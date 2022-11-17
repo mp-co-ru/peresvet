@@ -11,6 +11,7 @@ CONFIG_PASS="Peresvet21"
 ditAdminDn="cn=admin,cn=prs" # Distinguished Name for smt object
 DIT_PASS="Peresvet21"
 DIT_DN="cn=prs"
+SLEEP_DELAY=10
 
 echo " "
 
@@ -36,31 +37,45 @@ chmod -v -R 750 /etc/ldap/slapd.d
 echo .
 
 echo "Copying schema files..."
-mkdir '/etc/ldap/slapd.d/cn=config/cn=schema'
+sdir='/etc/ldap/slapd.d/cn=config/cn=schema'
+[ ! -d "$sdir" ] && mkdir -p "$sdir"
+
 cp -r "$SCRIPT_DIR/schema/prs/cn=config/cn=schema/"* "/etc/ldap/slapd.d/cn=config/cn=schema/"
 chown openldap:openldap -R /etc/ldap/slapd.d/cn=config/cn=schema
 
-echo "Starting slapd service..."
+echo ""
+echo "Starting slapd service and sleeping..."
 service slapd start
+echo "$?"
+sleep $SLEEP_DELAY
 
+echo ""
 echo "Connect MDB module ..."
+echo "ldapadd -x -D $configAdminDn -w $CONFIG_PASS -f $SCRIPT_DIR/02-add-mdb.ldif"
 ldapadd -x -D "$configAdminDn" -w "$CONFIG_PASS" -f "$SCRIPT_DIR/02-add-mdb.ldif"
 echo "$?"
 service slapd restart
+sleep $SLEEP_DELAY
 
+echo ""
 echo "Create base DIT cn=smt..."
 sed -i '/^'"olcSuffix:"'/s|.*|'"olcSuffix: $DIT_DN"'|' "$SCRIPT_DIR/03-base-dit.ldif"
 sed -i '/^'"olcDbDirectory:"'/s|.*|'"olcDbDirectory: /var/lib/ldap/$DIT_DN"'|' "$SCRIPT_DIR/03-base-dit.ldif"
 sed -i '/^'"olcRootDN:"'/s|.*|'"olcRootDN: $ditAdminDn"'|' "$SCRIPT_DIR/03-base-dit.ldif"
 sed '/^'"olcRootPW:"'/s|.*|'"olcRootPW: $sshaDitPass"'|' "$SCRIPT_DIR/03-base-dit.ldif" > "$SCRIPT_DIR/base-dit.ldif"
+echo "mkdir -pv /var/lib/ldap/$DIT_DN" 
 mkdir -pv /var/lib/ldap/$DIT_DN
-cp -fv /usr/share/slapd/DB_CONFIG /var/lib/ldap/$DIT_DN
+echo "$?"
+#cp -fv /usr/share/slapd/DB_CONFIG /var/lib/ldap/$DIT_DN
 chown -R openldap:openldap /var/lib/ldap/$DIT_DN
+echo "ldapadd -x -D $configAdminDn -w $CONFIG_PASS -f $SCRIPT_DIR/base-dit.ldif"
 ldapadd -x -D "$configAdminDn" -w "$CONFIG_PASS" -f "$SCRIPT_DIR/base-dit.ldif"
 echo "$?"
 
+echo ""
 echo "Adding main objects..."
 sed 's/cn=prs/'"$DIT_DN"'/' "$SCRIPT_DIR/04-objects.ldif" > "$SCRIPT_DIR/objects.ldif"
+echo "ldapadd -x -D $ditAdminDn -w $DIT_PASS -f $SCRIPT_DIR/objects.ldif"
 ldapadd -x -D "$ditAdminDn" -w "$DIT_PASS" -f "$SCRIPT_DIR/objects.ldif"
 
 #ldapadd -x -D "$ditAdminDn" -w "$DIT_PASS" -f "/app/default_storage.ldif"

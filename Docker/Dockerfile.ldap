@@ -1,4 +1,4 @@
-FROM osixia/openldap
+FROM osixia/openldap:1.5.0
 
 ENV LDAP_TLS=false
 ARG SCHEMA_DIR=prs
@@ -14,6 +14,6 @@ WORKDIR /app/ldap
 RUN bash ./ldap_docker_install.sh
 
 WORKDIR /app
-RUN rm -rf ldap
+#RUN rm -rf ldap
 
 EXPOSE 389 636

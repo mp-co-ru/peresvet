@@ -1,0 +1,11 @@
+version: '3.9'
+
+services:
+  ldap:
+    container_name: ldap
+    image: mpc/ldap.amd64.linux:0.5
+    ports:
+      - 389:389
+      - 636:636
+    environment:
+      TZ: ${TIME_ZONE}
