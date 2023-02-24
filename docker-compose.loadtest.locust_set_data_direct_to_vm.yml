@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  locust_master:
+    image: locustio/locust
+    ports:
+     - "8089:8089"
+    volumes:
+      - ./load_tests/src/:/mnt/locust/
+    command: -f /mnt/locust/locustfile_set_data_direct_to_vm.py --master -H http://locust_master:8089
+
+  locust_worker:
+    image: locustio/locust
+    volumes:
+      - ./load_tests/src/:/mnt/locust/
+    command: -f /mnt/locust/locustfile_set_data_direct_to_vm.py --worker --master-host locust_master

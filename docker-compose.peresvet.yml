@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   peresvet:
-    container_name: peresvet
+    #container_name: peresvet
     build:
       context: .
       dockerfile: Docker/Dockerfile.peresvet
@@ -11,8 +11,8 @@ services:
 
     volumes:
       - ./src/:/usr/src/
-    expose:
-      - ${HTTP_PORT}
+    #expose:
+    #  - ${HTTP_PORT}
     depends_on:
       - ldap
 
@@ -27,8 +27,13 @@ services:
 
   ldap:
     container_name: ldap
-    build:
-      context: .
-      dockerfile: Docker/Dockerfile.ldap
+    #build:
+    #  context: .
+    #  dockerfile: Docker/Dockerfile.ldap
+    image: mpc/load-test-postgre_ldap:0.1
+
     environment:
       TZ: ${TIME_ZONE}
+      LDAP_LOG_LEVEL: ${LDAP_LOG_LEVEL}
+    ports:
+      - 389:389

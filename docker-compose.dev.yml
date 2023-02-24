@@ -3,4 +3,10 @@ version: '3.9'
 services:
   peresvet:
     environment:
-      PRS_LOG_LEVEL: DEBUG
+      PRS_LOG_LEVEL: INFO
+    #ports:
+    #  - 8002:${HTTP_PORT} # при разработке позволяет обращаться напрямую к платформе, минуя nginx
+
+  ldap:
+    ports:
+      - ${LDAP_PORT}:${LDAP_PORT}

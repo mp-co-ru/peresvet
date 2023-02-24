@@ -1,4 +1,6 @@
 from typing import Dict, Any, List
+import asyncio
+from copy import deepcopy
 
 from fastapi import FastAPI, HTTPException, Response
 from ldap3 import BASE, DEREF_ALWAYS, DEREF_NEVER, SUBTREE, LEVEL
@@ -8,7 +10,7 @@ from app.models.Tag import PrsTagEntry, PrsTagCreate
 from app.models.DataStorage import PrsDataStorageEntry, PrsDataStorageCreate
 from app.models.data_storages.vm import PrsVictoriametricsEntry
 from app.models.data_storages.psql import PrsPostgreSQLEntry
-from app.models.Data import PrsData
+from app.models.Data import PrsReqGetData, PrsReqSetData
 from app.models.Connector import PrsConnectorCreate, PrsConnectorEntry
 import app.times as times
 from app.const import CNDataStorageTypes as CN_DS_T
@@ -137,12 +139,44 @@ class PrsApplication(FastAPI):
 
         return res[0]['dn'] if found else None
 
-    async def data_set(self, data: PrsData) -> Response:
+    async def data_get(self, data: PrsReqGetData) -> dict:
+        """
+        Метод создаёт копии запроса для каждого хранилища данных,
+        при этом в каждой копии сохраняются только те тэги, которые привязаны
+        к данном хранилищу.
+        Потом запросы на получение данных передаются параллельно всем
+        хранилищам.
+        """
+
+        data_storages = {}
+        tags = deepcopy(data.tagId)
+        for tag_id in tags:
+            data_storage_id = svc.tags[tag_id]['app']["dataStorageId"]
+            if data_storages.get(data_storage_id) is None:
+                data_storages[data_storage_id] = deepcopy(data)
+                data_storages[data_storage_id].tagId = [tag_id]
+            else:
+                data_storages[data_storage_id].tagId.append(tag_id)
+
+        tasks = [asyncio.create_task(
+            svc.data_storages[key].data_get(value)) for key, value in data_storages.items()
+        ]
+        done, _ = await asyncio.wait(tasks)
+        res = {
+            "data": []
+        }
+        for task in done:
+            value = task.result()
+            res["data"].extend(value["data"])
+
+        return res
+
+    async def data_set(self, data: PrsReqSetData) -> Response:
         """
         Метод разбивает массив данных на несколько массивов: один массив - одно хранилище и раздаёт эти массивы на запись
         соответствующим хранилищам. Также создаёт метки времени, если их нет и конвертирует их в микросекунды.
         """
-        now_ts = times.now_int()
+        now_ts = times.ts()
         # словарь значений для записи в разных хранилищах
         # имеет вид:
         # {
@@ -161,18 +195,18 @@ class PrsApplication(FastAPI):
                 if data_item.x is None:
                     x = now_ts
                 else:
-                    x = times.timestamp_to_int(data_item.x)
+                    x = times.ts(data_item.x)
                 data_storages[data_storage_id][tag_item.tagId].append((x, data_item.y, data_item.q))
 
-        #TODO: сделать параллельный запуск записи для хранилищ, а не друг за другом (background_tasks?)
-        resp = {}
-        for key, value in data_storages.items():
-            resp[key] = await svc.data_storages[key].set_data(value)
-
+        tasks = [asyncio.create_task(
+            svc.data_storages[key].data_set(value)) for key, value in data_storages.items()
+        ]
+        done, _ = await asyncio.wait(tasks)
         #TODO: подумать, как возвращать результат
-        for key, value in resp.items():
-            if value.status_code >= 400:
-                return value
+        for task in done:
+            value = task.result().status_code
+            if value >= 400:
+                return Response(status_code=value)
 
         return Response(status_code=204)
 

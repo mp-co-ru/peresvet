@@ -10,6 +10,9 @@ aiohttp[speedups]
 python-dateutil
 websockets
 asyncpg
+ciso8601
+pandas
+numpy
 
 #dev
 pytest
@@ -19,3 +22,4 @@ pytest-cov
 pytest-asyncio
 locust
 httpx
+fastapi_profiler

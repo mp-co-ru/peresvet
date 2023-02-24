@@ -8,5 +8,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       TZ: ${TIME_ZONE}
+      PGDATA: "/var/lib/postgresql/data/pgdata"
     ports:
       - 5432:5432
+    volumes:
+      - /home/vovaman/psql_set_test:/var/lib/postgresql/data

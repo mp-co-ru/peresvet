@@ -9,4 +9,4 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PWD}
       TZ: ${TIME_ZONE}
     ports:
-      - 80:80
+      - 8010:80

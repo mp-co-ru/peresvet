@@ -20,3 +20,11 @@ class CNTagValueTypes(IntEnum):
     CN_DOUBLE: int = 2
     CN_STR: int = 3
     CN_JSON: int = 4
+
+class Order(IntEnum):
+    """ Порядок сортировки выборки
+    ASC - по возрастанию
+    DESC - по убыванию
+    """
+    CN_ASC: int = 1
+    CN_DESC: int = 2

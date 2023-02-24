@@ -138,7 +138,7 @@ class PrsModelNodeEntry:
 
             try:
                 entry = writer.new(f'cn={cn},{parent_dn}')
-            except LDAPCursorException as ex:
+            except LDAPCursorError as ex:
                 s_er = f"Ошибка создания узла '{cn}': {ex}"
                 svc.logger.error(s_er)
                 raise HTTPException(HEC.CN_422, detail=s_er) from ex

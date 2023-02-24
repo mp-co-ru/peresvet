@@ -1,14 +1,18 @@
+import asyncio
 from typing import List, Union, Dict
 import json
 
 from urllib.parse import urlparse
 from pydantic import validator, Field, root_validator
 from ldap3 import LEVEL, DEREF_SEARCH, ALL_ATTRIBUTES
+from fastapi import Response
 
 from app.svc.Services import Services as svc
 from app.models.ModelNode import PrsModelNodeCreateAttrs, PrsModelNodeEntry, PrsModelNodeCreate
 from app.models.Tag import PrsTagEntry
 from app.const import CNDataStorageTypes
+from app.models.Data import PrsReqGetData
+import app.times as t
 
 class PrsDataStorageCreateAttrs(PrsModelNodeCreateAttrs):
     """
@@ -150,6 +154,7 @@ class PrsDataStorageEntry(PrsModelNodeEntry):
 
         for item in response:
             tag_entry = PrsTagEntry(id=str(item['attributes']['entryUUID']))
+
             svc.set_tag_cache(tag_entry, "data_storage", self._format_tag_cache(tag_entry))
 
         svc.logger.info(f"Тэги, привязанные к хранилищу `{self.data.attributes.cn}`, прочитаны.")
@@ -157,10 +162,10 @@ class PrsDataStorageEntry(PrsModelNodeEntry):
     async def connect(self):
         pass
 
-    async def set_data(self, data):
+    async def data_set(self, data):
         pass
 
-    async def get_data(self, Any):
+    async def data_get(self, data: PrsReqGetData) -> Response:
         pass
 
     def _add_subnodes(self) -> None:
@@ -191,7 +196,7 @@ class PrsDataStorageEntry(PrsModelNodeEntry):
             svc.ldap.add_alias(parent_dn=self.tags_node, aliased_dn=tag_entry.dn, name=tag_entry.id)
 
             tag_store = self._format_tag_data_store(tag_entry)
-            if (tag_entry.data.attributes.prsStore is None) or (not tag_store == json.loads(tag_entry.data.attributes.prsStore)):
+            if (tag_entry.data.attributes.prsStore is None) or (not tag_store == tag_entry.data.attributes.prsStore):
                 tag_entry.modify({
                     "prsStore": json.dumps(tag_store)
                 })

@@ -3,6 +3,7 @@ objectClass: olcMdbConfig
 olcDatabase: mdb
 olcSuffix: cn=prs
 olcDbDirectory: /var/lib/ldap/cn=prs
+olcDbMaxSize: 104857600
 olcRootDN: cn=admin,cn=prs
 olcRootPW: {SSHA}GlDOjH9uZHTUZtJLiqoO2W+/uzazHpVy
 olcDbIndex: objectClass,entryCSN,entryUUID eq

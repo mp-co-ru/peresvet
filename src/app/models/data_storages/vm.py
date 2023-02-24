@@ -89,7 +89,7 @@ class PrsVictoriametricsEntry(PrsDataStorageEntry):
         async with self.session.get(f"{self.get_url}?match[]=vm_free_disk_space_bytes") as response:
             return response.status
 
-    async def set_data(self, data):
+    async def data_set(self, data):
         # data:
         # {
         #        "<tag_id>": [(x, y, q)]
