@@ -1,3 +1,6 @@
+# нерабочий файл
+# попытка работать с вебсокетами
+
 from websocket import create_connection
 import gevent
 import ssl
