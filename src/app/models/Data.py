@@ -92,12 +92,7 @@ class PrsReqGetData(BaseModel):
 
     timeStep: int = Field(None, title="Период между соседними возвращаемыми значениями")
 
-<<<<<<< HEAD
     @validator('tagId', always=True)
-=======
-    @classmethod
-    @validator('tagId')
->>>>>>> f3852a9c2e630cb5d84b72a31ccbfcd2ae531049
     def tagId_must_exists(cls, v):
         if v is None:
             raise ValueError("Должен присутствовать ключ 'tagId'")

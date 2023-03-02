@@ -1,9 +1,9 @@
 import datetime
-from dateutil import tz, parser
+from dateutil import tz
 import time
-import pytz
 import ciso8601
 
+#TODO: попробовать модуль isotoint
 # функция преобразовывает пришедшую метку времени в количество микросекунд
 microsec = 1000000
 start_ts = datetime.datetime.fromtimestamp(0, datetime.timezone.utc)

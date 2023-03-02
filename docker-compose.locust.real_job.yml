@@ -1,0 +1,69 @@
+version: '3'
+
+services:
+  locust_master:
+    build:
+      context: .
+      dockerfile: Docker/Dockerfile.locust
+    ports:
+     - "8089:8089"
+    volumes:
+      - ./load_tests/src/:/mnt/locust/
+    command: -f /mnt/locust/locustfile_real_job_psql.py --master -H http://locust_master:8089
+
+  locust_worker:
+    build:
+      context: .
+      dockerfile: Docker/Dockerfile.locust
+    volumes:
+      - ./load_tests/src/:/mnt/locust/
+    command: -f /mnt/locust/locustfile_real_job_psql.py --worker --master-host locust_master
+    depends_on:
+      - peresvet
+
+  nginx:
+      image: nginx:latest
+      container_name: nginx_load_test
+      ports:
+        - ${HTTP_PORT}:${HTTP_PORT}
+      #restart: always
+      volumes:
+        - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
+        - ./config/nginx/no_ssl/default.conf.template:/etc/nginx/templates/default.conf.template:rw,cached
+      environment:
+        HTTP_PORT: ${HTTP_PORT}
+        HTTPS_PORT: ${HTTPS_PORT}
+        TZ: ${TIME_ZONE}
+      depends_on:
+        - peresvet
+
+  peresvet:
+    build:
+      context: .
+      dockerfile: Docker/Dockerfile.peresvet
+
+    command: uvicorn app.main:app --workers 1 --host 0.0.0.0 --port ${HTTP_PORT} --ws-ping-interval 10 --ws-ping-timeout 10
+
+    volumes:
+      - ./src/:/usr/src/
+    depends_on:
+      - ldap
+
+    environment:
+      PRS_LOG_LEVEL: ${PRS_LOG_LEVEL}
+      TZ: ${TIME_ZONE}
+      LDAP_HOST: ${LDAP_HOST}
+      LDAP_PORT: ${LDAP_PORT}
+      LDAP_USER: ${LDAP_USER}
+      LDAP_PASSWORD: ${LDAP_PASSWORD}
+      LDAP_BASE_NODE: ${LDAP_BASE_NODE}
+
+  ldap:
+    container_name: ldap_load_test
+    image: mpc/load-test-postgre_ldap:0.1
+    ports:
+      - 3890:389
+    #  - 636:636
+    environment:
+      TZ: ${TIME_ZONE}
+      LDAP_LOG_LEVEL: ${LDAP_LOG_LEVEL}
