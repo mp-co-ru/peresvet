@@ -113,7 +113,8 @@ class PrsPostgreSQLEntry(PrsDataStorageEntry):
 
     async def _post_init(self):
         try:
-            self.conn_pool = await apg.create_pool(dsn=self.dsn, min_size=20, max_size=200)
+            # self.conn_pool = await apg.create_pool(dsn=self.dsn, min_size=200, max_size=10000)
+            self.conn_pool = await apg.create_pool(dsn=self.dsn)
         except OSError as ex:
             er_str = f"Ошибка связи с базой данных '{self.dsn}': {ex}"
             svc.logger.error(er_str)
