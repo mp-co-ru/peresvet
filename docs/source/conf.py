@@ -170,3 +170,9 @@ texinfo_documents = [
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+html_logo = "pics/logo_middle.png"
+html_theme_options = {
+    'logo_only': True,
+    'display_version': False,
+}

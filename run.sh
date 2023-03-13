@@ -3,5 +3,5 @@
 docker compose -f docker-compose.peresvet.yml \
    -f docker-compose.nginx.yml \
    -f docker-compose.victoriametrics.yml \
-   -f docker-compose.postgres.yml \
+   -f docker-compose.postgres.set_test.yml \
    -f docker-compose.grafana.yml up
