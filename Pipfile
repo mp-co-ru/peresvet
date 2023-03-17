@@ -22,6 +22,8 @@ pandas="*"
 numpy="*"
 httpx = "*"
 random-dict = "*"
+redis = {extras = ["hiredis"], version = "*"}
+pika = "*"
 
 [requires]
 python_version = "3.10"
