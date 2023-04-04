@@ -6,57 +6,57 @@ description: This is root node of Peresvet hierarchy
 cn: prs
 
 # add dataStorages node
-dn: cn=dataStorages,cn=prs
-changetype: add
-objectClass: prsModelNode
-description: This node stores data storages
-cn: dataStorages
+#dn: cn=dataStorages,cn=prs
+#changetype: add
+#objectClass: prsModelNode
+#description: This node stores data storages
+#cn: dataStorages
 
 # add connectors node
-dn: cn=connectors,cn=prs
-changetype: add
-objectClass: prsModelNode
-description: This node stores connectors
-cn: connectors
+#dn: cn=connectors,cn=prs
+#changetype: add
+#objectClass: prsModelNode
+#description: This node stores connectors
+#cn: connectors
 
 # add templates node
-dn: cn=templates,cn=prs
-changetype: add
-objectClass: prsModelNode
-description: This node stores equipment templates
-cn: templates
+#dn: cn=templates,cn=prs
+#changetype: add
+#objectClass: prsModelNode
+#description: This node stores equipment templates
+#cn: templates
 
 # add schedules node
-dn: cn=schedules,cn=prs
-changetype: add
-objectClass: prsModelNode
-description: This node stores equipment templates
-cn: schedules
+#dn: cn=schedules,cn=prs
+#changetype: add
+#objectClass: prsModelNode
+#description: This node stores equipment templates
+#cn: schedules
 
 # add objects node
-dn: cn=objects,cn=prs
-changetype: add
-objectClass: prsModelNode
-description: This node stores real objects
-cn: objects
+#dn: cn=objects,cn=prs
+#changetype: add
+#objectClass: prsModelNode
+#description: This node stores real objects
+#cn: objects
 
 # add consts node
-dn: cn=consts,cn=prs
-changetype: add
-objectClass: prsModelNode
-description: This node stores constants
-cn: consts
+#dn: cn=consts,cn=prs
+#changetype: add
+#objectClass: prsModelNode
+#description: This node stores constants
+#cn: consts
 
 # add tags node
-dn: cn=tags,cn=prs
-changetype: add
-objectClass: prsModelNode
-description: This node stores tags
-cn: tags
+#dn: cn=tags,cn=prs
+#changetype: add
+#objectClass: prsModelNode
+#description: This node stores tags
+#cn: tags
 
 # add methods node
-dn: cn=methods,cn=prs
-changetype: add
-objectClass: prsModelNode
-description: This node stores methods
-cn: methods
+#dn: cn=methods,cn=prs
+#changetype: add
+#objectClass: prsModelNode
+#description: This node stores methods
+#cn: methods
