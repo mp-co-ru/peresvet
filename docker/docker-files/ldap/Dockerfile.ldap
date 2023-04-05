@@ -4,7 +4,7 @@ ENV LDAP_TLS=false
 ARG SCHEMA_DIR=prs
 
 WORKDIR /app
-COPY ./src/ /app/ldap
+COPY ../src/ /app/ldap
 
 WORKDIR /app/ldap/schema
 RUN mkdir -p $SCHEMA_DIR
