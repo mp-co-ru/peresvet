@@ -139,5 +139,78 @@ class Hierarchy:
                                 filterstr='(cn=*)',attrlist=['entryUUID'])
             return res[0][1]['entryUUID']
 
-    async def modify(self, base: str = None, attr_vals: dict = {}) -> str :
-        '''
+    async def modify(self, base: str, attr_vals: dict) -> str :
+        """Метод изменяет атрибуты узла.
+        В случае, если в изменяемых атрибутах присутствует cn (то есть узел
+        переименовывается), то метод возвращает новый DN узла
+
+        Args:
+            base (str): _description_. Defaults to None.
+            attr_vals (dict): _description_. Defaults to {}.
+
+        Returns:
+            str: _description_
+        """
+        if not base:
+            raise ValueError("Необходимо указать узел для изменения.")
+        if not attr_vals:
+            raise ValueError("Необходимо указать изменяемые атрибуты.")
+
+        real_base = self._get_base(base)
+
+        cn = attr_vals.pop("cn", None)
+
+        attrs = {
+            key: value if isinstance(value, list) else [value] for key, value in attr_vals.items()
+        }
+        attrs = {
+            key:[v.encode("utf-8") if type(v) == str else v for v in values] for key, values in attrs.items()
+        }
+
+        with self._cm.connection() as conn:
+            res = conn.search_s(real_base, CN_SCOPE_BASE, None, [key for key in attrs.keys()])
+            modlist = ldap.modlist.modifyModlist(res[0][1], attrs)
+            conn.modify_s(real_base, modlist)
+
+            if cn:
+                res = conn.search_s(real_base, CN_SCOPE_BASE, None, ['entryUUID'])
+                id = res[0][1]['entryUUID']
+
+                if isinstance(cn, list):
+                    cn = cn[0]
+                new_rdn = f'cn={ldap.dn.escape_dn_chars(cn)}'
+                conn.rename_s(real_base, new_rdn)
+
+                res = conn.search_s(self._base, CN_SCOPE_SUBTREE, f'(entryUUID={id})')
+
+                return res[0][0]
+
+    async def move(self, node: str, new_parent: str):
+        """Метод перемещает узел по дереву
+
+        Args:
+            node (str): _description_
+            new_parent (str): _description_
+        """
+
+        base_dn = self._get_base(node)
+        new_parent_dn = self._get_base(new_parent)
+
+        rdn = ldap.dn.explode_dn(base_dn,flags=ldap.DN_FORMAT_LDAPV3)[0]
+
+        with self._cm.connection() as conn:
+            conn.rename_s(base_dn, rdn, new_parent_dn)
+
+    async def delete(self, node: str):
+        """Метод удаляет из ерархии узел и всех его потомков/
+
+        Args:
+            node (str): _description_
+        """
+        if not node:
+            raise ValueError('Нельзя удалять корневой узел иерархии')
+
+        node_dn = self._get_base(node)
+
+        with self._cm.connection() as conn:
+            conn.delete_s(node_dn)
