@@ -4,8 +4,18 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+python-ldap = "*"
+ldappool = "*"
 
 [dev-packages]
+pylint = "*"
+pytest = "*"
+coverage = "*"
+pytest-cov = "*"
+sphinx = "*"
+sphinxcontrib-httpdomain = "*"
+sphinxcontrib-httpexample = "*"
+sphinx-rtd-theme = "*"
 
 [requires]
 python_version = "3.10"
