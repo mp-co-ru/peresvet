@@ -16,7 +16,7 @@ CN_SCOPE_SUBTREE = ldap.SCOPE_SUBTREE
 class Hierarchy:
     """Класс для работы с иерархической моделью.
     """
-    def __init__(self, base: str, uri: str, uid: str = None, pwd: str = None,
+    def __init__(self, uri: str, base: str, uid: str = None, pwd: str = None,
                  pool_size: int = 10):
         """_summary_
 

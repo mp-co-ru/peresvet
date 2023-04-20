@@ -6,6 +6,9 @@ name = "pypi"
 [packages]
 python-ldap = "*"
 ldappool = "*"
+lru-cache = "*"
+fastapi = "*"
+pydantic = "*"
 
 [dev-packages]
 pylint = "*"

@@ -1,0 +1,10 @@
+-i https://pypi.org/simple
+fastapi
+loguru
+pydantic
+validators
+python-dateutil
+ciso8601
+python-ldap
+ldappool
+lru_cache
