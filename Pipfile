@@ -7,8 +7,11 @@ name = "pypi"
 python-ldap = "*"
 ldappool = "*"
 lru-cache = "*"
+loguru = "*"
 fastapi = "*"
 pydantic = "*"
+validators = "*"
+ciso8601 = "*"
 
 [dev-packages]
 pylint = "*"
