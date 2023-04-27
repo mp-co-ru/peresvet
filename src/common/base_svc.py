@@ -6,7 +6,6 @@ from ldappool import ConnectionManager
 
 import aio_pika
 import aio_pika.abc
-from aio_pika.pool import Pool
 
 from settings import Settings
 from hierarchy import Hierarchy
@@ -18,7 +17,7 @@ class BaseService(FastAPI):
 
     """
 
-    def __init__(self, settings: Settings, **kwargs):
+    def __init__(self, settings: Settings, *args, **kwargs):
         if kwargs.get("on_startup"):
             kwargs.append(self.on_startup)
         else:
@@ -28,7 +27,7 @@ class BaseService(FastAPI):
         else:
             kwargs["on_shutdown"] = [self.on_shutdown]
 
-        super(BaseService, self).__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
         self.svc_name = settings.svc_name
         self.amqp_url = settings.amqp_url
@@ -65,7 +64,6 @@ class BaseService(FastAPI):
             return self._amqp_connect()
 
     async def on_startup(self) -> None:
-
         await self._ldap_connect()
         await self._amqp_connect()
 
