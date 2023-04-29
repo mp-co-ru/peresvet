@@ -73,7 +73,7 @@ class Hierarchy:
             return base
 
     async def search(self, base: str = None, filter_str: str = None,
-                     scope: Any = CN_SCOPE_SUBTREE, attr_list: list[str] = []) -> tuple:
+                     scope: Any = CN_SCOPE_SUBTREE, attr_list: list[str] = None) -> tuple:
         """Метод-генератор возвращает результат поиска узлов в иерархии.
         Результат - массив кортежей. Каждый кортеж состоит из трёх элементов:
         `id` узла (entryUUID), `dn` узла, словарь из атрибутов и их значений.
@@ -98,7 +98,7 @@ class Hierarchy:
             tuple: [(id, dn, attrs)]
         """
 
-        if attr_list is None or not attr_list:
+        if not attr_list:
             attr_list = ['*']
 
         attr_list.append('entryUUID')
@@ -114,7 +114,7 @@ class Hierarchy:
 
                 yield item
 
-    async def add(self, base: str = None, attr_vals: dict = {}) -> str:
+    async def add(self, base: str = None, attr_vals: dict = None) -> str:
         """Добавление узла в иерархию
 
         Args:
@@ -145,13 +145,13 @@ class Hierarchy:
         cn_bytes = ldap.dn.escape_dn_chars(attrs['cn'][0])
         dn = f"cn={cn_bytes},{self._get_base(base)}"
 
-        modlist = {key:[v.encode("utf-8") if type(v) == str else v for v in values] for key, values in attrs.items()}
+        modlist = {key:[v.encode("utf-8") if isinstance(v, str) else v for v in values] for key, values in attrs.items()}
         modlist = ldap.modlist.addModlist(modlist)
 
         with self._cm.connection() as conn:
             try:
                 conn.add_s(dn, modlist)
-            except ldap.ALREADY_EXISTS as ex:
+            except ldap.ALREADY_EXISTS:
                 return None
 
             res = conn.search_s(base=dn, scope=CN_SCOPE_BASE,

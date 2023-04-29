@@ -21,9 +21,6 @@ class BaseModelCRUD(BaseService):
     очереди, в которую нужно отдать результат.
     Это сообщения: создание, поиск. Другие же сообщения (update, delete)
     не предполагают ответа.
-
-    Args:
-        BaseService (_type_): _description_
     """
 
     def __init__(self, settings: CRUDSettings, *args, **kwargs):
@@ -31,7 +28,10 @@ class BaseModelCRUD(BaseService):
 
         self._api_crud_exchange_name : str = settings.api_crud_exchange
         self._api_crud_queue_name : str = settings.api_crud_queue
+
         self.hierarchy_node : str = settings.hierarchy_node
+        self.hierarchy_class : str = settings.hierarchy_class
+        self.hierarchy_parent_class : str = None
 
         self._svc_consume_channel: aio_pika.abc.AbstractRobustChannel = None
         self._svc_consume_exchange: aio_pika.abc.AbstractRobustExchange = None
@@ -48,10 +48,10 @@ class BaseModelCRUD(BaseService):
             self._api_crud_queue_name, durable=True
         )
         await self._svc_consume_queue.bind(exchange=self._svc_consume_exchange)
-        await self._svc_consume_queue.consume(self.process_message)
+        await self._svc_consume_queue.consume(self._process_message)
         await asyncio.Future()
 
-    async def process_message(self,
+    async def _process_message(self,
             message: aio_pika.abc.AbstractIncomingMessage
     ) -> None:
         async with message.process(ignore_processed=True):
@@ -94,10 +94,96 @@ class BaseModelCRUD(BaseService):
                 ),
                 routing_key=message.reply_to,
             )
+            await message.ack()
 
-    async def create(self, mes) -> dict:
-        pass
+    async def create(self, data: dict) -> dict:
+        """Метод создаёт новый экземпляр сущности в иерархии.
 
+        Args:
+            data (dict): входные данные вида:
+                {
+                    "parentId": <id родителя>,
+                    "attributes": {
+                        <ldap-attribute>: <value>
+                    }
+                }
+                ``parentId`` - id родительской сущности; в случае, если = None,
+                    то экзмепляр создаётся внутри базового для данной сущности
+                    узла; если ``parentId`` = None и нет базового узла, то
+                    генерируется ошибка.
+
+        Returns:
+            dict: {"id": <new_id>}
+        """
+
+        parent_node = data.get("parentId")
+        parent_node = parent_node if parent_node else self.hierarchy_node
+        if not parent_node:
+            res = {
+                "id": None,
+                "error": {
+                    "code": 406,
+                    "message": "Не указан родительский узел."
+                }
+            }
+            return res
+
+        if not self._check_parent_class(data["parentId"]):
+            res = {
+                "id": None,
+                "error": {
+                    "code": 406,
+                    "message": "Неприемлемый класс родительского узла."
+                }
+            }
+            return res
+
+        new_id = self._hierarchy.add(parent_node, data.get("attributes"))
+
+        if not new_id:
+            res = {
+                "id": None,
+                "error": {
+                    "code": 406,
+                    "message": "Ошибка создания узла."
+                }
+            }
+        else:
+            res = {
+                "id": new_id,
+                "error": {}
+            }
+
+        await self._svc_pub_exchange.publish(
+            aio_pika.Message(
+                body=f'{{"action": "created", "tagId": {new_id}}}'.encode(),
+                content_type='application/json',
+                delivery_mode=aio_pika.DeliveryMode.PERSISTENT
+            ),
+            routing_key="*"
+        )
+
+        return res
+
+
+    async def _check_parent_class(self, parent_id: str) -> bool:
+        """Метод проверки того, что класс родительского узла
+        соответсвует необходимому. К примеру, тревоги могут создаваться только
+        внутри тегов. То есть при создании новой тревоги мы должны убедиться,
+        что класс родительского узла - ``prsTag``.
+
+        Метод должен быть переопределён в классах-наследниках.
+
+        Args:
+            parent_id (str): идентификатор родительского узла
+
+        Returns:
+            bool: _description_
+        """
+        return True
+
+    async def update(self, data) -> None:
+        await self._hierarchy.modify(data["id"], data["attributes"])
 
     async def check_hierarchy_node(self) -> None:
         if not self.hierarchy_node:
