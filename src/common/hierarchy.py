@@ -1,34 +1,51 @@
 # класс для работы с иерархией
 
-from typing import Any
+from typing import Any, Tuple
 
 from uuid import uuid4, UUID
 
 import ldap
 import ldap.modlist
 import ldap.dn
+import ldapurl
 from ldappool import ConnectionManager
 
 CN_SCOPE_BASE = ldap.SCOPE_BASE
-CN_SCOPE_ONE_LEVEL = ldap.SCOPE_ONE_LEVEL
+CN_SCOPE_ONELEVEL = ldap.SCOPE_ONELEVEL
 CN_SCOPE_SUBTREE = ldap.SCOPE_SUBTREE
 
 class Hierarchy:
     """Класс для работы с иерархической моделью.
     """
-    def __init__(self, uri: str, base: str, uid: str = None, pwd: str = None,
-                 pool_size: int = 10):
-        """_summary_
 
+    def __init__(self, url: str, pool_size: int = 10):
+        """
         Args:
             uri (str): _description_
             uid (str, optional): _description_. Defaults to None.
             pwd (str, optional): _description_. Defaults to None.
             pool_size (int, optional): _description_. Defaults to 10.
         """
-        self._base = base
-        self._cm = ConnectionManager(uri=uri, bind=uid,
-                                     passwd=pwd, size=pool_size)
+
+        self.url : str = url
+        self.pool_size : int = pool_size
+        self._cm : ConnectionManager = None
+        self._base : str = None
+
+    def connect(self) -> None:
+
+        ldap_url = ldapurl.LDAPUrl(self.url)
+
+        self._cm = ConnectionManager(
+            uri=f"ldap://{ldap_url.hostport}",
+            bind=ldap_url.who,
+            passwd=ldap_url.cred,
+            size=self.pool_size,
+            retry_max=10,
+            retry_delay=0.3
+        )
+
+        self._base = ldap_url.dn
 
     def _get_base(self, base: str = None) -> str:
         """Метод возвращает dn базового узла для всех операций
@@ -41,23 +58,22 @@ class Hierarchy:
         """
 
         if not base:
-                return self._base
-        else:
-            try:
-                UUID(base)
+            return self._base
+        try:
+            UUID(base)
 
-                with self._cm.connection() as conn:
-                    res = conn.search_s(base=self._base, scope=CN_SCOPE_SUBTREE,
-                                    filterstr=f"(entryUUID={base})",attrlist=['cn'])
-                    if not res:
-                        raise ValueError(f"Узел {base} не найден.")
+            with self._cm.connection() as conn:
+                res = conn.search_s(base=self._base, scope=CN_SCOPE_SUBTREE,
+                                filterstr=f"(entryUUID={base})",attrlist=['cn'])
+                if not res:
+                    raise ValueError(f"Узел {base} не найден.")
 
-                return res[0][0]
-            except ValueError as ex:
-                return base
+            return res[0][0]
+        except ValueError as _:
+            return base
 
-    async def search(self, base: str = None, filter: str = None,
-                     scope: Any = CN_SCOPE_SUBTREE, attr_list: list[str] = []) -> tuple:
+    async def search(self, base: str = None, filter_str: str = None,
+                     scope: Any = CN_SCOPE_SUBTREE, attr_list: list[str] = None) -> tuple:
         """Метод-генератор возвращает результат поиска узлов в иерархии.
         Результат - массив кортежей. Каждый кортеж состоит из трёх элементов:
         `id` узла (entryUUID), `dn` узла, словарь из атрибутов и их значений.
@@ -65,6 +81,7 @@ class Hierarchy:
         Идентификатором экземпляра сущности (то есть любого узла) в иерархии,
         используемым в платформе, является его entryUUID.
         Поэтому аргумент `base` может принимать следующие значения:
+
         None - поиск ведётся от главного узла иерархии, задаваемого при её
                создании;
         uid  - в этом случае сначала ищется узел с указанным uid, затем от
@@ -81,7 +98,7 @@ class Hierarchy:
             tuple: [(id, dn, attrs)]
         """
 
-        if attr_list is None or not attr_list:
+        if not attr_list:
             attr_list = ['*']
 
         attr_list.append('entryUUID')
@@ -89,7 +106,7 @@ class Hierarchy:
         with self._cm.connection() as conn:
 
             res = conn.search_s(base=self._get_base(base), scope=scope,
-                                filterstr=filter,attrlist=attr_list)
+                                filterstr=filter_str,attrlist=attr_list)
             for item in res:
                 item = (item[1]['entryUUID'], item[0], {
                     key: [value.decode() for value in values] for key, values in item[1]
@@ -97,7 +114,7 @@ class Hierarchy:
 
                 yield item
 
-    async def add(self, base: str = None, attr_vals: dict = {}) -> str:
+    async def add(self, base: str = None, attr_vals: dict = None) -> str:
         """Добавление узла в иерархию
 
         Args:
@@ -106,7 +123,9 @@ class Hierarchy:
 
         Returns:
             str: id нового узла
+
         """
+
         if not attr_vals:
             raise ValueError((
                 "Для создания узла необходимо задать его атрибуты.",
@@ -126,13 +145,13 @@ class Hierarchy:
         cn_bytes = ldap.dn.escape_dn_chars(attrs['cn'][0])
         dn = f"cn={cn_bytes},{self._get_base(base)}"
 
-        modlist = {key:[v.encode("utf-8") if type(v) == str else v for v in values] for key, values in attrs.items()}
+        modlist = {key:[v.encode("utf-8") if isinstance(v, str) else v for v in values] for key, values in attrs.items()}
         modlist = ldap.modlist.addModlist(modlist)
 
         with self._cm.connection() as conn:
             try:
                 conn.add_s(dn, modlist)
-            except ldap.ALREADY_EXISTS as ex:
+            except ldap.ALREADY_EXISTS:
                 return None
 
             res = conn.search_s(base=dn, scope=CN_SCOPE_BASE,
@@ -164,7 +183,7 @@ class Hierarchy:
             key: value if isinstance(value, list) else [value] for key, value in attr_vals.items()
         }
         attrs = {
-            key:[v.encode("utf-8") if type(v) == str else v for v in values] for key, values in attrs.items()
+            key:[v.encode("utf-8") if isinstance(v, str) else v for v in values] for key, values in attrs.items()
         }
 
         with self._cm.connection() as conn:
@@ -214,3 +233,44 @@ class Hierarchy:
 
         with self._cm.connection() as conn:
             conn.delete_s(node_dn)
+
+    async def get_parent(self, node: str) -> Tuple[str, str]:
+        """Метод возвращает для узла ``node`` id(guid) и dn
+        родительского узла.
+
+        Args:
+            node (str): id или dn узла, родителя которого необходимо найти.
+
+        Returns:
+            (str, str): id(guid) и dn родительского узла.
+        """
+        res_node = None
+        try:
+            UUID(node)
+            with self._cm.connection() as conn:
+                res = conn.search_s(base=self._base, scope=CN_SCOPE_SUBTREE,
+                                filterstr=f"(entryUUID={node})",attrlist=['cn'])
+                if not res:
+                    raise ValueError(f"Узел {node} не найден.")
+
+                res_node = res[0][0]
+
+        except ValueError as ex:
+            if not ldap.dn.is_dn(node):
+                raise ValueError(
+                    f"Строка {node} не является корректным идентификатором узла."
+                ) from ex
+            res_node = node
+
+        rdns = ldap.explode_dn(res_node)
+        p = ','.join(rdns[1:])
+        if not p:
+            return (None, None)
+
+        with self._cm.connection() as conn:
+            res = conn.search_s(base=p, scope=CN_SCOPE_ONELEVEL,
+                attrlist=['entryUUID'])
+            if not res:
+                raise ValueError("Родительский узел не найден.")
+
+        return (res[0][1]['entryUUID'][0].decode('utf-8'), res[0][0])

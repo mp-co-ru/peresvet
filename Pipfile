@@ -12,6 +12,7 @@ fastapi = "*"
 pydantic = "*"
 validators = "*"
 ciso8601 = "*"
+aio-pika = "*"
 
 [dev-packages]
 pylint = "*"
