@@ -1,7 +1,7 @@
 # базовый класс для управления экземплярами сущностей в иерархии
 # по умолчанию, каждая сущность может иметь "свой" узел в иерархрии
 # для создания в нём "своей" иерархии; но это необязательно
-from typing import Annotated
+from typing import Annotated, Any, List
 import asyncio
 import json
 
@@ -10,6 +10,7 @@ import aio_pika.abc
 
 from base_svc import BaseService
 from crud_settings import CRUDSettings
+from hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
 
 class BaseModelCRUD(BaseService):
     """Базовый класс для всех сервисов, работающих с экземплярами сущностей
@@ -71,13 +72,13 @@ class BaseModelCRUD(BaseService):
 
             action = action.lower()
             if action == "create":
-                res = await self.create(mes)
+                res = await self._create(mes)
             elif action == "update":
-                res = await self.update(mes)
+                res = await self._update(mes)
             elif action == "read":
-                res = await self.read(mes)
+                res = await self._read(mes)
             elif action == "delete":
-                res = await self.delete(mes)
+                res = await self._delete(mes)
             else:
                 self.logger.error(f"Неизвестное действие: {action}.")
                 await message.ack()
@@ -96,7 +97,72 @@ class BaseModelCRUD(BaseService):
             )
             await message.ack()
 
-    async def create(self, data: dict) -> dict:
+    async def _update(self, data: dict) -> None:
+        """Метод обновления данных узла. Также метод может перемещать узел
+        по иерархии.
+
+        Args:
+            data (dict): данные узла.
+        """
+
+        new_parent = data.get("parentId")
+        if new_parent:
+            if self._check_parent_class(new_parent):
+                self._hierarchy.move(data['id'], new_parent)
+            else:
+                self.logger.error("Неправильный класс нового родительского узла.")
+                return
+
+        self._hierarchy.modify(data["id"], data["attributes"])
+        self._updating(data)
+        await self._svc_pub_exchange.publish(
+            aio_pika.Message(
+                body=f'{{"action": "updated", "id": {data["id"]}}}'.encode(),
+                content_type='application/json',
+                delivery_mode=aio_pika.DeliveryMode.PERSISTENT
+            ),
+            routing_key="*"
+        )
+        self.logger.info(f'Узел {data["id"]} обновлён.')
+
+    async def _updating(self, data: dict) -> None:
+        """Метод переопределяется в сервисах-наследниках.
+        В этом методе содержится специфическая работа при обновлении
+        нового экземпляра сущности
+
+        Args:
+            data (dict): id и атрибуты вновь создаваемого экземпляра сущности
+        """
+        pass
+
+    async def _delete(self, ids: List[str]) -> None:
+        """Метод удаляет экземпляр сущности из иерархии.
+
+        Args:
+            ids (List[str]): список идентификаторов узлов
+        """
+        for node in ids:
+            self._hierarchy.delete(node)
+
+        await self._svc_pub_exchange.publish(
+            aio_pika.Message(
+                body=f'{{"action": "deleted", "id": {ids}}}'.encode(),
+                content_type='application/json',
+                delivery_mode=aio_pika.DeliveryMode.PERSISTENT
+            ),
+            routing_key="*"
+        )
+        self.logger.info(f'Узлы {ids} удалены.')
+
+
+    async def _read(
+        self, base: str = None, filter_str: str = None,
+        scope: Any = CN_SCOPE_SUBTREE, attr_list: list[str] = None) -> tuple:
+        return self._hierarchy.search(
+            base=base, filter_str=filter_str, scope=scope, attr_list=attr_list
+        )
+
+    async def _create(self, data: dict) -> dict:
         """Метод создаёт новый экземпляр сущности в иерархии.
 
         Args:
@@ -154,9 +220,11 @@ class BaseModelCRUD(BaseService):
                 "error": {}
             }
 
+        await self._creating(data, new_id)
+
         await self._svc_pub_exchange.publish(
             aio_pika.Message(
-                body=f'{{"action": "created", "tagId": {new_id}}}'.encode(),
+                body=f'{{"action": "created", "id": {new_id}}}'.encode(),
                 content_type='application/json',
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             ),
@@ -165,6 +233,16 @@ class BaseModelCRUD(BaseService):
 
         return res
 
+    async def _creating(self, data: dict, new_id: str) -> None:
+        """Метод переопределяется в сервисах-наследниках.
+        В этом методе содержится специфическая работа при создании
+        нового экземпляра сущности
+
+        Args:
+            data (dict): атрибуты вновь создаваемого экземпляра сущности
+            new_id (str): id уже созданного узла
+        """
+        pass
 
     async def _check_parent_class(self, parent_id: str) -> bool:
         """Метод проверки того, что класс родительского узла
@@ -189,7 +267,7 @@ class BaseModelCRUD(BaseService):
         if not self.hierarchy_node:
             return
 
-        item = await self._hierarchy.search(filter_str=f"(cn={self.hierarchy_node})", attr_list=["entryUUID"])
+        item = await self._hierarchy.search(scope=CN_SCOPE_ONELEVEL, filter_str=f"(cn={self.hierarchy_node})", attr_list=["entryUUID"])
         if item:
             return
 

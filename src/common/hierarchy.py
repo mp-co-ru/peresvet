@@ -1,6 +1,6 @@
 # класс для работы с иерархией
 
-from typing import Any
+from typing import Any, Tuple
 
 from uuid import uuid4, UUID
 
@@ -183,7 +183,7 @@ class Hierarchy:
             key: value if isinstance(value, list) else [value] for key, value in attr_vals.items()
         }
         attrs = {
-            key:[v.encode("utf-8") if type(v) == str else v for v in values] for key, values in attrs.items()
+            key:[v.encode("utf-8") if isinstance(v, str) else v for v in values] for key, values in attrs.items()
         }
 
         with self._cm.connection() as conn:
@@ -233,3 +233,44 @@ class Hierarchy:
 
         with self._cm.connection() as conn:
             conn.delete_s(node_dn)
+
+    async def get_parent(self, node: str) -> Tuple[str, str]:
+        """Метод возвращает для узла ``node`` id(guid) и dn
+        родительского узла.
+
+        Args:
+            node (str): id или dn узла, родителя которого необходимо найти.
+
+        Returns:
+            (str, str): id(guid) и dn родительского узла.
+        """
+        res_node = None
+        try:
+            UUID(node)
+            with self._cm.connection() as conn:
+                res = conn.search_s(base=self._base, scope=CN_SCOPE_SUBTREE,
+                                filterstr=f"(entryUUID={node})",attrlist=['cn'])
+                if not res:
+                    raise ValueError(f"Узел {node} не найден.")
+
+                res_node = res[0][0]
+
+        except ValueError as ex:
+            if not ldap.dn.is_dn(node):
+                raise ValueError(
+                    f"Строка {node} не является корректным идентификатором узла."
+                ) from ex
+            res_node = node
+
+        rdns = ldap.explode_dn(res_node)
+        p = ','.join(rdns[1:])
+        if not p:
+            return (None, None)
+
+        with self._cm.connection() as conn:
+            res = conn.search_s(base=p, scope=CN_SCOPE_ONELEVEL,
+                attrlist=['entryUUID'])
+            if not res:
+                raise ValueError("Родительский узел не найден.")
+
+        return (res[0][1]['entryUUID'][0].decode('utf-8'), res[0][0])
