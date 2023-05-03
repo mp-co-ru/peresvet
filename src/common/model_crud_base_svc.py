@@ -8,15 +8,18 @@ import json
 import aio_pika
 import aio_pika.abc
 
-from base_svc import BaseService
-from crud_settings import CRUDSettings
 from hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
+from base_svc import BaseService
+from src.common.crud_svc_settings import CRUDSvcSettings
 
 class BaseModelCRUD(BaseService):
     """Базовый класс для всех сервисов, работающих с экземплярами сущностей
-    в иерархической модели. При запуске подписывается на сообщения
+    в иерархической модели.
+
+    При запуске подписывается на сообщения
     exchange'а с именем, задаваемым в переменной ``api_crud_exchange``,
     создавая очередь ``api_crud_queue``.
+
     Сообщения, приходящие в эту очередь, создаются сервисом API_CRUD.
     Часть сообщений эмулируют RPC, у них параметр ``reply_to`` содержит имя
     очереди, в которую нужно отдать результат.
@@ -24,7 +27,7 @@ class BaseModelCRUD(BaseService):
     не предполагают ответа.
     """
 
-    def __init__(self, settings: CRUDSettings, *args, **kwargs):
+    def __init__(self, settings: CRUDSvcSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
         self._api_crud_exchange_name : str = settings.api_crud_exchange
@@ -128,12 +131,13 @@ class BaseModelCRUD(BaseService):
     async def _updating(self, data: dict) -> None:
         """Метод переопределяется в сервисах-наследниках.
         В этом методе содержится специфическая работа при обновлении
-        нового экземпляра сущности
+        нового экземпляра сущности.
+        Метод вызывается методом ``update`` после изменения узла в иерархии,
+        но перед посылкой сообщения об изменении в очередь.
 
         Args:
             data (dict): id и атрибуты вновь создаваемого экземпляра сущности
         """
-        pass
 
     async def _delete(self, ids: List[str]) -> None:
         """Метод удаляет экземпляр сущности из иерархии.
@@ -154,6 +158,17 @@ class BaseModelCRUD(BaseService):
         )
         self.logger.info(f'Узлы {ids} удалены.')
 
+    async def _deleting(self, ids: List[str]) -> None:
+        """Метод переопределяется в сервисах-наследниках.
+        Используется для выполнения специфической работы при удалении
+        экземпляра сущности.
+
+        Вызывается методом ``delete`` после удаления узла в иерархии, но
+        перед посылкой сообщения об удалении в очередь.
+
+        Args:
+            ids (List[str]): список ``id`` удаляемых узлов.
+        """
 
     async def _read(
         self, base: str = None, filter_str: str = None,
@@ -236,13 +251,15 @@ class BaseModelCRUD(BaseService):
     async def _creating(self, data: dict, new_id: str) -> None:
         """Метод переопределяется в сервисах-наследниках.
         В этом методе содержится специфическая работа при создании
-        нового экземпляра сущности
+        нового экземпляра сущности.
+
+        Метод вызывается методом ``create`` после создания узла в иерархии,
+        но перед посылкой сообщения о создании в очередь.
 
         Args:
             data (dict): атрибуты вновь создаваемого экземпляра сущности
             new_id (str): id уже созданного узла
         """
-        pass
 
     async def _check_parent_class(self, parent_id: str) -> bool:
         """Метод проверки того, что класс родительского узла

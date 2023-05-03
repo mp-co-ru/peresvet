@@ -1,6 +1,6 @@
-from settings import Settings
+from base_svc_settings import BaseSvcSettings
 
-class CRUDSettings(Settings):
+class CRUDSvcSettings(BaseSvcSettings):
 
     # имя exchange'а, который публикует запросы от API_CRUD
     api_crud_exchange: str = "api_crud"
