@@ -1,6 +1,6 @@
 from pydantic import BaseSettings
 
-class Settings(BaseSettings):
+class BaseSvcSettings(BaseSettings):
 
     # имя сервиса. сервисы *_mod_crud создают в иерархии узел с таким же именем
     svc_name: str = ""
