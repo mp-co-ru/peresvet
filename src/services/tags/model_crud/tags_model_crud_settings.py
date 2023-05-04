@@ -1,6 +1,6 @@
-from src.common.model_crud_settings import CRUDSvcSettings
+from src.common.model_crud_settings import ModelCRUDSettings
 
-class TagsCRUDSettings(CRUDSvcSettings):
+class TagsCRUDSettings(ModelCRUDSettings):
     # имя exchange'а, который публикует запросы от API_CRUD
     api_crud_exchange: str = "tags_api_crud"
     # имя очереди, которую будут слушать все экземпляры сервиса model_crud

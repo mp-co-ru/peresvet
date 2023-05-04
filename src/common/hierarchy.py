@@ -1,6 +1,6 @@
 # класс для работы с иерархией
 
-from typing import Any, Tuple
+from typing import Any, Tuple, List
 
 from uuid import uuid4, UUID
 
@@ -32,21 +32,6 @@ class Hierarchy:
         self._cm : ConnectionManager = None
         self._base : str = None
 
-    def connect(self) -> None:
-
-        ldap_url = ldapurl.LDAPUrl(self.url)
-
-        self._cm = ConnectionManager(
-            uri=f"ldap://{ldap_url.hostport}",
-            bind=ldap_url.who,
-            passwd=ldap_url.cred,
-            size=self.pool_size,
-            retry_max=10,
-            retry_delay=0.3
-        )
-
-        self._base = ldap_url.dn
-
     def _get_base(self, base: str = None) -> str:
         """Метод возвращает dn базового узла для всех операций
 
@@ -72,8 +57,41 @@ class Hierarchy:
         except ValueError as _:
             return base
 
+    def _is_node_id_uuid(self, node: str) -> bool:
+        try:
+            UUID(node)
+        except ValueError:
+            return False
+
+        return True
+
+    async def _does_node_exist(self, node) -> bool:
+        with self._cm.connection() as conn:
+                res = conn.search_s(base=self._base, scope=CN_SCOPE_SUBTREE,
+                    filterstr=f"(entryUUID={node})",attrlist=['cn'])
+                if not res:
+                    return False
+
+        return True
+
+    def connect(self) -> None:
+
+        ldap_url = ldapurl.LDAPUrl(self.url)
+
+        self._cm = ConnectionManager(
+            uri=f"ldap://{ldap_url.hostport}",
+            bind=ldap_url.who,
+            passwd=ldap_url.cred,
+            size=self.pool_size,
+            retry_max=10,
+            retry_delay=0.3
+        )
+
+        self._base = ldap_url.dn
+
     async def search(self, base: str = None, filter_str: str = None,
-                     scope: Any = CN_SCOPE_SUBTREE, attr_list: list[str] = None) -> tuple:
+        scope: Any = CN_SCOPE_SUBTREE,
+        attr_list: list[str] = None) -> List[Tuple]:
         """Метод-генератор возвращает результат поиска узлов в иерархии.
         Результат - массив кортежей. Каждый кортеж состоит из трёх элементов:
         `id` узла (entryUUID), `dn` узла, словарь из атрибутов и их значений.
@@ -90,12 +108,12 @@ class Hierarchy:
 
         Args:
             base (str): None | uid | dn
-            scope (Any): _description_
-            filter (str): _description_
-            attr_list (list[str]): _description_
+            scope (Any): уровень поиска
+            filter (str): строка фильтра поиска
+            attr_list (list[str]): список возвращаемых атрибутов
 
         Returns:
-            tuple: [(id, dn, attrs)]
+            List[Tuple]: [(id, dn, attrs)]
         """
 
         if not attr_list:
@@ -118,12 +136,11 @@ class Hierarchy:
         """Добавление узла в иерархию
 
         Args:
-            base      (str): None | id | dn узла-родителя
+            base (str): None | id | dn узла-родителя
             attr_vals (dict): словарь со значениями атрибутов
 
         Returns:
             str: id нового узла
-
         """
 
         if not attr_vals:
@@ -274,3 +291,25 @@ class Hierarchy:
                 raise ValueError("Родительский узел не найден.")
 
         return (res[0][1]['entryUUID'][0].decode('utf-8'), res[0][0])
+
+    async def get_node_class(self, node: str) -> str:
+        """Возвращает класс узла
+
+        Args:
+            node (str): id узла
+
+        Raises:
+            ValueError: в случае отсутствия узла генерирует исключение
+
+        Returns:
+            str: значение атрибута objectClass (одно значение, исключая ``top``)
+        """
+        with self._cm.connection() as conn:
+            res = conn.search_s(base=self._base, scope=CN_SCOPE_SUBTREE,
+                filterstr=f"(entryUUID={node})",attrlist=['objectClass'])
+            if not res:
+                raise ValueError(f"Узел {node} не найден.")
+
+            obj_classes = res[0][1]["objectClass"]
+            obj_classes.remove(b'top')
+            return obj_classes[0].decode()

@@ -7,17 +7,17 @@ from ldappool import ConnectionManager
 import aio_pika
 import aio_pika.abc
 
-from src.common.settings import BaseSvcSettings
+from src.common.settings import Settings
 from hierarchy import Hierarchy
 from logger import PrsLogger
 
-class BaseService(FastAPI):
+class Svc(FastAPI):
     """Базовый класс для сервисов.
     Соединяется с AMQP, создаёт exchange типа директ со своим именем.
 
     """
 
-    def __init__(self, settings: BaseSvcSettings, *args, **kwargs):
+    def __init__(self, settings: Settings, *args, **kwargs):
         if kwargs.get("on_startup"):
             kwargs.append(self.on_startup)
         else:

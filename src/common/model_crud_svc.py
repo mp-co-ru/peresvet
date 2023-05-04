@@ -9,10 +9,10 @@ import aio_pika
 import aio_pika.abc
 
 from hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
-from src.common.svc import BaseService
-from src.common.crud_settings import CRUDSvcSettings
+from src.common.svc import Svc
+from src.common.model_crud_settings import ModelCRUDSettings
 
-class BaseModelCRUD(BaseService):
+class ModelCRUDSvc(Svc):
     """Базовый класс для всех сервисов, работающих с экземплярами сущностей
     в иерархической модели.
 
@@ -27,7 +27,7 @@ class BaseModelCRUD(BaseService):
     не предполагают ответа.
     """
 
-    def __init__(self, settings: CRUDSvcSettings, *args, **kwargs):
+    def __init__(self, settings: ModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
         self._api_crud_exchange_name : str = settings.api_crud_exchange
@@ -35,7 +35,12 @@ class BaseModelCRUD(BaseService):
 
         self.hierarchy_node : str = settings.hierarchy_node
         self.hierarchy_class : str = settings.hierarchy_class
-        self.hierarchy_parent_class : str = None
+        self.hierarchy_parent_classes = settings.hierarchy_parent_classes
+        if self.hierarchy_parent_classes:
+            classes = self.hierarchy_parent_classes.split(",")
+            self.hierarchy_parent_class = [
+                object_class.strip() for object_class in classes
+            ]
 
         self._svc_consume_channel: aio_pika.abc.AbstractRobustChannel = None
         self._svc_consume_exchange: aio_pika.abc.AbstractRobustExchange = None
@@ -275,7 +280,12 @@ class BaseModelCRUD(BaseService):
         Returns:
             bool: _description_
         """
-        return True
+        if self.hierarchy_parent_classes:
+            if (self._hierarchy.get_node_class(parent_id) in
+                self.hierarchy_parent_classes):
+                return True
+
+        return False
 
     async def update(self, data) -> None:
         await self._hierarchy.modify(data["id"], data["attributes"])
