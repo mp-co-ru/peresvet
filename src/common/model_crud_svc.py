@@ -9,8 +9,8 @@ import aio_pika
 import aio_pika.abc
 
 from hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
-from base_svc import BaseService
-from src.common.crud_svc_settings import CRUDSvcSettings
+from src.common.svc import BaseService
+from src.common.crud_settings import CRUDSvcSettings
 
 class BaseModelCRUD(BaseService):
     """Базовый класс для всех сервисов, работающих с экземплярами сущностей

@@ -7,7 +7,7 @@ from ldappool import ConnectionManager
 import aio_pika
 import aio_pika.abc
 
-from base_svc_settings import BaseSvcSettings
+from src.common.settings import BaseSvcSettings
 from hierarchy import Hierarchy
 from logger import PrsLogger
 
@@ -37,6 +37,7 @@ class BaseService(FastAPI):
         self._amqp_connection: aio_pika.abc.AbstractRobustConnection = None
         self._svc_pub_channel: aio_pika.abc.AbstractRobustChannel = None
         self._svc_pub_exchange: aio_pika.abc.AbstractRobustExchange = None
+        self._svc_pub_exchange_type = settings.pub_exchange_type
 
     async def _ldap_connect(self) -> None:
         try:
@@ -56,7 +57,7 @@ class BaseService(FastAPI):
             self._amqp_connection = await aio_pika.connect_robust(self.amqp_url)
             self._svc_pub_channel = await self._amqp_connection.channel()
             self._svc_pub_exchange = await self._svc_pub_channel.declare_exchange(
-                self.svc_name, aio_pika.ExchangeType.FANOUT,
+                self.svc_name, self._svc_pub_exchange_type,
             )
         except aio_pika.AMQPException as ex:
             self.logger.error(f"Ошибка связи с брокером: {ex}")
