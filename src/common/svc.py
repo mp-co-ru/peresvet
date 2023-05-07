@@ -1,20 +1,18 @@
 import asyncio
 from fastapi import FastAPI
-import ldapurl
 import ldap
-from ldappool import ConnectionManager
 
 import aio_pika
 import aio_pika.abc
 
-from src.common.settings import Settings
 from hierarchy import Hierarchy
 from logger import PrsLogger
+from src.common.settings import Settings
 
 class Svc(FastAPI):
-    """Базовый класс для сервисов.
-    Соединяется с AMQP, создаёт exchange типа директ со своим именем.
-
+    """
+    Args:
+            settings (Settings): конфигурация приложения см. :class:`settings.Settings`
     """
 
     def __init__(self, settings: Settings, *args, **kwargs):
@@ -40,6 +38,19 @@ class Svc(FastAPI):
         self._svc_pub_exchange_type = settings.pub_exchange_type
 
     async def _ldap_connect(self) -> None:
+        """Функция соединения с ldap-сервером.
+        В случае неудачи ошибка будет выведена в лог и попытки связи будут
+        продолжаться с периодичностью в 5 секунд.
+
+        Работа сервиса будет остановлена до тех пор, пока не установится
+        связь.
+
+        DSN для связи с ldap-сервером указывается в переменной окружения
+        ``ldap_url``.
+
+        Returns:
+            None
+        """
         try:
             self._hierarchy.connect()
         except ValueError:
@@ -53,6 +64,21 @@ class Svc(FastAPI):
             return self._ldap_connect()
 
     async def _amqp_connect(self) -> None:
+        """Функция связи с AMQP-сервером.
+        Аналогично функции ldap-connect при неудаче ошибка будет выведена в лог
+        и попытки связи будут продолжены с периодичностью в 5 секунд.
+
+        DSN для связи с amqp-сервером указывается в переменной окружения
+        ``amqp-url``.
+
+        После установки соединения создаётся exchange с именем, указанным
+        в переменной ``svc_name`` и типом, указанным в ``pub_exchange_type``.
+        Именно этот exchange будет использоваться для публикации сообщений,
+        генерируемых сервисом.
+
+        Returns:
+            None
+        """
         try:
             self._amqp_connection = await aio_pika.connect_robust(self.amqp_url)
             self._svc_pub_channel = await self._amqp_connection.channel()
@@ -65,9 +91,15 @@ class Svc(FastAPI):
             return self._amqp_connect()
 
     async def on_startup(self) -> None:
+        """Функция, выполняемая при старте сервиса: выполняется связь с
+        ldap- и amqp-серверами.
+        """
         await self._ldap_connect()
         await self._amqp_connect()
 
     async def on_shutdown(self) -> None:
+        """Функция, выполняемая при остановке сервиса: разрывается связь
+        с ldap- и amqp-серверами.
+        """
         await self._svc_pub_channel.close()
         await self._amqp_connection.close()

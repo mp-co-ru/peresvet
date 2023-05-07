@@ -28,6 +28,11 @@ class ModelCRUDSvc(Svc):
     """
 
     def __init__(self, settings: ModelCRUDSettings, *args, **kwargs):
+        """Конструктор класса.
+
+        Args:
+            settings (ModelCRUDSettings): _description_
+        """
         super().__init__(settings, *args, **kwargs)
 
         self._api_crud_exchange_name : str = settings.api_crud_exchange

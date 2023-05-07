@@ -1,5 +1,5 @@
 from uuid import UUID
-from pydantic import BaseModel, Field, validator, List
+from pydantic import BaseModel, Field, validator
 
 class NodeCreateAttributes(BaseModel):
     """Атрибуты для создания базового узла.
