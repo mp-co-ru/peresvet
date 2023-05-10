@@ -27,9 +27,9 @@ class Svc(FastAPI):
 
         super().__init__(*args, **kwargs)
 
-        self.svc_name = settings.svc_name
-        self.amqp_url = settings.amqp_url
-        self.logger = PrsLogger.make_logger()
+        self._svc_name = settings.svc_name
+        self._amqp_url = settings.amqp_url
+        self._logger = PrsLogger.make_logger()
         self._hierarchy = Hierarchy(settings.ldap_url)
 
         self._amqp_connection: aio_pika.abc.AbstractRobustConnection = None
@@ -54,12 +54,12 @@ class Svc(FastAPI):
         try:
             self._hierarchy.connect()
         except ValueError:
-            self.logger.error("Неверный формат URI ldap: {self.hierarchy.url}")
+            self._logger.error("Неверный формат URI ldap: {self.hierarchy.url}")
             await asyncio.sleep(5)
             return self._ldap_connect()
 
         except ldap.LDAPError as ex:
-            self.logger.error(f"Ошибка связи с сервером ldap: {ex}")
+            self._logger.error(f"Ошибка связи с сервером ldap: {ex}")
             await asyncio.sleep(5)
             return self._ldap_connect()
 
@@ -80,13 +80,13 @@ class Svc(FastAPI):
             None
         """
         try:
-            self._amqp_connection = await aio_pika.connect_robust(self.amqp_url)
+            self._amqp_connection = await aio_pika.connect_robust(self._amqp_url)
             self._svc_pub_channel = await self._amqp_connection.channel()
             self._svc_pub_exchange = await self._svc_pub_channel.declare_exchange(
-                self.svc_name, self._svc_pub_exchange_type,
+                self._svc_name, self._svc_pub_exchange_type,
             )
         except aio_pika.AMQPException as ex:
-            self.logger.error(f"Ошибка связи с брокером: {ex}")
+            self._logger.error(f"Ошибка связи с брокером: {ex}")
             await asyncio.sleep(5)
             return self._amqp_connect()
 

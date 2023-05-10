@@ -18,8 +18,8 @@ class Hierarchy:
     """Класс для работы с иерархической моделью.
 
     Args:
-            url (str): URL для связи с ldap-сервером
-            pool_size (int, optional): размер пула коннектов. По умолчанию - 10.
+        url (str): URL для связи с ldap-сервером;
+        pool_size (int, optional): размер пула коннектов. По умолчанию - 10.
 
     """
 
@@ -154,7 +154,9 @@ class Hierarchy:
 
         with self._cm.connection() as conn:
 
-            res = conn.search_s(base=self._get_base(base), scope=scope,
+            node = await self._get_base(base)
+
+            res = conn.search_s(base=node, scope=scope,
                                 filterstr=filter_str,attrlist=attr_list)
             for item in res:
                 item = (item[1]['entryUUID'], item[0], {
@@ -192,7 +194,7 @@ class Hierarchy:
         }
 
         cn_bytes = ldap.dn.escape_dn_chars(attrs['cn'][0])
-        dn = f"cn={cn_bytes},{self._get_base(base)}"
+        dn = f"cn={cn_bytes},{await self._get_base(base)}"
 
         modlist = {key:[v.encode("utf-8") if isinstance(v, str) else v for v in values] for key, values in attrs.items()}
         modlist = ldap.modlist.addModlist(modlist)
@@ -225,7 +227,7 @@ class Hierarchy:
         if not attr_vals:
             raise ValueError("Необходимо указать изменяемые атрибуты.")
 
-        real_base = self._get_base(node)
+        real_base = await self._get_base(node)
 
         cn = attr_vals.pop("cn", None)
 
@@ -262,8 +264,8 @@ class Hierarchy:
             new_parent (str): id нового родительского узла
         """
 
-        base_dn = self._get_base(node)
-        new_parent_dn = self._get_base(new_parent)
+        base_dn = await self._get_base(node)
+        new_parent_dn = await self._get_base(new_parent)
 
         rdn = ldap.dn.explode_dn(base_dn,flags=ldap.DN_FORMAT_LDAPV3)[0]
 
@@ -279,7 +281,7 @@ class Hierarchy:
         if not node:
             raise ValueError('Нельзя удалять корневой узел иерархии')
 
-        node_dn = self._get_base(node)
+        node_dn = await self._get_base(node)
 
         with self._cm.connection() as conn:
             conn.delete_s(node_dn)
@@ -289,10 +291,13 @@ class Hierarchy:
         родительского узла.
 
         Args:
+
             node (str): id или dn узла, родителя которого необходимо найти.
 
         Returns:
+
             (str, str): id(guid) и dn родительского узла.
+
         """
         res_node = None
         try:

@@ -1,3 +1,8 @@
+"""Модуль не содержит класса APICRUDSvc, так как все необходимые методы
+реализованы в рамках базового класса :py:class:`svc.Svc`.
+
+Модуль содержит классы, описывающие форматы входных данных для команд.
+"""
 from uuid import UUID
 from pydantic import BaseModel, Field, validator
 
