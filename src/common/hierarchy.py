@@ -1,5 +1,6 @@
 # класс для работы с иерархией
 
+import copy
 from typing import Any, Tuple, List
 
 from uuid import uuid4, UUID
@@ -47,7 +48,7 @@ class Hierarchy:
 
         return True
 
-    async def _get_base(self, base: str = None) -> str:
+    async def get_node_dn(self, node: str = None) -> str:
         """Метод определяет DN узла в иерархии по переданному id и
         возвращает его.
         В случае, если base = None, то возвращается DN базового узла
@@ -61,24 +62,24 @@ class Hierarchy:
 
         """
 
-        if not base:
+        if not node:
             return self._base
 
-        if self._is_node_id_uuid(base):
+        if self._is_node_id_uuid(node):
             with self._cm.connection() as conn:
                 res = conn.search_s(base=self._base, scope=CN_SCOPE_SUBTREE,
-                                filterstr=f"(entryUUID={base})",attrlist=['cn'])
+                                filterstr=f"(entryUUID={node})",attrlist=['cn'])
                 if not res:
-                    raise ValueError(f"Узел {base} не найден.")
+                    raise ValueError(f"Узел {node} не найден.")
 
             return res[0][0]
 
         try:
-            UUID(base)
+            UUID(node)
 
 
         except ValueError as _:
-            return base
+            return node
 
     def _is_node_id_uuid(self, node: str) -> bool:
         """Проверка того, что идентификатор узла
@@ -154,7 +155,7 @@ class Hierarchy:
 
         with self._cm.connection() as conn:
 
-            node = await self._get_base(base)
+            node = await self.get_node_dn(base)
 
             res = conn.search_s(base=node, scope=scope,
                                 filterstr=filter_str,attrlist=attr_list)
@@ -175,26 +176,18 @@ class Hierarchy:
         Returns:
             str: id нового узла
         """
-        #TODO: если в атрибутах отсутствует ``cn``, то в его качестве принимается id вновь созданного узла.
-
-        if not attr_vals:
-            raise ValueError((
-                "Для создания узла необходимо задать его атрибуты.",
-                "Как минимум, cn."
-            ))
-
-        cn = attr_vals.get("cn")
-        if not cn:
-            raise ValueError(
-                "В списке атрибутов обязательно должен быть задан cn."
-            )
-
-        attrs = {
+        attrs = {}
+        if attr_vals:
+            attrs = {
             key: values if isinstance(values, list) else [values] for key, values in attr_vals.items()
         }
+        rename_node = False
+        if not attrs.get("cn"):
+            rename_node = True
+            attrs["cn"] = [str(uuid4())]
 
         cn_bytes = ldap.dn.escape_dn_chars(attrs['cn'][0])
-        dn = f"cn={cn_bytes},{await self._get_base(base)}"
+        dn = f"cn={cn_bytes},{await self.get_node_dn(base)}"
 
         modlist = {key:[v.encode("utf-8") if isinstance(v, str) else v for v in values] for key, values in attrs.items()}
         modlist = ldap.modlist.addModlist(modlist)
@@ -207,6 +200,13 @@ class Hierarchy:
 
             res = conn.search_s(base=dn, scope=CN_SCOPE_BASE,
                                 filterstr='(cn=*)',attrlist=['entryUUID'])
+            if rename_node:
+                self.modify(
+                    node=res[0][1]['entryUUID'],
+                    attr_vals={
+                        "cn": [res[0][1]['entryUUID']]
+                    })
+
             return res[0][1]['entryUUID']
 
     async def modify(self, node: str, attr_vals: dict) -> str :
@@ -227,7 +227,7 @@ class Hierarchy:
         if not attr_vals:
             raise ValueError("Необходимо указать изменяемые атрибуты.")
 
-        real_base = await self._get_base(node)
+        real_base = await self.get_node_dn(node)
 
         cn = attr_vals.pop("cn", None)
 
@@ -264,8 +264,8 @@ class Hierarchy:
             new_parent (str): id нового родительского узла
         """
 
-        base_dn = await self._get_base(node)
-        new_parent_dn = await self._get_base(new_parent)
+        base_dn = await self.get_node_dn(node)
+        new_parent_dn = await self.get_node_dn(new_parent)
 
         rdn = ldap.dn.explode_dn(base_dn,flags=ldap.DN_FORMAT_LDAPV3)[0]
 
@@ -281,7 +281,7 @@ class Hierarchy:
         if not node:
             raise ValueError('Нельзя удалять корневой узел иерархии')
 
-        node_dn = await self._get_base(node)
+        node_dn = await self.get_node_dn(node)
 
         with self._cm.connection() as conn:
             conn.delete_s(node_dn)

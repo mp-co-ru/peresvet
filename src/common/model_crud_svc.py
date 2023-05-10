@@ -18,18 +18,57 @@ from src.common.svc import Svc
 from src.common.model_crud_settings import ModelCRUDSettings
 
 class ModelCRUDSvc(Svc):
-    """Базовый класс для всех сервисов, работающих с экземплярами сущностей
+    """
+    Базовый класс для всех сервисов, работающих с экземплярами сущностей
     в иерархической модели.
 
     При запуске подписывается на сообщения
     обменника с именем, задаваемым в переменной ``api_crud_exchange``,
     создавая очередь с именем из переменной ``api_crud_queue``.
 
-    Сообщения, приходящие в эту очередь, создаются сервисом API_CRUD.
+    Сообщения, приходящие в эту очередь, создаются сервисом
+    ``<сущность>_api_crud``.
     Часть сообщений эмулируют RPC, у них параметр ``reply_to`` содержит имя
     очереди, в которую нужно отдать результат.
     Это сообщения: создание, поиск. Другие же сообщения (update, delete)
     не предполагают ответа.
+
+    Общий формат сообщений, обрабатываемых сервисом:
+
+    .. code::
+
+       {
+            "action": "create | read | update | delete",
+            "data": {
+
+            }
+       }
+
+    Форматы сообщений:
+
+    **create**, запрос:
+
+    .. code::
+
+        {
+            "action": "create",
+            "data": {
+                "parentId": "id of parent node",
+                "attributes": {
+                    "cn": "new node name",
+                    "description": "some description"
+                }
+            }
+        }
+
+    **read**:
+
+    .. code::
+
+        {
+            "action": "read",
+
+        }
 
     Args:
         settings (ModelCRUDSettings): конфигурация сервиса.
@@ -42,7 +81,9 @@ class ModelCRUDSvc(Svc):
         self._api_crud_exchange_name : str = settings.api_crud_exchange
         self._api_crud_queue_name : str = settings.api_crud_queue
 
-        self._hierarchy_node : str = settings.hierarchy_node
+        self._hierarchy_node_name : str = settings.hierarchy_node_name
+        self._hierarchy_node_dn: str = None
+        self._hierarchy_node_id: str = None
         self._hierarchy_class : str = settings.hierarchy_class
         self._hierarchy_parent_classes = []
         if settings.hierarchy_parent_classes:
@@ -251,7 +292,7 @@ class ModelCRUDSvc(Svc):
                     {
                         "parentId": "id родителя",
                         "attributes": {
-                            "ldap-attribute": "value"
+                            "<ldap-attribute>": "<value>"
                         }
                     }
 
@@ -260,24 +301,34 @@ class ModelCRUDSvc(Svc):
                 узла; если ``parentId`` = None и нет базового узла, то
                 генерируется ошибка.
 
+                Среди атрибутов узла нет атрибута ``objectClass`` - метод
+                добавляет его сам, вставляя значение из переменной окружения
+                ``hierarchy_class``.
+
         Returns:
             dict: {"id": "new_id"}
 
         """
 
         parent_node = data.get("parentId")
-        parent_node = parent_node if parent_node else self._hierarchy_node
+        parent_node = parent_node if parent_node else self._hierarchy_node_id
         if not parent_node:
             res = {
                 "id": None,
                 "error": {
                     "code": 406,
-                    "message": "Не указан родительский узел."
+                    "message": "Не определён родительский узел."
                 }
             }
+
+            self._logger.error((
+                f"Попытка создания узла {data} "
+                f"в неопределённом месте иерархии."
+            ))
+
             return res
 
-        if not self._check_parent_class(data["parentId"]):
+        if not self._check_parent_class(parent_node):
             res = {
                 "id": None,
                 "error": {
@@ -285,8 +336,15 @@ class ModelCRUDSvc(Svc):
                     "message": "Неприемлемый класс родительского узла."
                 }
             }
+
+            self._logger.error((
+                f"Попытка создания узла {data} "
+                f"в родительском узле неприемлемого класса."
+            ))
+
             return res
 
+        data["objectClass"] = [self._hierarchy_class]
         new_id = self._hierarchy.add(parent_node, data.get("attributes"))
 
         if not new_id:
@@ -297,11 +355,15 @@ class ModelCRUDSvc(Svc):
                     "message": "Ошибка создания узла."
                 }
             }
+
+            self._logger.error(f"Ошибка создания узла {data}")
+
         else:
             res = {
                 "id": new_id,
                 "error": {}
             }
+            self._logger.info(f"Создан новый узел {new_id}")
 
         await self._creating(data, new_id)
 
@@ -332,12 +394,15 @@ class ModelCRUDSvc(Svc):
 
     async def _check_parent_class(self, parent_id: str) -> bool:
         """Метод проверки того, что класс родительского узла
-        соответсвует необходимому. К примеру, тревоги могут создаваться только
+        соответствует необходимому. К примеру, тревоги могут создаваться только
         внутри тегов. То есть при создании новой тревоги мы должны убедиться,
         что класс родительского узла - ``prsTag``.
 
         Список всех возможных классов узлов-родителей указывается
         в конфигурации в переменной ``hierarchy_parent_classes``.
+
+        Если у сущности нет собственного узла в иерархии и
+        ``parent_id == None``, то вернётся ``False``.
 
         Args:
             parent_id (str): идентификатор родительского узла
@@ -345,6 +410,13 @@ class ModelCRUDSvc(Svc):
         Returns:
             bool: True | False
         """
+
+        if not parent_id:
+            return False
+
+        if self._hierarchy_node_id == parent_id:
+            return True
+
         if self._hierarchy_parent_classes:
             if (self._hierarchy.get_node_class(parent_id) in
                 self._hierarchy_parent_classes):
@@ -373,14 +445,15 @@ class ModelCRUDSvc(Svc):
         """Метод проверяет наличие базового узла сущности и, в случае его
         отсутствия, создаёт его.
         """
-        if not self._hierarchy_node:
+        if not self._hierarchy_node_name:
             return
 
-        item = await self._hierarchy.search(scope=CN_SCOPE_ONELEVEL, filter_str=f"(cn={self._hierarchy_node})", attr_list=["entryUUID"])
-        if item:
-            return
+        item = await self._hierarchy.search(scope=CN_SCOPE_ONELEVEL, filter_str=f"(cn={self._hierarchy_node_name})", attr_list=["entryUUID"])
+        if not item:
+            base_node_id = await self._hierarchy.add(attr_vals={"cn": self._hierarchy_node_name})
 
-        await self._hierarchy.add(attr_vals={"cn": self._hierarchy_node})
+        self._hierarchy_node_dn = self._hierarchy.get_node_dn(base_node_id)
+        self._hierarchy_node_id = base_node_id
 
     async def on_startup(self) -> None:
         """Метод, выполняемый при старте приложения:

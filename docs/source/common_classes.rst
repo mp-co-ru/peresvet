@@ -42,3 +42,10 @@
    :members:
    :private-members:
    :show-inheritance:
+
+Модуль ``model_crud_settings``
+------------------------------
+.. automodule:: model_crud_settings
+   :members:
+   :private-members:
+   :show-inheritance:
