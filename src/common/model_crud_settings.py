@@ -3,9 +3,13 @@ from src.common.settings import Settings
 class ModelCRUDSettings(Settings):
 
     # имя exchange'а, который публикует запросы от API_CRUD
-    api_crud_exchange: str = "api_crud"
+    api_crud_exchange_name: str = ""
+    api_crud_exchange_type: str = "direct"
     # имя очереди, которую будут слушать все экземпляры сервиса model_crud
-    api_crud_queue: str = "api_crud"
+    api_crud_queue_name: str = ""
+    # routing_key для очереди
+    api_crud_routing_key: str = ""
+
     # имя узла для хранения сущностей в иерархии
     # пример: tags, objects, ...
     # если узел не требуется, то пустая строка

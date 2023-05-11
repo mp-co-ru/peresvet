@@ -1,3 +1,6 @@
+"""
+Модуль содержит базовый класс ``Svc`` - предок всех сервисов.
+"""
 import asyncio
 from fastapi import FastAPI
 import ldap
@@ -11,6 +14,14 @@ from src.common.settings import Settings
 
 class Svc(FastAPI):
     """
+    Базовый класс ``Svc`` - предок всех классов-сервисов.
+
+    Выполняет две задачи:
+
+    * устанавливает связь с ldap-сервером;
+    * устанавливает связь с amqp-сервером и создаёт обменник для публикации
+      сообщений.
+
     Args:
             settings (Settings): конфигурация приложения см. :class:`settings.Settings`
     """
@@ -35,7 +46,9 @@ class Svc(FastAPI):
         self._amqp_connection: aio_pika.abc.AbstractRobustConnection = None
         self._svc_pub_channel: aio_pika.abc.AbstractRobustChannel = None
         self._svc_pub_exchange: aio_pika.abc.AbstractRobustExchange = None
+        self._svc_pub_exchange_name = settings.pub_exchange_name
         self._svc_pub_exchange_type = settings.pub_exchange_type
+        self._svc_pub_routing_key = settings.pub_routing_key
 
     async def _ldap_connect(self) -> None:
         """Функция соединения с ldap-сервером.
@@ -83,7 +96,7 @@ class Svc(FastAPI):
             self._amqp_connection = await aio_pika.connect_robust(self._amqp_url)
             self._svc_pub_channel = await self._amqp_connection.channel()
             self._svc_pub_exchange = await self._svc_pub_channel.declare_exchange(
-                self._svc_name, self._svc_pub_exchange_type,
+                self._svc_pub_exchange_name, self._svc_pub_exchange_type, durable=True
             )
         except aio_pika.AMQPException as ex:
             self._logger.error(f"Ошибка связи с брокером: {ex}")

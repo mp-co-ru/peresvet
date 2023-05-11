@@ -23,8 +23,9 @@ class ModelCRUDSvc(Svc):
     в иерархической модели.
 
     При запуске подписывается на сообщения
-    обменника с именем, задаваемым в переменной ``api_crud_exchange``,
-    создавая очередь с именем из переменной ``api_crud_queue``.
+    обменника с именем, задаваемым в переменной окружения
+    ``api_crud_exchange_name``,
+    создавая очередь с именем из переменной ``api_crud_queue_name``.
 
     Сообщения, приходящие в эту очередь, создаются сервисом
     ``<сущность>_api_crud``.
@@ -35,7 +36,7 @@ class ModelCRUDSvc(Svc):
 
     Общий формат сообщений, обрабатываемых сервисом:
 
-    .. code::
+    .. code:: json
 
        {
             "action": "create | read | update | delete",
@@ -46,9 +47,15 @@ class ModelCRUDSvc(Svc):
 
     Форматы сообщений:
 
-    **create**, запрос:
+    **create**
 
-    .. code::
+    ``Message.reply_to`` = "имя ключа маршрутизации, с которым будет публиковаться ответ";
+
+    ``Message.correlation_id`` = <идентификатор корреляции>;
+
+    ``Message.body`` =
+
+    .. code:: json
 
         {
             "action": "create",
@@ -61,13 +68,77 @@ class ModelCRUDSvc(Svc):
             }
         }
 
+    В случае отсутствия ключа ``parentId`` в качестве родительского узла
+    принимается базовый ключ сущности в иерархии. Например, для тегов -
+    ``cn=tags,cn=prs``.
+
+    В случае отсутствия в словаре атрибута ``cn``, в качестве значения
+    этого атрибута принимается ``id`` (uuid) вновь созданного узла.
+
+    Если в качестве значения атрибута ``cn`` передан массив значений, то
+    в качестве имени узла принимается первое значение.
+
+    Результат выполнения команды публикуется с ключом маршрутизации из
+    параметра ``message.reply_to`` и идентификатором корреляции
+    ``message.correlation_id`` и имеет формат ``message.body`` в случае
+    успешного создания узла:
+
+    .. code:: json
+
+       {
+            "id": "new_node_id"
+       }
+
+    ...и неудачи при создании:
+
+    .. code:: json
+
+        {
+            "id": null,
+            "error": {
+                "code": 406,
+                "message": "Ошибка создания узла."
+            }
+        }
+
     **read**:
 
-    .. code::
+    ``Message.reply_to`` = "имя ключа маршрутизации, с которым будет публиковаться ответ";
+
+    ``Message.correlation_id`` = <идентификатор корреляции>;
+
+    ``Message.body`` =
+
+    .. code:: json
 
         {
             "action": "read",
+            "data": {
+                "id": ["first_id", "n_id"],
+                "base": "base for search",
+                "deref": true,
+                "scope": 1,
+                "filter": {
+                    "prsActive": [true],
+                    "prsEntityType": [1]
+                },
+                "return": ["cn", "description"]
+            }
+        }
 
+    Результат выполнения команды =
+
+    .. code:: json
+
+        {
+            "data": [
+                {
+                    "id": "node id",
+                    "dn": "node dn",
+                    "attributes": {
+                    }
+                }
+            ]
         }
 
     Args:
@@ -78,8 +149,10 @@ class ModelCRUDSvc(Svc):
     def __init__(self, settings: ModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-        self._api_crud_exchange_name : str = settings.api_crud_exchange
-        self._api_crud_queue_name : str = settings.api_crud_queue
+        self._api_crud_exchange_name: str = settings.api_crud_exchange_name
+        self._api_crud_exchange_type: str = settings.api_crud_exchange_type
+        self._api_crud_queue_name: str = settings.api_crud_queue_name
+        self._api_crud_routing_key: str = settings.api_crud_routing_key
 
         self._hierarchy_node_name : str = settings.hierarchy_node_name
         self._hierarchy_node_dn: str = None
@@ -92,9 +165,9 @@ class ModelCRUDSvc(Svc):
                 object_class.strip() for object_class in classes
             ]
 
-        self._svc_consume_channel: aio_pika.abc.AbstractRobustChannel = None
-        self._svc_consume_exchange: aio_pika.abc.AbstractRobustExchange = None
-        self._svc_consume_queue: aio_pika.abc.AbstractRobustQueue = None
+        self._api_crud_channel: aio_pika.abc.AbstractRobustChannel = None
+        self._api_crud_exchange: aio_pika.abc.AbstractRobustExchange = None
+        self._api_crud_queue: aio_pika.abc.AbstractRobustQueue = None
 
     async def _amqp_connect(self) -> None:
         """Связь с amqp-сервером.
@@ -106,15 +179,19 @@ class ModelCRUDSvc(Svc):
         """
         await super()._amqp_connect()
 
-        self._svc_consume_channel = await self._amqp_connection.channel()
-        self._svc_consume_exchange = await self._svc_consume_channel.declare_exchange(
-            self._api_crud_exchange_name, aio_pika.ExchangeType.FANOUT,
+        self._api_crud_channel = await self._amqp_connection.channel()
+        self._api_crud_exchange = await self._api_crud_channel.declare_exchange(
+            self._api_crud_exchange_name, type=self._api_crud_exchange_type,
+            durable=True
         )
-        self._svc_consume_queue = await self._svc_consume_channel.declare_queue(
+        self._api_crud_queue = await self._api_crud_channel.declare_queue(
             self._api_crud_queue_name, durable=True
         )
-        await self._svc_consume_queue.bind(exchange=self._svc_consume_exchange)
-        await self._svc_consume_queue.consume(self._process_message)
+        await self._api_crud_queue.bind(
+            exchange=self._api_crud_exchange,
+            routing_key=self._api_crud_routing_key
+        )
+        await self._api_crud_queue.consume(self._process_message)
         await asyncio.Future()
 
     async def _process_message(self,
@@ -178,7 +255,7 @@ class ModelCRUDSvc(Svc):
                 await message.ack()
                 return
 
-            await self._svc_consume_exchange.publish(
+            await self._api_crud_exchange.publish(
                 aio_pika.Message(
                     body=res,
                     correlation_id=message.correlation_id,
@@ -205,7 +282,7 @@ class ModelCRUDSvc(Svc):
 
         self._hierarchy.modify(data["id"], data["attributes"])
         self._updating(data)
-        await self._svc_pub_exchange.publish(
+        await self._svc_pub_exchange_name.publish(
             aio_pika.Message(
                 body=f'{{"action": "updated", "id": {data["id"]}}}'.encode(),
                 content_type='application/json',
@@ -235,7 +312,7 @@ class ModelCRUDSvc(Svc):
         for node in ids:
             self._hierarchy.delete(node)
 
-        await self._svc_pub_exchange.publish(
+        await self._svc_pub_exchange_name.publish(
             aio_pika.Message(
                 body=f'{{"action": "deleted", "id": {ids}}}'.encode(),
                 content_type='application/json',
@@ -257,29 +334,57 @@ class ModelCRUDSvc(Svc):
             ids (List[str]): список ``id`` удаляемых узлов.
         """
 
-    async def _read(
-        self, base: str = None,
-        filter_str: str = None,
-        scope: Any = CN_SCOPE_SUBTREE,
-        attr_list: list[str] = None) -> List[tuple]:
-        """Метод поиска узлов и чтения их данных.
+    async def _read(self, mes: dict) -> dict:
+        """Правильность заполнения полей входного сообщения выполняется
+        сервисом ``<сущность>_api_crud``.
 
-        Args:
-            * base (str, optional): Базовый узел для поиска.
-              В случае отсутствия поиск ведётся от вершины всей иерархии.
-            * filter_str (str, optional): Фильтр поиска.
-            * scope (Any, optional): Уровень поиска:
-              0 - используется для чтения параметров одного узла;
-              1 - поиск среди непосредственных потомков узла;
-              2 - поиск по всему дереву.
-            * attr_list (list[str], optional): Список атрибутов для возврата.
+        **mes**(dict) -
+
+            .. code:: json
+
+                {
+                    "action": "read",
+                    "data": {
+                        "id": ["first_id", "n_id"],
+                        "base": "base for search",
+                        "deref": true,
+                        "scope": 1,
+                        "filter": {
+                            "prsActive": [true],
+                            "prsEntityType": [1]
+                        },
+                        "return": ["cn", "description"]
+                    }
+                }
 
         Returns:
-            List[Tuple]: [(id, dn, attrs), ...]
+            dict: словарь из найденных объектов
+
+            .. code:: json
+
+                {
+                    "data": [
+                        {
+                            "id": "node id",
+                            "attributes": {
+                                "cn": ["name"],
+                                "description": ["some description"]
+                            }
+                        }
+                    ]
+                }
         """
-        return self._hierarchy.search(
-            base=base, filter_str=filter_str, scope=scope, attr_list=attr_list
-        )
+
+        res = {
+            "data": []
+        }
+        for id_, _, attributes in await self._hierarchy.search(mes["data"]):
+            res["data"].append({
+                "id": id_,
+                "attributes": attributes
+            })
+
+        return res
 
     async def _create(self, data: dict) -> dict:
         """Метод создаёт новый экземпляр сущности в иерархии.
@@ -367,7 +472,7 @@ class ModelCRUDSvc(Svc):
 
         await self._creating(data, new_id)
 
-        await self._svc_pub_exchange.publish(
+        await self._svc_pub_exchange_name.publish(
             aio_pika.Message(
                 body=f'{{"action": "created", "id": {new_id}}}'.encode(),
                 content_type='application/json',

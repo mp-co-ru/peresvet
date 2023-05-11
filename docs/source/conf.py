@@ -107,7 +107,7 @@ texinfo_documents = [
 # -- Options for todo extension ----------------------------------------------
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
-todo_include_todos = False
+todo_include_todos = True
 
 html_logo = "pics/logo_middle_text.png"
 html_theme_options = {

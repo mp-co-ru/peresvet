@@ -19,6 +19,7 @@ class Hierarchy:
     """Класс для работы с иерархической моделью.
 
     Args:
+
         url (str): URL для связи с ldap-сервером;
         pool_size (int, optional): размер пула коннектов. По умолчанию - 10.
 
@@ -121,44 +122,123 @@ class Hierarchy:
 
         self._base = ldap_url.dn
 
-    async def search(self, base: str = None, filter_str: str = None,
-        scope: Any = CN_SCOPE_SUBTREE,
-        attr_list: list[str] = None) -> List[Tuple]:
-        """Метод-генератор возвращает результат поиска узлов в иерархии.
+    @staticmethod
+    def __form_filterstr(filter_attributes: dict) -> str:
+        """Метод формирует из переданных данных строку фильтра для поиска узлов
+        в иерархии
+
+        Args:
+            filter_attributes (dict): атрибуты со значениями, по которым
+            строится фильтр.
+            См. :py:func:`hierarchy.Hierarchy.search`
+
+        Returns:
+            str: строка фильтра
+        """
+
+        filterstr = ""
+        for key, values in filter_attributes.items():
+            sub_filter = ""
+            for value in values:
+                sub_filter = f"{sub_filter}({key}={value})"
+            if filterstr:
+                filterstr = f"{filterstr}(|{sub_filter})"
+            else:
+                filterstr = f"(|{sub_filter})"
+
+        filterstr = f"(&{filterstr})"
+
+        return filterstr
+
+    async def search(self, payload: dict) -> List[Tuple]:
+        """Метод-генератор поиска узлов и чтения их данных.
+
         Результат - массив кортежей. Каждый кортеж состоит из трёх элементов:
         `id` узла (entryUUID), `dn` узла, словарь из атрибутов и их значений.
 
-        Идентификатором экземпляра сущности (то есть любого узла) в иерархии,
-        используемым в платформе, является его entryUUID.
-        Поэтому аргумент `base` может принимать следующие значения:
-
-        None - поиск ведётся от главного узла иерархии, задаваемого при её
-               создании;
-        uid  - в этом случае сначала ищется узел с указанным uid, затем от
-               него ведётся поиск;
-        dn   - поиск ведётся от указанного dn.
-
         Args:
-            base (str): None | uid | dn
-            scope (Any): уровень поиска
-            filter (str): строка фильтра поиска
-            attr_list (list[str]): список возвращаемых атрибутов
+            payload(dict) -
+
+                .. code:: json
+
+                    {
+                        "id": ["first_id", "n_id"],
+                        "base": "base for search",
+                        "deref": true,
+                        "scope": 1,
+                        "filter": {
+                            "prsActive": [true],
+                            "prsEntityType": [1]
+                        },
+                        "return": ["cn", "description"]
+                        }
+                    }
+
+                * id
+                    список идентификаторов узлов, данные по которым
+                    необходимо получить; если присутствует, то не учитываются ключи
+                    ``base``, ``scope``, ``attributes``; по умолчанию - None;
+                * base
+                    id (uuid) или dn базового узла, от которого
+                    вести поиск;
+                    в случае отстутствия поиск ведётся от корня иерархии; по
+                    умолчанию - None;
+                * deref
+                    флаг разъименования ссылок; по умолчанию - False;
+                    .. todo:: Реализовать поведение флага ``deref``.
+                * scope
+                    масштаб поиска; возможные значения:
+
+                    * 0 - возвращает данные по одному, указанному в ``base`` узлу;
+                    * 1 - поиск среди непосредственных потомков узла;
+                    * 2 - поиск по всему дереву;
+
+                * filter
+                    данные для формирования фильтра поиска; ``filter``
+                    представляет собой словарь, ключами в котором являются имена
+                    атрибутов, а значениями - массивы значений; фильтр формируется
+                    так: значения атрибутов из массивов объединяются операцией
+                    ``или``, а сами ключи - операцией ``и``;
+                    например, если ключ ``filter`` =
+
+                    .. code:: json
+
+                        {
+                            "cn": ["first", "second"],
+                            "prsEntityType": [2, 3]
+                        }
+
+                    то будет сформирована такая строка фильтра:
+                    ``(&(|(cn=first)(cn=second))(|(prsEntityType=1)(prsEntityType=2)))
+                * return
+                    список атрибутов, значения которых необходимо
+                    вернуть; по умолчанию - ['*']
+
 
         Returns:
-            List[Tuple]: [(id, dn, attrs)]
+            List[Tuple]: [(id, dn, attributes)]
         """
 
-        if not attr_list:
-            attr_list = ['*']
+        if payload["id"]:
+            filterstr = Hierarchy.__form_filterstr({
+                "entryUUID": payload["id"]
+            })
+        else:
+            filterstr = Hierarchy.__form_filterstr(payload["filter"])
 
-        attr_list.append('entryUUID')
+        base = payload.get("base", None)
+        scope = payload.get("scope", CN_SCOPE_SUBTREE)
+        #deref = payload.get("deref", True)
+        return_attributes = payload.get("return", ['*'])
+        return_attributes.append('entryUUID')
 
         with self._cm.connection() as conn:
 
             node = await self.get_node_dn(base)
 
             res = conn.search_s(base=node, scope=scope,
-                                filterstr=filter_str,attrlist=attr_list)
+                filterstr=filterstr, attrlist=return_attributes)
+
             for item in res:
                 item = (item[1]['entryUUID'], item[0], {
                     key: [value.decode() for value in values] for key, values in item[1]
