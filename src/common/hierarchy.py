@@ -209,24 +209,23 @@ class Hierarchy:
                         }
 
                     то будет сформирована такая строка фильтра:
-                    ``(&(|(cn=first)(cn=second))(|(prsEntityType=1)(prsEntityType=2)))
+                    ``(&(|(cn=first)(cn=second))(|(prsEntityType=1)(prsEntityType=2)))``
                 * return
                     список атрибутов, значения которых необходимо
-                    вернуть; по умолчанию - ['*']
+                    вернуть; по умолчанию - ``['*']``
 
 
         Returns:
             List[Tuple]: [(id, dn, attributes)]
         """
 
-        if payload["id"]:
-            filterstr = Hierarchy.__form_filterstr({
-                "entryUUID": payload["id"]
-            })
+        ids = payload.get("id")
+        if ids:
+            filterstr = Hierarchy.__form_filterstr({"entryUUID": ids})
         else:
             filterstr = Hierarchy.__form_filterstr(payload["filter"])
 
-        base = payload.get("base", None)
+        base = payload.get("base")
         scope = payload.get("scope", CN_SCOPE_SUBTREE)
         #deref = payload.get("deref", True)
         return_attributes = payload.get("return", ['*'])

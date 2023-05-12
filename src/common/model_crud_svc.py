@@ -338,24 +338,25 @@ class ModelCRUDSvc(Svc):
         """Правильность заполнения полей входного сообщения выполняется
         сервисом ``<сущность>_api_crud``.
 
-        **mes**(dict) -
+        Args:
+            mes(dict):
 
-            .. code:: json
+                .. code:: json
 
-                {
-                    "action": "read",
-                    "data": {
-                        "id": ["first_id", "n_id"],
-                        "base": "base for search",
-                        "deref": true,
-                        "scope": 1,
-                        "filter": {
-                            "prsActive": [true],
-                            "prsEntityType": [1]
-                        },
-                        "return": ["cn", "description"]
+                    {
+                        "action": "read",
+                        "data": {
+                            "id": ["first_id", "n_id"],
+                            "base": "base for search",
+                            "deref": true,
+                            "scope": 1,
+                            "filter": {
+                                "prsActive": [true],
+                                "prsEntityType": [1]
+                            },
+                            "return": ["cn", "description"]
+                        }
                     }
-                }
 
         Returns:
             dict: словарь из найденных объектов
@@ -373,6 +374,7 @@ class ModelCRUDSvc(Svc):
                         }
                     ]
                 }
+
         """
 
         res = {
