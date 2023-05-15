@@ -30,5 +30,7 @@ class TagsModelCRUDSettings(ModelCRUDSettings):
         #: класс экзмепляров сущности в иерархии
         "class": "prsTag",
         #: список через запятую родительских классов
-        "parent_classes": "prsObject"
+        "parent_classes": "prsObject",
+        #: флаг создания узла ``cn=system`` внутри узла экземпляра сущности
+        "create_sys_node": True
     }
