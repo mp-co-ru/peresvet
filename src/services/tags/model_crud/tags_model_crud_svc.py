@@ -1,4 +1,5 @@
 import src.common.model_crud_svc as model_crud
+from .tags_model_crud_settings import TagsModelCRUDSettings
 
 class TagsModelCRUD(model_crud.ModelCRUDSvc):
     """Сервис работы с тегами в иерархии.
@@ -10,3 +11,6 @@ class TagsModelCRUD(model_crud.ModelCRUDSvc):
     Формат ожидаемых сообщений
 
     """
+
+    def __init__(self, settings: TagsModelCRUDSettings, *args, **kwargs):
+        super().__init__(settings, *args, **kwargs)

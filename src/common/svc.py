@@ -2,6 +2,7 @@
 Модуль содержит базовый класс ``Svc`` - предок всех сервисов.
 """
 import asyncio
+from functools import cached_property
 from fastapi import FastAPI
 import ldap
 
@@ -38,17 +39,17 @@ class Svc(FastAPI):
 
         super().__init__(*args, **kwargs)
 
-        self._svc_name = settings.svc_name
-        self._amqp_url = settings.amqp_url
+        self._conf = settings
         self._logger = PrsLogger.make_logger()
         self._hierarchy = Hierarchy(settings.ldap_url)
 
         self._amqp_connection: aio_pika.abc.AbstractRobustConnection = None
-        self._svc_pub_channel: aio_pika.abc.AbstractRobustChannel = None
-        self._svc_pub_exchange: aio_pika.abc.AbstractRobustExchange = None
-        self._svc_pub_exchange_name = settings.pub_exchange_name
-        self._svc_pub_exchange_type = settings.pub_exchange_type
-        self._svc_pub_routing_key = settings.pub_routing_key
+        self._amqp_channel: aio_pika.abc.AbstractRobustChannel = None
+        self._pub_exchange: aio_pika.abc.AbstractRobustExchange = None
+
+    @cached_property
+    def _config(self):
+        return self._conf
 
     async def _ldap_connect(self) -> None:
         """Функция соединения с ldap-сервером.
@@ -93,10 +94,11 @@ class Svc(FastAPI):
             None
         """
         try:
-            self._amqp_connection = await aio_pika.connect_robust(self._amqp_url)
-            self._svc_pub_channel = await self._amqp_connection.channel()
-            self._svc_pub_exchange = await self._svc_pub_channel.declare_exchange(
-                self._svc_pub_exchange_name, self._svc_pub_exchange_type, durable=True
+            self._amqp_connection = await aio_pika.connect_robust(self._config["amqp_url"])
+            self._amqp_channel = await self._amqp_connection.channel()
+            self._pub_exchange = await self._amqp_channel.declare_exchange(
+                self._config.pub_exchange["name"],
+                self._config.pub_exchange["type"], durable=True
             )
         except aio_pika.AMQPException as ex:
             self._logger.error(f"Ошибка связи с брокером: {ex}")
@@ -114,5 +116,5 @@ class Svc(FastAPI):
         """Функция, выполняемая при остановке сервиса: разрывается связь
         с ldap- и amqp-серверами.
         """
-        await self._svc_pub_channel.close()
+        await self._amqp_channel.close()
         await self._amqp_connection.close()

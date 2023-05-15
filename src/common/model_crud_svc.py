@@ -149,23 +149,14 @@ class ModelCRUDSvc(Svc):
     def __init__(self, settings: ModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-        self._api_crud_exchange_name: str = settings.api_crud_exchange_name
-        self._api_crud_exchange_type: str = settings.api_crud_exchange_type
-        self._api_crud_queue_name: str = settings.api_crud_queue_name
-        self._api_crud_routing_key: str = settings.api_crud_routing_key
-
-        self._hierarchy_node_name : str = settings.hierarchy_node_name
-        self._hierarchy_node_dn: str = None
-        self._hierarchy_node_id: str = None
-        self._hierarchy_class : str = settings.hierarchy_class
-        self._hierarchy_parent_classes = []
-        if settings.hierarchy_parent_classes:
-            classes = settings.hierarchy_parent_classes.split(",")
-            self._hierarchy_parent_classes = [
+        self._conf.hierarchy["node_dn"]: str = None
+        self._conf.hierarchy["node_id"]: str = None
+        if settings._conf.hierarchy["parent_classes"]:
+            classes = settings._conf.hierarchy["parent_classes"].split(",")
+            self._conf.hierarchy["parent_classes"] = [
                 object_class.strip() for object_class in classes
             ]
 
-        self._api_crud_channel: aio_pika.abc.AbstractRobustChannel = None
         self._api_crud_exchange: aio_pika.abc.AbstractRobustExchange = None
         self._api_crud_queue: aio_pika.abc.AbstractRobustQueue = None
 
@@ -179,17 +170,18 @@ class ModelCRUDSvc(Svc):
         """
         await super()._amqp_connect()
 
-        self._api_crud_channel = await self._amqp_connection.channel()
-        self._api_crud_exchange = await self._api_crud_channel.declare_exchange(
-            self._api_crud_exchange_name, type=self._api_crud_exchange_type,
+        self._api_crud_exchange = await self._amqp_channel.declare_exchange(
+            self._config.api_crud_exchange["name"],
+            type=self._config.api_crud_exchange["type"],
             durable=True
         )
-        self._api_crud_queue = await self._api_crud_channel.declare_queue(
-            self._api_crud_queue_name, durable=True
+        self._api_crud_queue = await self._amqp_channel.declare_queue(
+            self._config.api_crud_exchange["queue_name"],
+            durable=True
         )
         await self._api_crud_queue.bind(
             exchange=self._api_crud_exchange,
-            routing_key=self._api_crud_routing_key
+            routing_key=self._config.api_crud_exchange["routing_key"]
         )
         await self._api_crud_queue.consume(self._process_message)
         await asyncio.Future()
@@ -282,13 +274,13 @@ class ModelCRUDSvc(Svc):
 
         self._hierarchy.modify(data["id"], data["attributes"])
         self._updating(data)
-        await self._svc_pub_exchange_name.publish(
+        await self._pub_exchange.publish(
             aio_pika.Message(
                 body=f'{{"action": "updated", "id": {data["id"]}}}'.encode(),
                 content_type='application/json',
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             ),
-            routing_key="*"
+            routing_key=self._config.pub_exchange["routing_key"]
         )
         self._logger.info(f'Узел {data["id"]} обновлён.')
 
@@ -312,13 +304,13 @@ class ModelCRUDSvc(Svc):
         for node in ids:
             self._hierarchy.delete(node)
 
-        await self._svc_pub_exchange_name.publish(
+        await self._pub_exchange.publish(
             aio_pika.Message(
                 body=f'{{"action": "deleted", "id": {ids}}}'.encode(),
                 content_type='application/json',
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             ),
-            routing_key="*"
+            routing_key=self._config.pub_exchange["routing_key"]
         )
         self._logger.info(f'Узлы {ids} удалены.')
 
@@ -418,7 +410,7 @@ class ModelCRUDSvc(Svc):
         """
 
         parent_node = data.get("parentId")
-        parent_node = parent_node if parent_node else self._hierarchy_node_id
+        parent_node = parent_node if parent_node else self._config.hierarchy["node_id"]
         if not parent_node:
             res = {
                 "id": None,
@@ -451,7 +443,7 @@ class ModelCRUDSvc(Svc):
 
             return res
 
-        data["objectClass"] = [self._hierarchy_class]
+        data["objectClass"] = self._config.hierarchy["class"]
         new_id = self._hierarchy.add(parent_node, data.get("attributes"))
 
         if not new_id:
@@ -472,15 +464,19 @@ class ModelCRUDSvc(Svc):
             }
             self._logger.info(f"Создан новый узел {new_id}")
 
+        # при необходимости создадим узел ``system``
+        if self._config.hierarchy["create_sys_node"]:
+            await self._hierarchy.add(new_id, {"cn": ["system"]})
+
         await self._creating(data, new_id)
 
-        await self._svc_pub_exchange_name.publish(
+        await self._pub_exchange.publish(
             aio_pika.Message(
                 body=f'{{"action": "created", "id": {new_id}}}'.encode(),
                 content_type='application/json',
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             ),
-            routing_key="*"
+            routing_key=self._config.pub_exchange["routing_key"]
         )
 
         return res
@@ -521,46 +517,35 @@ class ModelCRUDSvc(Svc):
         if not parent_id:
             return False
 
-        if self._hierarchy_node_id == parent_id:
+        if self._config.hierarchy["node_id"] == parent_id:
             return True
 
-        if self._hierarchy_parent_classes:
+        if self._config.hierarchy["parent_classes"]:
             if (self._hierarchy.get_node_class(parent_id) in
-                self._hierarchy_parent_classes):
+                self._config.hierarchy["parent_classes"]):
                 return True
 
         return False
-
-    async def _update(self, data: dict) -> None:
-        """Метод обновляет узел в иерархии.
-
-        В случае, если в ``data`` есть ключ ``parentId``, то узел будет
-        перемещён по иерархии. При этом если ``parentId == None``, то узел
-        будет перемещён в базовый узел сущности.
-
-        Пример: допустим, мы изменяем тег, принадлежащий объекту и в параметрах
-        команды ``update`` указываем ``parentId = None``. В этом случае тег
-        будет перемещён из-под узла объекта в базовый узел сущности тег:
-        ``cn=tags,cn=prs``.
-
-        Args:
-            data (dict): новые параметры узла.
-        """
-        await self._hierarchy.modify(data["id"], data["attributes"])
 
     async def _check_hierarchy_node(self) -> None:
         """Метод проверяет наличие базового узла сущности и, в случае его
         отсутствия, создаёт его.
         """
-        if not self._hierarchy_node_name:
+        if not self._config.hierarchy["node_name"]:
             return
 
-        item = await self._hierarchy.search(scope=CN_SCOPE_ONELEVEL, filter_str=f"(cn={self._hierarchy_node_name})", attr_list=["entryUUID"])
+        item = await self._hierarchy.search(
+            scope=CN_SCOPE_ONELEVEL,
+            filter_str=f"(cn={self._config.hierarchy['node_name']})",
+            attr_list=["entryUUID"]
+        )
         if not item:
-            base_node_id = await self._hierarchy.add(attr_vals={"cn": self._hierarchy_node_name})
+            base_node_id = await self._hierarchy.add(
+                attr_vals={"cn": self._config.hierarchy["node_name"]}
+            )
 
-        self._hierarchy_node_dn = self._hierarchy.get_node_dn(base_node_id)
-        self._hierarchy_node_id = base_node_id
+        self._config.hierarchy["node_dn"] = self._hierarchy.get_node_dn(base_node_id)
+        self._config.hierarchy["node_id"] = base_node_id
 
     async def on_startup(self) -> None:
         """Метод, выполняемый при старте приложения:

@@ -260,6 +260,10 @@ class Hierarchy:
             attrs = {
             key: values if isinstance(values, list) else [values] for key, values in attr_vals.items()
         }
+
+        if "objectClass" not in attrs.keys():
+            attrs["objectClass"] = ["prsModelNode"]
+
         rename_node = False
         if not attrs.get("cn"):
             rename_node = True
