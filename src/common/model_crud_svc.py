@@ -184,7 +184,6 @@ class ModelCRUDSvc(Svc):
             routing_key=self._config.api_crud_exchange["routing_key"]
         )
         await self._api_crud_queue.consume(self._process_message)
-        await asyncio.Future()
 
     async def _process_message(self,
             message: aio_pika.abc.AbstractIncomingMessage
