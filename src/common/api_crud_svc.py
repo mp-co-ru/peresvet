@@ -5,7 +5,7 @@
 """
 import asyncio
 import json
-from typing import Annotated
+from typing import Annotated, List
 from collections.abc import MutableMapping
 from uuid import UUID, uuid4
 from pydantic import BaseModel, Field, validator
@@ -61,7 +61,7 @@ class NodeCreate(BaseModel):
     parentId: str = Field(None, title="Id родительского узла",
         description=(
             "Идентификатор родительского узла. "
-            "Исли используется в команде создания узла, то в случае "
+            "Если используется в команде создания узла, то в случае "
             "отсутствия экзмепляр создаётся в базовом для данной "
             "сущности узле. "
             "При использовании в команде изменения узла трактуется как новый "
@@ -76,13 +76,13 @@ class NodeCreate(BaseModel):
             try:
                 UUID(v)
             except ValueError as ex:
-                raise ValueError('parentId должен быть в виде uuid') from ex
+                raise ValueError(f'parentId {v} должен быть в виде GUID') from ex
         return v
 
 class NodeDelete(BaseModel):
-    id: str = Field(title="Идентификатор узла.",
+    id: str | List[str] = Field(title="Идентификатор узла.",
         description=(
-            "Идентификатор удаляемого(изменяемого) узла "
+            "Идентификатор(-ы) удаляемого(изменяемого) узла "
             "должен быть в виде uuid."
         )
     )
@@ -91,13 +91,89 @@ class NodeDelete(BaseModel):
     @validator('id')
     def id_must_be_uuid(cls, v):
         try:
-            UUID(v)
-        except ValueError as ex:
-            raise ValueError('id должен быть в виде uuid') from ex
-        return v
+            values = []
+            if isinstance(v, str):
+                values.append(v)
+            else:
+                values = v
 
-class NodeUpdate(NodeCreate, NodeDelete):
-    pass
+            for val in values:
+                UUID(val)
+        except ValueError as ex:
+            raise ValueError(f'Id узла {val} должен быть в виде GUID') from ex
+        return values
+
+class NodeUpdate(NodeCreate):
+    """Базовый класс для изменения узла
+    """
+    id: str = Field(title="Идентификатор изменяемого узла.",
+                    description="Должен быть в формате GUID.")
+
+    @classmethod
+    @validator('id')
+    def id_must_be_uuid(cls, v):
+        try:
+            values = []
+            if isinstance(v, str):
+                values.append(v)
+            else:
+                values = v
+
+            for val in values:
+                UUID(val)
+        except ValueError as ex:
+            raise ValueError(f'Id узла {val} должен быть в виде GUID') from ex
+        return values
+
+class NodeRead(BaseModel):
+    id: str | List[str] = Field(
+        None,
+        title="Идентификатор(-ы) узлов.",
+        description=(
+            "Если уазан(-ы), то возвращаются данные по указанному(-ым) "
+            "узлам. В этом случае ключи `scope`, `filter` не принимаются во "
+            "внимание."
+        )
+    )
+    base: str = Field(
+        None,
+        title="Базовый узел для поиска.",
+        description="Если не указан, то поиск ведётся от главного узла иерархии."
+    )
+    deref: bool = Field(
+        True,
+        title="Флаг разыменования ссылок.",
+        description="По умолчанию = true."
+    )
+    scope: int = Field(
+        2,
+        title="Масштаб поиска.",
+        description=(
+            "0 - получение данных по указанному в ключе `base` узлу;"
+            "1 - поиск среди непосредственных потомков указанного в `base` узла;"
+            "2 - поиск по всему дереву, начиная с указанного в `base` узла."
+        )
+    )
+    filter: dict = Field(
+         None,
+         title=(
+            "Словарь из атрибутов и их значений, из "
+            "которых формируется фильтр для поиска."
+         ),
+         description=(
+            "Значения одного атрибута объединяются логической операцией `ИЛИ`, "
+            "затем значения для разных атрибутов объединяются операцией `И`."
+         )
+    )
+    attributes: List[str] = Field(
+        ["*"],
+        title="Список атрибутов.",
+        description=(
+            "Список атрибутов, значения которых необходимо вернуть "
+            "в ответе. По умолчанию - ['*'], то есть все атрибуты "
+            "(кроме системных)."
+        )
+    )
 
 class APICRUDSvc(Svc):
 
@@ -149,7 +225,7 @@ class APICRUDSvc(Svc):
 
         return await future
 
-    async def create(self, payload: Annotated[NodeCreate, Depends()]) -> dict:
+    async def create(self, payload: NodeCreate) -> dict:
         body = {
             "action": "create",
             "data": payload.dict()
@@ -157,7 +233,7 @@ class APICRUDSvc(Svc):
 
         return await self._post_message(mes=body, reply=True)
 
-    async def update(self, payload: Annotated[NodeUpdate, Depends()]) -> dict:
+    async def update(self, payload: NodeUpdate) -> dict:
         body = {
             "action": "update",
             "data": payload.dict()
@@ -165,7 +241,7 @@ class APICRUDSvc(Svc):
 
         return await self._post_message(mes=body, reply=False)
 
-    async def read(self, payload: Annotated[NodeRead, Depends()]) -> dict:
+    async def read(self, payload: NodeRead) -> dict:
         body = {
             "action": "read",
             "data": payload.dict()
@@ -173,7 +249,7 @@ class APICRUDSvc(Svc):
 
         return await self._post_message(mes=body, reply=True)
 
-    async def delete(self, payload: Annotated[NodeDelete, Depends()]) -> dict:
+    async def delete(self, payload: NodeDelete) -> dict:
         body = {
             "action": "delete",
             "data": payload.dict()

@@ -122,7 +122,7 @@ class ModelCRUDSvc(Svc):
                     "prsActive": [true],
                     "prsEntityType": [1]
                 },
-                "return": ["cn", "description"]
+                "attributes": ["cn", "description"]
             }
         }
 
@@ -345,7 +345,7 @@ class ModelCRUDSvc(Svc):
                                 "prsActive": [true],
                                 "prsEntityType": [1]
                             },
-                            "return": ["cn", "description"]
+                            "attributes": ["cn", "description"]
                         }
                     }
 

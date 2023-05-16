@@ -170,7 +170,7 @@ class Hierarchy:
                             "prsActive": [true],
                             "prsEntityType": [1]
                         },
-                        "return": ["cn", "description"]
+                        "attributes": ["cn", "description"]
                         }
                     }
 
@@ -210,7 +210,7 @@ class Hierarchy:
 
                     то будет сформирована такая строка фильтра:
                     ``(&(|(cn=first)(cn=second))(|(prsEntityType=1)(prsEntityType=2)))``
-                * return
+                * attributes
                     список атрибутов, значения которых необходимо
                     вернуть; по умолчанию - ``['*']``
 
@@ -228,7 +228,7 @@ class Hierarchy:
         base = payload.get("base")
         scope = payload.get("scope", CN_SCOPE_SUBTREE)
         #deref = payload.get("deref", True)
-        return_attributes = payload.get("return", ['*'])
+        return_attributes = payload.get("attributes", ['*'])
         return_attributes.append('entryUUID')
 
         with self._cm.connection() as conn:
