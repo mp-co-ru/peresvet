@@ -377,7 +377,12 @@ class ModelCRUDSvc(Svc):
                 "attributes": attributes
             })
 
-        return res
+        return await self._reading(mes, res)
+
+    async def _reading(self, data: dict, search_result: dict) -> dict:
+        """Метод переопределяется в классах-потомках, чтобы
+        расширять результат поиска дополнительной информацией.
+        """
 
     async def _create(self, data: dict) -> dict:
         """Метод создаёт новый экземпляр сущности в иерархии.

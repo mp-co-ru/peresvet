@@ -26,10 +26,12 @@
     :members:
     :show-inheritance:
 
+
 Модуль ``api_crud_svc``
 """""""""""""""""""""""
 .. automodule:: api_crud_svc
     :members:
+    :show-inheritance:
 
 Модуль ``model_crud_svc``
 """""""""""""""""""""""""

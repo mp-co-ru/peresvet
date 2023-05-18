@@ -1,7 +1,7 @@
-"""Модуль не содержит класса APICRUDSvc, так как все необходимые методы
-реализованы в рамках базового класса :py:class:`svc.Svc`.
-
-Модуль содержит классы, описывающие форматы входных данных для команд.
+"""
+Модуль содержит классы, описывающие форматы входных данных для команд,
+а также класс APICRUDSvc - базовый класс для всех сервисов
+<сущность>_api_crud.
 """
 import asyncio
 import json
@@ -11,15 +11,31 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, Field, validator
 from aio_pika import Message
 import aio_pika.abc
-from fastapi import Depends
+from fastapi import APIRouter
 
 from svc import Svc
-from settings import Settings
+from api_settings import APICRUDSettings
+
+def valid_uuid(id: str | List[str]) -> str | List[str]:
+    """Валидатор идентификаторов.
+    Идентификатор должен быть в виде GUID.
+    """
+    if id is not None:
+        try:
+            if isinstance(id, str):
+                UUID(id)
+            else:
+                for item in id:
+                    UUID(item)
+        except ValueError as ex:
+            raise ValueError('id должен быть в виде GUID') from ex
+    return id
+
 
 class NodeCreateAttributes(BaseModel):
     """Атрибуты для создания базового узла.
     """
-    cn: str = Field(title="Имя узла")
+    cn: str = Field(None, title="Имя узла")
     description: str = Field(None, title="Описание",
         description="Описание экземпляра.")
     prsJsonConfigString: str = Field(None, title="Конфигурация экземпляра.",
@@ -69,17 +85,12 @@ class NodeCreate(BaseModel):
         ))
     attributes: NodeCreateAttributes = Field(title="Атрибуты узла")
 
-    @classmethod
-    @validator('parentId', check_fields=False)
-    def parentId_must_be_uuid_or_none(cls, v):
-        if v is not None:
-            try:
-                UUID(v)
-            except ValueError as ex:
-                raise ValueError(f'parentId {v} должен быть в виде GUID') from ex
-        return v
+    validate_id = validator('parentId', allow_reuse=True)(valid_uuid)
 
 class NodeDelete(BaseModel):
+    """Базовый класс, описывающий параметры
+    команды для удаления узла.
+    """
     id: str | List[str] = Field(title="Идентификатор узла.",
         description=(
             "Идентификатор(-ы) удаляемого(изменяемого) узла "
@@ -87,21 +98,7 @@ class NodeDelete(BaseModel):
         )
     )
 
-    @classmethod
-    @validator('id')
-    def id_must_be_uuid(cls, v):
-        try:
-            values = []
-            if isinstance(v, str):
-                values.append(v)
-            else:
-                values = v
-
-            for val in values:
-                UUID(val)
-        except ValueError as ex:
-            raise ValueError(f'Id узла {val} должен быть в виде GUID') from ex
-        return values
+    validate_id = validator('id', allow_reuse=True)(valid_uuid)
 
 class NodeUpdate(NodeCreate):
     """Базовый класс для изменения узла
@@ -109,23 +106,13 @@ class NodeUpdate(NodeCreate):
     id: str = Field(title="Идентификатор изменяемого узла.",
                     description="Должен быть в формате GUID.")
 
-    @classmethod
-    @validator('id')
-    def id_must_be_uuid(cls, v):
-        try:
-            values = []
-            if isinstance(v, str):
-                values.append(v)
-            else:
-                values = v
-
-            for val in values:
-                UUID(val)
-        except ValueError as ex:
-            raise ValueError(f'Id узла {val} должен быть в виде GUID') from ex
-        return values
+    validate_id = validator('parentId', 'id', allow_reuse=True)(valid_uuid)
 
 class NodeRead(BaseModel):
+    """Базовый класс, описывающий параметры для команды
+    поиска/чтения узлов.
+    """
+
     id: str | List[str] = Field(
         None,
         title="Идентификатор(-ы) узлов.",
@@ -175,13 +162,29 @@ class NodeRead(BaseModel):
         )
     )
 
+    validate_id = validator('id', 'base', allow_reuse=True)(valid_uuid)
+
+class NodeCreateResult(BaseModel):
+    """Результат выполнения команды создания узла.
+    """
+    id: str
+
+
+class OneNodeInReadResult(BaseModel):
+    id: str = Field(title="Id узла.")
+    attributes: dict = Field(title="Атрибуты узла")
+
+class NodeReadResult(BaseModel):
+    data: List[OneNodeInReadResult] = Field(title="Список узлов")
+
 class APICRUDSvc(Svc):
 
     _callback_queue: aio_pika.abc.AbstractRobustQueue
 
-    def __init__(self, settings: Settings, *args, **kwargs):
+    def __init__(self, settings: APICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
+        self.api_version = settings.api_version
         self._callback_futures: MutableMapping[str, asyncio.Future] = {}
 
 

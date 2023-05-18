@@ -1,6 +1,7 @@
-from src.common.settings import Settings
+from src.common.api_settings import APICRUDSettings
 
-class TagsAPICRUDSettings(Settings):
+class TagsAPICRUDSettings(APICRUDSettings):
+
     #: имя сервиса. сервисы *_mod_crud создают в иерархии узел с таким же именем
     svc_name: str = "tags_api_crud"
     #: строка коннекта к RabbitMQ
