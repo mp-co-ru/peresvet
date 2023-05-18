@@ -113,11 +113,11 @@ class TagCreate(svc.NodeCreate):
     validate_id = validator('parentId', 'dataStorageId', 'connectorId', allow_reuse=True)(svc.valid_uuid)
 
 class TagRead(svc.NodeRead):
-    getDataStorage: bool = Field(
+    getDataStorageId: bool = Field(
         False,
         title="Флаг возврата id хранилища данных."
     )
-    getDataSource: bool = Field(
+    getDataSourceId: bool = Field(
         False,
         title="Флаг возврата id источника данных."
     )

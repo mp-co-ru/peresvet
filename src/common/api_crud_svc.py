@@ -91,7 +91,7 @@ class NodeDelete(BaseModel):
     """Базовый класс, описывающий параметры
     команды для удаления узла.
     """
-    id: str | List[str] = Field(title="Идентификатор узла.",
+    id: str | List[str] = Field(title="Идентификатор(-ы) узла.",
         description=(
             "Идентификатор(-ы) удаляемого(изменяемого) узла "
             "должен быть в виде uuid."
@@ -99,6 +99,13 @@ class NodeDelete(BaseModel):
     )
 
     validate_id = validator('id', allow_reuse=True)(valid_uuid)
+
+    @validator('id')
+    @classmethod
+    def make_id_as_array(cls, v: str | List[str]) -> List[str]:
+        if isinstance(v, str):
+            return [v]
+        return v
 
 class NodeUpdate(NodeCreate):
     """Базовый класс для изменения узла
@@ -168,7 +175,6 @@ class NodeCreateResult(BaseModel):
     """Результат выполнения команды создания узла.
     """
     id: str
-
 
 class OneNodeInReadResult(BaseModel):
     id: str = Field(title="Id узла.")

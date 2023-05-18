@@ -75,13 +75,6 @@ class Hierarchy:
 
             return res[0][0]
 
-        try:
-            UUID(node)
-
-
-        except ValueError as _:
-            return node
-
     def _is_node_id_uuid(self, node: str) -> bool:
         """Проверка того, что идентификатор узла
         имеет формат UUID.
@@ -150,6 +143,7 @@ class Hierarchy:
 
         return filterstr
 
+    #TODO: return not List, but one tuple, because it is a generator
     async def search(self, payload: dict) -> List[Tuple]:
         """Метод-генератор поиска узлов и чтения их данных.
 
@@ -227,11 +221,18 @@ class Hierarchy:
 
         base = payload.get("base")
         scope = payload.get("scope", CN_SCOPE_SUBTREE)
-        #deref = payload.get("deref", True)
+        deref = payload.get("deref", True)
         return_attributes = payload.get("attributes", ['*'])
         return_attributes.append('entryUUID')
 
         with self._cm.connection() as conn:
+
+            old_deref = conn.deref
+
+            if deref:
+                conn.deref = ldap.DEREF_SEARCHING
+            else:
+                conn.deref = ldap.DEREF_NEVER
 
             node = await self.get_node_dn(base)
 
@@ -244,6 +245,8 @@ class Hierarchy:
                 })
 
                 yield item
+
+            conn.deref = old_deref
 
     async def add(self, base: str = None, attr_vals: dict = None) -> str:
         """Добавление узла в иерархию.
@@ -291,6 +294,14 @@ class Hierarchy:
                     })
 
             return res[0][1]['entryUUID']
+
+    async def add_alias(self, parentId: str, aliased_object_id: str, alias_name: str) -> str:
+        aliased_object_dn = self.get_node_dn(aliased_object_id)
+        return self.add(base=parentId, attr_vals={
+            "objectClass": ["alias", "extensibleObject"],
+            "aliasedObjectName": [aliased_object_dn],
+            "cn": [alias_name]
+        })
 
     async def modify(self, node: str, attr_vals: dict) -> str :
         """Метод изменяет атрибуты узла.

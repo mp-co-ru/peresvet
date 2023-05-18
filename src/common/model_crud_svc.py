@@ -141,8 +141,22 @@ class ModelCRUDSvc(Svc):
             ]
         }
 
-    Args:
-        settings (ModelCRUDSettings): конфигурация сервиса.
+    **delete**:
+
+    ``Message.reply_to`` = None
+
+    ``Message.correlation_id`` = None
+
+    ``Message.body`` =
+
+    .. code:: json
+
+        {
+            "action": "delete",
+            "data": {
+                "id": ["first_id", "n_id"]
+            }
+        }
 
     """
 
@@ -255,7 +269,7 @@ class ModelCRUDSvc(Svc):
             )
             await message.ack()
 
-    async def _update(self, data: dict) -> None:
+    async def _update(self, mes: dict) -> None:
         """Метод обновления данных узла. Также метод может перемещать узел
         по иерархии.
 
@@ -263,27 +277,27 @@ class ModelCRUDSvc(Svc):
             data (dict): данные узла.
         """
 
-        new_parent = data.get("parentId")
+        new_parent = mes.get("parentId")
         if new_parent:
             if self._check_parent_class(new_parent):
-                self._hierarchy.move(data['id'], new_parent)
+                self._hierarchy.move(mes['id'], new_parent)
             else:
                 self._logger.error("Неправильный класс нового родительского узла.")
                 return
 
-        self._hierarchy.modify(data["id"], data["attributes"])
-        self._updating(data)
+        self._hierarchy.modify(mes["id"], mes["attributes"])
+        self._updating(mes)
         await self._pub_exchange.publish(
             aio_pika.Message(
-                body=f'{{"action": "updated", "id": {data["id"]}}}'.encode(),
+                body=f'{{"action": "updated", "id": {mes["id"]}}}'.encode(),
                 content_type='application/json',
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             ),
             routing_key=self._config.pub_exchange["routing_key"]
         )
-        self._logger.info(f'Узел {data["id"]} обновлён.')
+        self._logger.info(f'Узел {mes["id"]} обновлён.')
 
-    async def _updating(self, data: dict) -> None:
+    async def _updating(self, mes: dict) -> None:
         """Метод переопределяется в сервисах-наследниках.
         В этом методе содержится специфическая работа при обновлении
         нового экземпляра сущности.
@@ -294,26 +308,33 @@ class ModelCRUDSvc(Svc):
             data (dict): id и атрибуты вновь создаваемого экземпляра сущности
         """
 
-    async def _delete(self, ids: List[str]) -> None:
+    async def _delete(self, mes: dict) -> None:
         """Метод удаляет экземпляр сущности из иерархии.
 
         Args:
-            ids (List[str]): список идентификаторов узлов
+            mes (dict): {
+                "action": "delete",
+                "data": {
+                    "id": []
+                }
+            }
         """
-        for node in ids:
+        for node in mes["data"]["id"]:
             self._hierarchy.delete(node)
+
+        await self._deleting(mes)
 
         await self._pub_exchange.publish(
             aio_pika.Message(
-                body=f'{{"action": "deleted", "id": {ids}}}'.encode(),
+                body=f'{{"action": "deleted", "id": {mes}}}'.encode(),
                 content_type='application/json',
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             ),
             routing_key=self._config.pub_exchange["routing_key"]
         )
-        self._logger.info(f'Узлы {ids} удалены.')
+        self._logger.info(f'Узлы {mes} удалены.')
 
-    async def _deleting(self, ids: List[str]) -> None:
+    async def _deleting(self, mes: dict) -> None:
         """Метод переопределяется в сервисах-наследниках.
         Используется для выполнения специфической работы при удалении
         экземпляра сущности.
@@ -379,12 +400,12 @@ class ModelCRUDSvc(Svc):
 
         return await self._reading(mes, res)
 
-    async def _reading(self, data: dict, search_result: dict) -> dict:
+    async def _reading(self, mes: dict, search_result: dict) -> dict:
         """Метод переопределяется в классах-потомках, чтобы
         расширять результат поиска дополнительной информацией.
         """
 
-    async def _create(self, data: dict) -> dict:
+    async def _create(self, mes: dict) -> dict:
         """Метод создаёт новый экземпляр сущности в иерархии.
 
         Args:
@@ -413,7 +434,7 @@ class ModelCRUDSvc(Svc):
 
         """
 
-        parent_node = data.get("parentId")
+        parent_node = mes.get("parentId")
         parent_node = parent_node if parent_node else self._config.hierarchy["node_id"]
         if not parent_node:
             res = {
@@ -425,7 +446,7 @@ class ModelCRUDSvc(Svc):
             }
 
             self._logger.error((
-                f"Попытка создания узла {data} "
+                f"Попытка создания узла {mes} "
                 f"в неопределённом месте иерархии."
             ))
 
@@ -441,14 +462,14 @@ class ModelCRUDSvc(Svc):
             }
 
             self._logger.error((
-                f"Попытка создания узла {data} "
+                f"Попытка создания узла {mes} "
                 f"в родительском узле неприемлемого класса."
             ))
 
             return res
 
-        data["objectClass"] = self._config.hierarchy["class"]
-        new_id = self._hierarchy.add(parent_node, data.get("attributes"))
+        mes["objectClass"] = self._config.hierarchy["class"]
+        new_id = self._hierarchy.add(parent_node, mes.get("attributes"))
 
         if not new_id:
             res = {
@@ -459,7 +480,7 @@ class ModelCRUDSvc(Svc):
                 }
             }
 
-            self._logger.error(f"Ошибка создания узла {data}")
+            self._logger.error(f"Ошибка создания узла {mes}")
 
         else:
             res = {
@@ -472,7 +493,7 @@ class ModelCRUDSvc(Svc):
         if self._config.hierarchy["create_sys_node"]:
             await self._hierarchy.add(new_id, {"cn": ["system"]})
 
-        await self._creating(data, new_id)
+        await self._creating(mes, new_id)
 
         await self._pub_exchange.publish(
             aio_pika.Message(
@@ -485,7 +506,7 @@ class ModelCRUDSvc(Svc):
 
         return res
 
-    async def _creating(self, data: dict, new_id: str) -> None:
+    async def _creating(self, mes: dict, new_id: str) -> None:
         """Метод переопределяется в сервисах-наследниках.
         В этом методе содержится специфическая работа при создании
         нового экземпляра сущности.
