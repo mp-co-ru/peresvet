@@ -4,13 +4,15 @@ import logging
 import logging.config
 import os
 import sys
+import json
 
 from loguru import logger
-import json
 
 from pydantic import BaseSettings
 
 class Settings(BaseSettings):
+    """Класс с конфигурационными параметрами для журнала.
+    """
     LOG_LEVEL: str = "CRITICAL"
     LOG_FILE_NAME: str = "/var/log/peresvet.log"
     LOG_RETENTION: str = "1 months"
@@ -45,11 +47,29 @@ class InterceptHandler(logging.Handler):
             exception=record.exc_info
         ).log(level,record.getMessage())
 
-
 class PrsLogger:
+    """Класс журнала.
+    Для настройки используются 4 переменных окружения:
+
+    **LOG_LEVEL** - уровень журналирования
+    (CRITICAL, ERROR, WARNING, INFO, DEBUG);
+
+    **LOG_FILE_NAME** - имя файла журнала;
+
+    **LOG_RETENTION**
+
+    **LOG_ROTATION**
+
+    Журнал создаётся функцией ``make_logger``.
+    """
 
     @classmethod
     def make_logger(cls):
+        """Функция создаёт новый журнал.
+
+        Returns:
+            Настроенный экземпляр журнала.
+        """
         if settings.LOG_LEVEL == "DEBUG":
             fmt = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> <level>{level: <8}</level> : {name}.{function}.{line} :: <level>{message}</level>"
         else:
@@ -99,6 +119,6 @@ class PrsLogger:
     @classmethod
     def load_logging_config(cls, config_path):
         config = None
-        with open(config_path) as config_file:
+        with open(config_path, encoding='utf-8') as config_file:
             config = json.load(config_file)
         return config
