@@ -144,7 +144,7 @@ class Hierarchy:
         return filterstr
 
     #TODO: return not List, but one tuple, because it is a generator
-    async def search(self, payload: dict) -> List[Tuple]:
+    async def search(self, payload: dict) -> Tuple:
         """Метод-генератор поиска узлов и чтения их данных.
 
         Результат - массив кортежей. Каждый кортеж состоит из трёх элементов:
@@ -240,13 +240,13 @@ class Hierarchy:
                 filterstr=filterstr, attrlist=return_attributes)
 
             for item in res:
-                item = (item[1]['entryUUID'], item[0], {
+                yield (item[1]['entryUUID'], item[0], {
                     key: [value.decode() for value in values] for key, values in item[1]
                 })
 
-                yield item
-
             conn.deref = old_deref
+
+        yield
 
     async def add(self, base: str = None, attr_vals: dict = None) -> str:
         """Добавление узла в иерархию.
