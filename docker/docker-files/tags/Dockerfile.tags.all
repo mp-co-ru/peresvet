@@ -1,0 +1,37 @@
+FROM nginx/unit:1.28.0-python3.10
+
+ENV LDAP_ORGANISATION mycompany
+ENV LDAP_DOMAIN mycompany.com
+ENV LDAP_ADMIN_PASSWORD 123456
+
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
+WORKDIR /usr
+ADD src/common/ /usr/src/common
+RUN rm -r /usr/src/common/__pycache__
+WORKDIR /usr/src
+RUN mkdir services
+WORKDIR /usr/src/services
+ADD src/services/tags/ tags
+
+WORKDIR /home
+RUN pip3 install pipenv
+RUN apt-get update && apt-get install -y --no-install-recommends gcc \
+    build-essential python3-dev \
+    libldap2-dev libsasl2-dev tox lcov valgrind
+
+RUN bash -c "DEBIAN_FRONTEND=noninteractive apt install -q -y slapd ldap-utils"
+
+WORKDIR /usr/src/services/tags/api_crud
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
+
+WORKDIR /usr/src/services/tags/model_crud
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+COPY docker/docker-files/tags/config_nginx.unit_tags.all.json /docker-entrypoint.d/
+
+EXPOSE 80

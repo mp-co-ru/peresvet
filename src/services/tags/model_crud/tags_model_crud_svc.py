@@ -86,3 +86,7 @@ class TagsModelCRUD(model_crud.ModelCRUDSvc):
             await self._hierarchy.add_alias(
                 system_node_id, mes["data"]["dataSourceId"], "dataSource"
             )
+
+settings = TagsModelCRUDSettings()
+
+app = TagsModelCRUD(settings=settings, title="TagsModelCRUD")

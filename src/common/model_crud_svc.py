@@ -313,11 +313,11 @@ class ModelCRUDSvc(Svc):
 
         Args:
             mes (dict): {
-                "action": "delete",
-                "data": {
-                    "id": []
-                }
-            }
+                            "action": "delete",
+                            "data": {
+                                "id": []
+                            }
+                        }
         """
         for node in mes["data"]["id"]:
             self._hierarchy.delete(node)

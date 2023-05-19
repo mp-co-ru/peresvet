@@ -1,0 +1,13 @@
+version: '3.9'
+
+services:
+  ldap:
+    container_name: tags.all
+    build:
+      context: ../..
+      dockerfile: docker/docker-files/tags/Dockerfile.tags.all
+
+    environment:
+      TZ: ${TIME_ZONE}
+    ports:
+      - 80:80

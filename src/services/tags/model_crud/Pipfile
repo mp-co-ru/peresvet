@@ -8,19 +8,8 @@ python-ldap = "*"
 ldappool = "*"
 fastapi = "*"
 pydantic = "*"
-ciso8601 = "*"
 aio-pika = "*"
 loguru = "*"
-
-[dev-packages]
-pylint = "*"
-pytest = "*"
-coverage = "*"
-pytest-cov = "*"
-sphinx = "*"
-sphinxcontrib-httpdomain = "*"
-sphinxcontrib-httpexample = "*"
-sphinx-rtd-theme = "*"
 
 [requires]
 python_version = "3.10"

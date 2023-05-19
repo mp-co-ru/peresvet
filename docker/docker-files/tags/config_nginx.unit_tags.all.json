@@ -1,0 +1,24 @@
+{
+    "listeners": {
+        "*:80": {
+            "pass": "applications/api_crud"
+        }
+    },
+
+    "applications": {
+        "api_crud": {
+            "type": "python 3.10",
+            "path": "/src/services/tags/api_crud/",
+            "home": "/src/services/tags/api_crud/.venv/",
+            "module": "tags_api_crud_svc",
+            "callable": "app"
+        },
+        "model_crud": {
+            "type": "python 3.10",
+            "path": "/src/services/tags/model_crud/",
+            "home": "/src/services/tags/model_crud/.venv/",
+            "module": "tags_model_crud_svc",
+            "callable": "app"
+        }
+    }
+}
