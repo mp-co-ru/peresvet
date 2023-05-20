@@ -8,15 +8,17 @@
     "applications": {
         "api_crud": {
             "type": "python 3.10",
-            "path": "/src/services/tags/api_crud/",
-            "home": "/src/services/tags/api_crud/.venv/",
+            "working_directory": "/usr/src/tags_api_crud",
+            "path": "/usr/src/tags_api_crud/src/services/tags/api_crud/",
+            "home": "/usr/src/tags_api_crud/.venv/",
             "module": "tags_api_crud_svc",
             "callable": "app"
         },
         "model_crud": {
             "type": "python 3.10",
-            "path": "/src/services/tags/model_crud/",
-            "home": "/src/services/tags/model_crud/.venv/",
+            "working_directory": "/usr/src/tags_model_crud",
+            "path": "/usr/src/tags_model_crud/src/services/tags/model_crud/",
+            "home": "/usr/src/tags_model_crud/.venv/",
             "module": "tags_model_crud_svc",
             "callable": "app"
         }
