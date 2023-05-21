@@ -13,8 +13,8 @@ from aio_pika import Message
 import aio_pika.abc
 from fastapi import APIRouter
 
-from svc import Svc
-from api_settings import APICRUDSettings
+from .svc import Svc
+from .api_settings import APICRUDSettings
 
 def valid_uuid(id: str | List[str]) -> str | List[str]:
     """Валидатор идентификаторов.
@@ -200,7 +200,7 @@ class APICRUDSvc(Svc):
         self._callback_queue = await self._amqp_channel.declare_queue(
             durable=True, exclusive=True
         )
-        self._callback_queue.bind(
+        await self._callback_queue.bind(
             exchange=self._pub_exchange,
             routing_key=self._callback_queue.name
         )
@@ -227,7 +227,7 @@ class APICRUDSvc(Svc):
         await self._pub_exchange.publish(
             message=Message(
                 body=body, correlation_id=correlation_id, reply_to=reply_to
-            )
+            ), routing_key=self._config.pub_exchange["routing_key"]
         )
         if not reply:
             return

@@ -8,18 +8,6 @@ import json
 
 from loguru import logger
 
-from pydantic import BaseSettings
-
-class Settings(BaseSettings):
-    """Класс с конфигурационными параметрами для журнала.
-    """
-    LOG_LEVEL: str = "CRITICAL"
-    LOG_FILE_NAME: str = "/var/log/peresvet.log"
-    LOG_RETENTION: str = "1 months"
-    LOG_ROTATION: str = "20 days"
-
-settings = Settings()
-
 class InterceptHandler(logging.Handler):
     loglevel_mapping = {
         50: 'CRITICAL',
@@ -64,22 +52,28 @@ class PrsLogger:
     """
 
     @classmethod
-    def make_logger(cls):
+    def make_logger(
+        cls,
+        level: str = "CRITICAL",
+        file_name: str = "peresvet.log",
+        retention: str = "1 months",
+        rotation: str = "20 days"
+    ):
         """Функция создаёт новый журнал.
 
         Returns:
             Настроенный экземпляр журнала.
         """
-        if settings.LOG_LEVEL == "DEBUG":
+        if level == "DEBUG":
             fmt = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> <level>{level: <8}</level> : {name}.{function}.{line} :: <level>{message}</level>"
         else:
             fmt = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> <level>{level: <8}</level> :: <level>{message}</level>"
 
         return cls.customize_logging(
-            settings.LOG_FILE_NAME,
-            level=settings.LOG_LEVEL,
-            retention=settings.LOG_RETENTION,
-            rotation=settings.LOG_ROTATION,
+            file_name,
+            level=level,
+            retention=retention,
+            rotation=rotation,
             format=fmt
         )
 

@@ -5,7 +5,7 @@
 К примеру, наиболее используемая иерархия создаётся в узле ``objects``,
 которым управляет сервис ``objects_model_crud_svc``.
 """
-
+import sys
 from typing import Annotated, Any, List
 import asyncio
 import json
@@ -13,7 +13,9 @@ import json
 import aio_pika
 import aio_pika.abc
 
-from hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
+sys.path.append(".")
+
+from .hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
 from src.common.svc import Svc
 from src.common.model_crud_settings import ModelCRUDSettings
 
@@ -163,11 +165,11 @@ class ModelCRUDSvc(Svc):
     def __init__(self, settings: ModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-        self._conf.hierarchy["node_dn"]: str = None
-        self._conf.hierarchy["node_id"]: str = None
-        if settings._conf.hierarchy["parent_classes"]:
-            classes = settings._conf.hierarchy["parent_classes"].split(",")
-            self._conf.hierarchy["parent_classes"] = [
+        self._config.hierarchy["node_dn"]: str = None
+        self._config.hierarchy["node_id"]: str = None
+        if self._config.hierarchy["parent_classes"]:
+            classes = self._config.hierarchy["parent_classes"].split(",")
+            self._config.hierarchy["parent_classes"] = [
                 object_class.strip() for object_class in classes
             ]
 
@@ -452,7 +454,7 @@ class ModelCRUDSvc(Svc):
 
             return res
 
-        if not self._check_parent_class(parent_node):
+        if not await self._check_parent_class(parent_node):
             res = {
                 "id": None,
                 "error": {
@@ -469,7 +471,7 @@ class ModelCRUDSvc(Svc):
             return res
 
         mes["objectClass"] = self._config.hierarchy["class"]
-        new_id = self._hierarchy.add(parent_node, mes.get("attributes"))
+        new_id = await self._hierarchy.add(parent_node, mes.get("attributes"))
 
         if not new_id:
             res = {
@@ -556,18 +558,22 @@ class ModelCRUDSvc(Svc):
         """Метод проверяет наличие базового узла сущности и, в случае его
         отсутствия, создаёт его.
         """
-        if not self._config.hierarchy["node_name"]:
+        if not self._config.hierarchy["node"]:
             return
 
-        item = await self._hierarchy.search(
-            scope=CN_SCOPE_ONELEVEL,
-            filter_str=f"(cn={self._config.hierarchy['node_name']})",
-            attr_list=["entryUUID"]
-        )
+        item = await anext(self._hierarchy.search(payload={
+            "scope": CN_SCOPE_ONELEVEL,
+            "filter": {
+                "cn": [f"{self._config.hierarchy['node']}"]
+            },
+            "attributes": ["entryUUID"]
+        }))
         if not item:
             base_node_id = await self._hierarchy.add(
-                attr_vals={"cn": self._config.hierarchy["node_name"]}
+                attr_vals={"cn": self._config.hierarchy["node"]}
             )
+        else:
+            base_node_id = item[0]
 
         self._config.hierarchy["node_dn"] = self._hierarchy.get_node_dn(base_node_id)
         self._config.hierarchy["node_id"] = base_node_id

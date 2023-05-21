@@ -12,7 +12,10 @@
             "path": "/usr/src/tags_api_crud/src/services/tags/api_crud/",
             "home": "/usr/src/tags_api_crud/.venv/",
             "module": "tags_api_crud_svc",
-            "callable": "app"
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/tags_api_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+            }
         },
         "model_crud": {
             "type": "python 3.10",
@@ -20,7 +23,10 @@
             "path": "/usr/src/tags_model_crud/src/services/tags/model_crud/",
             "home": "/usr/src/tags_model_crud/.venv/",
             "module": "tags_model_crud_svc",
-            "callable": "app"
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/tags_model_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+            }
         }
     }
 }

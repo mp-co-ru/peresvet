@@ -144,7 +144,7 @@ class Hierarchy:
         return filterstr
 
     #TODO: return not List, but one tuple, because it is a generator
-    async def search(self, payload: dict) -> Tuple:
+    async def search(self, payload: dict) -> Tuple[str, str, dict] | None:
         """Метод-генератор поиска узлов и чтения их данных.
 
         Результат - массив кортежей. Каждый кортеж состоит из трёх элементов:
@@ -240,8 +240,8 @@ class Hierarchy:
                 filterstr=filterstr, attrlist=return_attributes)
 
             for item in res:
-                yield (item[1]['entryUUID'], item[0], {
-                    key: [value.decode() for value in values] for key, values in item[1]
+                yield (item[1]['entryUUID'][0].decode(), item[0], {
+                    key: [value.decode() for value in values] for key, values in item[1].items()
                 })
 
             conn.deref = old_deref
@@ -273,7 +273,8 @@ class Hierarchy:
             attrs["cn"] = [str(uuid4())]
 
         cn_bytes = ldap.dn.escape_dn_chars(attrs['cn'][0])
-        dn = f"cn={cn_bytes},{await self.get_node_dn(base)}"
+        base_dn = await self.get_node_dn(base)
+        dn = f"cn={cn_bytes},{base_dn}"
 
         modlist = {key:[v.encode("utf-8") if isinstance(v, str) else v for v in values] for key, values in attrs.items()}
         modlist = ldap.modlist.addModlist(modlist)
@@ -285,15 +286,16 @@ class Hierarchy:
                 return None
 
             res = conn.search_s(base=dn, scope=CN_SCOPE_BASE,
-                                filterstr='(cn=*)',attrlist=['entryUUID'])
+                               filterstr='(cn=*)',attrlist=['entryUUID'])
+            new_id = res[0][1]['entryUUID'][0].decode()
             if rename_node:
                 self.modify(
-                    node=res[0][1]['entryUUID'],
+                    node=new_id,
                     attr_vals={
-                        "cn": [res[0][1]['entryUUID']]
+                        "cn": [new_id]
                     })
 
-            return res[0][1]['entryUUID']
+            return new_id
 
     async def add_alias(self, parentId: str, aliased_object_id: str, alias_name: str) -> str:
         aliased_object_dn = self.get_node_dn(aliased_object_id)

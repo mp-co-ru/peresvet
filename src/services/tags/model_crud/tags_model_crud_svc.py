@@ -1,9 +1,13 @@
+import sys
 import copy
-import src.common.model_crud_svc as model_crud
-import src.common.hierarchy as hierarchy
-from .tags_model_crud_settings import TagsModelCRUDSettings
 
-class TagsModelCRUD(model_crud.ModelCRUDSvc):
+sys.path.append(".")
+
+from src.common import model_crud_svc
+from src.common import hierarchy
+from tags_model_crud_settings import TagsModelCRUDSettings
+
+class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
     """Сервис работы с тегами в иерархии.
 
     Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``,
@@ -41,21 +45,21 @@ class TagsModelCRUD(model_crud.ModelCRUDSvc):
                 else:
                     new_item["dataStorageId"] = None
 
-            if mes["getDataSourceId"]:
+            if mes.get("getConnectorId"):
                 res = await anext(self._hierarchy.search({
                     "base": self._system_node_id,
                     "deref": True,
                     "scope": hierarchy.CN_SCOPE_ONELEVEL,
                     "filter": {
-                        "objectClass": "prsDataSource"
+                        "objectClass": "prsConnector"
                     },
                     "attributes": ["cn"]
                 }))
 
                 if res:
-                    new_item["dataSourceId"] = res[0][0]
+                    new_item["connectorId"] = res[0][0]
                 else:
-                    new_item["dataSourceId"] = None
+                    new_item["connectorId"] = None
 
             new_res["data"].append(new_item)
 
@@ -76,15 +80,15 @@ class TagsModelCRUD(model_crud.ModelCRUDSvc):
 
         system_node_id = system_node[0]
 
-        if mes["data"]["dataStorageId"]:
+        if mes["data"].get("dataStorageId"):
             await self._hierarchy.add_alias(
                 system_node_id, mes["data"]["dataStorageId"], "dataStorage"
             )
 
 
-        if mes["data"]["dataSourceId"]:
+        if mes["data"].get("connectorId"):
             await self._hierarchy.add_alias(
-                system_node_id, mes["data"]["dataSourceId"], "dataSource"
+                system_node_id, mes["data"]["connectorId"], "connector"
             )
 
 settings = TagsModelCRUDSettings()
