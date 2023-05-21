@@ -2,10 +2,10 @@ version: '3.9'
 
 services:
   ldap:
-    container_name: ldap
+    hostname: ldap
     build:
-      context: ../docker-files/ldap
-      dockerfile: Dockerfile.ldap
+      context: ../..
+      dockerfile: docker/docker-files/ldap/Dockerfile.ldap
 
     environment:
       TZ: ${TIME_ZONE}

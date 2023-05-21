@@ -9,9 +9,9 @@ import ldap
 import aio_pika
 import aio_pika.abc
 
-from hierarchy import Hierarchy
-from logger import PrsLogger
-from src.common.settings import Settings
+from .hierarchy import Hierarchy
+from .logger import PrsLogger
+from .settings import Settings
 
 class Svc(FastAPI):
     """
@@ -40,7 +40,13 @@ class Svc(FastAPI):
         super().__init__(*args, **kwargs)
 
         self._conf = settings
-        self._logger = PrsLogger.make_logger()
+        self._logger = PrsLogger.make_logger(
+            level=settings.log["level"],
+            file_name=settings.log["file_name"],
+            retention=settings.log["retention"],
+            rotation=settings.log["rotation"]
+        )
+
         self._hierarchy = Hierarchy(settings.ldap_url)
 
         self._amqp_connection: aio_pika.abc.AbstractRobustConnection = None
@@ -65,17 +71,19 @@ class Svc(FastAPI):
         Returns:
             None
         """
-        try:
-            self._hierarchy.connect()
-        except ValueError:
-            self._logger.error("Неверный формат URI ldap: {self.hierarchy.url}")
-            await asyncio.sleep(5)
-            return self._ldap_connect()
+        connected = False
+        while not connected:
+            try:
+                self._hierarchy.connect()
+                connected = True
+                self._logger.info("Связь с LDAP сервером установлена.")
+            except ValueError:
+                self._logger.error(f"Неверный формат URI ldap: {self._config.ldap_url}")
+                await asyncio.sleep(5)
 
-        except ldap.LDAPError as ex:
-            self._logger.error(f"Ошибка связи с сервером ldap: {ex}")
-            await asyncio.sleep(5)
-            return self._ldap_connect()
+            except ldap.LDAPError as ex:
+                self._logger.error(f"Ошибка связи с сервером ldap: {ex}")
+                await asyncio.sleep(5)
 
     async def _amqp_connect(self) -> None:
         """Функция связи с AMQP-сервером.
@@ -93,17 +101,23 @@ class Svc(FastAPI):
         Returns:
             None
         """
-        try:
-            self._amqp_connection = await aio_pika.connect_robust(self._config["amqp_url"])
-            self._amqp_channel = await self._amqp_connection.channel()
-            self._pub_exchange = await self._amqp_channel.declare_exchange(
-                self._config.pub_exchange["name"],
-                self._config.pub_exchange["type"], durable=True
-            )
-        except aio_pika.AMQPException as ex:
-            self._logger.error(f"Ошибка связи с брокером: {ex}")
-            await asyncio.sleep(5)
-            return self._amqp_connect()
+        connected = False
+        while not connected:
+            try:
+                self._amqp_connection = await aio_pika.connect_robust(self._config.amqp_url)
+                self._amqp_channel = await self._amqp_connection.channel()
+                self._pub_exchange = await self._amqp_channel.declare_exchange(
+                    self._config.pub_exchange["name"],
+                    self._config.pub_exchange["type"], durable=True
+                )
+                connected = True
+
+                self._logger.info("Связь с AMQP сервером установлена.")
+
+            except aio_pika.AMQPException as ex:
+                self._logger.error(f"Ошибка связи с брокером: {ex}")
+                await asyncio.sleep(5)
+
 
     async def on_startup(self) -> None:
         """Функция, выполняемая при старте сервиса: выполняется связь с

@@ -16,15 +16,18 @@ from pydantic import BaseSettings
 
 def json_config_settings_source(settings: BaseSettings) -> dict[str, Any]:
     encoding = settings.__config__.env_file_encoding
-    return json.loads(Path(os.getenv('config_file', 'config.json')).read_text(encoding))
+    try:
+        return json.loads(Path(os.getenv('config_file', 'config.json')).read_text(encoding))
+    except Exception:
+        return {}
 
 class Settings(BaseSettings):
     #: имя сервиса
     svc_name: str = ""
     #: строка коннекта к RabbitMQ
-    amqp_url: str = "amqp://guest:guest@localhost/"
+    amqp_url: str = "amqp://prs:Peresvet21@rabbitmq/"
     #: строка коннекта к OpenLDAP
-    ldap_url: str = "ldap://localhost:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+    ldap_url: str = "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
 
     # описание обменника, в котором сервис будет публиковать свои сообщения
     pub_exchange: dict = {
@@ -35,6 +38,13 @@ class Settings(BaseSettings):
         #: routing_key, с которым будут публиковаться сообщения обменником
         #: pub_exchange_type
         "routing_key": ""
+    }
+
+    log: dict = {
+        "level": "CRITICAL",
+        "file_name": "peresvet.log",
+        "retention": "1 months",
+        "rotation": "20 days"
     }
 
     class Config:
@@ -49,7 +59,7 @@ class Settings(BaseSettings):
         ):
             return (
                 init_settings,
-                json_config_settings_source,
                 env_settings,
+                json_config_settings_source,
                 file_secret_settings,
             )

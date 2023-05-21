@@ -2,14 +2,17 @@
 Модуль содержит классы, описывающие входные данные для команд CRUD для тегов
 и класс сервиса ``tags_api_crud_svc``.
 """
+import sys
 from uuid import UUID
 from typing import Any, List
 from pydantic import Field, validator
 
 from fastapi import APIRouter
 
-import src.common.api_crud_svc as svc
-from .tags_api_crud_settings import TagsAPICRUDSettings
+sys.path.append(".")
+
+from src.common import api_crud_svc as svc
+from tags_api_crud_settings import TagsAPICRUDSettings
 
 class TagCreateAttributes(svc.NodeCreateAttributes):
     prsArchive: bool = Field(
@@ -113,18 +116,18 @@ class TagCreate(svc.NodeCreate):
     validate_id = validator('parentId', 'dataStorageId', 'connectorId', allow_reuse=True)(svc.valid_uuid)
 
 class TagRead(svc.NodeRead):
-    getDataStorage: bool = Field(
+    getDataStorageId: bool = Field(
         False,
         title="Флаг возврата id хранилища данных."
     )
-    getDataSource: bool = Field(
+    getConnectorId: bool = Field(
         False,
         title="Флаг возврата id источника данных."
     )
 
 class OneTagInReadResult(svc.OneNodeInReadResult):
     dataStorageId: str = Field(None, title="Id хранилища данных.")
-    dataSourceId: dict = Field(None, title="Id источника данных.")
+    connectorId: dict = Field(None, title="Id источника данных.")
 
 class TagReadResult(svc.NodeReadResult):
     data: List[OneTagInReadResult] = Field(title="Список тегов.")

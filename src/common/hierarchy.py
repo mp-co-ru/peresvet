@@ -2,6 +2,7 @@
 
 import copy
 from typing import Any, Tuple, List
+import json
 
 from uuid import uuid4, UUID
 
@@ -75,13 +76,6 @@ class Hierarchy:
 
             return res[0][0]
 
-        try:
-            UUID(node)
-
-
-        except ValueError as _:
-            return node
-
     def _is_node_id_uuid(self, node: str) -> bool:
         """Проверка того, что идентификатор узла
         имеет формат UUID.
@@ -150,7 +144,8 @@ class Hierarchy:
 
         return filterstr
 
-    async def search(self, payload: dict) -> List[Tuple]:
+    #TODO: return not List, but one tuple, because it is a generator
+    async def search(self, payload: dict) -> Tuple[str, str, dict] | None:
         """Метод-генератор поиска узлов и чтения их данных.
 
         Результат - массив кортежей. Каждый кортеж состоит из трёх элементов:
@@ -227,11 +222,18 @@ class Hierarchy:
 
         base = payload.get("base")
         scope = payload.get("scope", CN_SCOPE_SUBTREE)
-        #deref = payload.get("deref", True)
+        deref = payload.get("deref", True)
         return_attributes = payload.get("attributes", ['*'])
         return_attributes.append('entryUUID')
 
         with self._cm.connection() as conn:
+
+            old_deref = conn.deref
+
+            if deref:
+                conn.deref = ldap.DEREF_SEARCHING
+            else:
+                conn.deref = ldap.DEREF_NEVER
 
             node = await self.get_node_dn(base)
 
@@ -239,11 +241,13 @@ class Hierarchy:
                 filterstr=filterstr, attrlist=return_attributes)
 
             for item in res:
-                item = (item[1]['entryUUID'], item[0], {
-                    key: [value.decode() for value in values] for key, values in item[1]
+                yield (item[1]['entryUUID'][0].decode(), item[0], {
+                    key: [value.decode() for value in values] for key, values in item[1].items()
                 })
 
-                yield item
+            conn.deref = old_deref
+
+        yield
 
     async def add(self, base: str = None, attr_vals: dict = None) -> str:
         """Добавление узла в иерархию.
@@ -270,9 +274,31 @@ class Hierarchy:
             attrs["cn"] = [str(uuid4())]
 
         cn_bytes = ldap.dn.escape_dn_chars(attrs['cn'][0])
-        dn = f"cn={cn_bytes},{await self.get_node_dn(base)}"
+        base_dn = await self.get_node_dn(base)
+        dn = f"cn={cn_bytes},{base_dn}"
 
-        modlist = {key:[v.encode("utf-8") if isinstance(v, str) else v for v in values] for key, values in attrs.items()}
+        modlist = {}
+        for key, values in attrs.items():
+            modlist[key] = []
+            for value in values:
+                new_value = None
+                if value:
+                    if isinstance(value, bool):
+                        if value:
+                            new_value = 'TRUE'
+                        else:
+                            new_value = 'FALSE'
+                    elif isinstance(value, (int, float)):
+                        new_value = str(value)
+                    elif isinstance(value, dict):
+                        new_value = json.dumps(value, ensure_ascii=False)
+                    else: # str
+                        new_value = value
+
+                    new_value = new_value.encode('utf-8')
+
+                modlist[key].append(new_value)
+
         modlist = ldap.modlist.addModlist(modlist)
 
         with self._cm.connection() as conn:
@@ -282,15 +308,24 @@ class Hierarchy:
                 return None
 
             res = conn.search_s(base=dn, scope=CN_SCOPE_BASE,
-                                filterstr='(cn=*)',attrlist=['entryUUID'])
+                               filterstr='(cn=*)',attrlist=['entryUUID'])
+            new_id = res[0][1]['entryUUID'][0].decode()
             if rename_node:
-                self.modify(
-                    node=res[0][1]['entryUUID'],
+                await self.modify(
+                    node=new_id,
                     attr_vals={
-                        "cn": [res[0][1]['entryUUID']]
+                        "cn": [new_id]
                     })
 
-            return res[0][1]['entryUUID']
+            return new_id
+
+    async def add_alias(self, parentId: str, aliased_object_id: str, alias_name: str) -> str:
+        aliased_object_dn = self.get_node_dn(aliased_object_id)
+        return await self.add(base=parentId, attr_vals={
+            "objectClass": ["alias", "extensibleObject"],
+            "aliasedObjectName": [aliased_object_dn],
+            "cn": [alias_name]
+        })
 
     async def modify(self, node: str, attr_vals: dict) -> str :
         """Метод изменяет атрибуты узла.
