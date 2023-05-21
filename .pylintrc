@@ -1,2 +1,5 @@
 [MASTER]
 extension-pkg-allow-list=pydantic
+
+[MESSAGES CONTROL]
+disable=C0413
