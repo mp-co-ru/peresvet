@@ -2,6 +2,7 @@
 
 import copy
 from typing import Any, Tuple, List
+import json
 
 from uuid import uuid4, UUID
 
@@ -276,7 +277,28 @@ class Hierarchy:
         base_dn = await self.get_node_dn(base)
         dn = f"cn={cn_bytes},{base_dn}"
 
-        modlist = {key:[v.encode("utf-8") if isinstance(v, str) else v for v in values] for key, values in attrs.items()}
+        modlist = {}
+        for key, values in attrs.items():
+            modlist[key] = []
+            for value in values:
+                new_value = None
+                if value:
+                    if isinstance(value, bool):
+                        if value:
+                            new_value = 'TRUE'
+                        else:
+                            new_value = 'FALSE'
+                    elif isinstance(value, (int, float)):
+                        new_value = str(value)
+                    elif isinstance(value, dict):
+                        new_value = json.dumps(value, ensure_ascii=False)
+                    else: # str
+                        new_value = value
+
+                    new_value = new_value.encode('utf-8')
+
+                modlist[key].append(new_value)
+
         modlist = ldap.modlist.addModlist(modlist)
 
         with self._cm.connection() as conn:
@@ -289,7 +311,7 @@ class Hierarchy:
                                filterstr='(cn=*)',attrlist=['entryUUID'])
             new_id = res[0][1]['entryUUID'][0].decode()
             if rename_node:
-                self.modify(
+                await self.modify(
                     node=new_id,
                     attr_vals={
                         "cn": [new_id]
@@ -299,7 +321,7 @@ class Hierarchy:
 
     async def add_alias(self, parentId: str, aliased_object_id: str, alias_name: str) -> str:
         aliased_object_dn = self.get_node_dn(aliased_object_id)
-        return self.add(base=parentId, attr_vals={
+        return await self.add(base=parentId, attr_vals={
             "objectClass": ["alias", "extensibleObject"],
             "aliasedObjectName": [aliased_object_dn],
             "cn": [alias_name]

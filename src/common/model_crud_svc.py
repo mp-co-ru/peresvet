@@ -264,7 +264,7 @@ class ModelCRUDSvc(Svc):
 
             await self._api_crud_exchange.publish(
                 aio_pika.Message(
-                    body=res,
+                    body=json.dumps(res,ensure_ascii=False).encode(),
                     correlation_id=message.correlation_id,
                 ),
                 routing_key=message.reply_to,
@@ -411,14 +411,17 @@ class ModelCRUDSvc(Svc):
         """Метод создаёт новый экземпляр сущности в иерархии.
 
         Args:
-            data (dict): входные данные вида:
+            mes (dict): входные данные вида:
 
                 .. code-block:: json
 
                     {
-                        "parentId": "id родителя",
-                        "attributes": {
-                            "<ldap-attribute>": "<value>"
+                        "action": "...",
+                        "data": {
+                            "parentId": "id родителя",
+                            "attributes": {
+                                "<ldap-attribute>": "<value>"
+                            }
                         }
                     }
 
@@ -436,7 +439,7 @@ class ModelCRUDSvc(Svc):
 
         """
 
-        parent_node = mes.get("parentId")
+        parent_node = mes["data"].get("parentId")
         parent_node = parent_node if parent_node else self._config.hierarchy["node_id"]
         if not parent_node:
             res = {
@@ -470,8 +473,14 @@ class ModelCRUDSvc(Svc):
 
             return res
 
-        mes["objectClass"] = self._config.hierarchy["class"]
-        new_id = await self._hierarchy.add(parent_node, mes.get("attributes"))
+        if not mes["data"].get("attributes"):
+            mes["data"]["attributes"] = {
+                "objectClass": [self._config.hierarchy["class"]]
+            }
+        else:
+            mes["data"]["attributes"]["objectClass"] = [self._config.hierarchy["class"]]
+
+        new_id = await self._hierarchy.add(parent_node, mes["data"]["attributes"])
 
         if not new_id:
             res = {
