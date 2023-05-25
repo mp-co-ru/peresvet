@@ -1,0 +1,32 @@
+{
+  "listeners": {
+    "*:80": {
+      "pass": "applications/api_crud"
+    }
+  },
+
+  "applications": {
+    "api_crud": {
+      "type": "python 3.10",
+      "working_directory": "/usr/src/schedules_api_crud",
+      "path": "/usr/src/schedules_api_crud/src/services/schedules/api_crud/",
+      "home": "/usr/src/schedules_api_crud/.venv/",
+      "module": "schedules_api_crud_svc",
+      "callable": "app",
+      "environment": {
+        "log": "{\"level\": \"INFO\", \"file_name\": \"log/schedules_api_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+      }
+    },
+    "model_crud": {
+      "type": "python 3.10",
+      "working_directory": "/usr/src/schedules_model_crud",
+      "path": "/usr/src/schedules_model_crud/src/services/schedules/model_crud/",
+      "home": "/usr/src/schedules_model_crud/.venv/",
+      "module": "schedules_model_crud_svc",
+      "callable": "app",
+      "environment": {
+        "log": "{\"level\": \"INFO\", \"file_name\": \"log/schedules_model_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+      }
+    }
+  }
+}

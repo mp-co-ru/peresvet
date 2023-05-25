@@ -178,7 +178,7 @@ router = APIRouter()
 async def create(payload: TagCreate):
     return await app.create(payload)
 
-@router.get("/", response_model=svc.NodeCreateResult, status_code=201)
+@router.get("/", response_model=svc.NodeCreateResult, status_code=200)
 async def read(payload: TagRead):
     return await app.create(payload)
 

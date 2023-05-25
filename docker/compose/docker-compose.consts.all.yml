@@ -1,0 +1,17 @@
+version: '3.9'
+
+services:
+  consts_all:
+    hostname: consts_all
+    build:
+      context: ../..
+      dockerfile: docker/docker-files/consts/Dockerfile.consts.all
+
+    environment:
+      TZ: ${TIME_ZONE}
+    ports:
+      - 80:80
+
+    volumes:
+      - ./logs/consts.all/api_crud/:/usr/src/consts_api_crud/log/:rw
+      - ./logs/consts.all/model_crud/:/usr/src/consts_model_crud/log/:rw

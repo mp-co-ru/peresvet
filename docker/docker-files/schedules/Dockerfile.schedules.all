@@ -1,0 +1,59 @@
+FROM nginx/unit:1.28.0-python3.10
+
+ENV LDAP_ORGANISATION mycompany
+ENV LDAP_DOMAIN mycompany.com
+ENV LDAP_ADMIN_PASSWORD 123456
+
+#RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
+WORKDIR /home
+RUN pip3 install pipenv
+RUN apt-get update && apt-get install -y --no-install-recommends gcc \
+    build-essential python3-dev \
+    libldap2-dev libsasl2-dev tox lcov valgrind
+
+RUN bash -c "DEBIAN_FRONTEND=noninteractive apt install -q -y slapd ldap-utils"
+
+# для каждого сервиса создадим свой каталог -------------------
+WORKDIR /usr/src
+RUN mkdir schedules_api_crud schedules_model_crud
+COPY src/services/schedules/api_crud/Pipfile /usr/src/schedules_api_crud/
+COPY src/services/schedules/model_crud/Pipfile /usr/src/schedules_model_crud/
+WORKDIR /usr/src/schedules_api_crud
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
+
+WORKDIR /usr/src/schedules_model_crud
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
+
+RUN apt-get -y purge slapd
+
+# копируем исходники --------------------------------------------
+ADD src/common/ /usr/src/schedules_api_crud/src/common
+COPY src/__init__.py /usr/src/schedules_api_crud/src/
+# RUN rm -r /usr/src/schedules_api_crud/src/common/__pycache__
+WORKDIR /usr/src/schedules_api_crud/src
+RUN mkdir services
+WORKDIR /usr/src/schedules_api_crud/src/services
+ADD src/services/schedules/api_crud schedules/api_crud
+WORKDIR /usr/src/schedules_api_crud
+
+ADD src/common/ /usr/src/schedules_model_crud/src/common
+COPY src/__init__.py /usr/src/schedules_model_crud/src/
+# RUN rm -r /usr/src/schedules_model_crud/src/common/__pycache__
+WORKDIR /usr/src/schedules_model_crud/src
+RUN mkdir services
+WORKDIR /usr/src/schedules_model_crud/src/services
+ADD src/services/schedules/model_crud schedules/model_crud
+WORKDIR /usr/src/schedules_model_crud
+# ------------------------------------------------------------
+
+RUN addgroup --gid 1024 volume_group
+RUN usermod -a -G volume_group unit
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+COPY docker/docker-files/schedules/config_nginx.unit_schedules.all.json /docker-entrypoint.d/
+
+EXPOSE 80
