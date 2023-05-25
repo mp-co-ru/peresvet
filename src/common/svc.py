@@ -9,9 +9,9 @@ import ldap
 import aio_pika
 import aio_pika.abc
 
-from .hierarchy import Hierarchy
-from .logger import PrsLogger
-from .settings import Settings
+from src.common.hierarchy import Hierarchy
+from src.common.logger import PrsLogger
+from src.common.settings import Settings
 
 class Svc(FastAPI):
     """
