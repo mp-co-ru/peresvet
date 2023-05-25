@@ -15,7 +15,7 @@ import aio_pika.abc
 
 sys.path.append(".")
 
-from .hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
+from src.common.hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
 from src.common.svc import Svc
 from src.common.model_crud_settings import ModelCRUDSettings
 

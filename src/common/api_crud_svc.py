@@ -13,8 +13,8 @@ from aio_pika import Message
 import aio_pika.abc
 from fastapi import APIRouter
 
-from .svc import Svc
-from .api_settings import APICRUDSettings
+from src.common.svc import Svc
+from src.common.api_settings import APICRUDSettings
 
 def valid_uuid(id: str | List[str]) -> str | List[str]:
     """Валидатор идентификаторов.
