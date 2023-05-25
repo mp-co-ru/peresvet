@@ -1,5 +1,3 @@
 {
-    "restructuredtext.confPath": "${workspaceFolder}/documentation/source",
-    "esbonio.server.enabled": true,
-    "esbonio.sphinx.confDir": "${workspaceFolder}/documentation/source"
+    "esbonio.sphinx.confDir": ""
 }

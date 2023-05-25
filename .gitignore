@@ -136,3 +136,4 @@ src/*.json
 tls/
 
 test_*.py
+tests/dev/

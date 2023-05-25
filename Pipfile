@@ -4,27 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-sphinx-rtd-theme = "*"
-requests = "*"
-docker-compose = "*"
+python-ldap = "*"
+ldappool = "*"
 fastapi = "*"
-ldap3 = "*"
-uvicorn = "*"
-loguru = "*"
 pydantic = "*"
-validators = "*"
-aiohttp = {version = "*", extras = ["speedups"]}
-python-dateutil = "*"
-websockets = "*"
-asyncpg="*"
-ciso8601="*"
-pandas="*"
-numpy="*"
-httpx = "*"
-random-dict = "*"
-
-[requires]
-python_version = "3.10"
+ciso8601 = "*"
+aio-pika = "*"
+loguru = "*"
 
 [dev-packages]
 pylint = "*"
@@ -32,13 +18,10 @@ pytest = "*"
 coverage = "*"
 pytest-cov = "*"
 sphinx = "*"
-astunparse = "*"
 sphinxcontrib-httpdomain = "*"
 sphinxcontrib-httpexample = "*"
 sphinx-rtd-theme = "*"
-doc8="*"
-mock="*"
-locust="*"
-fastapi_profiler="*"
-httpx="*"
-locust_plugins="*"
+docutils = "*"
+
+[requires]
+python_version = "3.10"

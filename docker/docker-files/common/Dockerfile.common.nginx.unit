@@ -1,0 +1,25 @@
+# базовый докер-файл, в который устанавливаются общие компоненты
+
+FROM nginx/unit:1.28.0-python3.10
+
+COPY src/common/common_reqs.txt /config/common_reqs.txt
+# PIP isn't installed by default, so we install it first.
+# Next, we install the requirements, remove PIP, and perform image cleanup.
+RUN apt update && apt install -y python3-pip                                  \
+    && pip3 install -r /config/common_reqs.txt                               \
+    && apt remove -y python3-pip                                              \
+    && apt autoremove --purge -y                                              \
+    && rm -rf /var/lib/apt/lists/* /etc/apt/sources.list.d/*.list
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# copy project
+COPY asgi.py /www/
+COPY config_tls_docker.json /docker-entrypoint.d/
+COPY ./tls/MPCServer/MPCServer.pem /docker-entrypoint.d/
+COPY ./tls/rootCA/rootCA.crt /usr/local/share/ca-certificates/
+RUN update-ca-certificates
+
+EXPOSE 443
