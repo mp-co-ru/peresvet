@@ -211,7 +211,7 @@ class ModelCRUDSvc(Svc):
         .. code:: json
 
             {
-                "action": "create/read/update/delete",
+                "action": "create | read | update | delete",
                 "data: {}
             }
 
