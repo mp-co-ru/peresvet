@@ -12,9 +12,9 @@ from fastapi import APIRouter
 sys.path.append(".")
 
 from src.common import api_crud_svc as svc
-from consts_api_crud_settings import ConstsAPICRUDSettings
+from constants_api_crud_settings import ConstantsAPICRUDSettings
 
-class ConstCreateAttributes(svc.NodeCreateAttributes):
+class ConstantCreateAttributes(svc.NodeCreateAttributes):
     prsValueTypeCode: int = Field(
         2,
         title="Тип значений константы.",
@@ -24,32 +24,32 @@ class ConstCreateAttributes(svc.NodeCreateAttributes):
         )
     )
 
-    prsConstValue: str = Field(
+    prsConstantValue: str = Field(
         "",
         title="Значение константы",
         description=""
     )
 
-class ConstCreate(svc.NodeCreate):
+class ConstantCreate(svc.NodeCreate):
 
-    attributes: ConstCreateAttributes = Field(title="Атрибуты узла")
+    attributes: ConstantCreateAttributes = Field(title="Атрибуты узла")
 
     # validate_id = validator('parentId', 'dataStorageId', 'connectorId', allow_reuse=True)(svc.valid_uuid)
 
-class ConstRead(svc.NodeRead):
+class ConstantRead(svc.NodeRead):
     pass
 
-class OneConstInReadResult(svc.OneNodeInReadResult):
+class OneConstantInReadResult(svc.OneNodeInReadResult):
     pass
 
-class ConstReadResult(svc.NodeReadResult):
-    data: List[OneConstInReadResult] = Field(title="Список констант.")
+class ConstantReadResult(svc.NodeReadResult):
+    data: List[OneConstantInReadResult] = Field(title="Список констант.")
     pass
 
-class ConstUpdate(svc.NodeUpdate):
+class ConstantUpdate(svc.NodeUpdate):
     pass
 
-class ConstsAPICRUD(svc.APICRUDSvc):
+class ConstantsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с константами в иерархии.
 
     Подписывается на очередь ``consts_api_crud`` обменника ``consts_api_crud``,
@@ -60,38 +60,38 @@ class ConstsAPICRUD(svc.APICRUDSvc):
 
     """
 
-    def __init__(self, settings: ConstsAPICRUDSettings, *args, **kwargs):
+    def __init__(self, settings: ConstantsAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    async def create(self, payload: ConstCreate) -> dict:
+    async def create(self, payload: ConstantCreate) -> dict:
         return await super().create(payload=payload)
 
-    async def read(self, payload: ConstRead) -> dict:
+    async def read(self, payload: ConstantRead) -> dict:
         return await super().read(payload=payload)
 
-    async def update(self, payload: ConstUpdate) -> dict:
+    async def update(self, payload: ConstantUpdate) -> dict:
         return await super().update(payload=payload)
 
-settings = ConstsAPICRUDSettings()
+settings = ConstantsAPICRUDSettings()
 
-app = ConstsAPICRUD(settings=settings, title="`ConstsAPICRUD` service")
+app = ConstantsAPICRUD(settings=settings, title="`ConstantsAPICRUD` service")
 
 router = APIRouter()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
-async def create(payload: ConstCreate):
+async def create(payload: ConstantCreate):
     return await app.create(payload)
 
 @router.get("/", response_model=svc.NodeReadResult, status_code=200)
-async def read(payload: ConstRead):
+async def read(payload: ConstantRead):
     return await app.read(payload)
 
 @router.put("/", status_code=202)
-async def update(payload: ConstUpdate):
+async def update(payload: ConstantUpdate):
     await app.update(payload)
 
 @router.delete("/", status_code=202)
-async def delete(payload: ConstRead):
+async def delete(payload: ConstantRead):
     await app.delete(payload)
 
-app.include_router(router, prefix=f"{settings.api_version}/consts", tags=["consts"])
+app.include_router(router, prefix=f"{settings.api_version}/constants", tags=["constants"])

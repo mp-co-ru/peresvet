@@ -1,9 +1,9 @@
 from src.common.api_settings import APICRUDSettings
 
-class ConstsAPICRUDSettings(APICRUDSettings):
+class ConstantsAPICRUDSettings(APICRUDSettings):
 
     #: имя сервиса. сервисы *_mod_crud создают в иерархии узел с таким же именем
-    svc_name: str = "consts_api_crud"
+    svc_name: str = "constants_api_crud"
     #: строка коннекта к RabbitMQ
     amqp_url: str = "amqp://prs:Peresvet21@rabbitmq/"
     #: строка коннекта к OpenLDAP
@@ -11,7 +11,7 @@ class ConstsAPICRUDSettings(APICRUDSettings):
 
     #: обменник для публикаций
     pub_exchange: dict = {
-        "name": "consts_api_crud",
+        "name": "constants_api_crud",
         "type": "direct",
-        "routing_key": "consts_api_crud"
+        "routing_key": "constants_api_crud"
     }

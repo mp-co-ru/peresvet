@@ -1,8 +1,8 @@
 from src.common.model_crud_settings import ModelCRUDSettings
 
-class ConstsModelCRUDSettings(ModelCRUDSettings):
+class ConstantsModelCRUDSettings(ModelCRUDSettings):
     #: имя сервиса. сервисы *_mod_crud создают в иерархии узел с таким же именем
-    svc_name: str = "consts_model_crud"
+    svc_name: str = "constants_model_crud"
     #: строка коннекта к RabbitMQ
     amqp_url: str = "amqp://prs:Peresvet21@rabbitmq/"
     #: строка коннекта к OpenLDAP
@@ -10,23 +10,23 @@ class ConstsModelCRUDSettings(ModelCRUDSettings):
 
     #: обменник для публикаций
     pub_exchange: dict = {
-        "name": "consts_model_crud",
+        "name": "constants_model_crud",
         "type": "direct",
-        "routing_key": "consts_model_crud"
+        "routing_key": "constants_model_crud"
     }
 
     #: обменник, который публикует запросы от API_CRUD
     api_crud_exchange: dict = {
-        "name": "consts_api_crud",
+        "name": "constants_api_crud",
         "type": "direct",
-        "queue_name": "consts_api_crud",
-        "routing_key": "consts_api_crud"
+        "queue_name": "constants_api_crud",
+        "routing_key": "constants_api_crud"
     }
 
     hierarchy: dict = {
         #: имя узла для хранения сущностей в иерархии
         #: если узел не требуется, то пустая строка
-        "node": "consts",
+        "node": "constants",
         #: класс экзмепляров сущности в иерархии
         "class": "prsConstant",
         #: список через запятую родительских классов
