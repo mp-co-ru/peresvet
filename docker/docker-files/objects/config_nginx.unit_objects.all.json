@@ -1,0 +1,32 @@
+{
+  "listeners": {
+    "*:80": {
+      "pass": "applications/api_crud"
+    }
+  },
+
+  "applications": {
+    "api_crud": {
+      "type": "python 3.10",
+      "working_directory": "/usr/src/objects_api_crud",
+      "path": "/usr/src/objects_api_crud/src/services/objects/api_crud/",
+      "home": "/usr/src/objects_api_crud/.venv/",
+      "module": "objects_api_crud_svc",
+      "callable": "app",
+      "environment": {
+        "log": "{\"level\": \"INFO\", \"file_name\": \"log/objects_api_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+      }
+    },
+    "model_crud": {
+      "type": "python 3.10",
+      "working_directory": "/usr/src/objects_model_crud",
+      "path": "/usr/src/objects_model_crud/src/services/objects/model_crud/",
+      "home": "/usr/src/objects_model_crud/.venv/",
+      "module": "objects_model_crud_svc",
+      "callable": "app",
+      "environment": {
+        "log": "{\"level\": \"INFO\", \"file_name\": \"log/objects_model_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+      }
+    }
+  }
+}
