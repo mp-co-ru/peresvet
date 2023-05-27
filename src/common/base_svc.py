@@ -3,7 +3,6 @@
 """
 import asyncio
 from functools import cached_property
-from typing import List
 from fastapi import FastAPI
 
 import aio_pika
@@ -66,8 +65,8 @@ class BaseSvc(FastAPI):
         )
         self._amqp_connection: aio_pika.abc.AbstractRobustConnection = None
         self._amqp_channel: aio_pika.abc.AbstractRobustChannel = None
-        self._amqp_publish: List[aio_pika.abc.AbstractRobustExchange] = None
-        self._amqp_consume: List[aio_pika.abc.AbstractRobustExchange] = None
+        self._amqp_publish: dict = None
+        self._amqp_consume: dict = None
 
     @cached_property
     def _config(self):
