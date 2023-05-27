@@ -5,49 +5,70 @@
 
 Модуль ``hierarchy``
 """"""""""""""""""""
-.. automodule:: hierarchy
+.. automodule:: src.common.hierarchy
    :members:
    :private-members:
    :show-inheritance:
+   :noindex:
 
 Модуль ``logger``
 """""""""""""""""
-.. automodule:: logger
+.. automodule:: src.common.logger
    :members:
    :private-members:
    :exclude-members: InterceptHandler
    :show-inheritance:
+   :noindex:
 
-Модуль ``svc``
-""""""""""""""
-.. automodule:: svc
+Модуль ``base_svc``
+"""""""""""""""""""
+.. automodule:: src.common.base_svc
     :members:
     :private-members:
     :show-inheritance:
+    :noindex:
 
-Модуль ``settings``
-"""""""""""""""""""
-.. automodule:: settings
+Модуль ``base_svc_settings``
+"""""""""""""""""""""""""""""
+.. automodule:: src.common.base_svc_settings
     :members:
     :show-inheritance:
+    :noindex:
 
+Модуль ``svc``
+""""""""""""""
+.. automodule:: src.common.svc
+    :members:
+    :private-members:
+    :show-inheritance:
+    :noindex:
+
+Модуль ``svc_settings``
+"""""""""""""""""""""""
+.. automodule:: src.common.svc_settings
+    :members:
+    :show-inheritance:
+    :noindex:
 
 Модуль ``api_crud_svc``
 """""""""""""""""""""""
-.. automodule:: api_crud_svc
+.. automodule:: src.common.api_crud_svc
     :members:
     :show-inheritance:
+    :noindex:
 
 Модуль ``model_crud_svc``
 """""""""""""""""""""""""
-.. automodule:: model_crud_svc
+.. automodule:: src.common.model_crud_svc
    :members:
    :private-members:
    :show-inheritance:
+   :noindex:
 
 Модуль ``model_crud_settings``
 """"""""""""""""""""""""""""""
-.. automodule:: model_crud_settings
+.. automodule:: src.common.model_crud_settings
    :members:
    :private-members:
    :show-inheritance:
+   :noindex:
