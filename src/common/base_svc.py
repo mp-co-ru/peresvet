@@ -3,29 +3,49 @@
 """
 import asyncio
 from functools import cached_property
+from typing import List
 from fastapi import FastAPI
 
 import aio_pika
 import aio_pika.abc
 
-from .logger import PrsLogger
-from .settings import Settings
+from src.common.logger import PrsLogger
+from src.common.base_svc_settings import BaseSvcSettings
 
 
 class BaseSvc(FastAPI):
     """
-    Базовый класс ``BaseSvc`` - предок классов-сервисов и класса Svс,
+    Kласс ``BaseSvc`` - предок классов-сервисов и класса Svс,
     реализующего дополнительный функционал – соединение с ldap сервером.
 
     Выполняет одну задачу:
 
     * устанавливает связь с amqp-сервером и создаёт обменник для публикации
-      сообщений.
+      сообщений, а также, если указаны, очереди для потрбления сообщений
+
+    После запуска эземпляр сервиса будет иметь следующие переменные:
+
+    .. code:: python
+
+        # кроме указанного в ключе "main", будут созданые другие обменники,
+        # если они были описаны в конфигурации
+        self._amqp_publish = {
+            "main": exchange
+        }
+
+        # кроме указанных в ключе "main", будут созданые другие обменники и
+        # очереди, если они были описаны в конфигурации
+        self._amqp_consume = {
+            "main": {
+                "exchange": exchange,
+                "queue": queue
+            }
+        }
 
     Args:
             settings (Settings): конфигурация приложения см. :class:`settings.Settings`
     """
-    def __init__(self, settings: Settings, *args, **kwargs):
+    def __init__(self, settings: BaseSvcSettings, *args, **kwargs):
         if kwargs.get("on_startup"):
             kwargs.append(self.on_startup)
         else:
@@ -46,12 +66,13 @@ class BaseSvc(FastAPI):
         )
         self._amqp_connection: aio_pika.abc.AbstractRobustConnection = None
         self._amqp_channel: aio_pika.abc.AbstractRobustChannel = None
-        self._pub_exchange: aio_pika.abc.AbstractRobustExchange = None
+        self._amqp_publish: List[aio_pika.abc.AbstractRobustExchange] = None
+        self._amqp_consume: List[aio_pika.abc.AbstractRobustExchange] = None
 
     @cached_property
     def _config(self):
         return self._conf
-    
+
     async def _amqp_connect(self) -> None:
         """Функция связи с AMQP-сервером.
         Аналогично функции ldap-connect при неудаче ошибка будет выведена в лог
@@ -73,10 +94,28 @@ class BaseSvc(FastAPI):
             try:
                 self._amqp_connection = await aio_pika.connect_robust(self._config.amqp_url)
                 self._amqp_channel = await self._amqp_connection.channel()
-                self._pub_exchange = await self._amqp_channel.declare_exchange(
-                    self._config.pub_exchange["name"],
-                    self._config.pub_exchange["type"], durable=True
-                )
+
+                for key, item in self._config.publish.items():
+                    self._amqp_publish[key] = await self._amqp_channel.declare_exchange(
+                        item["name"], item["type"], durable=True
+                    )
+                for key, item in self._config.consume.items():
+                    self._amqp_consume[key] = {}
+                    self._amqp_consume[key]["exchange"] = (
+                        await self._amqp_channel.declare_exchange(
+                            item["name"], item["type"], durable=True
+                        )
+                    )
+                    self._amqp_consume[key]["queue"] = (
+                        await self._amqp_channel.declare_queue(
+                            item["queue_name"], durable=True
+                        )
+                    )
+                    await self._amqp_consume[key]["queue"].bind(
+                        exchange=self._amqp_consume[key]["exchange"],
+                        routing_key=item["routing_key"]
+                    )
+
                 connected = True
 
                 self._logger.info("Связь с AMQP сервером установлена.")

@@ -21,23 +21,41 @@ def json_config_settings_source(settings: BaseSettings) -> dict[str, Any]:
     except Exception:
         return {}
 
-class Settings(BaseSettings):
+class BaseSvcSettings(BaseSettings):
     #: имя сервиса
     svc_name: str = ""
     #: строка коннекта к RabbitMQ
     amqp_url: str = "amqp://prs:Peresvet21@rabbitmq/"
-    #: строка коннекта к OpenLDAP
-    ldap_url: str = "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
 
-    # описание обменника, в котором сервис будет публиковать свои сообщения
-    pub_exchange: dict = {
-        #: имя обменника
-        "name": "",
-        #: тип обменника
-        "type": "direct",
-        #: routing_key, с которым будут публиковаться сообщения обменником
-        #: pub_exchange_type
-        "routing_key": ""
+    # описание обменников, в которые сервис будет публиковать свои сообщения
+    # наиболее часто это всего один обменник, описанный в ключе "main"
+    # информацию об обменниках и сообщениях см. в документации на каждый
+    # конкретный сервис
+    publish: dict[str, dict] = {
+        "main": {
+            #: имя обменника
+            "name": "base_svc",
+            #: тип обменника
+            "type": "direct",
+            #: routing_key, с которым будут публиковаться сообщения обменником
+            #: pub_exchange_type
+            "routing_key": "base_svc"
+        }
+    }
+    # описание обменников, из которых сервис получает сообщения
+    # информацию об обменниках и сообщениях см. в документации на каждый
+    # конкретный сервис
+    consume: dict[str, dict] = {
+        "main": {
+            #: имя обменника
+            "name": "base_svc",
+            #: тип обменника
+            "type": "direct",
+            #: имя очереди, из которой обменник будет получать сообщения
+            "queue_name": "base_svc_consume",
+            #: привзяка для очереди
+            "routing_key": "base_svc_consume"
+        }
     }
 
     log: dict = {

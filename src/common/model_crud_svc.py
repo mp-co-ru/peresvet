@@ -314,12 +314,14 @@ class ModelCRUDSvc(Svc):
         """Метод удаляет экземпляр сущности из иерархии.
 
         Args:
-            mes (dict): {
-                            "action": "delete",
-                            "data": {
-                                "id": []
-                            }
-                        }
+            mes (dict):
+                {
+                    "action": "delete",
+                    "data": {
+                        "id": []
+                    }
+                }
+
         """
         for node in mes["data"]["id"]:
             self._hierarchy.delete(node)

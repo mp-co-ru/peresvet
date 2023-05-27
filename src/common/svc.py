@@ -8,9 +8,9 @@ import ldap
 import aio_pika
 import aio_pika.abc
 
-from .hierarchy import Hierarchy
-from .settings import Settings
-from .baseSvc import BaseSvc
+from src.common.hierarchy import Hierarchy
+from src.common.svc_settings import SvcSettings
+from src.common.base_svc import BaseSvc
 
 
 class Svc(BaseSvc):
@@ -27,13 +27,9 @@ class Svc(BaseSvc):
             settings (Settings): конфигурация приложения см. :class:`settings.Settings`
     """
 
-    def __init__(self, settings: Settings, *args, **kwargs):
+    def __init__(self, settings: SvcSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
         self._hierarchy = Hierarchy(settings.ldap_url)
-
-    @cached_property
-    def _config(self):
-        return self._conf
 
     async def _ldap_connect(self) -> None:
         """
@@ -65,17 +61,5 @@ class Svc(BaseSvc):
                 await asyncio.sleep(5)
 
     async def on_startup(self) -> None:
-        """
-        Функция, выполняемая при старте сервиса: выполняется связь с
-        ldap- и amqp-серверами.
-        """
+        await super().on_startup()
         await self._ldap_connect()
-        await self._amqp_connect()
-
-    async def on_shutdown(self) -> None:
-        """
-        Функция, выполняемая при остановке сервиса: разрывается связь
-        с ldap- и amqp-серверами.
-        """
-        await self._amqp_channel.close()
-        await self._amqp_connection.close()

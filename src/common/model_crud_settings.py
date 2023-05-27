@@ -3,9 +3,9 @@
 сущности в иерархии.
 """
 
-from src.common.settings import Settings
+from src.common.svc_settings import SvcSettings
 
-class ModelCRUDSettings(Settings):
+class ModelCRUDSettings(SvcSettings):
 
     #: обменник, публикующий сообщения, на которые подписывается сервис
     api_crud_exchange: dict = {
