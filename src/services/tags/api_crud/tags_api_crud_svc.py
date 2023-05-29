@@ -32,11 +32,6 @@ class TagCreateAttributes(svc.NodeCreateAttributes):
             "**Не используется**."
         )
     )
-    prsMaxDev: float = Field(
-        0,
-        title="Величина значащего отклонения.",
-        description="Используется коннекторами для снятия `дребезга` значений."
-    )
     prsMaxLineDev: float = Field(
         0,
         title="Параметр сжатия значений тега.",
@@ -46,14 +41,6 @@ class TagCreateAttributes(svc.NodeCreateAttributes):
         False,
         title="Флаг `ступенчатого тега`."
     )
-    prsStore: dict = Field(
-        None,
-        title="Словарь, описывающий способ хранения данных тега.",
-        description=(
-            "Для реляционных баз данных - имя таблицы, "
-            "для Victoriametrics - имя метрики и теги параметра."
-        )
-    )
     prsUpdate: bool = Field(
         True,
         title="Флаг обновления значений тега.",
@@ -62,13 +49,6 @@ class TagCreateAttributes(svc.NodeCreateAttributes):
             "времени, на которую значение тега уже есть, то новое значение "
             "тега заменит старое. Иначе в хранилище будет несколько "
             "значений тега на одну метку времени."
-        )
-    )
-    prsValueScale: float = Field(
-        1,
-        title=(
-            "Коэффициент, на который умножается значение тега коннектором "
-            "перед отправкой в платформу."
         )
     )
     prsValueTypeCode: int = Field(
@@ -90,15 +70,6 @@ class TagCreateAttributes(svc.NodeCreateAttributes):
     prsMeasureUnits: str = Field(
         None,
         title="Единицы измерения тега."
-    )
-    prsSource: dict = Field(
-        None,
-        title="Словарь источника данных.",
-        description=(
-            "Значения ключей словаря указывают коннектору, как "
-            "получать значения тега из источника данных. "
-            "Формат словаря зависит от конкретного коннектора."
-        )
     )
 
 class TagCreate(svc.NodeCreate):
