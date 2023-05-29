@@ -261,13 +261,13 @@ class ModelCRUDSvc(Svc):
 
         self._hierarchy.modify(mes["id"], mes["attributes"])
         self._updating(mes)
-        await self._pub_exchange.publish(
+        await self._amqp_publish["main"]["exchange"].publish(
             aio_pika.Message(
                 body=f'{{"action": "updated", "id": {mes["id"]}}}'.encode(),
                 content_type='application/json',
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             ),
-            routing_key=self._config.pub_exchange["routing_key"]
+            routing_key=self._config.publish["main"]["routing_key"]
         )
         self._logger.info(f'Узел {mes["id"]} обновлён.')
 
@@ -286,13 +286,7 @@ class ModelCRUDSvc(Svc):
         """Метод удаляет экземпляр сущности из иерархии.
 
         Args:
-            mes (dict):
-                {
-                    "action": "delete",
-                    "data": {
-                        "id": []
-                    }
-                }
+            mes (dict): {"action": "delete", "data": {"id": []}}
 
         """
         for node in mes["data"]["id"]:
@@ -300,13 +294,13 @@ class ModelCRUDSvc(Svc):
 
         await self._deleting(mes)
 
-        await self._pub_exchange.publish(
+        await self._amqp_publish["main"]["exchange"].publish(
             aio_pika.Message(
                 body=f'{{"action": "deleted", "id": {mes}}}'.encode(),
                 content_type='application/json',
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             ),
-            routing_key=self._config.pub_exchange["routing_key"]
+            routing_key=self._config.publish["main"]["routing_key"]
         )
         self._logger.info(f'Узлы {mes} удалены.')
 
@@ -480,13 +474,13 @@ class ModelCRUDSvc(Svc):
 
         await self._creating(mes, new_id)
 
-        await self._pub_exchange.publish(
+        await self._amqp_publish["main"]["exchange"].publish(
             aio_pika.Message(
                 body=f'{{"action": "created", "id": {new_id}}}'.encode(),
                 content_type='application/json',
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             ),
-            routing_key=self._config.pub_exchange["routing_key"]
+            routing_key=self._config.publish["main"]["routing_key"]
         )
 
         return res

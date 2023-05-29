@@ -72,6 +72,9 @@ class BaseSvc(FastAPI):
     def _config(self):
         return self._conf
 
+    async def _process_message(message: aio_pika.abc.AbstractIncomingMessage) -> None:
+        pass
+
     async def _amqp_connect(self) -> None:
         """Функция связи с AMQP-сервером.
         Аналогично функции ldap-connect при неудаче ошибка будет выведена в лог
@@ -95,9 +98,11 @@ class BaseSvc(FastAPI):
                 self._amqp_channel = await self._amqp_connection.channel()
 
                 for key, item in self._config.publish.items():
-                    self._amqp_publish[key] = await self._amqp_channel.declare_exchange(
+                    self._amqp_publish[key] = {}
+                    self._amqp_publish[key]["exchange"] = await self._amqp_channel.declare_exchange(
                         item["name"], item["type"], durable=True
                     )
+
                 for key, item in self._config.consume.items():
                     self._amqp_consume[key] = {}
                     self._amqp_consume[key]["exchange"] = (
@@ -114,6 +119,8 @@ class BaseSvc(FastAPI):
                         exchange=self._amqp_consume[key]["exchange"],
                         routing_key=item["routing_key"]
                     )
+
+                    await self._amqp_consume[key]["queue"].consume(process_message)
 
                 connected = True
 

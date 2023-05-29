@@ -7,14 +7,6 @@ from src.common.svc_settings import SvcSettings
 
 class ModelCRUDSettings(SvcSettings):
 
-    #: обменник, публикующий сообщения, на которые подписывается сервис
-    api_crud_exchange: dict = {
-        "name": "",
-        "type": "direct",
-        "queue_name": "",
-        "routing_key": ""
-    }
-
     #: параметры, связанные с работой с иерархией
     hierarchy: dict = {
         #: имя узла для хранения сущностей в иерархии
