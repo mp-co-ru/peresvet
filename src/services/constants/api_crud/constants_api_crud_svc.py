@@ -14,7 +14,7 @@ sys.path.append(".")
 from src.common import api_crud_svc as svc
 from constants_api_crud_settings import ConstantsAPICRUDSettings
 
-class ConstantCreateAttributes(svc.NodeCreateAttributes):
+class ConstantCreateAttributes(svc.NodeAttributes):
     prsValueTypeCode: int = Field(
         2,
         title="Тип значений константы.",

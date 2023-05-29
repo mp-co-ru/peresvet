@@ -32,7 +32,7 @@ def valid_uuid(id: str | List[str]) -> str | List[str]:
     return id
 
 
-class NodeCreateAttributes(BaseModel):
+class NodeAttributes(BaseModel):
     """Атрибуты для создания базового узла.
     """
     cn: str = Field(None, title="Имя узла")
@@ -83,7 +83,7 @@ class NodeCreate(BaseModel):
             "При использовании в команде изменения узла трактуется как новый "
             "родительский узел."
         ))
-    attributes: NodeCreateAttributes = Field(title="Атрибуты узла")
+    attributes: NodeAttributes = Field(title="Атрибуты узла")
 
     validate_id = validator('parentId', allow_reuse=True)(valid_uuid)
 

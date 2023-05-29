@@ -14,7 +14,7 @@ sys.path.append(".")
 from src.common import api_crud_svc as svc
 from tags_api_crud_settings import TagsAPICRUDSettings
 
-class TagCreateAttributes(svc.NodeCreateAttributes):
+class TagCreateAttributes(svc.NodeAttributes):
     prsArchive: bool = Field(
         True,
         title="Флаг архивирования начений тега.",

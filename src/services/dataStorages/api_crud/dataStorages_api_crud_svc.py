@@ -14,7 +14,7 @@ sys.path.append(".")
 from src.common import api_crud_svc as svc
 from dataStorages_api_crud_settings import DataStoragesAPICRUDSettings
 
-class DataStorageCreateAttributes(svc.NodeCreateAttributes):
+class DataStorageCreateAttributes(svc.NodeAttributes):
     pass
 
 class DataStorageCreate(svc.NodeCreate):

@@ -15,10 +15,10 @@ from src.common import api_crud_svc as svc
 from connectors_api_crud_settings import ConnectorsAPICRUDSettings
 
 
-class ConnectorCreateAttributes(svc.NodeCreateAttributes):
+class ConnectorCreateAttributes(svc.NodeAttributes):
     pass
 
-class ConnectorLinkedTagAttributes(svc.NodeCreateAttributes):
+class ConnectorLinkedTagAttributes(svc.NodeAttributes):
     prsSource: dict = Field(
         None,
         title="Словарь источника данных.",
@@ -42,11 +42,11 @@ class ConnectorLinkedTagAttributes(svc.NodeCreateAttributes):
     )
 
 class ConnectorLinkedTag(svc.NodeRead):
-    attributes: ConnectorLinkedTagAttributes = Field(title="Атрибуты тега, связанного с коннектором")
+    attributes: ConnectorLinkedTagAttributes = Field(title="Атрибуты тега")
 
 class ConnectorCreate(svc.NodeCreate):
     attributes: ConnectorCreateAttributes = Field(title="Атрибуты узла")
-    linkTags: List[ConnectorLinkedTag] = Field(title="")
+    linkTags: List[ConnectorLinkedTag] = Field(title="Список добавленных тегов для коннектора")
     # validate_id = validator('parentId', 'dataStorageId', 'connectorId', allow_reuse=True)(svc.valid_uuid)
 
 class ConnectorRead(svc.NodeRead):
@@ -56,11 +56,12 @@ class OneConnectorInReadResult(svc.OneNodeInReadResult):
     pass
 
 class ConnectorReadResult(svc.NodeReadResult):
-    data: List[OneConnectorInReadResult] = Field(title="Список коннекторов.")
+    data: List[OneConnectorInReadResult] = Field(title="Список коннекторов")
     pass    
 
 class ConnectorUpdate(svc.NodeUpdate):
-    pass
+    linkTags: List[ConnectorLinkedTag] = Field(title="Список добавленных тегов для коннектора")
+    unlinkTags: List[ConnectorLinkedTag] = Field(title="Список отсоединенных тегов для коннектора")
 
 class ConnectorsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с коннекторами в иерархии.
