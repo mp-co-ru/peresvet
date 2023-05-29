@@ -5,7 +5,7 @@
 import sys
 from uuid import UUID
 from typing import Any, List
-from pydantic import Field, validator
+from pydantic import BaseModel, Field, validator
 
 from fastapi import APIRouter
 
@@ -14,13 +14,20 @@ sys.path.append(".")
 from src.common import api_crud_svc as svc
 from dataStorages_api_crud_settings import DataStoragesAPICRUDSettings
 
-class DataStorageCreateAttributes(svc.NodeAttributes):
+class LinkTagOrAlertAttributes(BaseModel):
+    prsStore: str = Field(None, title="Хранилище тега")
+
+class LinkTagOrAlert(BaseModel):
+    id: str = Field(title="Идентификатор привязываемого тега")
+    attributes: LinkTagOrAlertAttributes = Field(None)
+
+class DataStorageCreateAttributes(svc.NodeCreateAttributes):
     pass
 
 class DataStorageCreate(svc.NodeCreate):
     attributes: DataStorageCreateAttributes = Field(title="Атрибуты узла")
-
-    # validate_id = validator('parentId', 'dataStorageId', 'connectorId', allow_reuse=True)(svc.valid_uuid)
+    linkTags: List[LinkTagOrAlert] = Field(None, title="Список привязываемых тегов")
+    linkAlerts: List[LinkTagOrAlert] = Field(None, title="Список привязываемых тревог")
 
 class DataStorageRead(svc.NodeRead):
     pass

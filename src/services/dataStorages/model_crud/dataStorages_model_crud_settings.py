@@ -9,18 +9,22 @@ class DataStoragesModelCRUDSettings(ModelCRUDSettings):
     ldap_url: str = "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
 
     #: обменник для публикаций
-    pub_exchange: dict = {
-        "name": "dataStorages_model_crud",
-        "type": "direct",
-        "routing_key": "dataStorages_model_crud"
+    publish: dict = {
+        "main": {
+            "name": "dataStorages",
+            "type": "direct",
+            "routing_key": "dataStorages_model_crud"
+        }
     }
 
-    #: обменник, который публикует запросы от API_CRUD
-    api_crud_exchange: dict = {
-        "name": "dataStorages_api_crud",
-        "type": "direct",
-        "queue_name": "dataStorages_api_crud",
-        "routing_key": "dataStorages_api_crud"
+    consume: dict = {
+        #: обменник, который публикует запросы от API_CRUD
+        "main": {
+            "name": "dataStorages",
+            "type": "direct",
+            "queue_name": "dataStorages_api_crud",
+            "routing_key": "dataStorages_api_crud"
+        }
     }
 
     hierarchy: dict = {

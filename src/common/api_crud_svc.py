@@ -201,7 +201,7 @@ class APICRUDSvc(Svc):
             durable=True, exclusive=True
         )
         await self._callback_queue.bind(
-            exchange=self._amqp_publish["main"],
+            exchange=self._amqp_publish["main"]["exchange"],
             routing_key=self._callback_queue.name
         )
 
@@ -224,7 +224,7 @@ class APICRUDSvc(Svc):
             future = asyncio.get_running_loop().create_future()
             self._callback_futures[correlation_id] = future
 
-        await self._amqp_publish["main"].publish(
+        await self._amqp_publish["main"]["exchange"].publish(
             message=Message(
                 body=body, correlation_id=correlation_id, reply_to=reply_to
             ), routing_key=self._config.publish["main"]["routing_key"]
