@@ -14,12 +14,39 @@ sys.path.append(".")
 from src.common import api_crud_svc as svc
 from connectors_api_crud_settings import ConnectorsAPICRUDSettings
 
-class TagCreateAttributes(svc.NodeCreateAttributes):
+
+class ConnectorCreateAttributes(svc.NodeCreateAttributes):
     pass
 
-class ConnectorCreate(svc.NodeCreate):
-    attributes: TagCreateAttributes = Field(title="Атрибуты узла")
+class ConnectorLinkedTagAttributes(svc.NodeCreateAttributes):
+    prsSource: dict = Field(
+        None,
+        title="Словарь источника данных.",
+        description=(
+            "Значения ключей словаря указывают коннектору, как "
+            "получать значения тега из источника данных. "
+            "Формат словаря зависит от конкретного коннектора."
+        )
+    )
+    prsValueScale: float = Field(
+        1,
+        title=(
+            "Коэффициент, на который умножается значение тега коннектором "
+            "перед отправкой в платформу."
+        )
+    )
+    prsMaxDev: float = Field(
+        0,
+        title="Величина значащего отклонения.",
+        description="Используется коннекторами для снятия `дребезга` значений."
+    )
 
+class ConnectorLinkedTag(svc.NodeRead):
+    attributes: ConnectorLinkedTagAttributes = Field(title="Атрибуты тега, связанного с коннектором")
+
+class ConnectorCreate(svc.NodeCreate):
+    attributes: ConnectorCreateAttributes = Field(title="Атрибуты узла")
+    linkTags: List[ConnectorLinkedTag] = Field(title="")
     # validate_id = validator('parentId', 'dataStorageId', 'connectorId', allow_reuse=True)(svc.valid_uuid)
 
 class ConnectorRead(svc.NodeRead):
@@ -30,10 +57,10 @@ class OneConnectorInReadResult(svc.OneNodeInReadResult):
 
 class ConnectorReadResult(svc.NodeReadResult):
     data: List[OneConnectorInReadResult] = Field(title="Список коннекторов.")
-    pass
+    pass    
 
-# class ConnectorUpdate(svc.NodeUpdate):
-#     pass
+class ConnectorUpdate(svc.NodeUpdate):
+    pass
 
 class ConnectorsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с коннекторами в иерархии.
@@ -55,8 +82,8 @@ class ConnectorsAPICRUD(svc.APICRUDSvc):
     async def read(self, payload: ConnectorRead) -> dict:
         return await super().read(payload=payload)
 
-    # async def update(self, payload: ConnectorUpdate) -> dict:
-    #     return await super().update(payload=payload)
+    async def update(self, payload: ConnectorUpdate) -> dict:
+        return await super().update(payload=payload)
 
 settings = ConnectorsAPICRUDSettings()
 
@@ -66,15 +93,16 @@ router = APIRouter()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: ConnectorCreate):
+    print(payload)
     return await app.create(payload)
 
 @router.get("/", response_model=svc.NodeCreateResult, status_code=201)
 async def read(payload: ConnectorRead):
     return await app.create(payload)
 
-# @router.put("/", status_code=202)
-# async def update(payload: ConnectorUpdate):
-#     await app.update(payload)
+@router.put("/", status_code=202)
+async def update(payload: ConnectorUpdate):
+    await app.update(payload)
 
 @router.delete("/", status_code=202)
 async def delete(payload: ConnectorRead):
