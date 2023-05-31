@@ -25,7 +25,33 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
         pass
 
     async def _creating(self, mes: dict, new_id: str) -> None:
-        pass
+        system_node = await anext(self._hierarchy.search(payload={
+            "base": new_id,
+            "scope": hierarchy.CN_SCOPE_ONELEVEL,
+            "filter": {
+                "cn": ["system"]
+            },
+            "attributes": ["cn"]
+        }))
+        if not system_node:
+            self._logger.error(f"В теге {new_id} отсутствует узел `system`.")
+            return
+
+        system_node_id = system_node[0]
+
+        if mes["data"].get("linkTags"):
+            linkTags = mes.get('data').get('linkTags')
+            prsSource = mes.get('data').get('prsSource')
+            prsMaxDev = mes.get('data').get('prsMaxDev')
+            prsValueScale = mes.get('data').get('prsValueScale')
+            prs_connector_tag_data_id = await self._hierarchy.add(system_node_id, 
+                                                                  {"objectClass": ["prsConnectorTagData"],
+                                                                   "prsSource": prsSource,
+                                                                   "prsMaxDev": prsMaxDev,
+                                                                   "prsValueScale": prsValueScale})
+            # await self._hierarchy.add_alias(
+            #     prs_connector_tag_data_id, mes["data"]["linkTags"], mes["data"]["linkTags"]
+            # )
 
 settings = ConnectorsModelCRUDSettings()
 
