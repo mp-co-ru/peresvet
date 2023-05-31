@@ -14,7 +14,7 @@ sys.path.append(".")
 from src.common import api_crud_svc as svc
 from schedules_api_crud_settings import SchedulesAPICRUDSettings
 
-class TagCreateAttributes(svc.NodeCreateAttributes):
+class TagCreateAttributes(svc.NodeAttributes):
     pass
 
 class ScheduleCreate(svc.NodeCreate):

@@ -14,7 +14,7 @@ sys.path.append(".")
 from src.common import api_crud_svc as svc
 from objects_api_crud_settings import ObjectsAPICRUDSettings
 
-class ObjectCreateAttributes(svc.NodeCreateAttributes):
+class ObjectCreateAttributes(svc.NodeAttributes):
     pass
 
 class ObjectCreate(svc.NodeCreate):
