@@ -41,7 +41,8 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-    'sphinx.ext.intersphinx'
+    'sphinx.ext.intersphinx',
+    'rst2pdf.pdfbuilder'
 ]
 
 httpexample_scheme = 'http'
@@ -110,8 +111,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'OstecPlatformDoc', 'Платформа Остек. Документация.',
-     author, 'OstecPlatformDoc', 'Платформа Остек. Документация.',
+    (master_doc, 'MPCPeresvetDoc', 'Платформа МПК Пересвет. Документация.',
+     author, 'MPCPeresvetDoc', 'Платформа МПК Пересвет. Документация.',
      'Miscellaneous'),
 ]
 
@@ -128,3 +129,5 @@ html_theme_options = {
     'logo_only': True,
     'display_version': True,
 }
+
+pdf_documents = [('index', u'documentation', u'My Docs', u'Me'), ]
