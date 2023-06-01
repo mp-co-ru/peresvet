@@ -24,8 +24,30 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
     async def _reading(self, mes: dict) -> dict:
         pass
 
-    async def _creating(self, mes: dict, new_id: str) -> None:
+    async def _link_tag(payload: dict) -> None:
         pass
+
+    async def _link_alert(payload: dict) -> None:
+        pass
+
+    async def _creating(self, mes: dict, new_id: str) -> None:
+        sys_id = await anext(self._hierarchy.search({
+            "base": new_id,
+            "scope": hierarchy.CN_SCOPE_ONELEVEL,
+            "filter": {
+                "cn": ["system"]
+            }
+        }))
+
+        sys_id = sys_id[0]
+
+        await self._hierarchy.add(sys_id, {"cn": "tags"})
+        await self._hierarchy.add(sys_id, {"cn": "alerts"})
+
+        for item in mes["data"]["linkTags"]:
+            await self._link_tag(item)
+        for item in mes["data"]["linkAlerts"]:
+            await self._link_alert(item)
 
 settings = DataStoragesModelCRUDSettings()
 

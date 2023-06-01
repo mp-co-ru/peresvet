@@ -3,9 +3,9 @@
 работы с иерархией.
 """
 
-from src.common.settings import Settings
+from src.common.base_svc_settings import BaseSvcSettings
 
-class APICRUDSettings(Settings):
+class APICRUDSettings(BaseSvcSettings):
     """Класс-конфигурация для сервиса, предоставляющего API.
     Отличается от базового класса наличием переменной, в которой хранится
     версия API.
@@ -16,3 +16,5 @@ class APICRUDSettings(Settings):
 
     #: версия API
     api_version: str = "/v1"
+
+    consume: dict = {}

@@ -173,34 +173,6 @@ class ModelCRUDSvc(Svc):
                 object_class.strip() for object_class in classes
             ]
 
-        self._api_crud_exchange: aio_pika.abc.AbstractRobustExchange = None
-        self._api_crud_queue: aio_pika.abc.AbstractRobustQueue = None
-
-    async def _amqp_connect(self) -> None:
-        """Связь с amqp-сервером.
-        В дополнение к обменнику, создаваемому классом-предком
-        :class:`svc.Svc`, в этом методе
-        создаётся обменник и очередь для получения сообщений от сервиса
-        ``<сущность>_api_crud_svc``.
-
-        """
-        await super()._amqp_connect()
-
-        self._api_crud_exchange = await self._amqp_channel.declare_exchange(
-            self._config.api_crud_exchange["name"],
-            type=self._config.api_crud_exchange["type"],
-            durable=True
-        )
-        self._api_crud_queue = await self._amqp_channel.declare_queue(
-            self._config.api_crud_exchange["queue_name"],
-            durable=True
-        )
-        await self._api_crud_queue.bind(
-            exchange=self._api_crud_exchange,
-            routing_key=self._config.api_crud_exchange["routing_key"]
-        )
-        await self._api_crud_queue.consume(self._process_message)
-
     async def _process_message(self,
             message: aio_pika.abc.AbstractIncomingMessage
     ) -> None:
@@ -262,7 +234,7 @@ class ModelCRUDSvc(Svc):
                 await message.ack()
                 return
 
-            await self._api_crud_exchange.publish(
+            await self._amqp_consume["main"]["exchange"].publish(
                 aio_pika.Message(
                     body=json.dumps(res,ensure_ascii=False).encode(),
                     correlation_id=message.correlation_id,
@@ -289,13 +261,13 @@ class ModelCRUDSvc(Svc):
 
         self._hierarchy.modify(mes["id"], mes["attributes"])
         self._updating(mes)
-        await self._pub_exchange.publish(
+        await self._amqp_publish["main"]["exchange"].publish(
             aio_pika.Message(
                 body=f'{{"action": "updated", "id": {mes["id"]}}}'.encode(),
                 content_type='application/json',
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             ),
-            routing_key=self._config.pub_exchange["routing_key"]
+            routing_key=self._config.publish["main"]["routing_key"]
         )
         self._logger.info(f'Узел {mes["id"]} обновлён.')
 
@@ -314,25 +286,21 @@ class ModelCRUDSvc(Svc):
         """Метод удаляет экземпляр сущности из иерархии.
 
         Args:
-            mes (dict): {
-                            "action": "delete",
-                            "data": {
-                                "id": []
-                            }
-                        }
+            mes (dict): {"action": "delete", "data": {"id": []}}
+
         """
         for node in mes["data"]["id"]:
             self._hierarchy.delete(node)
 
         await self._deleting(mes)
 
-        await self._pub_exchange.publish(
+        await self._amqp_publish["main"]["exchange"].publish(
             aio_pika.Message(
                 body=f'{{"action": "deleted", "id": {mes}}}'.encode(),
                 content_type='application/json',
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             ),
-            routing_key=self._config.pub_exchange["routing_key"]
+            routing_key=self._config.publish["main"]["routing_key"]
         )
         self._logger.info(f'Узлы {mes} удалены.')
 
@@ -506,13 +474,13 @@ class ModelCRUDSvc(Svc):
 
         await self._creating(mes, new_id)
 
-        await self._pub_exchange.publish(
+        await self._amqp_publish["main"]["exchange"].publish(
             aio_pika.Message(
                 body=f'{{"action": "created", "id": {new_id}}}'.encode(),
                 content_type='application/json',
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             ),
-            routing_key=self._config.pub_exchange["routing_key"]
+            routing_key=self._config.publish["main"]["routing_key"]
         )
 
         return res

@@ -14,7 +14,7 @@ import aio_pika.abc
 from fastapi import APIRouter
 
 from src.common.svc import Svc
-from src.common.api_settings import APICRUDSettings
+from src.common.api_crud_settings import APICRUDSettings
 
 def valid_uuid(id: str | List[str]) -> str | List[str]:
     """Валидатор идентификаторов.
@@ -83,7 +83,7 @@ class NodeCreate(BaseModel):
             "При использовании в команде изменения узла трактуется как новый "
             "родительский узел."
         ))
-    attributes: NodeAttributes = Field(title="Атрибуты узла")
+    attributes: NodeAttributes = Field({}, title="Атрибуты узла")
 
     validate_id = validator('parentId', allow_reuse=True)(valid_uuid)
 
@@ -201,7 +201,7 @@ class APICRUDSvc(Svc):
             durable=True, exclusive=True
         )
         await self._callback_queue.bind(
-            exchange=self._pub_exchange,
+            exchange=self._amqp_publish["main"]["exchange"],
             routing_key=self._callback_queue.name
         )
 
@@ -224,10 +224,10 @@ class APICRUDSvc(Svc):
             future = asyncio.get_running_loop().create_future()
             self._callback_futures[correlation_id] = future
 
-        await self._pub_exchange.publish(
+        await self._amqp_publish["main"]["exchange"].publish(
             message=Message(
                 body=body, correlation_id=correlation_id, reply_to=reply_to
-            ), routing_key=self._config.pub_exchange["routing_key"]
+            ), routing_key=self._config.publish["main"]["routing_key"]
         )
         if not reply:
             return

@@ -11,6 +11,7 @@ pydantic = "*"
 ciso8601 = "*"
 aio-pika = "*"
 loguru = "*"
+pygments = "*"
 
 [dev-packages]
 pylint = "*"
