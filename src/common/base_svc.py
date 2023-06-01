@@ -65,8 +65,8 @@ class BaseSvc(FastAPI):
         )
         self._amqp_connection: aio_pika.abc.AbstractRobustConnection = None
         self._amqp_channel: aio_pika.abc.AbstractRobustChannel = None
-        self._amqp_publish: dict = None
-        self._amqp_consume: dict = None
+        self._amqp_publish: dict = {}
+        self._amqp_consume: dict = {}
 
     @cached_property
     def _config(self):
@@ -120,7 +120,7 @@ class BaseSvc(FastAPI):
                         routing_key=item["routing_key"]
                     )
 
-                    await self._amqp_consume[key]["queue"].consume(_process_message)
+                    await self._amqp_consume[key]["queue"].consume(self._process_message)
 
                 connected = True
 
