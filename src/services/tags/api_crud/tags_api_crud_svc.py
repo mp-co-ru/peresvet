@@ -82,7 +82,7 @@ class TagCreate(svc.NodeCreate):
         None,
         title="Id коннектора-поставщика данных."
     )
-    attributes: TagCreateAttributes = Field(title="Атрибуты узла")
+    attributes: TagCreateAttributes = Field({}, title="Атрибуты узла")
 
     validate_id = validator('parentId', 'dataStorageId', 'connectorId', allow_reuse=True)(svc.valid_uuid)
 

@@ -364,13 +364,12 @@ class Hierarchy:
 
             if cn:
                 res = conn.search_s(real_base, CN_SCOPE_BASE, None, ['entryUUID'])
-                id_ = res[0][1]['entryUUID']
+                id_ = res[0][1]['entryUUID'][0].decode()
 
                 if isinstance(cn, list):
                     cn = cn[0]
                 new_rdn = f'cn={ldap.dn.escape_dn_chars(cn)}'
                 conn.rename_s(real_base, new_rdn)
-
                 res = conn.search_s(self._base, CN_SCOPE_SUBTREE, f'(entryUUID={id_})')
 
                 return res[0][0]
