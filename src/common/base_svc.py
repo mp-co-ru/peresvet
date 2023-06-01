@@ -15,7 +15,7 @@ from src.common.base_svc_settings import BaseSvcSettings
 class BaseSvc(FastAPI):
     """
     Kласс ``BaseSvc`` - предок классов-сервисов и класса Svс,
-    реализующего дополнительный функционал – соединение с ldap сервером.
+    реализующего дополнительный функционал - соединение с ldap-сервером.
 
     Выполняет одну задачу:
 
@@ -120,7 +120,7 @@ class BaseSvc(FastAPI):
                         routing_key=item["routing_key"]
                     )
 
-                    await self._amqp_consume[key]["queue"].consume(process_message)
+                    await self._amqp_consume[key]["queue"].consume(_process_message)
 
                 connected = True
 

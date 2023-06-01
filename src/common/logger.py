@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
+
+# Модуль содержит класс журнала
+
 import logging
 import logging.config
 import os
