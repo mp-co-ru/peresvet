@@ -21,13 +21,13 @@ class LinkTagOrAlert(BaseModel):
     id: str = Field(title="Идентификатор привязываемого тега")
     attributes: LinkTagOrAlertAttributes = Field(None)
 
-class DataStorageCreateAttributes(svc.NodeCreateAttributes):
+class DataStorageAttributes(svc.NodeAttributes):
     pass
 
 class DataStorageCreate(svc.NodeCreate):
-    attributes: DataStorageCreateAttributes = Field(title="Атрибуты узла")
-    linkTags: List[LinkTagOrAlert] = Field(None, title="Список привязываемых тегов")
-    linkAlerts: List[LinkTagOrAlert] = Field(None, title="Список привязываемых тревог")
+    attributes: DataStorageAttributes = Field({}, title="Атрибуты узла")
+    linkTags: List[LinkTagOrAlert] = Field([], title="Список привязываемых тегов")
+    linkAlerts: List[LinkTagOrAlert] = Field([], title="Список привязываемых тревог")
 
 class DataStorageRead(svc.NodeRead):
     pass

@@ -16,3 +16,5 @@ class APICRUDSettings(BaseSvcSettings):
 
     #: версия API
     api_version: str = "/v1"
+
+    consume: dict = {}

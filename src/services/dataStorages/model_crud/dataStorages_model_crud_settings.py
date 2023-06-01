@@ -22,7 +22,7 @@ class DataStoragesModelCRUDSettings(ModelCRUDSettings):
         "main": {
             "name": "dataStorages",
             "type": "direct",
-            "queue_name": "dataStorages_api_crud",
+            "queue_name": "dataStorages_model_crud",
             "routing_key": "dataStorages_api_crud"
         }
     }

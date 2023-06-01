@@ -83,7 +83,7 @@ class NodeCreate(BaseModel):
             "При использовании в команде изменения узла трактуется как новый "
             "родительский узел."
         ))
-    attributes: NodeAttributes = Field(title="Атрибуты узла")
+    attributes: NodeAttributes = Field({}, title="Атрибуты узла")
 
     validate_id = validator('parentId', allow_reuse=True)(valid_uuid)
 

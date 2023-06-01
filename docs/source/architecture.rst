@@ -533,24 +533,25 @@ LDAP-сервера и разработать комплект микросер�
 
 В общем случае настройки обменников в файле конфигурации выглядят так:
 
-.. code:: json
+.. code:: python
 
-   {
-      "publish": {
-         "main": {
-            "name": "<сущность>_pub",
-            "type": "direct",
-            "routing_key": "<service_name>_pub"
-         }
-      },
-      "consume": {
-         "main": {
-            "name": "<ext_service_name>_pub",
-            "type": "direct",
-            "queue_name": "<service_name>_cons"
-            "routing_key": "<ext_service_name>_pub"
+   publish: dict = {
+      "main": {
+         "name": "<сущность>",
+         "type": "direct",
+         "routing_key": "<service>"
       }
    }
+   consume: dict = {
+      "main": {
+         "name": "<сущность>",
+         "type": "direct",
+         "queue_name": "<service>",
+         "routing_key": "<routing_key>"
+      }
+   }
+
+Таким образом, все сервисы для одной сущности пользуются одним обменником.
 
 .. note::
    Все сервисы, составшяющие ядро платформы, имеют настройки по умолчанию,
@@ -571,16 +572,17 @@ tags_api_crud
 Принимая на вход команды, сервис проверяет корректность входных данных,
 затем добавляет в командю ключ ``action`` и отправляет команду в обменник.
 
-.. code:: json
+.. code:: python
 
    {
-      "publish": {
+      "publish": dict = {
          "main": {
-            "name": "tags_pub",
+            "name": "tags",
             "type": "direct",
-            "routing_key": "tags_api_crud_pub"
+            "routing_key": "tags_api_crud"
          }
       }
+      "consume": {}
    }
 
 .. note::
@@ -594,22 +596,22 @@ tags_model_crud
 свои собственные сообщения после выполненных работ с иерархией (подробнее
 см. `Логика сообщений при создании, обновлении и удалении узлов`_).
 
-.. code:: json
+.. code:: python
 
    {
       "publish": {
          "main": {
-            "name": "tags_pub",
+            "name": "tags",
             "type": "direct",
-            "routing_key": "tags_model_crud_pub"
+            "routing_key": "tags_model_crud"
          }
       },
       "consume": {
          "main": {
-            "name": "tags_pub",
+            "name": "tags",
             "type": "direct",
-            "queue_name": "tags_model_crud_cons",
-            "routing_key": "tags_api_crud_pub"
+            "queue_name": "tags_model_crud",
+            "routing_key": "tags_api_crud"
          }
       }
    }

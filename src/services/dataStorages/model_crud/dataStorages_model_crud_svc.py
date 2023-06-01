@@ -31,20 +31,22 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         pass
 
     async def _creating(self, mes: dict, new_id: str) -> None:
-        sys_id = await self._hierarchy.search({
+        sys_id = await anext(self._hierarchy.search({
             "base": new_id,
             "scope": hierarchy.CN_SCOPE_ONELEVEL,
             "filter": {
                 "cn": ["system"]
             }
-        })
+        }))
+
+        sys_id = sys_id[0]
 
         await self._hierarchy.add(sys_id, {"cn": "tags"})
         await self._hierarchy.add(sys_id, {"cn": "alerts"})
 
-        for item in mes["linkTags"]:
+        for item in mes["data"]["linkTags"]:
             await self._link_tag(item)
-        for item in mes["linkAlerts"]:
+        for item in mes["data"]["linkAlerts"]:
             await self._link_alert(item)
 
 settings = DataStoragesModelCRUDSettings()

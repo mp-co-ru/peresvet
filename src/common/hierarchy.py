@@ -357,13 +357,14 @@ class Hierarchy:
         }
 
         with self._cm.connection() as conn:
-            res = conn.search_s(real_base, CN_SCOPE_BASE, None, [key for key in attrs.keys()])
-            modlist = ldap.modlist.modifyModlist(res[0][1], attrs)
-            conn.modify_s(real_base, modlist)
+            if attrs:
+                res = conn.search_s(real_base, CN_SCOPE_BASE, None, [key for key in attrs.keys()])
+                modlist = ldap.modlist.modifyModlist(res[0][1], attrs)
+                conn.modify_s(real_base, modlist)
 
             if cn:
                 res = conn.search_s(real_base, CN_SCOPE_BASE, None, ['entryUUID'])
-                id_ = res[0][1]['entryUUID']
+                id_ = res[0][1]['entryUUID'][0].decode()
 
                 if isinstance(cn, list):
                     cn = cn[0]

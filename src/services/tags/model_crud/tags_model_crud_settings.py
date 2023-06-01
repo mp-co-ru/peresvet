@@ -9,18 +9,22 @@ class TagsModelCRUDSettings(ModelCRUDSettings):
     ldap_url: str = "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
 
     #: обменник для публикаций
-    pub_exchange: dict = {
-        "name": "tags_model_crud",
-        "type": "direct",
-        "routing_key": "tags_model_crud"
+    publish: dict = {
+        "main": {
+            "name": "tags",
+            "type": "direct",
+            "routing_key": "tags_model_crud"
+        }
     }
 
     #: обменник, который публикует запросы от API_CRUD
-    api_crud_exchange: dict = {
-        "name": "tags_api_crud",
-        "type": "direct",
-        "queue_name": "tags_api_crud",
-        "routing_key": "tags_api_crud"
+    consume: dict = {
+        "main": {
+            "name": "tags",
+            "type": "direct",
+            "queue_name": "tags_model_crud",
+            "routing_key": "tags_api_crud"
+        }
     }
 
     hierarchy: dict = {
