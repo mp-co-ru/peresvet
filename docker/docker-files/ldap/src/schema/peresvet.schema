@@ -228,7 +228,11 @@ objectClass ( 1.3.6.1.4.1.58316.2.4.2
 	NAME 'prsTag'
 	DESC 'класс тэга'
 	SUP prsModelNode STRUCTURAL
+<<<<<<< HEAD
 	MAY ( prsValueTypeCode $ prsMeasureUnits $ prsMaxLineDev $ prsArchive $ prsCompress $ prsStep $ prsUpdate $ prsDefaultValue ))
+=======
+	MAY ( prsValueTypeCode $ prsSource $ prsMeasureUnits $ prsMaxDev $ prsMaxLineDev $ prsArchive $ prsCompress $ prsValueScale $ prsStep $ prsUpdate $ prsDefaultValue ))
+>>>>>>> 2cb2179769ee2796f52977fcd48217cc870671d3
 
 objectClass ( 1.3.6.1.4.1.58316.2.4.3
 	NAME 'prsAlertLevel'
