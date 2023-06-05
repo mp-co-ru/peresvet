@@ -1,6 +1,7 @@
-from src.common.svc_settings import SvcSettings
+from src.common.base_svc_settings import BaseSvcSettings
 
-class ConnectorsAppSettings(SvcSettings):
+class ConnectorsAppSettings(BaseSvcSettings):
+
     #: имя сервиса. сервисы *_mod_crud создают в иерархии узел с таким же именем
     svc_name: str = "connectors_app"
     #: строка коннекта к RabbitMQ
@@ -13,7 +14,7 @@ class ConnectorsAppSettings(SvcSettings):
     #: обменник для публикаций
     publish: dict = {
         "main": {
-            "name": "connectors",
+            "name": "connectors_app",
             "type": "direct",
             "routing_key": "connectors_app"
         }
