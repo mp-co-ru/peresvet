@@ -146,7 +146,7 @@ async def create(payload: TagCreate):
 
 @router.get("/", response_model=svc.NodeCreateResult, status_code=200)
 async def read(payload: TagRead):
-    return await app.create(payload)
+    return await app.read(payload)
 
 @router.put("/", status_code=202)
 async def update(payload: TagUpdate):
