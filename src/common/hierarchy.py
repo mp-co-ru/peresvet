@@ -145,7 +145,7 @@ class Hierarchy:
         return filterstr
 
     #TODO: return not List, but one tuple, because it is a generator
-    async def search(self, payload: dict) -> Tuple[str, str, dict] | None:
+    async def search(self, payload: dict) -> Tuple[str, str, dict]:
         """Метод-генератор поиска узлов и чтения их данных.
 
         Результат - массив кортежей. Каждый кортеж состоит из трёх элементов:
@@ -247,7 +247,7 @@ class Hierarchy:
 
             conn.deref = old_deref
 
-        yield
+        yield None, None, None
 
     async def add(self, base: str = None, attr_vals: dict = None) -> str:
         """Добавление узла в иерархию.

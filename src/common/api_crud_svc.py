@@ -13,7 +13,7 @@ from aio_pika import Message
 import aio_pika.abc
 from fastapi import APIRouter
 
-from src.common.svc import Svc
+from src.common.base_svc import BaseSvc
 from src.common.api_crud_settings import APICRUDSettings
 
 def valid_uuid(id: str | List[str]) -> str | List[str]:
@@ -183,7 +183,7 @@ class OneNodeInReadResult(BaseModel):
 class NodeReadResult(BaseModel):
     data: List[OneNodeInReadResult] = Field(title="Список узлов")
 
-class APICRUDSvc(Svc):
+class APICRUDSvc(BaseSvc):
 
     _callback_queue: aio_pika.abc.AbstractRobustQueue
 
@@ -212,9 +212,9 @@ class APICRUDSvc(Svc):
     ) -> None:
         if message.correlation_id is None:
             self._logger.error("У сообщения не выставлен параметр `correlation_id`")
-            return
-        future: asyncio.Future = self._callback_futures.pop(message.correlation_id, None)
-        future.set_result(json.loads(message.body.decode()))
+        else:
+            future: asyncio.Future = self._callback_futures.pop(message.correlation_id, None)
+            future.set_result(json.loads(message.body.decode()))
 
     async def _post_message(self, mes: dict, reply: bool = False) -> dict | None:
         body = json.dumps(mes, ensure_ascii=False).encode()

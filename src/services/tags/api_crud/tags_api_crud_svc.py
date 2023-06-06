@@ -91,13 +91,6 @@ class TagRead(svc.NodeRead):
         title="Флаг возврата id источника данных."
     )
 
-class OneTagInReadResult(svc.OneNodeInReadResult):
-    dataStorageId: str = Field(None, title="Id хранилища данных.")
-    connectorId: dict = Field(None, title="Id источника данных.")
-
-class TagReadResult(svc.NodeReadResult):
-    data: List[OneTagInReadResult] = Field(title="Список тегов.")
-
 class TagUpdate(svc.NodeUpdate):
     dataStorageId: str = Field(
         None,
@@ -144,7 +137,7 @@ router = APIRouter()
 async def create(payload: TagCreate):
     return await app.create(payload)
 
-@router.get("/", response_model=svc.NodeCreateResult, status_code=200)
+@router.get("/", response_model=svc.NodeReadResult, status_code=200)
 async def read(payload: TagRead):
     return await app.read(payload)
 
@@ -153,7 +146,7 @@ async def update(payload: TagUpdate):
     await app.update(payload)
 
 @router.delete("/", status_code=202)
-async def delete(payload: TagRead):
+async def delete(payload: svc.NodeDelete):
     await app.delete(payload)
 
 app.include_router(router, prefix=f"{settings.api_version}/tags", tags=["tags"])
