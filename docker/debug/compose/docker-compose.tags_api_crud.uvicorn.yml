@@ -1,0 +1,14 @@
+version: '3.9'
+
+services:
+  tags_all:
+    hostname: tags_all
+    build:
+      context: ../..
+      dockerfile: docker/debug/docker-files/tags_api_crud/Dockerfile.tags_api_crud.debug
+
+    command: uvicorn src.services.tags.api_crud.tags_api_crud_svc:app --reload --workers 1 --host 0.0.0.0 --port 80 --ws-ping-interval 10 --ws-ping-timeout 10
+    environment:
+      TZ: ${TIME_ZONE}
+    ports:
+      - 80:80

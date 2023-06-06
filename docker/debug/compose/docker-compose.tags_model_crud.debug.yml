@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+  tags_all:
+    command:
+      [
+        'sh',
+        '-c',
+        'pip install debugpy && python -m debugpy --wait-for-client --listen 0.0.0.0:5678 -m uvicorn src.services.tags.model_crud.tags_model_crud_svc:app --reload',
+      ]
+    ports:
+      - 5678:5678
+
+  ldap:
+    ports:
+      - 389:389
