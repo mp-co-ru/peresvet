@@ -362,7 +362,7 @@ class ModelCRUDSvc(Svc):
         res = {
             "data": []
         }
-        for id_, _, attributes in await self._hierarchy.search(mes["data"]):
+        async for id_, _, attributes in self._hierarchy.search(mes["data"]):
             res["data"].append({
                 "id": id_,
                 "attributes": attributes
