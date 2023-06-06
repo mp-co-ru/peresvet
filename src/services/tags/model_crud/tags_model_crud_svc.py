@@ -21,50 +21,6 @@ class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
     def __init__(self, settings: TagsModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    async def _reading(self, mes: dict, search_result: dict) -> dict:
-        """Чтение дополнительных параметров для тега: id хранилища данных
-        и источника данных.
-        """
-        new_res = {"data": []}
-        for item in search_result["data"]:
-            new_item = copy.deepcopy(item)
-
-            if mes["getDataStorageId"]:
-                res = await anext(self._hierarchy.search({
-                    "base": self._system_node_id,
-                    "deref": True,
-                    "scope": hierarchy.CN_SCOPE_ONELEVEL,
-                    "filter": {
-                        "objectClass": "prsDataStorage"
-                    },
-                    "attributes": ["cn"]
-                }))
-
-                if res:
-                    new_item["dataStorageId"] = res[0][0]
-                else:
-                    new_item["dataStorageId"] = None
-
-            if mes.get("getConnectorId"):
-                res = await anext(self._hierarchy.search({
-                    "base": self._system_node_id,
-                    "deref": True,
-                    "scope": hierarchy.CN_SCOPE_ONELEVEL,
-                    "filter": {
-                        "objectClass": "prsConnector"
-                    },
-                    "attributes": ["cn"]
-                }))
-
-                if res:
-                    new_item["connectorId"] = res[0][0]
-                else:
-                    new_item["connectorId"] = None
-
-            new_res["data"].append(new_item)
-
-        return new_res
-
     async def _creating(self, mes: dict, new_id: str) -> None:
         system_node = await anext(self._hierarchy.search(payload={
             "base": new_id,
@@ -74,7 +30,7 @@ class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
             },
             "attributes": ["cn"]
         }))
-        if not system_node:
+        if not system_node[0]:
             self._logger.error(f"В теге {new_id} отсутствует узел `system`.")
             return
 

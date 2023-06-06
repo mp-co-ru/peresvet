@@ -6,9 +6,9 @@
 которым управляет сервис ``objects_model_crud_svc``.
 """
 import sys
-from typing import Annotated, Any, List
-import asyncio
+import copy
 import json
+
 
 import aio_pika
 import aio_pika.abc
@@ -362,11 +362,17 @@ class ModelCRUDSvc(Svc):
         res = {
             "data": []
         }
-        async for id_, _, attributes in self._hierarchy.search(mes["data"]):
-            res["data"].append({
-                "id": id_,
-                "attributes": attributes
-            })
+
+        mes_data = copy.deepcopy(mes["data"])
+        mes_data.setdefault("filter", {})
+        mes_data["filter"]["objectClass"] = [self._config.hierarchy["class"]]
+
+        async for id_, _, attributes in self._hierarchy.search(mes_data):
+            if id_:
+                res["data"].append({
+                    "id": id_,
+                    "attributes": attributes
+                })
 
         return await self._reading(mes, res)
 
@@ -374,6 +380,7 @@ class ModelCRUDSvc(Svc):
         """Метод переопределяется в классах-потомках, чтобы
         расширять результат поиска дополнительной информацией.
         """
+        return search_result
 
     async def _create(self, mes: dict) -> dict:
         """Метод создаёт новый экземпляр сущности в иерархии.
@@ -545,7 +552,7 @@ class ModelCRUDSvc(Svc):
             },
             "attributes": ["entryUUID"]
         }))
-        if not item:
+        if not item[0]:
             base_node_id = await self._hierarchy.add(
                 attr_vals={"cn": self._config.hierarchy["node"]}
             )
