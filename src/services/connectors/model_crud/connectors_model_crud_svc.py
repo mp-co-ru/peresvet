@@ -39,19 +39,22 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         system_node_id = system_node[0]
 
-        if mes["data"].get("linkTags"):
-            linkTags = mes.get('data').get('linkTags')
-            prsSource = mes.get('data').get('prsSource')
-            prsMaxDev = mes.get('data').get('prsMaxDev')
-            prsValueScale = mes.get('data').get('prsValueScale')
-            prs_connector_tag_data_id = await self._hierarchy.add(system_node_id, 
-                                                                  {"objectClass": ["prsConnectorTagData"],
-                                                                   "prsSource": prsSource,
-                                                                   "prsMaxDev": prsMaxDev,
-                                                                   "prsValueScale": prsValueScale})
-            # await self._hierarchy.add_alias(
-            #     prs_connector_tag_data_id, mes["data"]["linkTags"], mes["data"]["linkTags"]
-            # )
+        linkTags = mes.get('data').get('linkTags')
+
+        if linkTags and isinstance(linkTags, list):
+            for linkTag in linkTags:
+                prsSource = linkTag.get('attributes').get('prsSource')
+                prsMaxDev = linkTag.get('attributes').get('prsMaxDev')
+                prsValueScale = linkTag.get('attributes').get('prsValueScale')
+                prs_connector_tag_data_id = await self._hierarchy.add(system_node_id, 
+                                                                    {"objectClass": ["prsConnectorTagData"],
+                                                                     "cn": [linkTag.get('id')],
+                                                                    "prsSource": prsSource,
+                                                                    "prsMaxDev": prsMaxDev,
+                                                                    "prsValueScale": prsValueScale})
+                await self._hierarchy.add_alias(
+                    prs_connector_tag_data_id, linkTag.get('id'), linkTag.get('id')
+                )
 
 settings = ConnectorsModelCRUDSettings()
 
