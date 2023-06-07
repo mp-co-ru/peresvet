@@ -1,4 +1,4 @@
-from src.common.api_settings import APICRUDSettings
+from src.common.api_crud_settings import APICRUDSettings
 
 class DataStoragesAPICRUDSettings(APICRUDSettings):
 
@@ -10,8 +10,10 @@ class DataStoragesAPICRUDSettings(APICRUDSettings):
     ldap_url: str = "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
 
     #: обменник для публикаций
-    pub_exchange: dict = {
-        "name": "dataStorages_api_crud",
-        "type": "direct",
-        "routing_key": "dataStorages_api_crud"
+    publish: dict = {
+        "main": {
+            "name": "dataStorages",
+            "type": "direct",
+            "routing_key": "dataStorages_api_crud"
+        }
     }

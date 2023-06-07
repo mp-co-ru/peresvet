@@ -9,6 +9,9 @@
 5. [`Запуск нагрузочных тестов`](#load_tests)
    1. [`Тестирование платформы через прокси`](#load_tests_over_proxy)
    2. [`Тестирование платформы напрямую`](#load_tests_direct)
+6. [`Генерация документации`](#make_docs)
+   1. [`HTML`](#html-docs)
+   2. [`PDF`](#pdf-docs)
 ---
 
 **Полная текущая документация доступна по адресу https://mpc-peresvet.readthedocs.io.**
@@ -73,7 +76,8 @@
 окружения проекта выполните команду:
 ```bash
 $ sudo apt-get install build-essential python3-dev \
-libldap2-dev libsasl2-dev slapd ldap-utils tox lcov valgrind
+libldap2-dev libsasl2-dev slapd ldap-utils tox lcov valgrind \
+libcairo2-dev pkg-config
 ```
 После этого зайдите в корневую папку проекта и выполните:
 ```bash
@@ -266,4 +270,54 @@ $ ./run_locust_data_get_prs-psql.sh
 которых раз в секунду читает текущие значения для 28 тегов.
 ```bash
 $ ./run_locust_real_job.sh
+```
+
+# <a name="make_docs"></a>Генерация документации
+Документация создаётся с помощью инструмента
+`"sphinx" <https://www.sphinx-doc.org/en/master/>`_. Все необходимые пакеты
+прописаны в `Pipfile` и устанавливаются автоматически при создании
+окружения проекта.
+
+## <a name="html-docs"></a> HTML
+В консоли заходим в папку ``docs`` и выполняем команду
+
+``` bash
+$ make html
+```
+
+Созданная документация будет расположена в папке ``docs/build/html``.
+Основной файл - ``index.html``.
+
+## <a name="pdf"></a> PDF
+PDF вариант документации создаётся с помощью
+`LaTeX <https://www.latex-project.org/>`_.
+
+Устанавливаем необходимые пакеты:
+
+``` bash
+$ sudo apt-get install  texmaker gummi texlive texlive-full \
+texlive-latex-recommended latexdraw intltool-debian lacheck \
+lmodern luatex po-debconf tex-common texlive-binaries texlive-extra-utils \
+texlive-latex-base texlive-latex-base-doc texlive-luatex texlive-xetex \
+texlive-lang-cyrillic texlive-fonts-extra texlive-science \
+texlive-latex-extra texlive-pstricks
+```
+
+Заходим в каталог ``docs/latex`` и выполняем команды:
+
+``` bash
+$ pdflatex mpc_peresvet.tex
+$ makeindex mpc_peresvet.idx
+$ pdflatex mpc_peresvet.tex
+```
+
+В этой же папке появится сгенерированный файл документации
+``mpc_peresvet.pdf``.
+
+Для генерации исходных кодов в виде pdf-файла выполняем два раза одну и ту же
+команду:
+
+```bash
+$ pdflatex sources.tex
+$ pdflatex sources.tex
 ```

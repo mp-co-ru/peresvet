@@ -1,4 +1,4 @@
-from src.common.api_settings import APICRUDSettings
+from src.common.api_crud_settings import APICRUDSettings
 
 class SchedulesAPICRUDSettings(APICRUDSettings):
 

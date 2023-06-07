@@ -1,4 +1,4 @@
-# класс для работы с иерархией
+# Модуль содержит класс для работы с иерархией
 
 import copy
 from typing import Any, Tuple, List
@@ -96,7 +96,7 @@ class Hierarchy:
         return True
 
     def connect(self) -> None:
-        """Создание пула коннектов к lda-серверу.
+        """Создание пула коннектов к ldap-серверу.
         URL передаётся при создании нового экземпляра класса ``Hierarchy``.
 
         Количество попыток восстановления связи при разрыве - 10. Время
@@ -145,7 +145,7 @@ class Hierarchy:
         return filterstr
 
     #TODO: return not List, but one tuple, because it is a generator
-    async def search(self, payload: dict) -> Tuple[str, str, dict] | None:
+    async def search(self, payload: dict) -> Tuple[str, str, dict]:
         """Метод-генератор поиска узлов и чтения их данных.
 
         Результат - массив кортежей. Каждый кортеж состоит из трёх элементов:
@@ -247,7 +247,7 @@ class Hierarchy:
 
             conn.deref = old_deref
 
-        yield
+        yield None, None, None
 
     async def add(self, base: str = None, attr_vals: dict = None) -> str:
         """Добавление узла в иерархию.
