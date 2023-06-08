@@ -51,7 +51,7 @@ class BaseSvcSettings(BaseSettings):
             "name": "base_svc",
             #: тип обменника
             "type": "direct",
-            #: имя очереди, из которой обменник будет получать сообщения
+            #: имя очереди, из которой сервис будет получать сообщения
             "queue_name": "base_svc_consume",
             #: привзяка для очереди
             "routing_key": "base_svc_consume"
