@@ -2,6 +2,9 @@
   "listeners": {
     "*:80": {
       "pass": "applications/api_crud"
+    },
+    "*:443": {
+      "pass": "applications/app"
     }
   },
 
@@ -26,6 +29,17 @@
       "callable": "app",
       "environment": {
         "log": "{\"level\": \"INFO\", \"file_name\": \"log/connectors_model_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+      }
+    },
+    "app": {
+      "type": "python 3.10",
+      "working_directory": "/usr/src/connectors_app",
+      "path": "/usr/src/connectors_app/src/services/connectors/app/",
+      "home": "/usr/src/connectors_app/.venv/",
+      "module": "connectors_app_svc",
+      "callable": "app",
+      "environment": {
+        "log": "{\"level\": \"INFO\", \"file_name\": \"log/connectors_app.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
       }
     }
   }
