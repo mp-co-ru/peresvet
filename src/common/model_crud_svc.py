@@ -476,19 +476,20 @@ class ModelCRUDSvc(Svc):
             self._logger.info(f"Создан новый узел {new_id}")
 
         # при необходимости создадим узел ``system``
-        if self._config.hierarchy["create_sys_node"]:
-            await self._hierarchy.add(new_id, {"cn": ["system"]})
+        system_id = await self._hierarchy.add(new_id, {"cn": ["system"]})
+        await self._hierarchy.add(system_id, {"cn": ["subscribers"]})
 
         await self._creating(mes, new_id)
 
-        await self._amqp_publish["main"]["exchange"].publish(
-            aio_pika.Message(
-                body=f'{{"action": "created", "id": {new_id}}}'.encode(),
-                content_type='application/json',
-                delivery_mode=aio_pika.DeliveryMode.PERSISTENT
-            ),
-            routing_key=self._config.publish["main"]["routing_key"]
+        mes = aio_pika.Message(
+            body=f'{{"action": "created", "id": {new_id}}}'.encode(),
+            content_type='application/json',
+            delivery_mode=aio_pika.DeliveryMode.PERSISTENT
         )
+        for r_k in self._config.publish["main"]["routing_key"]:
+            await self._amqp_publish["main"]["exchange"].publish(
+                mes, routing_key=r_k
+            )
 
         return res
 

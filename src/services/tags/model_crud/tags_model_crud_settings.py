@@ -13,7 +13,7 @@ class TagsModelCRUDSettings(ModelCRUDSettings):
         "main": {
             "name": "tags",
             "type": "direct",
-            "routing_key": "tags_model_crud"
+            "routing_key": ["tags_model_crud_publish"]
         }
     }
 
@@ -22,8 +22,11 @@ class TagsModelCRUDSettings(ModelCRUDSettings):
         "main": {
             "name": "tags",
             "type": "direct",
-            "queue_name": "tags_model_crud",
-            "routing_key": "tags_api_crud"
+            "queue_name": "tags_model_crud_consume",
+            "routing_key": [
+                "tags_model_crud_consume",
+                "tags_api_crud_publish"
+            ]
         }
     }
 
