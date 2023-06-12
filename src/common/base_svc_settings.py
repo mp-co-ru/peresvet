@@ -32,14 +32,15 @@ class BaseSvcSettings(BaseSettings):
     # информацию об обменниках и сообщениях см. в документации на каждый
     # конкретный сервис
     publish: dict[str, dict] = {
+        #: главный обменник
         "main": {
             #: имя обменника
-            "name": "base_svc",
+            # "name": "base_svc",
             #: тип обменника
-            "type": "direct",
+            # "type": "direct",
             #: routing_key, с которым будут публиковаться сообщения обменником
             #: pub_exchange_type
-            "routing_key": "base_svc"
+            # "routing_key": ["base_svc_publish"]
         }
     }
     # описание обменников, из которых сервис получает сообщения
@@ -48,13 +49,13 @@ class BaseSvcSettings(BaseSettings):
     consume: dict[str, dict] = {
         "main": {
             #: имя обменника
-            "name": "base_svc",
+            # "name": "base_svc",
             #: тип обменника
-            "type": "direct",
+            # "type": "direct",
             #: имя очереди, из которой сервис будет получать сообщения
-            "queue_name": "base_svc_consume",
+            # "queue_name": "base_svc_consume",
             #: привзяка для очереди
-            "routing_key": "base_svc_consume"
+            # "routing_key": ["base_svc_consume"]
         }
     }
 
