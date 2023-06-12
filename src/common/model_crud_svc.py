@@ -8,6 +8,8 @@
 import sys
 import copy
 import json
+import asyncio
+from uuid import uuid4
 
 
 import aio_pika
@@ -250,14 +252,78 @@ class ModelCRUDSvc(Svc):
         Args:
             data (dict): данные узла.
         """
-
-        new_parent = mes.get("parentId")
+        mes_data = mes["data"]
+        new_parent = mes_data.get("parentId")
         if new_parent:
-            if self._check_parent_class(new_parent):
-                self._hierarchy.move(mes['id'], new_parent)
-            else:
+            if not self._check_parent_class(new_parent):
                 self._logger.error("Неправильный класс нового родительского узла.")
                 return
+
+        # логика уведомлений заинтересованных сервисов в обновлении узла
+
+        # получим список всех подписавшихся на уведомления
+        subscribers = []
+        node_dn = self._hierarchy.get_node_dn(mes_data['id'])
+        subscribers_id = f"cn=subscribers,cn=system,{node_dn}"
+        async for _, _, attributes in self._hierarchy.search(
+            {
+                "base": subscribers_id,
+                "scope": CN_SCOPE_ONELEVEL,
+                "filter": {
+                    "cn": ["*"]
+                },
+                "attributes": ["cn"]
+            }
+        ):
+            if attributes:
+                subscribers.append(attributes["cn"][0])
+
+        if subscribers:
+            tasks = []
+            for subscriber in subscribers:
+                future = asyncio.create_task(
+                    self._post_message({
+                        "action": "mayUpdate",
+                        "data": mes_data
+                    },
+                    reply=True,
+                    routing_key=subscriber),
+                    name=subscriber
+                )
+                tasks.append(future)
+
+            done, _ = await asyncio.wait(
+                tasks, return_when=asyncio.ALL_COMPLETED
+            )
+
+            for future in done:
+                res = future.result()
+                if res["response"] != "ok":
+                    self._logger.info(
+                        f"Нельзя обновить узел {mes_data['id']}. "
+                        f"Отрицательный ответ от {future.get_name()}"
+                    )
+                return
+
+            tasks = []
+            for subscriber in subscribers:
+                future = asyncio.create_task(
+                    self._post_message({
+                        "action": "updating",
+                        "data": mes_data
+                    },
+                    reply=True,
+                    routing_key=subscriber),
+                    name=subscriber
+                )
+                tasks.append(future)
+
+            done, _ = await asyncio.wait(
+                tasks, return_when=asyncio.ALL_COMPLETED
+            )
+
+        if new_parent:
+            self._hierarchy.move(mes_data['id'], new_parent)
 
         self._hierarchy.modify(mes["id"], mes["attributes"])
         self._updating(mes)
@@ -289,6 +355,75 @@ class ModelCRUDSvc(Svc):
             mes (dict): {"action": "delete", "data": {"id": []}}
 
         """
+
+        # TODO: логика удаления иерархии, а также того, что в запросе на
+        # удаление может прийти несколько id
+
+        mes_data = mes["data"]
+
+        # логика уведомлений заинтересованных сервисов в удалении узла
+
+        # получим список всех подписавшихся на уведомления
+        subscribers = []
+        node_dn = self._hierarchy.get_node_dn(mes_data['id'])
+        subscribers_id = f"cn=subscribers,cn=system,{node_dn}"
+        async for _, _, attributes in self._hierarchy.search(
+            {
+                "base": subscribers_id,
+                "scope": CN_SCOPE_ONELEVEL,
+                "filter": {
+                    "cn": ["*"]
+                },
+                "attributes": ["cn"]
+            }
+        ):
+            if attributes:
+                subscribers.append(attributes["cn"][0])
+
+        if subscribers:
+            tasks = []
+            for subscriber in subscribers:
+                future = asyncio.create_task(
+                    self._post_message({
+                        "action": "mayDelete",
+                        "data": mes_data
+                    },
+                    reply=True,
+                    routing_key=subscriber),
+                    name=subscriber
+                )
+                tasks.append(future)
+
+            done, _ = await asyncio.wait(
+                tasks, return_when=asyncio.ALL_COMPLETED
+            )
+
+            for future in done:
+                res = future.result()
+                if res["response"] != "ok":
+                    self._logger.info(
+                        f"Нельзя удалить узел {mes_data['id']}. "
+                        f"Отрицательный ответ от {future.get_name()}"
+                    )
+                return
+
+            tasks = []
+            for subscriber in subscribers:
+                future = asyncio.create_task(
+                    self._post_message({
+                        "action": "deleting",
+                        "data": mes_data
+                    },
+                    reply=True,
+                    routing_key=subscriber),
+                    name=subscriber
+                )
+                tasks.append(future)
+
+            done, _ = await asyncio.wait(
+                tasks, return_when=asyncio.ALL_COMPLETED
+            )
+
         for node in mes["data"]["id"]:
             self._hierarchy.delete(node)
 

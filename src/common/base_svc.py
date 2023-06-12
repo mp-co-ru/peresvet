@@ -1,8 +1,11 @@
 """
 Модуль содержит базовый класс ``BaseSvc`` - предок классов-сервисов и класса Svc.
 """
+import json
 import asyncio
 from functools import cached_property
+from uuid import uuid4
+from collections.abc import MutableMapping
 from fastapi import FastAPI
 
 import aio_pika
@@ -67,6 +70,8 @@ class BaseSvc(FastAPI):
         self._amqp_channel: aio_pika.abc.AbstractRobustChannel = None
         self._amqp_publish: dict = {}
         self._amqp_consume: dict = {}
+        self._amqp_callback_queue: aio_pika.abc.AbstractRobustQueue = None
+        self._callback_futures: MutableMapping[str, asyncio.Future] = {}
 
     @cached_property
     def _config(self):
@@ -74,6 +79,40 @@ class BaseSvc(FastAPI):
 
     async def _process_message(message: aio_pika.abc.AbstractIncomingMessage) -> None:
         pass
+
+    async def _post_message(
+            self, mes: dict, reply: bool = False, routing_key: str = None
+    ) -> dict | None:
+        body = json.dumps(mes, ensure_ascii=False).encode()
+        correlation_id = None
+        reply_to = None
+        if reply:
+            correlation_id = str(uuid4())
+            reply_to = self._amqp_callback_queue.name
+            future = asyncio.get_running_loop().create_future()
+            self._callback_futures[correlation_id] = future
+
+        if not routing_key:
+            routing_key = self._config.publish["main"]["routing_key"]
+
+        await self._amqp_publish["main"]["exchange"].publish(
+            message=aio_pika.Message(
+                body=body, correlation_id=correlation_id, reply_to=reply_to
+            ), routing_key=routing_key
+        )
+        if not reply:
+            return
+
+        return await future
+
+    async def _on_rpc_response(
+            self, message: aio_pika.abc.AbstractIncomingMessage
+    ) -> None:
+        if message.correlation_id is None:
+            self._logger.error("У сообщения не выставлен параметр `correlation_id`")
+        else:
+            future: asyncio.Future = self._callback_futures.pop(message.correlation_id, None)
+            future.set_result(json.loads(message.body.decode()))
 
     async def _amqp_connect(self) -> None:
         """Функция связи с AMQP-сервером.
@@ -87,6 +126,8 @@ class BaseSvc(FastAPI):
         в переменной ``svc_name`` и типом, указанным в ``pub_exchange_type``.
         Именно этот exchange будет использоваться для публикации сообщений,
         генерируемых сервисом.
+
+        Также создаётся очередь для ответов RPC.
 
         Returns:
             None
@@ -125,6 +166,16 @@ class BaseSvc(FastAPI):
                         )
 
                     await self._amqp_consume[key]["queue"].consume(self._process_message)
+
+                self._amqp_callback_queue = await self._amqp_channel.declare_queue(
+                    durable=True, exclusive=True
+                )
+                await self._amqp_callback_queue.bind(
+                    exchange=self._amqp_publish["main"]["exchange"],
+                    routing_key=self._amqp_callback_queue.name
+                )
+
+                await self._amqp_callback_queue.consume(self._on_rpc_response, no_ack=True)
 
                 connected = True
 
