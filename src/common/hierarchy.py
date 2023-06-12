@@ -469,3 +469,12 @@ class Hierarchy:
             obj_classes = res[0][1]["objectClass"]
             obj_classes.remove(b'top')
             return obj_classes[0].decode()
+
+    async def get_node_id(self, node_dn: str) -> str:
+        with self._cm.connection() as conn:
+            res = conn.search_s(base=node_dn, scope=CN_SCOPE_BASE,
+                    filterstr="(cn=*)", attrlist=['entryUUID'])
+            if not res:
+                return None
+
+            return res[0][1]['entryUUID'][0].decode()
