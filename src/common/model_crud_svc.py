@@ -253,6 +253,9 @@ class ModelCRUDSvc(Svc):
             data (dict): данные узла.
         """
         mes_data = mes["data"]
+
+        self._logger.debug(f"Обновление узла {mes_data['id']}...")
+
         new_parent = mes_data.get("parentId")
         if new_parent:
             if not self._check_parent_class(new_parent):
@@ -301,7 +304,7 @@ class ModelCRUDSvc(Svc):
                 if res["response"] != "ok":
                     self._logger.info(
                         f"Нельзя обновить узел {mes_data['id']}. "
-                        f"Отрицательный ответ от {future.get_name()}"
+                        f"Отрицательный ответ от {future.get_name()}: {res['message']}"
                     )
                 return
 
@@ -350,94 +353,129 @@ class ModelCRUDSvc(Svc):
 
     async def _delete(self, mes: dict) -> None:
         """Метод удаляет экземпляр сущности из иерархии.
+        Удаление отличается от обновления тем, что ищутся все узлы данной
+        сущности вниз по иерархии и сообщения рассылаются для каждого
+        экземпляра сущности.
 
         Args:
             mes (dict): {"action": "delete", "data": {"id": []}}
 
         """
 
-        # TODO: логика удаления иерархии, а также того, что в запросе на
-        # удаление может прийти несколько id
+        # TODO: нужно писать рекурсию: набор id для удаления получается
+        # неупорядоченный по уровням иерархии, поэтому выходит каша
 
         mes_data = mes["data"]
-
-        # логика уведомлений заинтересованных сервисов в удалении узла
-
-        # получим список всех подписавшихся на уведомления
-        subscribers = []
-        node_dn = self._hierarchy.get_node_dn(mes_data['id'])
-        subscribers_id = f"cn=subscribers,cn=system,{node_dn}"
-        async for _, _, attributes in self._hierarchy.search(
-            {
-                "base": subscribers_id,
-                "scope": CN_SCOPE_ONELEVEL,
+        ids = mes_data["id"] if isinstance(mes_data["id"], list) else [mes_data["id"]]
+        # составим набор всех узлов, приготовленных к удалению
+        ids = set(ids)
+        id_set = set([])
+        for id_ in ids:
+            id_set.add(id_)
+            for item in self._hierarchy.search({
+                "base": id_,
+                "scope": CN_SCOPE_SUBTREE,
                 "filter": {
-                    "cn": ["*"]
-                },
-                "attributes": ["cn"]
-            }
-        ):
-            if attributes:
-                subscribers.append(attributes["cn"][0])
+                    "objectClass": [self._config.hierarchy["class"]]
+                }
+            }):
+                if item[0]:
+                    id_set.add(item[0])
 
-        if subscribers:
-            tasks = []
-            for subscriber in subscribers:
-                future = asyncio.create_task(
-                    self._post_message({
-                        "action": "mayDelete",
-                        "data": mes_data
+        # логика уведомлений заинтересованных сервисов в удалении узла...
+        # получим список всех подписавшихся на уведомления
+        for id_ in ids:
+            subscribers = []
+            node_dn = self._hierarchy.get_node_dn(id_)
+            subscribers_id = f"cn=subscribers,cn=system,{node_dn}"
+            async for _, _, attributes in self._hierarchy.search(
+                {
+                    "base": subscribers_id,
+                    "scope": CN_SCOPE_ONELEVEL,
+                    "filter": {
+                        "cn": ["*"]
                     },
-                    reply=True,
-                    routing_key=subscriber),
-                    name=subscriber
-                )
-                tasks.append(future)
+                    "attributes": ["cn"]
+                }
+            ):
+                if attributes:
+                    subscribers.append(attributes["cn"][0])
 
-            done, _ = await asyncio.wait(
-                tasks, return_when=asyncio.ALL_COMPLETED
-            )
-
-            for future in done:
-                res = future.result()
-                if res["response"] != "ok":
-                    self._logger.info(
-                        f"Нельзя удалить узел {mes_data['id']}. "
-                        f"Отрицательный ответ от {future.get_name()}"
+            if subscribers:
+                tasks = []
+                for subscriber in subscribers:
+                    future = asyncio.create_task(
+                        self._post_message({
+                            "action": "mayDelete",
+                            "data": {"id": id_}
+                        },
+                        reply=True,
+                        routing_key=subscriber),
+                        name=subscriber
                     )
-                return
+                    tasks.append(future)
 
-            tasks = []
-            for subscriber in subscribers:
-                future = asyncio.create_task(
-                    self._post_message({
-                        "action": "deleting",
-                        "data": mes_data
-                    },
-                    reply=True,
-                    routing_key=subscriber),
-                    name=subscriber
+                done, _ = await asyncio.wait(
+                    tasks, return_when=asyncio.ALL_COMPLETED
                 )
-                tasks.append(future)
 
-            done, _ = await asyncio.wait(
-                tasks, return_when=asyncio.ALL_COMPLETED
+                for future in done:
+                    res = future.result()
+                    if res["response"] != "ok":
+                        self._logger.info(
+                            f"Нельзя удалить узел {mes_data['id']}. "
+                            f"Отрицательный ответ от {future.get_name()}"
+                        )
+                    return
+
+        for id_ in ids:
+            subscribers = []
+            node_dn = self._hierarchy.get_node_dn(id_)
+            subscribers_id = f"cn=subscribers,cn=system,{node_dn}"
+            async for _, _, attributes in self._hierarchy.search(
+                {
+                    "base": subscribers_id,
+                    "scope": CN_SCOPE_ONELEVEL,
+                    "filter": {
+                        "cn": ["*"]
+                    },
+                    "attributes": ["cn"]
+                }
+            ):
+                if attributes:
+                    subscribers.append(attributes["cn"][0])
+
+            if subscribers:
+                tasks = []
+                for subscriber in subscribers:
+                    future = asyncio.create_task(
+                        self._post_message({
+                            "action": "deleting",
+                            "data": {"id": id_}
+                        },
+                        reply=True,
+                        routing_key=subscriber),
+                        name=subscriber
+                    )
+                    tasks.append(future)
+
+                done, _ = await asyncio.wait(
+                    tasks, return_when=asyncio.ALL_COMPLETED
+                )
+
+            self._hierarchy.delete(id_)
+
+            await self._deleting(mes)
+
+            await self._amqp_publish["main"]["exchange"].publish(
+                aio_pika.Message(
+                    body=f'{{"action": "deleted", "id": {mes}}}'.encode(),
+                    content_type='application/json',
+                    delivery_mode=aio_pika.DeliveryMode.PERSISTENT
+                ),
+                routing_key=self._config.publish["main"]["routing_key"]
             )
-
-        for node in mes["data"]["id"]:
-            self._hierarchy.delete(node)
-
-        await self._deleting(mes)
-
-        await self._amqp_publish["main"]["exchange"].publish(
-            aio_pika.Message(
-                body=f'{{"action": "deleted", "id": {mes}}}'.encode(),
-                content_type='application/json',
-                delivery_mode=aio_pika.DeliveryMode.PERSISTENT
-            ),
-            routing_key=self._config.publish["main"]["routing_key"]
-        )
-        self._logger.info(f'Узлы {mes} удалены.')
+            self._logger.info(f'Узлы {mes} удалены.')
 
     async def _deleting(self, mes: dict) -> None:
         """Метод переопределяется в сервисах-наследниках.
