@@ -17,7 +17,5 @@ class ModelCRUDSettings(SvcSettings):
         #: пример: prsTag
         "class": "",
         #: список через запятую родительских классов
-        "parent_classes": "",
-        #: флаг создания узла ``cn=system`` внутри узла экземпляра сущности
-        "create_sys_node": False
+        "parent_classes": ""
     }

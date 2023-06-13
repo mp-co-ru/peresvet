@@ -25,7 +25,17 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         pass
 
     async def _link_tag(payload: dict) -> None:
-        pass
+        """Метод привязки тега к хранилищу.
+
+        Args:
+            payload (dict): {
+                "id": "tag_id",
+                "attributes": {
+                    "prsStore":
+                }
+            }
+        """
+
 
     async def _link_alert(payload: dict) -> None:
         pass

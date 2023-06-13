@@ -14,6 +14,6 @@ class TagsAPICRUDSettings(APICRUDSettings):
         "main": {
             "name": "tags",
             "type": "direct",
-            "routing_key": "tags_api_crud"
+            "routing_key": "tags_api_crud_publish"
         }
     }

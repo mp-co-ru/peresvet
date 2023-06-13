@@ -8,6 +8,8 @@
 import sys
 import copy
 import json
+import asyncio
+from uuid import uuid4
 
 
 import aio_pika
@@ -250,14 +252,83 @@ class ModelCRUDSvc(Svc):
         Args:
             data (dict): данные узла.
         """
+        mes_data = mes["data"]
 
-        new_parent = mes.get("parentId")
+        self._logger.debug(f"Обновление узла {mes_data['id']}...")
+
+        new_parent = mes_data.get("parentId")
         if new_parent:
-            if self._check_parent_class(new_parent):
-                self._hierarchy.move(mes['id'], new_parent)
-            else:
+            if not self._check_parent_class(new_parent):
                 self._logger.error("Неправильный класс нового родительского узла.")
                 return
+
+        # логика уведомлений заинтересованных сервисов в обновлении узла
+
+        # получим список всех подписавшихся на уведомления
+        subscribers = []
+        node_dn = self._hierarchy.get_node_dn(mes_data['id'])
+        subscribers_id = self._hierarchy.get_node_id(
+            f"cn=subscribers,cn=system,{node_dn}"
+        )
+        async for _, _, attributes in self._hierarchy.search(
+            {
+                "base": subscribers_id,
+                "scope": CN_SCOPE_ONELEVEL,
+                "filter": {
+                    "cn": ["*"]
+                },
+                "attributes": ["cn"]
+            }
+        ):
+            if attributes:
+                subscribers.append(attributes["cn"][0])
+
+        if subscribers:
+            tasks = []
+            for subscriber in subscribers:
+                future = asyncio.create_task(
+                    self._post_message({
+                        "action": "mayUpdate",
+                        "data": mes_data
+                    },
+                    reply=True,
+                    routing_key=subscriber),
+                    name=subscriber
+                )
+                tasks.append(future)
+
+            done, _ = await asyncio.wait(
+                tasks, return_when=asyncio.ALL_COMPLETED
+            )
+
+            for future in done:
+                res = future.result()
+                if res["response"] != "ok":
+                    self._logger.info(
+                        f"Нельзя обновить узел {mes_data['id']}. "
+                        f"Отрицательный ответ от {future.get_name()}: {res['message']}"
+                    )
+                return
+
+            tasks = []
+            for subscriber in subscribers:
+                future = asyncio.create_task(
+                    self._post_message({
+                        "action": "updating",
+                        "data": mes_data
+                    },
+                    reply=True,
+                    routing_key=subscriber),
+                    name=subscriber
+                )
+                tasks.append(future)
+
+            done, _ = await asyncio.wait(
+                tasks, return_when=asyncio.ALL_COMPLETED
+            )
+
+        if new_parent:
+            self._hierarchy.move(mes_data['id'], new_parent)
 
         self._hierarchy.modify(mes["id"], mes["attributes"])
         self._updating(mes)
@@ -284,25 +355,130 @@ class ModelCRUDSvc(Svc):
 
     async def _delete(self, mes: dict) -> None:
         """Метод удаляет экземпляр сущности из иерархии.
+        Удаление отличается от обновления тем, что ищутся все узлы данной
+        сущности вниз по иерархии и сообщения рассылаются для каждого
+        экземпляра сущности.
 
         Args:
             mes (dict): {"action": "delete", "data": {"id": []}}
 
         """
-        for node in mes["data"]["id"]:
-            self._hierarchy.delete(node)
 
-        await self._deleting(mes)
+        # TODO: нужно писать рекурсию: набор id для удаления получается
+        # неупорядоченный по уровням иерархии, поэтому выходит каша из
+        # идентификаторов. вопрос - надо или можно и так оставить?
 
-        await self._amqp_publish["main"]["exchange"].publish(
-            aio_pika.Message(
-                body=f'{{"action": "deleted", "id": {mes}}}'.encode(),
-                content_type='application/json',
-                delivery_mode=aio_pika.DeliveryMode.PERSISTENT
-            ),
-            routing_key=self._config.publish["main"]["routing_key"]
-        )
-        self._logger.info(f'Узлы {mes} удалены.')
+        mes_data = mes["data"]
+        ids = mes_data["id"] if isinstance(mes_data["id"], list) else [mes_data["id"]]
+        # составим набор всех узлов, приготовленных к удалению
+        ids = set(ids)
+        id_set = set([])
+        for id_ in ids:
+            id_set.add(id_)
+            for item in self._hierarchy.search({
+                "base": id_,
+                "scope": CN_SCOPE_SUBTREE,
+                "filter": {
+                    "objectClass": [self._config.hierarchy["class"]]
+                }
+            }):
+                if item[0]:
+                    id_set.add(item[0])
+
+        # логика уведомлений заинтересованных сервисов в удалении узла...
+        # получим список всех подписавшихся на уведомления
+        for id_ in id_set:
+            subscribers = []
+            node_dn = self._hierarchy.get_node_dn(id_)
+            subscribers_id = f"cn=subscribers,cn=system,{node_dn}"
+            async for _, _, attributes in self._hierarchy.search(
+                {
+                    "base": subscribers_id,
+                    "scope": CN_SCOPE_ONELEVEL,
+                    "filter": {
+                        "cn": ["*"]
+                    },
+                    "attributes": ["cn"]
+                }
+            ):
+                if attributes:
+                    subscribers.append(attributes["cn"][0])
+
+            if subscribers:
+                tasks = []
+                for subscriber in subscribers:
+                    future = asyncio.create_task(
+                        self._post_message({
+                            "action": "mayDelete",
+                            "data": {"id": id_}
+                        },
+                        reply=True,
+                        routing_key=subscriber),
+                        name=subscriber
+                    )
+                    tasks.append(future)
+
+                done, _ = await asyncio.wait(
+                    tasks, return_when=asyncio.ALL_COMPLETED
+                )
+
+                for future in done:
+                    res = future.result()
+                    if res["response"] != "ok":
+                        self._logger.info(
+                            f"Нельзя удалить узел {mes_data['id']}. "
+                            f"Отрицательный ответ от {future.get_name()}"
+                        )
+                    return
+
+        for id_ in ids:
+            subscribers = []
+            node_dn = self._hierarchy.get_node_dn(id_)
+            subscribers_id = f"cn=subscribers,cn=system,{node_dn}"
+            async for _, _, attributes in self._hierarchy.search(
+                {
+                    "base": subscribers_id,
+                    "scope": CN_SCOPE_ONELEVEL,
+                    "filter": {
+                        "cn": ["*"]
+                    },
+                    "attributes": ["cn"]
+                }
+            ):
+                if attributes:
+                    subscribers.append(attributes["cn"][0])
+
+            if subscribers:
+                tasks = []
+                for subscriber in subscribers:
+                    future = asyncio.create_task(
+                        self._post_message({
+                            "action": "deleting",
+                            "data": {"id": id_}
+                        },
+                        reply=True,
+                        routing_key=subscriber),
+                        name=subscriber
+                    )
+                    tasks.append(future)
+
+                await asyncio.wait(
+                    tasks, return_when=asyncio.ALL_COMPLETED
+                )
+
+            self._hierarchy.delete(id_)
+
+            await self._deleting(mes)
+
+            await self._amqp_publish["main"]["exchange"].publish(
+                aio_pika.Message(
+                    body=f'{{"action": "deleted", "id": {mes}}}'.encode(),
+                    content_type='application/json',
+                    delivery_mode=aio_pika.DeliveryMode.PERSISTENT
+                ),
+                routing_key=self._config.publish["main"]["routing_key"]
+            )
+            self._logger.info(f'Узлы {mes} удалены.')
 
     async def _deleting(self, mes: dict) -> None:
         """Метод переопределяется в сервисах-наследниках.
@@ -476,19 +652,20 @@ class ModelCRUDSvc(Svc):
             self._logger.info(f"Создан новый узел {new_id}")
 
         # при необходимости создадим узел ``system``
-        if self._config.hierarchy["create_sys_node"]:
-            await self._hierarchy.add(new_id, {"cn": ["system"]})
+        system_id = await self._hierarchy.add(new_id, {"cn": ["system"]})
+        await self._hierarchy.add(system_id, {"cn": ["subscribers"]})
 
         await self._creating(mes, new_id)
 
-        await self._amqp_publish["main"]["exchange"].publish(
-            aio_pika.Message(
-                body=f'{{"action": "created", "id": {new_id}}}'.encode(),
-                content_type='application/json',
-                delivery_mode=aio_pika.DeliveryMode.PERSISTENT
-            ),
-            routing_key=self._config.publish["main"]["routing_key"]
+        mes = aio_pika.Message(
+            body=f'{{"action": "created", "id": {new_id}}}'.encode(),
+            content_type='application/json',
+            delivery_mode=aio_pika.DeliveryMode.PERSISTENT
         )
+        for r_k in self._config.publish["main"]["routing_key"]:
+            await self._amqp_publish["main"]["exchange"].publish(
+                mes, routing_key=r_k
+            )
 
         return res
 

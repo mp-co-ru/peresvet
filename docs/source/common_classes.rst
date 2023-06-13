@@ -59,6 +59,7 @@
 
 Модуль ``model_crud_svc``
 """""""""""""""""""""""""
+
 .. automodule:: src.common.model_crud_svc
    :members:
    :private-members:

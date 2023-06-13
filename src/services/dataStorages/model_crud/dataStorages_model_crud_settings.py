@@ -13,7 +13,7 @@ class DataStoragesModelCRUDSettings(ModelCRUDSettings):
         "main": {
             "name": "dataStorages",
             "type": "direct",
-            "routing_key": "dataStorages_model_crud"
+            "routing_key": ["dataStorages_model_crud_publish"]
         }
     }
 
@@ -22,8 +22,11 @@ class DataStoragesModelCRUDSettings(ModelCRUDSettings):
         "main": {
             "name": "dataStorages",
             "type": "direct",
-            "queue_name": "dataStorages_model_crud",
-            "routing_key": "dataStorages_api_crud"
+            "queue_name": "dataStorages_model_crud_consume",
+            "routing_key": [
+                "dataStorages_model_crud_consume",
+                "dataStorages_api_crud_publish"
+            ]
         }
     }
 
