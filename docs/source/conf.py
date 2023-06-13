@@ -42,8 +42,8 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
     'sphinx.ext.intersphinx',
-    'rst2pdf.pdfbuilder',
-    'sphinx_togglebutton'
+    # uncomment to build pdf
+    #'rst2pdf.pdfbuilder',
 ]
 
 httpexample_scheme = 'http'
