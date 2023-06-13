@@ -267,7 +267,9 @@ class ModelCRUDSvc(Svc):
         # получим список всех подписавшихся на уведомления
         subscribers = []
         node_dn = self._hierarchy.get_node_dn(mes_data['id'])
-        subscribers_id = f"cn=subscribers,cn=system,{node_dn}"
+        subscribers_id = self._hierarchy.get_node_id(
+            f"cn=subscribers,cn=system,{node_dn}"
+        )
         async for _, _, attributes in self._hierarchy.search(
             {
                 "base": subscribers_id,
@@ -363,7 +365,8 @@ class ModelCRUDSvc(Svc):
         """
 
         # TODO: нужно писать рекурсию: набор id для удаления получается
-        # неупорядоченный по уровням иерархии, поэтому выходит каша
+        # неупорядоченный по уровням иерархии, поэтому выходит каша из
+        # идентификаторов. вопрос - надо или можно и так оставить?
 
         mes_data = mes["data"]
         ids = mes_data["id"] if isinstance(mes_data["id"], list) else [mes_data["id"]]
@@ -384,7 +387,7 @@ class ModelCRUDSvc(Svc):
 
         # логика уведомлений заинтересованных сервисов в удалении узла...
         # получим список всех подписавшихся на уведомления
-        for id_ in ids:
+        for id_ in id_set:
             subscribers = []
             node_dn = self._hierarchy.get_node_dn(id_)
             subscribers_id = f"cn=subscribers,cn=system,{node_dn}"
@@ -459,7 +462,7 @@ class ModelCRUDSvc(Svc):
                     )
                     tasks.append(future)
 
-                done, _ = await asyncio.wait(
+                await asyncio.wait(
                     tasks, return_when=asyncio.ALL_COMPLETED
                 )
 
