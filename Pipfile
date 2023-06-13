@@ -12,6 +12,7 @@ ciso8601 = "*"
 aio-pika = "*"
 loguru = "*"
 pygments = "*"
+sphinx-togglebutton = "*"
 
 [dev-packages]
 pylint = "*"
