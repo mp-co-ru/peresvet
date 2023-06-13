@@ -33,31 +33,60 @@ class BaseSvcSettings(BaseSettings):
     # конкретный сервис
     publish: dict[str, dict] = {
         #: главный обменник
+        '''
         "main": {
             #: имя обменника
-            # "name": "base_svc",
+            "name": "base_svc",
             #: тип обменника
-            # "type": "direct",
+            "type": "direct",
             #: routing_key, с которым будут публиковаться сообщения обменником
             #: pub_exchange_type
-            # "routing_key": ["base_svc_publish"]
+            "routing_key": ["base_svc_publish"]
         }
+        '''
     }
+
     # описание обменников, из которых сервис получает сообщения
     # информацию об обменниках и сообщениях см. в документации на каждый
     # конкретный сервис
     consume: dict[str, dict] = {
+        '''
         "main": {
             #: имя обменника
-            # "name": "base_svc",
+            "name": "base_svc",
             #: тип обменника
-            # "type": "direct",
+            "type": "direct",
             #: имя очереди, из которой сервис будет получать сообщения
-            # "queue_name": "base_svc_consume",
+            "queue_name": "base_svc_consume",
             #: привзяка для очереди
-            # "routing_key": ["base_svc_consume"]
+            "routing_key": ["base_svc_consume"]
         }
+        '''
     }
+
+    subscribe: dict = {
+         # сущность, уведомления об изменение/удаление узлов которой
+         # требуются сервису
+         '''
+         "<сущность_2>": {
+            # в этот обменник сервис будет посылать сообщение "subscribe"
+            "publish": {
+               "name": "<сущность_2>",
+               "type": "direct",
+               "routing_key": "<сущность_2>_model_crud_consume"
+            },
+            # обменник, из которого сервис будет получать уведомления об
+            # изменениях узлов
+            # (к этому обменнику, с указанным routing_key будет привязана
+            # главная очередь сервиса с управляющими командами)
+            "consume": {
+               "name": "<сущность_2>",
+               "type": "direct",
+               "routing_key": "<сущность_2>_model_crud_publish"
+            }
+         }
+         '''
+      }
 
     log: dict = {
         "level": "CRITICAL",

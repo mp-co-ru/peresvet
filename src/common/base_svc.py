@@ -177,6 +177,8 @@ class BaseSvc(FastAPI):
 
                 await self._amqp_callback_queue.consume(self._on_rpc_response, no_ack=True)
 
+                # создадим обменники,
+
                 connected = True
 
                 self._logger.info("Связь с AMQP сервером установлена.")
