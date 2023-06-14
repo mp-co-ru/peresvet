@@ -73,12 +73,58 @@ class BaseSvc(FastAPI):
         self._amqp_callback_queue: aio_pika.abc.AbstractRobustQueue = None
         self._callback_futures: MutableMapping[str, asyncio.Future] = {}
 
+        # словарь "<action>": function
+        # используется для вызова соответствующей функции при получении
+        # определённого сообщения
+        # набор команд и функций определяется в каждом классе-наследнике
+        # предполагается, что функция асинхронная, принимает на вход
+        # пришедшее сообщение отдаёт какой-то ответ, который будет переслан
+        # обратно, если у сообщения выставлен параметр reply_to
+        self._commands = {}
+
     @cached_property
     def _config(self):
         return self._conf
 
-    async def _process_message(message: aio_pika.abc.AbstractIncomingMessage) -> None:
-        pass
+    async def _process_message(self, message: aio_pika.abc.AbstractIncomingMessage) -> None:
+
+        async with message.process(ignore_processed=True):
+            mes = message.body.decode()
+            try:
+                mes = json.loads(mes)
+            except json.decoder.JSONDecodeError:
+                self._logger.error(f"Сообщение {mes} не в формате json.")
+                await message.ack()
+                return
+
+            action = mes.get("action")
+            if not action:
+                self._logger.error(f"В сообщении {mes} не указано действие.")
+                await message.ack()
+                return
+
+            action = action.lower()
+
+            func = self._commands.get(action)
+            if not func:
+                self._logger.error(f"Неизвестное действие: {action}.")
+                await message.ack()
+                return
+
+            res = await func(mes)
+
+            if not message.reply_to:
+                await message.ack()
+                return
+
+            await self._amqp_consume["main"]["exchange"].publish(
+                aio_pika.Message(
+                    body=json.dumps(res,ensure_ascii=False).encode(),
+                    correlation_id=message.correlation_id,
+                ),
+                routing_key=message.reply_to,
+            )
+            await message.ack()
 
     async def _post_message(
             self, mes: dict, reply: bool = False, routing_key: str = None
@@ -176,8 +222,6 @@ class BaseSvc(FastAPI):
                 )
 
                 await self._amqp_callback_queue.consume(self._on_rpc_response, no_ack=True)
-
-                # создадим обменники,
 
                 connected = True
 

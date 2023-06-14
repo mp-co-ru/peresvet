@@ -21,7 +21,7 @@ class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
     def __init__(self, settings: TagsModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    async def _creating(self, mes: dict, new_id: str) -> None:
+    async def _further_create(self, mes: dict, new_id: str) -> None:
         system_node = await anext(self._hierarchy.search(payload={
             "base": new_id,
             "scope": hierarchy.CN_SCOPE_ONELEVEL,
