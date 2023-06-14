@@ -144,7 +144,6 @@ class Hierarchy:
 
         return filterstr
 
-    #TODO: return not List, but one tuple, because it is a generator
     async def search(self, payload: dict) -> Tuple[str, str, dict]:
         """Метод-генератор поиска узлов и чтения их данных.
 
@@ -249,7 +248,7 @@ class Hierarchy:
 
         yield None, None, None
 
-    async def add(self, base: str = None, attr_vals: dict = None) -> str:
+    async def add(self, base: str = None, attribute_values: dict = None) -> str:
         """Добавление узла в иерархию.
 
         Args:
@@ -260,9 +259,9 @@ class Hierarchy:
             str: id нового узла
         """
         attrs = {}
-        if attr_vals:
+        if attribute_values:
             attrs = {
-            key: values if isinstance(values, list) else [values] for key, values in attr_vals.items()
+            key: values if isinstance(values, list) else [values] for key, values in attribute_values.items()
         }
 
         if "objectClass" not in attrs.keys():
@@ -321,7 +320,7 @@ class Hierarchy:
 
     async def add_alias(self, parentId: str, aliased_object_id: str, alias_name: str) -> str:
         aliased_object_dn = self.get_node_dn(aliased_object_id)
-        return await self.add(base=parentId, attr_vals={
+        return await self.add(base=parentId, attribute_values={
             "objectClass": ["alias", "extensibleObject"],
             "aliasedObjectName": [aliased_object_dn],
             "cn": [alias_name]
