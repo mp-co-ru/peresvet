@@ -15,16 +15,15 @@ from src.common.base_svc import BaseSvc
 
 class Svc(BaseSvc):
     """
-    Базовый класс ``Svc`` - предок классов-сервисов.
+    Класс ``Svc`` - наследник класса :class:`BaseSvc`
 
-    Выполняет две задачи:
+    Реализует дополнительную функциональность:
 
-    * устанавливает связь с ldap-сервером;
-    * устанавливает связь с amqp-сервером и создаёт обменник для публикации
-      сообщений.
+    * коннект к иерархии;
+    * логика подписок на сообщения между сервисами.
 
     Args:
-            settings (Settings): конфигурация приложения см. :class:`settings.Settings`
+            settings (Settings): конфигурация приложения см. :class:`~svc_settings.SvcSettings`
     """
 
     def __init__(self, settings: SvcSettings, *args, **kwargs):
@@ -88,6 +87,21 @@ class Svc(BaseSvc):
                 exchange=self._amqp_subscribe[key]["consume"]["exchange"],
                 routing_key=self._amqp_subscribe[key]["consume"]["routing_key"]
             )
+
+    async def _get_subscribers_node_id(self, node_id: str) -> str:
+        """Метод возвращает id подузла ``cn=subscribers,cn=system`` для
+        родительского узла ``node_id``.
+
+        Args:
+            node_id (str): id родительского узла
+
+        Returns:
+            str: id узла с подписчиками
+        """
+        dn = self._hierarchy.get_node_dn(node_id)
+        return self._hierarchy.get_node_id(
+            f"cn=subscribers,cn=system,{dn}"
+        )
 
     async def on_startup(self) -> None:
         await super().on_startup()

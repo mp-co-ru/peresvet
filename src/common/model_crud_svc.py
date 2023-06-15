@@ -193,23 +193,24 @@ class ModelCRUDSvc(Svc):
         """Метод-реакция на запрос на подписку.
 
         Args:
-            mes (dict): {
-                "action": "subscribe",
-                "data":{
-                    "routing_key": "<some_rk>",
-                    "id": ["<id_1>, <id_2>"]
-                }
-            }
+            mes (dict):
+
+                .. code:: python
+
+                    {
+                        "action": "subscribe",
+                        "data":{
+                            "routing_key": "<some_rk>",
+                            "id": ["<id_1>, <id_2>"]
+                        }
+                    }
         """
         for id_ in mes["data"]["id"]:
             if self._hierarchy.get_node_class(id_) != \
                 self._config.hierarchy["class"]:
                 self._logger.info(f"Узел {id_} не {self._config.hierarchy['class']}")
                 continue
-            dn = self._hierarchy.get_node_dn(id_)
-            subscribers_node_id = self._hierarchy.get_node_id(
-                f"cn=subscribers,cn=system,{dn}"
-            )
+            subscribers_node_id = self._get_subscribers_node_id(id_)
 
             item = await anext(self._hierarchy.search({
                 "base": subscribers_node_id,
@@ -218,7 +219,7 @@ class ModelCRUDSvc(Svc):
                 "attributes": ["cn"]
             }))
             if not item[0]:
-                self._hierarchy.add(
+                await self._hierarchy.add(
                     base=subscribers_node_id,
                     attribute_values={
                         "cn": mes['data']['routing_key']
@@ -233,17 +234,38 @@ class ModelCRUDSvc(Svc):
         """Метод-реакция на запрос на отписку.
 
         Args:
-            mes (dict): {
-                "action": "unsubscribe",
-                "data":{
-                    "routing_key": "<some_rk>",
-                    "id": ["<id_1>, <id_2>"]
-                }
-            }
+            mes (dict):
+
+                .. code:: python
+
+                    {
+                        "action": "unsubscribe",
+                        "data":{
+                            "routing_key": "<some_rk>",
+                            "id": ["<id_1>, <id_2>"]
+                        }
+                    }
+
         """
         for id_ in mes["data"]["id"]:
-            pass
+            if self._hierarchy.get_node_class(id_) != \
+                self._config.hierarchy["class"]:
+                self._logger.info(f"Узел {id_} не {self._config.hierarchy['class']}")
+                continue
+            subscribers_node_id = self._get_subscribers_node_id(id_)
 
+            item = await anext(self._hierarchy.search({
+                "base": subscribers_node_id,
+                "filter": f"(cn={mes['data']['routing_key']})",
+                "scope": CN_SCOPE_ONELEVEL,
+                "attributes": ["cn"]
+            }))
+            if item[0]:
+                await self._hierarchy.delete(item[0])
+                self._logger.info(
+                    f"Удалена подписка для {mes['data']['routing_key']} на "
+                    f"узел {id_}"
+                )
 
     async def _deleting(self, mes: dict) -> dict:
         return {
@@ -286,7 +308,7 @@ class ModelCRUDSvc(Svc):
 
         # получим список всех подписавшихся на уведомления
         subscribers = []
-        node_dn = self._hierarchy.get_node_dn(mes_data['id'])
+        node_dn = await self._hierarchy.get_node_dn(mes_data['id'])
         subscribers_id = self._hierarchy.get_node_id(
             f"cn=subscribers,cn=system,{node_dn}"
         )
@@ -348,11 +370,11 @@ class ModelCRUDSvc(Svc):
             )
 
         if new_parent:
-            self._hierarchy.move(mes_data['id'], new_parent)
+            await self._hierarchy.move(mes_data['id'], new_parent)
 
-        self._hierarchy.modify(mes["id"], mes["attributes"])
+        await self._hierarchy.modify(mes["id"], mes["attributes"])
 
-        self._further_update(mes)
+        await self._further_update(mes)
 
         await self._amqp_publish["main"]["exchange"].publish(
             aio_pika.Message(
@@ -411,7 +433,7 @@ class ModelCRUDSvc(Svc):
         # получим список всех подписавшихся на уведомления
         for id_ in id_set:
             subscribers = []
-            node_dn = self._hierarchy.get_node_dn(id_)
+            node_dn = await self._hierarchy.get_node_dn(id_)
             subscribers_id = f"cn=subscribers,cn=system,{node_dn}"
             async for _, _, attributes in self._hierarchy.search(
                 {
@@ -455,8 +477,7 @@ class ModelCRUDSvc(Svc):
 
         for id_ in ids:
             subscribers = []
-            node_dn = self._hierarchy.get_node_dn(id_)
-            subscribers_id = f"cn=subscribers,cn=system,{node_dn}"
+            subscribers_id = await self._get_subscribers_node_id(id_)
             async for _, _, attributes in self._hierarchy.search(
                 {
                     "base": subscribers_id,
@@ -488,7 +509,7 @@ class ModelCRUDSvc(Svc):
                     tasks, return_when=asyncio.ALL_COMPLETED
                 )
 
-            self._hierarchy.delete(id_)
+            await self._hierarchy.delete(id_)
 
             await self._further_delete(mes)
 
