@@ -40,6 +40,8 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
     async def _link_alert(payload: dict) -> None:
         pass
 
+
+
     async def _creating(self, mes: dict, new_id: str) -> None:
         sys_id = await anext(self._hierarchy.search({
             "base": new_id,

@@ -37,7 +37,5 @@ class DataStoragesModelCRUDSettings(ModelCRUDSettings):
         #: класс экзмепляров сущности в иерархии
         "class": "prsDataStorage",
         #: список через запятую родительских классов
-        "parent_classes": "",
-        #: флаг создания узла ``cn=system`` внутри узла экземпляра сущности
-        "create_sys_node": True
+        "parent_classes": ""
     }
