@@ -207,6 +207,81 @@ dataStorages_api_crud
    |                                                                                      |
    |     </details>                                                                       |
    +-----------+----------------------------------+-----+---------------------------------+
+   | update    | <dataStorages>_api_crud_publish  | `+` | dataStorages_model_crud,        |
+   |           |                                  |     | всем подписанным сервисам       |
+   +-----------+----------------------------------+-----+---------------------------------+
+   |                                                                                      |
+   |  .. raw:: html                                                                       |
+   |                                                                                      |
+   |     <details>                                                                        |
+   |     <summary><a>Описание</a></summary>                                               |
+   |                                                                                      |
+   |     Типовая команда обновления данных о узлах.                                       |
+   |                                                                                      |
+   |     </details>                                                                       |
+   |     <br/>                                                                            |
+   |     <details>                                                                        |
+   |     <summary><a>Тело сообщения</a></summary>                                         |
+   |                                                                                      |
+   |  .. code-block:: python                                                              |
+   |                                                                                      |
+   |     {                                                                                |
+   |        "action": "update",                                                             |
+   |        "data": {                                                                     |
+   |            "id": ["first_id", "n_id"],                                               |
+   |            "scope": 1,                                                               |
+   |            "filter": {                                                               |
+   |                "prsActive": [true]                                                   |
+   |            },                                                                        |
+   |            "attributes": ["cn", "description"]                                       |
+   |        },                                                                            |
+   |        "getLinkedTags": true,                                                        |
+   |        "getLinkedAlerts": true                                                       |
+   |    }                                                                                 |
+   |                                                                                      |
+   |                                                                                      |
+   |  .. raw:: html                                                                       |
+   |                                                                                      |
+   |     </details>                                                                       |
+   |     <br/>                                                                            |
+   |     <details>                                                                        |
+   |     <summary><a>Тело ответа</a></summary>                                            |
+   |                                                                                      |
+   |  .. code:: python                                                                    |
+   |                                                                                      |
+   |     {                                                                                |
+   |           "data": [                                                                  |
+   |                {                                                                     |
+   |                    "id": "<dataStorage_id>",                                         |
+   |                    "attributes": {                                                   |
+   |                        "cn": "<name>"                                                |
+   |                    },                                                                |
+   |                    "linkedTags": [                                                   |
+   |                        {                                                             |
+   |                            "id": "<tag_id>",                                         |
+   |                            "attributes": {                                           |
+   |                                "prsStore": {                                         |
+   |                                }                                                     |
+   |                            }                                                         |
+   |                        }                                                             |
+   |                    ],                                                                |
+   |                    "linkedAlerts": [                                                 |
+   |                        {                                                             |
+   |                            "id": "<alert_id>",                                       |
+   |                            "attributes": {                                           |
+   |                                "prsStore": {                                         |
+   |                                }                                                     |
+   |                            }                                                         |
+   |                        }                                                             |
+   |                    ]                                                                 |
+   |                }                                                                     |
+   |           ]                                                                          |
+   |     }                                                                                |
+   |                                                                                      |
+   |  .. raw:: html                                                                       |
+   |                                                                                      |
+   |     </details>                                                                       |
+   +-----------+----------------------------------+-----+---------------------------------+
 
 dataStorages_model_crud
 """""""""""""""""""""""

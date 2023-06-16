@@ -210,7 +210,7 @@ class Hierarchy:
 
 
         Returns:
-            List[Tuple]: [(id, dn, attributes)]
+            Tuple: (id, dn, attributes)
         """
 
         ids = payload.get("id")
