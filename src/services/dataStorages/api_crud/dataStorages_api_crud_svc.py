@@ -49,8 +49,13 @@ class OneDataStorageInReadResult(svc.OneNodeInReadResult):
 class DataStorageReadResult(svc.NodeReadResult):
     data: List[OneDataStorageInReadResult] = Field(title="Список хранилищ данных.")
 
-class DataStorageUpdate(svc.NodeUpdate):
-    pass
+class DataStorageUpdate(DataStorageCreate):
+    id: str = Field(title="Идентификатор изменяемого узла.",
+                    description="Должен быть в формате GUID.")
+    unlinkTags: List[str] = Field(None, "Список id тегов.")
+    unlinkAlerts: List[str] = Field(None, "Список id тревог.")
+
+    validate_id = validator('id', allow_reuse=True)(svc.valid_uuid)
 
 class DataStoragesAPICRUD(svc.APICRUDSvc):
     """Сервис работы с хранилищами данных в иерархии.
