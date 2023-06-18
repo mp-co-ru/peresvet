@@ -312,7 +312,7 @@ class ModelCRUDSvc(Svc):
         subscribers_id = self._hierarchy.get_node_id(
             f"cn=subscribers,cn=system,{node_dn}"
         )
-        async for _, _, attributes in self._hierarchy.search(
+        async for item in self._hierarchy.search(
             {
                 "base": subscribers_id,
                 "scope": CN_SCOPE_ONELEVEL,
@@ -322,8 +322,8 @@ class ModelCRUDSvc(Svc):
                 "attributes": ["cn"]
             }
         ):
-            if attributes:
-                subscribers.append(attributes["cn"][0])
+            if item[2]:
+                subscribers.append(item[2]["cn"][0])
 
         if subscribers:
             tasks = []
@@ -435,7 +435,7 @@ class ModelCRUDSvc(Svc):
             subscribers = []
             node_dn = await self._hierarchy.get_node_dn(id_)
             subscribers_id = f"cn=subscribers,cn=system,{node_dn}"
-            async for _, _, attributes in self._hierarchy.search(
+            async for item in self._hierarchy.search(
                 {
                     "base": subscribers_id,
                     "scope": CN_SCOPE_ONELEVEL,
@@ -445,8 +445,8 @@ class ModelCRUDSvc(Svc):
                     "attributes": ["cn"]
                 }
             ):
-                if attributes:
-                    subscribers.append(attributes["cn"][0])
+                if item[2]:
+                    subscribers.append(item[2]["cn"][0])
 
             if subscribers:
                 tasks = []
@@ -478,7 +478,7 @@ class ModelCRUDSvc(Svc):
         for id_ in ids:
             subscribers = []
             subscribers_id = await self._get_subscribers_node_id(id_)
-            async for _, _, attributes in self._hierarchy.search(
+            async for item in self._hierarchy.search(
                 {
                     "base": subscribers_id,
                     "scope": CN_SCOPE_ONELEVEL,
@@ -488,8 +488,8 @@ class ModelCRUDSvc(Svc):
                     "attributes": ["cn"]
                 }
             ):
-                if attributes:
-                    subscribers.append(attributes["cn"][0])
+                if item[2]:
+                    subscribers.append(item[2]["cn"][0])
 
             if subscribers:
                 tasks = []
@@ -586,11 +586,11 @@ class ModelCRUDSvc(Svc):
         mes_data.setdefault("filter", {})
         mes_data["filter"]["objectClass"] = [self._config.hierarchy["class"]]
 
-        async for id_, _, attributes in self._hierarchy.search(mes_data):
-            if id_:
+        async for item in self._hierarchy.search(mes_data):
+            if item[0]:
                 res["data"].append({
-                    "id": id_,
-                    "attributes": attributes
+                    "id": item[0],
+                    "attributes": item[2]
                 })
 
         return await self._further_read(mes, res)
@@ -673,6 +673,35 @@ class ModelCRUDSvc(Svc):
             }
         else:
             mes["data"]["attributes"]["objectClass"] = [self._config.hierarchy["class"]]
+
+        item = await anext(
+            self._hierarchy.search(
+                {
+                    "base": parent_node,
+                    "scope": CN_SCOPE_ONELEVEL,
+                    "filter": {
+                        "objectCalss": [mes["data"]["attributes"]["objectClass"]],
+                        "prsDefault": ["TRUE"]
+                    }
+                }
+            )
+        )
+        # логика создания узлов такова, что в списке узлов одного уровня
+        # есть один узел с prsDefault = True
+        # поэтому если по поиску выше не найдено узлов, то узлов в данном
+        # уровне нет вообще
+        if not item[0]:
+            mes["data"]["attributes"]["prsDefault"] = True
+        else:
+            # если есть уже дефолтный узел и делается попытка создать тоже
+            # дефолтный, то существующий дефолтный должен стать обычным
+            if mes["data"]["attributes"].get("prsDefault", False):
+                await self._hierarchy.modify(
+                    node=item[0],
+                    attr_vals={
+                        "prsDefault": ["FALSE"]
+                    }
+                )
 
         new_id = await self._hierarchy.add(parent_node, mes["data"]["attributes"])
 
