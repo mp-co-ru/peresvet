@@ -175,75 +175,117 @@ class ModelCRUDSvc(Svc):
                 object_class.strip() for object_class in classes
             ]
 
-    async def _process_message(self,
-            message: aio_pika.abc.AbstractIncomingMessage
-    ) -> None:
-        """Метод обработки сообщений от сервиса ``<сущность>_api_crud_svc``.
+        self._commands = {
+            "create": self._create,
+            "read": self._read,
+            "update": self._update,
+            "delete": self._delete,
+            "mayUpdate": self._may_update,
+            "updating": self._updating,
+            "mayDelete": self._may_delete,
+            "deleting": self._deleting,
+            "subscribe": self._subscribe,
+            "unsubscribe": self._unsubscribe
 
-        Сообщения должны приходить в формате:
+        }
 
-        .. code:: json
+    async def _subscribe(self, mes: dict) -> None:
+        """Метод-реакция на запрос на подписку.
 
-            {
-                "action": "create | read | update | delete",
-                "data: {}
-            }
+        Args:
+            mes (dict):
 
-        где
+                .. code:: python
 
-        * **action** - команда ("create", "read", "update", "delete"), при
-          этом строчные или прописные буквы - не важно;
-        * **data** - параметры команды.
+                    {
+                        "action": "subscribe",
+                        "data":{
+                            "routing_key": "<some_rk>",
+                            "id": ["<id_1>, <id_2>"]
+                        }
+                    }
+        """
+        for id_ in mes["data"]["id"]:
+            if self._hierarchy.get_node_class(id_) != \
+                self._config.hierarchy["class"]:
+                self._logger.info(f"Узел {id_} не {self._config.hierarchy['class']}")
+                continue
+            subscribers_node_id = self._get_subscribers_node_id(id_)
 
-        После выполнения соответствующей команды входное сообщение квитируется
-        (``messsage.ack()``).
+            item = await anext(self._hierarchy.search({
+                "base": subscribers_node_id,
+                "filter": f"(cn={mes['data']['routing_key']})",
+                "scope": CN_SCOPE_ONELEVEL,
+                "attributes": ["cn"]
+            }))
+            if not item[0]:
+                await self._hierarchy.add(
+                    base=subscribers_node_id,
+                    attribute_values={
+                        "cn": mes['data']['routing_key']
+                    }
+                )
+                self._logger.info(
+                    f"Создана подписка для {mes['data']['routing_key']} на "
+                    f"узел {id_}"
+                )
 
-        В случае, если в сообщении установлен параметр ``reply_to``,
-        то квитирование происходит после публикации ответного сообщения в
-        очередь, указанную в ``reply_to``.
+    async def _unsubscribe(self, mes: dict) -> None:
+        """Метод-реакция на запрос на отписку.
+
+        Args:
+            mes (dict):
+
+                .. code:: python
+
+                    {
+                        "action": "unsubscribe",
+                        "data":{
+                            "routing_key": "<some_rk>",
+                            "id": ["<id_1>, <id_2>"]
+                        }
+                    }
 
         """
-        async with message.process(ignore_processed=True):
-            mes = message.body.decode()
-            try:
-                mes = json.loads(mes)
-            except json.decoder.JSONDecodeError:
-                self._logger.error(f"Сообщение {mes} не в формате json.")
-                await message.ack()
-                return
+        for id_ in mes["data"]["id"]:
+            if self._hierarchy.get_node_class(id_) != \
+                self._config.hierarchy["class"]:
+                self._logger.info(f"Узел {id_} не {self._config.hierarchy['class']}")
+                continue
+            subscribers_node_id = self._get_subscribers_node_id(id_)
 
-            action = mes.get("action")
-            if not action:
-                self._logger.error(f"В сообщении {mes} не указано действие.")
-                await message.ack()
-                return
+            item = await anext(self._hierarchy.search({
+                "base": subscribers_node_id,
+                "filter": f"(cn={mes['data']['routing_key']})",
+                "scope": CN_SCOPE_ONELEVEL,
+                "attributes": ["cn"]
+            }))
+            if item[0]:
+                await self._hierarchy.delete(item[0])
+                self._logger.info(
+                    f"Удалена подписка для {mes['data']['routing_key']} на "
+                    f"узел {id_}"
+                )
 
-            action = action.lower()
-            if action == "create":
-                res = await self._create(mes)
-            elif action == "update":
-                res = await self._update(mes)
-            elif action == "read":
-                res = await self._read(mes)
-            elif action == "delete":
-                res = await self._delete(mes)
-            else:
-                self._logger.error(f"Неизвестное действие: {action}.")
-                await message.ack()
-                return
+    async def _deleting(self, mes: dict) -> dict:
+        return {
+            "response": "ok"
+        }
 
-            if not message.reply_to:
-                await message.ack()
-                return
+    async def _may_delete(self, mes: dict) -> dict:
+        return {
+            "response": "ok"
+        }
 
-            await self._amqp_consume["main"]["exchange"].publish(
-                aio_pika.Message(
-                    body=json.dumps(res,ensure_ascii=False).encode(),
-                    correlation_id=message.correlation_id,
-                ),
-                routing_key=message.reply_to,
-            )
-            await message.ack()
+    async def _may_update(self, mes: dict) -> dict:
+        return {
+            "response": "ok"
+        }
+
+    async def _updating(self, mes) -> dict:
+        return {
+            "response": "ok"
+        }
 
     async def _update(self, mes: dict) -> None:
         """Метод обновления данных узла. Также метод может перемещать узел
@@ -266,7 +308,7 @@ class ModelCRUDSvc(Svc):
 
         # получим список всех подписавшихся на уведомления
         subscribers = []
-        node_dn = self._hierarchy.get_node_dn(mes_data['id'])
+        node_dn = await self._hierarchy.get_node_dn(mes_data['id'])
         subscribers_id = self._hierarchy.get_node_id(
             f"cn=subscribers,cn=system,{node_dn}"
         )
@@ -328,10 +370,12 @@ class ModelCRUDSvc(Svc):
             )
 
         if new_parent:
-            self._hierarchy.move(mes_data['id'], new_parent)
+            await self._hierarchy.move(mes_data['id'], new_parent)
 
-        self._hierarchy.modify(mes["id"], mes["attributes"])
-        self._updating(mes)
+        await self._hierarchy.modify(mes["id"], mes["attributes"])
+
+        await self._further_update(mes)
+
         await self._amqp_publish["main"]["exchange"].publish(
             aio_pika.Message(
                 body=f'{{"action": "updated", "id": {mes["id"]}}}'.encode(),
@@ -342,7 +386,7 @@ class ModelCRUDSvc(Svc):
         )
         self._logger.info(f'Узел {mes["id"]} обновлён.')
 
-    async def _updating(self, mes: dict) -> None:
+    async def _further_update(self, mes: dict) -> None:
         """Метод переопределяется в сервисах-наследниках.
         В этом методе содержится специфическая работа при обновлении
         нового экземпляра сущности.
@@ -389,7 +433,7 @@ class ModelCRUDSvc(Svc):
         # получим список всех подписавшихся на уведомления
         for id_ in id_set:
             subscribers = []
-            node_dn = self._hierarchy.get_node_dn(id_)
+            node_dn = await self._hierarchy.get_node_dn(id_)
             subscribers_id = f"cn=subscribers,cn=system,{node_dn}"
             async for _, _, attributes in self._hierarchy.search(
                 {
@@ -433,8 +477,7 @@ class ModelCRUDSvc(Svc):
 
         for id_ in ids:
             subscribers = []
-            node_dn = self._hierarchy.get_node_dn(id_)
-            subscribers_id = f"cn=subscribers,cn=system,{node_dn}"
+            subscribers_id = await self._get_subscribers_node_id(id_)
             async for _, _, attributes in self._hierarchy.search(
                 {
                     "base": subscribers_id,
@@ -466,9 +509,9 @@ class ModelCRUDSvc(Svc):
                     tasks, return_when=asyncio.ALL_COMPLETED
                 )
 
-            self._hierarchy.delete(id_)
+            await self._hierarchy.delete(id_)
 
-            await self._deleting(mes)
+            await self._further_delete(mes)
 
             await self._amqp_publish["main"]["exchange"].publish(
                 aio_pika.Message(
@@ -480,7 +523,7 @@ class ModelCRUDSvc(Svc):
             )
             self._logger.info(f'Узлы {mes} удалены.')
 
-    async def _deleting(self, mes: dict) -> None:
+    async def _further_delete(self, mes: dict) -> None:
         """Метод переопределяется в сервисах-наследниках.
         Используется для выполнения специфической работы при удалении
         экземпляра сущности.
@@ -550,9 +593,9 @@ class ModelCRUDSvc(Svc):
                     "attributes": attributes
                 })
 
-        return await self._reading(mes, res)
+        return await self._further_read(mes, res)
 
-    async def _reading(self, mes: dict, search_result: dict) -> dict:
+    async def _further_read(self, mes: dict, search_result: dict) -> dict:
         """Метод переопределяется в классах-потомках, чтобы
         расширять результат поиска дополнительной информацией.
         """
@@ -655,7 +698,7 @@ class ModelCRUDSvc(Svc):
         system_id = await self._hierarchy.add(new_id, {"cn": ["system"]})
         await self._hierarchy.add(system_id, {"cn": ["subscribers"]})
 
-        await self._creating(mes, new_id)
+        await self._further_create(mes, new_id)
 
         mes = aio_pika.Message(
             body=f'{{"action": "created", "id": {new_id}}}'.encode(),
@@ -669,7 +712,7 @@ class ModelCRUDSvc(Svc):
 
         return res
 
-    async def _creating(self, mes: dict, new_id: str) -> None:
+    async def _further_create(self, mes: dict, new_id: str) -> None:
         """Метод переопределяется в сервисах-наследниках.
         В этом методе содержится специфическая работа при создании
         нового экземпляра сущности.
@@ -731,7 +774,7 @@ class ModelCRUDSvc(Svc):
         }))
         if not item[0]:
             base_node_id = await self._hierarchy.add(
-                attr_vals={"cn": self._config.hierarchy["node"]}
+                attribute_values={"cn": self._config.hierarchy["node"]}
             )
         else:
             base_node_id = item[0]

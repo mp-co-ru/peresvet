@@ -15,21 +15,21 @@ from src.common.base_svc import BaseSvc
 
 class Svc(BaseSvc):
     """
-    Базовый класс ``Svc`` - предок классов-сервисов.
+    Класс ``Svc`` - наследник класса :class:`BaseSvc`
 
-    Выполняет две задачи:
+    Реализует дополнительную функциональность:
 
-    * устанавливает связь с ldap-сервером;
-    * устанавливает связь с amqp-сервером и создаёт обменник для публикации
-      сообщений.
+    * коннект к иерархии;
+    * логика подписок на сообщения между сервисами.
 
     Args:
-            settings (Settings): конфигурация приложения см. :class:`settings.Settings`
+            settings (Settings): конфигурация приложения см. :class:`~svc_settings.SvcSettings`
     """
 
     def __init__(self, settings: SvcSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
         self._hierarchy = Hierarchy(settings.ldap_url)
+        self._amqp_subscribe = {}
 
     async def _ldap_connect(self) -> None:
         """
@@ -59,6 +59,49 @@ class Svc(BaseSvc):
             except ldap.LDAPError as ex:
                 self._logger.error(f"Ошибка связи с сервером ldap: {ex}")
                 await asyncio.sleep(5)
+
+    async def _amqp_connect(self) -> None:
+        await super()._amqp_connect()
+
+        # создадим подписки
+        for key, item in self._config.subscribe.items():
+            self._amqp_subscribe[key] = {
+                "publish": {},
+                "consume": {}
+            }
+
+            # сюда будем публиковать заявки на уведомления
+            self._amqp_subscribe[key]["publish"]["exchange"] = \
+                await self._amqp_channel.declare_exchange(
+                    item["publish"]["name"], item["publish"]["type"], durable=True
+            )
+            self._amqp_subscribe[key]["publish"]["routing_key"] = \
+                item["publish"]["routing_key"]
+
+            # для получения уведомлений подсоединим свою главную очередь
+            self._amqp_subscribe[key]["consume"]["exchange"] = \
+                await self._amqp_channel.declare_exchange(
+                    item["consume"]["name"], item["consume"]["type"], durable=True
+            )
+            await self._amqp_consume[key]["queue"].bind(
+                exchange=self._amqp_subscribe[key]["consume"]["exchange"],
+                routing_key=self._amqp_subscribe[key]["consume"]["routing_key"]
+            )
+
+    async def _get_subscribers_node_id(self, node_id: str) -> str:
+        """Метод возвращает id подузла ``cn=subscribers,cn=system`` для
+        родительского узла ``node_id``.
+
+        Args:
+            node_id (str): id родительского узла
+
+        Returns:
+            str: id узла с подписчиками
+        """
+        dn = self._hierarchy.get_node_dn(node_id)
+        return self._hierarchy.get_node_id(
+            f"cn=subscribers,cn=system,{dn}"
+        )
 
     async def on_startup(self) -> None:
         await super().on_startup()

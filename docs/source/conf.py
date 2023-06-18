@@ -10,7 +10,7 @@ import os
 import sys
 import datetime
 
-sys.path.insert(2, os.path.abspath('../../'))
+sys.path.insert(0, os.path.abspath('../../'))
 #sys.path.insert(1, os.path.abspath('../../src/'))
 #sys.path.insert(0, os.path.abspath('../../src/common/'))
 

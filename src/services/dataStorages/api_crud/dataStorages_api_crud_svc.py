@@ -3,6 +3,7 @@
 и класс сервиса ``dataStorages_api_crud_svc``.
 """
 import sys
+import json
 from uuid import UUID
 from typing import Any, List
 from pydantic import BaseModel, Field, validator
@@ -15,32 +16,46 @@ from src.common import api_crud_svc as svc
 from dataStorages_api_crud_settings import DataStoragesAPICRUDSettings
 
 class LinkTagOrAlertAttributes(BaseModel):
-    prsStore: str = Field(None, title="Хранилище тега")
+    prsStore: dict = Field(None, title="Хранилище тега")
 
 class LinkTagOrAlert(BaseModel):
     id: str = Field(title="Идентификатор привязываемого тега")
     attributes: LinkTagOrAlertAttributes = Field(None)
 
 class DataStorageAttributes(svc.NodeAttributes):
-    pass
+    @validator('prsJsonConfigString')
+    @classmethod
+    def check_config_string(cls, v: dict) -> dict:
+        rk = v.get("routing_key")
+        if not rk:
+            raise ValueError(
+                "prsJsonConfigString должна содержать ключ `routing_key`"
+            )
+        return v
 
 class DataStorageCreate(svc.NodeCreate):
-    attributes: DataStorageAttributes = Field({}, title="Атрибуты узла")
+    attributes: DataStorageAttributes = Field(title="Атрибуты узла")
     linkTags: List[LinkTagOrAlert] = Field([], title="Список привязываемых тегов")
     linkAlerts: List[LinkTagOrAlert] = Field([], title="Список привязываемых тревог")
 
 class DataStorageRead(svc.NodeRead):
-    pass
+    getLinkedTags: bool = Field(False, "Флаг возврата присоединённых тегов")
+    getLinkedAlerts: bool = Field(False, "Флаг возврата присоединённых тревог")
 
 class OneDataStorageInReadResult(svc.OneNodeInReadResult):
-    pass
+    linkedTags: List[str] = Field(None, "Список id присоединённых тегов.")
+    linkedAlerts: List[str] = Field(None, "Список id присоединённых тревог.")
 
 class DataStorageReadResult(svc.NodeReadResult):
     data: List[OneDataStorageInReadResult] = Field(title="Список хранилищ данных.")
-    pass
 
-class DataStorageUpdate(svc.NodeUpdate):
-    pass
+class DataStorageUpdate(DataStorageCreate):
+    id: str = Field(title="Идентификатор изменяемого узла.",
+                    description="Должен быть в формате GUID.")
+    unlinkTags: List[str] = Field(None, "Список id тегов.")
+    unlinkAlerts: List[str] = Field(None, "Список id тревог.")
+
+    validate_id = validator('id', allow_reuse=True)(svc.valid_uuid)
 
 class DataStoragesAPICRUD(svc.APICRUDSvc):
     """Сервис работы с хранилищами данных в иерархии.

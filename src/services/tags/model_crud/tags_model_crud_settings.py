@@ -30,6 +30,8 @@ class TagsModelCRUDSettings(ModelCRUDSettings):
         }
     }
 
+    subscribe: dict = {}
+
     hierarchy: dict = {
         #: имя узла для хранения сущностей в иерархии
         #: если узел не требуется, то пустая строка
