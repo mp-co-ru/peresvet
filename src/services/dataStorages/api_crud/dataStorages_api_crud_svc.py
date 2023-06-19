@@ -23,15 +23,7 @@ class LinkTagOrAlert(BaseModel):
     attributes: LinkTagOrAlertAttributes = Field(None)
 
 class DataStorageAttributes(svc.NodeAttributes):
-    @validator('prsJsonConfigString')
-    @classmethod
-    def check_config_string(cls, v: dict) -> dict:
-        rk = v.get("routing_key")
-        if not rk:
-            raise ValueError(
-                "prsJsonConfigString должна содержать ключ `routing_key`"
-            )
-        return v
+    pass
 
 class DataStorageCreate(svc.NodeCreate):
     attributes: DataStorageAttributes = Field(title="Атрибуты узла")

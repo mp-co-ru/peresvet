@@ -246,7 +246,7 @@ class Hierarchy:
 
             conn.deref = old_deref
 
-        yield None, None, None
+        yield (None, None, None)
 
     async def add(self, base: str = None, attribute_values: dict = None) -> str:
         """Добавление узла в иерархию.
