@@ -114,7 +114,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             dn2str(str2dn(item[1])[2:])
         )
 
-        routing_key = self._get_routing_key_for_datastorage(datastorage_id)
+        routing_key = self._config["publish"]["main"]["routing_key"][0]
 
         await self._post_message(mes={"action": "unlinkTag", "id": [tag_id]},
             routing_key=routing_key)
@@ -150,7 +150,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             dn2str(str2dn(item[1])[2:])
         )
 
-        routing_key = self._get_routing_key_for_datastorage(datastorage_id)
+        routing_key = self._config["publish"]["main"]["routing_key"][0]
 
         await self._post_message(mes={"action": "unlinkTag", "id": [alert_id]},
             routing_key=routing_key)
@@ -209,15 +209,13 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         await self._unlink_tag(payload["id"])
 
-        routing_key = await self._get_routing_key_for_datastorage(datastorage_id)
-
         # res = {
         #   "prsStore": {...}
         # }
         res = await self._post_message(
             mes={"action": "linkTag", "data": payload},
             reply=self._amqp_callback_queue.name,
-            routing_key=routing_key)
+            routing_key=self._config["publish"]["main"]["routing_key"][0])
 
         prs_store = res.get("prsStore")
         tags_node_id = await self._hierarchy.get_node_id(
@@ -277,7 +275,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         await self._unlink_alert(payload["id"])
 
-        routing_key = await self._get_routing_key_for_datastorage(datastorage_id)
+        routing_key = self._config["publish"]["main"]["routing_key"][0]
 
         # res = {
         #   "prsStore": {...}
