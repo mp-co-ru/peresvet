@@ -203,14 +203,15 @@ class BaseSvc(FastAPI):
                             item["name"], item["type"], durable=True
                         )
                     )
-                    r_ks = item["routing_key"]
-                    if not isinstance(r_ks, list):
-                        r_ks = [r_ks]
-                    for r_k in r_ks:
-                        await self._amqp_consume["queue"].bind(
-                            exchange=self._amqp_consume[key]["exchange"],
-                            routing_key=r_k
-                        )
+                    r_ks = item.get("routing_key")
+                    if r_ks:
+                        if not isinstance(r_ks, list):
+                            r_ks = [r_ks]
+                        for r_k in r_ks:
+                            await self._amqp_consume["queue"].bind(
+                                exchange=self._amqp_consume[key]["exchange"],
+                                routing_key=r_k
+                            )
 
                 await self._amqp_consume["queue"].consume(self._process_message)
 
