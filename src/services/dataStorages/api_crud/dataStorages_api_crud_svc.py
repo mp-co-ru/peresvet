@@ -30,6 +30,16 @@ class DataStorageCreate(svc.NodeCreate):
     linkTags: List[LinkTagOrAlert] = Field([], title="Список привязываемых тегов")
     linkAlerts: List[LinkTagOrAlert] = Field([], title="Список привязываемых тревог")
 
+    @validator('attributes')
+    @classmethod
+    def ds_type_is_necessary(cls, v: DataStorageAttributes) -> DataStorageAttributes:
+        # если не указан тип базы данных, то по умолчанию используется
+        # PostgreSQL
+        if v.prsEntityTypeCode is None:
+            v.prsEntityTypeCode = 0
+
+        return v
+
 class DataStorageRead(svc.NodeRead):
     getLinkedTags: bool = Field(False, "Флаг возврата присоединённых тегов")
     getLinkedAlerts: bool = Field(False, "Флаг возврата присоединённых тревог")
