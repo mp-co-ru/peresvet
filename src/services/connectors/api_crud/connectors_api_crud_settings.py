@@ -10,8 +10,10 @@ class ConnectorsAPICRUDSettings(APICRUDSettings):
     ldap_url: str = "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
 
     #: обменник для публикаций
-    pub_exchange: dict = {
-        "name": "connectors_api_crud",
-        "type": "direct",
-        "routing_key": "connectors_api_crud"
+    publish: dict = {
+        "main": {
+                "name": "connectors",
+                "type": "direct",
+                "routing_key": "connectors_api_crud"
+        }
     }

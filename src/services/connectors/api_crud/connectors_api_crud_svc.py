@@ -28,15 +28,15 @@ class ConnectorLinkedTagAttributes(svc.NodeAttributes):
             "Формат словаря зависит от конкретного коннектора."
         )
     )
-    prsValueScale: float = Field(
-        1,
+    prsValueScale: int = Field(
+        None,
         title=(
             "Коэффициент, на который умножается значение тега коннектором "
             "перед отправкой в платформу."
         )
     )
-    prsMaxDev: float = Field(
-        0,
+    prsMaxDev: int = Field(
+        None,
         title="Величина значащего отклонения.",
         description="Используется коннекторами для снятия `дребезга` значений."
     )
@@ -94,7 +94,6 @@ router = APIRouter()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: ConnectorCreate):
-    print(payload)
     return await app.create(payload)
 
 @router.get("/", response_model=svc.NodeCreateResult, status_code=201)
