@@ -68,7 +68,10 @@ class BaseSvc(FastAPI):
         self._amqp_connection: aio_pika.abc.AbstractRobustConnection = None
         self._amqp_channel: aio_pika.abc.AbstractRobustChannel = None
         self._amqp_publish: dict = {}
-        self._amqp_consume: dict = {}
+        self._amqp_consume: dict = {
+            "queue": None,
+            "exchanges": {}
+        }
         self._amqp_callback_queue: aio_pika.abc.AbstractRobustQueue = None
         self._callback_futures: MutableMapping[str, asyncio.Future] = {}
 
@@ -116,7 +119,7 @@ class BaseSvc(FastAPI):
                 await message.ack()
                 return
 
-            await self._amqp_consume["main"]["exchange"].publish(
+            await self._amqp_consume["exchanges"]["main"]["exchange"].publish(
                 aio_pika.Message(
                     body=json.dumps(res,ensure_ascii=False).encode(),
                     correlation_id=message.correlation_id,
@@ -189,28 +192,27 @@ class BaseSvc(FastAPI):
                         item["name"], item["type"], durable=True
                     )
 
-                for key, item in self._config.consume.items():
-                    self._amqp_consume[key] = {}
-                    self._amqp_consume[key]["exchange"] = (
+                self._amqp_consume["queue"] = \
+                    await self._amqp_channel.declare_queue(
+                        self._config.consume["queue_name"], durable=True
+                    )
+                for key, item in self._config.consume["exchanges"].items():
+                    self._amqp_consume["exchanges"][key] = {}
+                    self._amqp_consume["exchanges"][key]["exchange"] = (
                         await self._amqp_channel.declare_exchange(
                             item["name"], item["type"], durable=True
-                        )
-                    )
-                    self._amqp_consume[key]["queue"] = (
-                        await self._amqp_channel.declare_queue(
-                            item["queue_name"], durable=True
                         )
                     )
                     r_ks = item["routing_key"]
                     if not isinstance(r_ks, list):
                         r_ks = [r_ks]
                     for r_k in r_ks:
-                        await self._amqp_consume[key]["queue"].bind(
+                        await self._amqp_consume["queue"].bind(
                             exchange=self._amqp_consume[key]["exchange"],
                             routing_key=r_k
                         )
 
-                    await self._amqp_consume[key]["queue"].consume(self._process_message)
+                await self._amqp_consume["queue"].consume(self._process_message)
 
                 self._amqp_callback_queue = await self._amqp_channel.declare_queue(
                     durable=True, exclusive=True
