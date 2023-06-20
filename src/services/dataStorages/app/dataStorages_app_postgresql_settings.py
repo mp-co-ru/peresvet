@@ -28,23 +28,28 @@ class DataStoragesAppPostgreSQLSettings(SvcSettings):
     # информацию об обменниках и сообщениях см. в документации на каждый
     # конкретный сервис
     consume: dict[str, dict] = {
-        "main": {
-            #: имя обменника
-            "name": "dataStorages",
-            #: тип обменника
-            "type": "direct",
-            #: имя очереди, из которой сервис будет получать сообщения
-            "queue_name": "dataStorages_app_postgresql_consume",
-            #: привзяка для очереди
-            "routing_key": ["dataStorages_app_postgresql_consume"]
-        },
-        "tags": {
-            "name": "tags",
-            "type": "direct",
-            #: имя очереди, из которой сервис будет получать сообщения
-            "queue_name": "dataStorages_app_postgresql_consume",
-            #: привзяка для очереди
-            # привязка вычисляется во время работы сервиса
+        "queue_name": "dataStorages_app_postgresql_consume",
+        "exchanges": {
+            "main": {
+                #: имя обменника
+                "name": "dataStorages",
+                #: тип обменника
+                "type": "direct",
+                #: привзяка для очереди
+                "routing_key": ["dataStorages_app_postgresql_consume"]
+            },
+            "tags": {
+                "name": "tags",
+                "type": "direct",
+                #: привязка для очереди
+                # привязка вычисляется во время работы сервиса
+            },
+            "alerts": {
+                "name": "alerts",
+                "type": "direct",
+                #: привязка для очереди
+                # привязка вычисляется во время работы сервиса
+            }
         }
     }
 
