@@ -88,10 +88,26 @@ class BaseSvc(FastAPI):
     def _config(self):
         return self._conf
 
+    async def _reject_message(mes: dict) -> bool:
+        """Проверка сообщения на предмет того, что оно предназначается
+        данному сервису.
+        Метод может быть переопределён в сервисах-потомках.
+
+        Args:
+            mes (dict): _description_
+
+        Returns:
+            bool: True - сообщение возвращается в очередь;
+                  False - сообщение обрабатывается сервисом.
+        """
+
+        return False
+
     async def _process_message(self, message: aio_pika.abc.AbstractIncomingMessage) -> None:
 
         async with message.process(ignore_processed=True):
             mes = message.body.decode()
+
             try:
                 mes = json.loads(mes)
             except json.decoder.JSONDecodeError:
@@ -99,19 +115,22 @@ class BaseSvc(FastAPI):
                 await message.ack()
                 return
 
-            action = mes.get("action")
-            if not action:
+            if not mes.get("action"):
                 self._logger.error(f"В сообщении {mes} не указано действие.")
                 await message.ack()
                 return
-
-            action = action.lower()
-
-            func = self._commands.get(action)
-            if not func:
-                self._logger.error(f"Неизвестное действие: {action}.")
+            mes["action"] = mes["action"].lower()
+            if not mes["action"] in self._commands.keys():
+                self._logger.error(f"Неизвестное действие {mes['action']}.")
                 await message.ack()
                 return
+
+            reject = await self._reject_message(mes)
+            if reject:
+                await message.reject(True)
+                return
+
+            func = self._commands.get(mes["action"])
 
             res = await func(mes)
 

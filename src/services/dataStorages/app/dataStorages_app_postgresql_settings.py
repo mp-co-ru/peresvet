@@ -35,8 +35,8 @@ class DataStoragesAppPostgreSQLSettings(SvcSettings):
                 "name": "dataStorages",
                 #: тип обменника
                 "type": "direct",
-                #: привзяка для очереди
-                "routing_key": ["dataStorages_app_postgresql_consume"]
+                #: привязка для очереди
+                "routing_key": ["dataStorages_model_crud_publish"]
             },
             "tags": {
                 "name": "tags",

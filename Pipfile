@@ -12,6 +12,8 @@ ciso8601 = "*"
 aio-pika = "*"
 loguru = "*"
 pygments = "*"
+pandas = "*"
+numpy = "*"
 
 [dev-packages]
 pylint = "*"
