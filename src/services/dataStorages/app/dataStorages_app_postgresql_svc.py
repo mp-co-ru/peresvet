@@ -17,6 +17,7 @@ from dataStorages_app_postgresql_settings import DataStoragesAppPostgreSQLSettin
 from src.common import svc
 from src.common import hierarchy
 import src.common.times as t
+from src.common.consts import CNTagValueTypes as TVT
 
 import asyncpg as apg
 from asyncpg.exceptions import PostgresError
@@ -82,8 +83,10 @@ class DataStoragesAppPostgreSQL(svc.Svc):
     async def _reject_message(mes: dict) -> bool:
         return False
 
-    async def _link_tag(self, mes: dict):
-        """_summary_
+    async def _link_tag(self, mes: dict) -> dict:
+        """Метод привязки тега к хранилищу.
+        Атрибут ``prsStore`` должен быть вида
+        ``{"tableName": "<some_table>"}`` либо отсутствовать
 
         Args:
             mes (dict): {
@@ -92,56 +95,89 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                     "id": "tag_id",
                     "dataStorage_id": "ds_id",
                     "attributes": {
-                        "prsStore": ""
+                        "prsStore": {"tableName": "<some_table>"}
                     }
                 }
 
-        Raises:
-            HTTPException: _description_
         """
 
         async with self._connection_pools[mes["data"]["dataStorage_id"]].acquire() as conn:
 
-            tbl_name = tag.data.attributes.prsStore['table']
+            mes["data"].setdefault("attributes", {})
+            mes["data"]["attributes"].setdefault(
+                "prsStore",
+                {"tableName": f't_{mes["data"]["id"]}'}
+            )
 
-            q = (
-                    f"SELECT EXISTS ("
-                    f"SELECT FROM information_schema.tables "
-                    f"WHERE  table_name = '{tbl_name}')"
+            tag_params = self._tags.get(mes["data"]["id"])
+            if tag_params:
+                tbl_name = tag_params['table']
+                if mes["data"]["attributes"]["prsStore"]["tableName"] == tbl_name:
+                    self._logger.warning(f"Тег {mes['data']['id']} уже привязан")
+                    return
+
+                await conn.execute(
+                    f'drop table if exists "{tbl_name}"'
                 )
-            res = await conn.fetchval(q)
-            if not res:
 
-                if tag.data.attributes.prsValueTypeCode == TVT.CN_INT:
+            tag_cache = self._prepare_tag_data(mes["data"]["id"])
+            tag_cache["ds"] = self._connection_pools[mes["data"]["dataStorage_id"]]
+            match tag_cache["value_type"]:
+                case TVT.CN_INT:
                     s_type = "bigint"
-                elif tag.data.attributes.prsValueTypeCode == TVT.CN_DOUBLE:
+                case TVT.CN_DOUBLE:
                     s_type = "double precision"
-                elif tag.data.attributes.prsValueTypeCode == TVT.CN_STR:
+                case TVT.CN_STR:
                     s_type = "text"
-                elif tag.data.attributes.prsValueTypeCode == TVT.CN_JSON:
+                case TVT.CN_JSON:
                     s_type = "jsonb"
-                else:
-                    er_str = f"Тег: {tag.id}; неизвестный тип данных: {tag.data.attributes.prsValueTypeCode}"
-                    svc.logger.error(er_str)
-                    raise HTTPException(HEC.CN_422, er_str)
-            # -------------------------------------------------------------------------
+                case _:
+                    er_str = f"Тег: {mes['data']['id']}; неизвестный тип данных: {tag_cache['value_type']}"
+                    self._logger.error(er_str)
+                    return
 
-                # Запрос на создание таблицы в РСУБД
-                query = (f'CREATE TABLE public."{tbl_name}" ('
+            query = (f'CREATE TABLE public."{tag_cache["table"]}" ('
                     f'"id" serial primary key,'
                     f'"x" bigint NOT NULL,'
                     f'"y" {s_type},'
                     f'"q" int);'
                     # Создание индекса на поле "метка времени" ("ts")
-                    f'CREATE INDEX "{tbl_name}_idx" ON public."{tbl_name}" '
+                    f'CREATE INDEX "{tag_cache["table"]}_idx" ON public."{tag_cache["table"]}" '
                     f'USING btree ("x");')
 
-                if tag.data.attributes.prsValueTypeCode == 4:
-                    query += (f'CREATE INDEX "{tbl_name}_json__idx" ON public."{tbl_name}" '
-                                'USING gin ("y" jsonb_path_ops);')
+            if tag_cache["value_type"] == 4:
+                query += (f'CREATE INDEX "{tag_cache["table"]}_json__idx" ON public."{tag_cache["table"]}" '
+                            'USING gin ("y" jsonb_path_ops);')
 
+            await conn.execute(query)
 
-                await conn.execute(query)
+            self._tags[mes["data"]["id"]] = tag_cache
+
+        return {"prsStore": tag_cache["table"]}
+
+    async def _unlink_tag(self, mes: dict) -> None:
+        """_summary_
+
+        Args:
+            mes (dict): {
+                "action": "datastorages.unlinktag",
+                "data": {
+                    "id": "tag_id"
+                }
+        """
+        tag_params = self._tags.get(mes["data"]["id"])
+        if not tag_params:
+            self._logger.warning(f"Тег {mes['data']['id']} не привязан к хранилищу.")
+            return
+
+        async with tag_params["ds"].acquire() as conn:
+            await conn.execute(
+                f'drop table if exists "{tag_params["table"]}"'
+            )
+
+        self._tags.pop(mes["data"]["id"])
+
+        self._logger.info(f"Тег {mes['data']['id']} отвязан от хранилища.")
 
     async def _tag_set(self, mes: dict) -> None:
         """
@@ -215,6 +251,29 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             tasks, return_when=asyncio.ALL_COMPLETED
         )
 
+    async def _prepare_tag_data(self, tag_id: str) -> dict | None:
+        get_tag_data = {
+            "id": [tag_id],
+            "attributes": [
+                "prsUpdate", "prsValueTypeCode", "prsActive", "prsStep"
+            ]
+        }
+
+        tag_data = await anext(
+            self._hierarchy.search(payload=get_tag_data)
+        )
+        if not tag_data[0]:
+            self._logger.info(f"Не найден тег {tag_id}")
+            return None
+
+        return {
+            "table": json.loads(tag_data[2]["prsStore"][0])["table"],
+            "active": tag_data[2]["prsActive"][0] == "TRUE",
+            "update": tag_data[2]["prsUpdate"][0] == "TRUE",
+            "value_type": int(tag_data[2]["prsValueTypeCode"][0]),
+            "step": tag_data[2]["prsStep"][0] == "TRUE"
+        }
+
     async def on_startup(self) -> None:
         await super().on_startup()
 
@@ -266,28 +325,12 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 if not tag[0]:
                     continue
 
-                get_tag_data = {
-                    "id": [tag[0]],
-                    "attributes": [
-                        "prsUpdate", "prsValueTypeCode", "prsActive", "prsStep"
-                    ]
-                }
-
-                tag_data = await anext(
-                    self._hierarchy.search(payload=get_tag_data)
-                )
-                if not tag_data[0]:
-                    self._logger.info(f"Не найден тег {tag[0]}")
+                tag_cache = self._prepare_tag_data(tag[0])
+                if not tag_cache:
                     continue
 
-                self._tags[tag[0]] = {
-                    "ds": self._connection_pools[ds[0]],
-                    "table": json.loads(tag[2]["prsStore"][0])["table"],
-                    "active": tag_data[2]["prsActive"][0] == "TRUE",
-                    "update": tag_data[2]["prsUpdate"][0] == "TRUE",
-                    "value_type": int(tag_data[2]["prsValueTypeCode"][0]),
-                    "step": tag_data[2]["prsStep"][0] == "TRUE"
-                }
+                tag_cache["ds"] = self._connection_pools[ds[0]],
+                self._tags[tag[0]] = tag_cache
 
                 await self._amqp_consume["queue"].bind(
                     exchange=self._amqp_consume["tags"]["exchange"],
