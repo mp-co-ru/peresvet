@@ -46,7 +46,7 @@ class SchedulesAPICRUD(svc.APICRUDSvc):
 
     """
 
-    _crud_commands = {
+    _outgoing_commands = {
         "create": "schedules.create",
         "read": "schedules.read",
         "update": "schedules.update",

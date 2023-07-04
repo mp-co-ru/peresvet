@@ -60,7 +60,7 @@ class ConstantsAPICRUD(svc.APICRUDSvc):
 
     """
 
-    _crud_commands = {
+    _outgoing_commands = {
         "create": "constants.create",
         "read": "constants.read",
         "update": "constants.update",

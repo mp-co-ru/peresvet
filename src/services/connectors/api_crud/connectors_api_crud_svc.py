@@ -73,7 +73,7 @@ class ConnectorsAPICRUD(svc.APICRUDSvc):
     Формат ожидаемых сообщений
 
     """
-    _crud_commands = {
+    _outgoing_commands = {
         "create": "connectors.create",
         "read": "connectors.read",
         "update": "connectors.update",
