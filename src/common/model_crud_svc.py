@@ -164,6 +164,15 @@ class ModelCRUDSvc(Svc):
 
     """
 
+    _outgoing_commands = {
+        "mayUpdate": "mayUpdate",
+        "updating": "updating",
+        "updated": "updated",
+        "mayDelete": "mayDelete",
+        "deleting": "deleting",
+        "deleted": "deleted"
+    }
+
     def __init__(self, settings: ModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
@@ -175,7 +184,15 @@ class ModelCRUDSvc(Svc):
                 object_class.strip() for object_class in classes
             ]
 
-        self._commands = {
+        # словарь входящих команд переопределяем в каждом классе-наследнике,
+        # так как CRUD-команды в каждой группе сервисов начинаются с
+        # с имени "своей" сущности
+        # если сервис зависит от нескольких сущностей, как, к примеру,
+        # методы могут быть привязаны к тегам, тревогам, расписаниям,
+        # то в _incoming_messages может быть несколько ключей
+        # ...mayUpdate, ...updating и т.д.
+
+        self._incoming_commands = {
             "create": self._create,
             "read": self._read,
             "update": self._update,
@@ -186,8 +203,9 @@ class ModelCRUDSvc(Svc):
             "deleting": self._deleting,
             "subscribe": self._subscribe,
             "unsubscribe": self._unsubscribe
-
         }
+
+
 
     async def _subscribe(self, mes: dict) -> None:
         """Метод-реакция на запрос на подписку.
@@ -330,7 +348,7 @@ class ModelCRUDSvc(Svc):
             for subscriber in subscribers:
                 future = asyncio.create_task(
                     self._post_message({
-                        "action": "mayUpdate",
+                        "action": self._outgoing_commands["mayUpdate"],
                         "data": mes_data
                     },
                     reply=True,
@@ -356,7 +374,7 @@ class ModelCRUDSvc(Svc):
             for subscriber in subscribers:
                 future = asyncio.create_task(
                     self._post_message({
-                        "action": "updating",
+                        "action": self._outgoing_commands["updating"],
                         "data": mes_data
                     },
                     reply=True,
@@ -378,7 +396,7 @@ class ModelCRUDSvc(Svc):
 
         await self._amqp_publish["main"]["exchange"].publish(
             aio_pika.Message(
-                body=f'{{"action": "updated", "id": {mes["id"]}}}'.encode(),
+                body=f'{{"action": {self._outgoing_commands["updated"]}, "id": {mes["id"]}}}'.encode(),
                 content_type='application/json',
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             ),
@@ -453,7 +471,7 @@ class ModelCRUDSvc(Svc):
                 for subscriber in subscribers:
                     future = asyncio.create_task(
                         self._post_message({
-                            "action": "mayDelete",
+                            "action": self._outgoing_commands["mayDelete"],
                             "data": {"id": id_}
                         },
                         reply=True,
@@ -496,7 +514,7 @@ class ModelCRUDSvc(Svc):
                 for subscriber in subscribers:
                     future = asyncio.create_task(
                         self._post_message({
-                            "action": "deleting",
+                            "action": self._outgoing_commands["deleting"],
                             "data": {"id": id_}
                         },
                         reply=True,
@@ -515,7 +533,7 @@ class ModelCRUDSvc(Svc):
 
             await self._amqp_publish["main"]["exchange"].publish(
                 aio_pika.Message(
-                    body=f'{{"action": "deleted", "id": {mes}}}'.encode(),
+                    body=f'{{"action": {self._outgoing_commands["deleted"]}, "id": {mes}}}'.encode(),
                     content_type='application/json',
                     delivery_mode=aio_pika.DeliveryMode.PERSISTENT
                 ),
@@ -730,7 +748,7 @@ class ModelCRUDSvc(Svc):
         await self._further_create(mes, new_id)
 
         mes = aio_pika.Message(
-            body=f'{{"action": "created", "id": {new_id}}}'.encode(),
+            body=f'{{"action": {self._outgoing_commands["created"]}, "id": {new_id}}}'.encode(),
             content_type='application/json',
             delivery_mode=aio_pika.DeliveryMode.PERSISTENT
         )

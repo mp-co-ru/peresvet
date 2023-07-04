@@ -60,6 +60,13 @@ class ConstantsAPICRUD(svc.APICRUDSvc):
 
     """
 
+    _crud_commands = {
+        "create": "constants.create",
+        "read": "constants.read",
+        "update": "constants.update",
+        "delete": "constants.delete"
+    }
+
     def __init__(self, settings: ConstantsAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 

@@ -57,7 +57,7 @@ class OneConnectorInReadResult(svc.OneNodeInReadResult):
 
 class ConnectorReadResult(svc.NodeReadResult):
     data: List[OneConnectorInReadResult] = Field(title="Список коннекторов")
-    pass    
+    pass
 
 class ConnectorUpdate(svc.NodeUpdate):
     linkTags: List[ConnectorLinkedTag] = Field(title="Список добавленных тегов для коннектора")
@@ -73,6 +73,12 @@ class ConnectorsAPICRUD(svc.APICRUDSvc):
     Формат ожидаемых сообщений
 
     """
+    _crud_commands = {
+        "create": "connectors.create",
+        "read": "connectors.read",
+        "update": "connectors.update",
+        "delete": "connectors.delete"
+    }
 
     def __init__(self, settings: ConnectorsAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
