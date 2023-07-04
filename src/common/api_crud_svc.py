@@ -185,16 +185,34 @@ class NodeReadResult(BaseModel):
 
 class APICRUDSvc(BaseSvc):
 
-    _callback_queue: aio_pika.abc.AbstractRobustQueue
+    # так как сообщения, создаваемые сервисами каждой сущности
+    # начинаются с имени этой сущности, то
+    # каждый сервис-наследник класса APICRUDSvc должен
+    # определить "свои" CRUD-сообщения в этом словаре
+    # к примеру, для сервиса TagsAPICRUDSvc:
+    # {
+    #   "create": "tags.create",
+    #   "read": "tags.read",
+    #   "update": "tags.update",
+    #   "delete": "tags.delete"
+    # }
+    _crud_commands = {
+        "create": "create",
+        "read": "read",
+        "update": "update",
+        "delete": "delete"
+    }
 
     def __init__(self, settings: APICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
         self.api_version = settings.api_version
+        self._callback_queue: aio_pika.abc.AbstractRobustQueue
+
 
     async def create(self, payload: NodeCreate) -> dict:
         body = {
-            "action": "create",
+            "action": self._crud_commands["create"],
             "data": payload.dict()
         }
 
@@ -202,7 +220,7 @@ class APICRUDSvc(BaseSvc):
 
     async def update(self, payload: NodeUpdate) -> dict:
         body = {
-            "action": "update",
+            "action": self._crud_commands["update"],
             "data": payload.dict()
         }
 
@@ -210,7 +228,7 @@ class APICRUDSvc(BaseSvc):
 
     async def read(self, payload: NodeRead) -> dict:
         body = {
-            "action": "read",
+            "action": self._crud_commands["read"],
             "data": payload.dict()
         }
 
@@ -218,7 +236,7 @@ class APICRUDSvc(BaseSvc):
 
     async def delete(self, payload: NodeDelete) -> dict:
         body = {
-            "action": "delete",
+            "action": self._crud_commands["delete"],
             "data": payload.dict()
         }
 

@@ -70,6 +70,13 @@ class DataStoragesAPICRUD(svc.APICRUDSvc):
 
     """
 
+    _crud_commands = {
+        "create": "dataStorages.create",
+        "read": "dataStorages.read",
+        "update": "dataStorages.update",
+        "delete": "dataStorages.delete"
+    }
+
     def __init__(self, settings: DataStoragesAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 

@@ -18,6 +18,15 @@ class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     """
 
+    _outgoing_commands = {
+        "mayUpdate": "tags.mayUpdate",
+        "updating": "tags.updating",
+        "updated": "tags.updated",
+        "mayDelete": "tags.mayDelete",
+        "deleting": "tags.deleting",
+        "deleted": "tags.deleted"
+    }
+
     def __init__(self, settings: TagsModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 

@@ -15,9 +15,11 @@ sys.path.append(".")
 
 from dataStorages_app_postgresql_settings import DataStoragesAppPostgreSQLSettings
 from src.common import svc
-from src.common import hierarchy
 import src.common.times as t
-from src.common.consts import CNTagValueTypes as TVT
+from src.common.consts import (
+    CNTagValueTypes as TVT,
+    Order
+)
 
 import asyncpg as apg
 from asyncpg.exceptions import PostgresError
@@ -54,14 +56,6 @@ def linear_interpolated(start_point: Tuple[int, Any],
 
     return (x-x0)/(x1-x0)*(y1-y0)+y0
 
-class Order(IntEnum):
-    """ Порядок сортировки выборки
-    ASC - по возрастанию
-    DESC - по убыванию
-    """
-    CN_ASC: int = 1
-    CN_DESC: int = 2
-
 class DataStoragesAppPostgreSQL(svc.Svc):
 
     def __init__(
@@ -69,7 +63,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         ):
         super().__init__(settings, *args, **kwargs)
 
-        self._commands = {
+        self._incoming_commands = {
             "tags.set": self._tag_set,
             "tags.get": self._tag_get,
             "datastorages.linktag": self._link_tag,

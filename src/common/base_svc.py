@@ -46,6 +46,16 @@ class BaseSvc(FastAPI):
     Args:
             settings (Settings): конфигурация приложения см. :class:`settings.Settings`
     """
+
+    # словарь используется для перечисления типовых исходящих сообщений
+    # для разных сущностей
+    # к примеру: ...mayUpdate, ...updating и т.д. для
+    # словарь имеет вид:
+    # {
+    #    "<название типовой команды>": "<имя типовой команды для данной сущности>"
+    # }
+    _outgoing_commands = {}
+
     def __init__(self, settings: BaseSvcSettings, *args, **kwargs):
         if kwargs.get("on_startup"):
             kwargs.append(self.on_startup)
@@ -82,7 +92,7 @@ class BaseSvc(FastAPI):
         # предполагается, что функция асинхронная, принимает на вход
         # пришедшее сообщение отдаёт какой-то ответ, который будет переслан
         # обратно, если у сообщения выставлен параметр reply_to
-        self._commands = {}
+        self._incoming_commands = {}
 
     @cached_property
     def _config(self):
@@ -119,8 +129,8 @@ class BaseSvc(FastAPI):
                 self._logger.error(f"В сообщении {mes} не указано действие.")
                 await message.ack()
                 return
-            mes["action"] = mes["action"].lower()
-            if not mes["action"] in self._commands.keys():
+            #mes["action"] = mes["action"].lower()
+            if not mes["action"] in self._incoming_commands.keys():
                 self._logger.error(f"Неизвестное действие {mes['action']}.")
                 await message.ack()
                 return
@@ -130,7 +140,7 @@ class BaseSvc(FastAPI):
                 await message.reject(True)
                 return
 
-            func = self._commands.get(mes["action"])
+            func = self._incoming_commands.get(mes["action"])
 
             res = await func(mes)
 
