@@ -196,7 +196,7 @@ class APICRUDSvc(BaseSvc):
     #   "update": "tags.update",
     #   "delete": "tags.delete"
     # }
-    _crud_commands = {
+    _outgoing_commands = {
         "create": "create",
         "read": "read",
         "update": "update",
@@ -212,7 +212,7 @@ class APICRUDSvc(BaseSvc):
 
     async def create(self, payload: NodeCreate) -> dict:
         body = {
-            "action": self._crud_commands["create"],
+            "action": self._outgoing_commands["create"],
             "data": payload.dict()
         }
 
@@ -220,7 +220,7 @@ class APICRUDSvc(BaseSvc):
 
     async def update(self, payload: NodeUpdate) -> dict:
         body = {
-            "action": self._crud_commands["update"],
+            "action": self._outgoing_commands["update"],
             "data": payload.dict()
         }
 
@@ -228,7 +228,7 @@ class APICRUDSvc(BaseSvc):
 
     async def read(self, payload: NodeRead) -> dict:
         body = {
-            "action": self._crud_commands["read"],
+            "action": self._outgoing_commands["read"],
             "data": payload.dict()
         }
 
@@ -236,7 +236,7 @@ class APICRUDSvc(BaseSvc):
 
     async def delete(self, payload: NodeDelete) -> dict:
         body = {
-            "action": self._crud_commands["delete"],
+            "action": self._outgoing_commands["delete"],
             "data": payload.dict()
         }
 

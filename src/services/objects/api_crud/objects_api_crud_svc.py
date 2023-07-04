@@ -46,7 +46,7 @@ class ObjectsAPICRUD(svc.APICRUDSvc):
 
     """
 
-    _crud_commands = {
+    _outgoing_commands = {
         "create": "objects.create",
         "read": "objects.read",
         "update": "objects.update",

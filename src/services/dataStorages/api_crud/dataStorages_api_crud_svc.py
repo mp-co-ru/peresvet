@@ -70,7 +70,7 @@ class DataStoragesAPICRUD(svc.APICRUDSvc):
 
     """
 
-    _crud_commands = {
+    _outgoing_commands = {
         "create": "dataStorages.create",
         "read": "dataStorages.read",
         "update": "dataStorages.update",

@@ -115,7 +115,7 @@ class TagsAPICRUD(svc.APICRUDSvc):
 
     """
 
-    _crud_commands = {
+    _outgoing_commands = {
         "create": "tags.create",
         "read": "tags.read",
         "update": "tags.update",
