@@ -85,14 +85,34 @@ class BaseSvc(FastAPI):
         self._amqp_callback_queue: aio_pika.abc.AbstractRobustQueue = None
         self._callback_futures: MutableMapping[str, asyncio.Future] = {}
 
-        # словарь "<action>": function
+        # Словарь {
+        #   "<action>": function
+        # }
         # используется для вызова соответствующей функции при получении
-        # определённого сообщения
-        # набор команд и функций определяется в каждом классе-наследнике
-        # предполагается, что функция асинхронная, принимает на вход
-        # пришедшее сообщение отдаёт какой-то ответ, который будет переслан
-        # обратно, если у сообщения выставлен параметр reply_to
+        # определённого сообщения.
+        # Набор команд и функций определяется в каждом классе-наследнике.
+        # Предполагается, что функция асинхронная, принимает на вход
+        # пришедшее сообщение отдаёт и какой-то ответ, который будет переслан
+        # обратно, если у сообщения выставлен параметр reply_to.
+        # Список входящих команд переопределяется в специальной функции
+        # _set_incoming_commands, которая переписывается в каждом
+        # классе-наследнике. Делается это в отдельной функции потому, что
+        # потом в список автоматически добавляются команды subscribe и
+        # unsubscribe
         self._incoming_commands = {}
+        self._set_incoming_commands()
+        self._incoming_commands["subscribe"] = self._subscribe
+        self._incoming_commands["unsubscribe"] = self._unsubscribe
+
+    async def _subscribe(self, mes: dict) -> None:
+        pass
+
+    async def _unsubscribe(self, mes: dict) -> None:
+        pass
+
+    @classmethod
+    def _set_incoming_commands(cls):
+        pass
 
     @cached_property
     def _config(self):
