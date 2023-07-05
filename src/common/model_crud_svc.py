@@ -184,6 +184,7 @@ class ModelCRUDSvc(Svc):
                 object_class.strip() for object_class in classes
             ]
 
+    def _set_incoming_commands(self):
         # словарь входящих команд переопределяем в каждом классе-наследнике,
         # так как CRUD-команды в каждой группе сервисов начинаются с
         # с имени "своей" сущности
@@ -200,12 +201,8 @@ class ModelCRUDSvc(Svc):
             "mayUpdate": self._may_update,
             "updating": self._updating,
             "mayDelete": self._may_delete,
-            "deleting": self._deleting,
-            "subscribe": self._subscribe,
-            "unsubscribe": self._unsubscribe
+            "deleting": self._deleting
         }
-
-
 
     async def _subscribe(self, mes: dict) -> None:
         """Метод-реакция на запрос на подписку.
