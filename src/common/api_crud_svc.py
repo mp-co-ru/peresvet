@@ -5,7 +5,6 @@
 """
 import asyncio
 import json
-from typing import Annotated, List
 from collections.abc import MutableMapping
 from uuid import UUID, uuid4
 from pydantic import BaseModel, Field, validator
@@ -16,7 +15,7 @@ from fastapi import APIRouter
 from src.common.base_svc import BaseSvc
 from src.common.api_crud_settings import APICRUDSettings
 
-def valid_uuid(id: str | List[str]) -> str | List[str]:
+def valid_uuid(id: str | list[str]) -> str | list[str]:
     """Валидатор идентификаторов.
     Идентификатор должен быть в виде GUID.
     """
@@ -91,7 +90,7 @@ class NodeDelete(BaseModel):
     """Базовый класс, описывающий параметры
     команды для удаления узла.
     """
-    id: str | List[str] = Field(title="Идентификатор(-ы) узла.",
+    id: str | list[str] = Field(title="Идентификатор(-ы) узла.",
         description=(
             "Идентификатор(-ы) удаляемого(изменяемого) узла "
             "должен быть в виде uuid."
@@ -102,7 +101,7 @@ class NodeDelete(BaseModel):
 
     @validator('id')
     @classmethod
-    def make_id_as_array(cls, v: str | List[str]) -> List[str]:
+    def make_id_as_array(cls, v: str | list[str]) -> list[str]:
         if isinstance(v, str):
             return [v]
         return v
@@ -120,7 +119,7 @@ class NodeRead(BaseModel):
     поиска/чтения узлов.
     """
 
-    id: str | List[str] = Field(
+    id: str | list[str] = Field(
         None,
         title="Идентификатор(-ы) узлов.",
         description=(
@@ -159,7 +158,7 @@ class NodeRead(BaseModel):
             "затем значения для разных атрибутов объединяются операцией `И`."
          )
     )
-    attributes: List[str] = Field(
+    attributes: list[str] = Field(
         ["*"],
         title="Список атрибутов.",
         description=(
@@ -181,7 +180,7 @@ class OneNodeInReadResult(BaseModel):
     attributes: dict = Field(title="Атрибуты узла")
 
 class NodeReadResult(BaseModel):
-    data: List[OneNodeInReadResult] = Field(title="Список узлов")
+    data: list[OneNodeInReadResult] = Field(title="Список узлов")
 
 class APICRUDSvc(BaseSvc):
 

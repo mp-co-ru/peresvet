@@ -74,7 +74,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         self._tags = {}
         self._alerts = {}
 
-    async def _reject_message(mes: dict) -> bool:
+    async def _reject_message(self, mes: dict) -> bool:
         return False
 
     async def _link_tag(self, mes: dict) -> dict:

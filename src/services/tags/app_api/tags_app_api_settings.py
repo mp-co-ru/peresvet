@@ -1,9 +1,9 @@
 from src.common.api_crud_settings import APICRUDSettings
 
-class TagsAPICRUDSettings(APICRUDSettings):
+class TagsAppAPISettings(APICRUDSettings):
 
     #: имя сервиса. сервисы *_mod_crud создают в иерархии узел с таким же именем
-    svc_name: str = "tags_api_crud"
+    svc_name: str = "tags_app_api"
     #: строка коннекта к RabbitMQ
     amqp_url: str = "amqp://prs:Peresvet21@rabbitmq/"
 
@@ -12,11 +12,11 @@ class TagsAPICRUDSettings(APICRUDSettings):
         "main": {
             "name": "tags",
             "type": "direct",
-            "routing_key": "tags_api_crud_publish"
+            "routing_key": "tags_app_api_publish"
         }
     }
     consume: dict = {
-        "queue_name": "tags_api_crud_consume",
+        "queue_name": "tags_app_api_consume",
         "exchanges": {
             "main": {
                 #: имя обменника
@@ -24,7 +24,7 @@ class TagsAPICRUDSettings(APICRUDSettings):
                 #: тип обменника
                 "type": "direct",
                 #: привзяка для очереди
-                "routing_key": ["tags_api_crud_consume"]
+                "routing_key": ["tags_app_api_consume"]
             }
         }
     }
