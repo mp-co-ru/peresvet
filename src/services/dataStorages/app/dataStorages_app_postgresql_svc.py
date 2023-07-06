@@ -64,8 +64,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         super().__init__(settings, *args, **kwargs)
 
         self._incoming_commands = {
-            "tags.set": self._tag_set,
-            "tags.get": self._tag_get,
+            "tags.set_data": self._tag_set,
+            "tags.get_data": self._tag_get,
             "datastorages.linktag": self._link_tag,
             "datastorages.unlinktag": self._unlink_tag,
         }
@@ -178,7 +178,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         Args:
             mes (dict): {
-                "action": "tagSet",
+                "action": "tags.set_data",
                 "data": {
                     "data": [
                         {
@@ -466,7 +466,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         Args:
             mes (dict): {
-                "action": "tag.get",
+                "action": "tags.get_data",
                 "data": {
                     "tagId": [str],
                     "start": int,
