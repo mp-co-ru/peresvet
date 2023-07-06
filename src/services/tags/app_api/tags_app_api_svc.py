@@ -3,6 +3,8 @@
 и класс сервиса ``tags_api_crud_svc``.
 """
 import sys
+import asyncio
+import copy
 from uuid import UUID
 from typing import Any, List
 from pydantic import BaseModel, Field, validator
@@ -12,6 +14,7 @@ from fastapi import APIRouter
 sys.path.append(".")
 
 from src.common import svc
+from src.common.api_crud_svc import valid_uuid
 from src.services.tags.app_api.tags_app_api_settings import TagsAppAPISettings
 import src.common.times as t
 
@@ -103,6 +106,14 @@ class DataGet(BaseModel):
         title="Шаг между соседними значениями."
     )
 
+    @validator('tagId')
+    @classmethod
+    def tagId_list(cls, v: str | list[str]) -> list[str]:
+        if isinstance(v, str):
+            return [v]
+        else:
+            return v
+
     @validator('finish')
     @classmethod
     def finish_in_iso_format(cls, v: Any) -> int:
@@ -133,8 +144,7 @@ class DataGet(BaseModel):
                 )
             )
 
-
-    validate_id = validator('tagId', allow_reuse=True)(svc.valid_uuid)
+    validate_id = validator('tagId', allow_reuse=True)(valid_uuid)
 
 class TagsAppAPI(svc.Svc):
     """Сервис работы с тегами в иерархии.
@@ -153,24 +163,60 @@ class TagsAppAPI(svc.Svc):
         super().__init__(settings, *args, **kwargs)
 
     async def data_get(self, payload: DataGet) -> dict:
-        # TODO: усложнить логику: разобрать по тегам и постить
-        # по одному, каждый со своей привязкой
-        body = {
-            "action": "data.get",
-            "data": payload.dict()
+        new_payload = copy.deepcopy(payload.dict())
+        tag_ids = new_payload.pop(tag_id)
+        tasks = []
+        for tag_id in tag_ids:
+
+            new_payload["tagId"] = [tag_id]
+
+            future = asyncio.create_task(
+                self._post_message({
+                    "action": "tags.get_data",
+                    "data": new_payload
+                },
+                reply=True,
+                routing_key=tag_id)
+            )
+            tasks.append(future)
+
+        done, _ = await asyncio.wait(
+            tasks, return_when=asyncio.ALL_COMPLETED
+        )
+
+        final_res = {
+            "data": []
         }
-        return await self._post_message(mes=body, reply=True)
+        for future in done:
+            final_res["data"] = final_res["data"] + future.result()["data"]
 
+        return final_res
 
-    async def data_set(self, payload: AllData) -> dict:
-        return await super().read(payload=payload)
+    async def data_set(self, payload: AllData) -> None:
+        tasks = []
+        for tag_item in payload.data:
 
-    async def update(self, payload: TagUpdate) -> dict:
-        return await super().update(payload=payload)
+            future = asyncio.create_task(
+                self._post_message({
+                    "action": "tags.set_data",
+                    "data": {
+                        "data": [
+                            tag_item.dict()
+                        ]
+                    }
+                },
+                reply=False,
+                routing_key=tag_item.tagId)
+            )
+            tasks.append(future)
+
+        done, _ = await asyncio.wait(
+            tasks, return_when=asyncio.ALL_COMPLETED
+        )
 
 settings = TagsAppAPISettings()
 
-app = TagsAppAPI(settings=settings, title="`TagsAppAPICRUD` service")
+app = TagsAppAPI(settings=settings, title="`TagsAppAPI` service")
 
 router = APIRouter()
 
@@ -179,15 +225,7 @@ async def data_get(payload: DataGet):
     return await app.data_get(payload)
 
 @router.post("/", response_model=svc.NodeReadResult, status_code=200)
-async def read(payload: TagRead):
-    return await app.read(payload)
+async def data_set(payload: AllData):
+    return await app.data_set(payload)
 
-@router.put("/", status_code=202)
-async def update(payload: TagUpdate):
-    await app.update(payload)
-
-@router.delete("/", status_code=202)
-async def delete(payload: svc.NodeDelete):
-    await app.delete(payload)
-
-app.include_router(router, prefix=f"{settings.api_version}/tags", tags=["tags"])
+app.include_router(router, prefix=f"{settings.api_version}/data", tags=["data"])
