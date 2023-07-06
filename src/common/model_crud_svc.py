@@ -165,6 +165,7 @@ class ModelCRUDSvc(Svc):
     """
 
     _outgoing_commands = {
+        "created": "created",
         "mayUpdate": "mayUpdate",
         "updating": "updating",
         "updated": "updated",

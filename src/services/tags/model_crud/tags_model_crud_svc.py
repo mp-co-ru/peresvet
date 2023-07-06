@@ -19,6 +19,7 @@ class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
     """
 
     _outgoing_commands = {
+        "created": "tags.created",
         "mayUpdate": "tags.mayUpdate",
         "updating": "tags.updating",
         "updated": "tags.updated",
@@ -37,6 +38,7 @@ class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
             "tags.update": self._update,
             "tags.delete": self._delete,
 
+            #TODO: этот блок надо доработать
             "objects.mayUpdate": self._may_update,
             "objects.updating": self._updating,
             "objects.mayDelete": self._may_delete,

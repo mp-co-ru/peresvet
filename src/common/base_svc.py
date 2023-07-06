@@ -49,7 +49,7 @@ class BaseSvc(FastAPI):
 
     # словарь используется для перечисления типовых исходящих сообщений
     # для разных сущностей
-    # к примеру: ...mayUpdate, ...updating и т.д. для
+    # к примеру: ...mayUpdate, ...updating и т.д. для model_crud_svc
     # словарь имеет вид:
     # {
     #    "<название типовой команды>": "<имя типовой команды для данной сущности>"
@@ -118,7 +118,7 @@ class BaseSvc(FastAPI):
     def _config(self):
         return self._conf
 
-    async def _reject_message(mes: dict) -> bool:
+    async def _reject_message(self, mes: dict) -> bool:
         """Проверка сообщения на предмет того, что оно предназначается
         данному сервису.
         Метод может быть переопределён в сервисах-потомках.
@@ -258,7 +258,7 @@ class BaseSvc(FastAPI):
                             r_ks = [r_ks]
                         for r_k in r_ks:
                             await self._amqp_consume["queue"].bind(
-                                exchange=self._amqp_consume[key]["exchange"],
+                                exchange=self._amqp_consume["exchanges"][key]["exchange"],
                                 routing_key=r_k
                             )
 
