@@ -1,10 +1,8 @@
 import sys
-import copy
 import json
 import asyncio
 import numbers
 from typing import Any, List, Tuple
-from enum import IntEnum
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 import numpy as np
@@ -64,8 +62,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         super().__init__(settings, *args, **kwargs)
 
         self._incoming_commands = {
-            "tags.set_data": self._tag_set,
-            "tags.get_data": self._tag_get,
+            "tags.download_data": self._tag_set,
+            "tags.upload_data": self._tag_get,
             "datastorages.linktag": self._link_tag,
             "datastorages.unlinktag": self._unlink_tag,
         }
@@ -991,3 +989,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         if finish:
             return tag_data[-count:]
         return tag_data
+
+settings = DataStoragesAppPostgreSQLSettings()
+
+app = DataStoragesAppPostgreSQL(settings=settings, title="DataStoragesAppPostgreSQL")

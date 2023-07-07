@@ -206,8 +206,6 @@ class APICRUDSvc(BaseSvc):
         super().__init__(settings, *args, **kwargs)
 
         self.api_version = settings.api_version
-        self._callback_queue: aio_pika.abc.AbstractRobustQueue
-
 
     async def create(self, payload: NodeCreate) -> dict:
         body = {

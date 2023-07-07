@@ -62,7 +62,7 @@ class TagData(BaseModel):
         "Данные тега"
     )
 
-    validate_id = validator('tagId', allow_reuse=True)(svc.valid_uuid)
+    validate_id = validator('tagId', allow_reuse=True)(valid_uuid)
 
 class AllData(BaseModel):
     data: List[TagData] = Field(
@@ -163,56 +163,20 @@ class TagsAppAPI(svc.Svc):
         super().__init__(settings, *args, **kwargs)
 
     async def data_get(self, payload: DataGet) -> dict:
-        new_payload = copy.deepcopy(payload.dict())
-        tag_ids = new_payload.pop(tag_id)
-        tasks = []
-        for tag_id in tag_ids:
-
-            new_payload["tagId"] = [tag_id]
-
-            future = asyncio.create_task(
-                self._post_message({
-                    "action": "tags.get_data",
-                    "data": new_payload
-                },
-                reply=True,
-                routing_key=tag_id)
-            )
-            tasks.append(future)
-
-        done, _ = await asyncio.wait(
-            tasks, return_when=asyncio.ALL_COMPLETED
-        )
-
-        final_res = {
-            "data": []
+        body = {
+            "action": "tags.get_data",
+            "data": payload.dict()
         }
-        for future in done:
-            final_res["data"] = final_res["data"] + future.result()["data"]
 
-        return final_res
+        return await self._post_message(mes=body, reply=True)
 
     async def data_set(self, payload: AllData) -> None:
-        tasks = []
-        for tag_item in payload.data:
+        body = {
+            "action": "tags.set_data",
+            "data": payload.dict()
+        }
 
-            future = asyncio.create_task(
-                self._post_message({
-                    "action": "tags.set_data",
-                    "data": {
-                        "data": [
-                            tag_item.dict()
-                        ]
-                    }
-                },
-                reply=False,
-                routing_key=tag_item.tagId)
-            )
-            tasks.append(future)
-
-        done, _ = await asyncio.wait(
-            tasks, return_when=asyncio.ALL_COMPLETED
-        )
+        return await self._post_message(mes=body, reply=False)
 
 settings = TagsAppAPISettings()
 
@@ -224,7 +188,7 @@ router = APIRouter()
 async def data_get(payload: DataGet):
     return await app.data_get(payload)
 
-@router.post("/", response_model=svc.NodeReadResult, status_code=200)
+@router.post("/", status_code=200)
 async def data_set(payload: AllData):
     return await app.data_set(payload)
 

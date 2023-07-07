@@ -7,7 +7,6 @@ import json
 from uuid import UUID
 from typing import Any, List
 from pydantic import BaseModel, Field, validator
-
 from fastapi import APIRouter
 
 sys.path.append(".")
@@ -41,12 +40,24 @@ class DataStorageCreate(svc.NodeCreate):
         return v
 
 class DataStorageRead(svc.NodeRead):
-    getLinkedTags: bool = Field(False, "Флаг возврата присоединённых тегов")
-    getLinkedAlerts: bool = Field(False, "Флаг возврата присоединённых тревог")
+    getLinkedTags: bool = Field(
+        False,
+        title="Флаг возврата присоединённых тегов"
+    )
+    getLinkedAlerts: bool = Field(
+        False,
+        title="Флаг возврата присоединённых тревог"
+    )
 
 class OneDataStorageInReadResult(svc.OneNodeInReadResult):
-    linkedTags: List[str] = Field(None, "Список id присоединённых тегов.")
-    linkedAlerts: List[str] = Field(None, "Список id присоединённых тревог.")
+    linkedTags: List[str] = Field(
+        None,
+        title="Список id присоединённых тегов."
+    )
+    linkedAlerts: List[str] = Field(
+        None,
+        title="Список id присоединённых тревог."
+    )
 
 class DataStorageReadResult(svc.NodeReadResult):
     data: List[OneDataStorageInReadResult] = Field(title="Список хранилищ данных.")
@@ -54,8 +65,14 @@ class DataStorageReadResult(svc.NodeReadResult):
 class DataStorageUpdate(DataStorageCreate):
     id: str = Field(title="Идентификатор изменяемого узла.",
                     description="Должен быть в формате GUID.")
-    unlinkTags: List[str] = Field(None, "Список id тегов.")
-    unlinkAlerts: List[str] = Field(None, "Список id тревог.")
+    unlinkTags: List[str] = Field(
+        None,
+        title="Список id тегов."
+    )
+    unlinkAlerts: List[str] = Field(
+        None,
+        title="Список id тревог."
+    )
 
     validate_id = validator('id', allow_reuse=True)(svc.valid_uuid)
 

@@ -57,6 +57,7 @@ class BaseSvc(FastAPI):
     _outgoing_commands = {}
 
     def __init__(self, settings: BaseSvcSettings, *args, **kwargs):
+        print("BaseSvc init...")
         if kwargs.get("on_startup"):
             kwargs.append(self.on_startup)
         else:
@@ -99,8 +100,7 @@ class BaseSvc(FastAPI):
         # классе-наследнике. Делается это в отдельной функции потому, что
         # потом в список автоматически добавляются команды subscribe и
         # unsubscribe
-        self._incoming_commands = {}
-        self._set_incoming_commands()
+        self._incoming_commands = self._set_incoming_commands()
         self._incoming_commands["subscribe"] = self._subscribe
         self._incoming_commands["unsubscribe"] = self._unsubscribe
 
@@ -110,9 +110,8 @@ class BaseSvc(FastAPI):
     async def _unsubscribe(self, mes: dict) -> None:
         pass
 
-    @classmethod
-    def _set_incoming_commands(cls):
-        pass
+    def _set_incoming_commands(self) -> dict:
+        return {}
 
     @cached_property
     def _config(self):

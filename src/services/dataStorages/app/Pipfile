@@ -13,7 +13,9 @@ aio-pika = "*"
 loguru = "*"
 six = "*"
 ciso8601 = "*"
-python-dateutil = "*"
+pandas = "*"
+numpy = "*"
+asyncpg = "*"
 
 [requires]
 python_version = "3.10"

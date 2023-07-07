@@ -23,6 +23,20 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
     def __init__(self, settings: DataStoragesModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
+    def _set_incoming_commands(self) -> dict:
+        return {
+            "dataStorages.create": self._create,
+            "dataStorages.read": self._read,
+            "dataStorages.update": self._update,
+            "dataStorages.delete": self._delete,
+
+            #TODO: этот блок надо доработать
+            ".mayUpdate": self._may_update,
+            ".updating": self._updating,
+            ".mayDelete": self._may_delete,
+            ".deleting": self._deleting
+        }
+
     async def _further_read(self, mes: dict, search_result: dict) -> dict:
         res = {"data": []}
         for ds in search_result["data"]:
@@ -73,6 +87,18 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             res["data"].append(new_ds)
 
         return res
+
+    async def _further_update(self, mes: dict) -> None:
+
+        ds_id = mes["data"]["id"]
+        for item in mes["data"]["linkTags"]:
+            copy_item = copy.deepcopy(item)
+            copy_item["dataStorageId"] = ds_id
+            await self._link_tag(copy_item)
+        for item in mes["data"]["linkAlerts"]:
+            copy_item = copy.deepcopy(item)
+            copy_item["dataStorageId"] = ds_id
+            await self._link_alert(copy_item)
 
     async def _get_routing_key_for_datastorage(self, ds_id: str) -> str:
         """Метод возвращает routing_key для определённого хранилища данных.
@@ -191,7 +217,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         Args:
             payload (dict): {
                 "id": "tag_id",
-                "dataStorage_id": "ds_id",
+                "dataStorageId": "ds_id",
                 "attributes": {
                     "prsStore":
                 }
@@ -199,7 +225,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         """
         # если не передан datastorage_id, привязываем тег к хранилищу
         # по умолчанию
-        if not payload.get("dataStorage_id"):
+        if not payload.get("dataStorageId"):
             datastorage_id = await self._get_default_datastorage_id()
             if not datastorage_id:
                 self._logger.info(
@@ -207,7 +233,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                     f"нет хранилища данных по умолчанию."
                 )
                 return
-            payload["dataStorage_id"] = datastorage_id
+            payload["dataStorageId"] = datastorage_id
 
         await self._unlink_tag(payload["id"])
 
@@ -218,7 +244,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         res = await self._post_message(
             mes={"action": "dataStorages.linkTag", "data": payload},
             reply=True,
-            routing_key=payload["dataStorage_id"])
+            routing_key=payload["dataStorageId"])
 
         prs_store = res.get("prsStore")
         tags_node_id = await self._hierarchy.get_node_id(
@@ -326,11 +352,11 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         for item in mes["data"]["linkTags"]:
             copy_item = copy.deepcopy(item)
-            copy_item["dataStorage_id"] = new_id
+            copy_item["dataStorageId"] = new_id
             await self._link_tag(copy_item)
         for item in mes["data"]["linkAlerts"]:
             copy_item = copy.deepcopy(item)
-            copy_item["dataStorage_id"] = new_id
+            copy_item["dataStorageId"] = new_id
             await self._link_alert(copy_item)
 
 settings = DataStoragesModelCRUDSettings()

@@ -185,7 +185,7 @@ class ModelCRUDSvc(Svc):
                 object_class.strip() for object_class in classes
             ]
 
-    def _set_incoming_commands(self):
+    def _set_incoming_commands(self) -> dict:
         # словарь входящих команд переопределяем в каждом классе-наследнике,
         # так как CRUD-команды в каждой группе сервисов начинаются с
         # с имени "своей" сущности
@@ -194,7 +194,7 @@ class ModelCRUDSvc(Svc):
         # то в _incoming_messages может быть несколько ключей
         # ...mayUpdate, ...updating и т.д.
 
-        self._incoming_commands = {
+        return {
             "create": self._create,
             "read": self._read,
             "update": self._update,
