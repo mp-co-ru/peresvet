@@ -11,7 +11,7 @@ class DataStoragesAppPostgreSQLSettings(SvcSettings):
     # наиболее часто это всего один обменник, описанный в ключе "main"
     # информацию об обменниках и сообщениях см. в документации на каждый
     # конкретный сервис
-    publish: dict[str, dict] = {
+    publish: dict = {
         #: главный обменник
         "main": {
             #: имя обменника
@@ -27,7 +27,7 @@ class DataStoragesAppPostgreSQLSettings(SvcSettings):
     # описание обменников, из которых сервис получает сообщения
     # информацию об обменниках и сообщениях см. в документации на каждый
     # конкретный сервис
-    consume: dict[str, dict] = {
+    consume: dict = {
         "queue_name": "dataStorages_app_postgresql_consume",
         "exchanges": {
             "main": {

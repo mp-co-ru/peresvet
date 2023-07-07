@@ -12,7 +12,7 @@ import os
 import json
 from pathlib import Path
 from typing import Any
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 def json_config_settings_source(settings: BaseSettings) -> dict[str, Any]:
     encoding = settings.__config__.env_file_encoding
@@ -31,19 +31,17 @@ class BaseSvcSettings(BaseSettings):
     # наиболее часто это всего один обменник, описанный в ключе "main"
     # информацию об обменниках и сообщениях см. в документации на каждый
     # конкретный сервис
-    publish: dict[str, dict] = {
+    publish: dict = {
         #: главный обменник
-        '''
-        "main": {
+        # "main": {
             #: имя обменника
-            "name": "base_svc",
+        #   "name": "base_svc",
             #: тип обменника
-            "type": "direct",
+        #    "type": "direct",
             #: routing_key, с которым будут публиковаться сообщения обменником
             #: pub_exchange_type
-            "routing_key": ["base_svc_publish"]
-        }
-        '''
+        #    "routing_key": ["base_svc_publish"]
+        #}
     }
 
     # описание обменников, из которых сервис получает сообщения
@@ -51,7 +49,7 @@ class BaseSvcSettings(BaseSettings):
     # конкретный сервис
     # все сообщения для сервиса попадают в одну очередь (за исключением
     # ответов по RPC)
-    consume: dict[str, dict] = {
+    consume: dict = {
         '''
         "queue_name": "base_svc",
         "exchanges": {

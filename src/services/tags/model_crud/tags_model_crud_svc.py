@@ -31,8 +31,8 @@ class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
     def __init__(self, settings: TagsModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    def _set_incoming_commands(self):
-        self._incoming_commands = {
+    def _set_incoming_commands(self) -> dict:
+        return {
             "tags.create": self._create,
             "tags.read": self._read,
             "tags.update": self._update,
