@@ -13,7 +13,7 @@ class DataStoragesModelCRUDSettings(ModelCRUDSettings):
         "main": {
             "name": "dataStorages",
             "type": "direct",
-            "routing_key": ["dataStorages_model_crud_publish"]
+            "routing_key": "dataStorages_model_crud_publish"
         }
     }
 
