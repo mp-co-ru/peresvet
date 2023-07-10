@@ -210,7 +210,7 @@ class APICRUDSvc(BaseSvc):
     async def create(self, payload: NodeCreate) -> dict:
         body = {
             "action": self._outgoing_commands["create"],
-            "data": payload.dict()
+            "data": payload.model_dump()
         }
 
         return await self._post_message(mes=body, reply=True)
@@ -218,7 +218,7 @@ class APICRUDSvc(BaseSvc):
     async def update(self, payload: NodeUpdate) -> dict:
         body = {
             "action": self._outgoing_commands["update"],
-            "data": payload.dict()
+            "data": payload.model_dump()
         }
 
         return await self._post_message(mes=body, reply=False)
@@ -226,7 +226,7 @@ class APICRUDSvc(BaseSvc):
     async def read(self, payload: NodeRead) -> dict:
         body = {
             "action": self._outgoing_commands["read"],
-            "data": payload.dict()
+            "data": payload.model_dump()
         }
 
         return await self._post_message(mes=body, reply=True)
@@ -234,7 +234,7 @@ class APICRUDSvc(BaseSvc):
     async def delete(self, payload: NodeDelete) -> dict:
         body = {
             "action": self._outgoing_commands["delete"],
-            "data": payload.dict()
+            "data": payload.model_dump()
         }
 
         return await self._post_message(mes=body, reply=False)

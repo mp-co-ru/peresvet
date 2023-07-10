@@ -261,8 +261,8 @@ class Hierarchy:
         attrs = {}
         if attribute_values:
             attrs = {
-            key: values if isinstance(values, list) else [values] for key, values in attribute_values.items()
-        }
+                key: values if isinstance(values, list) else [values] for key, values in attribute_values.items()
+            }
 
         if "objectClass" not in attrs.keys():
             attrs["objectClass"] = ["prsModelNode"]
@@ -281,7 +281,7 @@ class Hierarchy:
             modlist[key] = []
             for value in values:
                 new_value = None
-                if value:
+                if value is not None:
                     if isinstance(value, bool):
                         if value:
                             new_value = 'TRUE'

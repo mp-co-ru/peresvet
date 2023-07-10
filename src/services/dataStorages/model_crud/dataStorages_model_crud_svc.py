@@ -127,7 +127,10 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         item = await anext(self._hierarchy.search({
             "base": self._config.hierarchy["node_id"],
             "scope": hierarchy.CN_SCOPE_SUBTREE,
-            "filter": f"&(cn={tag_id})(objectClass=prsDatastorageTagData)",
+            "filter": {
+                "cn": f"{tag_id}",
+                "objectClass": f"prsDatastorageTagData"
+            },
             "attributes": ["cn"]
         }))
         if not item[0]:
@@ -163,7 +166,10 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         item = await anext(self._hierarchy.search({
             "base": self._config.hierarchy["node_id"],
             "scope": hierarchy.CN_SCOPE_SUBTREE,
-            "filter": f"&(cn={alert_id})(objectClass=prsDatastorageAlertData)",
+            "filter": {
+                "cn": f"{alert_id}",
+                "objectClass": "prsDatastorageAlertData"
+            },
             "attributes": ["cn"]
         }))
         if not item[0]:

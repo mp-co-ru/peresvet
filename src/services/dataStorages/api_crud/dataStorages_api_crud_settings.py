@@ -14,7 +14,7 @@ class DataStoragesAPICRUDSettings(APICRUDSettings):
         "main": {
             "name": "dataStorages",
             "type": "direct",
-            "routing_key": ["dataStorages_api_crud_publish"]
+            "routing_key": "dataStorages_api_crud_publish"
         }
     }
     consume: dict = {

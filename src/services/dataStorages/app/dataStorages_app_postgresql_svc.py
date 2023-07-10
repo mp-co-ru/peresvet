@@ -266,9 +266,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             "step": tag_data[2]["prsStep"][0] == "TRUE"
         }
 
-    async def on_startup(self) -> None:
-        await super().on_startup()
-
+    async def _connect_to_db(self) -> None:
+        print("Попытка связи с базой данных.")
         if not self._config.datastorages_id:
             ds_node_id = await self._hierarchy.get_node_id("cn=dataStorages,cn=prs")
             payload = {
@@ -304,7 +303,16 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
             dsn = json.loads(ds[2]["prsJsonConfigString"][0])["dsn"]
 
-            self._connection_pools[ds[0]] = await apg.create_pool(dsn=dsn)
+            connected = False
+            while not connected:
+                try:
+                    self._logger.info(f"dsn: {dsn}")
+                    self._connection_pools[ds[0]] = await apg.create_pool(dsn=dsn)
+                    self._logger.info(f"Связь с базой данных {dsn} установлена.")
+                    connected = True
+                except Exception as ex:
+                    self._logger.error(f"Ошибка связи с базой данных '{dsn}': {ex}")
+                    await asyncio.sleep(5)
 
             search_tags = {
                 "base": ds[0],
@@ -366,6 +374,10 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 )
 
             self._logger.info(f"Хранилище {ds[0]}. Тревоги прочитаны.")
+
+    async def on_startup(self) -> None:
+        await super().on_startup()
+        await self._connect_to_db()
 
 
     """"

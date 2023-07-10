@@ -57,7 +57,6 @@ class BaseSvc(FastAPI):
     _outgoing_commands = {}
 
     def __init__(self, settings: BaseSvcSettings, *args, **kwargs):
-        print("BaseSvc init...")
         if kwargs.get("on_startup"):
             kwargs.append(self.on_startup)
         else:
