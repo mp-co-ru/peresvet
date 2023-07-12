@@ -98,8 +98,8 @@ class Svc(BaseSvc):
         Returns:
             str: id узла с подписчиками
         """
-        dn = self._hierarchy.get_node_dn(node_id)
-        return self._hierarchy.get_node_id(
+        dn = await self._hierarchy.get_node_dn(node_id)
+        return await self._hierarchy.get_node_id(
             f"cn=subscribers,cn=system,{dn}"
         )
 

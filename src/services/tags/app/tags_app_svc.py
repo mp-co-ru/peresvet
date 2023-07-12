@@ -41,7 +41,7 @@ class TagsAppAPI(svc.Svc):
 
     async def _data_get(self, mes: dict) -> dict:
         new_payload = copy.deepcopy(mes["data"])
-        tag_ids = new_payload.pop(tag_id)
+        tag_ids = new_payload.pop("tagId")
         tasks = []
         for tag_id in tag_ids:
 
@@ -49,7 +49,7 @@ class TagsAppAPI(svc.Svc):
 
             future = asyncio.create_task(
                 self._post_message({
-                    "action": "tags.download_data",
+                    "action": "tags.downloadData",
                     "data": new_payload
                 },
                 reply=True,
@@ -80,7 +80,7 @@ class TagsAppAPI(svc.Svc):
 
             future = asyncio.create_task(
                 self._post_message({
-                    "action": "tags.upload_data",
+                    "action": "tags.uploadData",
                     "data": {
                         "data": [
                             tag_item

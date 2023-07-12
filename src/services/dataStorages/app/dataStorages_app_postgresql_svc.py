@@ -62,10 +62,10 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         super().__init__(settings, *args, **kwargs)
 
         self._incoming_commands = {
-            "tags.download_data": self._tag_set,
-            "tags.upload_data": self._tag_get,
-            "datastorages.linktag": self._link_tag,
-            "datastorages.unlinktag": self._unlink_tag,
+            "tags.downloadData": self._tag_get,
+            "tags.uploadData": self._tag_set,
+            "dataStorages.linkTag": self._link_tag,
+            "dataStorages.unlinkTag": self._unlink_tag,
         }
 
         self._connection_pools = {}
@@ -84,8 +84,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             mes (dict): {
                 "action": "datastorages.linktag",
                 "data": {
-                    "id": "tag_id",
-                    "dataStorage_id": "ds_id",
+                    "tagId": "tag_id",
+                    "dataStorageId": "ds_id",
                     "attributes": {
                         "prsStore": {"tableName": "<some_table>"}
                     }
@@ -93,27 +93,33 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         """
 
-        async with self._connection_pools[mes["data"]["dataStorage_id"]].acquire() as conn:
+        async with self._connection_pools[mes["data"]["dataStorageId"]].acquire() as conn:
 
-            mes["data"].setdefault("attributes", {})
             mes["data"]["attributes"].setdefault(
                 "prsStore",
-                {"tableName": f't_{mes["data"]["id"]}'}
+                {"tableName": f't_{mes["data"]["tagId"]}'}
             )
 
-            tag_params = self._tags.get(mes["data"]["id"])
+            tag_params = self._tags.get(mes["data"]["tagId"])
             if tag_params:
                 tbl_name = tag_params['table']
                 if mes["data"]["attributes"]["prsStore"]["tableName"] == tbl_name:
-                    self._logger.warning(f"Тег {mes['data']['id']} уже привязан")
+                    self._logger.warning(f"Тег {mes['data']['tagId']} уже привязан")
                     return
 
                 await conn.execute(
                     f'drop table if exists "{tbl_name}"'
                 )
 
-            tag_cache = self._prepare_tag_data(mes["data"]["id"])
-            tag_cache["ds"] = self._connection_pools[mes["data"]["dataStorage_id"]]
+            tbl_name = mes["data"]["attributes"]["prsStore"]["tableName"]
+
+            tag_cache = await self._prepare_tag_data(
+                mes["data"]["tagId"],
+                mes["data"]["dataStorageId"]
+            )
+            tag_cache["table"] = tbl_name
+
+            tag_cache["ds"] = self._connection_pools[mes["data"]["dataStorageId"]]
             match tag_cache["value_type"]:
                 case TVT.CN_INT:
                     s_type = "bigint"
@@ -124,7 +130,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 case TVT.CN_JSON:
                     s_type = "jsonb"
                 case _:
-                    er_str = f"Тег: {mes['data']['id']}; неизвестный тип данных: {tag_cache['value_type']}"
+                    er_str = f"Тег: {mes['data']['tagId']}; неизвестный тип данных: {tag_cache['value_type']}"
                     self._logger.error(er_str)
                     return
 
@@ -143,9 +149,11 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
             await conn.execute(query)
 
-            self._tags[mes["data"]["id"]] = tag_cache
+            self._tags[mes["data"]["tagId"]] = tag_cache
 
-        return {"prsStore": tag_cache["table"]}
+        return {
+            "prsStore": json.dumps({"table": tag_cache["table"]})
+        }
 
     async def _unlink_tag(self, mes: dict) -> None:
         """_summary_
@@ -157,9 +165,9 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                     "id": "tag_id"
                 }
         """
-        tag_params = self._tags.get(mes["data"]["id"])
+        tag_params = self._tags.get(mes["data"]["tagId"])
         if not tag_params:
-            self._logger.warning(f"Тег {mes['data']['id']} не привязан к хранилищу.")
+            self._logger.warning(f"Тег {mes['data']['tagId']} не привязан к хранилищу.")
             return
 
         async with tag_params["ds"].acquire() as conn:
@@ -167,9 +175,9 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 f'drop table if exists "{tag_params["table"]}"'
             )
 
-        self._tags.pop(mes["data"]["id"])
+        self._tags.pop(mes["data"]["tagId"])
 
-        self._logger.info(f"Тег {mes['data']['id']} отвязан от хранилища.")
+        self._logger.info(f"Тег {mes['data']['tagId']} отвязан от хранилища.")
 
     async def _tag_set(self, mes: dict) -> None:
         """
@@ -232,7 +240,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 )
 
             except PostgresError as ex:
-                svc.logger.error(f"Ошибка при записи данных тега {payload['tagId']}: {ex}")
+                self._logger.error(f"Ошибка при записи данных тега {payload['tagId']}: {ex}")
 
         tasks = []
         for tag_data in mes["data"]["data"]:
@@ -243,7 +251,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             tasks, return_when=asyncio.ALL_COMPLETED
         )
 
-    async def _prepare_tag_data(self, tag_id: str) -> dict | None:
+    async def _prepare_tag_data(self, tag_id: str, ds_id: str) -> dict | None:
         get_tag_data = {
             "id": [tag_id],
             "attributes": [
@@ -254,20 +262,38 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         tag_data = await anext(
             self._hierarchy.search(payload=get_tag_data)
         )
+
         if not tag_data[0]:
             self._logger.info(f"Не найден тег {tag_id}")
             return None
 
-        return {
-            "table": json.loads(tag_data[2]["prsStore"][0])["table"],
+        to_return = {
+            "table": None,
             "active": tag_data[2]["prsActive"][0] == "TRUE",
             "update": tag_data[2]["prsUpdate"][0] == "TRUE",
             "value_type": int(tag_data[2]["prsValueTypeCode"][0]),
             "step": tag_data[2]["prsStep"][0] == "TRUE"
         }
 
+        get_link_data = {
+            "base": ds_id,
+            "filter": {
+                "cn": [tag_id]
+            },
+            "attributes": ["prsStore"]
+        }
+
+        link_data = await anext(
+            self._hierarchy.search(payload=get_link_data)
+        )
+        if not link_data[0]:
+            return to_return
+
+        to_return["table"] = json.loads(link_data[2]["prsStore"][0])["table"]
+
+        return to_return
+
     async def _connect_to_db(self) -> None:
-        print("Попытка связи с базой данных.")
         if not self._config.datastorages_id:
             ds_node_id = await self._hierarchy.get_node_id("cn=dataStorages,cn=prs")
             payload = {
@@ -306,7 +332,6 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             connected = False
             while not connected:
                 try:
-                    self._logger.info(f"dsn: {dsn}")
                     self._connection_pools[ds[0]] = await apg.create_pool(dsn=dsn)
                     self._logger.info(f"Связь с базой данных {dsn} установлена.")
                     connected = True
@@ -319,22 +344,24 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 "filter": {
                     "objectClass": ["prsDatastorageTagData"]
                 },
-                "attributes": ["prsStore"]
+                "attributes": ["prsStore", "cn"]
             }
             async for tag in self._hierarchy.search(payload=search_tags):
                 if not tag[0]:
                     continue
 
-                tag_cache = self._prepare_tag_data(tag[0])
+                tag_id = tag[2]["cn"][0]
+
+                tag_cache = await self._prepare_tag_data(tag_id, ds[0])
                 if not tag_cache:
                     continue
 
-                tag_cache["ds"] = self._connection_pools[ds[0]],
-                self._tags[tag[0]] = tag_cache
+                tag_cache["ds"] = self._connection_pools[ds[0]]
+                self._tags[tag_id] = tag_cache
 
                 await self._amqp_consume["queue"].bind(
-                    exchange=self._amqp_consume["tags"]["exchange"],
-                    routing_key=tag[0]
+                    exchange=self._amqp_consume["exchanges"]["tags"]["exchange"],
+                    routing_key=tag_id
                 )
 
             self._logger.info(f"Хранилище {ds[0]}. Теги прочитаны.")
@@ -344,14 +371,16 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 "filter": {
                     "objectClass": ["prsDatastorageAlertData"]
                 },
-                "attributes": ["prsStore"]
+                "attributes": ["prsStore", "cn"]
             }
             async for alert in self._hierarchy.search(payload=search_alerts):
                 if not alert[0]:
                     continue
 
+                alert_id = alert[2]["cn"][0]
+
                 get_alert_data = {
-                    "id": [alert[0]],
+                    "id": [alert_id],
                     "attributes": ["prsActive"]
                 }
 
@@ -359,10 +388,10 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                     self._hierarchy.search(payload=get_alert_data)
                 )
                 if not alert_data[0]:
-                    self._logger.info(f"Не найдена тревога {alert[0]}")
+                    self._logger.info(f'Не найдена тревога {alert_id}')
                     continue
 
-                self._alerts[alert[0]] = {
+                self._alerts[alert_id] = {
                     "ds": self._connection_pools[ds[0]],
                     "table": json.loads(alert[2]["prsStore"][0])["table"],
                     "active": alert_data[2]["prsActive"][0] == "TRUE"
@@ -370,7 +399,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
                 await self._amqp_consume["queue"].bind(
                     exchange=self._amqp_consume["alerts"]["exchange"],
-                    routing_key=alert[0]
+                    routing_key=alert_id
                 )
 
             self._logger.info(f"Хранилище {ds[0]}. Тревоги прочитаны.")
@@ -534,8 +563,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 tasks[tag_id] = asyncio.create_task(
                         self._data_get_one(
                             tag_params,
-                            mes["data"]["finish"],
-                            mes["data"]["step"]
+                            mes["data"]["finish"]
                         )
                     )
 
@@ -783,6 +811,44 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
     def _last_point(self, x: int, data: List[dict]) -> Tuple[int, Any]:
         return (x, list(filter(lambda rec: rec['x'] == x, data))[-1]['y'])
+
+    async def _data_get_one(self,
+                            tag_cache: dict,
+                            finish: int) -> List[dict]:
+        """ Получение значения на текущую метку времени
+        """
+        tag_data = await self._read_data(
+            tag_cache=tag_cache, start=None, finish=finish, count=1,
+            one_before=False, one_after=not tag_cache["step"], order=Order.CN_DESC
+        )
+
+        if not tag_data:
+            if finish is not None:
+                return [{
+                    'x': finish,
+                    'y': None,
+                    'q': None,
+                }]
+
+        x0 = tag_data[0]['x']
+        y0 = tag_data[0]['y']
+        try:
+            x1, y1 = self._last_point(tag_data[1]['x'], tag_data)
+            if not tag_cache["table"]:
+                tag_data[0]['y'] = linear_interpolated(
+                    (x0, y0), (x1, y1), finish
+                )
+
+            tag_data.pop()
+        except IndexError:
+            # Если в выборке только одна запись и `to` меньше, чем `x` этой записи...
+            if x0 > finish:
+                tag_data[0]['y'] = None
+                tag_data[0]['q'] = None
+        finally:
+            tag_data[0]['x'] = finish
+
+        return tag_data
 
     async def _data_get_many(self,
                              tag_cache: dict,

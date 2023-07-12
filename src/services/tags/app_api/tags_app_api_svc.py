@@ -7,7 +7,7 @@ import asyncio
 import copy
 from uuid import UUID
 from typing import Any, List
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, validator
 
 from fastapi import APIRouter
 
@@ -20,7 +20,7 @@ import src.common.times as t
 
 class DataPointItem(BaseModel):
     x: int | str | None = Field(
-        t.now_int(),
+        default_factory=t.now_int,
         title="Метка времени",
         description=(
             "Метка времени значения. Может быть: "
@@ -30,18 +30,17 @@ class DataPointItem(BaseModel):
             "в качестве метки времени текущий момент."
         )
     )
-    y: float | dict | str | int | None = Field(
+    y: float | dict | str | int = Field(
         None,
         title="Значение тега"
     )
-    q: int | None = Field(
+    q: int = Field(
         None,
         title="Качество значения",
         description="None = хорошее качество значения."
     )
 
-    @validator('x')
-    @classmethod
+    @field_validator('x')
     def x_in_iso_format(cls, v: Any) -> int:
         # если x в виде строки, то строка должна быть в формате ISO9601
         try:
@@ -78,7 +77,7 @@ class DataGet(BaseModel):
         title="Метка времени начала периода."
     )
     finish: int | str = Field(
-        t.now_int(),
+        default_factory=t.now_int,
         title="Метка времени окончания периода."
     )
     maxCount: int = Field(
@@ -171,9 +170,22 @@ class TagsAppAPI(svc.Svc):
         return await self._post_message(mes=body, reply=True)
 
     async def data_set(self, payload: AllData) -> None:
+        new_data = []
+        for tag_item in payload.data:
+            new_tag_item = {
+                "tagId": tag_item.tagId,
+                "data": []
+            }
+            for data_item in tag_item.data:
+                new_tag_item["data"].append((data_item.x, data_item.y, data_item.q))
+
+            new_data.append(new_tag_item)
+
         body = {
             "action": "tags.set_data",
-            "data": payload.model_dump()
+            "data": {
+                "data": new_data
+            }
         }
 
         return await self._post_message(mes=body, reply=False)
