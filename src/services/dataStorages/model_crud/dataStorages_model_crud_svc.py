@@ -222,7 +222,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         Args:
             payload (dict): {
-                "id": "tag_id",
+                "tagId": "tag_id",
                 "dataStorageId": "ds_id",
                 "attributes": {
                     "prsStore":
@@ -241,7 +241,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                 return
             payload["dataStorageId"] = datastorage_id
 
-        await self._unlink_tag(payload["id"])
+        await self._unlink_tag(payload["tagId"])
 
         # res = {
         #   "prsStore": {...}
@@ -253,25 +253,27 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             routing_key=payload["dataStorageId"])
 
         prs_store = res.get("prsStore")
+
+        node_dn = await self._hierarchy.get_node_dn(payload['dataStorageId'])
         tags_node_id = await self._hierarchy.get_node_id(
-            f"cn=tags,cn=system,{self._hierarchy.get_node_dn(datastorage_id)}"
+            f"cn=tags,cn=system,{node_dn}"
         )
         new_node_id = await self._hierarchy.add(
             base=tags_node_id,
             attribute_values={
-                "objectCalss": ["prsDatastorageTagData"],
-                "cn": payload["id"],
+                "objectClass": ["prsDatastorageTagData"],
+                "cn": payload["tagId"],
                 "prsStore": prs_store
             }
         )
         await self._hierarchy.add_alias(
             parent_id=new_node_id,
-            aliased_object_id=payload["id"],
-            alias_name=payload["id"]
+            aliased_object_id=payload["tagId"],
+            alias_name=payload["tagId"]
         )
 
         self._logger.info(
-            f"Тег {payload['id']} привязан к хранилищу {datastorage_id}"
+            f"Тег {payload['tagId']} привязан к хранилищу {payload['dataStorageId']}"
         )
 
     async def _link_alert(self, payload: dict) -> None:
@@ -291,7 +293,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         Args:
             payload (dict): {
-                "id": "alert_id",
+                "alertId": "alert_id",
                 "attributes": {
                     "prsStore":
                 }
@@ -308,7 +310,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                 )
                 return
 
-        await self._unlink_alert(payload["id"])
+        await self._unlink_alert(payload["alertId"])
 
         routing_key = self._config["publish"]["main"]["routing_key"][0]
 
@@ -321,25 +323,26 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             routing_key=routing_key)
 
         prs_store = res.get("prsStore")
+        node_dn = await self._hierarchy.get_node_dn(datastorage_id)
         alerts_node_id = await self._hierarchy.get_node_id(
-            f"cn=alerts,cn=system,{self._hierarchy.get_node_dn(datastorage_id)}"
+            f"cn=alerts,cn=system,{node_dn}"
         )
         new_node_id = await self._hierarchy.add(
             base=alerts_node_id,
             attribute_values={
-                "objectCalss": ["prsDatastorageAlertData"],
-                "cn": payload["id"],
+                "objectClass": ["prsDatastorageAlertData"],
+                "cn": payload["alertId"],
                 "prsStore": prs_store
             }
         )
         await self._hierarchy.add_alias(
             parent_id=new_node_id,
-            aliased_object_id=payload["id"],
-            alias_name=payload["id"]
+            aliased_object_id=payload["alertId"],
+            alias_name=payload["alertId"]
         )
 
         self._logger.info(
-            f"Тревога {payload['id']} привязана к хранилищу {datastorage_id}"
+            f"Тревога {payload['alertId']} привязана к хранилищу {datastorage_id}"
         )
 
     async def _further_create(self, mes: dict, new_id: str) -> None:

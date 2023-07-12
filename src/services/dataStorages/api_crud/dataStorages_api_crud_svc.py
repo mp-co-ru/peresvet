@@ -17,17 +17,21 @@ from dataStorages_api_crud_settings import DataStoragesAPICRUDSettings
 class LinkTagOrAlertAttributes(BaseModel):
     prsStore: dict = Field(None, title="Хранилище тега")
 
-class LinkTagOrAlert(BaseModel):
-    id: str = Field(title="Идентификатор привязываемого тега")
-    attributes: LinkTagOrAlertAttributes = Field(None)
+class LinkTag(BaseModel):
+    tagId: str = Field(title="Идентификатор привязываемого тега")
+    attributes: LinkTagOrAlertAttributes = Field({})
+
+class LinkAlert(BaseModel):
+    alertId: str = Field(title="Идентификатор привязываемого тега")
+    attributes: LinkTagOrAlertAttributes = Field({})
 
 class DataStorageAttributes(svc.NodeAttributes):
     pass
 
 class DataStorageCreate(svc.NodeCreate):
     attributes: DataStorageAttributes = Field(title="Атрибуты узла")
-    linkTags: List[LinkTagOrAlert] = Field([], title="Список привязываемых тегов")
-    linkAlerts: List[LinkTagOrAlert] = Field([], title="Список привязываемых тревог")
+    linkTags: List[LinkTag] = Field([], title="Список привязываемых тегов")
+    linkAlerts: List[LinkAlert] = Field([], title="Список привязываемых тревог")
 
     @validator('attributes')
     @classmethod
@@ -65,6 +69,7 @@ class DataStorageReadResult(svc.NodeReadResult):
 class DataStorageUpdate(DataStorageCreate):
     id: str = Field(title="Идентификатор изменяемого узла.",
                     description="Должен быть в формате GUID.")
+    attributes: DataStorageAttributes = Field(None, title="Атрибуты узла")
     unlinkTags: List[str] = Field(
         None,
         title="Список id тегов."

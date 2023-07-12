@@ -4,7 +4,7 @@
             "pass": "applications/api_crud"
         },
         "*:81": {
-            "pass": "applications/api_crud"
+            "pass": "applications/app_api"
         }
     },
 

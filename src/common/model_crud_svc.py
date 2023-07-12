@@ -329,7 +329,7 @@ class ModelCRUDSvc(Svc):
         # получим список всех подписавшихся на уведомления
         subscribers = []
         node_dn = await self._hierarchy.get_node_dn(mes_data['id'])
-        subscribers_id = self._hierarchy.get_node_id(
+        subscribers_id = await self._hierarchy.get_node_id(
             f"cn=subscribers,cn=system,{node_dn}"
         )
         async for item in self._hierarchy.search(
@@ -392,19 +392,24 @@ class ModelCRUDSvc(Svc):
         if new_parent:
             await self._hierarchy.move(mes_data['id'], new_parent)
 
-        await self._hierarchy.modify(mes["id"], mes["attributes"])
+        if mes_data.get("attributes"):
+            await self._hierarchy.modify(mes_data["id"], mes_data["attributes"])
 
         await self._further_update(mes)
 
+        body = json.dumps({
+            "action": self._outgoing_commands["updated"],
+            "id": mes_data["id"]
+        }).encode()
         await self._amqp_publish["main"]["exchange"].publish(
             aio_pika.Message(
-                body=f'{{"action": {self._outgoing_commands["updated"]}, "id": {mes["id"]}}}'.encode(),
+                body=body,
                 content_type='application/json',
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             ),
             routing_key=self._config.publish["main"]["routing_key"]
         )
-        self._logger.info(f'Узел {mes["id"]} обновлён.')
+        self._logger.info(f'Узел {mes_data["id"]} обновлён.')
 
     async def _further_update(self, mes: dict) -> None:
         """Метод переопределяется в сервисах-наследниках.
@@ -700,7 +705,7 @@ class ModelCRUDSvc(Svc):
                     "base": parent_node,
                     "scope": CN_SCOPE_ONELEVEL,
                     "filter": {
-                        "objectCalss": [mes["data"]["attributes"]["objectClass"]],
+                        "objectClass": [mes["data"]["attributes"]["objectClass"]],
                         "prsDefault": ["TRUE"]
                     }
                 }
@@ -828,7 +833,7 @@ class ModelCRUDSvc(Svc):
         else:
             base_node_id = item[0]
 
-        self._config.hierarchy["node_dn"] = self._hierarchy.get_node_dn(base_node_id)
+        self._config.hierarchy["node_dn"] = await self._hierarchy.get_node_dn(base_node_id)
         self._config.hierarchy["node_id"] = base_node_id
 
     async def on_startup(self) -> None:
