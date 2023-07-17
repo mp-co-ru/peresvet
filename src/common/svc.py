@@ -49,6 +49,7 @@ class Svc(BaseSvc):
         connected = False
         while not connected:
             try:
+                self._logger.debug("Установление связи с LDAP сервером.")
                 self._hierarchy.connect()
                 connected = True
                 self._logger.info("Связь с LDAP сервером установлена.")

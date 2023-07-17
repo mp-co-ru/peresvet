@@ -11,7 +11,7 @@ class TagsModelCRUDSettings(ModelCRUDSettings):
     #: обменник для публикаций
     publish: dict = {
         "main": {
-            "name": "tags",
+            "name": "peresvet",
             "type": "direct",
             "routing_key": ["tags_model_crud_publish"]
         }
@@ -22,7 +22,7 @@ class TagsModelCRUDSettings(ModelCRUDSettings):
         "queue_name": "tags_model_crud_consume",
         "exchanges": {
             "main": {
-                "name": "tags",
+                "name": "peresvet",
                 "type": "direct",
                 "routing_key": [
                     "tags_model_crud_consume",

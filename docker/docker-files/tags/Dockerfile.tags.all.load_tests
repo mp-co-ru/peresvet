@@ -44,7 +44,7 @@ RUN usermod -a -G volume_group unit
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-COPY docker/docker-files/tags/config_nginx.unit_tags.all.json /docker-entrypoint.d/
+COPY docker/docker-files/tags/config_nginx.unit_tags.all.load_tests.json /docker-entrypoint.d/
 
 # копируем исходники --------------------------------------------
 ADD src/common/ /usr/src/tags_api_crud/src/common

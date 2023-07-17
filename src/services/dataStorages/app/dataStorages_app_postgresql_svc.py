@@ -61,16 +61,17 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         ):
         super().__init__(settings, *args, **kwargs)
 
-        self._incoming_commands = {
-            "tags.downloadData": self._tag_get,
-            "tags.uploadData": self._tag_set,
-            "dataStorages.linkTag": self._link_tag,
-            "dataStorages.unlinkTag": self._unlink_tag,
-        }
-
         self._connection_pools = {}
         self._tags = {}
         self._alerts = {}
+
+    def _set_incoming_commands(self) -> dict:
+        return {
+            "tags.downloadData": self._tag_get,
+            "tags.uploadData": self._tag_set,
+            "dataStorages.linkTag": self._link_tag,
+            "dataStorages.unlinkTag": self._unlink_tag
+        }
 
     async def _reject_message(self, mes: dict) -> bool:
         return False
@@ -523,6 +524,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             _type_: _description_
         """
 
+        self._logger.debug(f"mes: {mes}")
+
         tasks = {}
         for tag_id in mes["data"]["tagId"]:
             tag_params = self._tags.get(tag_id)
@@ -538,6 +541,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 mes["data"]["timeStep"] = None
 
             if mes["data"]["actual"]:
+                self._logger.debug(f"Create task 'data_get_actual")
                 tasks[tag_id]= asyncio.create_task(
                         self._data_get_actual(
                             tag_params,
@@ -549,6 +553,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                     )
 
             elif mes["data"]["timeStep"] is not None:
+                self._logger.debug(f"Create task 'data_get_interpolated")
                 tasks[tag_id]= asyncio.create_task(
                         self._data_get_interpolated(
                             tag_params,
@@ -560,6 +565,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             elif mes["data"]["start"] is None and \
                 mes["data"]["count"] is None and \
                 (mes["data"]["value"] is None or len(mes["data"]["value"]) == 0):
+                self._logger.debug(f"Create task 'data_get_one")
                 tasks[tag_id] = asyncio.create_task(
                         self._data_get_one(
                             tag_params,
@@ -569,6 +575,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
             else:
                 # Множество значений
+                self._logger.debug(f"Create task 'data_get_many")
+
                 tasks[tag_id]= asyncio.create_task(
                         self._data_get_many(
                             tag_params,
@@ -578,9 +586,16 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                         )
                     )
 
-        await asyncio.wait(list(tasks.values()))
-
         result = {"data": []}
+
+        if tasks:
+            await asyncio.wait(list(tasks.values()))
+        else:
+            self._logger.debug(f"No data to return")
+            return result
+
+        self._logger.debug(f"Tasks done")
+
         for tag_id, task in tasks.items():
             tag_data = task.result()
 
@@ -625,6 +640,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             if mes["data"]["maxCount"]:
                 new_item["excess"] = excess
             result["data"].append(new_item)
+
+        self._logger.debug(f"Data get result: {result}")
 
         return result
 

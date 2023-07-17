@@ -3,6 +3,7 @@
 """
 import json
 import asyncio
+import uvloop
 from functools import cached_property
 from uuid import uuid4
 from collections.abc import MutableMapping
@@ -13,7 +14,6 @@ import aio_pika.abc
 
 from src.common.logger import PrsLogger
 from src.common.base_svc_settings import BaseSvcSettings
-
 
 class BaseSvc(FastAPI):
     """
@@ -57,6 +57,17 @@ class BaseSvc(FastAPI):
     _outgoing_commands = {}
 
     def __init__(self, settings: BaseSvcSettings, *args, **kwargs):
+
+        self._conf = settings
+        self._logger = PrsLogger.make_logger(
+            level=settings.log["level"],
+            file_name=settings.log["file_name"],
+            retention=settings.log["retention"],
+            rotation=settings.log["rotation"]
+        )
+
+        self._logger.debug("Начало инициализации сервиса.")
+
         if kwargs.get("on_startup"):
             kwargs.append(self.on_startup)
         else:
@@ -68,13 +79,10 @@ class BaseSvc(FastAPI):
 
         super().__init__(*args, **kwargs)
 
-        self._conf = settings
-        self._logger = PrsLogger.make_logger(
-            level=settings.log["level"],
-            file_name=settings.log["file_name"],
-            retention=settings.log["retention"],
-            rotation=settings.log["rotation"]
-        )
+        self._logger.debug("Смена петли событий...")
+
+        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+
         self._amqp_connection: aio_pika.abc.AbstractRobustConnection = None
         self._amqp_channel: aio_pika.abc.AbstractRobustChannel = None
         self._amqp_publish: dict = {}
@@ -230,6 +238,7 @@ class BaseSvc(FastAPI):
         connected = False
         while not connected:
             try:
+                self._logger.debug("Установление связи с брокером сообщений...")
                 self._amqp_connection = await aio_pika.connect_robust(self._config.amqp_url)
                 self._amqp_channel = await self._amqp_connection.channel()
 

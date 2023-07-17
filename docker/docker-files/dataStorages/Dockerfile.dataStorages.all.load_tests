@@ -44,7 +44,7 @@ RUN chmod g+wx /root
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-COPY docker/docker-files/dataStorages/config_nginx.unit_dataStorages.all.json /docker-entrypoint.d/
+COPY docker/docker-files/dataStorages/config_nginx.unit_dataStorages.all.load_tests.json /docker-entrypoint.d/
 
 # копируем исходники --------------------------------------------
 ADD src/common/ /usr/src/dataStorages_api_crud/src/common

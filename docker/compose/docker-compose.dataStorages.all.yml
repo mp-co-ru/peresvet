@@ -10,7 +10,7 @@ services:
     environment:
       TZ: ${TIME_ZONE}
     ports:
-      - 82:80
+      - 82:82
 
     volumes:
       - ./logs/dataStorages.all/api_crud/:/usr/src/dataStorages_api_crud/log/:rw

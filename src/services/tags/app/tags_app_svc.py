@@ -40,12 +40,19 @@ class TagsAppAPI(svc.Svc):
         }
 
     async def _data_get(self, mes: dict) -> dict:
+
+        self._logger.debug(f"mes: {mes}")
+
         new_payload = copy.deepcopy(mes["data"])
         tag_ids = new_payload.pop("tagId")
         tasks = []
         for tag_id in tag_ids:
 
             new_payload["tagId"] = [tag_id]
+
+            self._logger.debug((
+                f"Creating new task. payload: {new_payload}"
+            ))
 
             future = asyncio.create_task(
                 self._post_message({
@@ -61,13 +68,15 @@ class TagsAppAPI(svc.Svc):
             tasks, return_when=asyncio.ALL_COMPLETED
         )
 
+        self._logger.debug(f"Tasks done.")
+
         final_res = {
             "data": []
         }
         for future in done:
             final_res["data"] += future.result()["data"]
 
-        if mes["format"]:
+        if new_payload["format"]:
             for tag_item in final_res["data"]:
                 for data_item in tag_item["data"]:
                     data_item["x"] = t.int_to_local_timestamp(data_item["x"])
