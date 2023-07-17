@@ -28,6 +28,7 @@ sphinxcontrib-httpdomain = "*"
 sphinxcontrib-httpexample = "*"
 sphinx-rtd-theme = "*"
 docutils = "*"
+locust = "*"
 
 [requires]
 python_version = "3.10"
