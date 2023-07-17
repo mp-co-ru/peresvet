@@ -28,7 +28,7 @@ class DataSetUser(HttpUser):
         }
 
         # записываем значение тега на текущую метку времени
-        self.client.post("/data/", json=data)
+        self.client.post("/v1/data/", json=data)
 
     @task
     def set_int_data(self):
@@ -38,31 +38,31 @@ class DataSetUser(HttpUser):
         '''
 
         # выбираем случайный индекс тега
-        i = random.randrange(len(self.int_ids))
-        self.send_data(self.int_ids[i], random.randint(-100, 100))
+        i = random.randrange(len(self.ints))
+        self.send_data(self.ints[i], random.randint(-100, 100))
 
     @task
     def set_float_data(self):
-        i = random.randrange(len(self.float_ids))
-        self.send_data(self.str_ids[i], random.uniform(-100, 100))
+        i = random.randrange(len(self.floats))
+        self.send_data(self.floats[i], random.uniform(-100, 100))
 
     @task
     def set_str_data(self):
-        i = random.randrange(len(self.str_ids))
+        i = random.randrange(len(self.strs))
         self.send_data(
-            self.str_ids[i],
+            self.strs[i],
             ''.join(random.choice(self.letters) for _ in range(30))
         )
 
     @task
     def set_json_data(self):
-        i = random.randrange(len(self.json_ids))
+        i = random.randrange(len(self.jsons))
         data_item = {
             "first_field": random.randint(-100, 100),
             "second_field": random.uniform(-100, 100),
             "third_field": ''.join(random.choice(self.letters) for _ in range(30))
         }
-        self.send_data(self.json_ids[i], data_item)
+        self.send_data(self.jsons[i], data_item)
 
 
     def on_start(self):
@@ -70,11 +70,9 @@ class DataSetUser(HttpUser):
         self.letters = string.ascii_lowercase
 
         # прочитаем из файлов коды тегов каждого типа
-        with open("/mnt/locust/tags_type_1.json", "r") as f:
-            self.int_ids = json.load(f)
-        with open("/mnt/locust/tags_type_2.json", "r") as f:
-            self.float_ids = json.load(f)
-        with open("/mnt/locust/tags_type_3.json", "r") as f:
-            self.str_ids = json.load(f)
-        with open("/mnt/locust/tags_type_4.json", "r") as f:
-            self.json_ids = json.load(f)
+        with open("/mnt/locust/tags_in_progress.json", "r") as f:
+            js = json.load(f)
+            self.ints = js["0"]
+            self.floats = js["1"]
+            self.strs = js["2"]
+            self.jsons = js["4"]

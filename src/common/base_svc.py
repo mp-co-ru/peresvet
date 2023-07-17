@@ -66,7 +66,7 @@ class BaseSvc(FastAPI):
             rotation=settings.log["rotation"]
         )
 
-        self._logger.debug("Начало инициализации сервиса.")
+        self._logger.debug(f"Начало инициализации сервиса {settings.svc_name}.")
 
         if kwargs.get("on_startup"):
             kwargs.append(self.on_startup)
