@@ -162,12 +162,16 @@ class TagsAppAPI(svc.Svc):
         super().__init__(settings, *args, **kwargs)
 
     async def data_get(self, payload: DataGet) -> dict:
+
+        self._logger.debug(f"svc: {self._config.svc_name}; com: data_get; payload: {payload.model_dump()}")
+
         body = {
             "action": "tags.get_data",
             "data": payload.model_dump()
         }
 
-        return await self._post_message(mes=body, reply=True)
+        res = await self._post_message(mes=body, reply=True)
+        return res
 
     async def data_set(self, payload: AllData) -> None:
         new_data = []
@@ -196,9 +200,10 @@ app = TagsAppAPI(settings=settings, title="`TagsAppAPI` service")
 
 router = APIRouter()
 
-@router.get("/", response_model=AllData, status_code=200)
+@router.get("/", response_model=dict, status_code=200)
 async def data_get(payload: DataGet):
-    return await app.data_get(payload)
+    res = await app.data_get(payload)
+    return res
 
 @router.post("/", status_code=200)
 async def data_set(payload: AllData):

@@ -16,7 +16,7 @@ class TagsAppAPISettings(SvcSettings):
     #: обменник для публикаций
     publish: dict = {
         "main": {
-            "name": "tags",
+            "name": "peresvet",
             "type": "direct",
             "routing_key": "tags_app_api_publish"
         }
@@ -26,7 +26,7 @@ class TagsAppAPISettings(SvcSettings):
         "exchanges": {
             "main": {
                 #: имя обменника
-                "name": "tags",
+                "name": "peresvet",
                 #: тип обменника
                 "type": "direct",
                 #: привзяка для очереди

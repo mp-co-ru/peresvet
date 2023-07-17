@@ -12,7 +12,7 @@ class DataStoragesAPICRUDSettings(APICRUDSettings):
     #: обменник для публикаций
     publish: dict = {
         "main": {
-            "name": "dataStorages",
+            "name": "peresvet",
             "type": "direct",
             "routing_key": "dataStorages_api_crud_publish"
         }
@@ -22,7 +22,7 @@ class DataStoragesAPICRUDSettings(APICRUDSettings):
         "exchanges": {
             "main": {
                 #: имя обменника
-                "name": "dataStorages",
+                "name": "peresvet",
                 #: тип обменника
                 "type": "direct",
                 #: привзяка для очереди

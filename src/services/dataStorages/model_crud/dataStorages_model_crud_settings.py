@@ -11,7 +11,7 @@ class DataStoragesModelCRUDSettings(ModelCRUDSettings):
     #: обменник для публикаций
     publish: dict = {
         "main": {
-            "name": "dataStorages",
+            "name": "peresvet",
             "type": "direct",
             "routing_key": "dataStorages_model_crud_publish"
         }
@@ -22,7 +22,7 @@ class DataStoragesModelCRUDSettings(ModelCRUDSettings):
         "exchanges": {
             #: обменник, который публикует запросы от API_CRUD
             "main": {
-                "name": "dataStorages",
+                "name": "peresvet",
                 "type": "direct",
                 "routing_key": [
                     "dataStorages_model_crud_consume",

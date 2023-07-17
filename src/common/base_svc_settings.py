@@ -80,13 +80,13 @@ class BaseSvcSettings(BaseSettings):
         @classmethod
         def customise_sources(
             cls,
-            init_settings,
             env_settings,
+            init_settings,
             file_secret_settings,
         ):
             return (
-                init_settings,
                 env_settings,
+                init_settings,
                 json_config_settings_source,
                 file_secret_settings,
             )

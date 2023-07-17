@@ -15,7 +15,7 @@ class DataStoragesAppPostgreSQLSettings(SvcSettings):
         #: главный обменник
         "main": {
             #: имя обменника
-            "name": "dataStorages",
+            "name": "peresvet",
             #: тип обменника
             "type": "direct",
             #: routing_key, с которым будут публиковаться сообщения,
@@ -32,20 +32,20 @@ class DataStoragesAppPostgreSQLSettings(SvcSettings):
         "exchanges": {
             "main": {
                 #: имя обменника
-                "name": "dataStorages",
+                "name": "peresvet",
                 #: тип обменника
                 "type": "direct",
                 #: привязка для очереди
                 "routing_key": ["dataStorages_model_crud_publish"]
             },
             "tags": {
-                "name": "tags",
+                "name": "peresvet",
                 "type": "direct",
                 #: привязка для очереди
                 # привязка вычисляется во время работы сервиса
             },
             "alerts": {
-                "name": "alerts",
+                "name": "peresvet",
                 "type": "direct",
                 #: привязка для очереди
                 # привязка вычисляется во время работы сервиса

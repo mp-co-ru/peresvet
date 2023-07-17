@@ -1,0 +1,14 @@
+version: '3.9'
+
+services:
+  ldap_load_tests:
+    hostname: ldap_load_tests
+    build:
+      context: ../..
+      dockerfile: docker/docker-files/ldap/Dockerfile.ldap
+
+    environment:
+      TZ: ${TIME_ZONE}
+      LDAP_LOG_LEVEL: ${LDAP_LOG_LEVEL}
+    ports:
+      - 389:389

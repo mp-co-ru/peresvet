@@ -10,7 +10,7 @@ class TagsAPICRUDSettings(APICRUDSettings):
     #: обменник для публикаций
     publish: dict = {
         "main": {
-            "name": "tags",
+            "name": "peresvet",
             "type": "direct",
             "routing_key": "tags_api_crud_publish"
         }
@@ -20,7 +20,7 @@ class TagsAPICRUDSettings(APICRUDSettings):
         "exchanges": {
             "main": {
                 #: имя обменника
-                "name": "tags",
+                "name": "peresvet",
                 #: тип обменника
                 "type": "direct",
                 #: привзяка для очереди
