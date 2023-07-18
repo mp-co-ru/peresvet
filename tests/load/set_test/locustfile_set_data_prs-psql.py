@@ -27,6 +27,8 @@ class DataSetUser(HttpUser):
             ]
         }
 
+        #print(f"data: {json.dumps(data)}")
+
         # записываем значение тега на текущую метку времени
         self.client.post("/v1/data/", json=data)
 
@@ -70,7 +72,7 @@ class DataSetUser(HttpUser):
         self.letters = string.ascii_lowercase
 
         # прочитаем из файлов коды тегов каждого типа
-        with open("/mnt/locust/tags_in_progress.json", "r") as f:
+        with open("/mnt/locust/tags_in_postgres.json", "r") as f:
             js = json.load(f)
             self.ints = js["0"]
             self.floats = js["1"]
