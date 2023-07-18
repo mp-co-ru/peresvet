@@ -46,6 +46,13 @@ class ObjectsAPICRUD(svc.APICRUDSvc):
 
     """
 
+    _outgoing_commands = {
+        "create": "objects.create",
+        "read": "objects.read",
+        "update": "objects.update",
+        "delete": "objects.delete"
+    }
+
     def __init__(self, settings: ObjectsAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 

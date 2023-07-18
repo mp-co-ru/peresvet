@@ -3,11 +3,8 @@
 и класс сервиса ``dataStorages_api_crud_svc``.
 """
 import sys
-import json
-from uuid import UUID
-from typing import Any, List
+from typing import List
 from pydantic import BaseModel, Field, validator
-
 from fastapi import APIRouter
 
 sys.path.append(".")
@@ -18,25 +15,51 @@ from dataStorages_api_crud_settings import DataStoragesAPICRUDSettings
 class LinkTagOrAlertAttributes(BaseModel):
     prsStore: dict = Field(None, title="Хранилище тега")
 
-class LinkTagOrAlert(BaseModel):
-    id: str = Field(title="Идентификатор привязываемого тега")
-    attributes: LinkTagOrAlertAttributes = Field(None)
+class LinkTag(BaseModel):
+    tagId: str = Field(title="Идентификатор привязываемого тега")
+    attributes: LinkTagOrAlertAttributes = Field({})
+
+class LinkAlert(BaseModel):
+    alertId: str = Field(title="Идентификатор привязываемого тега")
+    attributes: LinkTagOrAlertAttributes = Field({})
 
 class DataStorageAttributes(svc.NodeAttributes):
     pass
 
 class DataStorageCreate(svc.NodeCreate):
     attributes: DataStorageAttributes = Field(title="Атрибуты узла")
-    linkTags: List[LinkTagOrAlert] = Field([], title="Список привязываемых тегов")
-    linkAlerts: List[LinkTagOrAlert] = Field([], title="Список привязываемых тревог")
+    linkTags: List[LinkTag] = Field([], title="Список привязываемых тегов")
+    linkAlerts: List[LinkAlert] = Field([], title="Список привязываемых тревог")
+
+    @validator('attributes')
+    @classmethod
+    def ds_type_is_necessary(cls, v: DataStorageAttributes) -> DataStorageAttributes:
+        # если не указан тип базы данных, то по умолчанию используется
+        # PostgreSQL
+        if v.prsEntityTypeCode is None:
+            v.prsEntityTypeCode = 0
+
+        return v
 
 class DataStorageRead(svc.NodeRead):
-    getLinkedTags: bool = Field(False, "Флаг возврата присоединённых тегов")
-    getLinkedAlerts: bool = Field(False, "Флаг возврата присоединённых тревог")
+    getLinkedTags: bool = Field(
+        False,
+        title="Флаг возврата присоединённых тегов"
+    )
+    getLinkedAlerts: bool = Field(
+        False,
+        title="Флаг возврата присоединённых тревог"
+    )
 
 class OneDataStorageInReadResult(svc.OneNodeInReadResult):
-    linkedTags: List[str] = Field(None, "Список id присоединённых тегов.")
-    linkedAlerts: List[str] = Field(None, "Список id присоединённых тревог.")
+    linkedTags: List[str] = Field(
+        None,
+        title="Список id присоединённых тегов."
+    )
+    linkedAlerts: List[str] = Field(
+        None,
+        title="Список id присоединённых тревог."
+    )
 
 class DataStorageReadResult(svc.NodeReadResult):
     data: List[OneDataStorageInReadResult] = Field(title="Список хранилищ данных.")
@@ -44,8 +67,15 @@ class DataStorageReadResult(svc.NodeReadResult):
 class DataStorageUpdate(DataStorageCreate):
     id: str = Field(title="Идентификатор изменяемого узла.",
                     description="Должен быть в формате GUID.")
-    unlinkTags: List[str] = Field(None, "Список id тегов.")
-    unlinkAlerts: List[str] = Field(None, "Список id тревог.")
+    attributes: DataStorageAttributes = Field(None, title="Атрибуты узла")
+    unlinkTags: List[str] = Field(
+        None,
+        title="Список id тегов."
+    )
+    unlinkAlerts: List[str] = Field(
+        None,
+        title="Список id тревог."
+    )
 
     validate_id = validator('id', allow_reuse=True)(svc.valid_uuid)
 
@@ -59,6 +89,13 @@ class DataStoragesAPICRUD(svc.APICRUDSvc):
     Формат ожидаемых сообщений
 
     """
+
+    _outgoing_commands = {
+        "create": "dataStorages.create",
+        "read": "dataStorages.read",
+        "update": "dataStorages.update",
+        "delete": "dataStorages.delete"
+    }
 
     def __init__(self, settings: DataStoragesAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)

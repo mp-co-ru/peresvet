@@ -5,7 +5,6 @@
 """
 import asyncio
 import json
-from typing import Annotated, List
 from collections.abc import MutableMapping
 from uuid import UUID, uuid4
 from pydantic import BaseModel, Field, validator
@@ -16,7 +15,7 @@ from fastapi import APIRouter
 from src.common.base_svc import BaseSvc
 from src.common.api_crud_settings import APICRUDSettings
 
-def valid_uuid(id: str | List[str]) -> str | List[str]:
+def valid_uuid(id: str | list[str]) -> str | list[str]:
     """Валидатор идентификаторов.
     Идентификатор должен быть в виде GUID.
     """
@@ -91,7 +90,7 @@ class NodeDelete(BaseModel):
     """Базовый класс, описывающий параметры
     команды для удаления узла.
     """
-    id: str | List[str] = Field(title="Идентификатор(-ы) узла.",
+    id: str | list[str] = Field(title="Идентификатор(-ы) узла.",
         description=(
             "Идентификатор(-ы) удаляемого(изменяемого) узла "
             "должен быть в виде uuid."
@@ -102,7 +101,7 @@ class NodeDelete(BaseModel):
 
     @validator('id')
     @classmethod
-    def make_id_as_array(cls, v: str | List[str]) -> List[str]:
+    def make_id_as_array(cls, v: str | list[str]) -> list[str]:
         if isinstance(v, str):
             return [v]
         return v
@@ -120,7 +119,7 @@ class NodeRead(BaseModel):
     поиска/чтения узлов.
     """
 
-    id: str | List[str] = Field(
+    id: str | list[str] = Field(
         None,
         title="Идентификатор(-ы) узлов.",
         description=(
@@ -159,7 +158,7 @@ class NodeRead(BaseModel):
             "затем значения для разных атрибутов объединяются операцией `И`."
          )
     )
-    attributes: List[str] = Field(
+    attributes: list[str] = Field(
         ["*"],
         title="Список атрибутов.",
         description=(
@@ -181,11 +180,27 @@ class OneNodeInReadResult(BaseModel):
     attributes: dict = Field(title="Атрибуты узла")
 
 class NodeReadResult(BaseModel):
-    data: List[OneNodeInReadResult] = Field(title="Список узлов")
+    data: list[OneNodeInReadResult] = Field(title="Список узлов")
 
 class APICRUDSvc(BaseSvc):
 
-    _callback_queue: aio_pika.abc.AbstractRobustQueue
+    # так как сообщения, создаваемые сервисами каждой сущности
+    # начинаются с имени этой сущности, то
+    # каждый сервис-наследник класса APICRUDSvc должен
+    # определить "свои" CRUD-сообщения в этом словаре
+    # к примеру, для сервиса TagsAPICRUDSvc:
+    # {
+    #   "create": "tags.create",
+    #   "read": "tags.read",
+    #   "update": "tags.update",
+    #   "delete": "tags.delete"
+    # }
+    _outgoing_commands = {
+        "create": "create",
+        "read": "read",
+        "update": "update",
+        "delete": "delete"
+    }
 
     def __init__(self, settings: APICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
@@ -194,32 +209,32 @@ class APICRUDSvc(BaseSvc):
 
     async def create(self, payload: NodeCreate) -> dict:
         body = {
-            "action": "create",
-            "data": payload.dict()
+            "action": self._outgoing_commands["create"],
+            "data": payload.model_dump()
         }
 
         return await self._post_message(mes=body, reply=True)
 
     async def update(self, payload: NodeUpdate) -> dict:
         body = {
-            "action": "update",
-            "data": payload.dict()
+            "action": self._outgoing_commands["update"],
+            "data": payload.model_dump()
         }
 
         return await self._post_message(mes=body, reply=False)
 
     async def read(self, payload: NodeRead) -> dict:
         body = {
-            "action": "read",
-            "data": payload.dict()
+            "action": self._outgoing_commands["read"],
+            "data": payload.model_dump()
         }
 
         return await self._post_message(mes=body, reply=True)
 
     async def delete(self, payload: NodeDelete) -> dict:
         body = {
-            "action": "delete",
-            "data": payload.dict()
+            "action": self._outgoing_commands["delete"],
+            "data": payload.model_dump()
         }
 
         return await self._post_message(mes=body, reply=False)

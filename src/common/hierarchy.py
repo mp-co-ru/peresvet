@@ -240,9 +240,15 @@ class Hierarchy:
                 filterstr=filterstr, attrlist=return_attributes)
 
             for item in res:
-                yield (item[1]['entryUUID'][0].decode(), item[0], {
+                item_data = {
                     key: [value.decode() for value in values] for key, values in item[1].items()
-                })
+                }
+
+                # поиск не возвращает атрибуты, значение которых = None
+                for key in list(set(return_attributes) - set(item_data.keys())):
+                    item_data[key] = [None]
+
+                yield (item[1]['entryUUID'][0].decode(), item[0], item_data)
 
             conn.deref = old_deref
 
@@ -261,8 +267,8 @@ class Hierarchy:
         attrs = {}
         if attribute_values:
             attrs = {
-            key: values if isinstance(values, list) else [values] for key, values in attribute_values.items()
-        }
+                key: values if isinstance(values, list) else [values] for key, values in attribute_values.items()
+            }
 
         if "objectClass" not in attrs.keys():
             attrs["objectClass"] = ["prsModelNode"]
@@ -281,7 +287,7 @@ class Hierarchy:
             modlist[key] = []
             for value in values:
                 new_value = None
-                if value:
+                if value is not None:
                     if isinstance(value, bool):
                         if value:
                             new_value = 'TRUE'
@@ -318,9 +324,9 @@ class Hierarchy:
 
             return new_id
 
-    async def add_alias(self, parentId: str, aliased_object_id: str, alias_name: str) -> str:
-        aliased_object_dn = self.get_node_dn(aliased_object_id)
-        return await self.add(base=parentId, attribute_values={
+    async def add_alias(self, parent_id: str, aliased_object_id: str, alias_name: str) -> str:
+        aliased_object_dn = await self.get_node_dn(aliased_object_id)
+        return await self.add(base=parent_id, attribute_values={
             "objectClass": ["alias", "extensibleObject"],
             "aliasedObjectName": [aliased_object_dn],
             "cn": [alias_name]

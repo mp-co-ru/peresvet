@@ -115,6 +115,13 @@ class TagsAPICRUD(svc.APICRUDSvc):
 
     """
 
+    _outgoing_commands = {
+        "create": "tags.create",
+        "read": "tags.read",
+        "update": "tags.update",
+        "delete": "tags.delete"
+    }
+
     def __init__(self, settings: TagsAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 

@@ -49,6 +49,7 @@ class Svc(BaseSvc):
         connected = False
         while not connected:
             try:
+                self._logger.debug("Установление связи с LDAP сервером.")
                 self._hierarchy.connect()
                 connected = True
                 self._logger.info("Связь с LDAP сервером установлена.")
@@ -83,7 +84,7 @@ class Svc(BaseSvc):
                 await self._amqp_channel.declare_exchange(
                     item["consume"]["name"], item["consume"]["type"], durable=True
             )
-            await self._amqp_consume[key]["queue"].bind(
+            await self._amqp_consume["queue"].bind(
                 exchange=self._amqp_subscribe[key]["consume"]["exchange"],
                 routing_key=self._amqp_subscribe[key]["consume"]["routing_key"]
             )
@@ -98,8 +99,8 @@ class Svc(BaseSvc):
         Returns:
             str: id узла с подписчиками
         """
-        dn = self._hierarchy.get_node_dn(node_id)
-        return self._hierarchy.get_node_id(
+        dn = await self._hierarchy.get_node_dn(node_id)
+        return await self._hierarchy.get_node_id(
             f"cn=subscribers,cn=system,{dn}"
         )
 

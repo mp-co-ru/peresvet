@@ -46,6 +46,13 @@ class SchedulesAPICRUD(svc.APICRUDSvc):
 
     """
 
+    _outgoing_commands = {
+        "create": "schedules.create",
+        "read": "schedules.read",
+        "update": "schedules.update",
+        "delete": "schedules.delete"
+    }
+
     def __init__(self, settings: SchedulesAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 

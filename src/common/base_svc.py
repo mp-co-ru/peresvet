@@ -3,6 +3,7 @@
 """
 import json
 import asyncio
+import uvloop
 from functools import cached_property
 from uuid import uuid4
 from collections.abc import MutableMapping
@@ -13,7 +14,6 @@ import aio_pika.abc
 
 from src.common.logger import PrsLogger
 from src.common.base_svc_settings import BaseSvcSettings
-
 
 class BaseSvc(FastAPI):
     """
@@ -46,7 +46,28 @@ class BaseSvc(FastAPI):
     Args:
             settings (Settings): конфигурация приложения см. :class:`settings.Settings`
     """
+
+    # словарь используется для перечисления типовых исходящих сообщений
+    # для разных сущностей
+    # к примеру: ...mayUpdate, ...updating и т.д. для model_crud_svc
+    # словарь имеет вид:
+    # {
+    #    "<название типовой команды>": "<имя типовой команды для данной сущности>"
+    # }
+    _outgoing_commands = {}
+
     def __init__(self, settings: BaseSvcSettings, *args, **kwargs):
+
+        self._conf = settings
+        self._logger = PrsLogger.make_logger(
+            level=settings.log["level"],
+            file_name=settings.log["file_name"],
+            retention=settings.log["retention"],
+            rotation=settings.log["rotation"]
+        )
+
+        self._logger.debug(f"Начало инициализации сервиса {settings.svc_name}.")
+
         if kwargs.get("on_startup"):
             kwargs.append(self.on_startup)
         else:
@@ -58,37 +79,71 @@ class BaseSvc(FastAPI):
 
         super().__init__(*args, **kwargs)
 
-        self._conf = settings
-        self._logger = PrsLogger.make_logger(
-            level=settings.log["level"],
-            file_name=settings.log["file_name"],
-            retention=settings.log["retention"],
-            rotation=settings.log["rotation"]
-        )
+        self._logger.debug("Смена петли событий...")
+
+        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+
         self._amqp_connection: aio_pika.abc.AbstractRobustConnection = None
         self._amqp_channel: aio_pika.abc.AbstractRobustChannel = None
         self._amqp_publish: dict = {}
-        self._amqp_consume: dict = {}
+        self._amqp_consume: dict = {
+            "queue": None,
+            "exchanges": {}
+        }
         self._amqp_callback_queue: aio_pika.abc.AbstractRobustQueue = None
         self._callback_futures: MutableMapping[str, asyncio.Future] = {}
 
-        # словарь "<action>": function
+        # Словарь {
+        #   "<action>": function
+        # }
         # используется для вызова соответствующей функции при получении
-        # определённого сообщения
-        # набор команд и функций определяется в каждом классе-наследнике
-        # предполагается, что функция асинхронная, принимает на вход
-        # пришедшее сообщение отдаёт какой-то ответ, который будет переслан
-        # обратно, если у сообщения выставлен параметр reply_to
-        self._commands = {}
+        # определённого сообщения.
+        # Набор команд и функций определяется в каждом классе-наследнике.
+        # Предполагается, что функция асинхронная, принимает на вход
+        # пришедшее сообщение отдаёт и какой-то ответ, который будет переслан
+        # обратно, если у сообщения выставлен параметр reply_to.
+        # Список входящих команд переопределяется в специальной функции
+        # _set_incoming_commands, которая переписывается в каждом
+        # классе-наследнике. Делается это в отдельной функции потому, что
+        # потом в список автоматически добавляются команды subscribe и
+        # unsubscribe
+        self._incoming_commands = self._set_incoming_commands()
+        self._incoming_commands["subscribe"] = self._subscribe
+        self._incoming_commands["unsubscribe"] = self._unsubscribe
+
+    async def _subscribe(self, mes: dict) -> None:
+        pass
+
+    async def _unsubscribe(self, mes: dict) -> None:
+        pass
+
+    def _set_incoming_commands(self) -> dict:
+        return {}
 
     @cached_property
     def _config(self):
         return self._conf
 
+    async def _reject_message(self, mes: dict) -> bool:
+        """Проверка сообщения на предмет того, что оно предназначается
+        данному сервису.
+        Метод может быть переопределён в сервисах-потомках.
+
+        Args:
+            mes (dict): _description_
+
+        Returns:
+            bool: True - сообщение возвращается в очередь;
+                  False - сообщение обрабатывается сервисом.
+        """
+
+        return False
+
     async def _process_message(self, message: aio_pika.abc.AbstractIncomingMessage) -> None:
 
         async with message.process(ignore_processed=True):
             mes = message.body.decode()
+
             try:
                 mes = json.loads(mes)
             except json.decoder.JSONDecodeError:
@@ -96,19 +151,22 @@ class BaseSvc(FastAPI):
                 await message.ack()
                 return
 
-            action = mes.get("action")
-            if not action:
+            if not mes.get("action"):
                 self._logger.error(f"В сообщении {mes} не указано действие.")
                 await message.ack()
                 return
-
-            action = action.lower()
-
-            func = self._commands.get(action)
-            if not func:
-                self._logger.error(f"Неизвестное действие: {action}.")
+            #mes["action"] = mes["action"].lower()
+            if not mes["action"] in self._incoming_commands.keys():
+                self._logger.error(f"Неизвестное действие {mes['action']}.")
                 await message.ack()
                 return
+
+            reject = await self._reject_message(mes)
+            if reject:
+                await message.reject(True)
+                return
+
+            func = self._incoming_commands.get(mes["action"])
 
             res = await func(mes)
 
@@ -116,7 +174,7 @@ class BaseSvc(FastAPI):
                 await message.ack()
                 return
 
-            await self._amqp_consume["main"]["exchange"].publish(
+            await self._amqp_consume["exchanges"]["main"]["exchange"].publish(
                 aio_pika.Message(
                     body=json.dumps(res,ensure_ascii=False).encode(),
                     correlation_id=message.correlation_id,
@@ -180,6 +238,7 @@ class BaseSvc(FastAPI):
         connected = False
         while not connected:
             try:
+                self._logger.debug("Установление связи с брокером сообщений...")
                 self._amqp_connection = await aio_pika.connect_robust(self._config.amqp_url)
                 self._amqp_channel = await self._amqp_connection.channel()
 
@@ -189,28 +248,28 @@ class BaseSvc(FastAPI):
                         item["name"], item["type"], durable=True
                     )
 
-                for key, item in self._config.consume.items():
-                    self._amqp_consume[key] = {}
-                    self._amqp_consume[key]["exchange"] = (
+                self._amqp_consume["queue"] = \
+                    await self._amqp_channel.declare_queue(
+                        self._config.consume["queue_name"], durable=True
+                    )
+                for key, item in self._config.consume["exchanges"].items():
+                    self._amqp_consume["exchanges"][key] = {}
+                    self._amqp_consume["exchanges"][key]["exchange"] = (
                         await self._amqp_channel.declare_exchange(
                             item["name"], item["type"], durable=True
                         )
                     )
-                    self._amqp_consume[key]["queue"] = (
-                        await self._amqp_channel.declare_queue(
-                            item["queue_name"], durable=True
-                        )
-                    )
-                    r_ks = item["routing_key"]
-                    if not isinstance(r_ks, list):
-                        r_ks = [r_ks]
-                    for r_k in r_ks:
-                        await self._amqp_consume[key]["queue"].bind(
-                            exchange=self._amqp_consume[key]["exchange"],
-                            routing_key=r_k
-                        )
+                    r_ks = item.get("routing_key")
+                    if r_ks:
+                        if not isinstance(r_ks, list):
+                            r_ks = [r_ks]
+                        for r_k in r_ks:
+                            await self._amqp_consume["queue"].bind(
+                                exchange=self._amqp_consume["exchanges"][key]["exchange"],
+                                routing_key=r_k
+                            )
 
-                    await self._amqp_consume[key]["queue"].consume(self._process_message)
+                await self._amqp_consume["queue"].consume(self._process_message)
 
                 self._amqp_callback_queue = await self._amqp_channel.declare_queue(
                     durable=True, exclusive=True

@@ -8,10 +8,15 @@ python-ldap = "*"
 ldappool = "*"
 fastapi = "*"
 pydantic = "*"
+pydantic-settings = "*"
 ciso8601 = "*"
 aio-pika = "*"
 loguru = "*"
 pygments = "*"
+pandas = "*"
+numpy = "*"
+python-dateutil = "*"
+uvloop = "*"
 
 [dev-packages]
 pylint = "*"
@@ -23,6 +28,7 @@ sphinxcontrib-httpdomain = "*"
 sphinxcontrib-httpexample = "*"
 sphinx-rtd-theme = "*"
 docutils = "*"
+locust = "*"
 
 [requires]
 python_version = "3.10"

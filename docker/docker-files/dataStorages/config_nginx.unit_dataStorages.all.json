@@ -1,6 +1,6 @@
 {
   "listeners": {
-    "*:81": {
+    "*:82": {
       "pass": "applications/api_crud"
     }
   },
@@ -14,7 +14,9 @@
       "module": "dataStorages_api_crud_svc",
       "callable": "app",
       "environment": {
-        "log": "{\"level\": \"INFO\", \"file_name\": \"log/dataStorages_api_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+        "log": "{\"level\": \"INFO\", \"file_name\": \"log/dataStorages_api_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+        "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
+        "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
       }
     },
     "model_crud": {
@@ -25,7 +27,22 @@
       "module": "dataStorages_model_crud_svc",
       "callable": "app",
       "environment": {
-        "log": "{\"level\": \"INFO\", \"file_name\": \"log/dataStorages_model_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+        "log": "{\"level\": \"INFO\", \"file_name\": \"log/dataStorages_model_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+        "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
+        "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+      }
+    },
+    "app_psql": {
+      "type": "python 3.10",
+      "working_directory": "/usr/src/dataStorages_app_psql",
+      "path": "/usr/src/dataStorages_app_psql/src/services/dataStorages/app_psql/",
+      "home": "/usr/src/dataStorages_app_psql/.venv/",
+      "module": "dataStorages_app_postgresql_svc",
+      "callable": "app",
+      "environment": {
+        "log": "{\"level\": \"INFO\", \"file_name\": \"log/dataStorages_app_psql.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+        "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
+        "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
       }
     }
   }

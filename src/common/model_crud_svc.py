@@ -164,6 +164,16 @@ class ModelCRUDSvc(Svc):
 
     """
 
+    _outgoing_commands = {
+        "created": "created",
+        "mayUpdate": "mayUpdate",
+        "updating": "updating",
+        "updated": "updated",
+        "mayDelete": "mayDelete",
+        "deleting": "deleting",
+        "deleted": "deleted"
+    }
+
     def __init__(self, settings: ModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
@@ -175,7 +185,16 @@ class ModelCRUDSvc(Svc):
                 object_class.strip() for object_class in classes
             ]
 
-        self._commands = {
+    def _set_incoming_commands(self) -> dict:
+        # словарь входящих команд переопределяем в каждом классе-наследнике,
+        # так как CRUD-команды в каждой группе сервисов начинаются с
+        # с имени "своей" сущности
+        # если сервис зависит от нескольких сущностей, как, к примеру,
+        # методы могут быть привязаны к тегам, тревогам, расписаниям,
+        # то в _incoming_messages может быть несколько ключей
+        # ...mayUpdate, ...updating и т.д.
+
+        return {
             "create": self._create,
             "read": self._read,
             "update": self._update,
@@ -183,10 +202,7 @@ class ModelCRUDSvc(Svc):
             "mayUpdate": self._may_update,
             "updating": self._updating,
             "mayDelete": self._may_delete,
-            "deleting": self._deleting,
-            "subscribe": self._subscribe,
-            "unsubscribe": self._unsubscribe
-
+            "deleting": self._deleting
         }
 
     async def _subscribe(self, mes: dict) -> None:
@@ -214,7 +230,9 @@ class ModelCRUDSvc(Svc):
 
             item = await anext(self._hierarchy.search({
                 "base": subscribers_node_id,
-                "filter": f"(cn={mes['data']['routing_key']})",
+                "filter": {
+                    "cn": f"{mes['data']['routing_key']}"
+                },
                 "scope": CN_SCOPE_ONELEVEL,
                 "attributes": ["cn"]
             }))
@@ -256,7 +274,9 @@ class ModelCRUDSvc(Svc):
 
             item = await anext(self._hierarchy.search({
                 "base": subscribers_node_id,
-                "filter": f"(cn={mes['data']['routing_key']})",
+                "filter": {
+                    "cn": f"{mes['data']['routing_key']}"
+                },
                 "scope": CN_SCOPE_ONELEVEL,
                 "attributes": ["cn"]
             }))
@@ -309,7 +329,7 @@ class ModelCRUDSvc(Svc):
         # получим список всех подписавшихся на уведомления
         subscribers = []
         node_dn = await self._hierarchy.get_node_dn(mes_data['id'])
-        subscribers_id = self._hierarchy.get_node_id(
+        subscribers_id = await self._hierarchy.get_node_id(
             f"cn=subscribers,cn=system,{node_dn}"
         )
         async for item in self._hierarchy.search(
@@ -330,7 +350,7 @@ class ModelCRUDSvc(Svc):
             for subscriber in subscribers:
                 future = asyncio.create_task(
                     self._post_message({
-                        "action": "mayUpdate",
+                        "action": self._outgoing_commands["mayUpdate"],
                         "data": mes_data
                     },
                     reply=True,
@@ -356,7 +376,7 @@ class ModelCRUDSvc(Svc):
             for subscriber in subscribers:
                 future = asyncio.create_task(
                     self._post_message({
-                        "action": "updating",
+                        "action": self._outgoing_commands["updating"],
                         "data": mes_data
                     },
                     reply=True,
@@ -372,19 +392,24 @@ class ModelCRUDSvc(Svc):
         if new_parent:
             await self._hierarchy.move(mes_data['id'], new_parent)
 
-        await self._hierarchy.modify(mes["id"], mes["attributes"])
+        if mes_data.get("attributes"):
+            await self._hierarchy.modify(mes_data["id"], mes_data["attributes"])
 
         await self._further_update(mes)
 
+        body = json.dumps({
+            "action": self._outgoing_commands["updated"],
+            "id": mes_data["id"]
+        }).encode()
         await self._amqp_publish["main"]["exchange"].publish(
             aio_pika.Message(
-                body=f'{{"action": "updated", "id": {mes["id"]}}}'.encode(),
+                body=body,
                 content_type='application/json',
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             ),
             routing_key=self._config.publish["main"]["routing_key"]
         )
-        self._logger.info(f'Узел {mes["id"]} обновлён.')
+        self._logger.info(f'Узел {mes_data["id"]} обновлён.')
 
     async def _further_update(self, mes: dict) -> None:
         """Метод переопределяется в сервисах-наследниках.
@@ -453,7 +478,7 @@ class ModelCRUDSvc(Svc):
                 for subscriber in subscribers:
                     future = asyncio.create_task(
                         self._post_message({
-                            "action": "mayDelete",
+                            "action": self._outgoing_commands["mayDelete"],
                             "data": {"id": id_}
                         },
                         reply=True,
@@ -496,7 +521,7 @@ class ModelCRUDSvc(Svc):
                 for subscriber in subscribers:
                     future = asyncio.create_task(
                         self._post_message({
-                            "action": "deleting",
+                            "action": self._outgoing_commands["deleting"],
                             "data": {"id": id_}
                         },
                         reply=True,
@@ -515,7 +540,7 @@ class ModelCRUDSvc(Svc):
 
             await self._amqp_publish["main"]["exchange"].publish(
                 aio_pika.Message(
-                    body=f'{{"action": "deleted", "id": {mes}}}'.encode(),
+                    body=f'{{"action": {self._outgoing_commands["deleted"]}, "id": {mes}}}'.encode(),
                     content_type='application/json',
                     delivery_mode=aio_pika.DeliveryMode.PERSISTENT
                 ),
@@ -680,7 +705,7 @@ class ModelCRUDSvc(Svc):
                     "base": parent_node,
                     "scope": CN_SCOPE_ONELEVEL,
                     "filter": {
-                        "objectCalss": [mes["data"]["attributes"]["objectClass"]],
+                        "objectClass": [mes["data"]["attributes"]["objectClass"]],
                         "prsDefault": ["TRUE"]
                     }
                 }
@@ -730,7 +755,7 @@ class ModelCRUDSvc(Svc):
         await self._further_create(mes, new_id)
 
         mes = aio_pika.Message(
-            body=f'{{"action": "created", "id": {new_id}}}'.encode(),
+            body=f'{{"action": {self._outgoing_commands["created"]}, "id": {new_id}}}'.encode(),
             content_type='application/json',
             delivery_mode=aio_pika.DeliveryMode.PERSISTENT
         )
@@ -808,7 +833,7 @@ class ModelCRUDSvc(Svc):
         else:
             base_node_id = item[0]
 
-        self._config.hierarchy["node_dn"] = self._hierarchy.get_node_dn(base_node_id)
+        self._config.hierarchy["node_dn"] = await self._hierarchy.get_node_dn(base_node_id)
         self._config.hierarchy["node_id"] = base_node_id
 
     async def on_startup(self) -> None:

@@ -3,9 +3,7 @@
 и класс сервиса ``connectors_api_crud_svc``.
 """
 import sys
-from uuid import UUID
-from typing import Any, List
-from pydantic import Field, validator
+from pydantic import Field
 
 from fastapi import APIRouter
 
@@ -46,7 +44,7 @@ class ConnectorLinkedTag(svc.NodeRead):
 
 class ConnectorCreate(svc.NodeCreate):
     attributes: ConnectorCreateAttributes = Field(title="Атрибуты узла")
-    linkTags: List[ConnectorLinkedTag] = Field(title="Список добавленных тегов для коннектора")
+    linkTags: list[ConnectorLinkedTag] = Field(title="Список добавленных тегов для коннектора")
     # validate_id = validator('parentId', 'dataStorageId', 'connectorId', allow_reuse=True)(svc.valid_uuid)
 
 class ConnectorRead(svc.NodeRead):
@@ -56,12 +54,12 @@ class OneConnectorInReadResult(svc.OneNodeInReadResult):
     pass
 
 class ConnectorReadResult(svc.NodeReadResult):
-    data: List[OneConnectorInReadResult] = Field(title="Список коннекторов")
-    pass    
+    data: list[OneConnectorInReadResult] = Field(title="Список коннекторов")
+    pass
 
 class ConnectorUpdate(svc.NodeUpdate):
-    linkTags: List[ConnectorLinkedTag] = Field(title="Список добавленных тегов для коннектора")
-    unlinkTags: List[ConnectorLinkedTag] = Field(title="Список отсоединенных тегов для коннектора")
+    linkTags: list[ConnectorLinkedTag] = Field(title="Список добавленных тегов для коннектора")
+    unlinkTags: list[ConnectorLinkedTag] = Field(title="Список отсоединенных тегов для коннектора")
 
 class ConnectorsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с коннекторами в иерархии.
@@ -73,6 +71,12 @@ class ConnectorsAPICRUD(svc.APICRUDSvc):
     Формат ожидаемых сообщений
 
     """
+    _outgoing_commands = {
+        "create": "connectors.create",
+        "read": "connectors.read",
+        "update": "connectors.update",
+        "delete": "connectors.delete"
+    }
 
     def __init__(self, settings: ConnectorsAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)

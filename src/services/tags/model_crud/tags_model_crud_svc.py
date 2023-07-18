@@ -18,8 +18,32 @@ class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     """
 
+    _outgoing_commands = {
+        "created": "tags.created",
+        "mayUpdate": "tags.mayUpdate",
+        "updating": "tags.updating",
+        "updated": "tags.updated",
+        "mayDelete": "tags.mayDelete",
+        "deleting": "tags.deleting",
+        "deleted": "tags.deleted"
+    }
+
     def __init__(self, settings: TagsModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
+
+    def _set_incoming_commands(self) -> dict:
+        return {
+            "tags.create": self._create,
+            "tags.read": self._read,
+            "tags.update": self._update,
+            "tags.delete": self._delete,
+
+            #TODO: этот блок надо доработать
+            "objects.mayUpdate": self._may_update,
+            "objects.updating": self._updating,
+            "objects.mayDelete": self._may_delete,
+            "objects.deleting": self._deleting
+        }
 
     async def _further_create(self, mes: dict, new_id: str) -> None:
         system_node = await anext(self._hierarchy.search(payload={
