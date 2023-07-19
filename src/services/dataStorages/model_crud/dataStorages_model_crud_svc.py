@@ -44,7 +44,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             new_ds = copy.deepcopy(ds)
             if mes["getLinkedTags"]:
                 new_ds["linkedTags"] = []
-                async for item in self._hierarchy.search(
+                items = await self._hierarchy.search(
                     {
                         "base": ds_id,
                         "filter": {
@@ -52,20 +52,20 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                         },
                         "attributes": ["cn", "prsStore"]
                     }
-                ):
-                    if item[0]:
-                        new_ds["linkedTags"].append(
-                            {
-                                "id": item[0],
-                                "attributes": {
-                                    "prsStore": item[2]["prsStore"][0]
-                                }
+                )
+                if items:
+                    new_ds["linkedTags"].append(
+                        {
+                            "id": items[0][0],
+                            "attributes": {
+                                "prsStore": items[0][2]["prsStore"][0]
                             }
-                        )
+                        }
+                    )
 
             if mes["getLinkedAlerts"]:
                 new_ds["linkedAlerts"] = []
-                async for item in self._hierarchy.search(
+                items = await self._hierarchy.search(
                     {
                         "base": ds_id,
                         "filter": {
@@ -73,16 +73,16 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                         },
                         "attributes": ["cn", "prsStore"]
                     }
-                ):
-                    if item[0]:
-                        new_ds["linkedAlerts"].append(
-                            {
-                                "id": item[0],
-                                "attributes": {
-                                    "prsStore": item[2]["prsStore"][0]
-                                }
+                )
+                if items:
+                    new_ds["linkedAlerts"].append(
+                        {
+                            "id": items[0][0],
+                            "attributes": {
+                                "prsStore": items[0][2]["prsStore"][0]
                             }
-                        )
+                        }
+                    )
 
             res["data"].append(new_ds)
 
@@ -100,22 +100,6 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             copy_item["dataStorageId"] = ds_id
             await self._link_alert(copy_item)
 
-    async def _get_routing_key_for_datastorage(self, ds_id: str) -> str:
-        """Метод возвращает routing_key для определённого хранилища данных.
-
-        Args:
-            ds_id (str): id хранилища данных.
-
-        Returns:
-            str: _description_
-        """
-        item = await anext(self._hierarchy.search({
-            "id": [ds_id],
-            "attributes": ["prsJsonConfigString"]
-        }))
-
-        return json.loads(item[2]["prsJsonConfigString"][0])["routing_key"]
-
     async def _unlink_tag(self, tag_id: str) -> None:
         """Метод отвязки тега от хранилища.
         Ищем, к какому хранилищу привязан тег и посылаем этому хранилищу
@@ -124,7 +108,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         Args:
             tag_id (str): id отвязываемого тега
         """
-        item = await anext(self._hierarchy.search({
+        items = await self._hierarchy.search({
             "base": self._config.hierarchy["node_id"],
             "scope": hierarchy.CN_SCOPE_SUBTREE,
             "filter": {
@@ -132,15 +116,15 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                 "objectClass": f"prsDatastorageTagData"
             },
             "attributes": ["cn"]
-        }))
-        if not item[0]:
+        })
+        if not items:
             self._logger.info(
                 f"Тег {tag_id} не привязан ни к одному хранилищу."
             )
             return
 
         datastorage_id = await self._hierarchy.get_node_id(
-            dn2str(str2dn(item[1])[2:])
+            dn2str(str2dn(items[0][1])[2:])
         )
 
         routing_key = self._config["publish"]["main"]["routing_key"][0]
@@ -148,7 +132,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         await self._post_message(mes={"action": "unlinkTag", "id": [tag_id]},
             routing_key=routing_key)
 
-        await self._hierarchy.delete(item[0])
+        await self._hierarchy.delete(items[0][0])
 
         self._logger.info(
             f"Послано сообщение об отвязке тега {tag_id} "
@@ -163,7 +147,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         Args:
             alert_id (str): id отвязываемой тревоги
         """
-        item = await anext(self._hierarchy.search({
+        items = await self._hierarchy.search({
             "base": self._config.hierarchy["node_id"],
             "scope": hierarchy.CN_SCOPE_SUBTREE,
             "filter": {
@@ -171,15 +155,15 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                 "objectClass": "prsDatastorageAlertData"
             },
             "attributes": ["cn"]
-        }))
-        if not item[0]:
+        })
+        if not items:
             self._logger.info(
                 f"Тег {alert_id} не привязан ни к одному хранилищу."
             )
             return
 
         datastorage_id = await self._hierarchy.get_node_id(
-            dn2str(str2dn(item[1])[2:])
+            dn2str(str2dn(items[0][1])[2:])
         )
 
         routing_key = self._config["publish"]["main"]["routing_key"][0]
@@ -187,7 +171,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         await self._post_message(mes={"action": "unlinkTag", "id": [alert_id]},
             routing_key=routing_key)
 
-        await self._hierarchy.delete(item[0])
+        await self._hierarchy.delete(items[0][0])
 
         self._logger.info(
             f"Послано сообщение об отвязке тревоги {alert_id} "
@@ -195,8 +179,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         )
 
     async def _get_default_datastorage_id(self) -> str:
-        item = await anext(
-            self._hierarchy.search({
+        items = await self._hierarchy.search({
                 "base": self._config.hierarchy["node_id"],
                 "filter": {
                     "objectClass": ["prsDataStorage"],
@@ -204,8 +187,10 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                 },
                 "scope": hierarchy.CN_SCOPE_ONELEVEL
             })
-        )
-        return item[0]
+
+        if items:
+            return items[0][0]
+        return None
 
     async def _link_tag(self, payload: dict) -> None:
         """Метод привязки тега к хранилищу.
@@ -346,15 +331,15 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         )
 
     async def _further_create(self, mes: dict, new_id: str) -> None:
-        sys_id = await anext(self._hierarchy.search({
+        sys_ids = await self._hierarchy.search({
             "base": new_id,
             "scope": hierarchy.CN_SCOPE_ONELEVEL,
             "filter": {
                 "cn": ["system"]
             }
-        }))
+        })
 
-        sys_id = sys_id[0]
+        sys_id = sys_ids[0][0]
 
         await self._hierarchy.add(sys_id, {"cn": "tags"})
         await self._hierarchy.add(sys_id, {"cn": "alerts"})

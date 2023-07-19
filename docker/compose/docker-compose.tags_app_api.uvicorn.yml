@@ -1,0 +1,12 @@
+version: '3.9'
+
+services:
+  tags_all:
+    hostname: tags_all
+    build:
+      context: ../..
+      dockerfile: docker/docker-files/tags/Dockerfile.tags_app_api.uvicorn.debug
+
+    command: uvicorn src.services.tags.app_api.tags_app_api_svc:app --reload --workers 1 --host 0.0.0.0 --port 81
+    environment:
+      TZ: ${TIME_ZONE}

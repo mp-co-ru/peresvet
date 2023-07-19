@@ -6,6 +6,7 @@ from typing import Any, List, Tuple
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 import numpy as np
+import time
 
 from ldap.dn import str2dn, dn2str
 
@@ -260,20 +261,18 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             ]
         }
 
-        tag_data = await anext(
-            self._hierarchy.search(payload=get_tag_data)
-        )
+        tag_data = await self._hierarchy.search(payload=get_tag_data)
 
-        if not tag_data[0]:
+        if not tag_data:
             self._logger.info(f"Не найден тег {tag_id}")
             return None
 
         to_return = {
             "table": None,
-            "active": tag_data[2]["prsActive"][0] == "TRUE",
-            "update": tag_data[2]["prsUpdate"][0] == "TRUE",
-            "value_type": int(tag_data[2]["prsValueTypeCode"][0]),
-            "step": tag_data[2]["prsStep"][0] == "TRUE"
+            "active": tag_data[0][2]["prsActive"][0] == "TRUE",
+            "update": tag_data[0][2]["prsUpdate"][0] == "TRUE",
+            "value_type": int(tag_data[0][2]["prsValueTypeCode"][0]),
+            "step": tag_data[0][2]["prsStep"][0] == "TRUE"
         }
 
         get_link_data = {
@@ -284,13 +283,12 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             "attributes": ["prsStore"]
         }
 
-        link_data = await anext(
-            self._hierarchy.search(payload=get_link_data)
-        )
-        if not link_data[0]:
+        link_data = await self._hierarchy.search(payload=get_link_data)
+
+        if not link_data:
             return to_return
 
-        to_return["table"] = json.loads(link_data[2]["prsStore"][0])["table"]
+        to_return["table"] = json.loads(link_data[0][2]["prsStore"][0])["table"]
 
         return to_return
 
@@ -317,10 +315,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         payload["attributes"] = ["prsJsonConfigString"]
 
-        async for ds in self._hierarchy.search(payload=payload):
-            if not ds[0]:
-                continue
-
+        dss = await self._hierarchy.search(payload=payload)
+        for ds in dss:
             await self._amqp_consume["queue"].bind(
                 exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
                 routing_key=ds[0]
@@ -347,23 +343,42 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 },
                 "attributes": ["prsStore", "cn"]
             }
-            async for tag in self._hierarchy.search(payload=search_tags):
+
+            self._logger.info("Чтение тегов, привязанных к хранилищу...")
+
+            i = 1
+            #async for tag in self._hierarchy.search(payload=search_tags):
+            tags = await self._hierarchy.search(payload=search_tags)
+            for tag in tags:
+                self._logger.debug(f"Текущий тег: {tag}")
+
+                '''
                 if not tag[0]:
                     continue
+                '''
+
+                t1 = time.time()
 
                 tag_id = tag[2]["cn"][0]
 
+                self._logger.debug(f"Подготовка кэша тега.")
                 tag_cache = await self._prepare_tag_data(tag_id, ds[0])
                 if not tag_cache:
+                    self._logger.debug(f"Кэш пустой.")
                     continue
 
+                self._logger.debug(f"Сохранение кэша тега.")
                 tag_cache["ds"] = self._connection_pools[ds[0]]
                 self._tags[tag_id] = tag_cache
 
+                self._logger.debug(f"Привязка очереди.")
                 await self._amqp_consume["queue"].bind(
                     exchange=self._amqp_consume["exchanges"]["tags"]["exchange"],
                     routing_key=tag_id
                 )
+
+                self._logger.debug(f"Тег {tag_id} привязан ({i}). Время: {time.time() - t1}")
+                i += 1
 
             self._logger.info(f"Хранилище {ds[0]}. Теги прочитаны.")
 
@@ -374,9 +389,16 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 },
                 "attributes": ["prsStore", "cn"]
             }
-            async for alert in self._hierarchy.search(payload=search_alerts):
+
+            self._logger.info("Чтение тревог, привязанных к хранилищу...")
+
+            #async for alert in self._hierarchy.search(payload=search_alerts):
+            alerts = await self._hierarchy.search(payload=search_alerts)
+            for alert in alerts:
+                '''
                 if not alert[0]:
                     continue
+                '''
 
                 alert_id = alert[2]["cn"][0]
 
@@ -385,17 +407,16 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                     "attributes": ["prsActive"]
                 }
 
-                alert_data = await anext(
-                    self._hierarchy.search(payload=get_alert_data)
-                )
-                if not alert_data[0]:
+                alert_data = await self._hierarchy.search(payload=get_alert_data)
+
+                if not alert_data:
                     self._logger.info(f'Не найдена тревога {alert_id}')
                     continue
 
                 self._alerts[alert_id] = {
                     "ds": self._connection_pools[ds[0]],
-                    "table": json.loads(alert[2]["prsStore"][0])["table"],
-                    "active": alert_data[2]["prsActive"][0] == "TRUE"
+                    "table": json.loads(alert[0][2]["prsStore"][0])["table"],
+                    "active": alert_data[0][2]["prsActive"][0] == "TRUE"
                 }
 
                 await self._amqp_consume["queue"].bind(
@@ -407,7 +428,10 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
     async def on_startup(self) -> None:
         await super().on_startup()
-        await self._connect_to_db()
+        try:
+            await self._connect_to_db()
+        except Exception as ex:
+            self._logger.error(f"Ошибка связи с базой данных: {ex}")
 
 
     """"
