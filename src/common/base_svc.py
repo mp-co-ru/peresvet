@@ -241,6 +241,7 @@ class BaseSvc(FastAPI):
                 self._logger.debug("Установление связи с брокером сообщений...")
                 self._amqp_connection = await aio_pika.connect_robust(self._config.amqp_url)
                 self._amqp_channel = await self._amqp_connection.channel()
+                await self._amqp_channel.set_qos(1)
 
                 for key, item in self._config.publish.items():
                     self._amqp_publish[key] = {}
@@ -294,6 +295,7 @@ class BaseSvc(FastAPI):
         Функция, выполняемая при старте сервиса: выполняется связь с
         amqp-сервером.
         """
+        self._logger.debug(f"{self._config.svc_name}: on_startup.")
         await self._amqp_connect()
 
     async def on_shutdown(self) -> None:

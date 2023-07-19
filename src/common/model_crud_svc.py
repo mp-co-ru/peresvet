@@ -228,6 +228,7 @@ class ModelCRUDSvc(Svc):
                 continue
             subscribers_node_id = self._get_subscribers_node_id(id_)
 
+            '''
             item = await anext(self._hierarchy.search({
                 "base": subscribers_node_id,
                 "filter": {
@@ -236,7 +237,16 @@ class ModelCRUDSvc(Svc):
                 "scope": CN_SCOPE_ONELEVEL,
                 "attributes": ["cn"]
             }))
-            if not item[0]:
+            '''
+            items = await self._hierarchy.search({
+                "base": subscribers_node_id,
+                "filter": {
+                    "cn": f"{mes['data']['routing_key']}"
+                },
+                "scope": CN_SCOPE_ONELEVEL,
+                "attributes": ["cn"]
+            })
+            if not items:
                 await self._hierarchy.add(
                     base=subscribers_node_id,
                     attribute_values={
@@ -272,6 +282,7 @@ class ModelCRUDSvc(Svc):
                 continue
             subscribers_node_id = self._get_subscribers_node_id(id_)
 
+            '''
             item = await anext(self._hierarchy.search({
                 "base": subscribers_node_id,
                 "filter": {
@@ -280,8 +291,17 @@ class ModelCRUDSvc(Svc):
                 "scope": CN_SCOPE_ONELEVEL,
                 "attributes": ["cn"]
             }))
-            if item[0]:
-                await self._hierarchy.delete(item[0])
+            '''
+            items = await anext(self._hierarchy.search({
+                "base": subscribers_node_id,
+                "filter": {
+                    "cn": f"{mes['data']['routing_key']}"
+                },
+                "scope": CN_SCOPE_ONELEVEL,
+                "attributes": ["cn"]
+            }))
+            if items:
+                await self._hierarchy.delete(items[0][0])
                 self._logger.info(
                     f"Удалена подписка для {mes['data']['routing_key']} на "
                     f"узел {id_}"
@@ -332,6 +352,7 @@ class ModelCRUDSvc(Svc):
         subscribers_id = await self._hierarchy.get_node_id(
             f"cn=subscribers,cn=system,{node_dn}"
         )
+        '''
         async for item in self._hierarchy.search(
             {
                 "base": subscribers_id,
@@ -342,8 +363,19 @@ class ModelCRUDSvc(Svc):
                 "attributes": ["cn"]
             }
         ):
-            if item[2]:
-                subscribers.append(item[2]["cn"][0])
+        '''
+        items = await self._hierarchy.search(
+            {
+                "base": subscribers_id,
+                "scope": CN_SCOPE_ONELEVEL,
+                "filter": {
+                    "cn": ["*"]
+                },
+                "attributes": ["cn"]
+            }
+        )
+        for item in items:
+            subscribers.append(item[2]["cn"][0])
 
         if subscribers:
             tasks = []
@@ -444,15 +476,24 @@ class ModelCRUDSvc(Svc):
         id_set = set([])
         for id_ in ids:
             id_set.add(id_)
-            for item in self._hierarchy.search({
+            '''
+            async for item in self._hierarchy.search({
                 "base": id_,
                 "scope": CN_SCOPE_SUBTREE,
                 "filter": {
                     "objectClass": [self._config.hierarchy["class"]]
                 }
             }):
-                if item[0]:
-                    id_set.add(item[0])
+            '''
+            items = await self._hierarchy.search({
+                "base": id_,
+                "scope": CN_SCOPE_SUBTREE,
+                "filter": {
+                    "objectClass": [self._config.hierarchy["class"]]
+                }
+            })
+            for item in items:
+                id_set.add(item[0])
 
         # логика уведомлений заинтересованных сервисов в удалении узла...
         # получим список всех подписавшихся на уведомления
@@ -460,7 +501,7 @@ class ModelCRUDSvc(Svc):
             subscribers = []
             node_dn = await self._hierarchy.get_node_dn(id_)
             subscribers_id = f"cn=subscribers,cn=system,{node_dn}"
-            async for item in self._hierarchy.search(
+            items = await self._hierarchy.search(
                 {
                     "base": subscribers_id,
                     "scope": CN_SCOPE_ONELEVEL,
@@ -469,9 +510,9 @@ class ModelCRUDSvc(Svc):
                     },
                     "attributes": ["cn"]
                 }
-            ):
-                if item[2]:
-                    subscribers.append(item[2]["cn"][0])
+            )
+            for item in items:
+                subscribers.append(item[2]["cn"][0])
 
             if subscribers:
                 tasks = []
@@ -503,7 +544,7 @@ class ModelCRUDSvc(Svc):
         for id_ in ids:
             subscribers = []
             subscribers_id = await self._get_subscribers_node_id(id_)
-            async for item in self._hierarchy.search(
+            items = await self._hierarchy.search(
                 {
                     "base": subscribers_id,
                     "scope": CN_SCOPE_ONELEVEL,
@@ -512,9 +553,9 @@ class ModelCRUDSvc(Svc):
                     },
                     "attributes": ["cn"]
                 }
-            ):
-                if item[2]:
-                    subscribers.append(item[2]["cn"][0])
+            )
+            for item in items:
+                subscribers.append(item[2]["cn"][0])
 
             if subscribers:
                 tasks = []
@@ -611,12 +652,12 @@ class ModelCRUDSvc(Svc):
         mes_data.setdefault("filter", {})
         mes_data["filter"]["objectClass"] = [self._config.hierarchy["class"]]
 
-        async for item in self._hierarchy.search(mes_data):
-            if item[0]:
-                res["data"].append({
-                    "id": item[0],
-                    "attributes": item[2]
-                })
+        items = await self._hierarchy.search(mes_data)
+        for item in items:
+            res["data"].append({
+                "id": item[0],
+                "attributes": item[2]
+            })
 
         return await self._further_read(mes, res)
 
@@ -699,8 +740,7 @@ class ModelCRUDSvc(Svc):
         else:
             mes["data"]["attributes"]["objectClass"] = [self._config.hierarchy["class"]]
 
-        item = await anext(
-            self._hierarchy.search(
+        items = await self._hierarchy.search(
                 {
                     "base": parent_node,
                     "scope": CN_SCOPE_ONELEVEL,
@@ -710,19 +750,19 @@ class ModelCRUDSvc(Svc):
                     }
                 }
             )
-        )
+
         # логика создания узлов такова, что в списке узлов одного уровня
         # есть один узел с prsDefault = True
         # поэтому если по поиску выше не найдено узлов, то узлов в данном
         # уровне нет вообще
-        if not item[0]:
+        if not items:
             mes["data"]["attributes"]["prsDefault"] = True
         else:
             # если есть уже дефолтный узел и делается попытка создать тоже
             # дефолтный, то существующий дефолтный должен стать обычным
             if mes["data"]["attributes"].get("prsDefault", False):
                 await self._hierarchy.modify(
-                    node=item[0],
+                    node=items[0][0],
                     attr_vals={
                         "prsDefault": ["FALSE"]
                     }
@@ -819,19 +859,19 @@ class ModelCRUDSvc(Svc):
         if not self._config.hierarchy["node"]:
             return
 
-        item = await anext(self._hierarchy.search(payload={
+        items = await self._hierarchy.search(payload={
             "scope": CN_SCOPE_ONELEVEL,
             "filter": {
                 "cn": [f"{self._config.hierarchy['node']}"]
             },
             "attributes": ["entryUUID"]
-        }))
-        if not item[0]:
+        })
+        if not items:
             base_node_id = await self._hierarchy.add(
                 attribute_values={"cn": self._config.hierarchy["node"]}
             )
         else:
-            base_node_id = item[0]
+            base_node_id = items[0][0]
 
         self._config.hierarchy["node_dn"] = await self._hierarchy.get_node_dn(base_node_id)
         self._config.hierarchy["node_id"] = base_node_id

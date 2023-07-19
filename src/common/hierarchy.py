@@ -144,7 +144,7 @@ class Hierarchy:
 
         return filterstr
 
-    async def search(self, payload: dict) -> Tuple[str, str, dict]:
+    async def search(self, payload: dict) -> List[Tuple[str, str, dict]]:
         """Метод-генератор поиска узлов и чтения их данных.
 
         Результат - массив кортежей. Каждый кортеж состоит из трёх элементов:
@@ -213,32 +213,38 @@ class Hierarchy:
             Tuple: (id, dn, attributes)
         """
 
-        ids = payload.get("id")
-        if ids:
-            filterstr = Hierarchy.__form_filterstr({"entryUUID": ids})
-        else:
-            filterstr = Hierarchy.__form_filterstr(payload["filter"])
-
-        base = payload.get("base")
-        scope = payload.get("scope", CN_SCOPE_SUBTREE)
-        deref = payload.get("deref", True)
-        return_attributes = payload.get("attributes", ['*'])
-        return_attributes.append('entryUUID')
-
         with self._cm.connection() as conn:
 
-            old_deref = conn.deref
-
-            if deref:
-                conn.deref = ldap.DEREF_SEARCHING
+            ids = payload.get("id")
+            if isinstance(ids, str):
+                ids = [ids]
+            if ids:
+                #filterstr = Hierarchy.__form_filterstr({"entryUUID": ids})
+                filterstr = '(|(entryUUID=' + ')(entryUUID='.join(ids) + '))'
+                node = self._base
+                scope = CN_SCOPE_SUBTREE
             else:
-                conn.deref = ldap.DEREF_NEVER
+                filterstr = Hierarchy.__form_filterstr(payload["filter"])
 
-            node = await self.get_node_dn(base)
+                base = payload.get("base")
+                scope = payload.get("scope", CN_SCOPE_SUBTREE)
+                deref = payload.get("deref", True)
+                old_deref = conn.deref
+
+                if deref:
+                    conn.deref = ldap.DEREF_SEARCHING
+                else:
+                    conn.deref = ldap.DEREF_NEVER
+
+                node = await self.get_node_dn(base)
+
+            return_attributes = payload.get("attributes", ['*'])
+            return_attributes.append('entryUUID')
 
             res = conn.search_s(base=node, scope=scope,
                 filterstr=filterstr, attrlist=return_attributes)
 
+            result = []
             for item in res:
                 item_data = {
                     key: [value.decode() for value in values] for key, values in item[1].items()
@@ -248,11 +254,14 @@ class Hierarchy:
                 for key in list(set(return_attributes) - set(item_data.keys())):
                     item_data[key] = [None]
 
-                yield (item[1]['entryUUID'][0].decode(), item[0], item_data)
+                #yield (item[1]['entryUUID'][0].decode(), item[0], item_data)
+                result.append((item[1]['entryUUID'][0].decode(), item[0], item_data))
 
-            conn.deref = old_deref
+            if not ids:
+                conn.deref = old_deref
 
-        yield (None, None, None)
+        #yield (None, None, None)
+        return result
 
     async def add(self, base: str = None, attribute_values: dict = None) -> str:
         """Добавление узла в иерархию.

@@ -46,19 +46,19 @@ class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
         }
 
     async def _further_create(self, mes: dict, new_id: str) -> None:
-        system_node = await anext(self._hierarchy.search(payload={
+        system_node = await self._hierarchy.search(payload={
             "base": new_id,
             "scope": hierarchy.CN_SCOPE_ONELEVEL,
             "filter": {
                 "cn": ["system"]
             },
             "attributes": ["cn"]
-        }))
-        if not system_node[0]:
+        })
+        if not system_node:
             self._logger.error(f"В теге {new_id} отсутствует узел `system`.")
             return
 
-        system_node_id = system_node[0]
+        system_node_id = system_node[0][0]
 
         if mes["data"].get("dataStorageId"):
             await self._hierarchy.add_alias(
