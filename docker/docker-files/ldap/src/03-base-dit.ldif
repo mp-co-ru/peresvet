@@ -6,4 +6,5 @@ olcDbDirectory: /var/lib/ldap/cn=prs
 olcDbMaxSize: 304857600
 olcRootDN: cn=admin,cn=prs
 olcRootPW: {SSHA}GlDOjH9uZHTUZtJLiqoO2W+/uzazHpVy
-olcDbIndex: objectClass,entryCSN,entryUUID eq
+olcDbIndex: cn pres,eq,sub
+olcDbIndex: objectClass,entryUUID pres,eq

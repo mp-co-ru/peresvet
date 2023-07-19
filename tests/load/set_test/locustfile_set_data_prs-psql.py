@@ -43,6 +43,7 @@ class DataSetUser(HttpUser):
         i = random.randrange(len(self.ints))
         self.send_data(self.ints[i], random.randint(-100, 100))
 
+    '''
     @task
     def set_float_data(self):
         i = random.randrange(len(self.floats))
@@ -65,7 +66,7 @@ class DataSetUser(HttpUser):
             "third_field": ''.join(random.choice(self.letters) for _ in range(30))
         }
         self.send_data(self.jsons[i], data_item)
-
+    '''
 
     def on_start(self):
         # создадим массив символов для генерации случайных строковых значений
