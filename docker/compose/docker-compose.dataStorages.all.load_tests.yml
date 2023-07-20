@@ -31,5 +31,5 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - /home/vovaman/psql_load_tests:/var/lib/postgresql/data
+      - ~/psql_load_tests:/var/lib/postgresql/data
       - ./config/psql/postgresql.conf:/etc/postgresql/postgresql.conf
