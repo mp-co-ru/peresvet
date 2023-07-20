@@ -79,7 +79,9 @@ class TagsAppAPI(svc.Svc):
         if new_payload["format"]:
             for tag_item in final_res["data"]:
                 for data_item in tag_item["data"]:
-                    data_item["x"] = t.int_to_local_timestamp(data_item["x"])
+                    data_item["x"] = str(t.int_to_local_timestamp(data_item["x"]))
+
+        self._logger.debug(f"Data get: {final_res}")
 
         return final_res
 
