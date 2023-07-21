@@ -9,7 +9,7 @@
       "module": "dataStorages_app_postgresql_svc",
       "callable": "app",
       "environment": {
-        "log": "{\"level\": \"DEBUG\",  \"file_name\": \"log/dataStorages_app_psql.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+        "log": "{\"level\": \"CRITICAL\",  \"file_name\": \"log/dataStorages_app_psql.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
         "amqp_url": "amqp://prs:Peresvet21@rabbitmq_load_tests/",
         "ldap_url": "ldap://ldap_load_tests:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
       }
