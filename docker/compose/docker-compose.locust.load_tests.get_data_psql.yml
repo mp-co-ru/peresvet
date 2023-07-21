@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  locust_master_set:
+  locust_master_get:
     build:
       context: ../..
       dockerfile: docker/docker-files/locust/Dockerfile.locust
@@ -9,12 +9,12 @@ services:
       - ../../tests/load/:/mnt/locust/
     ports:
      - 8089:8089
-    command: -f /mnt/locust/set_test/locustfile_set_data_prs-psql.py --master -H http://locust_master_set:8089
+    command: -f /mnt/locust/get_test/locustfile_get_data_prs-psql.py --master -H http://locust_master_get:8089
 
-  locust_worker_set:
+  locust_worker_get:
     build:
       context: ../..
       dockerfile: docker/docker-files/locust/Dockerfile.locust
     volumes:
       - ../../tests/load/:/mnt/locust/
-    command: -f /mnt/locust/set_test/locustfile_set_data_prs-psql.py --worker --master-host locust_master_set
+    command: -f /mnt/locust/get_test/locustfile_get_data_prs-psql.py --worker --master-host locust_master_get
