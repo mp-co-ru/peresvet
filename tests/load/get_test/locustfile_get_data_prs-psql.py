@@ -19,7 +19,7 @@ class DataGetUser(HttpUser):
             self.ids = js["0"]
             self.ids += js["1"]
             self.ids += js["2"]
-            self.jds += js["4"]
+            self.ids += js["4"]
 
     @task
     def get_data(self):
