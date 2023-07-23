@@ -10,7 +10,7 @@ services:
     environment:
       TZ: ${TIME_ZONE}
     ports:
-      - 80:80
+      - 83:83
 
     volumes:
       - ./logs/objects.all/api_crud/:/usr/src/objects_api_crud/log/:rw

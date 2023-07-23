@@ -481,7 +481,10 @@ class Hierarchy:
                 raise ValueError(f"Узел {node} не найден.")
 
             obj_classes = res[0][1]["objectClass"]
-            obj_classes.remove(b'top')
+            try:
+                obj_classes.remove(b'top')
+            except:
+                pass
             return obj_classes[0].decode()
 
     async def get_node_id(self, node_dn: str) -> str:

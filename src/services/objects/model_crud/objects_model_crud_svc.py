@@ -5,7 +5,6 @@ sys.path.append(".")
 
 from objects_model_crud_settings import ObjectsModelCRUDSettings
 from src.common import model_crud_svc
-from src.common import hierarchy
 
 class ObjectsModelCRUD(model_crud_svc.ModelCRUDSvc):
     """Сервис работы с объектами в иерархии.
@@ -17,15 +16,29 @@ class ObjectsModelCRUD(model_crud_svc.ModelCRUDSvc):
     Формат ожидаемых сообщений
 
     """
+    _outgoing_commands = {
+        "created": "objects.created",
+        "mayUpdate": "objects.mayUpdate",
+        "updating": "objects.updating",
+        "updated": "objects.updated",
+        "mayDelete": "objects.mayDelete",
+        "deleting": "objects.deleting",
+        "deleted": "objects.deleted"
+    }
 
     def __init__(self, settings: ObjectsModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    async def _reading(self, mes: dict) -> dict:
-        pass
+    def _set_incoming_commands(self) -> dict:
+        return {
+            "objects.create": self._create,
+            "objects.read": self._read,
+            "objects.update": self._update,
+            "objects.delete": self._delete,
+        }
 
-    async def _creating(self, mes: dict, new_id: str) -> None:
-        pass
+    def __init__(self, settings: ObjectsModelCRUDSettings, *args, **kwargs):
+        super().__init__(settings, *args, **kwargs)
 
 settings = ObjectsModelCRUDSettings()
 
