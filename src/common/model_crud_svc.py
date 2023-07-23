@@ -846,7 +846,8 @@ class ModelCRUDSvc(Svc):
             return True
 
         if self._config.hierarchy["parent_classes"]:
-            if (self._hierarchy.get_node_class(parent_id) in
+            node_class = await self._hierarchy.get_node_class(parent_id)
+            if (node_class in
                 self._config.hierarchy["parent_classes"]):
                 return True
 
