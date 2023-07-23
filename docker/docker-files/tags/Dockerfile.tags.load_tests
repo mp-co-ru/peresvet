@@ -22,12 +22,6 @@ COPY src/services/tags/model_crud/Pipfile /usr/src/tags_model_crud/
 COPY src/services/tags/app/Pipfile /usr/src/tags_app/
 COPY src/services/tags/app_api/Pipfile /usr/src/tags_app_api/
 
-WORKDIR /usr/src/tags_api_crud
-RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
-
-WORKDIR /usr/src/tags_model_crud
-RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
-
 WORKDIR /usr/src/tags_app
 RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
 
@@ -44,27 +38,9 @@ RUN usermod -a -G volume_group unit
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-COPY docker/docker-files/tags/config_nginx.unit_tags.all.load_tests.json /docker-entrypoint.d/
+COPY docker/docker-files/tags/config_nginx.unit_tags.load_tests.json /docker-entrypoint.d/
 
 # копируем исходники --------------------------------------------
-ADD src/common/ /usr/src/tags_api_crud/src/common
-COPY src/__init__.py /usr/src/tags_api_crud/src/
-RUN rm -r /usr/src/tags_api_crud/src/common/__pycache__
-WORKDIR /usr/src/tags_api_crud/src
-RUN mkdir services
-WORKDIR /usr/src/tags_api_crud/src/services
-ADD src/services/tags/api_crud tags/api_crud
-WORKDIR /usr/src/tags_api_crud
-
-ADD src/common/ /usr/src/tags_model_crud/src/common
-COPY src/__init__.py /usr/src/tags_model_crud/src/
-RUN rm -r /usr/src/tags_model_crud/src/common/__pycache__
-WORKDIR /usr/src/tags_model_crud/src
-RUN mkdir services
-WORKDIR /usr/src/tags_model_crud/src/services
-ADD src/services/tags/model_crud tags/model_crud
-WORKDIR /usr/src/tags_model_crud
-
 ADD src/common/ /usr/src/tags_app/src/common
 COPY src/__init__.py /usr/src/tags_app/src/
 RUN rm -r /usr/src/tags_app/src/common/__pycache__
