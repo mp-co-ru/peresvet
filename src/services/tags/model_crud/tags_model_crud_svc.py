@@ -37,12 +37,6 @@ class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
             "tags.read": self._read,
             "tags.update": self._update,
             "tags.delete": self._delete,
-
-            #TODO: этот блок надо доработать
-            "objects.mayUpdate": self._may_update,
-            "objects.updating": self._updating,
-            "objects.mayDelete": self._may_delete,
-            "objects.deleting": self._deleting
         }
 
     async def _further_create(self, mes: dict, new_id: str) -> None:

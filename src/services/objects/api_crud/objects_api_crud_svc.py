@@ -18,7 +18,7 @@ class ObjectCreateAttributes(svc.NodeAttributes):
     pass
 
 class ObjectCreate(svc.NodeCreate):
-    attributes: ObjectCreateAttributes = Field(title="Атрибуты узла")
+    attributes: ObjectCreateAttributes = Field(title="Атрибуты объекта")
 
     # validate_id = validator('parentId', 'dataStorageId', 'connectorId', allow_reuse=True)(svc.valid_uuid)
 
