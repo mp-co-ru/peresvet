@@ -1,22 +1,6 @@
 version: '3.9'
 
 services:
-  data_storages_all_load_tests:
-    hostname: dataStorages_all_load_tests
-    build:
-      context: ../..
-      dockerfile: docker/docker-files/dataStorages/Dockerfile.dataStorages.all.load_tests
-
-    environment:
-      TZ: ${TIME_ZONE}
-    ports:
-      - 82:82
-
-    volumes:
-      - ./logs/dataStorages.all.load_tests/api_crud/:/usr/src/dataStorages_api_crud/log/:rw
-      - ./logs/dataStorages.all.load_tests/model_crud/:/usr/src/dataStorages_model_crud/log/:rw
-      - ./logs/dataStorages.all.load_tests/app_psql/:/usr/src/dataStorages_app_psql/log/:rw
-
   psql_load_tests:
     hostname: psql_load_tests
     image: postgres:latest

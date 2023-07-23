@@ -1,11 +1,11 @@
 version: '3.9'
 
 services:
-  tags_all_load_tests:
-    hostname: tags_all_load_tests
+  tags_prepare_load_tests:
+    hostname: tags_prepare_load_tests
     build:
       context: ../..
-      dockerfile: docker/docker-files/tags/Dockerfile.tags.all.load_tests
+      dockerfile: docker/docker-files/tags/Dockerfile.tags.prepare_load_tests
 
     environment:
       TZ: ${TIME_ZONE}
