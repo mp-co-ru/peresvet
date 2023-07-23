@@ -2,6 +2,7 @@ import sys
 import json
 import asyncio
 import numbers
+import copy
 from typing import Any, List, Tuple
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
@@ -120,6 +121,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 mes["data"]["dataStorageId"]
             )
             tag_cache["table"] = tbl_name
+            cache_for_store = copy.deepcopy(tag_cache)
 
             tag_cache["ds"] = self._connection_pools[mes["data"]["dataStorageId"]]
             match tag_cache["value_type"]:
@@ -153,8 +155,9 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
             self._tags[mes["data"]["tagId"]] = tag_cache
 
+
         return {
-            "prsStore": json.dumps({"table": tag_cache["table"]})
+            "prsStore": json.dumps(cache_for_store)
         }
 
     async def _unlink_tag(self, mes: dict) -> None:
@@ -362,7 +365,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 tag_id = tag[2]["cn"][0]
 
                 self._logger.debug(f"Подготовка кэша тега.")
-                tag_cache = await self._prepare_tag_data(tag_id, ds[0])
+                tag_cache = json.loads(tag[2]["prsStore"][0])
                 if not tag_cache:
                     self._logger.debug(f"Кэш пустой.")
                     continue
