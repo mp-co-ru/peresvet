@@ -1,0 +1,19 @@
+version: '3.9'
+
+services:
+  nginx:
+      ports:
+        - ${HTTP_PORT}:${HTTP_PORT}
+        - ${HTTPS_PORT}:${HTTPS_PORT}
+      #restart: always
+      volumes:
+        - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
+        - ./config/nginx/ssl/default.conf.template:/etc/nginx/templates/default.conf.template:rw,cached
+        - ./tls/servers/${SRV_NAME}/:/etc/nginx/ssl/server/
+        - ./tls/rootCA/:/etc/nginx/ssl/rootCA/
+      environment:
+        SRV_NAME: ${SRV_NAME}
+        HTTP_PORT: ${HTTP_PORT}
+        HTTPS_PORT: ${HTTPS_PORT}
+        TZ: ${TIME_ZONE}
+        NGINX_CERT_REQUIRED: ${NGINX_CERT_REQUIRED}
