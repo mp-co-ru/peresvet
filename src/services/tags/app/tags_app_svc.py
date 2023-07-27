@@ -45,7 +45,9 @@ class TagsAppAPI(svc.Svc):
 
         new_payload = copy.deepcopy(mes["data"])
         tag_ids = new_payload.pop("tagId")
-        tasks = []
+        final_res = {
+            "data": []
+        }
         for tag_id in tag_ids:
 
             new_payload["tagId"] = [tag_id]
@@ -54,27 +56,16 @@ class TagsAppAPI(svc.Svc):
                 f"Creating new task. payload: {new_payload}"
             ))
 
-            future = asyncio.create_task(
-                self._post_message({
+            res = await self._post_message({
                     "action": "tags.downloadData",
                     "data": new_payload
                 },
                 reply=True,
-                routing_key=tag_id)
+                routing_key=tag_id
             )
-            tasks.append(future)
-
-        done, _ = await asyncio.wait(
-            tasks, return_when=asyncio.ALL_COMPLETED
-        )
+            final_res["data"] += res["data"]
 
         self._logger.debug(f"Tasks done.")
-
-        final_res = {
-            "data": []
-        }
-        for future in done:
-            final_res["data"] += future.result()["data"]
 
         if new_payload["format"]:
             for tag_item in final_res["data"]:
@@ -88,7 +79,7 @@ class TagsAppAPI(svc.Svc):
     async def _data_set(self, mes: dict) -> None:
         tasks = []
         for tag_item in mes["data"]["data"]:
-
+            '''
             future = asyncio.create_task(
                 self._post_message({
                     "action": "tags.uploadData",
@@ -102,10 +93,24 @@ class TagsAppAPI(svc.Svc):
                 routing_key=tag_item["tagId"])
             )
             tasks.append(future)
+            '''
+            await self._post_message({
+                    "action": "tags.uploadData",
+                    "data": {
+                        "data": [
+                            tag_item
+                        ]
+                    }
+                },
+                reply=False,
+                routing_key=tag_item["tagId"]
+            )
 
+        '''
         await asyncio.wait(
             tasks, return_when=asyncio.ALL_COMPLETED
         )
+        '''
 
 settings = TagsAppSettings()
 
