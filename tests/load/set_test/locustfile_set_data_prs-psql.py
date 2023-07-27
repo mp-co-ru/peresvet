@@ -8,10 +8,11 @@ import json
 import random
 import string
 
-from locust import HttpUser, task
+from locust import FastHttpUser, task
 
-class DataSetUser(HttpUser):
+class DataSetUser(FastHttpUser):
 
+    '''
     def send_data(self, tag_id, value):
         # формируем пакет данных для записи
         data = {
@@ -34,43 +35,112 @@ class DataSetUser(HttpUser):
 
     @task
     def set_int_data(self):
-        '''
-        Запись случайного целого числа в случайно выбранный
-        тег из диапазона целочисленных тегов
-        '''
 
         # выбираем случайный индекс тега
         i = random.randrange(len(self.ints))
-        self.send_data(self.ints[i], random.randint(-100, 100))
+        self.send_data(self.ints[i], self.rand_int)
 
-    '''
     @task
     def set_float_data(self):
         i = random.randrange(len(self.floats))
-        self.send_data(self.floats[i], random.uniform(-100, 100))
+        self.send_data(self.floats[i], self.rand_float)
 
     @task
     def set_str_data(self):
         i = random.randrange(len(self.strs))
-        self.send_data(
-            self.strs[i],
-            ''.join(random.choice(self.letters) for _ in range(30))
-        )
+        self.send_data(self.strs[i], self.rand_str)
 
     @task
     def set_json_data(self):
         i = random.randrange(len(self.jsons))
-        data_item = {
-            "first_field": random.randint(-100, 100),
-            "second_field": random.uniform(-100, 100),
-            "third_field": ''.join(random.choice(self.letters) for _ in range(30))
-        }
-        self.send_data(self.jsons[i], data_item)
+        self.send_data(self.jsons[i], self.rand_json)
     '''
+
+    @task
+    def set_pack_int(self):
+        tags = random.sample(self.ints, self.pack_size)
+        payload= {
+            "data": []
+        }
+        for tag in tags:
+            tag_item = {
+                "tagId": tag,
+                "data": [
+                    {
+                        "y": self.rand_int
+                    }
+                ]
+            }
+            payload["data"].append(tag_item)
+        self.client.post("/v1/data/", json=payload)
+
+    @task
+    def set_pack_float(self):
+        tags = random.sample(self.floats, self.pack_size)
+        payload= {
+            "data": []
+        }
+        for tag in tags:
+            tag_item = {
+                "tagId": tag,
+                "data": [
+                    {
+                        "y": self.rand_float
+                    }
+                ]
+            }
+            payload["data"].append(tag_item)
+        self.client.post("/v1/data/", json=payload)
+
+    @task
+    def set_pack_str(self):
+        tags = random.sample(self.strs, self.pack_size)
+        payload= {
+            "data": []
+        }
+        for tag in tags:
+            tag_item = {
+                "tagId": tag,
+                "data": [
+                    {
+                        "y": self.rand_str
+                    }
+                ]
+            }
+            payload["data"].append(tag_item)
+        self.client.post("/v1/data/", json=payload)
+
+    @task
+    def set_pack_json(self):
+        tags = random.sample(self.jsons, self.pack_size)
+        payload= {
+            "data": []
+        }
+        for tag in tags:
+            tag_item = {
+                "tagId": tag,
+                "data": [
+                    {
+                        "y": self.rand_json
+                    }
+                ]
+            }
+            payload["data"].append(tag_item)
+        self.client.post("/v1/data/", json=payload)
 
     def on_start(self):
         # создадим массив символов для генерации случайных строковых значений
         self.letters = string.ascii_lowercase
+
+        self.rand_int = random.randint(-100, 100)
+        self.rand_float = random.uniform(-100, 100)
+        self.rand_str = ''.join(random.choice(self.letters) for _ in range(30))
+        self.rand_json = {
+            "first_field": random.randint(-100, 100),
+            "second_field": random.uniform(-100, 100),
+            "third_field": ''.join(random.choice(self.letters) for _ in range(30))
+        }
+        self.pack_size = 10
 
         # прочитаем из файлов коды тегов каждого типа
         with open("/mnt/locust/tags_in_postgres.json", "r") as f:
