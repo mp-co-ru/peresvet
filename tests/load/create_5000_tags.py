@@ -89,7 +89,8 @@ async def main():
                 body = {
                     "attributes": {
                         "cn": name,
-                        "prsValueTypeCode": tag_type
+                        "prsValueTypeCode": tag_type,
+                        "prsUpdate": False
                     }
                 }
                 await create(session, body, ds_id)
