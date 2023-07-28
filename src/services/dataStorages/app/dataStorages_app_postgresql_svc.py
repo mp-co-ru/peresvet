@@ -237,24 +237,20 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                             records=data_items,
                             columns=('x', 'y', 'q'))
 
+                '''
                 await self._post_message(mes={
                         "action": "dataStorages.tagsArchived",
                         "data": payload
                     },
                     reply=False, routing_key=payload["tagId"]
                 )
+                '''
 
             except PostgresError as ex:
                 self._logger.error(f"Ошибка при записи данных тега {payload['tagId']}: {ex}")
 
-        tasks = []
         for tag_data in mes["data"]["data"]:
-            future = asyncio.create_task(set_tag_data(tag_data))
-            tasks.append(future)
-
-        await asyncio.wait(
-            tasks, return_when=asyncio.ALL_COMPLETED
-        )
+            await set_tag_data(tag_data)
 
     async def _prepare_tag_data(self, tag_id: str, ds_id: str) -> dict | None:
         get_tag_data = {
