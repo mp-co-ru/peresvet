@@ -8,7 +8,7 @@
     "applications": {
         "app": {
             "type": "python 3.10",
-            "processes": 4,
+            "processes": 2,
             "working_directory": "/usr/src/tags_app",
             "path": "/usr/src/tags_app/src/services/tags/app/",
             "home": "/usr/src/tags_app/.venv/",
