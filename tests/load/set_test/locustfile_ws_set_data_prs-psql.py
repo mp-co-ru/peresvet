@@ -7,10 +7,22 @@
 import json
 import random
 import string
+import websocket
+import time
+import gevent
 
-from locust import FastHttpUser, task, events
+from locust import User, task, events
 
-class DataSetUser(FastHttpUser):
+@events.init_command_line_parser.add_listener
+def _(parser):
+    parser.add_argument(
+        "--tags_in_pack", type=int, choices=[1, 5, 10, 100],
+        default=1, help="How many tags in one data packet."
+    )
+
+
+
+class WSDataSetUser(User):
 
     '''
     def send_data(self, tag_id, value):
@@ -60,7 +72,10 @@ class DataSetUser(FastHttpUser):
     def set_pack_int(self):
         tags = random.sample(self.ints, self.pack_size)
         payload= {
-            "data": []
+            "action": "set",
+            "data": {
+                "data": []
+            }
         }
         for tag in tags:
             tag_item = {
@@ -71,14 +86,17 @@ class DataSetUser(FastHttpUser):
                     }
                 ]
             }
-            payload["data"].append(tag_item)
-        self.client.post("", json=payload)
+            payload["data"]["data"].append(tag_item)
+        self.send(payload)
 
     @task
     def set_pack_float(self):
         tags = random.sample(self.floats, self.pack_size)
         payload= {
-            "data": []
+            "action": "set",
+            "data": {
+                "data": []
+            }
         }
         for tag in tags:
             tag_item = {
@@ -89,14 +107,17 @@ class DataSetUser(FastHttpUser):
                     }
                 ]
             }
-            payload["data"].append(tag_item)
-        self.client.post("", json=payload)
+            payload["data"]["data"].append(tag_item)
+        self.send(payload)
 
     @task
     def set_pack_str(self):
         tags = random.sample(self.strs, self.pack_size)
         payload= {
-            "data": []
+            "action": "set",
+            "data": {
+                "data": []
+            }
         }
         for tag in tags:
             tag_item = {
@@ -107,14 +128,17 @@ class DataSetUser(FastHttpUser):
                     }
                 ]
             }
-            payload["data"].append(tag_item)
-        self.client.post("", json=payload)
+            payload["data"]["data"].append(tag_item)
+        self.send(payload)
 
     @task
     def set_pack_json(self):
         tags = random.sample(self.jsons, self.pack_size)
         payload= {
-            "data": []
+            "action": "set",
+            "data": {
+                "data": []
+            }
         }
         for tag in tags:
             tag_item = {
@@ -125,8 +149,33 @@ class DataSetUser(FastHttpUser):
                     }
                 ]
             }
-            payload["data"].append(tag_item)
-        self.client.post("", json=payload)
+            payload["data"]["data"].append(tag_item)
+        self.send(payload)
+
+    def send(self, payload):
+        e = None
+        try:
+            json_data = json.dumps(payload)
+
+            start_time = time.time()
+            g = gevent.spawn(self.ws.send, json_data)
+            g.get(block=True, timeout=2)
+
+            g = gevent.spawn(self.ws.recv)
+            res = g.get(block=True, timeout=10)
+        except Exception as exp:
+            e = exp
+            self.ws.close()
+            print("Ошибка!")
+            time.sleep(2)
+            self.ws.connect(self.host)
+
+        elapsed = int((time.time() - start_time) * 1000)
+        events.request.fire(
+            request_type='ws', name=self.host,
+            response_time=elapsed,
+            response_length=0, exception=e
+        )
 
     def on_start(self):
         # создадим массив символов для генерации случайных строковых значений
@@ -149,3 +198,10 @@ class DataSetUser(FastHttpUser):
             self.floats = js["1"]
             self.strs = js["2"]
             self.jsons = js["4"]
+
+        self.ws = websocket.WebSocket()
+        self.ws.settimeout(10)
+        self.ws.connect(self.host)
+
+    def on_close(self):
+        self.ws.close()

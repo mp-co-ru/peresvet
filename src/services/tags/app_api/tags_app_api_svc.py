@@ -3,13 +3,13 @@
 и класс сервиса ``tags_api_crud_svc``.
 """
 import sys
-import asyncio
-import copy
-from uuid import UUID
 from typing import Any, List
-from pydantic import BaseModel, Field, field_validator, validator
+from pydantic import BaseModel, Field, field_validator, validator, ValidationError
+import json
 
 from fastapi import APIRouter
+from fastapi import WebSocket, WebSocketDisconnect, status
+from fastapi.exceptions import HTTPException, WebSocketException
 
 sys.path.append(".")
 
@@ -192,7 +192,6 @@ class TagsAppAPI(svc.Svc):
             }
         }
 
-
         return await self._post_message(mes=body, reply=False)
 
 settings = TagsAppAPISettings()
@@ -209,5 +208,44 @@ async def data_get(payload: DataGet):
 @router.post("/", status_code=200)
 async def data_set(payload: AllData):
     return await app.data_set(payload)
+
+@app.websocket(f"{settings.api_version}/ws/data")
+async def websocket_endpoint(websocket: WebSocket):
+
+    try:
+        await websocket.accept()
+        app._logger.debug(f"Установлена ws-связь.")
+
+        while True:
+            try:
+                received_data = await websocket.receive_json()
+                action = received_data.get("action")
+                if not action:
+                    raise ValueError("Не указано действие в команде.")
+                data = received_data.get("data")
+                if not data:
+                    raise ValueError("Не указаны данные команды.")
+
+                match action:
+                    case "get":
+                        res = await app.data_get(DataGet(**data))
+                    case "set":
+                        await app.data_set(AllData(**data))
+                        res = {
+                            "error": {"id": 0}
+                        }
+                await websocket.send_json(res)
+
+            except TypeError as ex:
+                app._logger.error(f"Неверный формат данных: {ex}")
+            except ValidationError as ex:
+                app._logger.error(f"Неверные данные сообщения: {ex}")
+            except json.JSONDecodeError as ex:
+                app._logger.error(f"Сообщение должно быть в виде json: {ex}")
+            except ValueError as ex:
+                app._logger.error(ex)
+
+    except Exception as ex:
+        app._logger.error(f"Разрыв ws-связи: {ex}")
 
 app.include_router(router, prefix=f"{settings.api_version}/data", tags=["data"])
