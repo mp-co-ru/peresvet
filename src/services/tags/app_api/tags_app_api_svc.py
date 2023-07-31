@@ -192,7 +192,6 @@ class TagsAppAPI(svc.Svc):
             }
         }
 
-
         return await self._post_message(mes=body, reply=False)
 
 settings = TagsAppAPISettings()
@@ -229,10 +228,14 @@ async def websocket_endpoint(websocket: WebSocket):
 
                 match action:
                     case "get":
-                        res = await data_get(DataGet(**data))
-                        await websocket.send_json(res)
+                        res = await app.data_get(DataGet(**data))
                     case "set":
-                        await data_set(AllData(**data))
+                        await app.data_set(AllData(**data))
+                        res = {
+                            "error": {"id": 0}
+                        }
+                await websocket.send_json(res)
+
             except TypeError as ex:
                 app._logger.error(f"Неверный формат данных: {ex}")
             except ValidationError as ex:

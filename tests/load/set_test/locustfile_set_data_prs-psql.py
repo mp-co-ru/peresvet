@@ -8,7 +8,7 @@ import json
 import random
 import string
 
-from locust import FastHttpUser, task
+from locust import FastHttpUser, task, events
 
 class DataSetUser(FastHttpUser):
 
@@ -72,7 +72,7 @@ class DataSetUser(FastHttpUser):
                 ]
             }
             payload["data"].append(tag_item)
-        self.client.post("/v1/data/", json=payload)
+        self.client.post("", json=payload)
 
     @task
     def set_pack_float(self):
@@ -90,7 +90,7 @@ class DataSetUser(FastHttpUser):
                 ]
             }
             payload["data"].append(tag_item)
-        self.client.post("/v1/data/", json=payload)
+        self.client.post("", json=payload)
 
     @task
     def set_pack_str(self):
@@ -108,7 +108,7 @@ class DataSetUser(FastHttpUser):
                 ]
             }
             payload["data"].append(tag_item)
-        self.client.post("/v1/data/", json=payload)
+        self.client.post("", json=payload)
 
     @task
     def set_pack_json(self):
@@ -126,7 +126,7 @@ class DataSetUser(FastHttpUser):
                 ]
             }
             payload["data"].append(tag_item)
-        self.client.post("/v1/data/", json=payload)
+        self.client.post("", json=payload)
 
     def on_start(self):
         # создадим массив символов для генерации случайных строковых значений
@@ -140,7 +140,7 @@ class DataSetUser(FastHttpUser):
             "second_field": random.uniform(-100, 100),
             "third_field": ''.join(random.choice(self.letters) for _ in range(30))
         }
-        self.pack_size = 10
+        self.pack_size = self.environment.parsed_options.tags_in_pack
 
         # прочитаем из файлов коды тегов каждого типа
         with open("/mnt/locust/tags_in_postgres.json", "r") as f:

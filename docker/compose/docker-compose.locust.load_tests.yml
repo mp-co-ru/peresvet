@@ -9,7 +9,7 @@ services:
       - ../../tests/load/:/mnt/locust/
     ports:
      - 8089:8089
-    command: -f /mnt/locust --class-picker --master -H http://tags_load_tests:81
+    command: -f /mnt/locust --class-picker --master -H http://tags_load_tests:81/v1/data
 
   locust_worker:
     build:

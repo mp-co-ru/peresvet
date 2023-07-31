@@ -21,11 +21,14 @@ class DataGetUser(HttpUser):
             self.ids += js["2"]
             self.ids += js["4"]
 
+        self.pack_size = self.environment.parsed_options.tags_in_pack
+
     @task
     def get_data(self):
-        i = random.randrange(len(self.ids))
+        tags = random.sample(self.ids, self.pack_size)
+
         data = {
-            "tagId": self.ids[i]
+            "tagId": tags
         }
 
-        self.client.get("/v1/data/", json=data)
+        self.client.get("", json=data)
