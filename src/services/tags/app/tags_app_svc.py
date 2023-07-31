@@ -77,23 +77,7 @@ class TagsAppAPI(svc.Svc):
         return final_res
 
     async def _data_set(self, mes: dict) -> None:
-        tasks = []
         for tag_item in mes["data"]["data"]:
-            '''
-            future = asyncio.create_task(
-                self._post_message({
-                    "action": "tags.uploadData",
-                    "data": {
-                        "data": [
-                            tag_item
-                        ]
-                    }
-                },
-                reply=False,
-                routing_key=tag_item["tagId"])
-            )
-            tasks.append(future)
-            '''
             await self._post_message({
                     "action": "tags.uploadData",
                     "data": {
@@ -105,12 +89,6 @@ class TagsAppAPI(svc.Svc):
                 reply=False,
                 routing_key=tag_item["tagId"]
             )
-
-        '''
-        await asyncio.wait(
-            tasks, return_when=asyncio.ALL_COMPLETED
-        )
-        '''
 
 settings = TagsAppSettings()
 

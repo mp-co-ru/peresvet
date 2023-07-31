@@ -152,26 +152,17 @@ class WSDataSetUser(User):
             payload["data"]["data"].append(tag_item)
         self.send(payload)
 
-    def send_with_response(self, payload):
-        json_data = json.dumps(payload)
-
-        g = gevent.spawn(self.ws.send, json_data)
-        g.get(block=True, timeout=2)
-        #g = gevent.spawn(self.ws.recv)
-        #result = g.get(block=True, timeout=10)
-
-        #json_data = json.loads(result)
-        return json_data
-
     def send(self, payload):
-        start_time = time.time()
         e = None
         try:
             json_data = json.dumps(payload)
 
+            start_time = time.time()
             g = gevent.spawn(self.ws.send, json_data)
             g.get(block=True, timeout=2)
-            print(f"Data: {json_data}")
+
+            g = gevent.spawn(self.ws.recv)
+            res = g.get(block=True, timeout=10)
         except Exception as exp:
             e = exp
             self.ws.close()
@@ -185,15 +176,6 @@ class WSDataSetUser(User):
             response_time=elapsed,
             response_length=0, exception=e
         )
-        '''
-        if e:
-            events.request_failure.fire(request_type='ws', name='send',
-                                        response_time=elapsed, exception=e)
-        else:
-            events.request_success.fire(request_type='ws', name='send',
-                                        response_time=elapsed,
-                                        response_length=0)
-        '''
 
     def on_start(self):
         # создадим массив символов для генерации случайных строковых значений
