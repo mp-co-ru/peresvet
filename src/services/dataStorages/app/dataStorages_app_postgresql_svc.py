@@ -772,29 +772,27 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         if not tag_data:
             if finish is not None:
-                return [{
-                    'x': finish,
-                    'y': None,
-                    'q': None,
-                }]
+                return [(None, finish, None)]
 
-        x0 = tag_data[0]['x']
-        y0 = tag_data[0]['y']
+        x0 = tag_data[0][1]
+        y0 = tag_data[0][0]
         try:
-            x1, y1 = self._last_point(tag_data[1]['x'], tag_data)
+            x1, y1 = self._last_point(tag_data[1][1], tag_data)
             if not tag_cache["table"]:
-                tag_data[0]['y'] = linear_interpolated(
-                    (x0, y0), (x1, y1), finish
+                tag_data[0] = (
+                    linear_interpolated(
+                        (x0, y0), (x1, y1), finish
+                    ), tag_data[0][1], tag_data[2]
                 )
 
             tag_data.pop()
         except IndexError:
             # Если в выборке только одна запись и `to` меньше, чем `x` этой записи...
             if x0 > finish:
-                tag_data[0]['y'] = None
-                tag_data[0]['q'] = None
+                tag_data[0] = (None, tag_data[0][1], None)
         finally:
             tag_data[0]['x'] = finish
+            tag_data[0] = (tag_data[0][0], finish, tag_data[0][2])
 
         return tag_data
 
