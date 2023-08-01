@@ -641,7 +641,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         time_row = self._timestep_row(time_step, count, start, finish)
 
         if not tag_data:
-            return [{'x': x, 'y': None, 'q': None} for x in time_row]
+            return [(None, x, None) for x in time_row]
 
         return self._interpolate(tag_data, time_row)
 
