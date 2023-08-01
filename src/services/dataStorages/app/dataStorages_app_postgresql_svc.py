@@ -432,7 +432,6 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         except Exception as ex:
             self._logger.error(f"Ошибка связи с базой данных: {ex}")
 
-
     async def _tag_get(self, mes: dict) -> dict:
         """_summary_
 
@@ -773,14 +772,18 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         if not tag_data:
             if finish is not None:
-                return [(None, finish, None)]
+                return [{
+                    'x': finish,
+                    'y': None,
+                    'q': None,
+                }]
 
-        x0 = tag_data[0][1]
-        y0 = tag_data[0][0]
+        x0 = tag_data[0]['x']
+        y0 = tag_data[0]['y']
         try:
-            x1, y1 = self._last_point(tag_data[1][1], tag_data)
+            x1, y1 = self._last_point(tag_data[1]['x'], tag_data)
             if not tag_cache["table"]:
-                tag_data[0][0] = linear_interpolated(
+                tag_data[0]['y'] = linear_interpolated(
                     (x0, y0), (x1, y1), finish
                 )
 
@@ -788,10 +791,10 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         except IndexError:
             # Если в выборке только одна запись и `to` меньше, чем `x` этой записи...
             if x0 > finish:
-                tag_data[0][0] = None
-                tag_data[0][2] = None
+                tag_data[0]['y'] = None
+                tag_data[0]['q'] = None
         finally:
-            tag_data[0][1] = finish
+            tag_data[0]['x'] = finish
 
         return tag_data
 
@@ -942,7 +945,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         async with tag_cache["ds"].acquire() as conn:
             async with conn.transaction():
                 async for r in conn.cursor(*query_args):
-                    records.append((r.get("y"), r.get("x"), r.get("q")))
+                    records.append(r.get['y'], r.get['x'], r.get['q'])
         return records
 
     def _get_values_filter(self, value: Any) -> tuple:
