@@ -194,7 +194,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                     "data": [
                         {
                             "tagId": "<some_id>",
-                            "data": [(x, y, q)]
+                            "data": [(y, x, q)]
                         }
                     ]
                 }
@@ -220,7 +220,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 new_data_items = []
                 for item in data_items:
                     new_data_items.append(
-                        (json.dumps(item[1], item[0], ensure_ascii=False), item[2])
+                        (json.dumps(item[0], ensure_ascii=False), item[1], item[2])
                     )
                 data_items = new_data_items
 
@@ -595,17 +595,17 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         if tag_step or tag_type_code not in [0, 1]:
             for item in tag_data:
                 if tag_type_code == 4:
-                    y = json.loads(item['y'])
+                    y = json.loads(item[0])
                 else:
-                    y = item['y']
+                    y = item[0]
                 if y in value:
                     res.append(item)
         else:
             for i in range(1, len(tag_data)):
-                y1 = tag_data[i - 1]['y']
-                y2 = tag_data[i]['y']
-                x1 = tag_data[i - 1]['x']
-                x2 = tag_data[i]['x']
+                y1 = tag_data[i - 1][0]
+                y2 = tag_data[i][0]
+                x1 = tag_data[i - 1][1]
+                x2 = tag_data[i][1]
                 if x1 == x2:
                     continue
                 if y1 in value:
@@ -620,8 +620,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                             continue
                         if ((y1 > val and y2 < val) or (y1 < val and y2 > val)):
                             x = estimate(x1, y1, x2, y2, val)
-                            res.append({"x": x, "y": val})
-            if tag_data[-1]['y'] in value:
+                            res.append((val, x, None))
+            if tag_data[-1][0] in value:
                 res.append(tag_data[-1])
         return res
 
