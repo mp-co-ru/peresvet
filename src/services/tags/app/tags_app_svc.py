@@ -41,7 +41,7 @@ class TagsAppAPI(svc.Svc):
 
     async def _data_get(self, mes: dict) -> dict:
 
-        self._logger.debug(f"mes: {mes}")
+        self._logger.debug(f"Data get mes: {mes}")
 
         new_payload = copy.deepcopy(mes["data"])
         tag_ids = new_payload.pop("tagId")
@@ -64,15 +64,6 @@ class TagsAppAPI(svc.Svc):
                 routing_key=tag_id
             )
             final_res["data"] += res["data"]
-
-        self._logger.debug(f"Tasks done.")
-
-        if new_payload["format"]:
-            for tag_item in final_res["data"]:
-                for data_item in tag_item["data"]:
-                    data_item["x"] = str(t.int_to_local_timestamp(data_item["x"]))
-
-        self._logger.debug(f"Data get: {final_res}")
 
         return final_res
 
