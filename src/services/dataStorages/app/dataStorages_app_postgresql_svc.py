@@ -577,8 +577,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         return result
 
     def _filter_data(
-            self, tag_data: List[dict], value: List[Any], tag_type_code: int,
-            tag_step: bool) -> List[dict]:
+            self, tag_data: List[tuple], value: List[Any], tag_type_code: int,
+            tag_step: bool) -> List[tuple]:
         def estimate(x1: int, y1: int | float, x2: int, y2: int | float, y: int | float) -> int:
             '''
             Функция принимает на вход две точки прямой и значение, координату X которого возвращает.
@@ -630,7 +630,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                                      start: int,
                                      finish: int,
                                      count: int,
-                                     time_step: int) -> List[dict]:
+                                     time_step: int) -> List[tuple]:
         """ Получение интерполированных значений с шагом time_step
         """
         tag_data = await self._data_get_many(tag_cache,
@@ -645,7 +645,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         return self._interpolate(tag_data, time_row)
 
-    def _interpolate(self, raw_data: List[dict], time_row: List[int]) -> List[dict]:
+    def _interpolate(self, raw_data: List[tuple], time_row: List[int]) -> List[tuple]:
         """ Получение линейно интерполированных значений для ряда ``time_row`` по
         действительным значениям из БД (``raw_data``)
 
@@ -661,13 +661,13 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         # Разбиение списка ``raw_data`` на подсписки по значению None
         # Если ``raw_data`` не имеет None, получается список [raw_data]
-        none_indexes = [idx for idx, val in enumerate(raw_data) if val['y'] is None]
+        none_indexes = [idx for idx, val in enumerate(raw_data) if val[0] is None]
         size = len(raw_data)
-        try:
+        if none_indexes:
             splitted_by_none = [raw_data[i: j+1] for i, j in
                 zip([0] + none_indexes, none_indexes +
                 ([size] if none_indexes[-1] != size else []))]
-        except IndexError:
+        else:
             splitted_by_none = [raw_data]
 
         data = []  # Результирующий список
@@ -675,13 +675,13 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             if len(period) == 1:
                 continue
 
-            key_x = lambda d: d['x']
-            min_ts = min(period, key=key_x)['x']
-            max_ts = max(period, key=key_x)['x']
+            key_x = lambda d: d[1]
+            min_ts = min(period, key=key_x)[1]
+            max_ts = max(period, key=key_x)[1]
             is_last_period = period == splitted_by_none[-1]
 
             # В каждый подсписок добавляются значения из ряда ``time_row``
-            period = [{'x': ts, 'y': None,'q': None} \
+            period = [(None , ts, None) \
                       for ts in time_row if min_ts <= ts < max_ts] + period
             period.sort(key=key_x)
 
@@ -691,21 +691,21 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             # Расширенный подсписок заворачивается в DataFrame и индексируется по 'x'
             df = pd.DataFrame(
                 period,
-                index=[r['x'] for r in period]
-            ).drop_duplicates(subset='x', keep='last')
+                index=[r[1] for r in period]
+            ).drop_duplicates(subset=1, keep='last')
 
             # линейная интерполяция значений 'y' в датафрейме для числовых тэгов
             # заполнение NaN полей ближайшими не-NaN для нечисловых тэгов
-            df[['x', 'y']] = df[['x', 'y']].interpolate(
-                method=('pad', 'index')[is_numeric_dtype(df['y'])]
+            df[[1, 0]] = df[[1, 0]].interpolate(
+                method=('pad', 'index')[is_numeric_dtype(df[0])]
             )
 
             # None-значения 'q' заполняются ближайшим не-None значением сверху
-            df['q'].fillna(method='ffill', inplace=True)
+            df[2].fillna(method='ffill', inplace=True)
 
             # Удаление из датафрейма всех элементов, чьи 'x' не принадлежат ``time_row``
-            df = df.loc[df['x'].isin(time_row)]
-            df[['y', 'q']] = df[['y', 'q']].replace({np.nan: None})
+            df = df.loc[df[1].isin(time_row)]
+            df[[0, 2]] = df[[0, 2]].replace({np.nan: None})
 
             # Преобразование получившегося датафрейма и добавление значений к
             # результирующему списку
@@ -757,8 +757,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             row.reverse()
         return row
 
-    def _last_point(self, x: int, data: List[dict]) -> Tuple[int, Any]:
-        return (x, list(filter(lambda rec: rec['x'] == x, data))[-1]['y'])
+    def _last_point(self, x: int, data: List[tuple]) -> Tuple[int, Any]:
+        return (x, list(filter(lambda rec: rec[1] == x, data))[-1][0])
 
     async def _data_get_one(self,
                             tag_cache: dict,
