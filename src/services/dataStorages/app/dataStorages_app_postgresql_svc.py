@@ -812,51 +812,45 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             return []
 
         now_ms = t.ts()
-        x0 = tag_data[0]['x']
-        y0 = tag_data[0]['y']
+        x0 = tag_data[0][1]
+        y0 = tag_data[0][0]
 
         if start is not None:
             if x0 > start:
                 # Если `from_` раньше времени первой записи в выборке
-                tag_data.insert(0, {
-                    'x': start,
-                    'y': None,
-                    'q': None,
-                })
+                tag_data.insert(0, (None, start, None))
 
             if len(tag_data) == 1:
                 if x0 < start:
-                    tag_data[0]['x'] = start
-                    tag_data.append({
-                        'x': now_ms,
-                        'y': y0,
-                        'q': tag_data[0]['q'],
-                    })
+                    tag_data[0] = (tag_data[0][0], start, tag_data[0][2])
+                    tag_data.append((y0, now_ms, tag_data[0]['q']))
                 return tag_data
 
-            x1, y1 = self._last_point(tag_data[1]['x'], tag_data)
+            x1, y1 = self._last_point(tag_data[1][1], tag_data)
             if x1 == start:
                 # Если время второй записи равно `from`,
                 # то запись "перед from" не нужна
                 tag_data.pop(0)
 
             if x0 < start < x1:
-                tag_data[0]['x'] = start
+                tag_data[0] = (tag_data[0][0], start, tag_data[0][2])
                 if tag_cache["step"]:
-                    tag_data[0]['y'] = y0
+                    tag_data[0] = (y0, tag_data[0][1], tag_data[0][2])
                 else:
-                    tag_data[0]['y'] = linear_interpolated(
-                        (x0, y0), (x1, y1), start
+                    tag_data[0] = (
+                        linear_interpolated(
+                            (x0, y0), (x1, y1), start
+                        ), tag_data[0][1], tag_data[0][2]
                     )
 
         if finish is not None:
             # (xn; yn) - запись "после to"
-            xn = tag_data[-1]['x']
-            yn = tag_data[-1]['y']
+            xn = tag_data[-1][1]
+            yn = tag_data[-1][0]
 
             # (xn_1; yn_1) - запись перед значением `to`
             try:
-                xn_1, yn_1 = self._last_point(tag_data[-2]['x'], tag_data)
+                xn_1, yn_1 = self._last_point(tag_data[-2][1], tag_data)
             except IndexError:
                 xn_1 = -1
                 yn_1 = None
@@ -867,28 +861,21 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 tag_data.pop()
 
             if xn_1 < finish < xn:
-                tag_data[-1]['x'] = finish
-                tag_data[-1]['q'] = tag_data[-2]['q']
                 if tag_cache["step"]:
-                    tag_data[-1]['y'] = yn_1
+                    y = yn_1
                 else:
-                    tag_data[-1]['y'] = linear_interpolated(
+                    y = linear_interpolated(
                         (xn_1, yn_1), (xn, yn), finish
                     )
+                tag_data[-1] = (
+                    y, finish, tag_data[-2][2]
+                )
 
             if finish > xn:
-                tag_data.append({
-                    'x': finish,
-                    'y': yn,
-                    'q': tag_data[-1]['q'],
-                })
+                tag_data.append((yn, finish, tag_data[-1][2]))
 
-        if all((finish is None, now_ms > tag_data[-1]['x'])):
-            tag_data.append({
-                'x': now_ms,
-                'y': tag_data[-1]['y'],
-                'q': tag_data[-1]['q'],
-            })
+        if all((finish is None, now_ms > tag_data[-1][1])):
+            tag_data.append((tag_data[-1][0], now_ms, tag_data[-1][2]))
 
         tag_data = self._limit_data(tag_data, count, start, finish)
         return tag_data
