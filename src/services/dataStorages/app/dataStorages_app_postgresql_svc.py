@@ -220,7 +220,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 new_data_items = []
                 for item in data_items:
                     new_data_items.append(
-                        (item[0], json.dumps(item[1], ensure_ascii=False), item[2])
+                        (json.dumps(item[1], item[0], ensure_ascii=False), item[2])
                     )
                 data_items = new_data_items
 
@@ -228,14 +228,14 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 async with connection_pool.acquire() as conn:
                     async with conn.transaction(isolation='read_committed'):
                         if update:
-                            xs = [str(x) for x, _, _ in data_items]
+                            xs = [str(x) for _, x, _ in data_items]
                             q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
                             await conn.execute(q)
 
                         await conn.copy_records_to_table(
                             tag_tbl,
                             records=data_items,
-                            columns=('x', 'y', 'q'))
+                            columns=('y', 'x', 'q'))
 
                 '''
                 await self._post_message(mes={
