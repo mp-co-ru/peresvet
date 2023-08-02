@@ -24,7 +24,7 @@ class WSDataGetUser(User):
             self.ids += js["4"]
 
         self.pack_size = self.environment.parsed_options.tags_in_pack
-        
+
         self.ws = websocket.WebSocket()
         self.ws.settimeout(10)
         self.ws.connect(self.host)
@@ -34,12 +34,15 @@ class WSDataGetUser(User):
         tags = random.sample(self.ids, self.pack_size)
 
         data = {
-            "tagId": tags
+            "action": "get",
+            "data": {
+                "tagId": tags
+            }
         }
         e = None
         try:
             json_data = json.dumps(data)
-            
+
             start_time = time.time()
 
             g = gevent.spawn(self.ws.send, json_data)
@@ -59,7 +62,7 @@ class WSDataGetUser(User):
             request_type='ws', name=self.host,
             response_time=elapsed,
             response_length=0, exception=e
-        )            
+        )
 
     def on_close(self):
         self.ws.close()
