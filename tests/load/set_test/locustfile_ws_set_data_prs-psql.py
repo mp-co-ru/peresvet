@@ -81,9 +81,7 @@ class WSDataSetUser(User):
             tag_item = {
                 "tagId": tag,
                 "data": [
-                    {
-                        "y": self.rand_int
-                    }
+                    (self.rand_int)
                 ]
             }
             payload["data"]["data"].append(tag_item)
@@ -102,9 +100,7 @@ class WSDataSetUser(User):
             tag_item = {
                 "tagId": tag,
                 "data": [
-                    {
-                        "y": self.rand_float
-                    }
+                    (self.rand_float)
                 ]
             }
             payload["data"]["data"].append(tag_item)
@@ -123,9 +119,7 @@ class WSDataSetUser(User):
             tag_item = {
                 "tagId": tag,
                 "data": [
-                    {
-                        "y": self.rand_str
-                    }
+                    (self.rand_str)
                 ]
             }
             payload["data"]["data"].append(tag_item)
@@ -144,9 +138,7 @@ class WSDataSetUser(User):
             tag_item = {
                 "tagId": tag,
                 "data": [
-                    {
-                        "y": self.rand_json
-                    }
+                    (self.rand_json)
                 ]
             }
             payload["data"]["data"].append(tag_item)

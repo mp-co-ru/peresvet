@@ -194,7 +194,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                     "data": [
                         {
                             "tagId": "<some_id>",
-                            "data": [(x, y, q)]
+                            "data": [(y, x, q)]
                         }
                     ]
                 }
@@ -220,7 +220,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 new_data_items = []
                 for item in data_items:
                     new_data_items.append(
-                        (item[0], json.dumps(item[1], ensure_ascii=False), item[2])
+                        (json.dumps(item[0], ensure_ascii=False), item[1], item[2])
                     )
                 data_items = new_data_items
 
@@ -228,14 +228,14 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 async with connection_pool.acquire() as conn:
                     async with conn.transaction(isolation='read_committed'):
                         if update:
-                            xs = [str(x) for x, _, _ in data_items]
+                            xs = [str(x) for _, x, _ in data_items]
                             q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
                             await conn.execute(q)
 
                         await conn.copy_records_to_table(
                             tag_tbl,
                             records=data_items,
-                            columns=('x', 'y', 'q'))
+                            columns=('y', 'x', 'q'))
 
                 '''
                 await self._post_message(mes={
@@ -432,98 +432,6 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         except Exception as ex:
             self._logger.error(f"Ошибка связи с базой данных: {ex}")
 
-
-    """"
-    class PrsReqGetData(BaseModel):
-        tagId: str | List[str] = Field(None,
-            title="Тег(-и)",
-            description=(
-                "Идентификатор тега или массив идентификаторов."
-            )
-        )
-        start: int | str = Field(None, title="Начало периода",
-            description=(
-                "Может быть либо целым числом, в этом случае это микросекунды, "
-                "либо строкой в формате ISO8601."
-        )
-        )
-
-        finish: int | str = Field(None, title="Конец периода",
-            description=(
-                "Может быть либо целым числом, в этом случае это микросекунды, "
-                "либо строкой в формате ISO8601."
-        )
-        )
-
-        #finish: int | str = None
-        maxCount: int = Field(None, title="Максимальное количество точек",
-            description=(
-                "Максимальное количество точек, возвращаемых для одного тега. "
-                "Если в хранилище для запрашиваемого периода находится "
-                "больше, чем maxCount точек, то в этом случае данные будут "
-                "интерполированы и возвращено maxCount точек. "
-                "Пример использования данной функциональности: "
-                "тренд на экране отображает значения тега за определённый период."
-                "Период пользователем может быть указан очень большим "
-                "и в хранилище для этого периода может быть очень много точек. "
-                "Но сам тренд на экране при этом имеет ширину, предположим, "
-                "800 точек и, соответственно, больше 800 точек не может "
-                "отобразить, поэтому и возвращать большее количество точек "
-                "не имеет смысла. В таком случае в ответе на запрос будет "
-                "выставлен флаг `excess` (для каждого тега в массиве `data`)."
-            )
-        )
-        format: bool | str = Field(False, title="Форматирование меток времени",
-            description=(
-                "Если присутствует и равен `true`, то метки времени будут "
-                "возвращены в виде строк в формате ISO8601 и с часовой зоной "
-                "сервера."
-            )
-        )
-        actual: bool = Field(False, title="Актуальные значение",
-            description=(
-                "Если присутствует и равен `true`, то будут возвращены только "
-                "реально записанные в хранилище значения."
-            )
-        )
-
-        value: Any = Field(None, title="Значение для поиска",
-            description="Фильтр по значению")
-
-        count: int = Field(None, title="Количество возвращаемых значений")
-
-        timeStep: int = Field(None, title="Период между соседними возвращаемыми значениями")
-
-        @validator('tagId', always=True)
-        def tagId_must_exists(cls, v):
-            if v is None:
-                raise ValueError("Должен присутствовать ключ 'tagId'")
-            if isinstance(v, str):
-                return [v]
-            return v
-
-        # always=True, because if finish is None it is set to current time
-        @validator('finish', always=True)
-        def finish_set_to_int(cls, v):
-            return t.ts(v)
-
-        # if start is None, validator will not be called
-        @validator('start')
-        def convert_start(cls, v):
-            return t.ts(v)
-
-        @validator('maxCount')
-        def maxCount_not_zero(cls, v):
-            if v is None:
-                return v
-
-            if isinstance(v, int) and v > 0:
-                return v
-
-            raise ValueError("Параметр maxCount должен быть целым числом и больше нуля.")
-    """
-
-
     async def _tag_get(self, mes: dict) -> dict:
         """_summary_
 
@@ -617,8 +525,6 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             self._logger.debug(f"No data to return")
             return result
 
-        self._logger.debug(f"Tasks done")
-
         for tag_id, task in tasks.items():
             tag_data = task.result()
 
@@ -669,8 +575,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         return result
 
     def _filter_data(
-            self, tag_data: List[dict], value: List[Any], tag_type_code: int,
-            tag_step: bool) -> List[dict]:
+            self, tag_data: List[tuple], value: List[Any], tag_type_code: int,
+            tag_step: bool) -> List[tuple]:
         def estimate(x1: int, y1: int | float, x2: int, y2: int | float, y: int | float) -> int:
             '''
             Функция принимает на вход две точки прямой и значение, координату X которого возвращает.
@@ -687,17 +593,17 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         if tag_step or tag_type_code not in [0, 1]:
             for item in tag_data:
                 if tag_type_code == 4:
-                    y = json.loads(item['y'])
+                    y = json.loads(item[0])
                 else:
-                    y = item['y']
+                    y = item[0]
                 if y in value:
                     res.append(item)
         else:
             for i in range(1, len(tag_data)):
-                y1 = tag_data[i - 1]['y']
-                y2 = tag_data[i]['y']
-                x1 = tag_data[i - 1]['x']
-                x2 = tag_data[i]['x']
+                y1 = tag_data[i - 1][0]
+                y2 = tag_data[i][0]
+                x1 = tag_data[i - 1][1]
+                x2 = tag_data[i][1]
                 if x1 == x2:
                     continue
                 if y1 in value:
@@ -712,8 +618,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                             continue
                         if ((y1 > val and y2 < val) or (y1 < val and y2 > val)):
                             x = estimate(x1, y1, x2, y2, val)
-                            res.append({"x": x, "y": val})
-            if tag_data[-1]['y'] in value:
+                            res.append((val, x, None))
+            if tag_data[-1][0] in value:
                 res.append(tag_data[-1])
         return res
 
@@ -722,7 +628,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                                      start: int,
                                      finish: int,
                                      count: int,
-                                     time_step: int) -> List[dict]:
+                                     time_step: int) -> List[tuple]:
         """ Получение интерполированных значений с шагом time_step
         """
         tag_data = await self._data_get_many(tag_cache,
@@ -733,11 +639,11 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         time_row = self._timestep_row(time_step, count, start, finish)
 
         if not tag_data:
-            return [{'x': x, 'y': None, 'q': None} for x in time_row]
+            return [(None, x, None) for x in time_row]
 
         return self._interpolate(tag_data, time_row)
 
-    def _interpolate(self, raw_data: List[dict], time_row: List[int]) -> List[dict]:
+    def _interpolate(self, raw_data: List[tuple], time_row: List[int]) -> List[tuple]:
         """ Получение линейно интерполированных значений для ряда ``time_row`` по
         действительным значениям из БД (``raw_data``)
 
@@ -753,13 +659,13 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         # Разбиение списка ``raw_data`` на подсписки по значению None
         # Если ``raw_data`` не имеет None, получается список [raw_data]
-        none_indexes = [idx for idx, val in enumerate(raw_data) if val['y'] is None]
+        none_indexes = [idx for idx, val in enumerate(raw_data) if val[0] is None]
         size = len(raw_data)
-        try:
+        if none_indexes:
             splitted_by_none = [raw_data[i: j+1] for i, j in
                 zip([0] + none_indexes, none_indexes +
                 ([size] if none_indexes[-1] != size else []))]
-        except IndexError:
+        else:
             splitted_by_none = [raw_data]
 
         data = []  # Результирующий список
@@ -767,13 +673,13 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             if len(period) == 1:
                 continue
 
-            key_x = lambda d: d['x']
-            min_ts = min(period, key=key_x)['x']
-            max_ts = max(period, key=key_x)['x']
+            key_x = lambda d: d[1]
+            min_ts = min(period, key=key_x)[1]
+            max_ts = max(period, key=key_x)[1]
             is_last_period = period == splitted_by_none[-1]
 
             # В каждый подсписок добавляются значения из ряда ``time_row``
-            period = [{'x': ts, 'y': None,'q': None} \
+            period = [(None , ts, None) \
                       for ts in time_row if min_ts <= ts < max_ts] + period
             period.sort(key=key_x)
 
@@ -783,21 +689,21 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             # Расширенный подсписок заворачивается в DataFrame и индексируется по 'x'
             df = pd.DataFrame(
                 period,
-                index=[r['x'] for r in period]
-            ).drop_duplicates(subset='x', keep='last')
+                index=[r[1] for r in period]
+            ).drop_duplicates(subset=1, keep='last')
 
             # линейная интерполяция значений 'y' в датафрейме для числовых тэгов
             # заполнение NaN полей ближайшими не-NaN для нечисловых тэгов
-            df[['x', 'y']] = df[['x', 'y']].interpolate(
-                method=('pad', 'index')[is_numeric_dtype(df['y'])]
+            df[[1, 0]] = df[[1, 0]].interpolate(
+                method=('pad', 'index')[is_numeric_dtype(df[0])]
             )
 
             # None-значения 'q' заполняются ближайшим не-None значением сверху
-            df['q'].fillna(method='ffill', inplace=True)
+            df[2].fillna(method='ffill', inplace=True)
 
             # Удаление из датафрейма всех элементов, чьи 'x' не принадлежат ``time_row``
-            df = df.loc[df['x'].isin(time_row)]
-            df[['y', 'q']] = df[['y', 'q']].replace({np.nan: None})
+            df = df.loc[df[1].isin(time_row)]
+            df[[0, 2]] = df[[0, 2]].replace({np.nan: None})
 
             # Преобразование получившегося датафрейма и добавление значений к
             # результирующему списку
@@ -849,8 +755,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             row.reverse()
         return row
 
-    def _last_point(self, x: int, data: List[dict]) -> Tuple[int, Any]:
-        return (x, list(filter(lambda rec: rec['x'] == x, data))[-1]['y'])
+    def _last_point(self, x: int, data: List[tuple]) -> Tuple[int, Any]:
+        return (x, list(filter(lambda rec: rec[1] == x, data))[-1][0])
 
     async def _data_get_one(self,
                             tag_cache: dict,
@@ -864,29 +770,30 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         if not tag_data:
             if finish is not None:
-                return [{
-                    'x': finish,
-                    'y': None,
-                    'q': None,
-                }]
+                return [(None, finish, None)]
 
-        x0 = tag_data[0]['x']
-        y0 = tag_data[0]['y']
+        x0 = tag_data[0][1]
+        y0 = tag_data[0][0]
         try:
-            x1, y1 = self._last_point(tag_data[1]['x'], tag_data)
-            if not tag_cache["table"]:
-                tag_data[0]['y'] = linear_interpolated(
-                    (x0, y0), (x1, y1), finish
+            x1, y1 = self._last_point(tag_data[1][1], tag_data)
+            if not tag_cache["step"]:
+                tag_data[0] = (
+                    linear_interpolated(
+                        (x0, y0), (x1, y1), finish
+                    ), tag_data[0][1], tag_data[2]
                 )
 
+            # TODO: избавиться от этого try/except логикой приложения, т.к.
+            # try/except отнимает слишком много времени
+
             tag_data.pop()
+
         except IndexError:
             # Если в выборке только одна запись и `to` меньше, чем `x` этой записи...
             if x0 > finish:
-                tag_data[0]['y'] = None
-                tag_data[0]['q'] = None
+                tag_data[0] = (None, tag_data[0][1], None)
         finally:
-            tag_data[0]['x'] = finish
+            tag_data[0] = (tag_data[0][0], finish, tag_data[0][2])
 
         return tag_data
 
@@ -898,7 +805,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         """ Получение значения на текущую метку времени
         """
         tag_data = await self._read_data(
-            tag_cache["table"], start, finish,
+            tag_cache, start, finish,
             (Order.CN_DESC if count is not None and start is None else Order.CN_ASC),
             count, True, True, None
         )
@@ -906,51 +813,45 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             return []
 
         now_ms = t.ts()
-        x0 = tag_data[0]['x']
-        y0 = tag_data[0]['y']
+        x0 = tag_data[0][1]
+        y0 = tag_data[0][0]
 
         if start is not None:
             if x0 > start:
                 # Если `from_` раньше времени первой записи в выборке
-                tag_data.insert(0, {
-                    'x': start,
-                    'y': None,
-                    'q': None,
-                })
+                tag_data.insert(0, (None, start, None))
 
             if len(tag_data) == 1:
                 if x0 < start:
-                    tag_data[0]['x'] = start
-                    tag_data.append({
-                        'x': now_ms,
-                        'y': y0,
-                        'q': tag_data[0]['q'],
-                    })
+                    tag_data[0] = (tag_data[0][0], start, tag_data[0][2])
+                    tag_data.append((y0, now_ms, tag_data[0][2]))
                 return tag_data
 
-            x1, y1 = self._last_point(tag_data[1]['x'], tag_data)
+            x1, y1 = self._last_point(tag_data[1][1], tag_data)
             if x1 == start:
                 # Если время второй записи равно `from`,
                 # то запись "перед from" не нужна
                 tag_data.pop(0)
 
             if x0 < start < x1:
-                tag_data[0]['x'] = start
+                tag_data[0] = (tag_data[0][0], start, tag_data[0][2])
                 if tag_cache["step"]:
-                    tag_data[0]['y'] = y0
+                    tag_data[0] = (y0, tag_data[0][1], tag_data[0][2])
                 else:
-                    tag_data[0]['y'] = linear_interpolated(
-                        (x0, y0), (x1, y1), start
+                    tag_data[0] = (
+                        linear_interpolated(
+                            (x0, y0), (x1, y1), start
+                        ), tag_data[0][1], tag_data[0][2]
                     )
 
         if finish is not None:
             # (xn; yn) - запись "после to"
-            xn = tag_data[-1]['x']
-            yn = tag_data[-1]['y']
+            xn = tag_data[-1][1]
+            yn = tag_data[-1][0]
 
             # (xn_1; yn_1) - запись перед значением `to`
             try:
-                xn_1, yn_1 = self._last_point(tag_data[-2]['x'], tag_data)
+                xn_1, yn_1 = self._last_point(tag_data[-2][1], tag_data)
             except IndexError:
                 xn_1 = -1
                 yn_1 = None
@@ -961,28 +862,21 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 tag_data.pop()
 
             if xn_1 < finish < xn:
-                tag_data[-1]['x'] = finish
-                tag_data[-1]['q'] = tag_data[-2]['q']
                 if tag_cache["step"]:
-                    tag_data[-1]['y'] = yn_1
+                    y = yn_1
                 else:
-                    tag_data[-1]['y'] = linear_interpolated(
+                    y = linear_interpolated(
                         (xn_1, yn_1), (xn, yn), finish
                     )
+                tag_data[-1] = (
+                    y, finish, tag_data[-2][2]
+                )
 
             if finish > xn:
-                tag_data.append({
-                    'x': finish,
-                    'y': yn,
-                    'q': tag_data[-1]['q'],
-                })
+                tag_data.append((yn, finish, tag_data[-1][2]))
 
-        if all((finish is None, now_ms > tag_data[-1]['x'])):
-            tag_data.append({
-                'x': now_ms,
-                'y': tag_data[-1]['y'],
-                'q': tag_data[-1]['q'],
-            })
+        if all((finish is None, now_ms > tag_data[-1][1])):
+            tag_data.append((tag_data[-1][0], now_ms, tag_data[-1][2]))
 
         tag_data = self._limit_data(tag_data, count, start, finish)
         return tag_data
@@ -1037,7 +931,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         async with tag_cache["ds"].acquire() as conn:
             async with conn.transaction():
                 async for r in conn.cursor(*query_args):
-                    records.append(dict(r))
+                    records.append((r.get('y'), r.get('x'), r.get('q')))
         return records
 
     def _get_values_filter(self, value: Any) -> tuple:
