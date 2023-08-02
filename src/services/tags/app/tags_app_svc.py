@@ -68,7 +68,9 @@ class TagsAppAPI(svc.Svc):
         return final_res
 
     async def _data_set(self, mes: dict) -> None:
+
         for tag_item in mes["data"]["data"]:
+
             await self._post_message({
                     "action": "tags.uploadData",
                     "data": {

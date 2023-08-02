@@ -525,8 +525,6 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             self._logger.debug(f"No data to return")
             return result
 
-        self._logger.debug(f"Tasks done")
-
         for tag_id, task in tasks.items():
             tag_data = task.result()
 
@@ -778,20 +776,23 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         y0 = tag_data[0][0]
         try:
             x1, y1 = self._last_point(tag_data[1][1], tag_data)
-            if not tag_cache["table"]:
+            if not tag_cache["step"]:
                 tag_data[0] = (
                     linear_interpolated(
                         (x0, y0), (x1, y1), finish
                     ), tag_data[0][1], tag_data[2]
                 )
 
+            # TODO: избавиться от этого try/except логикой приложения, т.к.
+            # try/except отнимает слишком много времени
+
             tag_data.pop()
+
         except IndexError:
             # Если в выборке только одна запись и `to` меньше, чем `x` этой записи...
             if x0 > finish:
                 tag_data[0] = (None, tag_data[0][1], None)
         finally:
-            tag_data[0]['x'] = finish
             tag_data[0] = (tag_data[0][0], finish, tag_data[0][2])
 
         return tag_data
@@ -804,7 +805,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         """ Получение значения на текущую метку времени
         """
         tag_data = await self._read_data(
-            tag_cache["table"], start, finish,
+            tag_cache, start, finish,
             (Order.CN_DESC if count is not None and start is None else Order.CN_ASC),
             count, True, True, None
         )
@@ -823,7 +824,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             if len(tag_data) == 1:
                 if x0 < start:
                     tag_data[0] = (tag_data[0][0], start, tag_data[0][2])
-                    tag_data.append((y0, now_ms, tag_data[0]['q']))
+                    tag_data.append((y0, now_ms, tag_data[0][2]))
                 return tag_data
 
             x1, y1 = self._last_point(tag_data[1][1], tag_data)
@@ -930,7 +931,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         async with tag_cache["ds"].acquire() as conn:
             async with conn.transaction():
                 async for r in conn.cursor(*query_args):
-                    records.append(r.get['y'], r.get['x'], r.get['q'])
+                    records.append((r.get('y'), r.get('x'), r.get('q')))
         return records
 
     def _get_values_filter(self, value: Any) -> tuple:
