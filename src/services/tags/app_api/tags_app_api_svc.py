@@ -25,7 +25,17 @@ class DataPointItem(NamedTuple):
     q: int | None = None
 
 def x_must_be_int(v):
-    return DataPointItem(v.y, t.ts(v.x), v.q)
+    match len(v):
+        case 0:
+            return DataPointItem(None, t.ts(None), None)
+        case 1:
+            return DataPointItem(v[0], t.ts(None), None)
+        case 2:
+            return DataPointItem(v[0], t.ts(v[1]), None)
+        case 3:
+            return DataPointItem(v[0], t.ts(v[1]), v[2])
+
+    return v
 
 class TagData(BaseModel):
     tagId: str = Field(
@@ -142,13 +152,14 @@ class TagsAppAPI(svc.Svc):
 
         res = await self._post_message(mes=body, reply=True)
 
-        final_res = {
-            "data": []
-        }
-        if payload["format"]:
+        if payload.format:
+            final_res = {
+                "data": []
+            }
+
             for tag_item in res["data"]:
                 new_tag_item = {
-                    "tagId": new_tag_item["tagId"],
+                    "tagId": tag_item["tagId"],
                     "data": []
                 }
                 for data_item in tag_item["data"]:
@@ -159,14 +170,14 @@ class TagsAppAPI(svc.Svc):
                     ))
                 final_res["data"].append(new_tag_item)
 
-        return final_res
+            return final_res
+
+        return res
 
     async def data_set(self, payload: AllData) -> None:
         body = {
             "action": "tags.set_data",
-            "data": {
-                "data": payload
-            }
+            "data": payload.model_dump()
         }
 
         return await self._post_message(mes=body, reply=False)
