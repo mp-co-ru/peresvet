@@ -21,6 +21,13 @@ def _(parser):
     )
 
 
+@events.init_command_line_parser.add_listener
+def _(parser):
+    parser.add_argument(
+        "--vals_in_tag", type=int, choices=[1, 5, 10, 100],
+        default=1, help="How many values in one tag."
+    )
+
 
 class WSDataSetUser(User):
 
@@ -78,13 +85,14 @@ class WSDataSetUser(User):
             }
         }
         for tag in tags:
+            data = []
+            for _ in range(self.vals_in_tag):
+                    data.append({
+                        "y": self.rand_int
+                    })
             tag_item = {
                 "tagId": tag,
-                "data": [
-                    {
-                        "y": self.rand_int
-                    }
-                ]
+                "data": data
             }
             payload["data"]["data"].append(tag_item)
         self.send(payload)
@@ -99,13 +107,14 @@ class WSDataSetUser(User):
             }
         }
         for tag in tags:
+            data = []
+            for _ in range(self.vals_in_tag):
+                    data.append({
+                        "y": self.rand_float
+                    })
             tag_item = {
                 "tagId": tag,
-                "data": [
-                    {
-                        "y": self.rand_float
-                    }
-                ]
+                "data": data
             }
             payload["data"]["data"].append(tag_item)
         self.send(payload)
@@ -120,13 +129,14 @@ class WSDataSetUser(User):
             }
         }
         for tag in tags:
+            data = []
+            for _ in range(self.vals_in_tag):
+                    data.append({
+                        "y": self.rand_str
+                    })
             tag_item = {
                 "tagId": tag,
-                "data": [
-                    {
-                        "y": self.rand_str
-                    }
-                ]
+                "data": data
             }
             payload["data"]["data"].append(tag_item)
         self.send(payload)
@@ -141,13 +151,14 @@ class WSDataSetUser(User):
             }
         }
         for tag in tags:
+            data = []
+            for _ in range(self.vals_in_tag):
+                    data.append({
+                        "y": self.rand_json
+                    })
             tag_item = {
                 "tagId": tag,
-                "data": [
-                    {
-                        "y": self.rand_json
-                    }
-                ]
+                "data": data
             }
             payload["data"]["data"].append(tag_item)
         self.send(payload)
@@ -190,6 +201,7 @@ class WSDataSetUser(User):
             "third_field": ''.join(random.choice(self.letters) for _ in range(30))
         }
         self.pack_size = self.environment.parsed_options.tags_in_pack
+        self.vals_in_tag = self.environment.parsed_options.vals_in_tag
 
         # прочитаем из файлов коды тегов каждого типа
         with open("/mnt/locust/tags_in_postgres.json", "r") as f:
