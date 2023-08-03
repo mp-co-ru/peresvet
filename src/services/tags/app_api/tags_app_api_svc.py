@@ -3,8 +3,9 @@
 и класс сервиса ``tags_api_crud_svc``.
 """
 import sys
-from typing import Any, List
-from pydantic import BaseModel, Field, field_validator, validator, ValidationError
+from typing import Any, List, NamedTuple
+from typing_extensions import Annotated
+from pydantic import BaseModel, Field, field_validator, validator, BeforeValidator, ValidationError
 import json
 
 from fastapi import APIRouter
@@ -18,48 +19,29 @@ from src.common.api_crud_svc import valid_uuid
 from src.services.tags.app_api.tags_app_api_settings import TagsAppAPISettings
 import src.common.times as t
 
-class DataPointItem(BaseModel):
-    x: int | str | None = Field(
-        default_factory=t.now_int,
-        title="Метка времени",
-        description=(
-            "Метка времени значения. Может быть: "
-            "строкой в формате ISO8601; "
-            "целым числом, в этом случае число - количество микросекунд, "
-            "начиная с 1 января 1970 года; NULL - тогда платформа присваивает "
-            "в качестве метки времени текущий момент."
-        )
-    )
-    y: float | dict | str | int = Field(
-        None,
-        title="Значение тега"
-    )
-    q: int = Field(
-        None,
-        title="Качество значения",
-        description="None = хорошее качество значения."
-    )
+class DataPointItem(NamedTuple):
+    y: float | dict | str | int | None = None
+    x: int | str | None = None
+    q: int | None = None
 
-    @field_validator('x')
-    def x_in_iso_format(cls, v: Any) -> int:
-        # если x в виде строки, то строка должна быть в формате ISO9601
-        try:
-            return t.ts(v)
-        except ValueError as ex:
-            raise ValueError(
-                (
-                    "Метка времени должна быть строкой в формате ISO8601, "
-                    "целым числом или отсутствовать."
-                )
-            )
+def x_must_be_int(v):
+    match len(v):
+        case 0:
+            return DataPointItem(None, t.ts(None), None)
+        case 1:
+            return DataPointItem(v[0], t.ts(None), None)
+        case 2:
+            return DataPointItem(v[0], t.ts(v[1]), None)
+        case 3:
+            return DataPointItem(v[0], t.ts(v[1]), v[2])
+
+    return v
 
 class TagData(BaseModel):
     tagId: str = Field(
         title="id тега"
     )
-    data: List[DataPointItem] = Field(
-        "Данные тега"
-    )
+    data: List[Annotated[DataPointItem, BeforeValidator(x_must_be_int)]]
 
     validate_id = validator('tagId', allow_reuse=True)(valid_uuid)
 
@@ -163,33 +145,39 @@ class TagsAppAPI(svc.Svc):
 
     async def data_get(self, payload: DataGet) -> dict:
 
-        self._logger.debug(f"svc: {self._config.svc_name}; com: data_get; payload: {payload.model_dump()}")
-
         body = {
             "action": "tags.get_data",
             "data": payload.model_dump()
         }
 
         res = await self._post_message(mes=body, reply=True)
+
+        if payload.format:
+            final_res = {
+                "data": []
+            }
+
+            for tag_item in res["data"]:
+                new_tag_item = {
+                    "tagId": tag_item["tagId"],
+                    "data": []
+                }
+                for data_item in tag_item["data"]:
+                    new_tag_item["data"].append((
+                        data_item[0],
+                        t.int_to_local_timestamp(data_item[1]),
+                        data_item[2]
+                    ))
+                final_res["data"].append(new_tag_item)
+
+            return final_res
+
         return res
 
     async def data_set(self, payload: AllData) -> None:
-        new_data = []
-        for tag_item in payload.data:
-            new_tag_item = {
-                "tagId": tag_item.tagId,
-                "data": []
-            }
-            for data_item in tag_item.data:
-                new_tag_item["data"].append((data_item.x, data_item.y, data_item.q))
-
-            new_data.append(new_tag_item)
-
         body = {
             "action": "tags.set_data",
-            "data": {
-                "data": new_data
-            }
+            "data": payload.model_dump()
         }
 
         return await self._post_message(mes=body, reply=False)

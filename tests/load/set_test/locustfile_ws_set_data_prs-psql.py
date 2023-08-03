@@ -87,9 +87,7 @@ class WSDataSetUser(User):
         for tag in tags:
             data = []
             for _ in range(self.vals_in_tag):
-                    data.append({
-                        "y": self.rand_int
-                    })
+                    data.append([self.rand_int])
             tag_item = {
                 "tagId": tag,
                 "data": data
@@ -109,9 +107,7 @@ class WSDataSetUser(User):
         for tag in tags:
             data = []
             for _ in range(self.vals_in_tag):
-                    data.append({
-                        "y": self.rand_float
-                    })
+                    data.append([self.rand_float])
             tag_item = {
                 "tagId": tag,
                 "data": data
@@ -131,9 +127,7 @@ class WSDataSetUser(User):
         for tag in tags:
             data = []
             for _ in range(self.vals_in_tag):
-                    data.append({
-                        "y": self.rand_str
-                    })
+                    data.append([self.rand_str])
             tag_item = {
                 "tagId": tag,
                 "data": data
@@ -153,9 +147,7 @@ class WSDataSetUser(User):
         for tag in tags:
             data = []
             for _ in range(self.vals_in_tag):
-                    data.append({
-                        "y": self.rand_json
-                    })
+                    data.append([self.rand_int])
             tag_item = {
                 "tagId": tag,
                 "data": data
