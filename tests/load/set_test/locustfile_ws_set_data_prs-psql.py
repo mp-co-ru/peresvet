@@ -84,6 +84,7 @@ class WSDataSetUser(User):
                 "data": []
             }
         }
+        
         for tag in tags:
             data = []
             for _ in range(self.vals_in_tag):

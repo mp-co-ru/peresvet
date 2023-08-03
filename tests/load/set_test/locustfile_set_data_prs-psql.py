@@ -65,6 +65,7 @@ class DataSetUser(FastHttpUser):
                 "data": []
             }
         }
+        
         for tag in tags:
             data = []
             for _ in range(self.vals_in_tag):
