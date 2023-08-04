@@ -9,8 +9,6 @@ from pandas.api.types import is_numeric_dtype
 import numpy as np
 import time
 
-from ldap.dn import str2dn, dn2str
-
 sys.path.append(".")
 
 from dataStorages_app_postgresql_settings import DataStoragesAppPostgreSQLSettings
@@ -329,10 +327,10 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             while not connected:
                 try:
                     self._connection_pools[ds[0]] = await apg.create_pool(dsn=dsn)
-                    self._logger.info(f"Связь с базой данных {dsn} установлена.")
+                    self._logger.info(f"Связь с базой данных {ds[0]} установлена.")
                     connected = True
                 except Exception as ex:
-                    self._logger.error(f"Ошибка связи с базой данных '{dsn}': {ex}")
+                    self._logger.error(f"Ошибка связи с базой данных '{ds[0]}': {ex}")
                     await asyncio.sleep(5)
 
             search_tags = {
