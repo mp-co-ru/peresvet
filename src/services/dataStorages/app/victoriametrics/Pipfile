@@ -17,6 +17,7 @@ pandas = "*"
 numpy = "*"
 asyncpg = "*"
 uvloop = "*"
+aiohttp="*"
 
 [requires]
 python_version = "3.10"

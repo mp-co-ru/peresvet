@@ -20,94 +20,6 @@ from src.common.consts import (
     Order
 )
 
-class PrsVictoriametricsEntry(PrsDataStorageEntry):
-
-    def __init__(self, **kwargs):
-        super(PrsVictoriametricsEntry, self).__init__(**kwargs)
-
-        if isinstance(self.data.attributes.prsJsonConfigString, dict):
-            js_config = self.data.attributes.prsJsonConfigString
-        else:
-            js_config = json.loads(self.data.attributes.prsJsonConfigString)
-        self.put_url = js_config['putUrl']
-        self.get_url = js_config['getUrl']
-
-        #self.session = None
-        self.session = aiohttp.ClientSession()
-
-    def _format_tag_data_store(self, tag: PrsTagEntry) -> None | Dict:
-        if tag.data.attributes.prsStore:
-            data_store = json.loads(tag.data.attributes.prsStore)
-        else:
-            data_store = {}
-        if data_store.get('metric') is None:
-            data_store['metric'] = (tag.data.attributes.cn, tag.data.attributes.cn[0])[isinstance(tag.data.attributes.cn, list)] # cn is array of str!
-
-            # имя метрики не может начинаться с цифр и не может содержать дефисов
-            if tag.id == data_store['metric']:
-                data_store['metric'] = f"t_{data_store['metric'].replace('-', '_')}"
-
-        return data_store
-
-    async def connect(self) -> int:
-        #if self.session is None:
-        #    self.session = aiohttp.ClientSession()
-        async with self.session.get(f"{self.get_url}?match[]=vm_free_disk_space_bytes") as response:
-            return response.status
-
-    async def data_set(self, data):
-        # data:
-        # {
-        #        "<tag_id>": [(x, y, q)]
-        # }
-        #
-        # method forms archive:
-        # [
-        #     {
-        #         "metric": "sys.cpu.nice",
-        #         "timestamp": 1346846400,
-        #         "value": 18,
-        #         "tags": {
-        #            "host": "web01",
-        #            "dc": "lga"
-        #         }
-        #     },
-        #     {
-        #         "metric": "sys.cpu.nice",
-        #         "timestamp": 1346846400,
-        #         "value": 9,
-        #         "tags": {
-        #            "host": "web02",
-        #            "dc": "lga"
-        #         }
-        #     }
-        # ]
-
-        formatted_data = []
-        for key, item in data.items():
-            # формат prsStore у тэга:
-            #
-            #   {
-            #        "metric": "metric_name",
-            #        "tags": {
-            #            "t1": "v1",
-            #            "t2": "v2"
-            #        }
-            #    }
-            tag_metric = svc.get_tag_cache(key, "data_storage")
-            for data_item in item:
-                x, y, _ = data_item
-                tag_metric['value'] = y
-                tag_metric['timestamp'] = round(x / 1000)
-                formatted_data.append(copy.deepcopy(tag_metric))
-
-        resp = await self.session.post(self.put_url, json=formatted_data)
-
-        svc.logger.debug(f"Set data status: {resp.status}")
-
-        return Response(status_code=resp.status)
-
-
 def linear_interpolated(start_point: Tuple[int, Any],
                         end_point: Tuple[int, Any],
                         x: int):
@@ -187,7 +99,7 @@ class DataStoragesAppVictoriametrics(svc.Svc):
         # имя метрики не может начинаться с цифр и не может содержать дефисов
         mes["data"]["attributes"].setdefault(
             "prsStore",
-            {"metric": f't_{mes["data"]["tagId"].replace("-", "_")}'}
+            {"metric": f'{mes["data"]["tagId"].replace("-", "_")}'}
         )
 
         tag_params = self._tags.get(mes["data"]["tagId"])
@@ -261,7 +173,7 @@ class DataStoragesAppVictoriametrics(svc.Svc):
                 return
 
             connection = tag_params["ds"]
-            metric = copy.deepcopy(tag_params["metric"])
+            metric = tag_params["metric"]
             tag_value_type = tag_params["value_type"]
             update = tag_params["update"]
             data_items = payload["data"]
@@ -269,9 +181,12 @@ class DataStoragesAppVictoriametrics(svc.Svc):
             formatted_data = []
             for item in data_items:
                 y, x, _ = item
-                metric['value'] = (y, json.dumps(y, ensure_ascii=False))[tag_value_type == 4]
-                metric['timestamp'] = round(x / 1000)
-                formatted_data.append(copy.deepcopy(metric))
+                vm_data_item = {
+                    'metric': metric,
+                    'value': (y, json.dumps(y, ensure_ascii=False))[tag_value_type == 4],
+                    'timestamp': round(x / 1000)
+                }
+                formatted_data.append(vm_data_item)
 
             resp = await connection["conn"].post(connection["putUrl"], json=formatted_data)
 
@@ -499,13 +414,13 @@ class DataStoragesAppVictoriametrics(svc.Svc):
                 continue
 
             ds_with_tags.setdefault(
-                tag_params["ds"]["putUrl"],
+                tag_params["ds"]["getUrl"],
                 {
                     "conn": tag_params["ds"]["conn"],
                     "tags": []
                 }
             )
-            ds_with_tags[tag_params["ds"]["putUrl"]]["tags"].append(tag_id)
+            ds_with_tags[tag_params["ds"]["getUrl"]]["tags"].append(tag_params["metric"])
 
         query_part = ""
         if mes["data"]["start"]:
@@ -516,19 +431,21 @@ class DataStoragesAppVictoriametrics(svc.Svc):
             query_part = f"&{query_part}step={mes['data']['timeStep']/1000000}"
 
         # допущение: метрика тега - id тега.
-        res_data = {"data: []"}
+        res_data = {"data": []}
         for key, value in ds_with_tags.items():
             metrics = f'({",".join(value["tags"])})'
             full_url = f"{key}?query={metrics}{query_part}"
+
             async with value["conn"].get(full_url) as response:
                 res_json = await response.json()
+
                 for item in res_json["data"]["result"]:
                     tag_item = {
-                        "tagId": item["metric"]["__name__"],
+                        "tagId": item["metric"]["__name__"].replace("_", "-"),
                         "data": []
                     }
                     for val in item["values"]:
-                        match self._tags.get(tag_item["tag_id"])["value_type"]:
+                        match self._tags.get(tag_item["tagId"])["value_type"]:
                             case 0:
                                 value = int(val[1])
                             case 1:
