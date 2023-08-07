@@ -90,7 +90,7 @@ class Hierarchy:
 
         try:
             UUID(node)
-        except ValueError:
+        except Exception:
             return False
 
         return True
