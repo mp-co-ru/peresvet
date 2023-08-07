@@ -3,7 +3,7 @@ version: '3.9'
 services:
   vm_load_tests:
     image: victoriametrics/victoria-metrics
-    container_name: vm
+    hostname: vm_load_tests
     command: -opentsdbHTTPListenAddr=:4242
     ports:
       - 8428:8428
