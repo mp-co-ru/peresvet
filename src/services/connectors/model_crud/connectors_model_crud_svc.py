@@ -18,26 +18,44 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     """
 
+    _outgoing_commands = {
+        "created": "connectors.created",
+        "mayUpdate": "connectors.mayUpdate",
+        "updating": "connectors.updating",
+        "updated": "connectors.updated",
+        "mayDelete": "connetors.mayDelete",
+        "deleting": "connectors.deleting",
+        "deleted": "connectors.deleted"
+    }
+
     def __init__(self, settings: ConnectorsModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
+
+    def _set_incoming_commands(self) -> dict:
+        return {
+            "connectors.create": self._create,
+            "connectors.read": self._read,
+            "connectors.update": self._update,
+            "connectors.delete": self._delete,
+        }
 
     async def _reading(self, mes: dict) -> dict:
         pass
 
-    async def _creating(self, mes: dict, new_id: str) -> None:
-        system_node = await anext(self._hierarchy.search(payload={
+    async def _further_create(self, mes: dict, new_id: str) -> None:
+        system_node = await self._hierarchy.search(payload={
             "base": new_id,
             "scope": hierarchy.CN_SCOPE_ONELEVEL,
             "filter": {
                 "cn": ["system"]
             },
             "attributes": ["cn"]
-        }))
+        })
         if not system_node:
             self._logger.error(f"В теге {new_id} отсутствует узел `system`.")
             return
 
-        system_node_id = system_node[0]
+        system_node_id = system_node[0][0]
 
         linkTags = mes.get('data').get('linkTags')
 
