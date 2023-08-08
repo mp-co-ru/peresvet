@@ -1,6 +1,7 @@
 import sys
 import json
 import asyncio
+import aiohttp
 import numbers
 import copy
 from typing import Any, List, Tuple
@@ -9,20 +10,15 @@ from pandas.api.types import is_numeric_dtype
 import numpy as np
 import time
 
-from ldap.dn import str2dn, dn2str
-
 sys.path.append(".")
 
-from dataStorages_app_postgresql_settings import DataStoragesAppPostgreSQLSettings
+from dataStorages_app_victoriametrics_settings import DataStoragesAppVictoriametricsSettings
 from src.common import svc
 import src.common.times as t
 from src.common.consts import (
     CNTagValueTypes as TVT,
     Order
 )
-
-import asyncpg as apg
-from asyncpg.exceptions import PostgresError
 
 def linear_interpolated(start_point: Tuple[int, Any],
                         end_point: Tuple[int, Any],
@@ -56,12 +52,15 @@ def linear_interpolated(start_point: Tuple[int, Any],
 
     return (x-x0)/(x1-x0)*(y1-y0)+y0
 
-class DataStoragesAppPostgreSQL(svc.Svc):
+class DataStoragesAppVictoriametrics(svc.Svc):
 
     def __init__(
-            self, settings: DataStoragesAppPostgreSQLSettings, *args, **kwargs
+            self, settings: DataStoragesAppVictoriametricsSettings, *args, **kwargs
         ):
         super().__init__(settings, *args, **kwargs)
+
+        # "putUrl": "http://ws_vm:4242/api/put",
+        # "getUrl": "http://localhost:8428/api/v1/query_range?query=tag1&start=1691131350000"
 
         self._connection_pools = {}
         self._tags = {}
@@ -78,6 +77,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
     async def _reject_message(self, mes: dict) -> bool:
         return False
 
+    # fixed
     async def _link_tag(self, mes: dict) -> dict:
         """Метод привязки тега к хранилищу.
         Атрибут ``prsStore`` должен быть вида
@@ -96,70 +96,36 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         """
 
-        async with self._connection_pools[mes["data"]["dataStorageId"]].acquire() as conn:
+        # имя метрики не может начинаться с цифр и не может содержать дефисов
+        mes["data"]["attributes"].setdefault(
+            "prsStore",
+            {"metric": f'{mes["data"]["tagId"].replace("-", "_")}'}
+        )
 
-            mes["data"]["attributes"].setdefault(
-                "prsStore",
-                {"tableName": f't_{mes["data"]["tagId"]}'}
-            )
+        tag_params = self._tags.get(mes["data"]["tagId"])
+        if tag_params:
+            metric = tag_params['metric']
+            if mes["data"]["attributes"]["prsStore"]["metric"] == metric:
+                self._logger.warning(f"Тег {mes['data']['tagId']} уже привязан")
+                return
 
-            tag_params = self._tags.get(mes["data"]["tagId"])
-            if tag_params:
-                tbl_name = tag_params['table']
-                if mes["data"]["attributes"]["prsStore"]["tableName"] == tbl_name:
-                    self._logger.warning(f"Тег {mes['data']['tagId']} уже привязан")
-                    return
+        metric = mes["data"]["attributes"]["prsStore"]["metric"]
 
-                await conn.execute(
-                    f'drop table if exists "{tbl_name}"'
-                )
+        tag_cache = await self._prepare_tag_data(
+            mes["data"]["tagId"],
+            mes["data"]["dataStorageId"]
+        )
+        tag_cache["metric"] = metric
+        cache_for_store = copy.deepcopy(tag_cache)
 
-            tbl_name = mes["data"]["attributes"]["prsStore"]["tableName"]
-
-            tag_cache = await self._prepare_tag_data(
-                mes["data"]["tagId"],
-                mes["data"]["dataStorageId"]
-            )
-            tag_cache["table"] = tbl_name
-            cache_for_store = copy.deepcopy(tag_cache)
-
-            tag_cache["ds"] = self._connection_pools[mes["data"]["dataStorageId"]]
-            match tag_cache["value_type"]:
-                case TVT.CN_INT:
-                    s_type = "bigint"
-                case TVT.CN_DOUBLE:
-                    s_type = "double precision"
-                case TVT.CN_STR:
-                    s_type = "text"
-                case TVT.CN_JSON:
-                    s_type = "jsonb"
-                case _:
-                    er_str = f"Тег: {mes['data']['tagId']}; неизвестный тип данных: {tag_cache['value_type']}"
-                    self._logger.error(er_str)
-                    return
-
-            query = (f'CREATE TABLE public."{tag_cache["table"]}" ('
-                    f'"id" serial primary key,'
-                    f'"x" bigint NOT NULL,'
-                    f'"y" {s_type},'
-                    f'"q" int);'
-                    # Создание индекса на поле "метка времени" ("ts")
-                    f'CREATE INDEX "{tag_cache["table"]}_idx" ON public."{tag_cache["table"]}" '
-                    f'USING btree ("x");')
-
-            if tag_cache["value_type"] == 4:
-                query += (f'CREATE INDEX "{tag_cache["table"]}_json__idx" ON public."{tag_cache["table"]}" '
-                            'USING gin ("y" jsonb_path_ops);')
-
-            await conn.execute(query)
-
-            self._tags[mes["data"]["tagId"]] = tag_cache
-
+        tag_cache["ds"] = self._connection_pools[mes["data"]["dataStorageId"]]
+        self._tags[mes["data"]["tagId"]] = tag_cache
 
         return {
             "prsStore": json.dumps(cache_for_store)
         }
 
+    # fixed
     async def _unlink_tag(self, mes: dict) -> None:
         """_summary_
 
@@ -175,15 +141,11 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             self._logger.warning(f"Тег {mes['data']['tagId']} не привязан к хранилищу.")
             return
 
-        async with tag_params["ds"].acquire() as conn:
-            await conn.execute(
-                f'drop table if exists "{tag_params["table"]}"'
-            )
-
         self._tags.pop(mes["data"]["tagId"])
 
         self._logger.info(f"Тег {mes['data']['tagId']} отвязан от хранилища.")
 
+    # fixed
     async def _tag_set(self, mes: dict) -> None:
         """
 
@@ -210,48 +172,30 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 )
                 return
 
-            connection_pool = tag_params["ds"]
-            tag_tbl = tag_params["table"]
+            connection = tag_params["ds"]
+            metric = tag_params["metric"]
             tag_value_type = tag_params["value_type"]
             update = tag_params["update"]
             data_items = payload["data"]
 
-            if tag_value_type == 4:
-                new_data_items = []
-                for item in data_items:
-                    new_data_items.append(
-                        (json.dumps(item[0], ensure_ascii=False), item[1], item[2])
-                    )
-                data_items = new_data_items
+            formatted_data = []
+            for item in data_items:
+                y, x, _ = item
+                vm_data_item = {
+                    'metric': metric,
+                    'value': (y, json.dumps(y, ensure_ascii=False))[tag_value_type == 4],
+                    'timestamp': round(x / 1000)
+                }
+                formatted_data.append(vm_data_item)
 
-            try:
-                async with connection_pool.acquire() as conn:
-                    async with conn.transaction(isolation='read_committed'):
-                        if update:
-                            xs = [str(x) for _, x, _ in data_items]
-                            q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
-                            await conn.execute(q)
+            resp = await connection["conn"].post(connection["putUrl"], json=formatted_data)
 
-                        await conn.copy_records_to_table(
-                            tag_tbl,
-                            records=data_items,
-                            columns=('y', 'x', 'q'))
-
-                '''
-                await self._post_message(mes={
-                        "action": "dataStorages.tagsArchived",
-                        "data": payload
-                    },
-                    reply=False, routing_key=payload["tagId"]
-                )
-                '''
-
-            except PostgresError as ex:
-                self._logger.error(f"Ошибка при записи данных тега {payload['tagId']}: {ex}")
+            self._logger.debug(f"Set data status: {resp.status}")
 
         for tag_data in mes["data"]["data"]:
             await set_tag_data(tag_data)
 
+    # fixed
     async def _prepare_tag_data(self, tag_id: str, ds_id: str) -> dict | None:
         get_tag_data = {
             "id": [tag_id],
@@ -267,7 +211,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             return None
 
         to_return = {
-            "table": None,
+            "metric": None,
             "active": tag_data[0][2]["prsActive"][0] == "TRUE",
             "update": tag_data[0][2]["prsUpdate"][0] == "TRUE",
             "value_type": int(tag_data[0][2]["prsValueTypeCode"][0]),
@@ -287,10 +231,11 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         if not link_data:
             return to_return
 
-        to_return["table"] = json.loads(link_data[0][2]["prsStore"][0])["table"]
+        to_return["metric"] = json.loads(link_data[0][2]["prsStore"][0])["metric"]
 
         return to_return
 
+    # fixed
     async def _connect_to_db(self) -> None:
         if not self._config.datastorages_id:
             ds_node_id = await self._hierarchy.get_node_id("cn=dataStorages,cn=prs")
@@ -323,17 +268,15 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
             self._logger.info(f"Чтение данных о хранилище {ds[0]}...")
 
-            dsn = json.loads(ds[2]["prsJsonConfigString"][0])["dsn"]
+            urls = json.loads(ds[2]["prsJsonConfigString"][0])
 
-            connected = False
-            while not connected:
-                try:
-                    self._connection_pools[ds[0]] = await apg.create_pool(dsn=dsn)
-                    self._logger.info(f"Связь с базой данных {dsn} установлена.")
-                    connected = True
-                except Exception as ex:
-                    self._logger.error(f"Ошибка связи с базой данных '{dsn}': {ex}")
-                    await asyncio.sleep(5)
+            conn = aiohttp.TCPConnector()
+            self._connection_pools[ds[0]] = {
+                "conn": aiohttp.ClientSession(connector=conn),
+                "putUrl": urls["putUrl"],
+                "getUrl": urls["getUrl"]
+            }
+            self._logger.info(f"Связь с базой данных {ds[0]} установлена.")
 
             search_tags = {
                 "base": ds[0],
@@ -381,6 +324,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
             self._logger.info(f"Хранилище {ds[0]}. Теги прочитаны.")
 
+            """
             search_alerts = {
                 "base": ds[0],
                 "filter": {
@@ -424,7 +368,9 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 )
 
             self._logger.info(f"Хранилище {ds[0]}. Тревоги прочитаны.")
+            """
 
+    # fixed
     async def on_startup(self) -> None:
         await super().on_startup()
         try:
@@ -432,11 +378,12 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         except Exception as ex:
             self._logger.error(f"Ошибка связи с базой данных: {ex}")
 
+    # fixed
     async def _tag_get(self, mes: dict) -> dict:
         """_summary_
 
         Args:
-            mes (dict): {
+            mes (dict): {`
                 "action": "tags.get_data",
                 "data": {
                     "tagId": [str],
@@ -457,7 +404,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         self._logger.debug(f"mes: {mes}")
 
-        tasks = {}
+        ds_with_tags = {}
         for tag_id in mes["data"]["tagId"]:
             tag_params = self._tags.get(tag_id)
             if not tag_params:
@@ -466,114 +413,62 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 )
                 continue
 
-            # Если ключ actual установлен в true, ключ timeStep не учитывается
-            if mes["data"]["actual"] or (mes["data"]["value"] is not None \
-               and len(mes["data"]["value"]) > 0):
-                mes["data"]["timeStep"] = None
+            ds_with_tags.setdefault(
+                tag_params["ds"]["getUrl"],
+                {
+                    "conn": tag_params["ds"]["conn"],
+                    "tags": []
+                }
+            )
+            ds_with_tags[tag_params["ds"]["getUrl"]]["tags"].append(tag_params["metric"])
 
-            if mes["data"]["actual"]:
-                self._logger.debug(f"Create task 'data_get_actual")
-                tasks[tag_id]= asyncio.create_task(
-                        self._data_get_actual(
-                            tag_params,
-                            mes["data"]["start"],
-                            mes["data"]["finish"],
-                            mes["data"]["count"],
-                            mes["data"]["value"]
-                        )
-                    )
+        query_part = ""
+        if mes["data"]["start"]:
+            query_part = f"&start={mes['data']['start']/1000000}"
+        if mes["data"]["finish"]:
+            query_part = f"&{query_part}end={mes['data']['finish']/1000000}"
+        if mes["data"]["timeStep"]:
+            query_part = f"&{query_part}step={mes['data']['timeStep']/1000000}"
 
-            elif mes["data"]["timeStep"] is not None:
-                self._logger.debug(f"Create task 'data_get_interpolated")
-                tasks[tag_id]= asyncio.create_task(
-                        self._data_get_interpolated(
-                            tag_params,
-                            mes["data"]["start"], mes["data"]["finish"],
-                            mes["data"]["count"], mes["data"]["timeStep"]
-                        )
-                    )
+        # допущение: метрика тега - id тега.
+        res_data = {"data": []}
+        for key, value in ds_with_tags.items():
+            metrics = f'({",".join(value["tags"])})'
+            full_url = f"{key}?query={metrics}{query_part}"
 
-            elif mes["data"]["start"] is None and \
-                mes["data"]["count"] is None and \
-                (mes["data"]["value"] is None or len(mes["data"]["value"]) == 0):
-                self._logger.debug(f"Create task 'data_get_one")
-                tasks[tag_id] = asyncio.create_task(
-                        self._data_get_one(
-                            tag_params,
-                            mes["data"]["finish"]
-                        )
-                    )
+            async with value["conn"].get(full_url) as response:
+                res_json = await response.json()
 
-            else:
-                # Множество значений
-                self._logger.debug(f"Create task 'data_get_many")
+                for item in res_json["data"]["result"]:
+                    tag_item = {
+                        "tagId": item["metric"]["__name__"].replace("_", "-"),
+                        "data": []
+                    }
+                    for val in item["values"]:
+                        match self._tags.get(tag_item["tagId"])["value_type"]:
+                            case 0:
+                                value = int(val[1])
+                            case 1:
+                                value = float(val[1])
+                            case 2:
+                                value = val[1]
+                            case 4:
+                                value = json.loads(val[1])
 
-                tasks[tag_id]= asyncio.create_task(
-                        self._data_get_many(
-                            tag_params,
-                            mes["data"]["start"],
-                            mes["data"]["finish"],
-                            mes["data"]["count"]
-                        )
-                    )
+                        data_item = [
+                            value,
+                            val[0] * 1000000,
+                            None
+                        ]
+                        tag_item["data"].append(data_item)
 
-        result = {"data": []}
+                    res_data["data"].append(tag_item)
 
-        if tasks:
-            await asyncio.wait(list(tasks.values()))
-        else:
-            self._logger.debug(f"No data to return")
-            return result
+        self._logger.debug(f"Data get result: {res_data}")
 
-        for tag_id, task in tasks.items():
-            tag_data = task.result()
+        return res_data
 
-            if not mes["data"]["actual"] and \
-                (
-                    mes["data"]["value"] is not None and \
-                    len(mes["data"]["value"]) > 0
-                ):
-                tag_data = self._filter_data(
-                    tag_data,
-                    mes["data"]["value"],
-                    self._tags[tag_id]['value_type'],
-                    self._tags[tag_id]['step']
-                )
-                if mes["data"]["from_"] is None:
-                    tag_data = [tag_data[-1]]
-
-            excess = False
-            if mes["data"]["maxCount"] is not None:
-                excess = len(tag_data) > mes["data"]["maxCount"]
-
-                if excess:
-                    if mes["data"]["maxCount"] == 0:
-                        tag_data = []
-                    elif mes["data"]["maxCount"] == 1:
-                        tag_data = tag_data[:1]
-                    elif mes["data"]["maxCount"] == 2:
-                        tag_data = [tag_data[0], tag_data[-1]]
-                    else:
-                        new_tag_data = tag_data[:mes["data"]["maxCount"] - 1]
-                        new_tag_data.append(tag_data[-1])
-                        tag_data = new_tag_data
-
-            '''
-            if mes["data"]["format"]:
-                svc.format_data(tag_data, data.format)
-            '''
-            new_item = {
-                "tagId": tag_id,
-                "data": tag_data
-            }
-            if mes["data"]["maxCount"]:
-                new_item["excess"] = excess
-            result["data"].append(new_item)
-
-        self._logger.debug(f"Data get result: {result}")
-
-        return result
-
+    # fixed
     def _filter_data(
             self, tag_data: List[tuple], value: List[Any], tag_type_code: int,
             tag_step: bool) -> List[tuple]:
@@ -623,6 +518,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 res.append(tag_data[-1])
         return res
 
+    # fixed
     async def _data_get_interpolated(self,
                                      tag_cache: dict,
                                      start: int,
@@ -643,6 +539,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         return self._interpolate(tag_data, time_row)
 
+    # fixed
     def _interpolate(self, raw_data: List[tuple], time_row: List[int]) -> List[tuple]:
         """ Получение линейно интерполированных значений для ряда ``time_row`` по
         действительным значениям из БД (``raw_data``)
@@ -711,6 +608,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         return data
 
+    # fixed
     def _timestep_row(self,
                       time_step: int,
                       limit: int,
@@ -755,9 +653,11 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             row.reverse()
         return row
 
+    # fixed
     def _last_point(self, x: int, data: List[tuple]) -> Tuple[int, Any]:
         return (x, list(filter(lambda rec: rec[1] == x, data))[-1][0])
 
+    # fixed
     async def _data_get_one(self,
                             tag_cache: dict,
                             finish: int) -> List[dict]:
@@ -797,6 +697,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         return tag_data
 
+    # fixed
     async def _data_get_many(self,
                              tag_cache: dict,
                              start: int,
@@ -881,6 +782,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         tag_data = self._limit_data(tag_data, count, start, finish)
         return tag_data
 
+    # fixed
     async def _data_get_actual(self, tag_cache: dict, start: int, finish: int,
             count: int, value: Any = None):
 
@@ -897,6 +799,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
     async def _read_data(self, tag_cache: dict, start: int, finish: int,
         order: int, count: int, one_before: bool, one_after: bool, value: Any = None):
+
+        #prsJsonConfigString	{"putUrl": "http://ws_vm:4242/api/put", "getUrl": "http://ws_vm:8428/api/v1/export"}
 
         #table = self._validate_container(table)
         conditions = ['TRUE']
@@ -1002,6 +906,6 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             return tag_data[-count:]
         return tag_data
 
-settings = DataStoragesAppPostgreSQLSettings()
+settings = DataStoragesAppVictoriametricsSettings()
 
-app = DataStoragesAppPostgreSQL(settings=settings, title="DataStoragesAppPostgreSQL")
+app = DataStoragesAppVictoriametrics(settings=settings, title="DataStoragesAppPostgreSQL")
