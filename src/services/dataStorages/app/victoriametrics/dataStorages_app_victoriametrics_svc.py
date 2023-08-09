@@ -439,30 +439,34 @@ class DataStoragesAppVictoriametrics(svc.Svc):
             async with value["conn"].get(full_url) as response:
                 res_json = await response.json()
 
-                for item in res_json["data"]["result"]:
-                    tag_item = {
-                        "tagId": item["metric"]["__name__"].replace("_", "-"),
-                        "data": []
-                    }
-                    for val in item["values"]:
-                        match self._tags.get(tag_item["tagId"])["value_type"]:
-                            case 0:
-                                value = int(val[1])
-                            case 1:
-                                value = float(val[1])
-                            case 2:
-                                value = val[1]
-                            case 4:
-                                value = json.loads(val[1])
+                if res_json["status"] == "success":
 
-                        data_item = [
-                            value,
-                            val[0] * 1000000,
-                            None
-                        ]
-                        tag_item["data"].append(data_item)
+                    for item in res_json["data"]["result"]:
+                        tag_item = {
+                            "tagId": item["metric"]["__name__"].replace("_", "-"),
+                            "data": []
+                        }
+                        for val in item["values"]:
+                            match self._tags.get(tag_item["tagId"])["value_type"]:
+                                case 0:
+                                    value = int(val[1])
+                                case 1:
+                                    value = float(val[1])
+                                case 2:
+                                    value = val[1]
+                                case 4:
+                                    value = json.loads(val[1])
 
-                    res_data["data"].append(tag_item)
+                            data_item = [
+                                value,
+                                val[0] * 1000000,
+                                None
+                            ]
+                            tag_item["data"].append(data_item)
+
+                        res_data["data"].append(tag_item)
+                else:
+                    self._logger.error(f"Ошибка получения данных: {res_json}")
 
         self._logger.debug(f"Data get result: {res_data}")
 
