@@ -24,7 +24,7 @@ def _(parser):
 @events.init_command_line_parser.add_listener
 def _(parser):
     parser.add_argument(
-        "--vals_in_tag", type=int, choices=[1, 5, 10, 100],
+        "--vals_in_tag", type=int,
         default=1, help="How many values in one tag."
     )
 
