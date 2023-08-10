@@ -98,7 +98,7 @@ class DataGet(BaseModel):
     @validator('finish')
     @classmethod
     def finish_in_iso_format(cls, v: Any) -> int:
-        # если finish в виде строки, то строка должна быть в формате ISO9601
+        # если finish в виде строки, то строка должна быть в формате ISO8601
         try:
             return t.ts(v)
         except ValueError as ex:
@@ -114,7 +114,7 @@ class DataGet(BaseModel):
     def start_in_iso_format(cls, v: Any) -> int:
         if v is None:
             return
-        # если finish в виде строки, то строка должна быть в формате ISO9601
+        # если finish в виде строки, то строка должна быть в формате ISO8601
         try:
             return t.ts(v)
         except ValueError as ex:
