@@ -17,11 +17,11 @@ from src.common import svc
 import src.common.times as t
 from src.services.tags.app.tags_app_settings import TagsAppSettings
 
-class TagsAppAPI(svc.Svc):
-    """Сервис работы с тегами в иерархии.
+class TagsApp(svc.Svc):
+    """Сервис работы с тегами.
 
-    Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``,
-    в которую публикует сообщения сервис ``tags_api_crud`` (все имена
+    Подписывается на очередь ``tags_app_api`` обменника ``peresvet``,
+    в которую публикует сообщения сервис ``tags_app_api`` (все имена
     указываются в переменных окружения).
 
     Формат ожидаемых сообщений
@@ -35,8 +35,8 @@ class TagsAppAPI(svc.Svc):
 
     def _set_incoming_commands(self) -> dict:
         return {
-            "tags.set_data": self._data_set,
-            "tags.get_data": self._data_get
+            "tags.setData": self._data_set,
+            "tags.getData": self._data_get
         }
 
     async def _data_get(self, mes: dict) -> dict:
@@ -85,4 +85,4 @@ class TagsAppAPI(svc.Svc):
 
 settings = TagsAppSettings()
 
-app = TagsAppAPI(settings=settings, title="`TagsApp` service")
+app = TagsApp(settings=settings, title="`TagsApp` service")

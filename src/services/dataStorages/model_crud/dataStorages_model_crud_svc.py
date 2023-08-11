@@ -303,7 +303,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         #   "prsStore": {...}
         # }
         res = await self._post_message(
-            mes={"action": "linkAlert", "data": payload},
+            mes={"action": "dataStorages.linkAlert", "data": payload},
             reply=self._amqp_callback_queue.name,
             routing_key=routing_key)
 
