@@ -159,7 +159,7 @@ class NodeRead(BaseModel):
          )
     )
     attributes: list[str] = Field(
-        ["*"],
+        ['*'],
         title="Список атрибутов.",
         description=(
             "Список атрибутов, значения которых необходимо вернуть "
