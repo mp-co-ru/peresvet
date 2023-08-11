@@ -20,7 +20,7 @@ class LinkTag(BaseModel):
     attributes: LinkTagOrAlertAttributes = Field({})
 
 class LinkAlert(BaseModel):
-    alertId: str = Field(title="Идентификатор привязываемого тега")
+    alertId: str = Field(title="Идентификатор привязываемой тревоги")
     attributes: LinkTagOrAlertAttributes = Field({})
 
 class DataStorageAttributes(svc.NodeAttributes):

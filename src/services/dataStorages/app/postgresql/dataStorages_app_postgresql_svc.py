@@ -69,8 +69,13 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         return {
             "tags.downloadData": self._tag_get,
             "tags.uploadData": self._tag_set,
+            "alerts.getAlarms": self._get_alarms,
+            "alerts.ackAlarm": self._ack_alarm,
             "dataStorages.linkTag": self._link_tag,
-            "dataStorages.unlinkTag": self._unlink_tag
+            "dataStorages.unlinkTag": self._unlink_tag,
+            "dataStorages.linkAlert": self._link_alert,
+            "dataStorages.unlinkTag": self._unlink_alert
+
         }
 
     async def _reject_message(self, mes: dict) -> bool:
@@ -157,6 +162,96 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         return {
             "prsStore": json.dumps(cache_for_store)
         }
+
+    async def _link_alert(self, mes: dict) -> dict:
+        """Метод привязки тревоги к хранилищу.
+        Атрибут ``prsStore`` должен быть вида
+        ``{"tableName": "<some_table>"}`` либо отсутствовать
+
+        Args:
+            mes (dict): {
+                "action": "dataStorages.linkAlert",
+                "data": {
+                    "alertId": "alert_id",
+                    "dataStorageId": "ds_id",
+                    "attributes": {
+                        "prsStore": {"tableName": "<some_table>"}
+                    }
+                }
+
+        """
+
+        async with self._connection_pools[mes["data"]["dataStorageId"]].acquire() as conn:
+
+            mes["data"]["attributes"].setdefault(
+                "prsStore",
+                {"tableName": f'a_{mes["data"]["alertId"]}'}
+            )
+
+            alert_params = self._alerts.get(mes["data"]["alertId"])
+            if alert_params:
+                tbl_name = alert_params['table']
+                if mes["data"]["attributes"]["prsStore"]["tableName"] == tbl_name:
+                    self._logger.warning(f"Тревога {mes['data']['alertId']} уже привязана.")
+                    return
+
+                await conn.execute(
+                    f'drop table if exists "{tbl_name}"'
+                )
+
+            tbl_name = mes["data"]["attributes"]["prsStore"]["tableName"]
+
+            alert_cache = await self._prepare_alert_data(
+                mes["data"]["alertId"],
+                mes["data"]["dataStorageId"]
+            )
+            alert_cache["table"] = tbl_name
+            cache_for_store = copy.deepcopy(alert_cache)
+
+            alert_cache["ds"] = self._connection_pools[mes["data"]["dataStorageId"]]
+
+            query = (f'CREATE TABLE public."{alert_cache["table"]}" ('
+                    f'"id" serial primary key,'
+                    f'"x" bigint NOT NULL,' # время возникновения тревоги
+                    f'"cx" bigint,'         # время квитирования
+                    f'"e" bigint);'         # время пропадания тревоги
+                    # Создание индекса на поле "метка времени" ("ts")
+                    f'CREATE INDEX "{alert_cache["table"]}_idx" ON public."{alert_cache["table"]}" '
+                    f'USING btree ("x");')
+
+            await conn.execute(query)
+
+            self._tags[mes["data"]["alertId"]] = alert_cache
+
+
+        return {
+            "prsStore": json.dumps(cache_for_store)
+        }
+
+    async def _unlink_alert(self, mes: dict) -> None:
+        """_summary_
+
+        Args:
+            mes (dict): {
+                "action": "dataStorages.unlinkAlert",
+                "data": {
+                    "alertId": "alert_id"
+                }
+        """
+        alert_params = self._tags.get(mes["data"]["alertId"])
+        if not alert_params:
+            self._logger.warning(f"Тревога {mes['data']['alertId']} не привязана к хранилищу.")
+            return
+
+        async with alert_params["ds"].acquire() as conn:
+            await conn.execute(
+                f'drop table if exists "{alert_params["table"]}"'
+            )
+
+        self._alerts.pop(mes["data"]["alertId"])
+
+        self._logger.info(f"Тревога {mes['data']['alertId']} отвязана от хранилища.")
+
 
     async def _unlink_tag(self, mes: dict) -> None:
         """_summary_

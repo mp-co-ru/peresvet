@@ -88,7 +88,7 @@ class AlertsAppAPI(svc.Svc):
     async def alarms_get(self, payload: AlarmsGet) -> dict:
 
         body = {
-            "action": "alerts.get_alarms",
+            "action": "alerts.getAlarms",
             "data": payload.model_dump()
         }
 
@@ -116,9 +116,9 @@ class AlertsAppAPI(svc.Svc):
 
         return res
 
-    async def data_set(self, payload: AllData) -> None:
+    async def ack_alarm(self, payload: AckAlarm) -> None:
         body = {
-            "action": "tags.set_data",
+            "action": "alerts.ackAlarms",
             "data": payload.model_dump()
         }
 
@@ -131,14 +131,15 @@ app = AlertsAppAPI(settings=settings, title="`TagsAppAPI` service")
 router = APIRouter()
 
 @router.get("/", response_model=dict, status_code=200)
-async def data_get(payload: DataGet):
-    res = await app.data_get(payload)
+async def alarms_get(payload: AlarmsGet):
+    res = await app.alarms_get(payload)
     return res
 
-@router.post("/", status_code=200)
-async def data_set(payload: AllData):
+@router.put("/", status_code=200)
+async def ack_alarm(payload: AckAlarm):
     return await app.data_set(payload)
 
+'''
 @app.websocket(f"{settings.api_version}/ws/data")
 async def websocket_endpoint(websocket: WebSocket):
 
@@ -177,5 +178,6 @@ async def websocket_endpoint(websocket: WebSocket):
 
     except Exception as ex:
         app._logger.error(f"Разрыв ws-связи: {ex}")
+'''
 
-app.include_router(router, prefix=f"{settings.api_version}/data", tags=["data"])
+app.include_router(router, prefix=f"{settings.api_version}/alarms", tags=["alarms"])
