@@ -1,0 +1,87 @@
+FROM nginx/unit:1.28.0-python3.10
+
+ENV LDAP_ORGANISATION mycompany
+ENV LDAP_DOMAIN mycompany.com
+ENV LDAP_ADMIN_PASSWORD 123456
+
+#RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
+WORKDIR /home
+RUN pip3 install pipenv
+RUN apt-get update && apt-get install -y --no-install-recommends gcc \
+    build-essential python3-dev \
+    libldap2-dev libsasl2-dev tox lcov valgrind
+
+RUN bash -c "DEBIAN_FRONTEND=noninteractive apt install -q -y slapd ldap-utils"
+
+# для каждого сервиса создадим свой каталог -------------------
+WORKDIR /usr/src
+RUN mkdir alerts_api_crud alerts_model_crud alerts_app alerts_app_api
+COPY src/services/alerts/api_crud/Pipfile /usr/src/alerts_api_crud/
+COPY src/services/alerts/model_crud/Pipfile /usr/src/alerts_model_crud/
+COPY src/services/alerts/app/Pipfile /usr/src/alerts_app/
+COPY src/services/alerts/app_api/Pipfile /usr/src/alerts_app_api/
+
+WORKDIR /usr/src/alerts_api_crud
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
+
+WORKDIR /usr/src/alerts_model_crud
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
+
+WORKDIR /usr/src/alerts_app
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
+
+WORKDIR /usr/src/alerts_app_api
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
+
+RUN apt-get -y purge slapd
+
+
+RUN addgroup --gid 1024 volume_group
+RUN usermod -a -G volume_group unit
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+COPY docker/docker-files/alerts/config_nginx.unit_alerts.all.json /docker-entrypoint.d/
+
+# копируем исходники --------------------------------------------
+ADD src/common/ /usr/src/alerts_api_crud/src/common
+COPY src/__init__.py /usr/src/alerts_api_crud/src/
+RUN rm -r /usr/src/alerts_api_crud/src/common/__pycache__
+WORKDIR /usr/src/alerts_api_crud/src
+RUN mkdir services
+WORKDIR /usr/src/alerts_api_crud/src/services
+ADD src/services/alerts/api_crud alerts/api_crud
+WORKDIR /usr/src/alerts_api_crud
+
+ADD src/common/ /usr/src/alerts_model_crud/src/common
+COPY src/__init__.py /usr/src/alerts_model_crud/src/
+RUN rm -r /usr/src/alerts_model_crud/src/common/__pycache__
+WORKDIR /usr/src/alerts_model_crud/src
+RUN mkdir services
+WORKDIR /usr/src/alerts_model_crud/src/services
+ADD src/services/alerts/model_crud alerts/model_crud
+WORKDIR /usr/src/alerts_model_crud
+
+ADD src/common/ /usr/src/alerts_app/src/common
+COPY src/__init__.py /usr/src/alerts_app/src/
+RUN rm -r /usr/src/alerts_app/src/common/__pycache__
+WORKDIR /usr/src/alerts_app/src
+RUN mkdir services
+WORKDIR /usr/src/alerts_app/src/services
+ADD src/services/alerts/app alerts/app
+WORKDIR /usr/src/alerts_app
+
+ADD src/common/ /usr/src/alerts_app_api/src/common
+COPY src/__init__.py /usr/src/alerts_app_api/src/
+RUN rm -r /usr/src/alerts_app_api/src/common/__pycache__
+WORKDIR /usr/src/alerts_app_api/src
+RUN mkdir services
+WORKDIR /usr/src/alerts_app_api/src/services
+ADD src/services/alerts/app_api alerts/app_api
+WORKDIR /usr/src/alerts_app_api
+# ------------------------------------------------------------
+
+EXPOSE 80 81
