@@ -7,4 +7,4 @@ olcDbMaxSize: 304857600
 olcRootDN: cn=admin,cn=prs
 olcRootPW: {SSHA}GlDOjH9uZHTUZtJLiqoO2W+/uzazHpVy
 olcDbIndex: cn pres,eq,sub
-olcDbIndex: objectClass,entryUUID pres,eq
+olcDbIndex: objectClass,entryUUID,prsActive pres,eq
