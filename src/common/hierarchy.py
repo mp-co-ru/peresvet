@@ -237,7 +237,7 @@ class Hierarchy:
 
                 node = await self.get_node_dn(base)
 
-            return_attributes = payload.get("attributes")
+            return_attributes = payload.get("attributes", ["*"])
             id_in_attrs = False
             if 'entryUUID' in return_attributes:
                 id_in_attrs = True

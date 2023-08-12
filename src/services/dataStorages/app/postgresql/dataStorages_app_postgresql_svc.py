@@ -69,8 +69,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         return {
             "tags.downloadData": self._tag_get,
             "tags.uploadData": self._tag_set,
-            "alerts.getAlarms": self._get_alarms,
-            "alerts.ackAlarm": self._ack_alarm,
+            #"alerts.getAlarms": self._get_alarms,
+            #"alerts.ackAlarm": self._ack_alarm,
             "dataStorages.linkTag": self._link_tag,
             "dataStorages.unlinkTag": self._unlink_tag,
             "dataStorages.linkAlert": self._link_alert,
@@ -252,7 +252,6 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         self._logger.info(f"Тревога {mes['data']['alertId']} отвязана от хранилища.")
 
-
     async def _unlink_tag(self, mes: dict) -> None:
         """_summary_
 
@@ -371,6 +370,42 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             "base": ds_id,
             "filter": {
                 "cn": [tag_id]
+            },
+            "attributes": ["prsStore"]
+        }
+
+        link_data = await self._hierarchy.search(payload=get_link_data)
+
+        if not link_data:
+            return to_return
+
+        to_return["table"] = json.loads(link_data[0][2]["prsStore"][0])["table"]
+
+        return to_return
+
+    async def _prepare_alert_data(self, alert_id: str, ds_id: str) -> dict | None:
+        get_alert_data = {
+            "id": [alert_id],
+            "attributes": [
+                "prsActive"
+            ]
+        }
+
+        alert_data = await self._hierarchy.search(payload=get_alert_data)
+
+        if not alert_data:
+            self._logger.info(f"Не найдена тревога {alert_id}")
+            return None
+
+        to_return = {
+            "table": None,
+            "active": alert_data[0][2]["prsActive"][0] == "TRUE"
+        }
+
+        get_link_data = {
+            "base": ds_id,
+            "filter": {
+                "cn": [alert_id]
             },
             "attributes": ["prsStore"]
         }
