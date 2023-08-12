@@ -1,6 +1,5 @@
 # Модуль содержит класс для работы с иерархией
 
-import copy
 from typing import Any, Tuple, List
 import json
 
