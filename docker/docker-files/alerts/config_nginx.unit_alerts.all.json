@@ -17,7 +17,7 @@
             "module": "alerts_api_crud_svc",
             "callable": "app",
             "environment": {
-                "log": "{\"level\": \"CRITICAL\", \"file_name\": \"log/alerts_api_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/alerts_api_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
                 "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
                 "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
             }
@@ -30,7 +30,7 @@
             "module": "alerts_model_crud_svc",
             "callable": "app",
             "environment": {
-                "log": "{\"level\": \"CRITICAL\", \"file_name\": \"log/alerts_model_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/alerts_model_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
                 "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
                 "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
             }
@@ -43,7 +43,7 @@
             "module": "alerts_app_svc",
             "callable": "app",
             "environment": {
-                "log": "{\"level\": \"CRITICAL\", \"file_name\": \"log/alerts_app.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/alerts_app.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
                 "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
                 "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
             }
@@ -56,7 +56,7 @@
             "module": "alerts_app_api_svc",
             "callable": "app",
             "environment": {
-                "log": "{\"level\": \"CRITICAL\", \"file_name\": \"log/alerts_app_api.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/alerts_app_api.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
                 "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
                 "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
             }

@@ -750,7 +750,8 @@ class ModelCRUDSvc(Svc):
                     "filter": {
                         "objectClass": [mes["data"]["attributes"]["objectClass"]],
                         "prsDefault": ["TRUE"]
-                    }
+                    },
+                    "attributes": ["cn"]
                 }
             )
 

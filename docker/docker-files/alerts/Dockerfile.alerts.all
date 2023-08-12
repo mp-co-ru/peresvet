@@ -84,4 +84,4 @@ ADD src/services/alerts/app_api alerts/app_api
 WORKDIR /usr/src/alerts_app_api
 # ------------------------------------------------------------
 
-EXPOSE 80 81
+EXPOSE 85 86
