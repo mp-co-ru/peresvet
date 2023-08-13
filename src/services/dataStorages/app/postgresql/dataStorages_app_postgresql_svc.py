@@ -71,12 +71,69 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             "tags.uploadData": self._tag_set,
             #"alerts.getAlarms": self._get_alarms,
             #"alerts.ackAlarm": self._ack_alarm,
+            "alerts.alarmOn": self._alarm_on,
+            "alerts.alarmOff": self._alarm_off,
             "dataStorages.linkTag": self._link_tag,
             "dataStorages.unlinkTag": self._unlink_tag,
             "dataStorages.linkAlert": self._link_alert,
             "dataStorages.unlinkTag": self._unlink_alert
 
         }
+
+    async def _alarm_on(self, mes: dict) -> None:
+        """Факт возникновения тревоги.
+
+        Args:
+            mes (dict): {
+                "action": "alerts.alrmOn",
+                "data": {
+                    "alertId": "alert_id",
+                    "x": 123
+                }
+            }
+        """
+        self._logger.debug(f"Обработка возникновения тревоги: {mes}")
+
+        alert_id = mes["data"]["alertId"]
+
+        alert_params = self._tags.get(alert_id)
+        if not alert_params:
+            self._logger.error(
+                f"Тревога {alert_id} не привязана к хранилищу."
+            )
+            return
+
+        connection_pool = alert_params["ds"]
+        tag_tbl = alert_params["table"]
+
+        try:
+            records = []
+            async with connection_pool.acquire() as conn:
+                async with conn.transaction():
+                    q = [f'select * top 1 from {tag_tbl} order by x desc;']
+                    async for r in conn.cursor(*q):
+                        records.append((r.get('id'), r.get('x'), r.get('cx'), r.get('e')))
+
+            # если алярмов у тревоги нет или она уже активна...
+            if records[0][0] is None
+
+
+            '''
+            await self._post_message(mes={
+                    "action": "dataStorages.tagsArchived",
+                    "data": payload
+                },
+                reply=False, routing_key=payload["tagId"]
+            )
+            '''
+
+        except PostgresError as ex:
+            self._logger.error(f"Ошибка при записи данных тега {payload['tagId']}: {ex}")
+
+
+
+    async def _alarm_off(self, mes: dict) -> None:
+        pass
 
     async def _reject_message(self, mes: dict) -> bool:
         return False
@@ -88,7 +145,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         Args:
             mes (dict): {
-                "action": "datastorages.linktag",
+                "action": "dataStorages.linkTag",
                 "data": {
                     "tagId": "tag_id",
                     "dataStorageId": "ds_id",
@@ -221,7 +278,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
             await conn.execute(query)
 
-            self._tags[mes["data"]["alertId"]] = alert_cache
+            self._alerts[mes["data"]["alertId"]] = alert_cache
 
 
         return {
