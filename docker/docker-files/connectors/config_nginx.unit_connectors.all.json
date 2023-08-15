@@ -1,9 +1,9 @@
 {
   "listeners": {
-    "*:80": {
+    "*:83": {
       "pass": "applications/api_crud"
     },
-    "*:443": {
+    "*:84": {
       "pass": "applications/app"
     }
   },

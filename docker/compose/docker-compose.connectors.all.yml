@@ -11,7 +11,7 @@ services:
       TZ: ${TIME_ZONE}
     ports:
       - 80:80
-      - 443:443
+      - 84:84
 
     volumes:
       - ./logs/connectors.all/api_crud/:/usr/src/connectors_api_crud/log/:rw
