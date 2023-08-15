@@ -146,7 +146,7 @@ class TagsAppAPI(svc.Svc):
     async def data_get(self, payload: DataGet) -> dict:
 
         body = {
-            "action": "tags.getDta",
+            "action": "tags.getData",
             "data": payload.model_dump()
         }
 

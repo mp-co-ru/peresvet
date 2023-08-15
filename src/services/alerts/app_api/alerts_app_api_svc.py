@@ -52,7 +52,7 @@ class AlarmData(BaseModel):
 
 class AckAlarm(BaseModel):
     id: str = Field(title="Id тревоги.")
-    ts: int | str = Field(None, title="Время квитирования тревоги.")
+    x: int | str = Field(None, title="Время квитирования тревоги.")
 
     @validator('ts')
     @classmethod
@@ -137,7 +137,7 @@ async def alarms_get(payload: AlarmsGet):
 
 @router.put("/", status_code=200)
 async def ack_alarm(payload: AckAlarm):
-    return await app.data_set(payload)
+    return await app.ack_alarm(payload)
 
 '''
 @app.websocket(f"{settings.api_version}/ws/data")
