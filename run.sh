@@ -5,4 +5,6 @@ docker compose \
 -f docker/compose/docker-compose.pgadmin.yml \
 -f docker/compose/docker-compose.dataStorages.all.yml \
 -f docker/compose/docker-compose.tags.all.yml \
+-f docker/compose/docker-compose.alerts.all.yml \
+-f docker/compose/docker-compose.postgresql.data_in_container.yml \
 up

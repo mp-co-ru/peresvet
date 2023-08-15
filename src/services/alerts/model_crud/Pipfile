@@ -4,6 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+python-ldap = "*"
+ldappool = "*"
 fastapi = "*"
 pydantic = "*"
 pydantic-settings = "*"
