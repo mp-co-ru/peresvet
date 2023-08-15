@@ -8,9 +8,12 @@ python-ldap = "*"
 ldappool = "*"
 fastapi = "*"
 pydantic = "*"
+pydantic-settings = "*"
 aio-pika = "*"
 loguru = "*"
 six = "*"
+uvloop = "*"
+
 
 [requires]
 python_version = "3.10"
