@@ -1,6 +1,5 @@
 # Модуль содержит класс для работы с иерархией
 
-import copy
 from typing import Any, Tuple, List
 import json
 
@@ -238,8 +237,12 @@ class Hierarchy:
 
                 node = await self.get_node_dn(base)
 
-            return_attributes = payload.get("attributes", ['*'])
-            return_attributes.append('entryUUID')
+            return_attributes = payload.get("attributes", ["*"])
+            id_in_attrs = False
+            if 'entryUUID' in return_attributes:
+                id_in_attrs = True
+            else:
+                return_attributes.append('entryUUID')
 
             res = conn.search_s(base=node, scope=scope,
                 filterstr=filterstr, attrlist=return_attributes)
@@ -253,6 +256,10 @@ class Hierarchy:
                 # поиск не возвращает атрибуты, значение которых = None
                 for key in list(set(return_attributes) - set(item_data.keys())):
                     item_data[key] = [None]
+
+                if not id_in_attrs:
+                    item_data.pop('entryUUID', None)
+                item_data.pop('*', None)
 
                 #yield (item[1]['entryUUID'][0].decode(), item[0], item_data)
                 result.append((item[1]['entryUUID'][0].decode(), item[0], item_data))

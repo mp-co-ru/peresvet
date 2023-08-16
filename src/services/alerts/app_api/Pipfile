@@ -4,12 +4,16 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+python-ldap = "*"
+ldappool = "*"
 fastapi = "*"
 pydantic = "*"
 pydantic-settings = "*"
 aio-pika = "*"
 loguru = "*"
 six = "*"
+ciso8601 = "*"
+python-dateutil = "*"
 uvloop = "*"
 
 [requires]

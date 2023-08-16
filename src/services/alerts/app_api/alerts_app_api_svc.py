@@ -9,85 +9,33 @@ from pydantic import BaseModel, Field, field_validator, validator, BeforeValidat
 import json
 
 from fastapi import APIRouter
-from fastapi import WebSocket, WebSocketDisconnect, status
-from fastapi.exceptions import HTTPException, WebSocketException
+from fastapi import WebSocket
 
 sys.path.append(".")
 
 from src.common import svc
 from src.common.api_crud_svc import valid_uuid
-from src.services.tags.app_api.tags_app_api_settings import TagsAppAPISettings
+from src.services.alerts.app_api.alerts_app_api_settings import AlertsAppAPISettings
 import src.common.times as t
 
-class DataPointItem(NamedTuple):
-    y: float | dict | str | int | None = None
-    x: int | str | None = None
-    q: int | None = None
+class AlarmsGet(BaseModel):
+    """
+    Логика получения алярмов:
+    parentId: указываем объект (список объектов), алярмы которого хотим получить
+    getChildren: флаг учёта дочерних объектов
+    format: флаг форматирования меток времени в ответе на запрос
 
-def x_must_be_int(v):
-    match len(v):
-        case 0:
-            return DataPointItem(None, t.ts(None), None)
-        case 1:
-            return DataPointItem(v[0], t.ts(None), None)
-        case 2:
-            return DataPointItem(v[0], t.ts(v[1]), None)
-        case 3:
-            return DataPointItem(v[0], t.ts(v[1]), v[2])
+    Запрос возвращает активные алярмы, либо неактивные и неквитированные.
 
-    return v
+    Возвращение истории алярмов (использование флагов start и finish) - в следующей версии.
+    """
+    parentId: str | list[str] = Field(None, title="Объект, тревоги которого запрашиваем.")
+    getChildren: bool = Field(False, title="Учитывать тревоги дочерних объектов.")
+    format: bool = Field(False, title="Флаг форматирования меток времени.")
 
-class TagData(BaseModel):
-    tagId: str = Field(
-        title="id тега"
-    )
-    data: List[Annotated[DataPointItem, BeforeValidator(x_must_be_int)]]
+    validate_id = validator('parentId', allow_reuse=True)(valid_uuid)
 
-    validate_id = validator('tagId', allow_reuse=True)(valid_uuid)
-
-class AllData(BaseModel):
-    data: List[TagData] = Field(
-        title="Данные"
-    )
-
-class DataGet(BaseModel):
-    tagId: str | list[str] = Field(
-        title="Id или список id тегов"
-    )
-    start: int | str = Field(
-        None,
-        title="Метка времени начала периода."
-    )
-    finish: int | str = Field(
-        default_factory=t.now_int,
-        title="Метка времени окончания периода."
-    )
-    maxCount: int = Field(
-        None,
-        title="Максимальное количество точек в ответе."
-    )
-    format: bool = Field(
-        False,
-        title="Флаг форматирования меток времени в строку формата ISO8601"
-    )
-    actual: bool = Field(
-        False,
-        title="Флаг возврата только реально записанных данных."
-    )
-    value: Any = Field(
-        None,
-        title="Фильтр по значению"
-    )
-    count: int = Field(
-        None,
-        title="Количество запрашиваемых точек."
-    )
-    timeStep: int = Field(
-        None,
-        title="Шаг между соседними значениями."
-    )
-
-    @validator('tagId')
+    @validator('parentId')
     @classmethod
     def tagId_list(cls, v: str | list[str]) -> list[str]:
         if isinstance(v, str):
@@ -95,10 +43,20 @@ class DataGet(BaseModel):
         else:
             return v
 
-    @validator('finish')
+class AlarmData(BaseModel):
+    id: str = Field(title="Id тревоги.")
+    description: str = Field(title="Описание тревоги.")
+    start: int | str = Field(title="Время возникновения тревоги.")
+    finish: int | str = Field(None, title="Время пропадания тревоги.")
+    acked: int | str = Field(None, title="Время квитирования тревоги.")
+
+class AckAlarm(BaseModel):
+    id: str = Field(title="Id тревоги.")
+    x: int | str = Field(None, title="Время квитирования тревоги.")
+
+    @validator('ts')
     @classmethod
-    def finish_in_iso_format(cls, v: Any) -> int:
-        # если finish в виде строки, то строка должна быть в формате ISO8601
+    def ts_in_iso_format(cls, v: Any) -> int:
         try:
             return t.ts(v)
         except ValueError as ex:
@@ -109,25 +67,9 @@ class DataGet(BaseModel):
                 )
             )
 
-    @validator('start')
-    @classmethod
-    def start_in_iso_format(cls, v: Any) -> int:
-        if v is None:
-            return
-        # если finish в виде строки, то строка должна быть в формате ISO8601
-        try:
-            return t.ts(v)
-        except ValueError as ex:
-            raise ValueError(
-                (
-                    "Метка времени должна быть строкой в формате ISO8601, "
-                    "целым числом или отсутствовать."
-                )
-            )
+    validate_id = validator('id', allow_reuse=True)(valid_uuid)
 
-    validate_id = validator('tagId', allow_reuse=True)(valid_uuid)
-
-class TagsAppAPI(svc.Svc):
+class AlertsAppAPI(svc.Svc):
     """Сервис работы с тегами в иерархии.
 
     Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``,
@@ -140,13 +82,13 @@ class TagsAppAPI(svc.Svc):
 
     _outgoing_commands = {}
 
-    def __init__(self, settings: TagsAppAPISettings, *args, **kwargs):
+    def __init__(self, settings: AlertsAppAPISettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    async def data_get(self, payload: DataGet) -> dict:
+    async def alarms_get(self, payload: AlarmsGet) -> dict:
 
         body = {
-            "action": "tags.getData",
+            "action": "alerts.getAlarms",
             "data": payload.model_dump()
         }
 
@@ -174,29 +116,30 @@ class TagsAppAPI(svc.Svc):
 
         return res
 
-    async def data_set(self, payload: AllData) -> None:
+    async def ack_alarm(self, payload: AckAlarm) -> None:
         body = {
-            "action": "tags.setData",
+            "action": "alerts.ackAlarms",
             "data": payload.model_dump()
         }
 
         return await self._post_message(mes=body, reply=False)
 
-settings = TagsAppAPISettings()
+settings = AlertsAppAPISettings()
 
-app = TagsAppAPI(settings=settings, title="`TagsAppAPI` service")
+app = AlertsAppAPI(settings=settings, title="`TagsAppAPI` service")
 
 router = APIRouter()
 
 @router.get("/", response_model=dict, status_code=200)
-async def data_get(payload: DataGet):
-    res = await app.data_get(payload)
+async def alarms_get(payload: AlarmsGet):
+    res = await app.alarms_get(payload)
     return res
 
-@router.post("/", status_code=200)
-async def data_set(payload: AllData):
-    return await app.data_set(payload)
+@router.put("/", status_code=200)
+async def ack_alarm(payload: AckAlarm):
+    return await app.ack_alarm(payload)
 
+'''
 @app.websocket(f"{settings.api_version}/ws/data")
 async def websocket_endpoint(websocket: WebSocket):
 
@@ -235,5 +178,6 @@ async def websocket_endpoint(websocket: WebSocket):
 
     except Exception as ex:
         app._logger.error(f"Разрыв ws-связи: {ex}")
+'''
 
-app.include_router(router, prefix=f"{settings.api_version}/data", tags=["data"])
+app.include_router(router, prefix=f"{settings.api_version}/alarms", tags=["alarms"])

@@ -284,9 +284,9 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                 }
             }
         """
-        # если не передан datastorage_id, привязываем тег к хранилищу
+        # если не передан datastorage_id, привязываем тревогу к хранилищу
         # по умолчанию
-        if not datastorage_id:
+        if not payload.get("dataStorageId"):
             datastorage_id = await self._get_default_datastorage_id()
             if not datastorage_id:
                 self._logger.info(
@@ -294,21 +294,22 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                     f"нет хранилища данных по умолчанию."
                 )
                 return
+            payload["dataStorageId"] = datastorage_id
 
         await self._unlink_alert(payload["alertId"])
-
-        routing_key = self._config["publish"]["main"]["routing_key"][0]
 
         # res = {
         #   "prsStore": {...}
         # }
+        # сообщение о привязке тега посылается с routing_key = <id хранилища>
         res = await self._post_message(
-            mes={"action": "linkAlert", "data": payload},
-            reply=self._amqp_callback_queue.name,
-            routing_key=routing_key)
+            mes={"action": "dataStorages.linkAlert", "data": payload},
+            reply=True,
+            routing_key=payload["dataStorageId"])
 
         prs_store = res.get("prsStore")
-        node_dn = await self._hierarchy.get_node_dn(datastorage_id)
+
+        node_dn = await self._hierarchy.get_node_dn(payload['dataStorageId'])
         alerts_node_id = await self._hierarchy.get_node_id(
             f"cn=alerts,cn=system,{node_dn}"
         )
@@ -327,7 +328,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         )
 
         self._logger.info(
-            f"Тревога {payload['alertId']} привязана к хранилищу {datastorage_id}"
+            f"Тревога {payload['alertId']} привязана к хранилищу {payload['dataStorageId']}"
         )
 
     async def _further_create(self, mes: dict, new_id: str) -> None:
