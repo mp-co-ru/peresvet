@@ -1,6 +1,6 @@
-from src.common.base_svc_settings import BaseSvcSettings
+from src.common.svc_settings import SvcSettings
 
-class ConnectorsAppSettings(BaseSvcSettings):
+class ConnectorsAppSettings(SvcSettings):
 
     #: имя сервиса. сервисы *_mod_crud создают в иерархии узел с таким же именем
     svc_name: str = "connectors_app"
@@ -14,19 +14,24 @@ class ConnectorsAppSettings(BaseSvcSettings):
     #: обменник для публикаций
     publish: dict = {
         "main": {
-            "name": "connectors_app",
+            "name": "peresvet",
             "type": "direct",
-            "routing_key": "connectors_app"
+            "routing_key": "connectors_app_publish"
         }
     }
 
     #: обменник, который публикует запросы от API_CRUD
     consume: dict = {
-        "main": {
-            "name": "connectors",
-            "type": "direct",
-            "queue_name": "connectors_app",
-            "routing_key": "connectors_app"
+        "queue_name": "connectors_app_consume",
+        "exchanges": {
+            "main": {
+                #: имя обменника
+                "name": "peresvet",
+                #: тип обменника
+                "type": "direct",
+                #: привязка для очереди
+                "routing_key": ["connectors_app_consume"]
+            }
         }
     }
 
