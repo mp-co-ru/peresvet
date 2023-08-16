@@ -1,16 +1,12 @@
-from fastapi import WebSocket, WebSocketDisconnect, APIRouter, HTTPException
 import sys
+import copy
+import aio_pika
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from src.services.connectors.app.connectors_app_settings import ConnectorsAppSettings
+from src.common import svc, hierarchy
 
+class ConnectorApp(svc.Svc):
 
-sys.path.append(".")
-
-from src.common import base_svc
-from connectors_app_settings import ConnectorsAppSettings
-import json
-import asyncio
-
-
-class ConnectorApp(base_svc.BaseSvc):
     """Сервис работы с коннекторами в платформе.
     """
     # def compile_json():

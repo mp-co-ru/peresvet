@@ -11,19 +11,24 @@ class ConnectorsModelCRUDSettings(ModelCRUDSettings):
     #: обменник для публикаций
     publish: dict = {
         "main": {
-            "name": "connectors",
+            "name": "peresvet",
             "type": "direct",
-            "routing_key": "connectors_model_crud"
+            "routing_key": "connectors_model_crud_publish"
         }
     }
 
     #: обменник, который публикует запросы от API_CRUD
     consume: dict = {
-        "main": {
-            "name": "connectors",
-            "type": "direct",
-            "queue_name": "connectors_api_crud",
-            "routing_key": "connectors_api_crud"
+        "queue_name": "connectors_model_crud_consume",
+        "exchanges": {
+            "main": {
+                "name": "peresvet",
+                "type": "direct",
+                "routing_key": [
+                    "connectors_model_crud_consume",
+                    "connectors_api_crud_publish"
+                ]
+            }
         }
     }
 

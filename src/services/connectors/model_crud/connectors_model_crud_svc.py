@@ -18,8 +18,26 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     """
 
+    _outgoing_commands = {
+        "created": "connectors.created",
+        "mayUpdate": "connectors.mayUpdate",
+        "updating": "connectors.updating",
+        "updated": "connectors.updated",
+        "mayDelete": "connectors.mayDelete",
+        "deleting": "connectors.deleting",
+        "deleted": "connectors.deleted"
+    }
+
     def __init__(self, settings: ConnectorsModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
+
+    def _set_incoming_commands(self) -> dict:
+        return {
+            "connectors.create": self._create,
+            "connectors.read": self._read,
+            "connectors.update": self._update,
+            "connectors.delete": self._delete,
+        }
 
     async def _reading(self, mes: dict) -> dict:
         pass

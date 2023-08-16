@@ -3,6 +3,7 @@
 и класс сервиса ``connectors_api_crud_svc``.
 """
 import sys
+from typing import List
 from pydantic import Field
 
 from fastapi import APIRouter
@@ -54,8 +55,7 @@ class OneConnectorInReadResult(svc.OneNodeInReadResult):
     pass
 
 class ConnectorReadResult(svc.NodeReadResult):
-    data: list[OneConnectorInReadResult] = Field(title="Список коннекторов")
-    pass
+    data: List[OneConnectorInReadResult] = Field(title="Список коннекторов")
 
 class ConnectorUpdate(svc.NodeUpdate):
     linkTags: list[ConnectorLinkedTag] = Field(title="Список добавленных тегов для коннектора")
@@ -111,5 +111,9 @@ async def update(payload: ConnectorUpdate):
 @router.delete("/", status_code=202)
 async def delete(payload: ConnectorRead):
     await app.delete(payload)
+
+@router.get('/test')
+async def test():
+    return {"test": "ok"}
 
 app.include_router(router, prefix=f"{settings.api_version}/connectors", tags=["connectors"])
