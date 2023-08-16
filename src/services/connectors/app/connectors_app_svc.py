@@ -2,6 +2,9 @@ import sys
 import copy
 import aio_pika
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+
+sys.path.append(".")
+
 from src.services.connectors.app.connectors_app_settings import ConnectorsAppSettings
 from src.common import svc, hierarchy
 
