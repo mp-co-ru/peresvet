@@ -71,8 +71,12 @@ class DataStoragesAppVictoriametrics(svc.Svc):
             "tags.downloadData": self._tag_get,
             "tags.uploadData": self._tag_set,
             "dataStorages.linkTag": self._link_tag,
-            "dataStorages.unlinkTag": self._unlink_tag
+            "dataStorages.unlinkTag": self._unlink_tag,
+            "dataStorages.updated": self._updated
         }
+
+    async def _updated (self, mes: dict) -> None:
+        pass
 
     async def _reject_message(self, mes: dict) -> bool:
         return False

@@ -76,8 +76,12 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             "dataStorages.linkTag": self._link_tag,
             "dataStorages.unlinkTag": self._unlink_tag,
             "dataStorages.linkAlert": self._link_alert,
-            "dataStorages.unlinkTag": self._unlink_alert
+            "dataStorages.unlinkTag": self._unlink_alert,
+            "dataStorages.unlinkTag": self._updated,
         }
+
+    async def _updated(self, mes: dict) -> None:
+        pass
 
     async def _alarm_on(self, mes: dict) -> None:
         """Факт возникновения тревоги.
@@ -692,13 +696,13 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
                 self._logger.debug(f"Подготовка кэша тревоги.")
                 alert_cache = json.loads(alert[2]["prsStore"][0])
-                if not tag_cache:
+                if not alert_cache:
                     self._logger.debug(f"Кэш пустой.")
                     continue
 
                 self._logger.debug(f"Сохранение кэша тревоги.")
                 alert_cache["ds"] = self._connection_pools[ds[0]]
-                self._alerts[tag_id] = alert_cache
+                self._alerts[alert_id] = alert_cache
 
                 self._logger.debug(f"Привязка очереди.")
                 await self._amqp_consume["queue"].bind(
