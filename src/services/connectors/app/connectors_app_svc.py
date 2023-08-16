@@ -5,9 +5,9 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 sys.path.append(".")
 
 from src.services.connectors.app.connectors_app_settings import ConnectorsAppSettings
-from src.common import app_svc, hierarchy
+from src.common import svc, hierarchy
 
-class ConnectorsApp(app_svc.AppSvc):
+class ConnectorsApp(svc.Svc):
     """Сервис работы с коннекторами.
 
     Подписывается на очередь ``connectors_tags_api`` обменника ``connectors_api_crud``,
