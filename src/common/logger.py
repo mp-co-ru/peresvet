@@ -67,7 +67,7 @@ class PrsLogger:
         Returns:
             Настроенный экземпляр журнала.
         """
-        if level == "DEBUG":
+        if level in ("DEBUG", "ERROR"):
             fmt = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> <level>{level: <8}</level> : {name}.{function}.{line} :: <level>{message}</level>"
         else:
             fmt = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> <level>{level: <8}</level> :: <level>{message}</level>"
