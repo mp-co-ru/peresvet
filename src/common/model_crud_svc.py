@@ -439,7 +439,7 @@ class ModelCRUDSvc(Svc):
                 content_type='application/json',
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             ),
-            routing_key=self._config.publish["main"]["routing_key"]
+            routing_key=mes_data["id"]
         )
         self._logger.info(f'Узел {mes_data["id"]} обновлён.')
 
