@@ -1,8 +1,8 @@
 from src.common.model_crud_settings import ModelCRUDSettings
 
-class DataStoragesModelCRUDSettings(ModelCRUDSettings):
+class MethodsModelCRUDSettings(ModelCRUDSettings):
     #: имя сервиса. сервисы *_mod_crud создают в иерархии узел с таким же именем
-    svc_name: str = "dataStorages_model_crud"
+    svc_name: str = "methods_model_crud"
     #: строка коннекта к RabbitMQ
     amqp_url: str = "amqp://prs:Peresvet21@rabbitmq/"
     #: строка коннекта к OpenLDAP
@@ -13,31 +13,35 @@ class DataStoragesModelCRUDSettings(ModelCRUDSettings):
         "main": {
             "name": "peresvet",
             "type": "direct",
-            "routing_key": "dataStorages_model_crud_publish"
+            "routing_key": ["methods_model_crud_publish"]
         }
     }
 
+    #: обменник, который публикует запросы от API_CRUD
     consume: dict = {
-        "queue_name": "dataStorages_model_crud_consume",
+        "queue_name": "methods_model_crud_consume",
         "exchanges": {
-            #: обменник, который публикует запросы от API_CRUD
             "main": {
                 "name": "peresvet",
                 "type": "direct",
                 "routing_key": [
-                    "dataStorages_model_crud_consume",
-                    "dataStorages_api_crud_publish"
+                    "methods_model_crud_consume",
+                    "methods_api_crud_publish"
                 ]
             }
         }
     }
 
+    subscribe: dict = {}
+
     hierarchy: dict = {
         #: имя узла для хранения сущностей в иерархии
         #: если узел не требуется, то пустая строка
-        "node": "dataStorages",
+        "node": "methods",
         #: класс экзмепляров сущности в иерархии
-        "class": "prsDataStorage",
+        "class": "prsMethod",
         #: список через запятую родительских классов
-        "parent_classes": ""
+        "parent_classes": ["prsTag", "prsAlert"],
+        #: флаг создания узла ``cn=system`` внутри узла экземпляра сущности
+        "create_sys_node": True
     }

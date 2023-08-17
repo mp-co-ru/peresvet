@@ -14,11 +14,11 @@ class MethodsAPICRUDSettings(APICRUDSettings):
         "main": {
             "name": "peresvet",
             "type": "direct",
-            "routing_key": "dataStorages_api_crud_publish"
+            "routing_key": "methods_api_crud_publish"
         }
     }
     consume: dict = {
-        "queue_name": "dataStorages_api_crud_consume",
+        "queue_name": "methods_api_crud_consume",
         "exchanges": {
             "main": {
                 #: имя обменника
@@ -26,7 +26,7 @@ class MethodsAPICRUDSettings(APICRUDSettings):
                 #: тип обменника
                 "type": "direct",
                 #: привзяка для очереди
-                "routing_key": ["dataStorages_api_crud_consume"]
+                "routing_key": ["methods_api_crud_consume"]
             }
         }
     }
