@@ -71,6 +71,7 @@ class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
         )
         for parameter in mes["data"]["parameters"]:
             parameter.pop("parentId", None)
+            parameter["attributes"]["objectClass"] = ["prsMethodParameter"]
             await self._hierarchy.add(
                 parameters_node_id,
                 parameter["attributes"]
