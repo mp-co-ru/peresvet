@@ -225,7 +225,7 @@ class AlertsApp(svc.Svc):
             f"{'.'.join(args)}".encode()
         ).hexdigest()   # SHA3-256
 
-    async def _get_alerts(self, mes: dict) -> None:
+    async def _get_alerts(self) -> None:
         get_alerts = {
             "filter": {
                 "objectClass": ["prsAlert"],
