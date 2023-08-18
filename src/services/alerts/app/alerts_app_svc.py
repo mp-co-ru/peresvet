@@ -229,7 +229,7 @@ class AlertsApp(svc.Svc):
         get_alerts = {
             "filter": {
                 "objectClass": ["prsAlert"],
-                "prsActive": True
+                "prsActive": [True]
             },
             "attributes": ["cn", "description", "prsJsonConfigString"]
         }
