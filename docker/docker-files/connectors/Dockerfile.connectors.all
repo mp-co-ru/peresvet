@@ -69,5 +69,5 @@ ENV PYTHONUNBUFFERED 1
 
 COPY docker/docker-files/connectors/config_nginx.unit_connectors.all.json /docker-entrypoint.d/
 
-EXPOSE 80
-EXPOSE 443
+EXPOSE 83
+EXPOSE 84

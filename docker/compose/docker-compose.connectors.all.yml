@@ -10,7 +10,7 @@ services:
     environment:
       TZ: ${TIME_ZONE}
     ports:
-      - 80:80
+      - 83:83
       - 84:84
 
     volumes:

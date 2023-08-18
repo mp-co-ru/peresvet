@@ -1,4 +1,5 @@
 import sys
+import json
 import copy
 import aio_pika
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
@@ -82,12 +83,14 @@ class ConnectorsApp(svc.Svc):
             attributes['prsValueTypeCode'] = tag_attr.get('prsValueTypeCode')[0]
             if id_:
                 res["tags"].append({
-                    "tagId": id_,
+                    "tagId": tag_id,
                     "attributes": attributes
                 })
         
         return res
         
+
+
 settings = ConnectorsAppSettings()
 
 app = ConnectorsApp(settings=settings, title="ConnectorsApp")
@@ -127,16 +130,15 @@ async def get_req(websocket: WebSocket, connector_id: str):
         await websocket.send_json(connector_tag_data)
 
         while True:
-            tag_data_json = await websocket.receive_json()
-            await app._amqp_publish["main"]["exchange"].publish(
-                aio_pika.Message(
-                    body=f'{tag_data_json}'.encode(),
-                    content_type='application/json',
-                    delivery_mode=aio_pika.DeliveryMode.PERSISTENT
-                ),
-            routing_key=app._config.publish["main"]["routing_key"]
-            )
-            # app._logger.info(f'Данные коннектора {connector_id} отправлены')
+            tags_data_json = await websocket.receive_json()
+            for tag_data in tags_data_json.get('data'):
+
+                body = {
+                        "action": "tags.setData",
+                        "data": {"data": [tag_data]}
+                        }
+                await app._post_message(body, reply=False)
+                app._logger.info(f'Данные коннектора {connector_id} отправлены')
             
     except WebSocketDisconnect:
         # manager.disconnect(websocket)
