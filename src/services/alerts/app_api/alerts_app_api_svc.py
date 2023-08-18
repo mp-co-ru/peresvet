@@ -54,7 +54,7 @@ class AckAlarm(BaseModel):
     id: str = Field(title="Id тревоги.")
     x: int | str = Field(None, title="Время квитирования тревоги.")
 
-    @validator('ts')
+    @validator('x')
     @classmethod
     def ts_in_iso_format(cls, v: Any) -> int:
         try:
