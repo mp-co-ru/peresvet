@@ -1,4 +1,4 @@
-version: '3.9'
+version: "3.9"
 
 services:
   connectors_all:
@@ -10,8 +10,10 @@ services:
     environment:
       TZ: ${TIME_ZONE}
     ports:
-      - 80:80
+      - 83:83
+      - 84:84
 
     volumes:
       - ./logs/connectors.all/api_crud/:/usr/src/connectors_api_crud/log/:rw
       - ./logs/connectors.all/model_crud/:/usr/src/connectors_model_crud/log/:rw
+      - ./logs/connectors.all/app/:/usr/src/connectors_app/log/:rw
