@@ -3,8 +3,10 @@
 и класс сервиса ``tags_api_crud_svc``.
 """
 import sys
-import copy
+import json
 from ldap.dn import str2dn, dn2str
+from patio import NullExecutor, Registry
+from patio_rabbitmq import RabbitMQBroker
 
 sys.path.append(".")
 
@@ -24,6 +26,7 @@ class MethodsApp(svc.Svc):
     def __init__(self, settings: MethodsAppSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
         self._cache = Cache(settings.ldap_url)
+        self._method_broker = None
 
     def _set_incoming_commands(self) -> dict:
         return {
@@ -64,17 +67,57 @@ class MethodsApp(svc.Svc):
                 }
             ]
             """
-            for tag_data_item in tag_data:
-                for item in methods_ids:
-                    await self._calc_tag(item["tagId"], item["methodId"], tag_data_item)
 
-    async def _calc_tag(self, tag_id: str, method_id: str, data: list[int | None]) -> None:
-        parameters = await self._hierarchy.search({
-            "base": method_id,
-            "filter": {"cn": ["*"]},
-            "attributes": ["cn", "prsJsonConfigString"]
-        })
+            for item in methods_ids:
+                parameters = await self._hierarchy.search({
+                    "base": item["methodId"],
+                    "filter": {"cn": ["*"], "objectClass": ["prsMethodParameter"]},
+                    "attributes": ["cn", "prsJsonConfigString", "prsIndex"]
+                })
+                for tag_data_item in tag_data:
+                    await self._calc_tag(item["tagId"], item["methodId"], parameters, tag_data_item)
 
+    async def _calc_tag(self, tag_id: str, method_id: str, parameters: dict, data: list[int | None]) -> None:
+        parameters_data = []
+        for parameter in parameters:
+            request = json.loads(parameter[2]["prsJsonConfigString"][0])
+            request["finish"] = data[1]
+            param_data = await self._post_message(
+                mes={"action": "tags.getData", "data": request},
+                reply=True,
+                routing_key="tags_app_consume"
+            )
+            parameters_data.append(
+                {
+                    "index": parameter[2]["prsIndex"][0],
+                    "data": param_data
+                }
+            )
+
+        parameters_data.sort(key=lambda item: (int(item["index"], 1000)[item["index"] is None]))
+
+        method_name = self._hierarchy.search(
+            {
+                "id": method_id,
+                "attributes": ["cn"]
+            }
+        )
+
+        res = await self._method_broker.call(method_name[2]["cn"][0], *parameters_data)
+
+        await self._post_message(mes={
+            "action": "tags.setData",
+            "data": {
+                "data": [
+                    {
+                        "tagId": tag_id,
+                        "data": [
+                            (res, data[1], None)
+                        ]
+                    }
+                ]
+            }
+        }, reply=False, routing_key="tags_app_consume")
 
     async def _read_methods(self) -> None:
         # пока работаем только с вычислительными методами для тегов!
@@ -127,6 +170,15 @@ class MethodsApp(svc.Svc):
             await self._read_methods()
         except Exception as ex:
             self._logger.error(f"Ошибка чтения методов: {ex}")
+
+    async def _amqp_connect(self) -> None:
+        await super()._amqp_connect()
+
+        executor = await NullExecutor(Registry(project=self._config.svc_name))
+        self._method_broker = await RabbitMQBroker(
+            executor, amqp_url="amqp://prs:Peresvet21@localhost/"
+        )
+
 
 settings = MethodsAppSettings()
 

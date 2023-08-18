@@ -15,6 +15,8 @@ six = "*"
 ciso8601 = "*"
 python-dateutil = "*"
 uvloop = "*"
+patio = "*"
+patio_rabbitmq = "*"
 
 [requires]
 python_version = "3.10"

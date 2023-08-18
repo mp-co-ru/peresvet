@@ -21,7 +21,15 @@ class MethodParameter(svc.NodeAttributes):
 class MethodCreate(svc.NodeCreate):
     attributes: MethodCreateAttributes = Field({}, title="Атрибуты метода")
     initiatedBy: str | list[str] = Field([], "Список id экземпляров сущностей, инициирующих вычисление тега.")
-    parameters: List[MethodParameter] = Field([], title="Параметры метода")
+    parameters: List[MethodParameter] = Field(
+        [],
+        title="Параметры метода.",
+        description=(
+            "При создании параметров метода они должны быть пронумерованы ",
+            "с помощью атрибута prsIndex. В противном случае параметры ",
+            "будут переданы в вычислительный метод в случайном порядке."
+        )
+    )
 
     @validator('initiatedBy')
     @classmethod

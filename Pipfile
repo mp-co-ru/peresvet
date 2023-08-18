@@ -17,6 +17,8 @@ pandas = "*"
 numpy = "*"
 python-dateutil = "*"
 uvloop = "*"
+patio = "*"
+patio-rabbitmq = "*"
 
 [dev-packages]
 pylint = "*"
