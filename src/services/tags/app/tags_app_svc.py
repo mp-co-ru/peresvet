@@ -3,18 +3,11 @@
 и класс сервиса ``tags_api_crud_svc``.
 """
 import sys
-import asyncio
 import copy
-from uuid import UUID
-from typing import Any, List
-from pydantic import BaseModel, Field, validator
-
-from fastapi import APIRouter
 
 sys.path.append(".")
 
 from src.common import svc
-import src.common.times as t
 from src.services.tags.app.tags_app_settings import TagsAppSettings
 
 class TagsApp(svc.Svc):

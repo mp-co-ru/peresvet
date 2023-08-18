@@ -80,7 +80,7 @@ class AlertsApp(svc.Svc):
             }
         """
         alert_id = mes["data"]["id"]
-        alert_cache_key = self._cache_key(self._config.svc_name, alert_id)
+        alert_cache_key = self._cache_key(alert_id, self._config.svc_name)
         alert_data = self._cache.get_key(
             key=alert_cache_key,
             json_loads=True
@@ -146,7 +146,7 @@ class AlertsApp(svc.Svc):
             alerts = await self._hierarchy.search(get_alerts)
             for alert in alerts:
                 alert_id = alert[0]
-                alert_cache_key = self._cache_key(self._config.svc_name, alert_id)
+                alert_cache_key = self._cache_key(alert_id, self._config.svc_name)
                 alert_data = self._cache.get_key(
                     key=alert_cache_key,
                     json_loads=True
@@ -221,9 +221,12 @@ class AlertsApp(svc.Svc):
                     value=alert_data)
 
     def _cache_key(self, *args):
+        '''
         return hashlib.sha3_256(
             f"{'.'.join(args)}".encode()
         ).hexdigest()   # SHA3-256
+        '''
+        return f"{'.'.join(args)}"
 
     async def _get_alerts(self) -> None:
         get_alerts = {
@@ -242,7 +245,7 @@ class AlertsApp(svc.Svc):
             )
 
             await self._amqp_consume["queue"].bind(
-                exchange=self._amqp_consume["exchanges"]["tags"]["exchange"],
+                exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
                 routing_key=tag_id
             )
 
@@ -259,7 +262,7 @@ class AlertsApp(svc.Svc):
             }
 
             self._cache.set_key(
-                self._cache_key(self._config.svc_name, alert_id),
+                self._cache_key(alert_id, self._config.svc_name),
                 alert_data
             )
 
