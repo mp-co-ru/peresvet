@@ -19,15 +19,12 @@ class ConnectorsAPICRUDSettings(APICRUDSettings):
     }
 
     consume: dict = {
-        "queue_name": "connectors_model_crud_consume",
+        "queue_name": "connectors_api_crud_consume",
         "exchanges": {
             "main": {
                 "name": "peresvet",
                 "type": "direct",
-                "routing_key": [
-                    "connectors_model_crud_consume",
-                    "connectors_api_crud_publish"
-                ]
+                "routing_key": ["connectors_api_crud_consume"]
             }
         }
     }
