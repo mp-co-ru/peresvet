@@ -39,25 +39,26 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
             "connectors.delete": self._delete,
         }
 
-    async def _reading(self, mes: dict) -> dict:
+    async def _further_read(self, mes: dict) -> dict:
         pass
 
-    async def _creating(self, mes: dict, new_id: str) -> None:
-        system_node = await anext(self._hierarchy.search(payload={
+    async def _further_create(self, mes: dict, new_id: str) -> None:
+        system_node = await self._hierarchy.search(payload={
             "base": new_id,
             "scope": hierarchy.CN_SCOPE_ONELEVEL,
             "filter": {
                 "cn": ["system"]
             },
             "attributes": ["cn"]
-        }))
+        })
         if not system_node:
             self._logger.error(f"В теге {new_id} отсутствует узел `system`.")
             return
 
-        system_node_id = system_node[0]
+        system_node_id = system_node[0][0]
 
         linkTags = mes.get('data').get('linkTags')
+        self._logger.info(linkTags)
 
         if linkTags and isinstance(linkTags, list):
             for linkTag in linkTags:
