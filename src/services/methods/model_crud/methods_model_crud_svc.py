@@ -19,13 +19,13 @@ class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
     """
 
     _outgoing_commands = {
-        "created": "tags.created",
-        "mayUpdate": "tags.mayUpdate",
-        "updating": "tags.updating",
-        "updated": "tags.updated",
-        "mayDelete": "tags.mayDelete",
-        "deleting": "tags.deleting",
-        "deleted": "tags.deleted"
+        "created": "methods.created",
+        "mayUpdate": "methods.mayUpdate",
+        "updating": "methods.updating",
+        "updated": "methods.updated",
+        "mayDelete": "methods.mayDelete",
+        "deleting": "methods.deleting",
+        "deleted": "methods.deleted"
     }
 
     def __init__(self, settings: MethodsModelCRUDSettings, *args, **kwargs):
@@ -33,10 +33,10 @@ class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     def _set_incoming_commands(self) -> dict:
         return {
-            "tags.create": self._create,
-            "tags.read": self._read,
-            "tags.update": self._update,
-            "tags.delete": self._delete,
+            "methods.create": self._create,
+            "methods.read": self._read,
+            "methods.update": self._update,
+            "methods.delete": self._delete,
         }
 
     async def _further_create(self, mes: dict, new_id: str) -> None:
