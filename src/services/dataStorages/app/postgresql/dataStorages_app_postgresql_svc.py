@@ -64,6 +64,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         self._connection_pools = {}
         self._tags = {}
         self._alerts = {}
+        self._data_cache = {}
 
     def _set_incoming_commands(self) -> dict:
         return {
@@ -442,6 +443,32 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         self._logger.info(f"Тег {mes['data']['tagId']} отвязан от хранилища.")
 
+    async def _write_cache_data(self) -> None:
+        while True:
+            await asyncio.sleep(self._config.cache_data_period)
+            self._logger.info(f"Запись данных из кэша.")
+
+            for ds_id, tags in self._data_cache.items():
+                connection_pool = self._connection_pools[ds_id]
+                try:
+                    async with connection_pool.acquire() as conn:
+                        for tag_id, data in tags.items():
+                            tag_params = self._tags[tag_id]
+                            tag_tbl = tag_params["table"]
+                            async with conn.transaction(isolation='read_committed'):
+                                if tag_params["update"]:
+                                    xs = [str(x) for _, x, _ in data]
+                                    q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
+                                    await conn.execute(q)
+
+                                await conn.copy_records_to_table(
+                                    tag_tbl,
+                                    records=data,
+                                    columns=('y', 'x', 'q'))
+                            tags[tag_id] = []
+                except Exception as ex:
+                    self._logger.error("Ошибка записи данных в базу {ds_id}: {ex}")
+
     async def _tag_set(self, mes: dict) -> None:
         """
 
@@ -452,63 +479,15 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                     "data": [
                         {
                             "tagId": "<some_id>",
-                            "data": [(y, x, q)]
+                            "data": [(y,x,q)]
                         }
                     ]
                 }
             }
         """
-        async def set_tag_data(payload: dict) -> None:
-            self._logger.info(f"Запись данных тега {payload['tagId']}")
-
-            tag_params = self._tags.get(payload["tagId"])
-            if not tag_params:
-                self._logger.error(
-                    f"Тег {payload['tagId']} не привязан к хранилищу."
-                )
-                return
-
-            connection_pool = tag_params["ds"]
-            tag_tbl = tag_params["table"]
-            tag_value_type = tag_params["value_type"]
-            update = tag_params["update"]
-            data_items = payload["data"]
-
-            if tag_value_type == 4:
-                new_data_items = []
-                for item in data_items:
-                    new_data_items.append(
-                        (json.dumps(item[0], ensure_ascii=False), item[1], item[2])
-                    )
-                data_items = new_data_items
-
-            try:
-                async with connection_pool.acquire() as conn:
-                    async with conn.transaction(isolation='read_committed'):
-                        if update:
-                            xs = [str(x) for _, x, _ in data_items]
-                            q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
-                            await conn.execute(q)
-
-                        await conn.copy_records_to_table(
-                            tag_tbl,
-                            records=data_items,
-                            columns=('y', 'x', 'q'))
-
-                '''
-                await self._post_message(mes={
-                        "action": "dataStorages.tagsArchived",
-                        "data": payload
-                    },
-                    reply=False, routing_key=payload["tagId"]
-                )
-                '''
-
-            except PostgresError as ex:
-                self._logger.error(f"Ошибка при записи данных тега {payload['tagId']}: {ex}")
-
         for tag_data in mes["data"]["data"]:
-            await set_tag_data(tag_data)
+            tag_params = self._tags[tag_data["tagId"]]
+            self._data_cache[tag_params["ds_id"]][tag_data["tagId"]].extend(tag_data["data"])
 
     async def _prepare_tag_data(self, tag_id: str, ds_id: str) -> dict | None:
         get_tag_data = {
@@ -639,6 +618,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
             self._logger.info("Чтение тегов, привязанных к хранилищу...")
 
+            self._data_cache[ds[0]] = {}
+
             i = 1
             #async for tag in self._hierarchy.search(payload=search_tags):
             tags = await self._hierarchy.search(payload=search_tags)
@@ -662,7 +643,10 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
                 self._logger.debug(f"Сохранение кэша тега.")
                 tag_cache["ds"] = self._connection_pools[ds[0]]
+                tag_cache["ds_id"] = ds[0]
                 self._tags[tag_id] = tag_cache
+
+                self._data_cache[ds[0]][tag_id] = []
 
                 self._logger.debug(f"Привязка очереди.")
                 await self._amqp_consume["queue"].bind(
@@ -719,6 +703,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         await super().on_startup()
         try:
             await self._connect_to_db()
+
+            await asyncio.gather(self._write_cache_data())
         except Exception as ex:
             self._logger.error(f"Ошибка связи с базой данных: {ex}")
 
