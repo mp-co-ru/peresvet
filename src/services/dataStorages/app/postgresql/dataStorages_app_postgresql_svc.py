@@ -446,26 +446,31 @@ class DataStoragesAppPostgreSQL(svc.Svc):
     async def _write_cache_data(self) -> None:
         while True:
             await asyncio.sleep(self._config.cache_data_period)
-            self._logger.info(f"Запись данных из кэша.")
 
             for ds_id, tags in self._data_cache.items():
+                self._logger.info(f"Запись данных из кэша в базу {ds_id}...")
                 connection_pool = self._connection_pools[ds_id]
                 try:
                     async with connection_pool.acquire() as conn:
                         for tag_id, data in tags.items():
                             tag_params = self._tags[tag_id]
                             tag_tbl = tag_params["table"]
-                            async with conn.transaction(isolation='read_committed'):
-                                if tag_params["update"]:
-                                    xs = [str(x) for _, x, _ in data]
-                                    q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
-                                    await conn.execute(q)
+                            if data:
+                                async with conn.transaction(isolation='read_committed'):
+                                    if tag_params["update"]:
+                                        xs = [str(x) for _, x, _ in data]
+                                        q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
+                                        await conn.execute(q)
 
-                                await conn.copy_records_to_table(
-                                    tag_tbl,
-                                    records=data,
-                                    columns=('y', 'x', 'q'))
-                            tags[tag_id] = []
+                                    await conn.copy_records_to_table(
+                                        tag_tbl,
+                                        records=data,
+                                        columns=('y', 'x', 'q'))
+                                self._logger.info(f"В базу {ds_id} записано {len(data)} точек.")
+                                tags[tag_id] = []
+                            else:
+                                self._logger.info(f"Для базы {ds_id} в кэше нет данных.")
+
                 except Exception as ex:
                     self._logger.error("Ошибка записи данных в базу {ds_id}: {ex}")
 
