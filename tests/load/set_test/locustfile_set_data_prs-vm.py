@@ -7,29 +7,10 @@
 import json
 import random
 import string
-import websocket
-import time
-import gevent
 
-from locust import User, task, events
+from locust import FastHttpUser, task, events
 
-@events.init_command_line_parser.add_listener
-def _(parser):
-    parser.add_argument(
-        "--tags_in_pack", type=int, choices=[1, 5, 10, 100],
-        default=1, help="How many tags in one data packet."
-    )
-
-
-@events.init_command_line_parser.add_listener
-def _(parser):
-    parser.add_argument(
-        "--vals_in_tag", type=int,
-        default=1, help="How many values in one tag."
-    )
-
-
-class WSDataSetUser(User):
+class DataSetUserVM(FastHttpUser):
 
     '''
     def send_data(self, tag_id, value):
@@ -84,22 +65,22 @@ class WSDataSetUser(User):
                 "data": []
             }
         }
-
+        
         for tag in tags:
             data = []
             for _ in range(self.vals_in_tag):
-                    data.append([self.rand_int])
+                data.append([self.rand_int])
             tag_item = {
                 "tagId": tag,
                 "data": data
             }
             payload["data"]["data"].append(tag_item)
-        self.send(payload)
+        self.client.post("", json=payload)
 
     @task
     def set_pack_float(self):
         tags = random.sample(self.floats, self.pack_size)
-        payload= {
+        payload = {
             "action": "set",
             "data": {
                 "data": []
@@ -108,13 +89,13 @@ class WSDataSetUser(User):
         for tag in tags:
             data = []
             for _ in range(self.vals_in_tag):
-                    data.append([self.rand_float])
+                data.append([self.rand_float])
             tag_item = {
                 "tagId": tag,
                 "data": data
             }
             payload["data"]["data"].append(tag_item)
-        self.send(payload)
+        self.client.post("", json=payload)
 
     @task
     def set_pack_str(self):
@@ -128,13 +109,13 @@ class WSDataSetUser(User):
         for tag in tags:
             data = []
             for _ in range(self.vals_in_tag):
-                    data.append([self.rand_str])
+                data.append([self.rand_str])
             tag_item = {
                 "tagId": tag,
                 "data": data
             }
             payload["data"]["data"].append(tag_item)
-        self.send(payload)
+        self.client.post("", json=payload)
 
     @task
     def set_pack_json(self):
@@ -148,38 +129,13 @@ class WSDataSetUser(User):
         for tag in tags:
             data = []
             for _ in range(self.vals_in_tag):
-                    data.append([self.rand_int])
+                data.append([self.rand_json])
             tag_item = {
                 "tagId": tag,
                 "data": data
             }
             payload["data"]["data"].append(tag_item)
-        self.send(payload)
-
-    def send(self, payload):
-        e = None
-        try:
-            json_data = json.dumps(payload)
-
-            start_time = time.time()
-            g = gevent.spawn(self.ws.send, json_data)
-            g.get(block=True, timeout=2)
-
-            g = gevent.spawn(self.ws.recv)
-            res = g.get(block=True, timeout=10)
-        except Exception as exp:
-            e = exp
-            self.ws.close()
-            print("Ошибка!")
-            time.sleep(2)
-            self.ws.connect(self.host)
-
-        elapsed = int((time.time() - start_time) * 1000)
-        events.request.fire(
-            request_type='ws', name=self.host,
-            response_time=elapsed,
-            response_length=0, exception=e
-        )
+        self.client.post("", json=payload)
 
     def on_start(self):
         # создадим массив символов для генерации случайных строковых значений
@@ -197,16 +153,9 @@ class WSDataSetUser(User):
         self.vals_in_tag = self.environment.parsed_options.vals_in_tag
 
         # прочитаем из файлов коды тегов каждого типа
-        with open("/mnt/locust/tags_in_postgres.json", "r") as f:
+        with open("/mnt/locust/tags_in_vm.json", "r") as f:
             js = json.load(f)
             self.ints = js["0"]
             self.floats = js["1"]
             self.strs = js["2"]
             self.jsons = js["4"]
-
-        self.ws = websocket.WebSocket()
-        self.ws.settimeout(10)
-        self.ws.connect(self.host)
-
-    def on_close(self):
-        self.ws.close()

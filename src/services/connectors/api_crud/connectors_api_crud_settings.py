@@ -15,6 +15,22 @@ class ConnectorsAPICRUDSettings(APICRUDSettings):
                 "name": "peresvet",
                 "type": "direct",
                 "routing_key": "connectors_api_crud_publish"
+<<<<<<< HEAD
+=======
+        }
+    }
+    consume: dict = {
+        "queue_name": "connectors_api_crud_consume",
+        "exchanges": {
+            "main": {
+                #: имя обменника
+                "name": "peresvet",
+                #: тип обменника
+                "type": "direct",
+                #: привзяка для очереди
+                "routing_key": ["connectors_api_crud_consume"]
+            }
+>>>>>>> d2074789837efdb871ee581824524cdc755f4ef1
         }
     }
 

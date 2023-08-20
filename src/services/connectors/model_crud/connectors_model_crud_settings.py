@@ -13,7 +13,11 @@ class ConnectorsModelCRUDSettings(ModelCRUDSettings):
         "main": {
             "name": "peresvet",
             "type": "direct",
+<<<<<<< HEAD
             "routing_key": "connectors_model_crud_publish"
+=======
+            "routing_key": ["connectors_model_crud_publish"]
+>>>>>>> d2074789837efdb871ee581824524cdc755f4ef1
         }
     }
 
@@ -27,10 +31,16 @@ class ConnectorsModelCRUDSettings(ModelCRUDSettings):
                 "routing_key": [
                     "connectors_model_crud_consume",
                     "connectors_api_crud_publish"
+<<<<<<< HEAD
                 ]
+=======
+                    ]
+>>>>>>> d2074789837efdb871ee581824524cdc755f4ef1
             }
         }
     }
+
+    subscribe: dict = {}
 
     hierarchy: dict = {
         #: имя узла для хранения сущностей в иерархии

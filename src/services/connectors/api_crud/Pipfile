@@ -13,6 +13,10 @@ aio-pika = "*"
 loguru = "*"
 six = "*"
 uvloop = "*"
+<<<<<<< HEAD
+=======
+
+>>>>>>> d2074789837efdb871ee581824524cdc755f4ef1
 
 [requires]
 python_version = "3.10"
