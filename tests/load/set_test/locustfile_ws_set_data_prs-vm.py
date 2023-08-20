@@ -13,23 +13,7 @@ import gevent
 
 from locust import User, task, events
 
-@events.init_command_line_parser.add_listener
-def _(parser):
-    parser.add_argument(
-        "--tags_in_pack", type=int, choices=[1, 5, 10, 100],
-        default=1, help="How many tags in one data packet."
-    )
-
-
-@events.init_command_line_parser.add_listener
-def _(parser):
-    parser.add_argument(
-        "--vals_in_tag", type=int,
-        default=1, help="How many values in one tag."
-    )
-
-
-class WSDataSetUser(User):
+class WSDataSetUserVM(User):
 
     '''
     def send_data(self, tag_id, value):
@@ -197,7 +181,7 @@ class WSDataSetUser(User):
         self.vals_in_tag = self.environment.parsed_options.vals_in_tag
 
         # прочитаем из файлов коды тегов каждого типа
-        with open("/mnt/locust/tags_in_postgres.json", "r") as f:
+        with open("/mnt/locust/tags_in_vm.json", "r") as f:
             js = json.load(f)
             self.ints = js["0"]
             self.floats = js["1"]

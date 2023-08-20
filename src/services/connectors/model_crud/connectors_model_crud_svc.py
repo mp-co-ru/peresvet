@@ -23,7 +23,11 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
         "mayUpdate": "connectors.mayUpdate",
         "updating": "connectors.updating",
         "updated": "connectors.updated",
+<<<<<<< HEAD
         "mayDelete": "connectors.mayDelete",
+=======
+        "mayDelete": "connetors.mayDelete",
+>>>>>>> d2074789837efdb871ee581824524cdc755f4ef1
         "deleting": "connectors.deleting",
         "deleted": "connectors.deleted"
     }
@@ -39,7 +43,11 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
             "connectors.delete": self._delete,
         }
 
+<<<<<<< HEAD
     async def _further_read(self, mes: dict) -> dict:
+=======
+    async def _reading(self, mes: dict) -> dict:
+>>>>>>> d2074789837efdb871ee581824524cdc755f4ef1
         pass
 
     async def _further_create(self, mes: dict, new_id: str) -> None:

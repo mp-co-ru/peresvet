@@ -2,7 +2,7 @@
   "applications": {
     "app_psql": {
       "type": "python 3.10",
-      "processes": 1,
+      "processes": 4,
       "working_directory": "/usr/src/dataStorages_app_psql",
       "path": "/usr/src/dataStorages_app_psql/src/services/dataStorages/app_psql/",
       "home": "/usr/src/dataStorages_app_psql/.venv/",
