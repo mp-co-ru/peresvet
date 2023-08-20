@@ -66,10 +66,11 @@ class DataSetUser(FastHttpUser):
             tag_item = {
                 "tagId": tag,
                 "data": [
-                    (self.rand_int)
+                    [self.rand_int]
                 ]
             }
             payload["data"].append(tag_item)
+
         self.client.post("", json=payload)
 
     @task
@@ -82,7 +83,7 @@ class DataSetUser(FastHttpUser):
             tag_item = {
                 "tagId": tag,
                 "data": [
-                    (self.rand_float)
+                    [self.rand_float]
                 ]
             }
             payload["data"].append(tag_item)
@@ -98,7 +99,7 @@ class DataSetUser(FastHttpUser):
             tag_item = {
                 "tagId": tag,
                 "data": [
-                    (self.rand_str)
+                    [self.rand_str]
                 ]
             }
             payload["data"].append(tag_item)
@@ -114,7 +115,7 @@ class DataSetUser(FastHttpUser):
             tag_item = {
                 "tagId": tag,
                 "data": [
-                    (self.rand_json)
+                    [self.rand_json]
                 ]
             }
             payload["data"].append(tag_item)

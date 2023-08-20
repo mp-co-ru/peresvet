@@ -88,3 +88,6 @@ class DataStoragesAppPostgreSQLSettings(SvcSettings):
     # данный сервис
     # если коды не указаны, то будут обслуживаться все хранилища заданного типа
     datastorages_id: List[str] = []
+
+    # периодичность накопления кэша данных, секунды
+    cache_data_period: int = 30
