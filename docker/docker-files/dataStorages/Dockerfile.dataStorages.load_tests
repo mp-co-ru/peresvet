@@ -53,7 +53,7 @@ ADD src/services/dataStorages/app/postgresql dataStorages/app_psql
 
 ADD src/common/ /usr/src/dataStorages_app_vm/src/common
 COPY src/__init__.py /usr/src/dataStorages_app_vm/src/
-RUN rm -r /usr/src/dataStorages_app_vm/src/common/__pycache__
+#RUN rm -r /usr/src/dataStorages_app_vm/src/common/__pycache__
 WORKDIR /usr/src/dataStorages_app_vm/src
 RUN mkdir services
 WORKDIR /usr/src/dataStorages_app_vm/src/services

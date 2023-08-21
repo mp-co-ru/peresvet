@@ -444,35 +444,44 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         self._logger.info(f"Тег {mes['data']['tagId']} отвязан от хранилища.")
 
     async def _write_cache_data(self) -> None:
-        while True:
-            await asyncio.sleep(self._config.cache_data_period)
 
-            for ds_id, tags in self._data_cache.items():
-                self._logger.info(f"Запись данных из кэша в базу {ds_id}...")
-                connection_pool = self._connection_pools[ds_id]
-                try:
-                    async with connection_pool.acquire() as conn:
-                        for tag_id, data in tags.items():
-                            tag_params = self._tags[tag_id]
-                            tag_tbl = tag_params["table"]
-                            if data:
-                                async with conn.transaction(isolation='read_committed'):
-                                    if tag_params["update"]:
-                                        xs = [str(x) for _, x, _ in data]
-                                        q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
-                                        await conn.execute(q)
+        for ds_id, tags in self._data_cache.items():
+            self._logger.info(f"Запись данных из кэша в базу {ds_id}...")
+            connection_pool = self._connection_pools[ds_id]
+            try:
+                async with connection_pool.acquire() as conn:
+                    for tag_id, data in tags.items():
+                        tag_params = self._tags[tag_id]
+                        tag_tbl = tag_params["table"]
 
-                                    await conn.copy_records_to_table(
-                                        tag_tbl,
-                                        records=data,
-                                        columns=('y', 'x', 'q'))
-                                self._logger.info(f"В базу {ds_id} записано {len(data)} точек.")
-                                tags[tag_id] = []
-                            else:
-                                self._logger.info(f"Для базы {ds_id} в кэше нет данных.")
+                        if data:
+                            async with conn.transaction(isolation='read_committed'):
+                                if tag_params["update"]:
+                                    xs = [str(x) for _, x, _ in data]
+                                    q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
+                                    await conn.execute(q)
+                                if tag_params["value_type"] == 4:
+                                    new_data = []
+                                    for item in data:
+                                        new_data.append(
+                                            (json.dumps(item[0], ensure_ascii=False), item[1], item[2])
+                                        )
+                                    data = new_data
 
-                except Exception as ex:
-                    self._logger.error("Ошибка записи данных в базу {ds_id}: {ex}")
+                                await conn.copy_records_to_table(
+                                    tag_tbl,
+                                    records=data,
+                                    columns=('y', 'x', 'q'))
+                            self._logger.debug(f"В базу {ds_id} для тега {tag_id} записано {len(data)} точек.")
+                            tags[tag_id] = []
+                        else:
+                            self._logger.debug(f"Для тега {tag_id} в кэше нет данных.")
+
+            except Exception as ex:
+                self._logger.error(f"Ошибка записи данных в базу {ds_id}: {ex}")
+
+        loop = asyncio.get_event_loop()
+        loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))
 
     async def _tag_set(self, mes: dict) -> None:
         """
@@ -709,7 +718,9 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         try:
             await self._connect_to_db()
 
-            await asyncio.gather(self._write_cache_data())
+            loop = asyncio.get_event_loop()
+            loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))
+            #await asyncio.gather(asyncio.create_task())
         except Exception as ex:
             self._logger.error(f"Ошибка связи с базой данных: {ex}")
 
