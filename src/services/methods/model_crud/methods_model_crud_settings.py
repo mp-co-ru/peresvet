@@ -37,11 +37,11 @@ class MethodsModelCRUDSettings(ModelCRUDSettings):
     hierarchy: dict = {
         #: имя узла для хранения сущностей в иерархии
         #: если узел не требуется, то пустая строка
-        "node": "methods",
+        "node": "",
         #: класс экзмепляров сущности в иерархии
         "class": "prsMethod",
         #: список через запятую родительских классов
-        "parent_classes": ["prsTag", "prsAlert"],
+        "parent_classes": "prsTag,prsAlert",
         #: флаг создания узла ``cn=system`` внутри узла экземпляра сущности
         "create_sys_node": True
     }

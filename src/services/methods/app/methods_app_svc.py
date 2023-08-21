@@ -1,6 +1,6 @@
 """
 Модуль содержит классы, описывающие входные данные для команд CRUD для тегов
-и класс сервиса ``tags_api_crud_svc``.
+и класс сервиса ``methods_api_crud_svc``.
 """
 import sys
 import json
@@ -174,8 +174,8 @@ class MethodsApp(svc.Svc):
     async def _amqp_connect(self) -> None:
         await super()._amqp_connect()
 
-        executor = await NullExecutor(Registry(project=self._config.svc_name))
-        self._method_broker = await RabbitMQBroker(
+        executor = NullExecutor(Registry(project=self._config.svc_name))
+        self._method_broker = RabbitMQBroker(
             executor, amqp_url="amqp://prs:Peresvet21@localhost/"
         )
 

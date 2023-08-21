@@ -1,0 +1,49 @@
+{
+    "listeners": {
+        "*:87": {
+            "pass": "applications/api_crud"
+        }
+    },
+
+    "applications": {
+        "api_crud": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/methods_api_crud",
+            "path": "/usr/src/methods_api_crud/src/services/methods/api_crud/",
+            "home": "/usr/src/methods_api_crud/.venv/",
+            "module": "methods_api_crud_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"CRITICAL\", \"file_name\": \"log/methods_api_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
+                "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        },
+        "model_crud": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/methods_model_crud",
+            "path": "/usr/src/methods_model_crud/src/services/methods/model_crud/",
+            "home": "/usr/src/methods_model_crud/.venv/",
+            "module": "methods_model_crud_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"CRITICAL\", \"file_name\": \"log/methods_model_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
+                "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        },
+        "app": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/methods_app",
+            "path": "/usr/src/methods_app/src/services/methods/app/",
+            "home": "/usr/src/methods_app/.venv/",
+            "module": "methods_app_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"CRITICAL\", \"file_name\": \"log/methods_app.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
+                "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        }
+    }
+}
