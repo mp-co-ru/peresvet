@@ -7,7 +7,7 @@ from src.services.methods.model_crud.methods_model_crud_settings import MethodsM
 from src.common import model_crud_svc
 from src.common import hierarchy
 
-class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
+class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
     """Сервис работы с тегами в иерархии.
 
     Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``,
@@ -49,7 +49,7 @@ class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
             "attributes": ["cn"]
         })
         if not system_node:
-            self._logger.error(f"В теге {new_id} отсутствует узел `system`.")
+            self._logger.error(f"В методе {new_id} отсутствует узел `system`.")
             return
 
         system_node_id = system_node[0][0]
@@ -70,7 +70,6 @@ class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
             {"cn": ["parameters"]}
         )
         for parameter in mes["data"]["parameters"]:
-            parameter.pop("parentId", None)
             parameter["attributes"]["objectClass"] = ["prsMethodParameter"]
             await self._hierarchy.add(
                 parameters_node_id,
@@ -79,4 +78,4 @@ class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
 settings = MethodsModelCRUDSettings()
 
-app = TagsModelCRUD(settings=settings, title="TagsModelCRUD")
+app = MethodsModelCRUD(settings=settings, title="TagsModelCRUD")

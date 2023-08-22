@@ -1,0 +1,73 @@
+FROM nginx/unit:1.28.0-python3.10
+
+ENV LDAP_ORGANISATION mycompany
+ENV LDAP_DOMAIN mycompany.com
+ENV LDAP_ADMIN_PASSWORD 123456
+
+#RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
+WORKDIR /home
+RUN pip3 install pipenv
+RUN apt-get update && apt-get install -y --no-install-recommends gcc \
+    build-essential python3-dev \
+    libldap2-dev libsasl2-dev tox lcov valgrind
+
+RUN bash -c "DEBIAN_FRONTEND=noninteractive apt install -q -y slapd ldap-utils"
+
+# для каждого сервиса создадим свой каталог -------------------
+WORKDIR /usr/src
+RUN mkdir methods_api_crud methods_model_crud methods_app
+COPY src/services/methods/api_crud/Pipfile /usr/src/methods_api_crud/
+COPY src/services/methods/model_crud/Pipfile /usr/src/methods_model_crud/
+COPY src/services/methods/app/Pipfile /usr/src/methods_app/
+
+WORKDIR /usr/src/methods_api_crud
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
+
+WORKDIR /usr/src/methods_model_crud
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
+
+WORKDIR /usr/src/methods_app
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
+
+RUN apt-get -y purge slapd
+
+RUN addgroup --gid 1024 volume_group
+RUN usermod -a -G volume_group unit
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+COPY docker/docker-files/methods/config_nginx.unit_methods.all.json /docker-entrypoint.d/
+
+# копируем исходники --------------------------------------------
+ADD src/common/ /usr/src/methods_api_crud/src/common
+COPY src/__init__.py /usr/src/methods_api_crud/src/
+#RUN rm -r /usr/src/methods_api_crud/src/common/__pycache__
+WORKDIR /usr/src/methods_api_crud/src
+RUN mkdir services
+WORKDIR /usr/src/methods_api_crud/src/services
+ADD src/services/methods/api_crud methods/api_crud
+WORKDIR /usr/src/methods_api_crud
+
+ADD src/common/ /usr/src/methods_model_crud/src/common
+COPY src/__init__.py /usr/src/methods_model_crud/src/
+#RUN rm -r /usr/src/methods_model_crud/src/common/__pycache__
+WORKDIR /usr/src/methods_model_crud/src
+RUN mkdir services
+WORKDIR /usr/src/methods_model_crud/src/services
+ADD src/services/methods/model_crud methods/model_crud
+WORKDIR /usr/src/methods_model_crud
+
+ADD src/common/ /usr/src/methods_app/src/common
+COPY src/__init__.py /usr/src/methods_app/src/
+#RUN rm -r /usr/src/methods_app/src/common/__pycache__
+WORKDIR /usr/src/methods_app/src
+RUN mkdir services
+WORKDIR /usr/src/methods_app/src/services
+ADD src/services/methods/app methods/app
+WORKDIR /usr/src/methods_app
+# ------------------------------------------------------------
+
+EXPOSE 87
