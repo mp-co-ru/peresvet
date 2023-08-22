@@ -13,14 +13,15 @@ from src.common import api_crud_svc as svc
 from src.services.methods.api_crud.methods_api_crud_settings import MethodsAPICRUDSettings
 
 class MethodCreateAttributes(svc.NodeAttributes):
-    prsMethodAddress: str = ""
+    prsMethodAddress: str = Field(title="Адрес метода")
+    prsEntityTypeCode: int = Field(0, title="Тип метода")
 
-class MethodParameter(svc.NodeAttributes):
+class MethodParameter(svc.NodeCreate):
     pass
 
 class MethodCreate(svc.NodeCreate):
     attributes: MethodCreateAttributes = Field({}, title="Атрибуты метода")
-    initiatedBy: str | list[str] = Field([], "Список id экземпляров сущностей, инициирующих вычисление тега.")
+    initiatedBy: str | list[str] = Field([], title="Список id экземпляров сущностей, инициирующих вычисление тега.")
     parameters: List[MethodParameter] = Field(
         [],
         title="Параметры метода.",
@@ -92,4 +93,4 @@ async def update(payload: MethodUpdate):
 async def delete(payload: svc.NodeDelete):
     await app.delete(payload)
 
-app.include_router(router, prefix=f"{settings.api_version}/tags", tags=["tags"])
+app.include_router(router, prefix=f"{settings.api_version}/methods", tags=["methods"])

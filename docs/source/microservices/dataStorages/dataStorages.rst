@@ -4,8 +4,6 @@
 
    <br/>
 
-Микросервисы
-------------
 dataStorages (хранилища данных)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Группа сервисов для хранилищ данных.
@@ -226,7 +224,7 @@ dataStorages_api_crud
    |  .. code-block:: python                                                              |
    |                                                                                      |
    |     {                                                                                |
-   |        "action": "update",                                                             |
+   |        "action": "update",                                                           |
    |        "data": {                                                                     |
    |            "id": ["first_id", "n_id"],                                               |
    |            "scope": 1,                                                               |

@@ -1,0 +1,14 @@
+version: '3.9'
+
+services:
+  methods_all:
+    hostname: methods_all
+    build:
+      context: ../..
+      dockerfile: docker/docker-files/methods/Dockerfile.methods.load_tests
+
+    environment:
+      TZ: ${TIME_ZONE}
+
+    volumes:
+      - ./logs/methods.all/app/:/usr/src/methods_app/log/:rw

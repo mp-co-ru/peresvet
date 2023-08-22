@@ -290,7 +290,7 @@ class Hierarchy:
             attrs["objectClass"] = ["prsModelNode"]
 
         rename_node = False
-        if not attrs.get("cn"):
+        if not (cn := attrs.get("cn")) or not cn[0]:
             rename_node = True
             attrs["cn"] = [str(uuid4())]
 

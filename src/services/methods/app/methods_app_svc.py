@@ -1,6 +1,6 @@
 """
 Модуль содержит классы, описывающие входные данные для команд CRUD для тегов
-и класс сервиса ``tags_api_crud_svc``.
+и класс сервиса ``methods_api_crud_svc``.
 """
 import sys
 import json
@@ -72,7 +72,7 @@ class MethodsApp(svc.Svc):
                 parameters = await self._hierarchy.search({
                     "base": item["methodId"],
                     "filter": {"cn": ["*"], "objectClass": ["prsMethodParameter"]},
-                    "attributes": ["cn", "prsJsonConfigString", "prsIndex"]
+                    "attributes": ["prsJsonConfigString", "prsIndex", "cn"]
                 })
                 for tag_data_item in tag_data:
                     await self._calc_tag(item["tagId"], item["methodId"], parameters, tag_data_item)
@@ -89,21 +89,21 @@ class MethodsApp(svc.Svc):
             )
             parameters_data.append(
                 {
-                    "index": parameter[2]["prsIndex"][0],
+                    "index": int(parameter[2]["prsIndex"][0]),
                     "data": param_data
                 }
             )
 
-        parameters_data.sort(key=lambda item: (int(item["index"], 1000)[item["index"] is None]))
+        parameters_data.sort(key=lambda item: (item["index"], 1000)[item["index"] is None])
 
         method_name = self._hierarchy.search(
             {
                 "id": method_id,
-                "attributes": ["cn"]
+                "attributes": ["prsMethodAddress"]
             }
         )
 
-        res = await self._method_broker.call(method_name[2]["cn"][0], *parameters_data)
+        res = await self._method_broker.call(method_name[2]["prsMethodAddress"][0], *parameters_data)
 
         await self._post_message(mes={
             "action": "tags.setData",
@@ -174,8 +174,8 @@ class MethodsApp(svc.Svc):
     async def _amqp_connect(self) -> None:
         await super()._amqp_connect()
 
-        executor = await NullExecutor(Registry(project=self._config.svc_name))
-        self._method_broker = await RabbitMQBroker(
+        executor = NullExecutor(Registry(project=self._config.svc_name))
+        self._method_broker = RabbitMQBroker(
             executor, amqp_url="amqp://prs:Peresvet21@localhost/"
         )
 
