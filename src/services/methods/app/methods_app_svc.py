@@ -162,7 +162,6 @@ class MethodsApp(svc.Svc):
 
             self._logger.debug(f"Метод {method[0]} прочитан.")
 
-        print(f"cache_data: {cache_data}")
         for tag_id, methods_ids in cache_data.items():
             await self._cache.set_key(
                 self._cache_key(tag_id, self._config.svc_name),

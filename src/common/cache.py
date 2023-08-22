@@ -44,7 +44,8 @@ class Cache(Hierarchy):
             return result
 
     async def set_key(self, key: str, value: str | dict) -> None:
-        new_value = (value, json.dumps(value, ensure_ascii=False))[isinstance(value, dict)]
+        new_value = (value, json.dumps(value, ensure_ascii=False))[isinstance(value, (dict, list))]
+
         modlist = {
             "prsJsonConfigString": [new_value.encode('utf-8')]
         }
