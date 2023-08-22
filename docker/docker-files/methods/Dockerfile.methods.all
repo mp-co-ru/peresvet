@@ -44,7 +44,7 @@ COPY docker/docker-files/methods/config_nginx.unit_methods.all.json /docker-entr
 # копируем исходники --------------------------------------------
 ADD src/common/ /usr/src/methods_api_crud/src/common
 COPY src/__init__.py /usr/src/methods_api_crud/src/
-RUN rm -r /usr/src/methods_api_crud/src/common/__pycache__
+#RUN rm -r /usr/src/methods_api_crud/src/common/__pycache__
 WORKDIR /usr/src/methods_api_crud/src
 RUN mkdir services
 WORKDIR /usr/src/methods_api_crud/src/services
@@ -53,7 +53,7 @@ WORKDIR /usr/src/methods_api_crud
 
 ADD src/common/ /usr/src/methods_model_crud/src/common
 COPY src/__init__.py /usr/src/methods_model_crud/src/
-RUN rm -r /usr/src/methods_model_crud/src/common/__pycache__
+#RUN rm -r /usr/src/methods_model_crud/src/common/__pycache__
 WORKDIR /usr/src/methods_model_crud/src
 RUN mkdir services
 WORKDIR /usr/src/methods_model_crud/src/services
@@ -62,7 +62,7 @@ WORKDIR /usr/src/methods_model_crud
 
 ADD src/common/ /usr/src/methods_app/src/common
 COPY src/__init__.py /usr/src/methods_app/src/
-RUN rm -r /usr/src/methods_app/src/common/__pycache__
+#RUN rm -r /usr/src/methods_app/src/common/__pycache__
 WORKDIR /usr/src/methods_app/src
 RUN mkdir services
 WORKDIR /usr/src/methods_app/src/services
