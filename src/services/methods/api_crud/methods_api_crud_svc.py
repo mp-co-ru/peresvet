@@ -13,9 +13,10 @@ from src.common import api_crud_svc as svc
 from src.services.methods.api_crud.methods_api_crud_settings import MethodsAPICRUDSettings
 
 class MethodCreateAttributes(svc.NodeAttributes):
-    prsMethodAddress: str = ""
+    prsMethodAddress: str = Field(title="Адрес метода")
+    prsEntityTypeCode: int = Field(0, title="Тип метода")
 
-class MethodParameter(svc.NodeAttributes):
+class MethodParameter(svc.NodeCreate):
     pass
 
 class MethodCreate(svc.NodeCreate):

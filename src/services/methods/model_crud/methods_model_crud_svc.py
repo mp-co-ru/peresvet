@@ -70,7 +70,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             {"cn": ["parameters"]}
         )
         for parameter in mes["data"]["parameters"]:
-            parameter.pop("parentId", None)
+            print(f"param: {parameter}")
             parameter["attributes"]["objectClass"] = ["prsMethodParameter"]
             await self._hierarchy.add(
                 parameters_node_id,

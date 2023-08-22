@@ -72,7 +72,7 @@ class MethodsApp(svc.Svc):
                 parameters = await self._hierarchy.search({
                     "base": item["methodId"],
                     "filter": {"cn": ["*"], "objectClass": ["prsMethodParameter"]},
-                    "attributes": ["cn", "prsJsonConfigString", "prsIndex"]
+                    "attributes": ["prsJsonConfigString", "prsIndex", "cn"]
                 })
                 for tag_data_item in tag_data:
                     await self._calc_tag(item["tagId"], item["methodId"], parameters, tag_data_item)
@@ -89,21 +89,21 @@ class MethodsApp(svc.Svc):
             )
             parameters_data.append(
                 {
-                    "index": parameter[2]["prsIndex"][0],
+                    "index": int(parameter[2]["prsIndex"][0]),
                     "data": param_data
                 }
             )
 
-        parameters_data.sort(key=lambda item: (int(item["index"], 1000)[item["index"] is None]))
+        parameters_data.sort(key=lambda item: (item["index"], 1000)[item["index"] is None])
 
         method_name = self._hierarchy.search(
             {
                 "id": method_id,
-                "attributes": ["cn"]
+                "attributes": ["prsMethodAddress"]
             }
         )
 
-        res = await self._method_broker.call(method_name[2]["cn"][0], *parameters_data)
+        res = await self._method_broker.call(method_name[2]["prsMethodAddress"][0], *parameters_data)
 
         await self._post_message(mes={
             "action": "tags.setData",
