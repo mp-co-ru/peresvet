@@ -126,7 +126,7 @@ class MethodsApp(svc.Svc):
             "filter": {
                 "objectClass": ["prsMethod"],
                 "prsActive": [True],
-                "prsEntityTypeCode": 0
+                "prsEntityTypeCode": [0]
             },
             "attributes": ["cn"]
         }
