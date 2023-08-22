@@ -50,7 +50,7 @@ class Svc(BaseSvc):
         while not connected:
             try:
                 self._logger.debug("Установление связи с LDAP сервером.")
-                self._hierarchy.connect()
+                await self._hierarchy.connect()
                 connected = True
                 self._logger.info("Связь с LDAP сервером установлена.")
             except ValueError:

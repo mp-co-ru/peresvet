@@ -1,7 +1,9 @@
 import json
 import ldap
 
-from src.common.hierarchy import Hierarchy
+from src.common.hierarchy import (
+    Hierarchy, CN_SCOPE_ONELEVEL, CN_SCOPE_BASE, CN_SCOPE_SUBTREE
+)
 
 class Cache(Hierarchy):
 
@@ -9,16 +11,16 @@ class Cache(Hierarchy):
         super().__init__(url, pool_size)
         self._cache_node_dn = None
 
-    def connect(self) -> None:
-        super().connect()
+    async def connect(self) -> None:
+        await super().connect()
 
         with self._cm.connection() as conn:
-            res = conn.search_s(base=self._base, scope=Hierarchy.CN_SCOPE_ONELEVEL,
+            res = conn.search_s(base=self._base_dn, scope=CN_SCOPE_ONELEVEL,
                 filterstr=f"(cn=_cache)",attrlist=['cn'])
             if not res:
-                self.add(attribute_values={"cn": "_cache"})
+                await self.add(attribute_values={"cn": "_cache"})
 
-        self._cache_node_dn = f"cn=_cache,{self._base}"
+        self._cache_node_dn = f"cn=_cache,{self._base_dn}"
 
         return True
 
@@ -27,7 +29,7 @@ class Cache(Hierarchy):
         try:
             with self._cm.connection() as conn:
                 base_node = f"cn={key},{self._cache_node_dn}"
-                res = conn.search_s(base=base_node, scope=Hierarchy.CN_SCOPE_BASE,
+                res = conn.search_s(base=base_node, scope=CN_SCOPE_BASE,
                     attrlist=["prsJsonConfigString"])
             result = res[0][1]["prsJsonConfigString"][0].decode()
         except:

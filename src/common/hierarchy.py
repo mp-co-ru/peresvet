@@ -29,7 +29,7 @@ class Hierarchy:
         self.url : str = url
         self.pool_size : int = pool_size
         self._cm : ConnectionManager = None
-        self._base : str = None
+        self._base_dn : str = None
 
     async def _does_node_exist(self, node: str) -> bool:
         """Проверка существования узла с указанным id.
@@ -42,7 +42,7 @@ class Hierarchy:
         """
 
         with self._cm.connection() as conn:
-                res = conn.search_s(base=self._base, scope=CN_SCOPE_SUBTREE,
+                res = conn.search_s(base=self._base_dn, scope=CN_SCOPE_SUBTREE,
                     filterstr=f"(entryUUID={node})",attrlist=['cn'])
                 if not res:
                     return False
@@ -64,11 +64,11 @@ class Hierarchy:
         """
 
         if not node:
-            return self._base
+            return self._base_dn
 
         if self._is_node_id_uuid(node):
             with self._cm.connection() as conn:
-                res = conn.search_s(base=self._base, scope=CN_SCOPE_SUBTREE,
+                res = conn.search_s(base=self._base_dn, scope=CN_SCOPE_SUBTREE,
                                 filterstr=f"(entryUUID={node})",attrlist=['cn'])
                 if not res:
                     raise ValueError(f"Узел {node} не найден.")
@@ -94,7 +94,7 @@ class Hierarchy:
 
         return True
 
-    def connect(self) -> None:
+    async def connect(self) -> None:
         """Создание пула коннектов к ldap-серверу.
         URL передаётся при создании нового экземпляра класса ``Hierarchy``.
 
@@ -113,7 +113,8 @@ class Hierarchy:
             retry_delay=0.3
         )
 
-        self._base = ldap_url.dn
+        self._base_dn = ldap_url.dn
+        self._base_id = await self.get_node_id(self._base_dn)
 
     @staticmethod
     def __form_filterstr(filter_attributes: dict) -> str:
@@ -133,6 +134,8 @@ class Hierarchy:
         for key, values in filter_attributes.items():
             sub_filter = ""
             for value in values:
+                if isinstance(value, bool):
+                    value = ("FALSE", "TRUE")[value]
                 sub_filter = f"{sub_filter}({key}={value})"
             if filterstr:
                 filterstr = f"{filterstr}(|{sub_filter})"
@@ -220,12 +223,13 @@ class Hierarchy:
             if ids:
                 #filterstr = Hierarchy.__form_filterstr({"entryUUID": ids})
                 filterstr = '(|(entryUUID=' + ')(entryUUID='.join(ids) + '))'
-                node = self._base
+                node = self._base_dn
                 scope = CN_SCOPE_SUBTREE
             else:
                 filterstr = Hierarchy.__form_filterstr(payload["filter"])
 
-                base = payload.get("base")
+                node = await self.get_node_dn(payload.get("base"))
+
                 scope = payload.get("scope", CN_SCOPE_SUBTREE)
                 deref = payload.get("deref", True)
                 old_deref = conn.deref
@@ -234,8 +238,6 @@ class Hierarchy:
                     conn.deref = ldap.DEREF_SEARCHING
                 else:
                     conn.deref = ldap.DEREF_NEVER
-
-                node = await self.get_node_dn(base)
 
             return_attributes = payload.get("attributes", ["*"])
             id_in_attrs = False
@@ -391,7 +393,7 @@ class Hierarchy:
                     cn = cn[0]
                 new_rdn = f'cn={ldap.dn.escape_dn_chars(cn)}'
                 conn.rename_s(real_base, new_rdn)
-                res = conn.search_s(self._base, CN_SCOPE_SUBTREE, f'(entryUUID={id_})')
+                res = conn.search_s(self._base_dn, CN_SCOPE_SUBTREE, f'(entryUUID={id_})')
 
                 return res[0][0]
 
@@ -442,7 +444,7 @@ class Hierarchy:
         try:
             UUID(node)
             with self._cm.connection() as conn:
-                res = conn.search_s(base=self._base, scope=CN_SCOPE_SUBTREE,
+                res = conn.search_s(base=self._base_dn, scope=CN_SCOPE_SUBTREE,
                                 filterstr=f"(entryUUID={node})",attrlist=['cn'])
                 if not res:
                     raise ValueError(f"Узел {node} не найден.")
@@ -482,7 +484,7 @@ class Hierarchy:
             str: значение атрибута objectClass (одно значение, исключая ``top``)
         """
         with self._cm.connection() as conn:
-            res = conn.search_s(base=self._base, scope=CN_SCOPE_SUBTREE,
+            res = conn.search_s(base=self._base_dn, scope=CN_SCOPE_SUBTREE,
                 filterstr=f"(entryUUID={node})",attrlist=['objectClass'])
             if not res:
                 raise ValueError(f"Узел {node} не найден.")
