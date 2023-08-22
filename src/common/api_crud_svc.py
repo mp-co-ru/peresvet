@@ -3,14 +3,9 @@
 а также класс APICRUDSvc - базовый класс для всех сервисов
 <сущность>_api_crud.
 """
-import asyncio
-import json
-from collections.abc import MutableMapping
-from uuid import UUID, uuid4
+from typing import Optional
+from uuid import UUID
 from pydantic import BaseModel, Field, validator
-from aio_pika import Message
-import aio_pika.abc
-from fastapi import APIRouter
 
 from src.common.base_svc import BaseSvc
 from src.common.api_crud_settings import APICRUDSettings
