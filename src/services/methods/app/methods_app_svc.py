@@ -125,8 +125,8 @@ class MethodsApp(svc.Svc):
         get_methods = {
             "filter": {
                 "objectClass": ["prsMethod"],
-                "prsActive": True,
-                "prsEntityTypeCode": 0
+                "prsActive": [True],
+                "prsEntityTypeCode": [0]
             },
             "attributes": ["cn"]
         }
@@ -161,8 +161,6 @@ class MethodsApp(svc.Svc):
                 self._cache_key(tag_id, self._config.svc_name),
                 methods_ids
             )
-
-        self._logger.debug(f"Метод {method[0]} прочитан.")
 
     async def on_startup(self) -> None:
         await super().on_startup()
