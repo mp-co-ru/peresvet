@@ -1,5 +1,7 @@
 import json
 import ldap
+import ldap.modlist
+import ldap.dn
 
 from src.common.hierarchy import (
     Hierarchy, CN_SCOPE_ONELEVEL, CN_SCOPE_BASE, CN_SCOPE_SUBTREE
@@ -43,20 +45,32 @@ class Cache(Hierarchy):
         else:
             return result
 
-    async def set_key(self, key: str, value: str | dict) -> None:
+    async def set_key(self, key: str, value: str | dict | list) -> None:
         new_value = (value, json.dumps(value, ensure_ascii=False))[isinstance(value, (dict, list))]
 
-        modlist = {
-            "prsJsonConfigString": [new_value.encode('utf-8')]
-        }
-        modlist = ldap.modlist.addModlist(modlist)
+        cn_bytes = ldap.dn.escape_dn_chars(key)
 
-        dn = f"cn={key},{self._cache_node_dn}"
+        modlist = {
+            "prsJsonConfigString": [new_value.encode('utf-8')],
+            "objectClass": ["prsModelNode".encode('utf-8')],
+            "cn": [key.encode('utf-8')]
+        }
+
+        add_modlist = ldap.modlist.addModlist(modlist)
+
+        dn = f"cn={cn_bytes},{self._cache_node_dn}"
 
         with self._cm.connection() as conn:
             try:
-                conn.add_s(dn, modlist)
+                conn.add_s(dn, add_modlist)
             except ldap.ALREADY_EXISTS:
-                conn.modify_s(dn, modlist)
+                res = conn.search_s(base=dn, scope=CN_SCOPE_BASE,
+                        attrlist=["prsJsonConfigString"])
+                modlist = {
+                    "prsJsonConfigString": [new_value.encode('utf-8')]
+                }
+                modify_modlist = ldap.modlist.modifyModlist(res[0][1], modlist)
+                conn.modify_s(dn, modify_modlist)
+
 
         return None

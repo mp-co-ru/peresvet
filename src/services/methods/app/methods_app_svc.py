@@ -147,6 +147,7 @@ class MethodsApp(svc.Svc):
                     },
                     "attributes": ["cn"]
                 })
+
             parent_tag_id = await self._hierarchy.get_parent(method[0])
             for initiatedBy_id in initiatedBy_nodes:
                 tag_initiator = initiatedBy_id[0]
