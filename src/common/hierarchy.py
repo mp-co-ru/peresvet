@@ -441,6 +441,7 @@ class Hierarchy:
 
         """
         res_node = None
+
         try:
             UUID(node)
             with self._cm.connection() as conn:
@@ -458,13 +459,9 @@ class Hierarchy:
                 ) from ex
             res_node = node
 
-        rdns = ldap.explode_dn(res_node)
-        p = ','.join(rdns[1:])
-        if not p:
-            return (None, None)
-
+        p = ldap.dn.dn2str(ldap.dn.str2dn(res_node)[1:])
         with self._cm.connection() as conn:
-            res = conn.search_s(base=p, scope=CN_SCOPE_ONELEVEL,
+            res = conn.search_s(base=p, scope=CN_SCOPE_BASE,
                 attrlist=['entryUUID'])
             if not res:
                 raise ValueError("Родительский узел не найден.")

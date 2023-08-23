@@ -720,7 +720,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
             loop = asyncio.get_event_loop()
             loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))
-            #await asyncio.gather(asyncio.create_task())
+
+            await asyncio.gather(asyncio.create_task())
         except Exception as ex:
             self._logger.error(f"Ошибка связи с базой данных: {ex}")
 

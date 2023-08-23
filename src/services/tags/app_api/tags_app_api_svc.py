@@ -143,14 +143,26 @@ class TagsAppAPI(svc.Svc):
     def __init__(self, settings: TagsAppAPISettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
+    def _set_incoming_commands(self) -> dict:
+        return {
+            "client.getData": self.data_get
+        }
+
     async def data_get(self, payload: DataGet) -> dict:
+        if isinstance(payload, dict):
+            payload = payload["data"]
+            payload = DataGet(**payload)
 
         body = {
             "action": "tags.getData",
             "data": payload.model_dump()
         }
 
+        self._logger.debug(f"getData: {payload}")
+
         res = await self._post_message(mes=body, reply=True)
+
+        self._logger.debug(f"res: {res}")
 
         if payload.format:
             final_res = {
