@@ -11,6 +11,7 @@ from patio_rabbitmq import RabbitMQBroker
 sys.path.append(".")
 
 from src.common import svc
+from src.common.hierarchy import CN_SCOPE_BASE, CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
 from src.common.cache import Cache
 from src.services.methods.app.methods_app_settings import MethodsAppSettings
 
@@ -131,41 +132,46 @@ class MethodsApp(svc.Svc):
             "attributes": ["cn"]
         }
         methods = await self._hierarchy.search(get_methods)
+
         cache_data = {}
         for method in methods:
-            initiatedBy_nodes = self._hierarchy.search(
+            base_node = await self._hierarchy.get_node_id(
+                f"cn=initiatedBy,cn=system,{method[1]}"
+            )
+            initiatedBy_nodes = await self._hierarchy.search(
                 {
-                    "base": f"cn=initiatedBy,cn=system,{method[1]}",
+                    "base": base_node,
+                    "scope": CN_SCOPE_ONELEVEL,
                     "filter": {
                         "cn": ['*']
                     },
                     "attributes": ["cn"]
                 })
 
-            parent_tag_id = self._hierarchy.get_parent(method[0])
-
+            parent_tag_id = await self._hierarchy.get_parent(method[0])
             for initiatedBy_id in initiatedBy_nodes:
+                tag_initiator = initiatedBy_id[0]
                 await self._amqp_consume["queue"].bind(
                     exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
-                    routing_key=initiatedBy_id
+                    routing_key=tag_initiator
                 )
-                cache_data.setdefault(initiatedBy_id, [])
-
-                cache_data[initiatedBy_id].append({
+                cache_data.setdefault(tag_initiator, [])
+                cache_data[tag_initiator].append({
                     "methodId": method[0],
-                    "tagId": parent_tag_id
+                    "tagId": parent_tag_id[0]
                 })
 
+            self._logger.debug(f"Метод {method[0]} прочитан.")
+
         for tag_id, methods_ids in cache_data.items():
-            self._cache.set_key(
+            await self._cache.set_key(
                 self._cache_key(tag_id, self._config.svc_name),
                 methods_ids
             )
 
-        self._logger.debug(f"Метод {method[0]} прочитан.")
-
     async def on_startup(self) -> None:
         await super().on_startup()
+        await self._cache.connect()
         try:
             await self._read_methods()
         except Exception as ex:

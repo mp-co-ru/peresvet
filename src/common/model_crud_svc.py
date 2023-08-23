@@ -653,8 +653,6 @@ class ModelCRUDSvc(Svc):
             mes_data["filter"] = {}
         mes_data["filter"]["objectClass"] = [self._config.hierarchy["class"]]
 
-        print(f"mes_data: {mes_data}")
-
         items = await self._hierarchy.search(mes_data)
         for item in items:
             res["data"].append({
