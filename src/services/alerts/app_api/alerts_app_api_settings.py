@@ -3,7 +3,7 @@ from src.common.svc_settings import SvcSettings
 class AlertsAppAPISettings(SvcSettings):
 
     #: имя сервиса. сервисы *_mod_crud создают в иерархии узел с таким же именем
-    svc_name: str = "tags_app_api"
+    svc_name: str = "alerts_app_api"
     #: строка коннекта к RabbitMQ
     amqp_url: str = "amqp://prs:Peresvet21@rabbitmq/"
 
@@ -18,11 +18,11 @@ class AlertsAppAPISettings(SvcSettings):
         "main": {
             "name": "peresvet",
             "type": "direct",
-            "routing_key": "tags_app_api_publish"
+            "routing_key": "alerts_app_api_publish"
         }
     }
     consume: dict = {
-        "queue_name": "tags_app_api_consume",
+        "queue_name": "alerts_app_api_consume",
         "exchanges": {
             "main": {
                 #: имя обменника
@@ -30,7 +30,7 @@ class AlertsAppAPISettings(SvcSettings):
                 #: тип обменника
                 "type": "direct",
                 #: привзяка для очереди
-                "routing_key": ["tags_app_api_consume"]
+                "routing_key": ["alerts_app_api_consume"]
             }
         }
     }
