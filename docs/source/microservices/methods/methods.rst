@@ -50,23 +50,32 @@ methods (методы)
 Создадим скрипт на языке **python**, предварительно установив пакеты
 "patio" и "patio_rabbitmq":
 
-.. code:: python
+.. code-block:: python
+   :linenos:
 
    import asyncio
    from patio import Registry, AsyncExecutor
    from patio_rabbitmq import RabbitMQBroker
 
-   rpc = Registry(project="MPKPeresvet_calcs", auto_naming=False)
+   rpc = Registry(project="methods_app", auto_naming=False)
 
    @rpc("sum")
-   async def sum(a: float, b: float) -> float:
-      return a+b
+   async def sum(a: dict, b: dict) -> float:
+      try:
+         val_a = a["data"][0]["data"][0][0]
+         val_b = b["data"][0]["data"][0][0]
+         res = (val_a, 0)[val_a is None]+(val_b, 0)[val_b is None]
+      except Exception as ex:
+         print(f"Ошибка: {ex}")
+         return None
+
+      return res
 
    async def main():
       async with AsyncExecutor(rpc, max_workers=16) as executor:
          async with RabbitMQBroker(
                # измените параметры подключения к RabbitMQ
-               executor, amqp_url="amqp://uid:pwd@server/",
+               executor, amqp_url="amqp://uid:pwd@localhost/",
          ) as broker:
                await broker.join()
 
@@ -75,8 +84,9 @@ methods (методы)
 
 .. attention::
 
-   Отметим, что расчётный метод регистрируется в системе под именем "sum":
-   ``@rpc("sum")``.
+   1. Отметим, что расчётный метод регистрируется в системе под именем "sum":
+      ``@rpc("sum")`` (строка 7).
+   2. Выбор значений (строки 10-11) будет объяснён ниже.
 
 Созданный нами расчётный метод имеет два входных параметра: ``a`` и ``b``.
 
@@ -103,12 +113,12 @@ methods (методы)
    2. id "Освещение --> Потреблённая энергия" = 2
    3. id "Телевизор --> Потреблённая энергия" = 3
 
-.. code:: python
+.. code-block:: python
+   :linenos:
 
    # request: POST http://<srv>/v1/methods
 
    # body:
-
    {
       # id вычисляемого тега ("Суммарная потреблённая энергия")
       "parentId": "1",
@@ -132,3 +142,52 @@ methods (методы)
          }
       ]
    }
+
+Таким образом, имя метода передается в атрибуте ``prsMethodAddress``
+(строка 10).
+
+В рассматриваемом примере порядок следования параметров при вызове метода
+не важен. Если же при вызове метода необходимо учитывать порядок параметров,
+то в атрибутах параметра необходимо передать атрибут ``prsIndex``. При вызове
+метода параметры будут отсортированы по этому атрибуту в порядке возрастания
+и переданы методу.
+
+Запрос с учётом порядка следования параметров:
+
+.. code-block:: python
+   :linenos:
+
+   # request: POST http://<srv>/v1/methods
+
+   # body:
+   {
+      # id вычисляемого тега ("Суммарная потреблённая энергия")
+      "parentId": "1",
+      "attributes": {
+         # зарегистрированное имя метода
+         "cn": "Сумма",
+         "prsMethodAddress": "sum"
+      },
+      # id тегов "Потреблённая энергия" объектов "Освещение" и "Телевизор"
+      "initiatedBy": ["2", "3"],
+      "parameters": [
+         {
+            "attributes": {
+               "prsJsonConfigString": "{\"tagId\": \"2\"}",
+               "prsIndex": 1
+            }
+         },
+         {
+            "attributes": {
+               "prsJsonConfigString": "{\"tagId\": \"3\"}",
+               "prsIndex": 2
+            }
+         }
+      ]
+   }
+
+Атрибут ``prsJsonConfigString`` содержит, фактически, запрос для команды
+``data/get``. При вызове метода в этот запрос автоматически подставляется
+флаг ``finish``, который равен метке времени нового значения тега-инициатора
+расчёта. Именно поэтому в вычислительном методе такой сложный выбор значений
+(см. выше).

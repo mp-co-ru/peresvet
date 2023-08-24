@@ -139,7 +139,7 @@ class AlertsApp(svc.Svc):
                 "scope": CN_SCOPE_ONELEVEL,
                 "filter": {
                     "objectClass": ["prsAlert"],
-                    "prsActive": True
+                    "prsActive": [True]
                 },
                 "attributes": ["entryUUID"]
             }
@@ -261,7 +261,7 @@ class AlertsApp(svc.Svc):
                 "description": alert[2]["description"][0]
             }
 
-            self._cache.set_key(
+            await self._cache.set_key(
                 self._cache_key(alert_id, self._config.svc_name),
                 alert_data
             )
@@ -270,6 +270,8 @@ class AlertsApp(svc.Svc):
 
     async def on_startup(self) -> None:
         await super().on_startup()
+
+        await self._cache.connect()
         try:
             await self._get_alerts()
         except Exception as ex:
