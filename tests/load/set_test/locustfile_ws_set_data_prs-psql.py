@@ -28,6 +28,12 @@ def _(parser):
         default=1, help="How many values in one tag."
     )
 
+@events.init_command_line_parser.add_listener
+def _(parser):
+    parser.add_argument(
+        "--history_data_timestep", type=int,
+        default=10, help="How many values in one tag."
+    )
 
 class WSDataSetUser(User):
 
