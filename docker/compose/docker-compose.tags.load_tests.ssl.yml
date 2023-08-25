@@ -5,12 +5,12 @@ services:
     hostname: tags_load_tests
     build:
       context: ../..
-      dockerfile: docker/docker-files/tags/Dockerfile.tags.load_tests
+      dockerfile: docker/docker-files/tags/Dockerfile.tags.load_tests.ssl
 
     environment:
       TZ: ${TIME_ZONE}
     ports:
-      - 81:81
+      - 443:443
 
     volumes:
       - ./logs/tags.all.load_tests/app/:/usr/src/tags_app/log/:rw

@@ -38,7 +38,8 @@ RUN usermod -a -G volume_group unit
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-COPY docker/docker-files/tags/config_nginx.unit_tags.load_tests.json /docker-entrypoint.d/
+COPY docker/docker-files/tags/config_nginx.unit_tags.load_tests.ssl.json /docker-entrypoint.d/
+COPY docker/docker-files/tags/bdhome.pem /docker-entrypoint.d/
 
 # копируем исходники --------------------------------------------
 ADD src/common/ /usr/src/tags_app/src/common
@@ -60,4 +61,4 @@ ADD src/services/tags/app_api tags/app_api
 WORKDIR /usr/src/tags_app_api
 # ------------------------------------------------------------
 
-EXPOSE 81
+EXPOSE 443
