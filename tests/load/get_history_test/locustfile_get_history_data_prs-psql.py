@@ -23,8 +23,9 @@ class DataGetHistoryUser(HttpUser):
             self.ids += js["4"]
 
         self.pack_size = self.environment.parsed_options.tags_in_pack
-        self.start_date = datetime.utcfromtimestamp(1690454451).date()
-        self.end_date = datetime.utcfromtimestamp(1690971801).date() - timedelta(days=1)
+        self.history_data_timestep = self.environment.parsed_options.history_data_timestep
+        self.start_date = datetime.utcfromtimestamp(1690837200).date()
+        self.end_date = datetime.utcfromtimestamp(1691096400).date() - timedelta(days=1)
 
     @task
     def get_data(self):
@@ -37,7 +38,8 @@ class DataGetHistoryUser(HttpUser):
         data = {
         "tagId": tags,
         "start": start,
-        "finish": end 
+        "finish": end,
+        "timeStep": self.history_data_timestep
         }
 
         self.client.get("", json=data)
