@@ -20,32 +20,26 @@ class DataSetUser(FastHttpUser):
         }
 
         for tag in tags:
-            data = []
-            for _ in range(self.vals_in_tag):
-                data.append([self.rand_int])
-            tag_item = {
+            payload["data"].append({
                 "tagId": tag,
-                "data": data
-            }
-            payload["data"].append(tag_item)
+                "data": self.int_pack
+            })
 
         self.client.post("", json=payload)
 
     @task
     def set_pack_float(self):
         tags = random.sample(self.floats, self.pack_size)
-        payload = {
+        payload= {
             "data": []
         }
+
         for tag in tags:
-            data = []
-            for _ in range(self.vals_in_tag):
-                data.append([self.rand_float])
-            tag_item = {
+            payload["data"].append({
                 "tagId": tag,
-                "data": data
-            }
-            payload["data"].append(tag_item)
+                "data": self.float_pack
+            })
+
         self.client.post("", json=payload)
 
     @task
@@ -54,32 +48,28 @@ class DataSetUser(FastHttpUser):
         payload= {
             "data": []
         }
+
         for tag in tags:
-            data = []
-            for _ in range(self.vals_in_tag):
-                data.append([self.rand_str])
-            tag_item = {
+            payload["data"].append({
                 "tagId": tag,
-                "data": data
-            }
-            payload["data"].append(tag_item)
+                "data": self.str_pack
+            })
+
         self.client.post("", json=payload)
 
     @task
     def set_pack_json(self):
         tags = random.sample(self.jsons, self.pack_size)
-        payload= {
+        payload = {
             "data": []
         }
+
         for tag in tags:
-            data = []
-            for _ in range(self.vals_in_tag):
-                data.append([self.rand_json])
-            tag_item = {
+            payload["data"].append({
                 "tagId": tag,
-                "data": data
-            }
-            payload["data"].append(tag_item)
+                "data": self.json_pack
+            })
+
         self.client.post("", json=payload)
 
     def on_start(self):
@@ -96,6 +86,10 @@ class DataSetUser(FastHttpUser):
         }
         self.pack_size = self.environment.parsed_options.tags_in_pack
         self.vals_in_tag = self.environment.parsed_options.vals_in_tag
+        self.int_pack = [[self.rand_int] for _ in range(self.vals_in_tag)]
+        self.float_pack = [[self.rand_float] for _ in range(self.vals_in_tag)]
+        self.str_pack = [[self.rand_str] for _ in range(self.vals_in_tag)]
+        self.json_pack = [[self.rand_json] for _ in range(self.vals_in_tag)]
 
         # прочитаем из файлов коды тегов каждого типа
         with open("/mnt/locust/tags_in_postgres.json", "r") as f:

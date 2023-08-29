@@ -31,8 +31,15 @@ def _(parser):
 @events.init_command_line_parser.add_listener
 def _(parser):
     parser.add_argument(
-        "--history_data_timestep", type=int,
-        default=10, help="How many values in one tag."
+        "--start", type=str,
+        default="", help="Время начала периода для запроса data/get."
+    )
+
+@events.init_command_line_parser.add_listener
+def _(parser):
+    parser.add_argument(
+        "--finish", type=str,
+        default="", help="Время конца периода для запроса data/get."
     )
 
 class WSDataSetUser(User):

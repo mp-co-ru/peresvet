@@ -8,9 +8,7 @@ from locust import HttpUser, TaskSet, task, between, events
 from websocket import create_connection
 import time
 
-from uuid import uuid4
-
-#from locust_plugins.users import SocketIOUser
+import times
 
 class DataGetHistoryUser(HttpUser):
 
@@ -23,23 +21,21 @@ class DataGetHistoryUser(HttpUser):
             self.ids += js["4"]
 
         self.pack_size = self.environment.parsed_options.tags_in_pack
-        self.history_data_timestep = self.environment.parsed_options.history_data_timestep
-        self.start_date = datetime.utcfromtimestamp(1690837200).date()
-        self.end_date = datetime.utcfromtimestamp(1691096400).date() - timedelta(days=1)
+        self.start_date = self.environment.parsed_options.start
+        if self.start_date:
+            self.start_date = times.ts(self.start_date)
+        self.end_date = self.environment.parsed_options.finish
+        if self.end_date:
+            self.end_date = times.ts(self.end_date)
 
     @task
     def get_data(self):
         tags = random.sample(self.ids, self.pack_size)
-        delta = self.end_date - self.start_date
-        random_date = self.start_date + timedelta(days=random.randint(0, delta.days))
-        start = random_date.isoformat()
-        end = (random_date + timedelta(days=1)).isoformat()
 
-        data = {
-        "tagId": tags,
-        "start": start,
-        "finish": end,
-        "timeStep": self.history_data_timestep
-        }
+        data = {"tagId": tags}
+        if self.start_date:
+            data["start"] = self.start_date
+        if self.end_date:
+            data["finish"] = self.end_date
 
         self.client.get("", json=data)

@@ -3,10 +3,12 @@
 и класс сервиса ``tags_api_crud_svc``.
 """
 import sys
+import asyncio
 from typing import Any, List, NamedTuple
 from typing_extensions import Annotated
 from pydantic import BaseModel, Field, field_validator, validator, BeforeValidator, ValidationError
 import json
+import numpy as np
 
 from fastapi import APIRouter
 from fastapi import WebSocket, WebSocketDisconnect, status
@@ -157,12 +159,9 @@ class TagsAppAPI(svc.Svc):
             "action": "tags.getData",
             "data": payload.model_dump()
         }
-
-        self._logger.debug(f"getData: {payload}")
-
-        res = await self._post_message(mes=body, reply=True)
-
-        self._logger.debug(f"res: {res}")
+        res = await self._post_message(
+            mes=body, reply=True,
+        )
 
         if payload.format:
             final_res = {

@@ -33,7 +33,6 @@ class TagsApp(svc.Svc):
         }
 
     async def _data_get(self, mes: dict) -> dict:
-
         self._logger.debug(f"Data get mes: {mes}")
 
         new_payload = copy.deepcopy(mes["data"])
@@ -62,6 +61,12 @@ class TagsApp(svc.Svc):
 
     async def _data_set(self, mes: dict) -> None:
 
+        mes["action"] = "tags.uploadData"
+        await self._post_message(mes,
+            reply=False,
+            routing_key="ac258e2a-b8f7-103d-9a07-6fcde61b9a51"
+        )
+        """
         for tag_item in mes["data"]["data"]:
 
             await self._post_message({
@@ -75,6 +80,7 @@ class TagsApp(svc.Svc):
                 reply=False,
                 routing_key=tag_item["tagId"]
             )
+        """
 
 settings = TagsAppSettings()
 
