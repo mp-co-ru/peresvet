@@ -130,7 +130,6 @@ class AlertsApp(svc.Svc):
                 }
             }
         """
-
         for tag_item in mes["data"]["data"]:
             tag_id = tag_item["tagId"]
             
@@ -147,7 +146,7 @@ class AlertsApp(svc.Svc):
             for alert in alerts:
                 alert_id = alert[0]
                 alert_cache_key = self._cache_key(alert_id, self._config.svc_name)
-                alert_data = self._cache.get_key(
+                alert_data = await self._cache.get_key(
                     key=alert_cache_key,
                     json_loads=True
                 )
@@ -216,7 +215,7 @@ class AlertsApp(svc.Svc):
                         alert_data["fired"] = None
                         alert_data["acked"] = None
 
-                self._cache.set_key(
+                await self._cache.set_key(
                     key=alert_cache_key,
                     value=alert_data)
 

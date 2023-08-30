@@ -93,27 +93,6 @@ class AlertsAppAPI(svc.Svc):
         }
 
         res = await self._post_message(mes=body, reply=True)
-
-        if payload.format:
-            final_res = {
-                "data": []
-            }
-
-            for tag_item in res["data"]:
-                new_tag_item = {
-                    "tagId": tag_item["tagId"],
-                    "data": []
-                }
-                for data_item in tag_item["data"]:
-                    new_tag_item["data"].append((
-                        data_item[0],
-                        t.int_to_local_timestamp(data_item[1]),
-                        data_item[2]
-                    ))
-                final_res["data"].append(new_tag_item)
-
-            return final_res
-
         return res
 
     async def ack_alarm(self, payload: AckAlarm) -> None:
