@@ -45,10 +45,10 @@ class AlertsApp(svc.Svc):
             dict: _description_
         """
         get_alerts = {
-            "base": self._hierarchy.get_node_id(self._cache._cache_node_dn),
+            "base": await self._hierarchy.get_node_id(self._cache._cache_node_dn),
             "scope": CN_SCOPE_ONELEVEL,
             "filter": {
-                "cn": ['*']
+                "cn": ['*.alerts_app']
             },
             "attributes": ["prsJsonConfigString"]
         }
@@ -133,7 +133,7 @@ class AlertsApp(svc.Svc):
 
         for tag_item in mes["data"]["data"]:
             tag_id = tag_item["tagId"]
-
+            
             get_alerts = {
                 "base": tag_id,
                 "scope": CN_SCOPE_ONELEVEL,
