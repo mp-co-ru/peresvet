@@ -228,16 +228,6 @@ class ModelCRUDSvc(Svc):
                 continue
             subscribers_node_id = self._get_subscribers_node_id(id_)
 
-            '''
-            item = await anext(self._hierarchy.search({
-                "base": subscribers_node_id,
-                "filter": {
-                    "cn": f"{mes['data']['routing_key']}"
-                },
-                "scope": CN_SCOPE_ONELEVEL,
-                "attributes": ["cn"]
-            }))
-            '''
             items = await self._hierarchy.search({
                 "base": subscribers_node_id,
                 "filter": {

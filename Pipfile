@@ -19,6 +19,7 @@ python-dateutil = "*"
 uvloop = "*"
 patio = "*"
 patio-rabbitmq = "*"
+apscheduler = "*"
 
 [dev-packages]
 pylint = "*"

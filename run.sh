@@ -8,4 +8,5 @@ docker compose \
 -f docker/compose/docker-compose.tags.all.yml \
 -f docker/compose/docker-compose.alerts.all.yml \
 -f docker/compose/docker-compose.methods.all.yml \
+-f docker/compose/docker-compose.schedules.all.yml \
 up

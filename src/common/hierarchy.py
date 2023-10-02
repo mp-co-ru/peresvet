@@ -167,7 +167,6 @@ class Hierarchy:
                             "prsEntityType": [1]
                         },
                         "attributes": ["cn", "description"]
-                        }
                     }
 
                 * id
