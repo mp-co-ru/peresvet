@@ -11,6 +11,10 @@ pydantic = "*"
 aio-pika = "*"
 loguru = "*"
 six = "*"
+pydantic-settings = "*"
+uvloop = "*"
+python-dateutil = "*"
+ciso8601 = "*"
 
 [requires]
 python_version = "3.10"

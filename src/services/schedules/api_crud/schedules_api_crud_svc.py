@@ -3,7 +3,7 @@
 и класс сервиса ``schedules_api_crud_svc``.
 """
 import sys
-from uuid import UUID
+import json
 from typing import Any, List
 from pydantic import Field, validator
 
@@ -12,13 +12,56 @@ from fastapi import APIRouter
 sys.path.append(".")
 
 from src.common import api_crud_svc as svc
+from src.common import times as t
 from schedules_api_crud_settings import SchedulesAPICRUDSettings
 
-class TagCreateAttributes(svc.NodeAttributes):
-    pass
+class ScheduleCreateAttributes(svc.NodeAttributes):
+    @validator('prsJsonConfigString')
+    @classmethod
+    def config_str(cls, v: str) -> str:
+
+        def raise_exception():
+            raise ValueError(
+                'prsJsonConfigString должен быть вида '
+                '{'
+                '   "start": "<дата ISO8601>", '
+                '   "end": "<дата ISO8601>", '
+                '   "interval_type": "seconds | minutes | hours | days", '
+                '   "interval_value": <int> '
+                '} '
+                'Параметр "end" - необязательный.'
+            )
+
+        if not v:
+            raise_exception()
+
+        try:
+            config = json.loads()
+            start = config.get("start")
+            end = config.get("end")
+            interval_type = config.get("interval_type")
+            interval_value = config.get("interval_value")
+
+            if not start or not interval_type or not interval_value:
+                raise_exception()
+
+            start = t.ts(start)
+            if end:
+                end = t.ts(end)
+            if interval_type not in ("seconds", "minutes", "hours", "days"):
+                raise_exception()
+            if not isinstance(interval_value, int):
+                raise_exception()
+            if interval_value < 1:
+                raise_exception()
+
+        except json.JSONDecodeError as ex:
+            raise_exception()
+
+        return v
 
 class ScheduleCreate(svc.NodeCreate):
-    attributes: TagCreateAttributes = Field(title="Атрибуты узла")
+    attributes: ScheduleCreateAttributes = Field(title="Атрибуты узла")
 
     # validate_id = validator('parentId', 'dataStorageId', 'connectorId', allow_reuse=True)(svc.valid_uuid)
 

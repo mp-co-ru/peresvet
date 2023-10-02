@@ -1,6 +1,6 @@
 {
   "listeners": {
-    "*:80": {
+    "*:88": {
       "pass": "applications/api_crud"
     }
   },
@@ -26,6 +26,17 @@
       "callable": "app",
       "environment": {
         "log": "{\"level\": \"INFO\", \"file_name\": \"log/schedules_model_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+      }
+    },
+    "app": {
+      "type": "python 3.10",
+      "working_directory": "/usr/src/schedules_app",
+      "path": "/usr/src/schedules_app/src/services/schedules/app/",
+      "home": "/usr/src/schedules_app/.venv/",
+      "module": "schedules_app_svc",
+      "callable": "app",
+      "environment": {
+        "log": "{\"level\": \"INFO\", \"file_name\": \"log/schedules_app.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
       }
     }
   }
