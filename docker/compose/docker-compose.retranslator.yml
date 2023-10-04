@@ -1,0 +1,14 @@
+version: '3.9'
+
+services:
+  retranslator:
+    hostname: retranslator
+    build:
+      context: ../..
+      dockerfile: docker/docker-files/retranslator/Dockerfile.retranslator
+
+    environment:
+      TZ: ${TIME_ZONE}
+
+    volumes:
+      - ./logs/retranslator/app/:/usr/src/retranslator_app/log/:rw
