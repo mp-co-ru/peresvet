@@ -24,7 +24,7 @@ class RetranslatorApp(svc.Svc):
     """
 
     def __init__(self, settings: RetranslatorAppSettings, *args, **kwargs):
-        self.scheduler = BackgroundScheduler(
+        self.scheduler = AsyncIOScheduler(
             job_defaults=job_defaults,
             job_executors=executors
         )
@@ -69,20 +69,14 @@ class RetranslatorApp(svc.Svc):
             self._logger.error(self.tag_sub)
             await message.ack()
 
-    def retranslate(self):
-        loop = asyncio.get_running_loop()
-        loop.run_until_complete(self._retranslate())
-
-    async def _retranslate(self):
-        while True:
-            for routing_key in self.tag_sub.keys():
-                cur_tag_val = self.get_cur_tag_val(routing_key)
-                await self._tags_topic_exchange.publish(
-                message=aio_pika.Message(
-                    body=str(cur_tag_val).encode(),
-                ), routing_key=routing_key)
-                self._logger.info(f"Send message {cur_tag_val} to {routing_key}")
-            await asyncio.sleep(2)
+    async def retranslate(self):
+        for routing_key in self.tag_sub.keys():
+            cur_tag_val = self.get_cur_tag_val(routing_key)
+            await self._tags_topic_exchange.publish(
+            message=aio_pika.Message(
+                body=str(cur_tag_val).encode(),
+            ), routing_key=routing_key)
+            self._logger.info(f"Send message {cur_tag_val} to {routing_key}")
 
     async def _connect_to_topic(self):
         connected = False
@@ -112,10 +106,8 @@ class RetranslatorApp(svc.Svc):
         
     async def on_startup(self) -> None:
         await super().on_startup()
-        asyncio.create_task(self._retranslate())
-        logging.getLogger('apscheduler').setLevel(logging.WARNING)
-        # self.scheduler.add_job(self.retranslate, 'interval', seconds=2)
-        # self.scheduler.start()
+        self.scheduler.add_job(self.retranslate, 'interval', seconds=2)
+        self.scheduler.start()
         return await self._connect_to_topic()
 
     async def on_shutdown(self) -> None:
