@@ -1,0 +1,15 @@
+{
+  "applications": {
+    "app": {
+      "type": "python 3.10",
+      "working_directory": "/usr/src/retranslator_app",
+      "path": "/usr/src/retranslator_app/src/services/retranslator/app/",
+      "home": "/usr/src/retranslator_app/.venv/",
+      "module": "retranslator_app_svc",
+      "callable": "app",
+      "environment": {
+        "log": "{\"level\": \"INFO\", \"file_name\": \"log/retranslator_app.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+      }
+    }
+  }
+}
