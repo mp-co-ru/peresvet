@@ -5,6 +5,7 @@ class RetranslatorAppSettings(SvcSettings):
     svc_name: str = "retranslator_app"
     #: строка коннекта к RabbitMQ
     amqp_url: str = "amqp://prs:Peresvet21@rabbitmq/"
+    rabbitmq_api_url: str = "http://rabbitmq:15672/api"
     #: строка коннекта к OpenLDAP
     ldap_url: str = "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
 
@@ -14,7 +15,6 @@ class RetranslatorAppSettings(SvcSettings):
             "name": "peresvet",
             "type": "direct",
             "routing_key": "retranslator_app_publish"
-
         }
     }
 
@@ -24,9 +24,9 @@ class RetranslatorAppSettings(SvcSettings):
             "main": {
                 "name": "peresvet",
                 "type": "direct",
-                "routing_key": [
-                        "tags_app_api_publish"
-                    ]
+                "routing_key": ["retranslator_app_consume",
+                                 "tags_app_publish"
+                                 ]
             }
         }
     }
