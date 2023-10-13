@@ -268,10 +268,11 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         async with self._connection_pools[mes["data"]["dataStorageId"]].acquire() as conn:
 
-            mes["data"]["attributes"].setdefault(
-                "prsStore",
-                {"tableName": f't_{mes["data"]["tagId"]}'}
-            )
+            self._logger.info(f"Link mes 1: {mes}")
+
+            if not mes["data"]["attributes"].get("prsStore"):
+                mes["data"]["attributes"]["prsStore"] = \
+                    {"tableName": f't_{mes["data"]["tagId"]}'}
 
             tag_params = self._tags.get(mes["data"]["tagId"])
             if tag_params:
@@ -283,6 +284,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 await conn.execute(
                     f'drop table if exists "{tbl_name}"'
                 )
+
+            self._logger.info(f"Link mes 2: {mes}")
 
             tbl_name = mes["data"]["attributes"]["prsStore"]["tableName"]
 
