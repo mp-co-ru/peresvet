@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.abspath('../../'))
 #sys.path.insert(0, os.path.abspath('../../src/common/'))
 
 project = 'МПК Пересвет'
-copyright = f'{datetime.date.today().year}, ООО Матч-пойнт консалтинг'
+copyright = f'{datetime.date.today().year}, ООО Матч Поинт Консалтинг'
 author = 'V.Badashkin'
 version = '0.0'
 release = '0.0.1'
@@ -92,7 +92,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'mpc_peresvet.tex', 'МПК Пересвет',
-     'ООО Матч-пойнт консалтинг', 'manual'),
+     'ООО Матч Поинт Консалтинг', 'manual'),
 ]
 
 

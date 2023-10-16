@@ -1,9 +1,3 @@
-.. include:: <isonum.txt>
-
-.. |br| raw:: html
-
-   <br/>
-
 methods (методы)
 ~~~~~~~~~~~~~~~~
 Методы используются для вычислений значений тегов.
@@ -33,7 +27,7 @@ methods (методы)
 
 Покажем иерархию созданных объектов и тегов:
 
-.. figure:: microservices/methods/pics/methods_01.png
+.. figure:: pics/methods_01.png
     :align: center
 
     Объекты

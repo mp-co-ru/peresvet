@@ -11,17 +11,50 @@ import os
 
 import json
 from pathlib import Path
-from typing import Any
-from pydantic_settings import BaseSettings
+from typing import Any, Dict, Tuple, Type
+from pydantic import BaseModel
+from pydantic.fields import FieldInfo
+from pydantic_settings import (
+    BaseSettings,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict
+)
 
-def json_config_settings_source(settings: BaseSettings) -> dict[str, Any]:
-    encoding = settings.__config__.env_file_encoding
-    try:
-        return json.loads(Path(os.getenv('config_file', 'config.json')).read_text(encoding))
-    except Exception:
-        return {}
+class JsonConfigSettingsSource(PydanticBaseSettingsSource):
 
-class BaseSvcSettings(BaseSettings):
+    def get_field_value(
+        self, field: FieldInfo, field_name: str
+    ) -> Tuple[Any, str, bool]:
+        encoding = self.config.get('env_file_encoding')
+        file_content_json = json.loads(
+            Path(os.getenv('config_file', 'config.json')).read_text(encoding)
+        )
+        field_value = file_content_json.get(field_name)
+        return field_value, field_name, False
+
+    def prepare_field_value(
+        self, field_name: str, field: FieldInfo, value: Any, value_is_complex: bool
+    ) -> Any:
+        return value
+
+    def __call__(self) -> Dict[str, Any]:
+        d: Dict[str, Any] = {}
+
+        for field_name, field in self.settings_cls.model_fields.items():
+            field_value, field_key, value_is_complex = self.get_field_value(
+                field, field_name
+            )
+            field_value = self.prepare_field_value(
+                field_name, field, field_value, value_is_complex
+            )
+            if field_value is not None:
+                d[field_key] = field_value
+
+        return d
+
+class BaseSvcSettings(BaseSettings, BaseModel):
+    model_config = SettingsConfigDict(env_file_encoding='utf-8')
+
     #: имя сервиса
     svc_name: str = ""
     #: строка коннекта к RabbitMQ
@@ -60,7 +93,7 @@ class BaseSvcSettings(BaseSettings):
                 "type": "direct",
                 #: имя очереди, из которой сервис будет получать сообщения
                 "queue_name": "base_svc_consume",
-                #: привзяка для очереди
+                #: привязка для очереди
                 "routing_key": ["base_svc_consume"]
             }
         }
@@ -74,19 +107,19 @@ class BaseSvcSettings(BaseSettings):
         "rotation": "20 days"
     }
 
-    class Config:
-        env_file_encoding = 'utf-8'
-
-        @classmethod
-        def customise_sources(
-            cls,
-            init_settings,
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: Type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> Tuple[PydanticBaseSettingsSource, ...]:
+        return (
             env_settings,
+            init_settings,
+            JsonConfigSettingsSource(settings_cls),
+            dotenv_settings,
             file_secret_settings,
-        ):
-            return (
-                env_settings,
-                init_settings,
-                json_config_settings_source,
-                file_secret_settings,
-            )
+        )
