@@ -20,21 +20,6 @@
    :show-inheritance:
    :noindex:
 
-Модуль ``base_svc``
-~~~~~~~~~~~~~~~~~~~
-.. automodule:: src.common.base_svc
-    :members:
-    :private-members:
-    :show-inheritance:
-    :noindex:
-
-Модуль ``base_svc_settings``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. automodule:: src.common.base_svc_settings
-    :members:
-    :show-inheritance:
-    :noindex:
-
 Модуль ``svc``
 ~~~~~~~~~~~~~~
 .. automodule:: src.common.svc
@@ -49,27 +34,3 @@
     :members:
     :show-inheritance:
     :noindex:
-
-Модуль ``api_crud_svc``
-~~~~~~~~~~~~~~~~~~~~~~~
-.. automodule:: src.common.api_crud_svc
-    :members:
-    :show-inheritance:
-    :noindex:
-
-Модуль ``model_crud_svc``
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: src.common.model_crud_svc
-   :members:
-   :private-members:
-   :show-inheritance:
-   :noindex:
-
-Модуль ``model_crud_settings``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. automodule:: src.common.model_crud_settings
-   :members:
-   :private-members:
-   :show-inheritance:
-   :noindex:
