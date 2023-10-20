@@ -114,12 +114,12 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             records = []
             async with connection_pool.acquire() as conn:
                 async with conn.transaction():
-                    q = [f'select * top 1 from {alert_tbl} order by x desc;']
+                    q = [f'select * from \"{alert_tbl}\" order by x desc limit 1;']
                     async for r in conn.cursor(*q):
                         records.append((r.get('id'), r.get('x'), r.get('cx'), r.get('e')))
 
                     # если алярмов у тревоги вообще нет или закончились...
-                    if records[0][0] is None or records[0][3]:
+                    if not records or records[0][0] is None or records[0][3]:
                         await conn.copy_records_to_table(
                             alert_tbl,
                             records=[(mes["data"]["x"], None, None)],
@@ -169,7 +169,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             records = []
             async with connection_pool.acquire() as conn:
                 async with conn.transaction():
-                    q = [f'select * top 1 from {alert_tbl} order by x desc;']
+                    q = [f'select * from \"{alert_tbl}\" order by x desc limit 1;']
                     async for r in conn.cursor(*q):
                         records.append((r.get('id'), r.get('x'), r.get('cx'), r.get('e')))
 
@@ -222,7 +222,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             records = []
             async with connection_pool.acquire() as conn:
                 async with conn.transaction():
-                    q = [f'select * top 1 from {alert_tbl} order by x desc;']
+                    q = [f'select * from \"{alert_tbl}\" order by x desc limit 1;']
                     async for r in conn.cursor(*q):
                         records.append((r.get('id'), r.get('x'), r.get('cx'), r.get('e')))
 
@@ -268,8 +268,6 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         async with self._connection_pools[mes["data"]["dataStorageId"]].acquire() as conn:
 
-            self._logger.info(f"Link mes 1: {mes}")
-
             if not mes["data"]["attributes"].get("prsStore"):
                 mes["data"]["attributes"]["prsStore"] = \
                     {"tableName": f't_{mes["data"]["tagId"]}'}
@@ -284,8 +282,6 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 await conn.execute(
                     f'drop table if exists "{tbl_name}"'
                 )
-
-            self._logger.info(f"Link mes 2: {mes}")
 
             tbl_name = mes["data"]["attributes"]["prsStore"]["tableName"]
 
@@ -353,10 +349,9 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         async with self._connection_pools[mes["data"]["dataStorageId"]].acquire() as conn:
 
-            mes["data"]["attributes"].setdefault(
-                "prsStore",
-                {"tableName": f'a_{mes["data"]["alertId"]}'}
-            )
+            if not mes["data"]["attributes"].get("prsStore"):
+                mes["data"]["attributes"]["prsStore"] = \
+                    {"tableName": f'a_{mes["data"]["alertId"]}'}
 
             alert_params = self._alerts.get(mes["data"]["alertId"])
             if alert_params:

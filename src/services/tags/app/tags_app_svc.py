@@ -62,7 +62,7 @@ class TagsApp(svc.Svc):
     async def _data_set(self, mes: dict) -> None:
 
         mes["action"] = "tags.uploadData"
-        
+
         for tag_item in mes["data"]["data"]:
 
             await self._post_message({

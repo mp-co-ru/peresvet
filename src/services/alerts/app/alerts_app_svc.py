@@ -132,7 +132,7 @@ class AlertsApp(svc.Svc):
         """
         for tag_item in mes["data"]["data"]:
             tag_id = tag_item["tagId"]
-            
+
             get_alerts = {
                 "base": tag_id,
                 "scope": CN_SCOPE_ONELEVEL,
@@ -150,11 +150,17 @@ class AlertsApp(svc.Svc):
                     key=alert_cache_key,
                     json_loads=True
                 )
+
+                self._logger.debug(f"Alert cache data: {alert_data}")
+
                 if not alert_data:
                     self._logger.error(f"Нет кэша тревоги {alert_id}.")
                     continue
 
                 for data_item in tag_item["data"]:
+
+                    self._logger.debug(f"Data item: {data_item}")
+
                     # если данные более ранние, чем уже обработанные...
                     if alert_data["fired"]:
                         if data_item[1] <= alert_data["fired"]:
@@ -163,9 +169,11 @@ class AlertsApp(svc.Svc):
                             continue
 
                     alert_on = (
-                        data_item[1] < alert_data["value"],
-                        data_item[1] >= alert_data["value"],
+                        data_item[0] < alert_data["value"],
+                        data_item[0] >= alert_data["value"],
                     )[alert_data["high"]]
+
+                    self._logger.debug(f"Alarm on: {alert_on}")
 
                     if (alert_data["fired"] and alert_on) or \
                         (not alert_data["fired"] and not alert_on):
@@ -240,7 +248,7 @@ class AlertsApp(svc.Svc):
             alert_id = alert[0]
             alert_config = json.loads(alert[2]["prsJsonConfigString"][0])
             tag_id = await self._hierarchy.get_node_id(
-                dn2str(str2dn(alert[1])[2:])
+                dn2str(str2dn(alert[1])[1:])
             )
 
             await self._amqp_consume["queue"].bind(
