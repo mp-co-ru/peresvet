@@ -26,10 +26,14 @@ class JsonConfigSettingsSource(PydanticBaseSettingsSource):
         self, field: FieldInfo, field_name: str
     ) -> Tuple[Any, str, bool]:
         encoding = self.config.get('env_file_encoding')
-        file_content_json = json.loads(
-            Path(os.getenv('config_file', 'config.json')).read_text(encoding)
-        )
-        field_value = file_content_json.get(field_name)
+        try:
+            file_content_json = json.loads(
+                Path(os.getenv('config_file', 'config.json')).read_text(encoding)
+            )
+            field_value = file_content_json.get(field_name)
+        except Exception as _:
+            return None, None, False
+
         return field_value, field_name, False
 
     def prepare_field_value(
