@@ -141,6 +141,10 @@ class BaseSvc(FastAPI):
 
     async def _process_message(self, message: aio_pika.abc.AbstractIncomingMessage) -> None:
 
+        if not self._amqp_callback_queue:
+            await message.ack()
+            return
+
         async with message.process(ignore_processed=True):
             mes = message.body.decode()
 
@@ -185,7 +189,7 @@ class BaseSvc(FastAPI):
 
     async def _post_message(
             self, mes: dict, reply: bool = False, routing_key: str = None
-    ) -> dict | None:
+    ) -> dict | None: 
         body = json.dumps(mes, ensure_ascii=False).encode()
         correlation_id = None
         reply_to = None
