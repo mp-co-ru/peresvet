@@ -3,6 +3,7 @@
 """
 import json
 import asyncio
+import time
 import uvloop
 from functools import cached_property
 from uuid import uuid4
@@ -142,10 +143,19 @@ class BaseSvc(FastAPI):
 
         return False
 
+    async def _check_mes_correctness(self, message: aio_pika.abc.AbstractIncomingMessage) -> bool:
+        return True
+
     async def _process_message(self, message: aio_pika.abc.AbstractIncomingMessage) -> None:
 
-        while not self._initialized:
+        while not self._amqp_is_connected:
             await asyncio.sleep(0.5)
+
+        correct = await self._check_mes_correctness(message)
+        if not correct:
+            self._logger.error(f"Неправильный формат сообщения")
+            await message.ack()
+            return 
 
         async with message.process(ignore_processed=True):
             mes = message.body.decode()
@@ -192,9 +202,6 @@ class BaseSvc(FastAPI):
     async def _post_message(
             self, mes: dict, reply: bool = False, routing_key: str = None
     ) -> dict | None:
-
-        while not self._initialized:
-            await asyncio.sleep(0.5)
 
         body = json.dumps(mes, ensure_ascii=False).encode()
         correlation_id = None
