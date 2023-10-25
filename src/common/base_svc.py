@@ -300,6 +300,8 @@ class BaseSvc(FastAPI):
 
                 self._logger.info("Связь с AMQP сервером установлена.")
 
+                self._initialized = True
+
             except aio_pika.AMQPException as ex:
                 self._logger.error(f"Ошибка связи с брокером: {ex}")
                 await asyncio.sleep(5)
@@ -311,8 +313,6 @@ class BaseSvc(FastAPI):
         """
         self._logger.debug(f"{self._config.svc_name}: on_startup.")
         await self._amqp_connect()
-
-        self._initialized = True
 
     async def on_shutdown(self) -> None:
         """
