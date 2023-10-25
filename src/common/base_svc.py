@@ -148,7 +148,7 @@ class BaseSvc(FastAPI):
 
     async def _process_message(self, message: aio_pika.abc.AbstractIncomingMessage) -> None:
 
-        while not self._amqp_is_connected:
+        while not self._initialized:
             await asyncio.sleep(0.5)
 
         correct = await self._check_mes_correctness(message)
@@ -252,7 +252,7 @@ class BaseSvc(FastAPI):
         Returns:
             None
         """
-        while not self._amqp_is_connected:
+        while not self._initialized:
             try:
                 self._logger.debug("Установление связи с брокером сообщений...")
                 self._amqp_connection = await aio_pika.connect_robust(self._config.amqp_url)
@@ -297,8 +297,6 @@ class BaseSvc(FastAPI):
                 )
 
                 await self._amqp_callback_queue.consume(self._on_rpc_response, no_ack=True)
-
-                self._amqp_is_connected = True
 
                 self._logger.info("Связь с AMQP сервером установлена.")
 
