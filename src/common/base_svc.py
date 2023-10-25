@@ -112,6 +112,8 @@ class BaseSvc(FastAPI):
         self._incoming_commands["subscribe"] = self._subscribe
         self._incoming_commands["unsubscribe"] = self._unsubscribe
 
+        self._initialized = False
+
     async def _subscribe(self, mes: dict) -> None:
         pass
 
@@ -142,9 +144,9 @@ class BaseSvc(FastAPI):
 
     async def _process_message(self, message: aio_pika.abc.AbstractIncomingMessage) -> None:
 
-        while self._amqp_is_connected is False:
+        while not self._initialized:
             await asyncio.sleep(0.5)
-        
+
         async with message.process(ignore_processed=True):
             mes = message.body.decode()
 
@@ -189,8 +191,11 @@ class BaseSvc(FastAPI):
 
     async def _post_message(
             self, mes: dict, reply: bool = False, routing_key: str = None
-    ) -> dict | None: 
-        self._logger.error(self._amqp_callback_queue.channel.is_closed)
+    ) -> dict | None:
+
+        while not self._initialized:
+            await asyncio.sleep(0.5)
+
         body = json.dumps(mes, ensure_ascii=False).encode()
         correlation_id = None
         reply_to = None
@@ -301,6 +306,8 @@ class BaseSvc(FastAPI):
         """
         self._logger.debug(f"{self._config.svc_name}: on_startup.")
         await self._amqp_connect()
+
+        self._initialized = True
 
     async def on_shutdown(self) -> None:
         """
