@@ -84,6 +84,7 @@ class BaseSvc(FastAPI):
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
         self._amqp_connection: aio_pika.abc.AbstractRobustConnection = None
+        self._amqp_is_connected: bool = False
         self._amqp_channel: aio_pika.abc.AbstractRobustChannel = None
         self._amqp_publish: dict = {}
         self._amqp_consume: dict = {
@@ -141,10 +142,9 @@ class BaseSvc(FastAPI):
 
     async def _process_message(self, message: aio_pika.abc.AbstractIncomingMessage) -> None:
 
-        if not self._amqp_callback_queue:
-            await message.ack()
-            return
-
+        while self._amqp_is_connected is False:
+            await asyncio.sleep(0.5)
+        
         async with message.process(ignore_processed=True):
             mes = message.body.decode()
 
@@ -190,6 +190,7 @@ class BaseSvc(FastAPI):
     async def _post_message(
             self, mes: dict, reply: bool = False, routing_key: str = None
     ) -> dict | None: 
+        self._logger.error(self._amqp_callback_queue.channel.is_closed)
         body = json.dumps(mes, ensure_ascii=False).encode()
         correlation_id = None
         reply_to = None
@@ -239,8 +240,7 @@ class BaseSvc(FastAPI):
         Returns:
             None
         """
-        connected = False
-        while not connected:
+        while not self._amqp_is_connected:
             try:
                 self._logger.debug("Установление связи с брокером сообщений...")
                 self._amqp_connection = await aio_pika.connect_robust(self._config.amqp_url)
@@ -286,7 +286,7 @@ class BaseSvc(FastAPI):
 
                 await self._amqp_callback_queue.consume(self._on_rpc_response, no_ack=True)
 
-                connected = True
+                self._amqp_is_connected = True
 
                 self._logger.info("Связь с AMQP сервером установлена.")
 
