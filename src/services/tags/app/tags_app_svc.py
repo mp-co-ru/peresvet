@@ -91,5 +91,3 @@ class TagsApp(svc.Svc):
 settings = TagsAppSettings()
 
 app = TagsApp(settings=settings, title="`TagsApp` service")
-
-uvicorn.run(app)
