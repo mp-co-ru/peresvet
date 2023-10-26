@@ -2,8 +2,11 @@
 Модуль содержит классы, описывающие входные данные для команд CRUD для тегов
 и класс сервиса ``tags_api_crud_svc``.
 """
+import json
 import sys
 import copy
+import aio_pika.abc
+import uvicorn
 
 sys.path.append(".")
 
@@ -31,6 +34,14 @@ class TagsApp(svc.Svc):
             "tags.setData": self._data_set,
             "tags.getData": self._data_get
         }
+
+    async def _check_mes_correctness(self, message: aio_pika.abc.AbstractIncomingMessage) -> bool:
+        mes_body = json.loads(message.body.decode())
+        if mes_body.get('action') != "tags.getData":
+            return True
+        if not message.reply_to:
+            return False
+        return True
 
     async def _data_get(self, mes: dict) -> dict:
         self._logger.debug(f"Data get mes: {mes}")

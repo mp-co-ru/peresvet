@@ -3,6 +3,7 @@
 """
 import json
 import asyncio
+import time
 import uvloop
 from functools import cached_property
 from uuid import uuid4
@@ -84,6 +85,7 @@ class BaseSvc(FastAPI):
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
         self._amqp_connection: aio_pika.abc.AbstractRobustConnection = None
+        self._amqp_is_connected: bool = False
         self._amqp_channel: aio_pika.abc.AbstractRobustChannel = None
         self._amqp_publish: dict = {}
         self._amqp_consume: dict = {
@@ -110,6 +112,8 @@ class BaseSvc(FastAPI):
         self._incoming_commands = self._set_incoming_commands()
         self._incoming_commands["subscribe"] = self._subscribe
         self._incoming_commands["unsubscribe"] = self._unsubscribe
+
+        self._initialized = False
 
     async def _subscribe(self, mes: dict) -> None:
         pass
@@ -139,7 +143,19 @@ class BaseSvc(FastAPI):
 
         return False
 
+    async def _check_mes_correctness(self, message: aio_pika.abc.AbstractIncomingMessage) -> bool:
+        return True
+
     async def _process_message(self, message: aio_pika.abc.AbstractIncomingMessage) -> None:
+
+        while not self._initialized:
+            await asyncio.sleep(0.5)
+
+        correct = await self._check_mes_correctness(message)
+        if not correct:
+            self._logger.error(f"Неправильный формат сообщения")
+            await message.ack()
+            return 
 
         async with message.process(ignore_processed=True):
             mes = message.body.decode()
@@ -186,6 +202,7 @@ class BaseSvc(FastAPI):
     async def _post_message(
             self, mes: dict, reply: bool = False, routing_key: str = None
     ) -> dict | None:
+
         body = json.dumps(mes, ensure_ascii=False).encode()
         correlation_id = None
         reply_to = None
@@ -235,8 +252,7 @@ class BaseSvc(FastAPI):
         Returns:
             None
         """
-        connected = False
-        while not connected:
+        while not self._initialized:
             try:
                 self._logger.debug("Установление связи с брокером сообщений...")
                 self._amqp_connection = await aio_pika.connect_robust(self._config.amqp_url)
@@ -282,9 +298,9 @@ class BaseSvc(FastAPI):
 
                 await self._amqp_callback_queue.consume(self._on_rpc_response, no_ack=True)
 
-                connected = True
-
                 self._logger.info("Связь с AMQP сервером установлена.")
+
+                self._initialized = True
 
             except aio_pika.AMQPException as ex:
                 self._logger.error(f"Ошибка связи с брокером: {ex}")
