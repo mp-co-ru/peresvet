@@ -191,7 +191,6 @@ class RetranslatorApp(svc.Svc):
         await super().on_startup()
         self.scheduler.start()
         await self.init_tag_sub()
-        # await self.get_cur_tag_val('d8b75f9e-fae3-103d-911b-4d5c856e3c46')
         await self._connect_to_topic()
         return 
 
