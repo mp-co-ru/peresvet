@@ -3,9 +3,10 @@ import json
 import logging
 import sys
 import copy
+import aiohttp
 import aio_pika
+from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 sys.path.append(".")
 
@@ -31,27 +32,49 @@ class RetranslatorApp(svc.Svc):
         self.tag_sub = {}
         super().__init__(settings, *args, **kwargs)
         
-    def get_cur_tag_val(self, tag_id: str) -> int:
-        # Поиск текущего значения тега
-        cache = {
-        "86224f28-e283-103d-9f68-a15ac671071b": 10,
-        "86271044-e283-103d-9f6b-a15ac671071b": 20,
-        "862e04d0-e283-103d-9f70-a15ac671071b": 100,
-        "863374b0-e283-103d-9f75-a15ac671071b": 1,
-        "8637ef2c-e283-103d-9f78-a15ac671071b": 2,
-        "863dfec6-e283-103d-9f7d-a15ac671071b": 3,
-        "8643d648-e283-103d-9f82-a15ac671071b": 4,
-        "86492602-e283-103d-9f87-a15ac671071b": 5
-        }
-        return cache.get(tag_id)
 
+    async def get_cur_tag_val(self, tag_id: str):
+        # Поиск текущего значения тега
+        self._logger.error("Posted message")
+        async with aiohttp.ClientSession() as sess:
+            async with sess.get("http://tags_all:81/v1/data", json={"tagId": tag_id}) as resp:
+                response = await resp.json()
+                cur_tag_data = response.get('data')[0].get('data')[0][0]
+        # tag_cur_val = await self._post_message(mes=body, reply=True)
+        # self._logger.error("fter sending")
+                return cur_tag_data
+
+    async def retranslate_job(self, tag_id: str):
+        updated_at = self.tag_sub[tag_id].get('updated_at')
+        cached_tag_value = self.tag_sub[tag_id].get('last_val')
+        if cached_tag_value is None:
+            self._logger.info("Cached val is none")
+            tag_cur_val = await self.get_cur_tag_val(tag_id)
+            self.tag_sub[tag_id]['last_val'] = str(tag_cur_val)
+        if updated_at:
+            self._logger.info("Updated at is not None")
+            timedelta = datetime.now() - updated_at
+            if timedelta.total_seconds() < 5:
+                return
+        self._logger.info("Sending message")
+        await self._tags_topic_exchange.publish(
+        message=aio_pika.Message(
+            body=self.tag_sub[tag_id]['last_val'].encode(),
+        ), routing_key=tag_id)
+        self._logger.info(f"Send message {self.tag_sub[tag_id]['last_val']} to {tag_id}")
+        return 
+
+        
+    async def add_tag_task(self, tag_id: str):
+        task = self.scheduler.add_job(self.retranslate_job, trigger=IntervalTrigger(seconds=5) ,args=[tag_id])
+        return task
+    
     async def _bind_event_callback(self, message: aio_pika.abc.AbstractIncomingMessage):
         async with message.process(ignore_processed=True):
             action = message.routing_key
             routing_key = message.headers.get('routing_key')
             source_name = message.headers.get('source_name')
             destination_name = message.headers.get('destination_name')
-            self._logger.info(message)
             if routing_key and destination_name and source_name=='amq.topic':
                 match action:
                     case "binding.created":
@@ -61,28 +84,48 @@ class RetranslatorApp(svc.Svc):
                         else:
                             self.tag_sub[routing_key] = {"count": 1, 'queues': set()}
                             self.tag_sub[routing_key]["queues"].add(destination_name,)
+                            task = await self.add_tag_task(routing_key)
+                            self.tag_sub[routing_key]["task"] = task
+                            await self.subscribe_to_tag(routing_key)
                     case "binding.deleted":
+                        self._logger.error("Binding deleted")
                         if self.tag_sub.get(routing_key):
                             self.tag_sub[routing_key]['count'] -= 1
                             if self.tag_sub[routing_key]['count'] == 0:
+                                self.tag_sub[routing_key]['task'].remove()
+                                await self.unsubscribe_from_tag(routing_key)
                                 self.tag_sub.pop(routing_key)
             self._logger.error(self.tag_sub)
             await message.ack()
 
-    async def retranslate(self):
-        for routing_key in self.tag_sub.keys():
-            cur_tag_val = self.get_cur_tag_val(routing_key)
-            await self._tags_topic_exchange.publish(
-            message=aio_pika.Message(
-                body=str(cur_tag_val).encode(),
-            ), routing_key=routing_key)
-            self._logger.info(f"Send message {cur_tag_val} to {routing_key}")
+    async def subscribe_to_tag(self, tag_id):
+        await self._amqp_consume["queue"].bind(
+                        exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
+                        routing_key=tag_id)
+
+    async def unsubscribe_from_tag(self, tag_id):
+        await self._amqp_consume["queue"].unbind(
+                        exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
+                        routing_key=tag_id)
+
+    async def retranslate(self, routing_key: str, data: str):
+        if not hasattr(self, "_tags_topic_exchange"): 
+            return
+        await self._tags_topic_exchange.publish(
+        message=aio_pika.Message(
+            body=data.encode(),
+        ), routing_key=routing_key)
+        self._logger.info(f"Send message {data} to {routing_key}")
+        # Сохранение в кеш последнего значения тега
+        self.tag_sub[routing_key]["last_val"] = data
+        # Обновление метки времени обновления значения тега
+        self.tag_sub[routing_key]['updated_at'] = datetime.now()
 
     async def _connect_to_topic(self):
         connected = False
         while not connected:
             try:
-                self._logger.debug("Создание очереди для передачи данных от тегов...")
+                self._logger.info("Создание очереди для передачи данных от тегов...")
                 self._bind_event_amqp_channel = await self._amqp_connection.channel()
                 await self._bind_event_amqp_channel.set_qos(1)
 
@@ -103,12 +146,53 @@ class RetranslatorApp(svc.Svc):
             except aio_pika.AMQPException as ex:
                 self._logger.error(f"Ошибка связи с брокером: {ex}")
                 await asyncio.sleep(5)
+        return
         
+    async def _process_message(self, message: aio_pika.abc.AbstractIncomingMessage) -> None:
+        self._logger.error(message)
+        routing_key = message.routing_key
+        async with message.process(ignore_processed=True):
+            mes = message.body.decode()
+            try:
+                mes = json.loads(mes)
+                self._logger.info(mes)
+                if mes.get('action') == "tags.uploadData":
+                    tag_data = mes.get('data').get('data')[0].get('data')[0][0]
+                    # Сохраняем последнее значение тега в кеше tag_sub
+                    self.tag_sub
+                    # Ретранслируем его с routing_key равным id тега в обменник amq.topic
+                    await self.retranslate(routing_key=routing_key, data=str(tag_data))
+                await message.ack()
+            except json.decoder.JSONDecodeError:
+                self._logger.error(f"Сообщение {mes} не в формате json.")
+                await message.ack()
+                return
+        return
+
+    async def init_tag_sub(self):
+        async with aiohttp.ClientSession() as sess:
+            async with sess.get(self._conf.rabbitmq_api_url + "/exchanges/%2F/amq.topic/bindings/source" ,auth=aiohttp.BasicAuth('prs', 'Peresvet21')) as resp:
+                response = await resp.json()
+                for binding in response:
+                    routing_key = binding.get('routing_key')
+                    destination = binding.get('destination')
+                    if self.tag_sub.get(routing_key):
+                        self.tag_sub[routing_key]['count'] += 1
+                        self.tag_sub[routing_key]['queues'].add(destination,)
+                    else:
+                        self.tag_sub[routing_key] = {"count": 1, 'queues': set()}
+                        self.tag_sub[routing_key]["queues"].add(destination,)
+                        task = await self.add_tag_task(routing_key)
+                        self.tag_sub[routing_key]["task"] = task
+                        await self.subscribe_to_tag(routing_key)
+        return
+
     async def on_startup(self) -> None:
         await super().on_startup()
-        self.scheduler.add_job(self.retranslate, 'interval', seconds=2)
         self.scheduler.start()
-        return await self._connect_to_topic()
+        await self.init_tag_sub()
+        await self._connect_to_topic()
+        return 
 
     async def on_shutdown(self) -> None:
         await self._bind_event_amqp_channel.close()
