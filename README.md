@@ -97,7 +97,7 @@ $ pipenv shell
 
 Для отладки в VSCode должен быть установлен плагин `ms-vscode-remote.remote-containers`.
 
-Внутренняя настройка режима отладки происходит
+Внутренняя настройка режима отладки происходит с помощью python скрипта.
 
 Запуск отладки:
 
@@ -125,9 +125,9 @@ $ pipenv shell
     ]
    }
    ```
-3. Создаем образ контейнера сервиса для отладки. `docker-compose -f <docker-compose file name> build --build-arg debug_svc=<service name>`, где `<service name>` – название сервиса, указанной в конфигурации nginx-unit (app | app_api | api_crud | model_crud)
-4. Запускаем собранный образ сервиса командой `docker compose <docker-compose file name> up`, а также остальные сервисы, необходимые для работы платформы.
-5. Создаем в VSCode новый терминал: `Terminal -> New terminal` (`Терминал -> Создать терминал`).
+3. Создаем в VSCode новый терминал: `Terminal -> New terminal` (`Терминал -> Создать терминал`).
+4. Создаем образ контейнера сервиса для отладки. `docker-compose -f <docker-compose file name> build --build-arg debug_svc=<service name>`, где `<service name>` – название сервиса, указанной в конфигурации nginx-unit (app | app_api | api_crud | model_crud)
+5. Запускаем собранный образ сервиса командой `docker compose <docker-compose file name> up`, а также остальные сервисы, необходимые для работы платформы.
 6. Ждем до тех пор, пока сервис для отладки не запустится окончательно.
 7. Переходим в исходный файл сервиса, который был запущен в режиме отладки и ставим breakpoints для отладки.
 8. Нажимаем `F5`...
