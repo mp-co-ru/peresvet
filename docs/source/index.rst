@@ -48,6 +48,7 @@
    Используемые термины<terms>
    Архитектура<architecture>
    Руководство разработчика<developer>
+   Интеграция с Grafana<grafana/grafana_integration>
 
 Indices and tables
 ==================
