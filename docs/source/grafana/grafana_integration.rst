@@ -6,10 +6,10 @@
 #. Запускаем все необходимые сервисы платформы Пересвет в Docker
 #. Запустить Grafana с плагином формы ручного ввода в Docker
 
-   #. Для этого необходимо скачать проект. 
+   #. Для этого необходимо скачать проект.
    #. Сначала перейдите в директорию, где будет лежать проект плагина для Grafana.
    #. Затем скачайте его с помощью команды `gh repo clone mp-co-ru/grafana-ui-plugin`
-   #. Откройте проект в VSCode и перейдите в терминал. 
+   #. Откройте проект в VSCode и перейдите в терминал.
    #. Из корневой директории проекта запустите команду `docker compose -f docker-compose.yml up`.
    #. Дождитесь пока контейнер запустится полностью.
 
@@ -27,36 +27,36 @@
 
 * Для установки плагина нужно перейти в раздел `plugins` и ввести в поиске mqtt.
 
-.. figure:: pics/grafana_setup_plugins_menu.png
+.. figure:: ../pics/grafana_setup_plugins_menu.png
     :align: center
 
     Меню плагинов
 
-.. figure:: pics/grafana_setup_search_plugin.png
+.. figure:: ../pics/grafana_setup_search_plugin.png
     :align: center
 
     Посик MQTT плагина
 
-* Выбираем появившийся плагин и нажимаем Install. 
+* Выбираем появившийся плагин и нажимаем Install.
 
-.. figure:: pics/grafana_setup_plugins_menu.png
+.. figure:: ../pics/grafana_setup_plugins_menu.png
     :align: center
 
     Установка плагина
 
 * После установки выбираем появившийся вариант Create a MQTT Datasource.
 
-.. figure:: pics/grafana_setup_plugins_menu.png
+.. figure:: ../pics/grafana_setup_plugins_menu.png
     :align: center
 
     Создание нового источника данных
 
-* Для настройки нового источника данных нужно указать 
+* Для настройки нового источника данных нужно указать
 
-   .. figure:: pics/grafana_setup_conf_datasource.png
-       :align: center
+   .. figure:: ../pics/grafana_setup_conf_datasource.png
+      :align: center
 
-    Настройка источника данных
+      Настройка источника данных
 
    * Название источника данных
    * URL адрес для подключения к брокеру сообщений, например tcp://localhost:1883
@@ -72,19 +72,19 @@
       Для установки плагина `rabbit-mqtt` нужно зайти в контейнер RabbitMQ выполнив в любом терминале
       команду `docker exec -it <id контейнера> bash` и далее выполнив команду `rabbitmq-plugins enable rabbitmq_mqtt`
       внутри контейнера
-       
+
 Отображение данных из платформы
 -------------------------------
 Для отображения данных из платформы необходимо:
 
 #. Cоздать новый dashboard и панель.
 
-.. figure:: pics/grafana_setup_add_dashboard.png
+.. figure:: ../pics/grafana_setup_add_dashboard.png
     :align: center
 
     Создание нового дэшборда
 
-.. figure:: pics/grafana_setup_add_panel.png
+.. figure:: ../pics/grafana_setup_add_panel.png
     :align: center
 
     Создание новой панели
@@ -92,9 +92,10 @@
 #. Настроить источник данных в панели, а именно:
    #. Указать в качестве источника MQTT
    #. Прописать необходимый topic по которому из брочека сообщений панель будет получать данный из платформы.
-    .. note:: В качестве обменника для получения данный Grafana MQTT плагин использует `amq.topic`.
 
-.. figure:: pics/grafana_setup_conf_panel.png
+      .. note:: В качестве обменника для получения данный Grafana MQTT плагин использует `amq.topic`.
+
+.. figure:: ../pics/grafana_setup_conf_panel.png
     :align: center
 
     Настройка источника данных в панели
@@ -110,6 +111,6 @@
 Для отправки данных из Grafana необходимо воспользоваться плагином формы ручного ввода.
 
 Для его работы дополнительная настройка Grafana не требуется
-Подробнее про запуск, конфигурацию и работу плагина 
+Подробнее про запуск, конфигурацию и работу плагина
 
 `Плагин для формы ручного ввода в Grafana <./grafana_plugin.rst>`

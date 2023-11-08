@@ -49,6 +49,7 @@
    Архитектура<architecture>
    Руководство разработчика<developer>
    Интеграция с Grafana<grafana/grafana_integration>
+   Grafana plugin<grafana/grafana_plugin.rst>
 
 Indices and tables
 ==================
