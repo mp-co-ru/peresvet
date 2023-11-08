@@ -47,6 +47,7 @@
 
    Используемые термины<terms>
    Архитектура<architecture>
+   Интеграция с Grafana<grafana/grafana_integration>
 
 Indices and tables
 ==================
