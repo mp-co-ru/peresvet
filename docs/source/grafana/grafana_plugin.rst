@@ -14,19 +14,19 @@
    Тег должен быть создан в самой платформе и привязан к определенному хранилищу данных.
 
 
-.. figure:: ../pics/grafana_plugin_option_01.jpeg
+.. figure:: ../pics/grafana_plugin_option_01.png
 
    Настройка 1
 
-.. figure:: ../pics/grafana_plugin_field_var.jpeg
+.. figure:: ../pics/grafana_plugin_field_var.png
 
    Вариант с отображением текстового поля
 
-.. figure:: ../pics/grafana_plugin_icon_var.jpeg
+.. figure:: ../pics/grafana_plugin_icon_var.png
 
    Вариант с отображением кнопки с иконкой
 
-.. figure:: ../pics/grafana_plugin_option_03.jpeg
+.. figure:: ../pics/grafana_plugin_option_03.png
 
    Настройка 3
 
@@ -39,7 +39,7 @@
 
 После настройки данные тегов по каждой форме будут обновляться с периодичностью, указанной в настройках Grafana (5 сек., 10 сек., и др.).
 
-.. figure:: ../pics/grafana_plugin_option_03.jpeg
+.. figure:: ../pics/grafana_plugin_option_03.png
 
    Время обновления текущего значения тега в панели ручного ввода
 
@@ -48,6 +48,6 @@
 
 После этого покруг поля появится синяя граница, которая показывает, что поле было изменено.
 
-.. figure:: ../pics/grafana_plugin_enter_value.jpeg
+.. figure:: ../pics/grafana_plugin_enter_value.png
 
    Ввод и отправка значения из формы
