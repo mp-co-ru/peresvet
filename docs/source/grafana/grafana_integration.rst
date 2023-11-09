@@ -3,17 +3,133 @@
 
 Для связи между Grafana и платформой необходимо произвести несколько настроек
 
-#. Запускаем все необходимые сервисы платформы Пересвет в Docker
-#. Запустить Grafana с плагином формы ручного ввода в Docker
+#. Запускаем все необходимые сервисы платформы Пересвет в Docker.
+   
+   Для этого необходимо:
+   
+   #. Скачать проект с помощью команды `git clone https://github.com/mp-co-ru/mpc-peresvet.git`
+   #. Открыть любой терминал и перейти в корневую директорию проекта `cd <путь до директории проекта>/mpc-peresvet` 
+   #. Выполнить команду `./run.sh`.
 
-   #. Для этого необходимо скачать проект.
-   #. Сначала перейдите в директорию, где будет лежать проект плагина для Grafana.
-   #. Затем скачайте его с помощью команды `gh repo clone mp-co-ru/grafana-ui-plugin`
-   #. Откройте проект в VSCode и перейдите в терминал.
-   #. Из корневой директории проекта запустите команду `docker compose -f docker-compose.yml up`.
-   #. Дождитесь пока контейнер запустится полностью.
+      .. warning::
+         Для того, чтобы процедура запуска сервисов прошла, в системе должнен быть установлен Docker. 
 
-#. Перейдите в браузер и откройте https://localhost:3000/login
+#. Запустить Grafana
+
+   Запуск возможен несколькими способами 
+
+   **Linux**
+   
+   #. Установить зависимости 
+
+      .. code-block:: sh 
+
+         sudo apt-get install -y apt-transport-https software-properties-common wgetsudo apt-get install -y apt-transport-https software-properties-common wget
+
+   #. Импортируем GPG ключ
+      
+      .. code-block:: sh
+      
+         sudo mkdir -p /etc/apt/keyrings/
+         wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+
+   #. Создаем директорию для версий Grafana
+
+      .. code-block:: sh
+
+         echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+
+   #. Обновляем пакеты
+
+      .. code-block:: sh
+
+         sudo apt-get update
+
+   #. Устанавливаем Grafana
+
+      .. code-block:: sh
+
+         sudo apt-get install grafana-enterprise
+
+   #. Запуск Grafana 
+
+      .. code-block:: sh
+
+         sudo systemctl daemon-reload
+         sudo systemctl start grafana-server
+         sudo systemctl status grafana-server
+
+   **Docker**
+
+   #. Запускаем контейнер с помощью команды
+   
+      .. code-block:: sh
+
+         docker run -d -p 3000:3000 --name=grafana \
+         -e "GF_INSTALL_PLUGINS=https://github.com/VolkovLabs/custom-plugin.zip;custom-plugin" \
+         grafana/grafana-enterprise 
+
+   **MacOS**
+
+   #. 
+
+      .. code-block:: sh
+
+         brew update
+         brew install grafana
+
+   #. 
+
+      .. code-block:: sh
+
+         brew services start grafana
+
+   .. note::
+      
+      По умолчанию Grafana запускает сервер на порту 3000. Если необходимо изменить порт, то это можно сделать с помощью инструмента
+      `grafana-cli`. 
+      
+      **Linux/MacOS**
+
+      #. В любом терминале перейдите в директорию Grafana 
+         
+         .. code-block:: sh
+
+            cd <путь к корневой директории Grafana>/bin
+      
+      #. Выполните команду
+
+         .. code-block:: sh
+
+            ./grafana-cli admin set-config --http_port=<порт для сервера Grafana>
+
+      #. Перезагрузите сервис Grafana
+         
+         **Linux**
+
+         .. code-block:: sh
+            
+            sudo systemctl start grafana-server
+        
+         **MacOS**
+
+         .. code-block:: sh
+            
+            brew services restart grafana
+
+      **Docker**
+
+      При использовании Docker возможно поменять порт для Grafana без изменения конфигурации самой Grafana
+      Для этого при запуске контейнера укажите флаг -p в виде: -p <новый порт для Grafana>:3000
+
+      .. code-block:: sh
+    
+         docker run -d -p <новый порт для Grafana>:3000 --name=grafana \
+         -e "GF_INSTALL_PLUGINS=https://github.com/VolkovLabs/custom-plugin.zip;custom-plugin" \
+         grafana/grafana-enterprise 
+
+
+#. Перейдите в браузер и откройте https://localhost:<порт grafana (по умолчанию 3000)>/login
 #. В форме авторизации введите `admin` в качестве пользователя и `admin` в качестве пароля.
 
 Подключение к платформе по протоколу MQTT
@@ -106,9 +222,31 @@
    Автообновление нарушает ее работу и сбрасывает все данные, еоторые она получила до обновления.
 
 Отправка данных из Grafana в платформу
-======================================
+--------------------------------------
 
-Для отправки данных из Grafana необходимо воспользоваться плагином формы ручного ввода.
+Для отправки данных из Grafana необходимо установить плагин формы ручного ввода.
+
+Установка плагина
+~~~~~~~~~~~~~~~~~
+
+**Linux/MacOS**
+
+.. code-block:: sh
+
+   wget "https://github.com/mp-co-ru/grafana-ui-plugin/mp-co-peresvet-app-1-0-0.zip" -O <директория для плагинов в Grafana>/mp-co-peresvet-app-1-0-0.zip
+   unzip <директория для плагинов в Grafana>/mp-co-peresvet-app-1-0-0.zip -d <директория для плагинов в Grafana>/mp-co-peresvet-app-1-0-0 
+   rm <директория для плагинов в Grafana>/mp-co-peresvet-app-1-0-0.zip
+
+.. note::
+   Директория для плагинов в Grafana по умолчанию находится по пути `/usr/local/var/lib/grafana/plugins`.
+
+**Docker**
+
+.. code-block:: sh
+
+   docker run -d -p 3000:3000 --name=grafana \
+   -e "GF_INSTALL_PLUGINS=https://github.com/mp-co-ru/grafana-ui-plugin/mp-co-peresvet-app-1-0-0.zip;mp-co-peresvet-app" \
+   grafana/grafana-enterprise
 
 Для его работы дополнительная настройка Grafana не требуется
 Подробнее про запуск, конфигурацию и работу плагина
