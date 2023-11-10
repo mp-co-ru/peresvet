@@ -731,17 +731,30 @@ class ModelCRUDSvc(Svc):
         else:
             mes["data"]["attributes"]["objectClass"] = [self._config.hierarchy["class"]]
 
+        self._logger.error(mes['data']['attributes']['objectClass'])
+        self._logger.error({
+                    "base": parent_node,
+                    "scope": CN_SCOPE_ONELEVEL,
+                    "filter": {
+                        "objectClass": [mes["data"]["attributes"]["objectClass"][0]],
+                        "prsDefault": ["TRUE"]
+                    },
+                    "attributes": ["cn"]
+                })
+
         items = await self._hierarchy.search(
                 {
                     "base": parent_node,
                     "scope": CN_SCOPE_ONELEVEL,
                     "filter": {
-                        "objectClass": [mes["data"]["attributes"]["objectClass"]],
+                        "objectClass": [mes["data"]["attributes"]["objectClass"][0]],
                         "prsDefault": ["TRUE"]
                     },
                     "attributes": ["cn"]
                 }
             )
+
+        self._logger.error(items)
 
         # логика создания узлов такова, что в списке узлов одного уровня
         # есть один узел с prsDefault = True
