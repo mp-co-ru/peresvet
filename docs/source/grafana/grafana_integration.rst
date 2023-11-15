@@ -1,38 +1,38 @@
 Интеграция с Grafana
-==================================================
+====================
 
-.. note:: 
+.. note::
    Для дальнейшей работы необходимо иметь Linux (Ubuntu/Debian) в качестве ОС и установить Docker и git.
 
 Для связи между Grafana и платформой Пересвет необходимо произвести несколько настроек
 
 #. Запускаем все необходимые сервисы платформы Пересвет в Docker.
-   
+
    Для этого необходимо:
-   
+
    #. Скачать проект с помощью команды `git clone https://github.com/mp-co-ru/mpc-peresvet.git`
-   #. Открыть любой терминал и перейти в корневую директорию проекта `cd <путь до директории проекта>/mpc-peresvet` 
+   #. Открыть любой терминал и перейти в корневую директорию проекта `cd <путь до директории проекта>/mpc-peresvet`
    #. Выполнить команду `./run.sh`.
 
       .. warning::
-         Для того, чтобы процедура запуска сервисов прошла успешно, в системе должнен быть установлен Docker. 
+         Для того, чтобы процедура запуска сервисов прошла успешно, в системе должнен быть установлен Docker.
 
 #. Запустить Grafana
 
-   Запуск возможен несколькими способами 
+   Запуск возможен несколькими способами
 
    **Linux**
-   
-   #. Установить зависимости 
 
-      .. code-block:: sh 
+   #. Установить зависимости
+
+      .. code-block:: sh
 
          sudo apt-get install -y apt-transport-https software-properties-common wgetsudo apt-get install -y apt-transport-https software-properties-common wget
 
    #. Импортируем GPG ключ
-      
+
       .. code-block:: sh
-      
+
          sudo mkdir -p /etc/apt/keyrings/
          wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
 
@@ -54,7 +54,7 @@
 
          sudo apt-get install grafana-enterprise
 
-   #. Запуск Grafana 
+   #. Запуск Grafana
 
       .. code-block:: sh
 
@@ -65,41 +65,41 @@
    **Docker**
 
    #. Запускаем контейнер с помощью команды
-   
+
       .. code-block:: sh
 
          docker run -d -p 3000:3000 --name=grafana \
          -e "GF_INSTALL_PLUGINS=https://github.com/VolkovLabs/custom-plugin.zip;custom-plugin" \
-         grafana/grafana-enterprise 
+         grafana/grafana-enterprise
 
    **MacOS**
 
-   #. 
+   #.
 
       .. code-block:: sh
 
          brew update
          brew install grafana
 
-   #. 
+   #.
 
       .. code-block:: sh
 
          brew services start grafana
 
    .. note::
-      
+
       По умолчанию Grafana запускает сервер на порту 3000. Если необходимо изменить порт, то это можно сделать с помощью инструмента
-      `grafana-cli`. 
-      
+      `grafana-cli`.
+
       **Linux/MacOS**
 
-      #. В любом терминале перейдите в директорию Grafana 
-         
+      #. В любом терминале перейдите в директорию Grafana
+
          .. code-block:: sh
 
             cd <путь к корневой директории Grafana>/bin
-      
+
       #. Выполните команду
 
          .. code-block:: sh
@@ -107,17 +107,17 @@
             ./grafana-cli admin set-config --http_port=<порт для сервера Grafana>
 
       #. Перезагрузите сервис Grafana
-         
+
          **Linux**
 
          .. code-block:: sh
-            
+
             sudo systemctl start grafana-server
-        
+
          **MacOS**
 
          .. code-block:: sh
-            
+
             brew services restart grafana
 
       **Docker**
@@ -126,10 +126,10 @@
       Для этого при запуске контейнера укажите флаг -p в виде: -p <новый порт для Grafana>:3000
 
       .. code-block:: sh
-    
+
          docker run -d -p <новый порт для Grafana>:3000 --name=grafana \
          -e "GF_INSTALL_PLUGINS=https://github.com/VolkovLabs/custom-plugin.zip;custom-plugin" \
-         grafana/grafana-enterprise 
+         grafana/grafana-enterprise
 
 
 #. Перейдите в браузер и откройте https://localhost:<порт grafana (по умолчанию 3000)>/login
@@ -238,7 +238,7 @@
 .. code-block:: sh
 
    wget "https://github.com/mp-co-ru/grafana-ui-plugin/mp-co-peresvet-app-1-0-0.zip" -O <директория для плагинов в Grafana>/mp-co-peresvet-app-1-0-0.zip
-   unzip <директория для плагинов в Grafana>/mp-co-peresvet-app-1-0-0.zip -d <директория для плагинов в Grafana>/mp-co-peresvet-app-1-0-0 
+   unzip <директория для плагинов в Grafana>/mp-co-peresvet-app-1-0-0.zip -d <директория для плагинов в Grafana>/mp-co-peresvet-app-1-0-0
    rm <директория для плагинов в Grafana>/mp-co-peresvet-app-1-0-0.zip
 
 .. note::
