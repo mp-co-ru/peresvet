@@ -134,7 +134,7 @@ class NodeRead(BaseModel):
         description="По умолчанию = true."
     )
     scope: int = Field(
-        2,
+        1,
         title="Масштаб поиска.",
         description=(
             "0 - получение данных по указанному в ключе `base` узлу;"
