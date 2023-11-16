@@ -9,4 +9,5 @@ docker compose \
 -f docker/compose/docker-compose.alerts.all.yml \
 -f docker/compose/docker-compose.methods.all.yml \
 -f docker/compose/docker-compose.schedules.all.yml \
+-f docker/compose/docker-compose.retranslator.yml \
 up
