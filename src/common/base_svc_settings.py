@@ -12,7 +12,7 @@ import os
 import json
 from pathlib import Path
 from typing import Any, Dict, Tuple, Type
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from pydantic.fields import FieldInfo
 from pydantic_settings import (
     BaseSettings,
@@ -57,7 +57,9 @@ class JsonConfigSettingsSource(PydanticBaseSettingsSource):
         return d
 
 class BaseSvcSettings(BaseSettings, BaseModel):
-    model_config = SettingsConfigDict(env_file_encoding='utf-8')
+    #model_config = SettingsConfigDict(env_file_encoding='utf-8')
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
 
     #: имя сервиса
     svc_name: str = ""
