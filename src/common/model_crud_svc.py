@@ -743,7 +743,7 @@ class ModelCRUDSvc(Svc):
                     "base": parent_node,
                     "scope": CN_SCOPE_ONELEVEL,
                     "filter": {
-                        "objectClass": [mes["data"]["attributes"]["objectClass"]],
+                        "objectClass": [mes["data"]["attributes"]["objectClass"][0]],
                         "prsDefault": ["TRUE"]
                     },
                     "attributes": ["cn"]
