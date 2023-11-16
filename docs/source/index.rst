@@ -47,7 +47,6 @@
 
    Используемые термины<terms>
    Архитектура<architecture>
-   Руководство разработчика<developer>
 
 Indices and tables
 ==================

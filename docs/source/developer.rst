@@ -3,4 +3,4 @@
 
 .. include:: common_classes.rst
 
-.. include:: microservices/microservices.rst
+.. include:: services/microservices.rst
