@@ -70,9 +70,12 @@
 
       .. code-block:: sh
 
-         docker run -d -p 3000:3000 --name=grafana \
-         -e "GF_INSTALL_PLUGINS=https://github.com/VolkovLabs/custom-plugin.zip;custom-plugin" \
-         grafana/grafana-enterprise
+         docker run -d -p 3000:3000 --name=grafana --network=<название сети с платформой Пересвет, по умолчанию compose_deafult> \
+         grafana/grafana-enterprise 
+
+      .. note::
+         Флаг --network добавлен для того, чтобы контейнер Grafana запустилась в сети,
+         в которой запущена платформа Пересвет
 
    **MacOS**
 
