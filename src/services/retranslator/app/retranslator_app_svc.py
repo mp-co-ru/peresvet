@@ -36,13 +36,14 @@ class RetranslatorApp(svc.Svc):
     async def get_cur_tag_val(self, tag_id: str):
         # Поиск текущего значения тега
         self._logger.error("Posted message")
-        async with aiohttp.ClientSession() as sess:
-            async with sess.get("http://tags_all:81/v1/data", json={"tagId": tag_id}) as resp:
-                response = await resp.json()
-                cur_tag_data = response.get('data')[0].get('data')[0][0]
-        # tag_cur_val = await self._post_message(mes=body, reply=True)
-        # self._logger.error("fter sending")
-                return cur_tag_data
+        try:
+            async with aiohttp.ClientSession() as sess:
+                async with sess.get("http://tags_all:81/v1/data", json={"tagId": tag_id}) as resp:
+                    response = await resp.json()
+                    cur_tag_data = response.get('data')[0].get('data')[0][0]
+                    return cur_tag_data
+        except asyncio.exceptions.TimeoutError:
+            return None
 
     async def retranslate_job(self, tag_id: str):
         updated_at = self.tag_sub[tag_id].get('updated_at')
