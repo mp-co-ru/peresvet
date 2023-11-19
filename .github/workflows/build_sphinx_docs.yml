@@ -30,8 +30,10 @@ jobs:
         with:
            python-version: "3.10"
       # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+      - name: Dependencies for python-ldap
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends gcc build-essential python3-dev libldap2-dev libsasl2-dev tox lcov valgrind
 
       - name: Install dependencies
         run: |
@@ -44,9 +46,3 @@ jobs:
       - name: Run ghp-import
         run: |
           ghp-import -n -p -f docs/build/html
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
