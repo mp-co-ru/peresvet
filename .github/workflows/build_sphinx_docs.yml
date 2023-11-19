@@ -32,8 +32,8 @@ jobs:
       # Runs a single command using the runners shell
       - name: Dependencies for python-ldap
         run: |
-          apt-get update
-          apt-get install -y --no-install-recommends gcc build-essential python3-dev libldap2-dev libsasl2-dev tox lcov valgrind
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gcc build-essential python3-dev libldap2-dev libsasl2-dev tox lcov valgrind
 
       - name: Install dependencies
         run: |
