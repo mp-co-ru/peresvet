@@ -51,7 +51,7 @@ class PrsLogger:
 
     **LOG_ROTATION**
 
-    Журнал создаётся функцией ``make_logger``.
+    Журнал создаётся функцией ``make_logger``\.
     """
 
     @classmethod

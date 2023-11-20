@@ -18,7 +18,7 @@ from src.common import svc
 class RetranslatorApp(svc.Svc):
     """Сервис пересылки и дублирования сообщения для правильной визуализации в Grafana.
 
-    Подписывается на очередь ``tags_app_api`` обменника ``tags_app_api``,
+    Подписывается на очередь ``tags_app_api`` обменника ``tags_app_api``\,
     в которую публикует сообщения сервис ``connectors_api_crud`` (все имена
     указываются в переменных окружения).
 
@@ -31,7 +31,7 @@ class RetranslatorApp(svc.Svc):
         )
         self.tag_sub = {}
         super().__init__(settings, *args, **kwargs)
-        
+
 
     async def get_cur_tag_val(self, tag_id: str):
         # Поиск текущего значения тега
@@ -62,13 +62,13 @@ class RetranslatorApp(svc.Svc):
             body=self.tag_sub[tag_id]['last_val'].encode(),
         ), routing_key=tag_id)
         self._logger.info(f"Send message {self.tag_sub[tag_id]['last_val']} to {tag_id}")
-        return 
+        return
 
-        
+
     async def add_tag_task(self, tag_id: str):
         task = self.scheduler.add_job(self.retranslate_job, trigger=IntervalTrigger(seconds=5) ,args=[tag_id])
         return task
-    
+
     async def _bind_event_callback(self, message: aio_pika.abc.AbstractIncomingMessage):
         async with message.process(ignore_processed=True):
             action = message.routing_key
@@ -109,7 +109,7 @@ class RetranslatorApp(svc.Svc):
                         routing_key=tag_id)
 
     async def retranslate(self, routing_key: str, data: str):
-        if not hasattr(self, "_tags_topic_exchange"): 
+        if not hasattr(self, "_tags_topic_exchange"):
             return
         await self._tags_topic_exchange.publish(
         message=aio_pika.Message(
@@ -147,7 +147,7 @@ class RetranslatorApp(svc.Svc):
                 self._logger.error(f"Ошибка связи с брокером: {ex}")
                 await asyncio.sleep(5)
         return
-        
+
     async def _process_message(self, message: aio_pika.abc.AbstractIncomingMessage) -> None:
         self._logger.error(message)
         routing_key = message.routing_key
@@ -192,13 +192,12 @@ class RetranslatorApp(svc.Svc):
         self.scheduler.start()
         await self.init_tag_sub()
         await self._connect_to_topic()
-        return 
+        return
 
     async def on_shutdown(self) -> None:
         await self._bind_event_amqp_channel.close()
         return await super().on_shutdown()
-        
+
 settings = RetranslatorAppSettings()
 
 app = RetranslatorApp(settings=settings, title="ConnectorsApp")
-

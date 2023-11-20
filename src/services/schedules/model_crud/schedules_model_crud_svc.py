@@ -10,7 +10,7 @@ from src.common import hierarchy
 class SchedulesModelCRUD(model_crud_svc.ModelCRUDSvc):
     """Сервис работы с расписаниями в иерархии.
 
-    Подписывается на очередь ``schedules_api_crud`` обменника ``schedules_api_crud``,
+    Подписывается на очередь ``schedules_api_crud`` обменника ``schedules_api_crud``\,
     в которую публикует сообщения сервис ``schedules_api_crud`` (все имена
     указываются в переменных окружения).
 

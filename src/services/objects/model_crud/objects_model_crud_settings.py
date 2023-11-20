@@ -1,7 +1,7 @@
 from src.common.model_crud_settings import ModelCRUDSettings
 
 class ObjectsModelCRUDSettings(ModelCRUDSettings):
-    #: имя сервиса. сервисы *_mod_crud создают в иерархии узел с таким же именем
+    #: имя сервиса
     svc_name: str = "objects_model_crud"
     #: строка коннекта к RabbitMQ
     amqp_url: str = "amqp://prs:Peresvet21@rabbitmq/"

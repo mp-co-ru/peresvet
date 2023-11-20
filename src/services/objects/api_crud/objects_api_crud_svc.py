@@ -1,6 +1,6 @@
 """
 Модуль содержит классы, описывающие входные данные для команд CRUD для объектов
-и класс сервиса ``objects_api_crud_svc``.
+и класс сервиса ``objects_api_crud_svc``\.
 """
 import sys
 from uuid import UUID
@@ -38,7 +38,7 @@ class ObjectUpdate(svc.NodeUpdate):
 class ObjectsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с объектами в иерархии.
 
-    Подписывается на очередь ``objects_api_crud`` обменника ``objects_api_crud``,
+    Подписывается на очередь ``objects_api_crud`` обменника ``objects_api_crud``\,
     в которую публикует сообщения сервис ``objects_api_crud`` (все имена
     указываются в переменных окружения).
 

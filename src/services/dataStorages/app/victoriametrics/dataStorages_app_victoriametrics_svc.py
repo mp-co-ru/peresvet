@@ -550,7 +550,7 @@ class DataStoragesAppVictoriametrics(svc.Svc):
     # fixed
     def _interpolate(self, raw_data: List[tuple], time_row: List[int]) -> List[tuple]:
         """ Получение линейно интерполированных значений для ряда ``time_row`` по
-        действительным значениям из БД (``raw_data``)
+        действительным значениям из БД (``raw_data``\)
 
         :param raw_data: Реальные значения из БД
         :type raw_data: List[Dict]
@@ -890,8 +890,8 @@ class DataStoragesAppVictoriametrics(svc.Svc):
                     start: int,
                     finish: int):
         """ Ограничение количества записей в выборке.
-        Если задан параметр ``since``, возвращается ``limit`` первых записей списка.
-        Если ``since`` не задан (None), но задан ``till``, возвращается
+        Если задан параметр ``since``\, возвращается ``limit`` первых записей списка.
+        Если ``since`` не задан (None), но задан ``till``\, возвращается
         ``limit`` последних записей списка
 
         :param tag_data: исходная выборка, массив словарей {'x': int, 'y': Any, 'q': int}

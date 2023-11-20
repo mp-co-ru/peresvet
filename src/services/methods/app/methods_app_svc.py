@@ -1,6 +1,6 @@
 """
 Модуль содержит классы, описывающие входные данные для команд CRUD для тегов
-и класс сервиса ``methods_api_crud_svc``.
+и класс сервиса ``methods_api_crud_svc``\.
 """
 import sys
 import json

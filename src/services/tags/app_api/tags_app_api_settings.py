@@ -1,8 +1,7 @@
 from src.common.svc_settings import SvcSettings
 
 class TagsAppAPISettings(SvcSettings):
-
-    #: имя сервиса. сервисы *_mod_crud создают в иерархии узел с таким же именем
+    #: имя сервиса
     svc_name: str = "tags_app_api"
     #: строка коннекта к RabbitMQ
     amqp_url: str = "amqp://prs:Peresvet21@rabbitmq/"

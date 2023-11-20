@@ -12,7 +12,7 @@ from src.common import hierarchy
 class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
     """Сервис работы с хранилищами данных в иерархии.
 
-    Подписывается на очередь ``dataStorages_api_crud`` обменника ``dataStorages_api_crud``,
+    Подписывается на очередь ``dataStorages_api_crud`` обменника ``dataStorages_api_crud``\,
     в которую публикует сообщения сервис ``dataStorages_api_crud`` (все имена
     указываются в переменных окружения).
 
@@ -212,7 +212,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         какого хранилища эти данные брать).
 
         Если тег уже привязан к какому-либо хранилищу (ищем ссылку на этот тег
-        в иерархии ``cn=dataStorages,cn=prs``), то сначала отвязываем тег от
+        в иерархии ``cn=dataStorages,cn=prs``\), то сначала отвязываем тег от
         предыдущего хранилища, затем привязываем к новому.
 
         Args:
@@ -283,7 +283,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         Если тревога уже привязана к какому-либо хранилищу (ищем ссылку на
         эту тревогу
-        в иерархии ``cn=dataStorages,cn=prs``), то сначала отвязываем тревогу
+        в иерархии ``cn=dataStorages,cn=prs``\), то сначала отвязываем тревогу
         от предыдущего хранилища, затем привязываем к новому.
 
         Args:

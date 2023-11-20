@@ -1,6 +1,6 @@
 """
 Модуль содержит классы, описывающие входные данные для команд CRUD для тегов
-и класс сервиса ``tags_api_crud_svc``.
+и класс сервиса ``tags_api_crud_svc``\.
 """
 import json
 import sys
@@ -16,7 +16,7 @@ from src.services.tags.app.tags_app_settings import TagsAppSettings
 class TagsApp(svc.Svc):
     """Сервис работы с тегами.
 
-    Подписывается на очередь ``tags_app_api`` обменника ``peresvet``,
+    Подписывается на очередь ``tags_app_api`` обменника ``peresvet``\,
     в которую публикует сообщения сервис ``tags_app_api`` (все имена
     указываются в переменных окружения).
 

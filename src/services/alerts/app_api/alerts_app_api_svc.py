@@ -1,11 +1,14 @@
 """
 Модуль содержит классы, описывающие входные данные для команд CRUD для тегов
-и класс сервиса ``tags_api_crud_svc``.
+и класс сервиса ``tags_api_crud_svc``\.
 """
 import sys
 from typing import Any, List, NamedTuple
 from typing_extensions import Annotated
-from pydantic import BaseModel, Field, field_validator, validator, BeforeValidator, ValidationError
+from pydantic import (
+    BaseModel, Field, field_validator,
+    validator, BeforeValidator, ValidationError, ConfigDict
+)
 import json
 
 from fastapi import APIRouter
@@ -29,6 +32,9 @@ class AlarmsGet(BaseModel):
 
     Возвращение истории алярмов (использование флагов start и finish) - в следующей версии.
     """
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
+
     parentId: str | list[str] = Field(None, title="Объект, тревоги которого запрашиваем.")
     getChildren: bool = Field(False, title="Учитывать тревоги дочерних объектов.")
     format: bool = Field(False, title="Флаг форматирования меток времени.")
@@ -44,6 +50,9 @@ class AlarmsGet(BaseModel):
             return v
 
 class AlarmData(BaseModel):
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
+
     id: str = Field(title="Id тревоги.")
     description: str = Field(title="Описание тревоги.")
     start: int | str = Field(title="Время возникновения тревоги.")
@@ -51,6 +60,9 @@ class AlarmData(BaseModel):
     acked: int | str = Field(None, title="Время квитирования тревоги.")
 
 class AckAlarm(BaseModel):
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
+
     id: str = Field(title="Id тревоги.")
     x: int | str = Field(None, title="Время квитирования тревоги.")
 
@@ -72,7 +84,7 @@ class AckAlarm(BaseModel):
 class AlertsAppAPI(svc.Svc):
     """Сервис работы с тегами в иерархии.
 
-    Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``,
+    Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``\,
     в которую публикует сообщения сервис ``tags_api_crud`` (все имена
     указываются в переменных окружения).
 

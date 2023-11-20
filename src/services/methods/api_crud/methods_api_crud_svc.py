@@ -1,6 +1,6 @@
 """
 Модуль содержит классы, описывающие входные данные для команд CRUD для хранилищ данных
-и класс сервиса ``dataStorages_api_crud_svc``.
+и класс сервиса ``dataStorages_api_crud_svc``\.
 """
 import sys
 from typing import List

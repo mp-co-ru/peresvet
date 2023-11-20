@@ -13,14 +13,6 @@ Subpackages
 Submodules
 ----------
 
-src.services.dataStorages.app.test\_psql module
------------------------------------------------
-
-.. automodule:: src.services.dataStorages.app.test_psql
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Module contents
 ---------------
 

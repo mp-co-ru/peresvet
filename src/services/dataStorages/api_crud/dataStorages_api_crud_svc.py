@@ -1,10 +1,10 @@
 """
 Модуль содержит классы, описывающие входные данные для команд CRUD для хранилищ данных
-и класс сервиса ``dataStorages_api_crud_svc``.
+и класс сервиса ``dataStorages_api_crud_svc``\.
 """
 import sys
 from typing import List
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, ConfigDict
 from fastapi import APIRouter
 
 sys.path.append(".")
@@ -13,13 +13,22 @@ from src.common import api_crud_svc as svc
 from dataStorages_api_crud_settings import DataStoragesAPICRUDSettings
 
 class LinkTagOrAlertAttributes(BaseModel):
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
+
     prsStore: dict = Field(None, title="Хранилище тега")
 
 class LinkTag(BaseModel):
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
+
     tagId: str = Field(title="Идентификатор привязываемого тега")
     attributes: LinkTagOrAlertAttributes = Field({})
 
 class LinkAlert(BaseModel):
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
+
     alertId: str = Field(title="Идентификатор привязываемой тревоги")
     attributes: LinkTagOrAlertAttributes = Field({})
 
@@ -82,7 +91,7 @@ class DataStorageUpdate(DataStorageCreate):
 class DataStoragesAPICRUD(svc.APICRUDSvc):
     """Сервис работы с хранилищами данных в иерархии.
 
-    Подписывается на очередь ``dataStorages_api_crud`` обменника ``dataStorages_api_crud``,
+    Подписывается на очередь ``dataStorages_api_crud`` обменника ``dataStorages_api_crud``\,
     в которую публикует сообщения сервис ``dataStorages_api_crud`` (все имена
     указываются в переменных окружения).
 

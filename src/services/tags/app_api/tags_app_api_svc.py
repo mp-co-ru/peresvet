@@ -1,12 +1,15 @@
 """
 Модуль содержит классы, описывающие входные данные для команд CRUD для тегов
-и класс сервиса ``tags_api_crud_svc``.
+и класс сервиса ``tags_api_crud_svc``\.
 """
 import sys
 import asyncio
 from typing import Any, List, NamedTuple
 from typing_extensions import Annotated
-from pydantic import BaseModel, Field, field_validator, validator, BeforeValidator, ValidationError
+from pydantic import (
+    BaseModel, Field, field_validator,
+    validator, BeforeValidator, ValidationError, ConfigDict
+)
 import json
 import numpy as np
 
@@ -40,6 +43,9 @@ def x_must_be_int(v):
     return v
 
 class TagData(BaseModel):
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
+
     tagId: str = Field(
         title="id тега"
     )
@@ -48,11 +54,17 @@ class TagData(BaseModel):
     validate_id = validator('tagId', allow_reuse=True)(valid_uuid)
 
 class AllData(BaseModel):
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
+
     data: List[TagData] = Field(
         title="Данные"
     )
 
 class DataGet(BaseModel):
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
+
     tagId: str | list[str] = Field(
         title="Id или список id тегов"
     )
@@ -132,7 +144,7 @@ class DataGet(BaseModel):
 class TagsAppAPI(svc.Svc):
     """Сервис работы с тегами в иерархии.
 
-    Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``,
+    Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``\,
     в которую публикует сообщения сервис ``tags_api_crud`` (все имена
     указываются в переменных окружения).
 

@@ -5,7 +5,7 @@
 """
 from typing import Optional
 from uuid import UUID
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, ConfigDict
 
 from src.common.base_svc import BaseSvc
 from src.common.api_crud_settings import APICRUDSettings
@@ -29,6 +29,9 @@ def valid_uuid(id: str | list[str]) -> str | list[str]:
 class NodeAttributes(BaseModel):
     """Атрибуты для создания базового узла.
     """
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
+
     cn: str = Field(None, title="Имя узла")
     description: str = Field(None, title="Описание",
         description="Описание экземпляра.")
@@ -47,7 +50,7 @@ class NodeAttributes(BaseModel):
     )
     prsDefault: bool = Field(None, title="Сущность по умолчанию.",
         description=(
-            "Если = ``True``, то данный экземпляр считается узлом по умолчанию "
+            "Если = ``True``\, то данный экземпляр считается узлом по умолчанию "
             "в списке равноправных узлов данного уровня иерархии."
         )
     )
@@ -68,6 +71,9 @@ class NodeAttributes(BaseModel):
 class NodeCreate(BaseModel):
     """Базовый класс для команды создания экземпляра сущности.
     """
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
+
     parentId: str = Field(None, title="Id родительского узла",
         description=(
             "Идентификатор родительского узла. "
@@ -85,9 +91,12 @@ class NodeDelete(BaseModel):
     """Базовый класс, описывающий параметры
     команды для удаления узла.
     """
-    id: str | list[str] = Field(title="Идентификатор(-ы) узла.",
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
+
+    id: str | list[str] = Field(title="Идентификатор(ы) узла.",
         description=(
-            "Идентификатор(-ы) удаляемого(изменяемого) узла "
+            "Идентификатор(ы) удаляемого(изменяемого) узла "
             "должен быть в виде uuid."
         )
     )
@@ -113,12 +122,14 @@ class NodeRead(BaseModel):
     """Базовый класс, описывающий параметры для команды
     поиска/чтения узлов.
     """
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
 
     id: str | list[str] = Field(
         None,
-        title="Идентификатор(-ы) узлов.",
+        title="Идентификатор(ы) узлов.",
         description=(
-            "Если уазан(-ы), то возвращаются данные по указанному(-ым) "
+            "Если уазан(ы), то возвращаются данные по указанному(ым) "
             "узлам. В этом случае ключи `base`, `scope`, `filter` "
             "не принимаются во внимание."
         )
@@ -137,9 +148,9 @@ class NodeRead(BaseModel):
         1,
         title="Масштаб поиска.",
         description=(
-            "0 - получение данных по указанному в ключе `base` узлу;"
-            "1 - поиск среди непосредственных потомков указанного в `base` узла;"
-            "2 - поиск по всему дереву, начиная с указанного в `base` узла."
+            "0 - получение данных по указанному в ключе ``base`` узлу;"
+            "1 - поиск среди непосредственных потомков указанного в ``base`` узла;"
+            "2 - поиск по всему дереву, начиная с указанного в ``base`` узла."
         )
     )
     filter: dict = Field(
@@ -149,8 +160,8 @@ class NodeRead(BaseModel):
             "которых формируется фильтр для поиска."
          ),
          description=(
-            "Значения одного атрибута объединяются логической операцией `ИЛИ`, "
-            "затем значения для разных атрибутов объединяются операцией `И`."
+            "Значения одного атрибута объединяются логической операцией ``ИЛИ``\, "
+            "затем значения для разных атрибутов объединяются операцией ``И``\."
          )
     )
     attributes: list[str] = Field(
@@ -158,7 +169,7 @@ class NodeRead(BaseModel):
         title="Список атрибутов.",
         description=(
             "Список атрибутов, значения которых необходимо вернуть "
-            "в ответе. По умолчанию - ['*'], то есть все атрибуты "
+            "в ответе. По умолчанию - ['\*'], то есть все атрибуты "
             "(кроме системных)."
         )
     )
@@ -168,28 +179,25 @@ class NodeRead(BaseModel):
 class NodeCreateResult(BaseModel):
     """Результат выполнения команды создания узла.
     """
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
+
     id: str
 
 class OneNodeInReadResult(BaseModel):
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
+
     id: str = Field(title="Id узла.")
     attributes: dict = Field(title="Атрибуты узла")
 
 class NodeReadResult(BaseModel):
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
+
     data: list[OneNodeInReadResult] = Field(title="Список узлов")
 
 class APICRUDSvc(BaseSvc):
-
-    # так как сообщения, создаваемые сервисами каждой сущности
-    # начинаются с имени этой сущности, то
-    # каждый сервис-наследник класса APICRUDSvc должен
-    # определить "свои" CRUD-сообщения в этом словаре
-    # к примеру, для сервиса TagsAPICRUDSvc:
-    # {
-    #   "create": "tags.create",
-    #   "read": "tags.read",
-    #   "update": "tags.update",
-    #   "delete": "tags.delete"
-    # }
     _outgoing_commands = {
         "create": "create",
         "read": "read",
@@ -210,14 +218,6 @@ class APICRUDSvc(BaseSvc):
 
         return await self._post_message(mes=body, reply=True)
 
-    async def update(self, payload: NodeUpdate) -> dict:
-        body = {
-            "action": self._outgoing_commands["update"],
-            "data": payload.model_dump()
-        }
-
-        return await self._post_message(mes=body, reply=False)
-
     async def read(self, payload: NodeRead) -> dict:
         body = {
             "action": self._outgoing_commands["read"],
@@ -226,7 +226,18 @@ class APICRUDSvc(BaseSvc):
 
         return await self._post_message(mes=body, reply=True)
 
+
+    async def update(self, payload: NodeUpdate) -> dict:
+        body = {
+            "action": self._outgoing_commands["update"],
+            "data": payload.model_dump()
+        }
+
+        return await self._post_message(mes=body, reply=False)
+
     async def delete(self, payload: NodeDelete) -> dict:
+        """Удаление узлов в иерархии.
+        """
         body = {
             "action": self._outgoing_commands["delete"],
             "data": payload.model_dump()

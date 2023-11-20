@@ -1,6 +1,6 @@
 """
 Модуль содержит классы, описывающие входные данные для команд CRUD для тегов
-и класс сервиса ``tags_api_crud_svc``.
+и класс сервиса ``tags_api_crud_svc``\.
 """
 import sys
 from uuid import UUID
@@ -15,16 +15,19 @@ from src.services.alerts.api_crud.alerts_api_crud_settings import AlertsAPICRUDS
 
 class AlertCreateAttributes(svc.NodeAttributes):
     """При создании тревоги атрибут ``prsJsonConfigString`` имеет формат
-    {
-        # "тревожное" значение тега
-        "value": ...
-        # способ сравнения значения тега с "тревожным":
-        # если high = true, то тревога возникает, если значение тега >= value
-        # иначе - значение тега < value
-        "high": true
-        # флаг автоквитирования
-        "autoAck": true
-    }
+
+    .. code:: python
+
+        {
+            # "тревожное" значение тега
+            "value": ...
+            # способ сравнения значения тега с "тревожным":
+            # если high = true, то тревога возникает, если значение тега >= value
+            # иначе - значение тега < value
+            "high": true
+            # флаг автоквитирования
+            "autoAck": true
+        }
 
     Args:
         svc (_type_): _description_
@@ -43,7 +46,7 @@ class AlertUpdate(svc.NodeUpdate):
 class AlertsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с тегами в иерархии.
 
-    Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``,
+    Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``\,
     в которую публикует сообщения сервис ``tags_api_crud`` (все имена
     указываются в переменных окружения).
 

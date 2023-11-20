@@ -1,6 +1,6 @@
 """
 Модуль содержит классы, описывающие входные данные для команд CRUD для расписаний
-и класс сервиса ``schedules_api_crud_svc``.
+и класс сервиса ``schedules_api_crud_svc``\.
 """
 import sys
 import json
@@ -81,7 +81,7 @@ class ScheduleUpdate(svc.NodeUpdate):
 class SchedulesAPICRUD(svc.APICRUDSvc):
     """Сервис работы с расписаниями в иерархии.
 
-    Подписывается на очередь ``schedules_api_crud`` обменника ``schedules_api_crud``,
+    Подписывается на очередь ``schedules_api_crud`` обменника ``schedules_api_crud``\,
     в которую публикует сообщения сервис ``schedules_api_crud`` (все имена
     указываются в переменных окружения).
 

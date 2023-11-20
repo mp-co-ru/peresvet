@@ -11,7 +11,7 @@ class ConnectorsApp(app_svc.Svc):
 
     """Сервис работы с коннекторами.
 
-    Подписывается на очередь ``connectors_tags_api`` обменника ``connectors_api_crud``,
+    Подписывается на очередь ``connectors_tags_api`` обменника ``connectors_api_crud``\,
     в которую публикует сообщения сервис ``connectors_api_crud`` (все имена
     указываются в переменных окружения).
 

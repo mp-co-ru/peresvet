@@ -17,44 +17,6 @@ from src.common.logger import PrsLogger
 from src.common.base_svc_settings import BaseSvcSettings
 
 class BaseSvc(FastAPI):
-    """
-    Kласс ``BaseSvc`` - предок классов-сервисов и класса Svс.
-
-    Выполняет одну задачу:
-
-    * устанавливает связь с amqp-сервером и создаёт обменник для публикации
-      сообщений, а также, если указаны, очереди для потребления сообщений
-
-    После запуска эземпляр сервиса будет иметь следующие переменные:
-
-    .. code:: python
-
-        # кроме указанного в ключе "main", будут созданые другие обменники,
-        # если они были описаны в конфигурации
-        self._amqp_publish = {
-            "main": exchange
-        }
-
-        # кроме указанных в ключе "main", будут созданые другие обменники и
-        # очереди, если они были описаны в конфигурации
-        self._amqp_consume = {
-            "main": {
-                "exchange": exchange,
-                "queue": queue
-            }
-        }
-
-    Args:
-            settings (Settings): конфигурация приложения см. :class:`settings.Settings`
-    """
-
-    # словарь используется для перечисления типовых исходящих сообщений
-    # для разных сущностей
-    # к примеру: ...mayUpdate, ...updating и т.д. для model_crud_svc
-    # словарь имеет вид:
-    # {
-    #    "<название типовой команды>": "<имя типовой команды для данной сущности>"
-    # }
     _outgoing_commands = {}
 
     def __init__(self, settings: BaseSvcSettings, *args, **kwargs):
@@ -155,7 +117,7 @@ class BaseSvc(FastAPI):
         if not correct:
             self._logger.error(f"Неправильный формат сообщения")
             await message.ack()
-            return 
+            return
 
         async with message.process(ignore_processed=True):
             mes = message.body.decode()
@@ -240,10 +202,10 @@ class BaseSvc(FastAPI):
         и попытки связи будут продолжены с периодичностью в 5 секунд.
 
         DSN для связи с amqp-сервером указывается в переменной окружения
-        ``amqp-url``.
+        ``amqp-url``\.
 
         После установки соединения создаётся exchange с именем, указанным
-        в переменной ``svc_name`` и типом, указанным в ``pub_exchange_type``.
+        в переменной ``svc_name`` и типом, указанным в ``pub_exchange_type``\.
         Именно этот exchange будет использоваться для публикации сообщений,
         генерируемых сервисом.
 

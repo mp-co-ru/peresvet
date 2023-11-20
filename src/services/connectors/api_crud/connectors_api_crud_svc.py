@@ -1,6 +1,6 @@
 """
 Модуль содержит классы, описывающие входные данные для команд CRUD для коннекторов
-и класс сервиса ``connectors_api_crud_svc``.
+и класс сервиса ``connectors_api_crud_svc``\.
 """
 import sys
 from typing import List
@@ -68,7 +68,7 @@ class ConnectorUpdate(svc.NodeUpdate):
 class ConnectorsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с коннекторами в иерархии.
 
-    Подписывается на очередь ``connectors_api_crud`` обменника ``connectors_api_crud``,
+    Подписывается на очередь ``connectors_api_crud`` обменника ``connectors_api_crud``\,
     в которую публикует сообщения сервис ``connectors_api_crud`` (все имена
     указываются в переменных окружения).
 

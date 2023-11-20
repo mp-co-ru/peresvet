@@ -10,7 +10,7 @@ from src.common import hierarchy
 class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
     """Сервис работы с коннекторами в иерархии.
 
-    Подписывается на очередь ``connectors_api_crud`` обменника ``connectors_api_crud``,
+    Подписывается на очередь ``connectors_api_crud`` обменника ``connectors_api_crud``\,
     в которую публикует сообщения сервис ``connectors_api_crud`` (все имена
     указываются в переменных окружения).
 

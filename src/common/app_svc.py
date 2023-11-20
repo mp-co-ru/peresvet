@@ -19,7 +19,6 @@ class AppSvc(Svc):
         self.api_version = settings.api_version
         self._callback_futures: MutableMapping[str, asyncio.Future] = {}
 
-
     async def _amqp_connect(self) -> None:
         await super()._amqp_connect()
 

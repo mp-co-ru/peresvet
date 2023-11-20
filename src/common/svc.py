@@ -41,7 +41,7 @@ class Svc(BaseSvc):
         связь.
 
         DSN для связи с ldap-сервером указывается в переменной окружения
-        ``ldap_url``.
+        ``ldap_url``\.
 
         Returns:
             None
@@ -91,7 +91,7 @@ class Svc(BaseSvc):
 
     async def _get_subscribers_node_id(self, node_id: str) -> str:
         """Метод возвращает id подузла ``cn=subscribers,cn=system`` для
-        родительского узла ``node_id``.
+        родительского узла ``node_id``\.
 
         Args:
             node_id (str): id родительского узла

@@ -2,7 +2,7 @@ from src.common.svc_settings import SvcSettings
 
 class AlertsAppSettings(SvcSettings):
 
-    #: имя сервиса. сервисы *_mod_crud создают в иерархии узел с таким же именем
+    #: имя сервиса
     svc_name: str = "alerts_app"
     #: строка коннекта к RabbitMQ
     amqp_url: str = "amqp://prs:Peresvet21@rabbitmq/"

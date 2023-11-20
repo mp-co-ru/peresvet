@@ -1,6 +1,6 @@
 """
 Модуль содержит классы, описывающие входные данные для команд CRUD для тегов
-и класс сервиса ``tags_api_crud_svc``.
+и класс сервиса ``tags_api_crud_svc``\.
 """
 import sys
 from uuid import UUID
@@ -28,7 +28,7 @@ class TagCreateAttributes(svc.NodeAttributes):
         title="Флаг сжатия значений тега.",
         description=(
             "Если = True, значения тега будут проходить через алгоритм "
-            "сжатия данных (в соответствии с параметром ``prsMaxLineDev``). "
+            "сжатия данных (в соответствии с параметром ``prsMaxLineDev``\). "
             "**Не используется**."
         )
     )
@@ -107,7 +107,7 @@ class TagUpdate(svc.NodeUpdate):
 class TagsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с тегами в иерархии.
 
-    Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``,
+    Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``\,
     в которую публикует сообщения сервис ``tags_api_crud`` (все имена
     указываются в переменных окружения).
 
