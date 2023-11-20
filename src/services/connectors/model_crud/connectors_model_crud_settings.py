@@ -1,7 +1,7 @@
 from src.common.model_crud_settings import ModelCRUDSettings
 
 class ConnectorsModelCRUDSettings(ModelCRUDSettings):
-    #: имя сервиса. сервисы *_mod_crud создают в иерархии узел с таким же именем
+    #: имя сервиса
     svc_name: str = "connectors_model_crud"
     #: строка коннекта к RabbitMQ
     amqp_url: str = "amqp://prs:Peresvet21@rabbitmq/"
@@ -13,11 +13,7 @@ class ConnectorsModelCRUDSettings(ModelCRUDSettings):
         "main": {
             "name": "peresvet",
             "type": "direct",
-<<<<<<< HEAD
-            "routing_key": "connectors_model_crud_publish"
-=======
             "routing_key": ["connectors_model_crud_publish"]
->>>>>>> d2074789837efdb871ee581824524cdc755f4ef1
         }
     }
 
@@ -31,11 +27,7 @@ class ConnectorsModelCRUDSettings(ModelCRUDSettings):
                 "routing_key": [
                     "connectors_model_crud_consume",
                     "connectors_api_crud_publish"
-<<<<<<< HEAD
-                ]
-=======
                     ]
->>>>>>> d2074789837efdb871ee581824524cdc755f4ef1
             }
         }
     }

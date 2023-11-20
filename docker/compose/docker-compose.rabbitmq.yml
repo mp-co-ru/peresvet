@@ -1,8 +1,10 @@
-version: "3.9"
+version: '3.9'
 services:
   rabbitmq:
     image: rabbitmq:3.11.16-management
     hostname: rabbitmq
+    volumes:
+      - ../docker-files/rabbitmq/enabled_plugins/:/etc/rabbitmq/enabled_plugins:rw
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBIT_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBIT_PASSWORD}
@@ -11,3 +13,4 @@ services:
     ports:
       - 15672:15672
       - 5672:5672
+      - 1883:1883

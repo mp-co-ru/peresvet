@@ -7,16 +7,8 @@ sys.path.append(".")
 from src.services.connectors.app.connectors_app_settings import ConnectorsAppSettings
 from src.common import app_svc
 
-class ConnectorsApp(svc.Svc):
-    """Сервис работы с коннекторами.
-
-    Подписывается на очередь ``connectors_tags_api`` обменника ``connectors_api_crud``,
-    в которую публикует сообщения сервис ``connectors_api_crud`` (все имена
-    указываются в переменных окружения).
-
-    Формат ожидаемых сообщений
-
 class ConnectorsApp(app_svc.Svc):
+
     """Сервис работы с коннекторами.
 
     Подписывается на очередь ``connectors_tags_api`` обменника ``connectors_api_crud``,
@@ -31,41 +23,41 @@ class ConnectorsApp(app_svc.Svc):
         super().__init__(settings, *args, **kwargs)
 
 
-        """{
-    "prsJsonConfigString": "{...}",
-    "tags": [
-        {
-            "tagId": "12",
-            "attributes": {
-                "prsMaxLineDev": 1,
-                "prsValueScale": 1,
-                "prsValueTypeCode": 1,
-                "prsSource": {
-                  "register": 1,
-                  "span": 10,
-                  "frequency": 1
+    """{
+        "prsJsonConfigString": "{...}",
+        "tags": [
+            {
+                "tagId": "12",
+                "attributes": {
+                    "prsMaxLineDev": 1,
+                    "prsValueScale": 1,
+                    "prsValueTypeCode": 1,
+                    "prsSource": {
+                    "register": 1,
+                    "span": 10,
+                    "frequency": 1
+                    }
                 }
             }
+        ]
+    }
+
+    {
+    "data": [
+        {
+                "tagId": "...",
+                "data": [
+                    {
+                        "x": 1,
+                        "y": 2,
+                        "q": 100
+                    }
+                ]
         }
     ]
-}
+    }
 
-{
-   "data": [
-       {
-            "tagId": "...",
-            "data": [
-                 {
-                     "x": 1,
-                     "y": 2,
-                     "q": 100
-                 }
-            ]
-       }
-  ]
-}
-
-        """
+    """
     async def get_connector_tag_data(self, connector_id: str) -> dict:
         res = {
             "tags": []

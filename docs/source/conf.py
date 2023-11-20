@@ -11,8 +11,38 @@ import sys
 import datetime
 
 sys.path.insert(0, os.path.abspath('../../'))
-#sys.path.insert(1, os.path.abspath('../../src/'))
-#sys.path.insert(0, os.path.abspath('../../src/common/'))
+
+sys.path.insert(0, os.path.abspath('../../src/services/alerts/api_crud/'))
+sys.path.insert(0, os.path.abspath('../../src/services/alerts/app/'))
+sys.path.insert(0, os.path.abspath('../../src/services/alerts/app_api/'))
+sys.path.insert(0, os.path.abspath('../../src/services/alerts/model_crud/'))
+
+sys.path.insert(0, os.path.abspath('../../src/services/connectors/api_crud/'))
+sys.path.insert(0, os.path.abspath('../../src/services/connectors/model_crud/'))
+sys.path.insert(0, os.path.abspath('../../src/services/connectors/app/'))
+
+sys.path.insert(0, os.path.abspath('../../src/services/dataStorages/api_crud/'))
+sys.path.insert(0, os.path.abspath('../../src/services/dataStorages/model_crud/'))
+sys.path.insert(0, os.path.abspath('../../src/services/dataStorages/app/postgresql/'))
+sys.path.insert(0, os.path.abspath('../../src/services/dataStorages/app/victoriametrics/'))
+
+sys.path.insert(0, os.path.abspath('../../src/services/methods/api_crud/'))
+sys.path.insert(0, os.path.abspath('../../src/services/methods/app/'))
+sys.path.insert(0, os.path.abspath('../../src/services/methods/model_crud/'))
+
+sys.path.insert(0, os.path.abspath('../../src/services/objects/api_crud/'))
+sys.path.insert(0, os.path.abspath('../../src/services/objects/model_crud/'))
+
+sys.path.insert(0, os.path.abspath('../../src/services/retranslator/app/'))
+
+sys.path.insert(0, os.path.abspath('../../src/services/schedules/api_crud/'))
+sys.path.insert(0, os.path.abspath('../../src/services/schedules/app/'))
+sys.path.insert(0, os.path.abspath('../../src/services/schedules/model_crud/'))
+
+sys.path.insert(0, os.path.abspath('../../src/services/tags/api_crud/'))
+sys.path.insert(0, os.path.abspath('../../src/services/tags/app/'))
+sys.path.insert(0, os.path.abspath('../../src/services/tags/app_api/'))
+sys.path.insert(0, os.path.abspath('../../src/services/tags/model_crud/'))
 
 project = 'МПК Пересвет'
 copyright = f'{datetime.date.today().year}, ООО Матч Поинт Консалтинг'

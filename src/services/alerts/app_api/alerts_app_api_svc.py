@@ -93,6 +93,13 @@ class AlertsAppAPI(svc.Svc):
         }
 
         res = await self._post_message(mes=body, reply=True)
+
+        if payload.format:
+            for alarm_item in res["data"]:
+                alarm_item["fired"] = t.int_to_local_timestamp(alarm_item["fired"])
+                if alarm_item["acked"] is not None:
+                    alarm_item["acked"] = t.int_to_local_timestamp(alarm_item["acked"])
+
         return res
 
     async def ack_alarm(self, payload: AckAlarm) -> None:

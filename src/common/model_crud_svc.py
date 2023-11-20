@@ -639,9 +639,16 @@ class ModelCRUDSvc(Svc):
         }
 
         mes_data = copy.deepcopy(mes["data"])
+
         if mes_data.get("filter") is None:
             mes_data["filter"] = {}
         mes_data["filter"]["objectClass"] = [self._config.hierarchy["class"]]
+
+        if not mes_data.get("base"):
+            if not self._config.hierarchy["node"]:
+                return {"error": "Должен быть указан родительский узел для поиска."}
+
+            mes_data["base"] = self._config.hierarchy["node_id"]
 
         items = await self._hierarchy.search(mes_data)
         for item in items:
@@ -736,7 +743,7 @@ class ModelCRUDSvc(Svc):
                     "base": parent_node,
                     "scope": CN_SCOPE_ONELEVEL,
                     "filter": {
-                        "objectClass": [mes["data"]["attributes"]["objectClass"]],
+                        "objectClass": [mes["data"]["attributes"]["objectClass"][0]],
                         "prsDefault": ["TRUE"]
                     },
                     "attributes": ["cn"]

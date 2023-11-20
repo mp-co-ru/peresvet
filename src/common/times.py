@@ -9,22 +9,23 @@ import ciso8601
 microsec = 1000000
 start_ts = datetime.datetime.fromtimestamp(0, datetime.timezone.utc)
 
-def ts (field: int | str = None) -> int:
-    """ Функция возвращает метку времени как целое число микросекунд,
+def ts (time_data: int | str = None) -> int:
+    """Функция возвращает метку времени как целое число микросекунд,
     прошедших с 1 января 1970 г. UTC
 
-    :param field: Входная метка времени. Если None - возвращается текущее
-    время, если целое число - то оно и возвращается, если строка - то
-    она интерпретируется как метка времени в формате ISO8601.
-    :type field: None | int | str
+    :param time_data: Входящая метка времени. По умолчанию - None.
+        Если целое число - будет возвращена она же,
+        если строка - будет преобразована к целому числу микросекунд.
+    :type time_data: int | str = None
+    :returns: Целое число микросекунд с 01.01.1970
+    :rtype: int
     """
-
-    if field is None:
+    if time_data is None:
         return now_int()
-    elif isinstance (field, int):
-        return field
+    elif isinstance (time_data, int):
+        return time_data
 
-    timestampFrom = ciso8601.parse_datetime (field)
+    timestampFrom = ciso8601.parse_datetime (time_data)
     if timestampFrom.tzinfo is None:
         timestampFrom = timestampFrom.replace (tzinfo=datetime.timezone.utc)
 

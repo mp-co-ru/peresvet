@@ -1,9 +1,4 @@
 from src.common.svc_settings import SvcSettings
-<<<<<<< HEAD
-
-class ConnectorsAppSettings(SvcSettings):
-=======
->>>>>>> d2074789837efdb871ee581824524cdc755f4ef1
 
 class ConnectorsAppSettings(SvcSettings):
     #: имя сервиса. сервисы *_mod_crud создают в иерархии узел с таким же именем
@@ -29,21 +24,12 @@ class ConnectorsAppSettings(SvcSettings):
         "queue_name": "connectors_app_consume",
         "exchanges": {
             "main": {
-<<<<<<< HEAD
-                #: имя обменника
-                "name": "peresvet",
-                #: тип обменника
-                "type": "direct",
-                #: привязка для очереди
-                "routing_key": ["connectors_app_consume"]
-=======
                 "name": "peresvet",
                 "type": "direct",
                 "routing_key": [
                         "connectors_app_consume",
                         "tags_app_api_publish"
                     ]
->>>>>>> d2074789837efdb871ee581824524cdc755f4ef1
             }
         }
     }
@@ -56,8 +42,4 @@ class ConnectorsAppSettings(SvcSettings):
         #: класс экзмепляров сущности в
         #: пример: prsTag
         "class": "",
-<<<<<<< HEAD
     }
-=======
-    }
->>>>>>> d2074789837efdb871ee581824524cdc755f4ef1
