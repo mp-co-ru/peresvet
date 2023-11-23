@@ -11,7 +11,7 @@ import time
 
 sys.path.append(".")
 
-from dataStorages_app_postgresql_settings import DataStoragesAppPostgreSQLSettings
+from src.services.dataStorages.app.postgresql.dataStorages_app_postgresql_settings import DataStoragesAppPostgreSQLSettings
 from src.common import svc
 import src.common.times as t
 from src.common.consts import (
