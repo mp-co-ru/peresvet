@@ -211,10 +211,18 @@ app = TagsAppAPI(settings=settings, title="`TagsAppAPI` service")
 
 router = APIRouter()
 
-@router.get("/", response_model=dict, status_code=200)
-async def data_get(payload: DataGet):
-    res = await app.data_get(payload)
+@router.get("/", response_model=dict | None, status_code=200)
+async def data_get(q: str | None = None, payload: DataGet | None = None):
+    if q:
+        p = DataGet.model_validate_json(json.loads(q))
+        
+    elif payload:
+        p = payload
+    else:
+        return None
+    res = await app.data_get(p)
     return res
+
 
 @router.post("/", status_code=200)
 async def data_set(payload: AllData):

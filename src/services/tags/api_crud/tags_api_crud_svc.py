@@ -2,6 +2,7 @@
 Модуль содержит классы, описывающие входные данные для команд CRUD для тегов
 и класс сервиса ``tags_api_crud_svc``\.
 """
+import json
 import sys
 from uuid import UUID
 from typing import Any, List
@@ -144,9 +145,15 @@ router = APIRouter()
 async def create(payload: TagCreate):
     return await app.create(payload)
 
-@router.get("/", response_model=svc.NodeReadResult, status_code=200)
-async def read(payload: TagRead):
-    return await app.read(payload)
+@router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
+async def read(q: str | None = None, payload: TagRead | None = None):
+    if q:
+        p = TagRead.model_validate_json(json.loads(q))
+    elif payload:
+        p = payload
+    else:
+        return None
+    return await app.read(p)
 
 @router.put("/", status_code=202)
 async def update(payload: TagUpdate):
