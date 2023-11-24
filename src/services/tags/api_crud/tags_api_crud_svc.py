@@ -147,13 +147,7 @@ async def create(payload: TagCreate):
 
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
 async def read(q: str | None = None, payload: TagRead | None = None):
-    if q:
-        p = TagRead.model_validate_json(json.loads(q))
-    elif payload:
-        p = payload
-    else:
-        return None
-    return await app.read(p)
+    return await app.api_get_read(TagRead, q, payload)
 
 @router.put("/", status_code=202)
 async def update(payload: TagUpdate):
