@@ -118,9 +118,9 @@ router = APIRouter()
 async def create(payload: ScheduleCreate):
     return await app.create(payload)
 
-@router.get("/", response_model=svc.NodeReadResult, status_code=200)
-async def read(payload: ScheduleRead):
-    return await app.read(payload)
+@router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
+async def read(q: str | None = None, payload: ScheduleRead | None = None):
+    return await app.api_get_read(ScheduleRead, q, payload)
 
 @router.put("/", status_code=202)
 async def update(payload: ScheduleUpdate):
