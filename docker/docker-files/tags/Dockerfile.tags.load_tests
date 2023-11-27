@@ -43,7 +43,7 @@ COPY docker/docker-files/tags/config_nginx.unit_tags.load_tests.json /docker-ent
 # копируем исходники --------------------------------------------
 ADD src/common/ /usr/src/tags_app/src/common
 COPY src/__init__.py /usr/src/tags_app/src/
-#RUN rm -r /usr/src/tags_app/src/common/__pycache__
+RUN rm -r -f /usr/src/tags_app/src/common/__pycache__
 WORKDIR /usr/src/tags_app/src
 RUN mkdir services
 WORKDIR /usr/src/tags_app/src/services
@@ -52,7 +52,7 @@ WORKDIR /usr/src/tags_app
 
 ADD src/common/ /usr/src/tags_app_api/src/common
 COPY src/__init__.py /usr/src/tags_app_api/src/
-#RUN rm -r /usr/src/tags_app_api/src/common/__pycache__
+RUN rm -r -f /usr/src/tags_app_api/src/common/__pycache__
 WORKDIR /usr/src/tags_app_api/src
 RUN mkdir services
 WORKDIR /usr/src/tags_app_api/src/services
