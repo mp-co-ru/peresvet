@@ -6,7 +6,6 @@ import json
 import sys
 import copy
 import aio_pika.abc
-import uvicorn
 
 sys.path.append(".")
 

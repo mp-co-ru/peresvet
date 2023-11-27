@@ -324,7 +324,6 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
             self._tags[mes["data"]["tagId"]] = tag_cache
 
-
         return {
             "prsStore": json.dumps(cache_for_store)
         }
