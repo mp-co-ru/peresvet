@@ -35,7 +35,7 @@
     "app_psql": {
       "type": "python 3.10",
       "working_directory": "/usr/src/dataStorages_app_psql",
-      "path": "/usr/src/dataStorages_app_psql/src/services/dataStorages/app_psql/",
+      "path": "/usr/src/dataStorages_app_psql/src/services/dataStorages/app/postgresql/",
       "home": "/usr/src/dataStorages_app_psql/.venv/",
       "module": "dataStorages_app_postgresql_svc",
       "callable": "app",
@@ -48,7 +48,7 @@
     "app_vm": {
       "type": "python 3.10",
       "working_directory": "/usr/src/dataStorages_app_vm",
-      "path": "/usr/src/dataStorages_app_vm/src/services/dataStorages/app_vm/",
+      "path": "/usr/src/dataStorages_app_vm/src/services/dataStorages/app/victoriametrics/",
       "home": "/usr/src/dataStorages_app_vm/.venv/",
       "module": "dataStorages_app_victoriametrics_svc",
       "callable": "app",

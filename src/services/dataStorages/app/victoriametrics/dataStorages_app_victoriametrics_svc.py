@@ -1,6 +1,5 @@
 import sys
 import json
-import asyncio
 import aiohttp
 import numbers
 import copy
@@ -12,7 +11,7 @@ import time
 
 sys.path.append(".")
 
-from dataStorages_app_victoriametrics_settings import DataStoragesAppVictoriametricsSettings
+from src.services.dataStorages.app.victoriametrics.dataStorages_app_victoriametrics_settings import DataStoragesAppVictoriametricsSettings
 from src.common import svc
 import src.common.times as t
 from src.common.consts import (

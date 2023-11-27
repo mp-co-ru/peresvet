@@ -53,35 +53,47 @@ COPY docker/docker-files/dataStorages/config_nginx.unit_dataStorages.all.json /d
 # копируем исходники --------------------------------------------
 ADD src/common/ /usr/src/dataStorages_api_crud/src/common
 COPY src/__init__.py /usr/src/dataStorages_api_crud/src/
-#RUN rm -r /usr/src/dataStorages_api_crud/src/common/__pycache__
+RUN rm -r -f /usr/src/dataStorages_api_crud/src/common/__pycache__
 WORKDIR /usr/src/dataStorages_api_crud/src
 RUN mkdir services
+COPY src/services/__init__.py /usr/src/dataStorages_api_crud/src/services/
 WORKDIR /usr/src/dataStorages_api_crud/src/services
 ADD src/services/dataStorages/api_crud dataStorages/api_crud
+RUN rm -r -f /usr/src/dataStorages_api_crud/src/services/dataStorages/api_crud/__pycache__
 
 ADD src/common/ /usr/src/dataStorages_model_crud/src/common
 COPY src/__init__.py /usr/src/dataStorages_model_crud/src/
-#RUN rm -r /usr/src/dataStorages_model_crud/src/common/__pycache__
+RUN rm -r -f /usr/src/dataStorages_model_crud/src/common/__pycache__
 WORKDIR /usr/src/dataStorages_model_crud/src
 RUN mkdir services
+COPY src/services/__init__.py /usr/src/dataStorages_model_crud/src/services/
 WORKDIR /usr/src/dataStorages_model_crud/src/services
 ADD src/services/dataStorages/model_crud dataStorages/model_crud
+RUN rm -r -f /usr/src/dataStorages_model_crud/src/services/dataStorages/model_crud/__pycache__
 
 ADD src/common/ /usr/src/dataStorages_app_psql/src/common
 COPY src/__init__.py /usr/src/dataStorages_app_psql/src/
-#RUN rm -r /usr/src/dataStorages_app_psql/src/common/__pycache__
+RUN rm -r -f /usr/src/dataStorages_app_psql/src/common/__pycache__
 WORKDIR /usr/src/dataStorages_app_psql/src
-RUN mkdir services
+RUN mkdir -p services/DataStorages/app
+COPY src/services/__init__.py /usr/src/dataStorages_app_psql/src/services/
+COPY src/services/dataStorages/__init__.py /usr/src/dataStorages_app_psql/src/services/dataStorages/
+COPY src/services/dataStorages/app/__init__.py /usr/src/dataStorages_app_psql/src/services/dataStorages/app/
 WORKDIR /usr/src/dataStorages_app_psql/src/services
-ADD src/services/dataStorages/app/postgresql dataStorages/app_psql
+ADD src/services/dataStorages/app/postgresql dataStorages/app/postgresql
+RUN rm -r -f /usr/src/dataStorages_app_psql/src/services/dataStorages/app/postgresql/__pycache__
 
 ADD src/common/ /usr/src/dataStorages_app_vm/src/common
 COPY src/__init__.py /usr/src/dataStorages_app_vm/src/
-#RUN rm -r /usr/src/dataStorages_app_vm/src/common/__pycache__
+RUN rm -r -f /usr/src/dataStorages_app_vm/src/common/__pycache__
 WORKDIR /usr/src/dataStorages_app_vm/src
-RUN mkdir services
+RUN mkdir -p services/dataStorages/app
+COPY src/services/__init__.py /usr/src/dataStorages_app_vm/src/services/
+COPY src/services/dataStorages/__init__.py /usr/src/dataStorages_app_vm/src/services/dataStorages/
+COPY src/services/dataStorages/app/__init__.py /usr/src/dataStorages_app_vm/src/services/dataStorages/app/
 WORKDIR /usr/src/dataStorages_app_vm/src/services
-ADD src/services/dataStorages/app/victoriametrics dataStorages/app_vm
+ADD src/services/dataStorages/app/victoriametrics dataStorages/app/victoriametrics
+RUN rm -r -f /usr/src/dataStorages_app_vm/src/services/dataStorages/app/victoriametrics/__pycache__
 # ------------------------------------------------------------
 
 EXPOSE 82
