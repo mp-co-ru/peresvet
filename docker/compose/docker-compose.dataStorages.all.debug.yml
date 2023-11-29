@@ -6,11 +6,11 @@ services:
     build:
       context: ../..
       dockerfile: docker/docker-files/dataStorages/Dockerfile.dataStorages.all.debug
-      args:
-        - DEBUG_SVC=${debug_svc}
 
     environment:
       TZ: ${TIME_ZONE}
+      DEBUG_SVC: ${debug_svc}
+
     ports:
       - 82:82
       - 5678:5678
