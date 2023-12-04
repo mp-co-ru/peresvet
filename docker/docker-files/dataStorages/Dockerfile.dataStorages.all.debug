@@ -98,7 +98,5 @@ RUN rm -r -f /usr/src/dataStorages_app_vm/src/services/dataStorages/app/victoria
 
 EXPOSE 82
 
-ARG debug_svc=app_psql
-ENV DEBUG_SVC $debug_svc
 COPY docker/docker-files/common/debug_setup.py /usr/src
 COPY --chmod=777 docker/docker-files/common/run_debug_setup.sh /docker-entrypoint.d/

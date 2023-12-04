@@ -1,14 +1,16 @@
 
+# Модуль чтения исторических данных.
+# Протокол - WebSocket.
+# Период и количество тегов в запросе задаётся в окне создания запроса.
+# База данных - postgresql или victoriametrics.
+
 import json
 import random
-import string
 import websocket
 import gevent
-from datetime import datetime, timedelta
 
 from locust import User, task, events
 
-from websocket import create_connection
 import time
 
 from uuid import uuid4
@@ -31,8 +33,8 @@ class WSDataGetHistoryUser(User):
         self.ws.settimeout(10)
         self.ws.connect(self.host)
 
-        self.start_date = datetime.utcfromtimestamp(1690454451).date()
-        self.end_date = datetime.utcfromtimestamp(1690971801).date() - timedelta(days=1)
+        self.start_date = self.environment.parsed_options.start
+        self.end_date = self.environment.parsed_options.finish
 
     @task
     def get_data(self):
@@ -49,7 +51,7 @@ class WSDataGetHistoryUser(User):
         "tagId": tags,
         "start": start,
         "finish": end
-        } 
+        }
         }
 
         e = None

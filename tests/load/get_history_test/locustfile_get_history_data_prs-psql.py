@@ -1,3 +1,8 @@
+# Модуль чтения исторических данных.
+# Протокол - HTTP.
+# Период и количество тегов в запросе задаётся в окне создания запроса.
+# База данных - postgresql или victoriametrics.
+
 import json
 import random
 import string

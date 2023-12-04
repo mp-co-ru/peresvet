@@ -1,15 +1,16 @@
+# Модуль чтения текущих данных.
+# Протокол - HTTP.
+# Количество тегов в запросе задаётся в окне создания запроса.
+# База данных - postgresql или victoriametrics.
+
 import json
 import random
-import string
 
-from locust import HttpUser, TaskSet, task, between, events
+from locust import HttpUser, task, between, events
 
-from websocket import create_connection
 import time
 
 from uuid import uuid4
-
-#from locust_plugins.users import SocketIOUser
 
 class DataGetUser(HttpUser):
 
@@ -18,9 +19,9 @@ class DataGetUser(HttpUser):
             js = json.load(f)
             self.ids = js["0"]
 
-            #self.ids += js["1"]
-            #self.ids += js["2"]
-            #self.ids += js["4"]
+            self.ids += js["1"]
+            self.ids += js["2"]
+            self.ids += js["4"]
 
         self.pack_size = self.environment.parsed_options.tags_in_pack
 

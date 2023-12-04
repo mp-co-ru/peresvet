@@ -1,4 +1,12 @@
-# -f docker/compose/docker-compose.pgadmin.yml \
+#!/bin/bash
+# Скрипт запускает контейнеры с сервисами платформы.
+# в первом аргументе в командной строке можно передавать параметры
+# команды compose up.
+back=""
+if [ -n "$1" ]
+then
+    back=$1
+fi
 docker compose \
 -f docker/compose/docker-compose.rabbitmq.yml \
 -f docker/compose/docker-compose.ldap.yml \
@@ -9,4 +17,4 @@ docker compose \
 -f docker/compose/docker-compose.alerts.all.yml \
 -f docker/compose/docker-compose.methods.all.yml \
 -f docker/compose/docker-compose.schedules.all.yml \
-up
+up $back

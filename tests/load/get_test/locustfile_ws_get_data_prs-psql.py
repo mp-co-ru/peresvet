@@ -1,12 +1,15 @@
+# Модуль чтения текущих данных.
+# Протокол - WebSocket.
+# Количество тегов в запросе задаётся в окне создания запроса.
+# База данных - postgresql или victoriametrics.
+
 import json
 import random
-import string
 import websocket
 import gevent
 
 from locust import User, task, events
 
-from websocket import create_connection
 import time
 
 from uuid import uuid4

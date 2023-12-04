@@ -16,6 +16,22 @@
                 }
             ],
             "justMyCode": true
+        },
+        {
+            "name": "MPC_DEBUG: f438 app_psql",
+            "type": "python",
+            "request": "attach",
+            "connect": {
+                "host": "172.27.0.10",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "."
+                }
+            ],
+            "justMyCode": true
         }
     ]
-   }
+}
