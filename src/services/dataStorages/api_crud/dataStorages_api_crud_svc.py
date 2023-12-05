@@ -17,7 +17,7 @@ class LinkTagOrAlertAttributes(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
 
-    prsStore: dict = Field(None, title="Хранилище тега")
+    prsStore: dict | None = Field(None, title="Хранилище тега")
 
 class LinkTag(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
@@ -62,11 +62,11 @@ class DataStorageRead(svc.NodeRead):
     )
 
 class OneDataStorageInReadResult(svc.OneNodeInReadResult):
-    linkedTags: List[str] = Field(
+    linkedTags: List[str] | None = Field(
         None,
         title="Список id присоединённых тегов."
     )
-    linkedAlerts: List[str] = Field(
+    linkedAlerts: List[str] | None = Field(
         None,
         title="Список id присоединённых тревог."
     )
@@ -78,11 +78,11 @@ class DataStorageUpdate(DataStorageCreate):
     id: str = Field(title="Идентификатор изменяемого узла.",
                     description="Должен быть в формате GUID.")
     attributes: DataStorageAttributes = Field(None, title="Атрибуты узла")
-    unlinkTags: List[str] = Field(
+    unlinkTags: List[str] | None = Field(
         None,
         title="Список id тегов."
     )
-    unlinkAlerts: List[str] = Field(
+    unlinkAlerts: List[str] | None = Field(
         None,
         title="Список id тревог."
     )

@@ -60,7 +60,7 @@ class TagCreateAttributes(svc.NodeAttributes):
             "4 - json"
         )
     )
-    prsDefaultValue: Any = Field(
+    prsDefaultValue: Any | None = Field(
         None,
         title="Значение тега по умолчанию.",
         description=(
@@ -68,13 +68,13 @@ class TagCreateAttributes(svc.NodeAttributes):
             "в хранилище при создании тега с меткой времени на момент создания."
         )
     )
-    prsMeasureUnits: str = Field(
+    prsMeasureUnits: str | None = Field(
         None,
         title="Единицы измерения тега."
     )
 
 class TagCreate(svc.NodeCreate):
-    connectorId: str = Field(
+    connectorId: str | None = Field(
         None,
         title="Id коннектора-поставщика данных."
     )
@@ -93,12 +93,12 @@ class TagRead(svc.NodeRead):
     )
 
 class TagUpdate(svc.NodeUpdate):
-    dataStorageId: str = Field(
+    dataStorageId: str | None = Field(
         None,
         title="Id хранилища данных, в котором будет храниться история значений тега.",
         description="Если = None, тег будет привязан к хранилищу по умолчанию."
     )
-    connectorId: str = Field(
+    connectorId: str | None = Field(
         None,
         title="Id коннектора-поставщика данных."
     )
