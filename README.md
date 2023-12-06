@@ -55,7 +55,7 @@
 # <a name="installing"></a> Установка
 
 Процесс установки описан в документации:
-`Установка <https://mp-co-ru.github.io/mpc-peresvet/installation.html>`_.
+[Установка](https://mp-co-ru.github.io/mpc-peresvet/installation.html>).
 
 # <a name="debugging"></a> Отладка
 
