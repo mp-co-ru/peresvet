@@ -11,7 +11,7 @@ import time
 
 sys.path.append(".")
 
-from dataStorages_app_postgresql_settings import DataStoragesAppPostgreSQLSettings
+from src.services.dataStorages.app.postgresql.dataStorages_app_postgresql_settings import DataStoragesAppPostgreSQLSettings
 from src.common import svc
 import src.common.times as t
 from src.common.consts import (
@@ -323,7 +323,6 @@ class DataStoragesAppPostgreSQL(svc.Svc):
             await conn.execute(query)
 
             self._tags[mes["data"]["tagId"]] = tag_cache
-
 
         return {
             "prsStore": json.dumps(cache_for_store)

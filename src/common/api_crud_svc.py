@@ -3,6 +3,7 @@
 а также класс APICRUDSvc - базовый класс для всех сервисов
 <сущность>_api_crud.
 """
+import json
 from typing import Optional
 from uuid import UUID
 from pydantic import BaseModel, Field, validator, ConfigDict
@@ -244,3 +245,13 @@ class APICRUDSvc(BaseSvc):
         }
 
         return await self._post_message(mes=body, reply=False)
+
+    async def api_get_read(self, request_model: NodeRead, q: str | None, payload: NodeRead | None):
+        if q:
+            p = request_model.model_validate_json(json.loads(q))
+            return await self.read(p)
+        elif payload:
+            p = payload
+            return await self.read(p)
+        else:
+            return None

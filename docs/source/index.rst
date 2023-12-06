@@ -46,6 +46,7 @@
    :caption: Содержание:
 
    Используемые термины<terms>
+   Установка<installation>
    Архитектура<architecture>
    Интеграция с Grafana<grafana/grafana_integration>
    Плагин ручного ввода для Grafana<grafana/grafana_plugin.rst>

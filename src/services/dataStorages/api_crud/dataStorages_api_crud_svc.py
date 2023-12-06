@@ -2,6 +2,7 @@
 Модуль содержит классы, описывающие входные данные для команд CRUD для хранилищ данных
 и класс сервиса ``dataStorages_api_crud_svc``\.
 """
+import json
 import sys
 from typing import List
 from pydantic import BaseModel, Field, validator, ConfigDict
@@ -128,9 +129,9 @@ router = APIRouter()
 async def create(payload: DataStorageCreate):
     return await app.create(payload)
 
-@router.get("/", response_model=svc.NodeReadResult, status_code=200)
-async def read(payload: DataStorageRead):
-    return await app.read(payload)
+@router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
+async def read(q: str | None = None, payload: DataStorageRead | None = None):
+    return await app.api_get_read(DataStorageRead, q, payload)
 
 @router.put("/", status_code=202)
 async def update(payload: DataStorageUpdate):

@@ -2,6 +2,7 @@
 Модуль содержит классы, описывающие входные данные для команд CRUD для объектов
 и класс сервиса ``objects_api_crud_svc``\.
 """
+import json
 import sys
 from uuid import UUID
 from typing import Any, List
@@ -75,10 +76,10 @@ router = APIRouter()
 async def create(payload: ObjectCreate):
     return await app.create(payload)
 
-@router.get("/", response_model=svc.NodeReadResult, status_code=200)
-async def read(payload: ObjectRead):
-    return await app.read(payload)
-
+@router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
+async def read(q: str | None = None, payload: ObjectRead | None = None):
+    return await app.api_get_read(ObjectRead, q, payload)
+    
 @router.put("/", status_code=202)
 async def update(payload: ObjectUpdate):
     await app.update(payload)
