@@ -13,12 +13,17 @@ container_ip=$(docker inspect $1 | \
     grep -E '"IPAddress": "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"' | \
     grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 
+if [ $? -ne 0 ]
+then
+    exit
+fi
+
 echo "IP контейнера: $container_ip"
 
 echo "Создаём конфигурацию для запуска отладки сервиса '$2' в контейнере '$1'..."
-$PWD/.venv/bin/python docker/docker-files/common/debug_create_launch.py $1 $2 $container_ip
+$PWD/.venv/bin/python docker/docker/debug/debug_create_launch.py $1 $2 $container_ip
 echo "...конфигурация создана."
 
-docker cp docker/docker-files/common/debug_setup.py $1:/usr/src/
+docker cp docker/docker/debug/debug_setup.py $1:/usr/src/
 echo "Запускаем процесс для отладки в контейнере..."
 docker exec -it $1 python /usr/src/debug_setup.py $2
