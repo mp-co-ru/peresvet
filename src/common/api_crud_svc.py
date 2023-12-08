@@ -34,9 +34,9 @@ class NodeAttributes(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
 
     cn: str = Field(None, title="Имя узла")
-    description: str = Field(None, title="Описание",
+    description: str | None = Field(None, title="Описание",
         description="Описание экземпляра.")
-    prsJsonConfigString: str = Field(None, title="Конфигурация экземпляра.",
+    prsJsonConfigString: str | None = Field(None, title="Конфигурация экземпляра.",
         description=(
             "Строка содержит, в случае необходимости, конфигурацию узла. "
             "Интерпретируется сервисом, управляющим сущностью, которой "
@@ -49,19 +49,19 @@ class NodeAttributes(BaseModel):
             "недонастроен."
         )
     )
-    prsDefault: bool = Field(None, title="Сущность по умолчанию.",
+    prsDefault: bool | None = Field(None, title="Сущность по умолчанию.",
         description=(
             "Если = ``True``\, то данный экземпляр считается узлом по умолчанию "
             "в списке равноправных узлов данного уровня иерархии."
         )
     )
-    prsEntityTypeCode: int = Field(None, title="Тип узла.",
+    prsEntityTypeCode: int | None = Field(None, title="Тип узла.",
         description=(
             "Атрибут используется для определения типа. К примеру, "
             "хранилища данных могут быть разных типов."
         )
     )
-    prsIndex: int = Field(None, title="Индекс узла.",
+    prsIndex: int | None = Field(None, title="Индекс узла.",
         description=(
             "Если у узлов одного уровня иерархии проставлены индексы, то "
             "перед отдачей клиенту списка экземпляров они сортируются "
@@ -75,7 +75,7 @@ class NodeCreate(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
 
-    parentId: str = Field(None, title="Id родительского узла",
+    parentId: str | None = Field(None, title="Id родительского узла",
         description=(
             "Идентификатор родительского узла. "
             "Если используется в команде создания узла, то в случае "
@@ -135,7 +135,7 @@ class NodeRead(BaseModel):
             "не принимаются во внимание."
         )
     )
-    base: str = Field(
+    base: str | None = Field(
         None,
         title="Базовый узел для поиска.",
         description="Если не указан, то поиск ведётся от главного узла иерархии."
@@ -154,7 +154,7 @@ class NodeRead(BaseModel):
             "2 - поиск по всему дереву, начиная с указанного в ``base`` узла."
         )
     )
-    filter: dict = Field(
+    filter: dict | None = Field(
          None,
          title=(
             "Словарь из атрибутов и их значений, из "

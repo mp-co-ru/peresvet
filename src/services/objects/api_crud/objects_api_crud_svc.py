@@ -8,12 +8,17 @@ from uuid import UUID
 from typing import Any, List
 from pydantic import Field, validator
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
+from fastapi.middleware.cors import CORSMiddleware
 
 sys.path.append(".")
 
 from src.common import api_crud_svc as svc
 from objects_api_crud_settings import ObjectsAPICRUDSettings
+
+origins = [
+    "http://localhost:5173",
+]
 
 class ObjectCreateAttributes(svc.NodeAttributes):
     pass
@@ -70,11 +75,29 @@ settings = ObjectsAPICRUDSettings()
 
 app = ObjectsAPICRUD(settings=settings, title="`ObjectsAPICRUD` service")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 router = APIRouter()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: ObjectCreate):
+    app._logger.error(payload)
     return await app.create(payload)
+
+@router.post("/test", status_code=201)
+async def test(request: Request):
+    app._logger.error(request)
+    print(request.method, request.url, request.headers, request.client)
+    print(await request.body(), await request.json())
+    # obj = ObjectCreate.model_validate(payload)
+    # app._logger.error(obj)
+    return
 
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
 async def read(q: str | None = None, payload: ObjectRead | None = None):
