@@ -227,7 +227,14 @@ class Hierarchy:
             else:
                 filterstr = Hierarchy.__form_filterstr(payload["filter"])
 
-                node = await self.get_node_dn(payload.get("base"))
+                id_ = payload.get("base")
+                if not id_:
+                    node = self._base_dn
+                else:
+                    if self._is_node_id_uuid(id_):
+                        node = await self.get_node_dn(payload.get("base"))
+                    else:
+                        node = id_
 
                 scope = payload.get("scope", CN_SCOPE_SUBTREE)
                 deref = payload.get("deref", True)
@@ -423,8 +430,16 @@ class Hierarchy:
 
         node_dn = await self.get_node_dn(node)
 
+        def recursive_delete(conn, base_dn):
+            search = conn.search_s(base_dn, CN_SCOPE_ONELEVEL)
+
+            for dn, _ in search:
+                recursive_delete(conn, dn)
+
+            conn.delete_s(base_dn)
+
         with self._cm.connection() as conn:
-            conn.delete_s(node_dn)
+            recursive_delete(conn, node_dn)
 
     async def get_parent(self, node: str) -> Tuple[str, str]:
         """Метод возвращает для узла ``node`` id(guid) и dn

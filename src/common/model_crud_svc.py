@@ -568,15 +568,16 @@ class ModelCRUDSvc(Svc):
 
             await self._further_delete(mes)
 
-            await self._amqp_publish["main"]["exchange"].publish(
-                aio_pika.Message(
-                    body=f'{{"action": {self._outgoing_commands["deleted"]}, "id": {mes}}}'.encode(),
-                    content_type='application/json',
-                    delivery_mode=aio_pika.DeliveryMode.PERSISTENT
-                ),
-                routing_key=self._config.publish["main"]["routing_key"]
+            mes = aio_pika.Message(
+                body=f'{{"action": {self._outgoing_commands["deleted"]}, "id": {id_}}}'.encode(),
+                content_type='application/json',
+                delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             )
-            self._logger.info(f'Узлы {mes} удалены.')
+            await self._amqp_publish["main"]["exchange"].publish(
+                mes, routing_key=id_
+            )
+
+            self._logger.info(f'Узел {id_} удален.')
 
     async def _further_delete(self, mes: dict) -> None:
         """Метод переопределяется в сервисах-наследниках.

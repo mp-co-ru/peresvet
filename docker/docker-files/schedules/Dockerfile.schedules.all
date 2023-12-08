@@ -32,7 +32,12 @@ RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
 
 RUN apt-get -y purge slapd
 
+RUN addgroup --gid 1024 volume_group
+RUN usermod -a -G volume_group unit
+
 # копируем исходники --------------------------------------------
+RUN mkdir /usr/src/schedules_api_crud/log
+RUN chown unit:volume_group /usr/src/schedules_api_crud/log
 ADD src/common/ /usr/src/schedules_api_crud/src/common
 COPY src/__init__.py /usr/src/schedules_api_crud/src/
 # RUN rm -r /usr/src/schedules_api_crud/src/common/__pycache__
@@ -42,6 +47,8 @@ WORKDIR /usr/src/schedules_api_crud/src/services
 ADD src/services/schedules/api_crud schedules/api_crud
 WORKDIR /usr/src/schedules_api_crud
 
+RUN mkdir /usr/src/schedules_model_crud/log
+RUN chown unit:volume_group /usr/src/schedules_model_crud/log
 ADD src/common/ /usr/src/schedules_model_crud/src/common
 COPY src/__init__.py /usr/src/schedules_model_crud/src/
 # RUN rm -r /usr/src/schedules_model_crud/src/common/__pycache__
@@ -51,6 +58,8 @@ WORKDIR /usr/src/schedules_model_crud/src/services
 ADD src/services/schedules/model_crud schedules/model_crud
 WORKDIR /usr/src/schedules_model_crud
 
+RUN mkdir /usr/src/schedules_app/log
+RUN chown unit:volume_group /usr/src/schedules_app/log
 ADD src/common/ /usr/src/schedules_app/src/common
 COPY src/__init__.py /usr/src/schedules_app/src/
 # RUN rm -r /usr/src/schedules_model_crud/src/common/__pycache__
@@ -60,9 +69,6 @@ WORKDIR /usr/src/schedules_app/src/services
 ADD src/services/schedules/app schedules/app
 WORKDIR /usr/src/schedules_app
 # ------------------------------------------------------------
-
-RUN addgroup --gid 1024 volume_group
-RUN usermod -a -G volume_group unit
 
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1

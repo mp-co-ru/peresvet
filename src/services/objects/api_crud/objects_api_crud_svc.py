@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 sys.path.append(".")
 
 from src.common import api_crud_svc as svc
-from objects_api_crud_settings import ObjectsAPICRUDSettings
+from src.services.objects.api_crud.objects_api_crud_settings import ObjectsAPICRUDSettings
 
 origins = [
     "http://localhost:5173",
@@ -102,7 +102,7 @@ async def test(request: Request):
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
 async def read(q: str | None = None, payload: ObjectRead | None = None):
     return await app.api_get_read(ObjectRead, q, payload)
-    
+
 @router.put("/", status_code=202)
 async def update(payload: ObjectUpdate):
     await app.update(payload)

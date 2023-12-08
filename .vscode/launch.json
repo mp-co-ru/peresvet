@@ -18,11 +18,11 @@
             "justMyCode": true
         },
         {
-            "name": "MPC_DEBUG: f438 app_psql",
+            "name": "MPC_DEBUG: 5859 model_crud",
             "type": "python",
             "request": "attach",
             "connect": {
-                "host": "172.27.0.10",
+                "host": "172.27.0.3",
                 "port": 5678
             },
             "pathMappings": [
