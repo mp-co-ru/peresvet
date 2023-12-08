@@ -32,6 +32,8 @@ RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
 RUN apt-get -y purge slapd
 
 # копируем исходники --------------------------------------------
+RUN mkdir /usr/src/connectors_api_crud/log
+RUN chown unit:volume_group /usr/src/connectors_api_crud/log
 ADD src/common/ /usr/src/connectors_api_crud/src/common
 COPY src/__init__.py /usr/src/connectors_api_crud/src/
 RUN rm -r -f /usr/src/connectors_api_crud/src/common/__pycache__
@@ -41,6 +43,8 @@ WORKDIR /usr/src/connectors_api_crud/src/services
 ADD src/services/connectors/api_crud connectors/api_crud
 WORKDIR /usr/src/connectors_api_crud
 
+RUN mkdir /usr/src/connectors_model_crud/log
+RUN chown unit:volume_group /usr/src/connectors_model_crud/log
 ADD src/common/ /usr/src/connectors_model_crud/src/common
 COPY src/__init__.py /usr/src/connectors_model_crud/src/
 RUN rm -r -f /usr/src/connectors_model_crud/src/common/__pycache__
@@ -50,6 +54,8 @@ WORKDIR /usr/src/connectors_model_crud/src/services
 ADD src/services/connectors/model_crud connectors/model_crud
 WORKDIR /usr/src/connectors_model_crud
 
+RUN mkdir /usr/src/connectors_app/log
+RUN chown unit:volume_group /usr/src/connectors_app/log
 ADD src/common/ /usr/src/connectors_app/src/common
 COPY src/__init__.py /usr/src/connectors_app/src/
 RUN rm -r -f /usr/src/connectors_model_crud/src/common/__pycache__

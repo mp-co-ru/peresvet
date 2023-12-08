@@ -24,7 +24,12 @@ RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
 
 RUN apt-get -y purge slapd
 
+RUN addgroup --gid 1024 volume_group
+RUN usermod -a -G volume_group unit
+
 # копируем исходники --------------------------------------------
+RUN mkdir /usr/src/retranslator_app/log
+RUN chown unit:volume_group /usr/src/retranslator_app/log
 ADD src/common/ /usr/src/retranslator_app/src/common
 COPY src/__init__.py /usr/src/retranslator_app/src/
 WORKDIR /usr/src/retranslator_app/src
@@ -33,9 +38,6 @@ WORKDIR /usr/src/retranslator_app/src/services
 ADD src/services/retranslator/app retranslator/app
 WORKDIR /usr/src/retranslator_app
 # ------------------------------------------------------------
-
-RUN addgroup --gid 1024 volume_group
-RUN usermod -a -G volume_group unit
 
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1

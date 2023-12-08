@@ -19,7 +19,7 @@ class ConnectorCreateAttributes(svc.NodeAttributes):
     pass
 
 class ConnectorLinkedTagAttributes(svc.NodeAttributes):
-    prsSource: dict = Field(
+    prsSource: dict | None = Field(
         None,
         title="Словарь источника данных.",
         description=(
@@ -28,14 +28,14 @@ class ConnectorLinkedTagAttributes(svc.NodeAttributes):
             "Формат словаря зависит от конкретного коннектора."
         )
     )
-    prsValueScale: int = Field(
+    prsValueScale: int | None = Field(
         None,
         title=(
             "Коэффициент, на который умножается значение тега коннектором "
             "перед отправкой в платформу."
         )
     )
-    prsMaxDev: int = Field(
+    prsMaxDev: int | None = Field(
         None,
         title="Величина значащего отклонения.",
         description="Используется коннекторами для снятия `дребезга` значений."

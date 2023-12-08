@@ -27,7 +27,12 @@ RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
 
 RUN apt-get -y purge slapd
 
+RUN addgroup --gid 1024 volume_group
+RUN usermod -a -G volume_group unit
+
 # копируем исходники --------------------------------------------
+RUN mkdir /usr/src/objects_api_crud/log
+RUN chown unit:volume_group /usr/src/objects_api_crud/log
 ADD src/common/ /usr/src/objects_api_crud/src/common
 COPY src/__init__.py /usr/src/objects_api_crud/src/
 RUN rm -r -f /usr/src/objects_api_crud/src/common/__pycache__
@@ -37,6 +42,8 @@ WORKDIR /usr/src/objects_api_crud/src/services
 ADD src/services/objects/api_crud objects/api_crud
 WORKDIR /usr/src/objects_api_crud
 
+RUN mkdir /usr/src/objects_model_crud/log
+RUN chown unit:volume_group /usr/src/objects_model_crud/log
 ADD src/common/ /usr/src/objects_model_crud/src/common
 COPY src/__init__.py /usr/src/objects_model_crud/src/
 RUN rm -r -f /usr/src/objects_model_crud/src/common/__pycache__
@@ -46,9 +53,6 @@ WORKDIR /usr/src/objects_model_crud/src/services
 ADD src/services/objects/model_crud objects/model_crud
 WORKDIR /usr/src/objects_model_crud
 # ------------------------------------------------------------
-
-RUN addgroup --gid 1024 volume_group
-RUN usermod -a -G volume_group unit
 
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1

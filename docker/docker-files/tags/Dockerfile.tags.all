@@ -47,6 +47,8 @@ ENV PYTHONUNBUFFERED 1
 COPY docker/docker-files/tags/config_nginx.unit_tags.all.json /docker-entrypoint.d/
 
 # копируем исходники --------------------------------------------
+RUN mkdir /usr/src/tags_api_crud/log
+RUN chown unit:volume_group /usr/src/tags_api_crud/log
 ADD src/common/ /usr/src/tags_api_crud/src/common
 COPY src/__init__.py /usr/src/tags_api_crud/src/
 RUN rm -r -f /usr/src/tags_api_crud/src/common/__pycache__
@@ -56,6 +58,8 @@ WORKDIR /usr/src/tags_api_crud/src/services
 ADD src/services/tags/api_crud tags/api_crud
 WORKDIR /usr/src/tags_api_crud
 
+RUN mkdir /usr/src/tags_model_crud/log
+RUN chown unit:volume_group /usr/src/tags_model_crud/log
 ADD src/common/ /usr/src/tags_model_crud/src/common
 COPY src/__init__.py /usr/src/tags_model_crud/src/
 RUN rm -r -f /usr/src/tags_model_crud/src/common/__pycache__
@@ -65,6 +69,8 @@ WORKDIR /usr/src/tags_model_crud/src/services
 ADD src/services/tags/model_crud tags/model_crud
 WORKDIR /usr/src/tags_model_crud
 
+RUN mkdir /usr/src/tags_app/log
+RUN chown unit:volume_group /usr/src/tags_app/log
 ADD src/common/ /usr/src/tags_app/src/common
 COPY src/__init__.py /usr/src/tags_app/src/
 RUN rm -r -f /usr/src/tags_app/src/common/__pycache__
@@ -74,6 +80,8 @@ WORKDIR /usr/src/tags_app/src/services
 ADD src/services/tags/app tags/app
 WORKDIR /usr/src/tags_app
 
+RUN mkdir /usr/src/tags_app_api/log
+RUN chown unit:volume_group /usr/src/tags_app_api/log
 ADD src/common/ /usr/src/tags_app_api/src/common
 COPY src/__init__.py /usr/src/tags_app_api/src/
 RUN rm -r -f /usr/src/tags_app_api/src/common/__pycache__

@@ -42,6 +42,8 @@ ENV PYTHONUNBUFFERED 1
 COPY docker/docker-files/methods/config_nginx.unit_methods.all.json /docker-entrypoint.d/
 
 # копируем исходники --------------------------------------------
+RUN mkdir /usr/src/methods_api_crud/log
+RUN chown unit:volume_group /usr/src/methods_api_crud/log
 ADD src/common/ /usr/src/methods_api_crud/src/common
 COPY src/__init__.py /usr/src/methods_api_crud/src/
 RUN rm -r -f /usr/src/methods_api_crud/src/common/__pycache__
@@ -51,6 +53,8 @@ WORKDIR /usr/src/methods_api_crud/src/services
 ADD src/services/methods/api_crud methods/api_crud
 WORKDIR /usr/src/methods_api_crud
 
+RUN mkdir /usr/src/methods_model_crud/log
+RUN chown unit:volume_group /usr/src/methods_model_crud/log
 ADD src/common/ /usr/src/methods_model_crud/src/common
 COPY src/__init__.py /usr/src/methods_model_crud/src/
 RUN rm -r -f /usr/src/methods_model_crud/src/common/__pycache__
@@ -60,6 +64,8 @@ WORKDIR /usr/src/methods_model_crud/src/services
 ADD src/services/methods/model_crud methods/model_crud
 WORKDIR /usr/src/methods_model_crud
 
+RUN mkdir /usr/src/methods_app/log
+RUN chown unit:volume_group /usr/src/methods_app/log
 ADD src/common/ /usr/src/methods_app/src/common
 COPY src/__init__.py /usr/src/methods_app/src/
 RUN rm -r -f /usr/src/methods_app/src/common/__pycache__

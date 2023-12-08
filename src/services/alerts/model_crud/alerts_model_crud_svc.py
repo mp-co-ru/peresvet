@@ -5,7 +5,6 @@ sys.path.append(".")
 
 from src.services.alerts.model_crud.alerts_model_crud_settings import AlertsModelCRUDSettings
 from src.common import model_crud_svc
-from src.common import hierarchy
 
 class AlertsModelCRUD(model_crud_svc.ModelCRUDSvc):
     """Сервис работы с тегами в иерархии.
