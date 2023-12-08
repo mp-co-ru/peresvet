@@ -41,11 +41,12 @@ else:
 changed = False
 for conf in launch["configurations"]:
     if conf["name"] == launch_conf_name:
-        conf = launch_conf
         changed = True
+        break
 
-if not changed:
-    launch["configurations"].append(launch_conf)
+if changed:
+    launch["configurations"].remove(conf)
+launch["configurations"].append(launch_conf)
 
 with open(launch_path, "w") as f:
     json.dump(launch, f, indent=4, ensure_ascii=False)

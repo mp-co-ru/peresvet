@@ -51,6 +51,8 @@ ENV PYTHONUNBUFFERED 1
 COPY docker/docker-files/dataStorages/config_nginx.unit_dataStorages.all.json /docker-entrypoint.d/
 
 # копируем исходники --------------------------------------------
+RUN mkdir /usr/src/dataStorages_api_crud/log
+RUN chown unit:volume_group /usr/src/dataStorages_api_crud/log
 ADD src/common/ /usr/src/dataStorages_api_crud/src/common
 COPY src/__init__.py /usr/src/dataStorages_api_crud/src/
 RUN rm -r -f /usr/src/dataStorages_api_crud/src/common/__pycache__
@@ -61,6 +63,8 @@ WORKDIR /usr/src/dataStorages_api_crud/src/services
 ADD src/services/dataStorages/api_crud dataStorages/api_crud
 RUN rm -r -f /usr/src/dataStorages_api_crud/src/services/dataStorages/api_crud/__pycache__
 
+RUN mkdir /usr/src/dataStorages_model_crud/log
+RUN chown unit:volume_group /usr/src/dataStorages_model_crud/log
 ADD src/common/ /usr/src/dataStorages_model_crud/src/common
 COPY src/__init__.py /usr/src/dataStorages_model_crud/src/
 RUN rm -r -f /usr/src/dataStorages_model_crud/src/common/__pycache__
@@ -71,6 +75,8 @@ WORKDIR /usr/src/dataStorages_model_crud/src/services
 ADD src/services/dataStorages/model_crud dataStorages/model_crud
 RUN rm -r -f /usr/src/dataStorages_model_crud/src/services/dataStorages/model_crud/__pycache__
 
+RUN mkdir /usr/src/dataStorages_app_psql/log
+RUN chown unit:volume_group /usr/src/dataStorages_app_psql/log
 ADD src/common/ /usr/src/dataStorages_app_psql/src/common
 COPY src/__init__.py /usr/src/dataStorages_app_psql/src/
 RUN rm -r -f /usr/src/dataStorages_app_psql/src/common/__pycache__
@@ -83,6 +89,8 @@ WORKDIR /usr/src/dataStorages_app_psql/src/services
 ADD src/services/dataStorages/app/postgresql dataStorages/app/postgresql
 RUN rm -r -f /usr/src/dataStorages_app_psql/src/services/dataStorages/app/postgresql/__pycache__
 
+RUN mkdir /usr/src/dataStorages_app_vm/log
+RUN chown unit:volume_group /usr/src/dataStorages_app_vm/log
 ADD src/common/ /usr/src/dataStorages_app_vm/src/common
 COPY src/__init__.py /usr/src/dataStorages_app_vm/src/
 RUN rm -r -f /usr/src/dataStorages_app_vm/src/common/__pycache__

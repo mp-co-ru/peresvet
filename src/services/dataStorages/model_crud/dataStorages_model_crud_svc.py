@@ -5,7 +5,7 @@ from ldap.dn import str2dn, dn2str
 
 sys.path.append(".")
 
-from dataStorages_model_crud_settings import DataStoragesModelCRUDSettings
+from src.services.dataStorages.model_crud.dataStorages_model_crud_settings import DataStoragesModelCRUDSettings
 from src.common import model_crud_svc
 from src.common import hierarchy
 
