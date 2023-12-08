@@ -52,7 +52,7 @@ COPY docker/docker-files/alerts/config_nginx.unit_alerts.all.json /docker-entryp
 # копируем исходники --------------------------------------------
 ADD src/common/ /usr/src/alerts_api_crud/src/common
 COPY src/__init__.py /usr/src/alerts_api_crud/src/
-RUN rm -r /usr/src/alerts_api_crud/src/common/__pycache__
+RUN rm -r -f /usr/src/alerts_api_crud/src/common/__pycache__
 WORKDIR /usr/src/alerts_api_crud/src
 RUN mkdir services
 WORKDIR /usr/src/alerts_api_crud/src/services
@@ -61,7 +61,7 @@ WORKDIR /usr/src/alerts_api_crud
 
 ADD src/common/ /usr/src/alerts_model_crud/src/common
 COPY src/__init__.py /usr/src/alerts_model_crud/src/
-RUN rm -r /usr/src/alerts_model_crud/src/common/__pycache__
+RUN rm -r -f /usr/src/alerts_model_crud/src/common/__pycache__
 WORKDIR /usr/src/alerts_model_crud/src
 RUN mkdir services
 WORKDIR /usr/src/alerts_model_crud/src/services
@@ -70,7 +70,7 @@ WORKDIR /usr/src/alerts_model_crud
 
 ADD src/common/ /usr/src/alerts_app/src/common
 COPY src/__init__.py /usr/src/alerts_app/src/
-RUN rm -r /usr/src/alerts_app/src/common/__pycache__
+RUN rm -r -f /usr/src/alerts_app/src/common/__pycache__
 WORKDIR /usr/src/alerts_app/src
 RUN mkdir services
 WORKDIR /usr/src/alerts_app/src/services
@@ -79,7 +79,7 @@ WORKDIR /usr/src/alerts_app
 
 ADD src/common/ /usr/src/alerts_app_api/src/common
 COPY src/__init__.py /usr/src/alerts_app_api/src/
-RUN rm -r /usr/src/alerts_app_api/src/common/__pycache__
+RUN rm -r -f /usr/src/alerts_app_api/src/common/__pycache__
 WORKDIR /usr/src/alerts_app_api/src
 RUN mkdir services
 WORKDIR /usr/src/alerts_app_api/src/services

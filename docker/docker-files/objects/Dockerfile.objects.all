@@ -30,7 +30,7 @@ RUN apt-get -y purge slapd
 # копируем исходники --------------------------------------------
 ADD src/common/ /usr/src/objects_api_crud/src/common
 COPY src/__init__.py /usr/src/objects_api_crud/src/
-# RUN rm -r /usr/src/objects_api_crud/src/common/__pycache__
+RUN rm -r -f /usr/src/objects_api_crud/src/common/__pycache__
 WORKDIR /usr/src/objects_api_crud/src
 RUN mkdir services
 WORKDIR /usr/src/objects_api_crud/src/services
@@ -39,7 +39,7 @@ WORKDIR /usr/src/objects_api_crud
 
 ADD src/common/ /usr/src/objects_model_crud/src/common
 COPY src/__init__.py /usr/src/objects_model_crud/src/
-# RUN rm -r /usr/src/objects_model_crud/src/common/__pycache__
+RUN rm -r -f /usr/src/objects_model_crud/src/common/__pycache__
 WORKDIR /usr/src/objects_model_crud/src
 RUN mkdir services
 WORKDIR /usr/src/objects_model_crud/src/services

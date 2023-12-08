@@ -8,12 +8,12 @@ services:
         - ${NGINX_HTTP_PORT}:${NGINX_HTTP_PORT}
         - ${NGINX_HTTPS_PORT}:${NGINX_HTTPS_PORT}
       #restart: always
-      volumes:
-        - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
-        - ./config/nginx/no_ssl/default.conf.template:/etc/nginx/templates/default.conf.template:rw,cached
+      #volumes:
+      #  - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
+      #  - ./config/nginx/no_ssl/default.conf.template:/etc/nginx/templates/default.conf.template:rw,cached
       environment:
-        HTTP_PORT: ${NGINX_HTTP_PORT}
-        HTTPS_PORT: ${NGINX_HTTPS_PORT}
+        NGINX_HTTP_PORT: ${NGINX_HTTP_PORT}
+        NGINX_HTTPS_PORT: ${NGINX_HTTPS_PORT}
 
         TAGS_APP_API_HTTP_PORT: ${TAGS_APP_API_HTTP_PORT}
         TZ: ${TIME_ZONE}
