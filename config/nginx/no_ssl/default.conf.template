@@ -1,5 +1,5 @@
 server {
-    listen ${HTTP_PORT};
+    listen ${NGINX_HTTP_PORT};
     server_name 0.0.0.0 localhost ${SRV_NAME};
 
     client_max_body_size 15m;
