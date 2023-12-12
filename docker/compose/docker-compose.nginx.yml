@@ -10,7 +10,7 @@ services:
         - ${NGINX_HTTP_PORT}:${NGINX_HTTP_PORT}
         - ${NGINX_HTTPS_PORT}:${NGINX_HTTPS_PORT}
       #restart: always
-      volumes:
+      #volumes:
       #  - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
       # - ./config/nginx/mapped_conf.d/:/etc/nginx/conf.d/:rw
       environment:
