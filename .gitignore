@@ -143,3 +143,5 @@ tests/load/tags_in_postgres.json
 tests/load/tags_in_vm.json
 
 .vscode/aunch.json
+
+compose/config/nginx/
