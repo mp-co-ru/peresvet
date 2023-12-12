@@ -144,4 +144,4 @@ tests/load/tags_in_vm.json
 
 .vscode/aunch.json
 
-compose/config/nginx/
+docker/compose/config/nginx/
