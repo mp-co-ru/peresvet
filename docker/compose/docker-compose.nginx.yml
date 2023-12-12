@@ -59,5 +59,11 @@ services:
         HOST_SCHEDULES_ALL: ${HOST_SCHEDULES_ALL}
 
         TZ: ${TIME_ZONE}
-      # depends_on:
-      #  - connectors_all
+      depends_on:
+        - connectors_all
+        - alerts_all
+        - objects_all
+        - data_storages_all
+        - methods_all
+        - tags_all
+        - schedules_all
