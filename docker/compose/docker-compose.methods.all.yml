@@ -2,15 +2,15 @@ version: '3.9'
 
 services:
   methods_all:
-    hostname: methods_all
+    hostname: ${HOST_METHODS_ALL}
     build:
       context: ../..
       dockerfile: docker/docker-files/methods/Dockerfile.methods.all
 
     environment:
       TZ: ${TIME_ZONE}
-    ports:
-      - 87:87
+    #ports:
+      #- 87:87
 
     #volumes:
     #  - ./logs/methods.all/api_crud/:/usr/src/methods_api_crud/log/:rw

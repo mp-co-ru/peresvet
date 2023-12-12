@@ -2,16 +2,16 @@ version: '3.9'
 
 services:
   alerts_all:
-    hostname: alerts_all
+    hostname: ${HOST_ALERTS_ALL}
     build:
       context: ../..
       dockerfile: docker/docker-files/alerts/Dockerfile.alerts.all
 
     environment:
       TZ: ${TIME_ZONE}
-    ports:
-      - 85:85
-      - 86:86
+    #ports:
+    #  - 85:85
+    #  - 86:86
 
     #volumes:
     #  - ./logs/alerts.all/api_crud/:/usr/src/alerts_api_crud/log/:rw

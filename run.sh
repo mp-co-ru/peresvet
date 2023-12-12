@@ -7,7 +7,7 @@ if [ -n "$1" ]
 then
     back=$1
 fi
-docker compose \
+docker compose $back --env-file docker/compose/.cont_all_in_one.env \
 -f docker/compose/docker-compose.rabbitmq.yml \
 -f docker/compose/docker-compose.ldap.yml \
 -f docker/compose/docker-compose.postgresql.data_in_container.yml \
@@ -17,4 +17,7 @@ docker compose \
 -f docker/compose/docker-compose.alerts.all.yml \
 -f docker/compose/docker-compose.methods.all.yml \
 -f docker/compose/docker-compose.schedules.all.yml \
-up $back
+-f docker/compose/docker-compose.nginx.yml \
+-f docker/compose/docker-compose.connectors.all.yml \
+-f docker/compose/docker-compose.retranslator.yml \
+up

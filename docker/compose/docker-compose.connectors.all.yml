@@ -2,16 +2,16 @@ version: "3.9"
 
 services:
   connectors_all:
-    hostname: connectors_all
+    hostname: ${HOST_CONNECTORS_ALL}
     build:
       context: ../..
       dockerfile: docker/docker-files/connectors/Dockerfile.connectors.all
 
     environment:
       TZ: ${TIME_ZONE}
-    ports:
-      - 83:83
-      - 84:84
+    #ports:
+      #- 83:83
+      #- 84:84
 
     #volumes:
     #  - ./logs/connectors.all/api_crud/:/usr/src/connectors_api_crud/log/:rw

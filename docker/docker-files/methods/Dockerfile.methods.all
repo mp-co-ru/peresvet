@@ -76,4 +76,4 @@ ADD src/services/methods/app methods/app
 WORKDIR /usr/src/methods_app
 # ------------------------------------------------------------
 
-EXPOSE 87
+# EXPOSE 87

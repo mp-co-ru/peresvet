@@ -45,5 +45,4 @@ ENV PYTHONUNBUFFERED 1
 
 COPY docker/docker-files/retranslator/config_nginx.unit_retranslator.json /docker-entrypoint.d/
 
-EXPOSE 88
-EXPOSE 89
+# EXPOSE 88 89

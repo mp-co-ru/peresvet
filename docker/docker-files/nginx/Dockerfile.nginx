@@ -1,9 +1,10 @@
 FROM nginx:latest
 
 COPY config/nginx/nginx.conf /etc/nginx/
-COPY config/nginx/no_ssl/default.conf.no_ssl /etc/nginx/conf.d/
-COPY config/nginx/ssl/default.conf.ssl /etc/nginx/conf.d/
-COPY config/nginx/peresvet /etc/nginx/conf.d/
+COPY config/nginx/no_ssl/default.conf.no_ssl.template /etc/nginx/templates/default.conf.template
+#COPY config/nginx/ssl/default.conf.ssl.template /etc/nginx/templates/
+COPY config/nginx/peresvet /etc/nginx/templates/
 
-WORKDIR /etc/nginx/conf.d
-RUN ln -s ./default.conf.no_ssl ./default.conf
+#WORKDIR /etc/nginx/conf.d
+#RUN rm default.conf
+#RUN ln -s ./default.conf.no_ssl ./default.conf

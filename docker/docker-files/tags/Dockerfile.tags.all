@@ -92,4 +92,4 @@ ADD src/services/tags/app_api tags/app_api
 WORKDIR /usr/src/tags_app_api
 # ------------------------------------------------------------
 
-EXPOSE 80 81
+# EXPOSE 80 81

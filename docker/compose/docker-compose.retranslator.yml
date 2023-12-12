@@ -10,5 +10,5 @@ services:
     environment:
       TZ: ${TIME_ZONE}
 
-    volumes:
-      - ./logs/retranslator/app/:/usr/src/retranslator_app/log/:rw
+    #volumes:
+    #  - ./logs/retranslator/app/:/usr/src/retranslator_app/log/:rw
