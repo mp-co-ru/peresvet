@@ -2,19 +2,68 @@ version: '3.9'
 
 services:
   nginx:
-      image: nginx:latest
       hostname: nginx
+      build:
+        context: ../..
+        dockerfile: docker/docker-files/nginx/Dockerfile.nginx
       ports:
-        - ${HTTP_PORT}:${HTTP_PORT}
-        - ${HTTPS_PORT}:${HTTPS_PORT}
+        - ${NGINX_HTTP_PORT}:${NGINX_HTTP_PORT}
+        - ${NGINX_HTTPS_PORT}:${NGINX_HTTPS_PORT}
       #restart: always
-      volumes:
-        - ${PWD}/config/nginx/nginx.conf:/etc/nginx/nginx.conf
-        - ${PWD}/config/nginx/no_ssl/default.conf.template:/etc/nginx/templates/default.conf.template:rw,cached
+      #volumes:
+      #  - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
+      #  - ./config/nginx/mapped_conf.d/:/etc/nginx/conf.d/:rw
       environment:
-        HTTP_PORT: ${HTTP_PORT}
-        HTTPS_PORT: ${HTTPS_PORT}
-        TAGS_APP_API_HTTP_PORT: ${TAGS_APP_API_HTTP_PORT}
+        NGINX_HOST: ${NGINX_HOST}
+        NGINX_HTTP_PORT: ${NGINX_HTTP_PORT}
+        NGINX_HTTPS_PORT: ${NGINX_HTTPS_PORT}
+
+        PORT_ALERTS_API_CRUD: ${PORT_ALERTS_API_CRUD}
+        HOST_ALERTS_API_CRUD: ${HOST_ALERTS_API_CRUD}
+        PORT_ALERTS_APP_API: ${PORT_ALERTS_APP_API}
+        HOST_ALERTS_APP_API: ${HOST_ALERTS_APP_API}
+        HOST_ALERTS_ALL: ${HOST_ALERTS_ALL}
+
+        # connectors
+        PORT_CONNECTORS_API_CRUD: ${PORT_CONNECTORS_API_CRUD}
+        HOST_CONNECTORS_API_CRUD: ${HOST_CONNECTORS_API_CRUD}
+        PORT_CONNECTORS_APP: ${PORT_CONNECTORS_APP}
+        HOST_CONNECTORS_APP: ${HOST_CONNECTORS_APP}
+        HOST_CONNECTORS_ALL: ${HOST_CONNECTORS_ALL}
+
+        # dataStorages
+        PORT_DATASTORAGES_API_CRUD: ${PORT_DATASTORAGES_API_CRUD}
+        HOST_DATASTORAGES_API_CRUD: ${HOST_DATASTORAGES_API_CRUD}
+        HOST_DATASTORAGES_ALL: ${HOST_DATASTORAGES_ALL}
+
+        # methods
+        PORT_METHODS_API_CRUD: ${PORT_METHODS_API_CRUD}
+        HOST_METHODS_API_CRUD: ${HOST_METHODS_API_CRUD}
+        HOST_METHODS_ALL: ${HOST_METHODS_ALL}
+
+        # objects
+        PORT_OBJECTS_API_CRUD: ${PORT_OBJECTS_API_CRUD}
+        HOST_OBJECTS_API_CRUD: ${HOST_OBJECTS_API_CRUD}
+        HOST_OBJECTS_ALL: ${HOST_OBJECTS_ALL}
+
+        # tags
+        PORT_TAGS_API_CRUD: ${PORT_TAGS_API_CRUD}
+        HOST_TAGS_API_CRUD: ${HOST_TAGS_API_CRUD}
+        PORT_TAGS_APP_API: ${PORT_TAGS_APP_API}
+        HOST_TAGS_APP_API: ${HOST_TAGS_APP_API}
+        HOST_TAGS_ALL: ${HOST_TAGS_ALL}
+
+        # schedules
+        PORT_SCHEDULES_API_CRUD: ${PORT_SCHEDULES_API_CRUD}
+        HOST_SCHEDULES_API_CRUD: ${HOST_SCHEDULES_API_CRUD}
+        HOST_SCHEDULES_ALL: ${HOST_SCHEDULES_ALL}
+
         TZ: ${TIME_ZONE}
       depends_on:
-        - tags_load_tests
+        - connectors_all
+        - alerts_all
+        - objects_all
+        - data_storages_all
+        - methods_all
+        - tags_all
+        - schedules_all

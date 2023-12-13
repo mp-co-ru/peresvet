@@ -116,8 +116,4 @@ async def update(payload: ConnectorUpdate):
 async def delete(payload: ConnectorRead):
     await app.delete(payload)
 
-@router.get('/test')
-async def test():
-    return {"test": "ok"}
-
 app.include_router(router, prefix=f"{settings.api_version}/connectors", tags=["connectors"])

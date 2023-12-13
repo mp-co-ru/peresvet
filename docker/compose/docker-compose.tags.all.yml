@@ -2,16 +2,16 @@ version: '3.9'
 
 services:
   tags_all:
-    hostname: tags_all
+    hostname: ${HOST_TAGS_ALL}
     build:
       context: ../..
       dockerfile: docker/docker-files/tags/Dockerfile.tags.all
 
     environment:
       TZ: ${TIME_ZONE}
-    ports:
-      - 80:80
-      - 81:81
+    #ports:
+    #  - 80:80
+    #  - 81:81
 
     #volumes:
     #  - ./logs/tags.all/api_crud/:/usr/src/tags_api_crud/log/:rw

@@ -2,15 +2,15 @@ version: '3.9'
 
 services:
   objects_all:
-    hostname: objects_all
+    hostname: ${HOST_OBJECTS_ALL}
     build:
       context: ../..
       dockerfile: docker/docker-files/objects/Dockerfile.objects.all
 
     environment:
       TZ: ${TIME_ZONE}
-    ports:
-      - 83:83
+    #ports:
+      #- 83:83
 
     #volumes:
     #  - ./logs/objects.all/api_crud/:/usr/src/objects_api_crud/log/:rw

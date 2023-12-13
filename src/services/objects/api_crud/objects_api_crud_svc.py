@@ -87,17 +87,7 @@ router = APIRouter()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: ObjectCreate):
-    app._logger.error(payload)
     return await app.create(payload)
-
-@router.post("/test", status_code=201)
-async def test(request: Request):
-    app._logger.error(request)
-    print(request.method, request.url, request.headers, request.client)
-    print(await request.body(), await request.json())
-    # obj = ObjectCreate.model_validate(payload)
-    # app._logger.error(obj)
-    return
 
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
 async def read(q: str | None = None, payload: ObjectRead | None = None):

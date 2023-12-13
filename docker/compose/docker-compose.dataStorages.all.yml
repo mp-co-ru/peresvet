@@ -2,15 +2,15 @@ version: '3.9'
 
 services:
   data_storages_all:
-    hostname: dataStorages_all
+    hostname: ${HOST_DATASTORAGES_ALL}
     build:
       context: ../..
       dockerfile: docker/docker-files/dataStorages/Dockerfile.dataStorages.all
 
     environment:
       TZ: ${TIME_ZONE}
-    ports:
-      - 82:82
+    #ports:
+      #- 82:82
 
     #volumes:
     #  - ./logs/dataStorages.all/api_crud/:/usr/src/dataStorages_api_crud/log/:rw

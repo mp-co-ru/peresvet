@@ -40,7 +40,7 @@ RUN mkdir /usr/src/schedules_api_crud/log
 RUN chown unit:volume_group /usr/src/schedules_api_crud/log
 ADD src/common/ /usr/src/schedules_api_crud/src/common
 COPY src/__init__.py /usr/src/schedules_api_crud/src/
-# RUN rm -r /usr/src/schedules_api_crud/src/common/__pycache__
+RUN rm -r -f /usr/src/schedules_api_crud/src/common/__pycache__
 WORKDIR /usr/src/schedules_api_crud/src
 RUN mkdir services
 WORKDIR /usr/src/schedules_api_crud/src/services
@@ -51,7 +51,7 @@ RUN mkdir /usr/src/schedules_model_crud/log
 RUN chown unit:volume_group /usr/src/schedules_model_crud/log
 ADD src/common/ /usr/src/schedules_model_crud/src/common
 COPY src/__init__.py /usr/src/schedules_model_crud/src/
-# RUN rm -r /usr/src/schedules_model_crud/src/common/__pycache__
+RUN rm -r -f /usr/src/schedules_model_crud/src/common/__pycache__
 WORKDIR /usr/src/schedules_model_crud/src
 RUN mkdir services
 WORKDIR /usr/src/schedules_model_crud/src/services
@@ -62,7 +62,7 @@ RUN mkdir /usr/src/schedules_app/log
 RUN chown unit:volume_group /usr/src/schedules_app/log
 ADD src/common/ /usr/src/schedules_app/src/common
 COPY src/__init__.py /usr/src/schedules_app/src/
-# RUN rm -r /usr/src/schedules_model_crud/src/common/__pycache__
+RUN rm -r -f /usr/src/schedules_model_crud/src/common/__pycache__
 WORKDIR /usr/src/schedules_app/src
 RUN mkdir services
 WORKDIR /usr/src/schedules_app/src/services
@@ -76,4 +76,4 @@ ENV PYTHONUNBUFFERED 1
 
 COPY docker/docker-files/schedules/config_nginx.unit_schedules.all.json /docker-entrypoint.d/
 
-EXPOSE 85
+# EXPOSE 85

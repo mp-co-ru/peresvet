@@ -36,7 +36,6 @@ RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
 
 RUN apt-get -y purge slapd
 
-
 RUN addgroup --gid 1024 volume_group
 RUN usermod -a -G volume_group unit
 
@@ -51,7 +50,7 @@ RUN mkdir /usr/src/alerts_api_crud/log
 RUN chown unit:volume_group /usr/src/alerts_api_crud/log
 ADD src/common/ /usr/src/alerts_api_crud/src/common
 COPY src/__init__.py /usr/src/alerts_api_crud/src/
-RUN rm -r /usr/src/alerts_api_crud/src/common/__pycache__
+RUN rm -r -f /usr/src/alerts_api_crud/src/common/__pycache__
 WORKDIR /usr/src/alerts_api_crud/src
 RUN mkdir services
 WORKDIR /usr/src/alerts_api_crud/src/services
@@ -62,7 +61,7 @@ RUN mkdir /usr/src/alerts_model_crud/log
 RUN chown unit:volume_group /usr/src/alerts_model_crud/log
 ADD src/common/ /usr/src/alerts_model_crud/src/common
 COPY src/__init__.py /usr/src/alerts_model_crud/src/
-RUN rm -r /usr/src/alerts_model_crud/src/common/__pycache__
+RUN rm -r -f /usr/src/alerts_model_crud/src/common/__pycache__
 WORKDIR /usr/src/alerts_model_crud/src
 RUN mkdir services
 WORKDIR /usr/src/alerts_model_crud/src/services
@@ -73,7 +72,7 @@ RUN mkdir /usr/src/alerts_app/log
 RUN chown unit:volume_group /usr/src/alerts_app/log
 ADD src/common/ /usr/src/alerts_app/src/common
 COPY src/__init__.py /usr/src/alerts_app/src/
-RUN rm -r /usr/src/alerts_app/src/common/__pycache__
+RUN rm -r -f /usr/src/alerts_app/src/common/__pycache__
 WORKDIR /usr/src/alerts_app/src
 RUN mkdir services
 WORKDIR /usr/src/alerts_app/src/services
@@ -84,7 +83,7 @@ RUN mkdir /usr/src/alerts_app_api/log
 RUN chown unit:volume_group /usr/src/alerts_app_api/log
 ADD src/common/ /usr/src/alerts_app_api/src/common
 COPY src/__init__.py /usr/src/alerts_app_api/src/
-RUN rm -r /usr/src/alerts_app_api/src/common/__pycache__
+RUN rm -r -f /usr/src/alerts_app_api/src/common/__pycache__
 WORKDIR /usr/src/alerts_app_api/src
 RUN mkdir services
 WORKDIR /usr/src/alerts_app_api/src/services
@@ -92,4 +91,4 @@ ADD src/services/alerts/app_api alerts/app_api
 WORKDIR /usr/src/alerts_app_api
 # ------------------------------------------------------------
 
-EXPOSE 85 86
+#EXPOSE 85 86

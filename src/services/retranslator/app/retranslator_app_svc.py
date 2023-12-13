@@ -35,7 +35,6 @@ class RetranslatorApp(svc.Svc):
 
     async def get_cur_tag_val(self, tag_id: str):
         # Поиск текущего значения тега
-        self._logger.error("Posted message")
         try:
             async with aiohttp.ClientSession() as sess:
                 async with sess.get("http://tags_all:81/v1/data", json={"tagId": tag_id}) as resp:
@@ -89,14 +88,12 @@ class RetranslatorApp(svc.Svc):
                             self.tag_sub[routing_key]["task"] = task
                             await self.subscribe_to_tag(routing_key)
                     case "binding.deleted":
-                        self._logger.error("Binding deleted")
                         if self.tag_sub.get(routing_key):
                             self.tag_sub[routing_key]['count'] -= 1
                             if self.tag_sub[routing_key]['count'] == 0:
                                 self.tag_sub[routing_key]['task'].remove()
                                 await self.unsubscribe_from_tag(routing_key)
                                 self.tag_sub.pop(routing_key)
-            self._logger.error(self.tag_sub)
             await message.ack()
 
     async def subscribe_to_tag(self, tag_id):
@@ -150,7 +147,6 @@ class RetranslatorApp(svc.Svc):
         return
 
     async def _process_message(self, message: aio_pika.abc.AbstractIncomingMessage) -> None:
-        self._logger.error(message)
         routing_key = message.routing_key
         async with message.process(ignore_processed=True):
             mes = message.body.decode()
