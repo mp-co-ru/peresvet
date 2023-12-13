@@ -49,3 +49,7 @@ location = /v1/tags/ {
 location = /v1/data/ {
     proxy_pass $proto://tags_app_api;
 }
+
+location /grafana/ {
+    proxy_pass $proto://grafana;
+}

@@ -20,4 +20,5 @@ docker compose $back --env-file docker/compose/.cont_all_in_one.env \
 -f docker/compose/docker-compose.nginx.yml \
 -f docker/compose/docker-compose.connectors.all.yml \
 -f docker/compose/docker-compose.retranslator.yml \
+-f docker/compose/docker-compose.grafana.yml \
 up

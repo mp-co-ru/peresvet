@@ -44,3 +44,8 @@ upstream tags_api_crud {
 upstream tags_app_api {
     server ${HOST_TAGS_APP_API}:${PORT_TAGS_APP_API};
 }
+
+#grafana
+upstream grafana {
+    server ${HOST_GRAFANA}:${PORT_GRAFANA}
+}

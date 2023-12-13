@@ -58,6 +58,10 @@ services:
         HOST_SCHEDULES_API_CRUD: ${HOST_SCHEDULES_API_CRUD}
         HOST_SCHEDULES_ALL: ${HOST_SCHEDULES_ALL}
 
+        #grafana
+        PORT_GRAFANA: ${PORT_GRAFANA}
+        HOST_GRAFANA: ${HOST_GRAFANA}
+
         TZ: ${TIME_ZONE}
       depends_on:
         - connectors_all
@@ -67,3 +71,4 @@ services:
         - methods_all
         - tags_all
         - schedules_all
+        - grafana
