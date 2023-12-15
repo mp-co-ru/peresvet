@@ -141,7 +141,7 @@ async def get_req(websocket: WebSocket, connector_id: str):
             
     except WebSocketDisconnect as e:
         # manager.disconnect(websocket)
-        app._logger.info(f"Разрыв связи с коннектором {connector_id}. Ошибка: {e}")
+        app._logger.error(f"Разрыв связи с коннектором {connector_id}. Ошибка: {e}")
 
 
 app.include_router(router, prefix=f"{settings.api_version}/connectors", tags=["connectors_app"])
