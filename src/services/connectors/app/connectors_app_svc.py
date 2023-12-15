@@ -1,7 +1,4 @@
 import sys
-import json
-import copy
-import aio_pika
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 sys.path.append(".")
 
@@ -71,10 +68,7 @@ class ConnectorsApp(svc.Svc):
             }
         })
 
-        self._logger.error(tags)
-
         for id_, _, attributes in tags:
-            self._logger.error(id_, attributes)
             tag = await self._hierarchy.search(payload={
                 "scope": hierarchy.CN_SCOPE_SUBTREE,
                 "id": attributes.get('cn')[0],
@@ -145,9 +139,9 @@ async def get_req(websocket: WebSocket, connector_id: str):
                 await app._post_message(body, reply=False)
                 app._logger.info(f'Данные коннектора {connector_id} отправлены')
             
-    except WebSocketDisconnect:
+    except WebSocketDisconnect as e:
         # manager.disconnect(websocket)
-        app._logger.info(f"Разрыв связи с коннектором {connector_id}")
+        app._logger.info(f"Разрыв связи с коннектором {connector_id}. Ошибка: {e}")
 
 
 app.include_router(router, prefix=f"{settings.api_version}/connectors", tags=["connectors_app"])
