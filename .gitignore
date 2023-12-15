@@ -142,6 +142,6 @@ tests/dev/
 tests/load/tags_in_postgres.json
 tests/load/tags_in_vm.json
 
-.vscode/aunch.json
+.vscode/launch.json
 
 docker/compose/config/nginx/
