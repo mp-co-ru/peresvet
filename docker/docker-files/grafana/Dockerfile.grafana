@@ -1,0 +1,5 @@
+#FROM grafana/grafana-enterprise
+FROM grafana/grafana:9.5.14-ubuntu
+
+#ENV GF_INSTALL_PLUGINS https://github.com/mp-co-ru/grafana-ui-plugin/releases/download/v1.0.0/mp-co-peresvet-app-1-0-0.zip;mp-co-peresvet-app
+COPY config/grafana/grafana.ini /etc/grafana/
