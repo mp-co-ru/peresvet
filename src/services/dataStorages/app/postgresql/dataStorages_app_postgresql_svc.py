@@ -4,6 +4,8 @@ import asyncio
 import numbers
 import copy
 from typing import Any, List, Tuple
+
+import redis.asyncio as redis
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 import numpy as np
@@ -65,6 +67,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         self._tags = {}
         self._alerts = {}
         self._data_cache = {}
+
+        self._cache_pool = redis.ConnectionPool.from_url(self._config.redis_url)
 
     def _set_incoming_commands(self) -> dict:
         return {
@@ -496,9 +500,29 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 }
             }
         """
-        for tag_data in mes["data"]["data"]:
-            tag_params = self._tags[tag_data["tagId"]]
-            self._data_cache[tag_params["ds_id"]][tag_data["tagId"]].extend(tag_data["data"])
+        try:
+            client = redis.Redis(connection_pool=self._cache_pool)
+        except Exception as ex:
+            self._logger.error(f"Ошибка при попытке связи с кэш сервером: {ex}")
+            return
+
+        try:
+            async with client.pipeline(transaction=True) as pipe:
+                for tag_data in mes["data"]["data"]:
+                    tag_id = tag_data["tagId"]
+                    tag_params = self._tags[tag_id]
+                    ds_id = tag_params["ds_id"]
+
+                    pipe.json().arrappend(self._config.svc_name, f"$.data.{ds_id}.{tag_id}", *tag_data["data"])
+                res = await pipe.execute()
+
+                self._logger.debug(
+                    f"Обновление кэша данных: {json.dumps(mes,indent=4,ensure_ascii=False)}"
+                )
+        except Exception as ex:
+            self._logger.error(f"Ошибка обновления данных в кэше: {ex}")
+        finally:
+            await client.aclose()
 
     async def _prepare_tag_data(self, tag_id: str, ds_id: str) -> dict | None:
         get_tag_data = {
