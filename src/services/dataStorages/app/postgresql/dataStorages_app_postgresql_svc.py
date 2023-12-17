@@ -270,63 +270,96 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         """
 
-        async with self._connection_pools[mes["data"]["dataStorageId"]].acquire() as conn:
+        cache_for_store = {}
+        tag_id = mes["data"]["tagId"]
+        ds_id = mes["data"]["dataStorageId"]
+
+        async with self._connection_pools[ds_id].acquire() as conn:
 
             if not mes["data"]["attributes"].get("prsStore"):
                 mes["data"]["attributes"]["prsStore"] = \
-                    {"tableName": f't_{mes["data"]["tagId"]}'}
+                    {"tableName": f't_{tag_id}'}
 
-            tag_params = self._tags.get(mes["data"]["tagId"])
-            if tag_params:
-                tbl_name = tag_params['table']
-                if mes["data"]["attributes"]["prsStore"]["tableName"] == tbl_name:
-                    self._logger.warning(f"Тег {mes['data']['tagId']} уже привязан")
-                    return
+            try:
+                client = redis.Redis(connection_pool=self._cache_pool)
 
-                await conn.execute(
-                    f'drop table if exists "{tbl_name}"'
-                )
+                async with client.pipeline(transaction=True) as pipe:
+                    pipe.json().get(
+                        self._config.svc_name,
+                        f"$.tags.{tag_id}"
+                    )
 
-            tbl_name = mes["data"]["attributes"]["prsStore"]["tableName"]
+                    res = await pipe.execute()
+                    tag_params = res[0][0]
 
-            tag_cache = await self._prepare_tag_data(
-                mes["data"]["tagId"],
-                mes["data"]["dataStorageId"]
-            )
-            tag_cache["table"] = tbl_name
-            cache_for_store = copy.deepcopy(tag_cache)
+                    if tag_params:
+                        tbl_name = tag_params['table']
+                        if mes["data"]["attributes"]["prsStore"]["tableName"] == tbl_name:
+                            self._logger.warning(f"Тег {tag_id} уже привязан")
+                            return
 
-            tag_cache["ds"] = self._connection_pools[mes["data"]["dataStorageId"]]
-            match tag_cache["value_type"]:
-                case TVT.CN_INT:
-                    s_type = "bigint"
-                case TVT.CN_DOUBLE:
-                    s_type = "double precision"
-                case TVT.CN_STR:
-                    s_type = "text"
-                case TVT.CN_JSON:
-                    s_type = "jsonb"
-                case _:
-                    er_str = f"Тег: {mes['data']['tagId']}; неизвестный тип данных: {tag_cache['value_type']}"
-                    self._logger.error(er_str)
-                    return
+                        await conn.execute(
+                            f'drop table if exists "{tbl_name}"'
+                        )
 
-            query = (f'CREATE TABLE public."{tag_cache["table"]}" ('
-                    f'"id" serial primary key,'
-                    f'"x" bigint NOT NULL,'
-                    f'"y" {s_type},'
-                    f'"q" int);'
-                    # Создание индекса на поле "метка времени" ("ts")
-                    f'CREATE INDEX "{tag_cache["table"]}_idx" ON public."{tag_cache["table"]}" '
-                    f'USING btree ("x");')
+                    tbl_name = mes["data"]["attributes"]["prsStore"]["tableName"]
 
-            if tag_cache["value_type"] == 4:
-                query += (f'CREATE INDEX "{tag_cache["table"]}_json__idx" ON public."{tag_cache["table"]}" '
-                            'USING gin ("y" jsonb_path_ops);')
+                    tag_cache = await self._prepare_tag_data(
+                        tag_id,
+                        mes["data"][ds_id]
+                    )
+                    tag_cache["table"] = tbl_name
+                    cache_for_store = copy.deepcopy(tag_cache)
 
-            await conn.execute(query)
+                    #tag_cache["ds"] = self._connection_pools[ds_id]
+                    tag_cache["ds"] = ds_id
+                    match tag_cache["value_type"]:
+                        case TVT.CN_INT:
+                            s_type = "bigint"
+                        case TVT.CN_DOUBLE:
+                            s_type = "double precision"
+                        case TVT.CN_STR:
+                            s_type = "text"
+                        case TVT.CN_JSON:
+                            s_type = "jsonb"
+                        case _:
+                            er_str = f"Тег: {tag_id}; неизвестный тип данных: {tag_cache['value_type']}"
+                            self._logger.error(er_str)
+                            return
 
-            self._tags[mes["data"]["tagId"]] = tag_cache
+                    query = (f'CREATE TABLE public."{tag_cache["table"]}" ('
+                            f'"id" serial primary key,'
+                            f'"x" bigint NOT NULL,'
+                            f'"y" {s_type},'
+                            f'"q" int);'
+                            # Создание индекса на поле "метка времени" ("ts")
+                            f'CREATE INDEX "{tag_cache["table"]}_idx" ON public."{tag_cache["table"]}" '
+                            f'USING btree ("x");')
+
+                    if tag_cache["value_type"] == 4:
+                        query += (f'CREATE INDEX "{tag_cache["table"]}_json__idx" ON public."{tag_cache["table"]}" '
+                                    'USING gin ("y" jsonb_path_ops);')
+
+                    await conn.execute(query)
+
+                    async with client.pipeline(transaction=True) as pipe:
+                        pipe.json().set(
+                            self._config.svc_name,
+                            f"$.data.tags.{tag_id}", tag_cache
+                        )
+                        res = await pipe.execute()
+
+                        if not res[0]:
+                            self._logger.error(f"Ошибка обновления кэша тега {tag_id}.")
+
+                        self._logger.debug(
+                            f"Обновление кэша данных: {json.dumps(mes,indent=4,ensure_ascii=False)}"
+                        )
+
+            except Exception as ex:
+                self._logger.error(f"Ошибка обновления данных в кэше: {ex}")
+            finally:
+                await client.aclose()
 
         return {
             "prsStore": json.dumps(cache_for_store)
@@ -406,7 +439,7 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                     "alertId": "alert_id"
                 }
         """
-        alert_params = self._tags.get(mes["data"]["alertId"])
+        alert_params = self._alerts.get(mes["data"]["alertId"])
         if not alert_params:
             self._logger.warning(f"Тревога {mes['data']['alertId']} не привязана к хранилищу.")
             return
@@ -430,21 +463,67 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                     "id": "tag_id"
                 }
         """
-        tag_params = self._tags.get(mes["data"]["tagId"])
-        if not tag_params:
-            self._logger.warning(f"Тег {mes['data']['tagId']} не привязан к хранилищу.")
-            return
+        tag_id = mes["data"]["tagId"]
+        try:
+            client = redis.Redis(connection_pool=self._cache_pool)
 
-        async with tag_params["ds"].acquire() as conn:
-            await conn.execute(
-                f'drop table if exists "{tag_params["table"]}"'
-            )
+            async with client.pipeline(transaction=True) as pipe:
+                pipe.json().get(
+                    self._config.svc_name,
+                    f"$.tags.{tag_id}"
+                )
 
-        self._tags.pop(mes["data"]["tagId"])
+                res = await pipe.execute()
+                tag_params = res[0][0]
 
-        self._logger.info(f"Тег {mes['data']['tagId']} отвязан от хранилища.")
+                if not tag_params:
+                    self._logger.warning(f"Тег {mes[tag_id]} не привязан к хранилищу.")
+                    return
 
-    async def _write_cache_data(self) -> None:
+                async with tag_params["ds"].acquire() as conn:
+                    await conn.execute(
+                        f'drop table if exists "{tag_params["table"]}"'
+                    )
+
+                pipe.json().delete(
+                    self._config.svc_name,
+                    f"$.tags.{tag_id}"
+                )
+                await pipe.execute()
+
+            await client.aclose()
+        except Exception as ex:
+            self._logger.error(f"Ошибка отвязки тега: {ex}")
+
+        self._logger.info(f"Тег {tag_id} отвязан от хранилища.")
+
+    async def _write_cache_data(self, tag_ids: [str] = None) -> None:
+        # функция сбрасывает кэш данных тегов в базу
+        # если tag_ids - пустой список, то сбрасываются все теги из кэша
+        # иначе - только те, которые в списке
+
+        try:
+            client = redis.Redis(connection_pool=self._cache_pool)
+
+            async with client.pipeline(transaction=True) as pipe:
+                pipe.json().objkeys(
+                    self._config.svc_name,
+                    f"$.tags"
+                )
+                res = await pipe.execute()
+                cache_tags = res[0][0]
+                tags_to_push = cache_tags
+                if tag_ids:
+                    set_cache_tags = set(tags_to_push)
+                    set_tag_ids = set(tag_ids)
+                    tags_to_push = list(set_cache_tags & set_tag_ids)
+                    set_tags_to_push = set(tags_to_push)
+                    unprocess_tags = list(set_tag_ids & set_tags_to_push)
+                    if unprocess_tags:
+                        self._logger.warning(f"Теги {unprocess_tags} отсутствуют в кэше {self._config.svc_name}.")
+
+
+
 
         for ds_id, tags in self._data_cache.items():
             self._logger.info(f"Запись данных из кэша в базу {ds_id}...")
