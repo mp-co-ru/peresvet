@@ -50,8 +50,8 @@ location = /v1/data/ {
     proxy_pass $proto://tags_app_api;
 }
 
-location /grafana/ {
-    #rewrite  ^/grafana/(.*)  /$1 break;
-    proxy_set_header Host $http_host;
-    proxy_pass $proto://grafana;
-}
+#location /grafana/ {
+#    #rewrite  ^/grafana/(.*)  /$1 break;
+#    proxy_set_header Host $http_host;
+#    proxy_pass $proto://grafana;
+#}
