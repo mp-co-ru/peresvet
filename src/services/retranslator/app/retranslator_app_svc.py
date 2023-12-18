@@ -37,7 +37,7 @@ class RetranslatorApp(svc.Svc):
         # Поиск текущего значения тега
         try:
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5)) as sess:
-                async with sess.get("http://nginx/v1/data/", json={"tagId": tag_id}) as resp:
+                async with sess.get(self._conf.tags_app_url, json={"tagId": tag_id}) as resp:
                     if not resp.ok:
                         return None
                     response = await resp.json()
