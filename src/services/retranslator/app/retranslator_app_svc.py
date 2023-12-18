@@ -1,9 +1,9 @@
 import asyncio
 import json
-import logging
 import sys
-import copy
+import os
 import aiohttp
+from urllib.parse import urlparse
 import aio_pika
 from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -36,8 +36,10 @@ class RetranslatorApp(svc.Svc):
     async def get_cur_tag_val(self, tag_id: str):
         # Поиск текущего значения тега
         try:
-            async with aiohttp.ClientSession() as sess:
-                async with sess.get("http://tags_all:81/v1/data", json={"tagId": tag_id}) as resp:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5)) as sess:
+                async with sess.get("http://nginx/v1/data/", json={"tagId": tag_id}) as resp:
+                    if not resp.ok:
+                        return None
                     response = await resp.json()
                     cur_tag_data = response.get('data')[0].get('data')[0][0]
                     return cur_tag_data
@@ -167,8 +169,11 @@ class RetranslatorApp(svc.Svc):
         return
 
     async def init_tag_sub(self):
+        rabbitmq_usr = urlparse(self._conf.amqp_url).username
+        rabbitmq_pass = urlparse(self._conf.amqp_url).password
         async with aiohttp.ClientSession() as sess:
-            async with sess.get(self._conf.rabbitmq_api_url + "/exchanges/%2F/amq.topic/bindings/source" ,auth=aiohttp.BasicAuth('prs', 'Peresvet21')) as resp:
+            async with sess.get(self._conf.rabbitmq_api_url + "/exchanges/%2F/amq.topic/bindings/source",
+                                auth=aiohttp.BasicAuth(rabbitmq_usr, rabbitmq_pass)) as resp:
                 response = await resp.json()
                 for binding in response:
                     routing_key = binding.get('routing_key')
