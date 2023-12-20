@@ -8,6 +8,7 @@ class RetranslatorAppSettings(SvcSettings):
     rabbitmq_api_url: str = "http://rabbitmq:15672/api"
     #: строка коннекта к OpenLDAP
     ldap_url: str = "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+    tags_app_url: str = "http://nginx/v1/data/"
 
     #: обменник для публикаций
     publish: dict = {

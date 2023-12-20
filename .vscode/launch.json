@@ -64,6 +64,38 @@
                 }
             ],
             "justMyCode": true
+        },
+        {
+            "name": "MPC_DEBUG: cdd1 app_psql",
+            "type": "python",
+            "request": "attach",
+            "connect": {
+                "host": "172.27.0.5",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "."
+                }
+            ],
+            "justMyCode": true
+        },
+        {
+            "name": "MPC_DEBUG: b354 app_psql",
+            "type": "python",
+            "request": "attach",
+            "connect": {
+                "host": "172.27.0.8",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "."
+                }
+            ],
+            "justMyCode": true
         }
     ]
 }
