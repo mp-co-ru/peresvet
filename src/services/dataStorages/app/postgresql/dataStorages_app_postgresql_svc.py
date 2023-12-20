@@ -522,6 +522,27 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                     if unprocess_tags:
                         self._logger.warning(f"Теги {unprocess_tags} отсутствуют в кэше {self._config.svc_name}.")
 
+                if not tags_to_push:
+                    self._logger.info(f"Отсутствие тегов, данные которых должны быть записаны в хранилище.")
+                    return
+
+                for tag_id in tags_to_push:
+                    pipe.json().get(
+                        self._config.svc_name,
+                        f"$.tags.{tag_id}"
+                    )
+
+                res_tags_params = await pipe.execute()
+                for tag_params in res_tags_params[0]:
+                    ds_id = tag_params["ds_id"]
+
+                    connection_pool = self._connection_pools[ds_id]
+                    try:
+                        async with connection_pool.acquire() as conn:
+                            pipe.multi()
+                            pipe.json().get(self._config.svc_name, f"$.data.{ds_id}.{tag_id}")
+                            pipe.json().delete(self._config.svc_name, f"$.data.{ds_id}.{tag_id}")
+                            res = await pipe.execute()
 
 
 
