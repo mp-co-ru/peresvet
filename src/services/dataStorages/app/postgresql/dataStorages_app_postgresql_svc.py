@@ -699,6 +699,17 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         return to_return
 
+    async def _create_connection_pool(self, config: dict) -> Any:
+        """Метод создаёт пул коннектов к базе.
+        Конфигурация базы передаётся в словаре config.
+        Для PostgreSQL в словаре конфигурации только один ключ - dsn.
+
+        Args:
+            config (dict): _description_
+        """
+        return await apg.create_pool(dsn=config["dsn"])
+
+    """
     async def _connect_to_db(self) -> None:
         if not self._config.datastorages_id:
             ds_node_id = await self._hierarchy.get_node_id("cn=dataStorages,cn=prs")
@@ -731,12 +742,10 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
             self._logger.info(f"Чтение данных о хранилище {ds[0]}...")
 
-            dsn = json.loads(ds[2]["prsJsonConfigString"][0])["dsn"]
-
             connected = False
             while not connected:
                 try:
-                    self._connection_pools[ds[0]] = await apg.create_pool(dsn=dsn)
+                    self._connection_pools[ds[0]] = await self._create_connection_pool(json.loads(ds[2]["prsJsonConfigString"][0]))
                     self._logger.info(f"Связь с базой данных {ds[0]} установлена.")
                     connected = True
                 except Exception as ex:
@@ -833,6 +842,8 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 i += 1
 
             self._logger.info(f"Хранилище {ds[0]}. Тревоги прочитаны.")
+
+    """
 
     async def on_startup(self) -> None:
         await super().on_startup()

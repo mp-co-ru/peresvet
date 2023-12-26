@@ -56,7 +56,46 @@ def linear_interpolated(start_point: Tuple[int, Any],
 class DataStoragesAppBase(svc.Svc):
     """Базовый класс для хранилищ данных.
     Реализует общую логику: работа с кэшем, поддержка нескольких экземпляров
-    хранилища одного типа.
+    хранилища одного типа и т.д.
+
+    Для работы данному классу требуется информация о тегах.
+    Правильное поведение - запрос через брокер сообщений данных о теге, но
+    пока сделаем, чтобы класс сам брал из иерархии нужные данные.
+
+    Класс реализует кэш json-вида. Кэш формируется только для активных хранилищ,
+    активных тегов и тревог.
+
+    {
+        "<svc_name>":{
+            "tags":  {
+                "<tag_id>": {
+                    "prsStore": {
+                        # ключи зависят от типа хранилища
+                    },
+                    "prsUpdate": true,
+                    "prsValueTypeCode": 1,
+                    "prsStep": false,
+                    "dsId": "<ds_id>"
+                }
+            },
+            "alerts": {
+                "<alert_id>": "some alert cache"
+            },
+            "<ds_id>": ["<tag_id_1>", "<tag_id_2>"],
+
+            "data": {
+                "<dataStorage_id>": {
+                    "<tag_id1>": [[y0, x0, q0], [y1, x1, q1]],
+                    "<tag_id2>": [[y2, x2, q2], [y3, x3, q3],  [y4, x4, q4]]
+                }
+            },
+            "alarms": {
+                ...
+            }
+        }
+    }
+    Кроме этого, есть обычные ключи:
+    "build: <ds_id>" = True, когда идет построение кэша тегов и тревог для определённого хранилища
 
     Args:
         settings (DataStoragesAppBaseSettings): Параметры конфигурации
@@ -67,22 +106,16 @@ class DataStoragesAppBase(svc.Svc):
         ):
         super().__init__(settings, *args, **kwargs)
 
+        # словарь коннектов к хранилищам. имеет вид:
+        # {
+        #    "<ds_id>": <connection_pool>
+        # }
         self._connection_pools = {}
-        self._cache_pool = {}
+        # коннект к кеш-серверу
+        self._cache_pool = None
 
-    async def on_startup(self) -> None:
-
-        await super().on_startup()
-        try:
-            await self._connect_to_db()
-            self._cache_pool = redis.ConnectionPool.from_url(self._config.cache_url)
-
-            loop = asyncio.get_event_loop()
-            loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))
-
-            #await asyncio.gather(asyncio.create_task())
-        except Exception as ex:
-            self._logger.error(f"Ошибка инициализации хранилища: {ex}")
+        # список id хранилищ, которые обслуживает сервис
+        self._ds_ids = []
 
     def _set_incoming_commands(self) -> dict:
         return {
@@ -95,11 +128,92 @@ class DataStoragesAppBase(svc.Svc):
             "dataStorages.linkTag": self._link_tag,
             "dataStorages.unlinkTag": self._unlink_tag,
             "dataStorages.linkAlert": self._link_alert,
-            "dataStorages.unlinkTag": self._unlink_alert,
-            "dataStorages.unlinkTag": self._updated,
+            "dataStorages.unlinkAlert": self._unlink_alert,
+            "dataStorages.added": self._added,
+            "dataStorages.updated": self._updated,
+            "dataStorages.deleted": self._updated
         }
 
+    async def _add_supported_ds(self, ds_id: str) -> None:
+
+        payload = {
+            "id": [ds_id],
+            "attributes": ["prsJsonConfigString", "prsActive"]
+        }
+        ds = await self._hierarchy.search(payload=payload)
+        if ds[2]["prsActive"][0] == "FALSE":
+            self._logger.info(f"Хранилище {ds_id} неактивно.")
+            return
+
+        # добавим в список поддерживаемых хранилищ новое
+        self._ds_ids.append(ds[0])
+
+        await self._amqp_consume["queue"].bind(
+            exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
+            routing_key=ds[0]
+        )
+
+        self._logger.info(f"Чтение данных о хранилище {ds[0]}...")
+
+        connected = False
+        while not connected:
+            try:
+                self._connection_pools[ds[0]] = await self._create_connection_pool(json.loads(ds[2]["prsJsonConfigString"][0]))
+                self._logger.info(f"Связь с базой данных {ds[0]} установлена.")
+                connected = True
+            except Exception as ex:
+                self._logger.error(f"Ошибка связи с базой данных '{ds[0]}': {ex}")
+                await asyncio.sleep(5)
+
+        self._build_cache(ds[0])
+
+    async def on_startup(self) -> None:
+
+        await super().on_startup()
+        try:
+            self._cache_pool = redis.ConnectionPool.from_url(self._config.cache_url)
+
+            # обслуживаем либо указанные в конфигурации базы данных, либо
+            # все базы нужного типа
+            if not self._config.datastorages_id:
+                ds_node_id = await self._hierarchy.get_node_id("cn=dataStorages,cn=prs")
+                payload = {
+                    "base": ds_node_id,
+                    "filter": {
+                        "prsEntityTypeCode": [self._config.datastorage_type],
+                        "objectClass": ["prsDataStorage"]
+                    }
+                }
+            else:
+                payload = {
+                    "id": self._config.datastorages_id
+                }
+                # если указаны конкретные id хранилищ, которые надо обслуживать,
+                # то отменяем базовую привязку очереди прослушивания
+                await self._amqp_consume["queue"].unbind(
+                        exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
+                        routing_key=self._config.consume["exchanges"]["main"]["routing_key"][0]
+                    )
+
+            payload["attributes"] = ["cn"]
+
+            dss = await self._hierarchy.search(payload=payload)
+            for ds in dss:
+                self._add_supported_ds(ds)
+
+            loop = asyncio.get_event_loop()
+            loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))
+
+        except Exception as ex:
+            self._logger.error(f"Ошибка инициализации хранилища: {ex}")
+
+    async def _added(self, mes: dict) -> None:
+        pass
+
     async def _updated(self, mes: dict) -> None:
+        pass
+
+    async def _deleted(self, mes: dict) -> None:
         pass
 
     async def _alarm_on(self, mes: dict) -> None:
@@ -266,7 +380,7 @@ class DataStoragesAppBase(svc.Svc):
     async def _reject_message(self, mes: dict) -> bool:
         return False
 
-    async def _link_tag(self, mes: dict) -> dict:
+    async def _link_tag(self, mes: dict) -> dict | None:
         """Метод привязки тега к хранилищу.
         Атрибут ``prsStore`` должен быть вида
         ``{"tableName": "<some_table>"}`` либо отсутствовать
@@ -287,6 +401,9 @@ class DataStoragesAppBase(svc.Svc):
         cache_for_store = {}
         tag_id = mes["data"]["tagId"]
         ds_id = mes["data"]["dataStorageId"]
+        if ds_id not in self._ds_ids:
+            self._logger.error(f"Хранилища {ds_id} нет в списке поддерживаемых.")
+            return
 
         async with self._connection_pools[ds_id].acquire() as conn:
 
@@ -677,6 +794,49 @@ class DataStoragesAppBase(svc.Svc):
 
         return to_return
 
+    async def _prepare_tag_cache(self, tag_id: str, ds_id: str) -> dict | None:
+        """Функция подготовки кэша с данными о теге.
+        Args:
+            tag_id (str): _description_
+            ds_id (str): _description_
+
+        Returns:
+            dict | None: _description_
+        """
+        payload = {
+            "id": tag_id,
+            "attributes": [
+                "prsUpdate",
+                "prsValueTypeCode",
+                "prsStep",
+                "prsActive"]
+        }
+        res = await self._hierarchy.search(payload=payload)
+        tag_attrs = res[0][2]
+        if tag_attrs["prsActive"][0] == "FALSE":
+            return None
+
+        tag_cache = {
+            "prsUpdate": tag_attrs["prsUpdate"][0],
+            "prsValueTypeCode": tag_attrs["prsValueTypeCode"][0],
+            "prsStep": tag_attrs["prsStep"][0],
+            "dsId": ds_id
+        }
+
+        payload = {
+            "base": ds_id,
+            "filter": {
+                "cn": tag_id
+            },
+            "attributes": ["prsStore"]
+        }
+        res = await self._hierarchy.search(payload=payload)
+        tag_attrs = res[0][2]
+        tag_cache["prsStore"] = json.loads(tag_attrs["prsStore"][0])
+
+        return tag_cache
+
+
     async def _prepare_alert_data(self, alert_id: str, ds_id: str) -> dict | None:
         get_alert_data = {
             "id": [alert_id],
@@ -713,140 +873,77 @@ class DataStoragesAppBase(svc.Svc):
 
         return to_return
 
-    async def _connect_to_db(self) -> None:
-        if not self._config.datastorages_id:
-            ds_node_id = await self._hierarchy.get_node_id("cn=dataStorages,cn=prs")
-            payload = {
-                "base": ds_node_id,
-                "filter": {
-                    "prsEntityTypeCode": [self._config.datastorage_type],
-                    "objectClass": ["prsDataStorage"]
+    async def _create_connection_pool(self, config: dict) -> Any:
+        """Метод создаёт пул коннектов к базе.
+        Конфигурация базы передаётся в словаре config.
+        Каждый класс для специфического хранилища переопределяет этот метод
+
+        Args:
+            config (dict): _description_
+        """
+        pass
+
+    async def _build_cache(self, ds_id: str) -> None:
+        client = redis.Redis(connection_pool=self._cache_pool)
+
+        build_key = f"build: {ds_id}"
+        async with client.pipeline(transaction=True) as pipe:
+            await pipe.watch(build_key)
+            res = await pipe.get(build_key)
+            if res is None:
+                res = 0
+            else:
+                res = int(res)
+
+            if res:
+                await pipe.unwatch()
+                self._logger.info(f"Кэш для хранилища {ds_id} строится другим сервисом.")
+            else:
+                self._logger.info(f"Построение кэша тегов, привязанных к хранилищу {ds_id}...")
+
+                pipe.multi()
+                await pipe.set(build_key, 1)
+                await pipe.execute()
+
+                search_tags = {
+                    "base": ds_id,
+                    "filter": {
+                        "objectClass": ["prsDatastorageTagData"]
+                    },
+                    "attributes": ["cn"]
                 }
-            }
-        else:
-            payload = {
-                "id": self._config.datastorages_id
-            }
-            # если указаны конкретные id хранилищ, которые надо обслуживать,
-            # то отменяем базовую привязку очереди прослушивания
-            await self._amqp_consume["queue"].unbind(
-                    exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
-                    routing_key=self._config.consume["exchanges"]["main"]["routing_key"][0]
-                )
 
-        payload["attributes"] = ["prsJsonConfigString"]
+                i = 1
+                pipe.multi()
+                pipe.json().set(ds_id, "$.{self._config.svc_name}", [])
+                tags_ds_data = await self._hierarchy.search(payload=search_tags)
+                for tag_ds in tags_ds_data:
+                    self._logger.debug(f"Текущий тег: {tag_ds}")
 
-        dss = await self._hierarchy.search(payload=payload)
-        for ds in dss:
-            await self._amqp_consume["queue"].bind(
-                exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
-                routing_key=ds[0]
-            )
+                    tag_id = tag_ds[2]["cn"][0]
 
-            self._logger.info(f"Чтение данных о хранилище {ds[0]}...")
+                    self._logger.debug(f"Подготовка кэша тега {tag_id}.")
+                    tag_cache = self._prepare_tag_cache(tag_id, ds_id)
+                    if not tag_cache:
+                        self._logger.debug(f"Кэш пустой.")
+                        continue
 
-            dsn = json.loads(ds[2]["prsJsonConfigString"][0])["dsn"]
+                    self._logger.debug(f"Запись кэша тега {tag_id}.")
+                    pipe.json().set(tag_id, f"$.{self._config.svc_name}.tags", tag_cache)
+                    pipe.json().arrappend(ds_id, f"$.{self._config.svc_name}", tag_id)
 
-            connected = False
-            while not connected:
-                try:
-                    self._connection_pools[ds[0]] = await apg.create_pool(dsn=dsn)
-                    self._logger.info(f"Связь с базой данных {ds[0]} установлена.")
-                    connected = True
-                except Exception as ex:
-                    self._logger.error(f"Ошибка связи с базой данных '{ds[0]}': {ex}")
-                    await asyncio.sleep(5)
+                    self._logger.debug(f"Привязка очереди.")
+                    await self._amqp_consume["queue"].bind(
+                        exchange=self._amqp_consume["exchanges"]["tags"]["exchange"],
+                        routing_key=tag_id
+                    )
 
-            search_tags = {
-                "base": ds[0],
-                "filter": {
-                    "objectClass": ["prsDatastorageTagData"]
-                },
-                "attributes": ["prsStore", "cn"]
-            }
+                    self._logger.debug(f"Тег {tag_id} привязан ({i}).")
+                    i += 1
 
-            self._logger.info("Чтение тегов, привязанных к хранилищу...")
+                self._logger.info(f"Хранилище {ds_id}. Теги прочитаны.")
 
-            self._data_cache[ds[0]] = {}
-
-            i = 1
-            #async for tag in self._hierarchy.search(payload=search_tags):
-            tags = await self._hierarchy.search(payload=search_tags)
-            for tag in tags:
-                self._logger.debug(f"Текущий тег: {tag}")
-
-                '''
-                if not tag[0]:
-                    continue
-                '''
-
-                t1 = time.time()
-
-                tag_id = tag[2]["cn"][0]
-
-                self._logger.debug(f"Подготовка кэша тега.")
-                tag_cache = json.loads(tag[2]["prsStore"][0])
-                if not tag_cache:
-                    self._logger.debug(f"Кэш пустой.")
-                    continue
-
-                self._logger.debug(f"Сохранение кэша тега.")
-                tag_cache["ds"] = self._connection_pools[ds[0]]
-                tag_cache["ds_id"] = ds[0]
-                self._tags[tag_id] = tag_cache
-
-                self._data_cache[ds[0]][tag_id] = []
-
-                self._logger.debug(f"Привязка очереди.")
-                await self._amqp_consume["queue"].bind(
-                    exchange=self._amqp_consume["exchanges"]["tags"]["exchange"],
-                    routing_key=tag_id
-                )
-
-                self._logger.debug(f"Тег {tag_id} привязан ({i}). Время: {time.time() - t1}")
-                i += 1
-
-            self._logger.info(f"Хранилище {ds[0]}. Теги прочитаны.")
-
-            search_alerts = {
-                "base": ds[0],
-                "filter": {
-                    "objectClass": ["prsDatastorageAlertData"]
-                },
-                "attributes": ["prsStore", "cn"]
-            }
-
-            self._logger.info("Чтение тревог, привязанных к хранилищу...")
-
-            #async for alert in self._hierarchy.search(payload=search_alerts):
-            alerts = await self._hierarchy.search(payload=search_alerts)
-            for alert in alerts:
-                self._logger.debug(f"Текущая тревога: {alert}")
-
-                t1 = time.time()
-
-                alert_id = alert[2]["cn"][0]
-
-                self._logger.debug(f"Подготовка кэша тревоги.")
-                alert_cache = json.loads(alert[2]["prsStore"][0])
-                if not alert_cache:
-                    self._logger.debug(f"Кэш пустой.")
-                    continue
-
-                self._logger.debug(f"Сохранение кэша тревоги.")
-                alert_cache["ds"] = self._connection_pools[ds[0]]
-                self._alerts[alert_id] = alert_cache
-
-                self._logger.debug(f"Привязка очереди.")
-                await self._amqp_consume["queue"].bind(
-                    exchange=self._amqp_consume["exchanges"]["alerts"]["exchange"],
-                    routing_key=alert_id
-                )
-
-                self._logger.debug(f"Тревога {alert_id} привязана ({i}). Время: {time.time() - t1}")
-                i += 1
-
-            self._logger.info(f"Хранилище {ds[0]}. Тревоги прочитаны.")
+        await client.aclose()
 
     async def _tag_get(self, mes: dict) -> dict:
         """_summary_
@@ -1418,6 +1515,6 @@ class DataStoragesAppBase(svc.Svc):
             return tag_data[-count:]
         return tag_data
 
-settings = DataStoragesAppPostgreSQLSettings()
+settings = DataStoragesAppBaseSettings()
 
-app = DataStoragesAppPostgreSQL(settings=settings, title="DataStoragesAppPostgreSQL")
+app = DataStoragesAppBase(settings=settings, title="DataStoragesAppBase")
