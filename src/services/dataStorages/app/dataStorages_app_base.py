@@ -15,6 +15,9 @@ sys.path.append(".")
 
 from src.services.dataStorages.app.dataStorages_app_base_settings import DataStoragesAppBaseSettings
 from src.common import svc
+from src.common.hierarchy import (
+    CN_SCOPE_BASE, CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
+)
 import src.common.times as t
 from src.common.consts import (
     CNTagValueTypes as TVT,
@@ -65,23 +68,36 @@ class DataStoragesAppBase(svc.Svc):
     Класс реализует кэш json-вида. Кэш формируется только для активных хранилищ,
     активных тегов и тревог.
 
+    Кэш строится этим базовым классом сразу для всех хранилищ,
+    так как он типовой. Поэтому название ключа кэша - "dataStorages".
+
     {
-        "<svc_name>":{
+        "dataStorages":{
             "tags":  {
                 "<tag_id>": {
-                    "prsStore": {
-                        # ключи зависят от типа хранилища
-                    },
+                    "prsActive": true,
                     "prsUpdate": true,
                     "prsValueTypeCode": 1,
                     "prsStep": false,
-                    "dsId": "<ds_id>"
+                    "dsIds": {
+                        "<ds_id1>": "<prsStore1>",
+                        "<ds_id2>": "<prsStore1>"
+                    } # тег может быть привязан к нескольким хранилищам
                 }
             },
             "alerts": {
-                "<alert_id>": "some alert cache"
+                "<alert_id>": {
+                    "prsActive": true,
+                    "dsIds": {
+                        "<ds_id1>": "<prsStore1>",
+                        "<ds_id2>": "<prsStore1>"
+                    }
+                }
             },
-            "<ds_id>": ["<tag_id_1>", "<tag_id_2>"],
+            "<ds_id>": {
+                "prsActive": true,
+                "tags": ["<tag_id_1>", "<tag_id_2>"]
+            }
 
             "data": {
                 "<dataStorage_id>": {
@@ -95,7 +111,7 @@ class DataStoragesAppBase(svc.Svc):
         }
     }
     Кроме этого, есть обычные ключи:
-    "build: <ds_id>" = True, когда идет построение кэша тегов и тревог для определённого хранилища
+    "build dataStorages" = True, когда идет построение кэша тегов и тревог для определённого хранилища
 
     Args:
         settings (DataStoragesAppBaseSettings): Параметры конфигурации
@@ -116,6 +132,7 @@ class DataStoragesAppBase(svc.Svc):
 
         # список id хранилищ, которые обслуживает сервис
         self._ds_ids = []
+        self._cache_key = "dataStorages"
 
     def _set_incoming_commands(self) -> dict:
         return {
@@ -135,37 +152,38 @@ class DataStoragesAppBase(svc.Svc):
         }
 
     async def _add_supported_ds(self, ds_id: str) -> None:
+        """Метод добавляет в список поддерживаемых хранилищ новое.
+
+        Args:
+            ds_id (str): _description_
+        """
 
         payload = {
             "id": [ds_id],
-            "attributes": ["prsJsonConfigString", "prsActive"]
+            "attributes": ["prsJsonConfigString"]
         }
         ds = await self._hierarchy.search(payload=payload)
-        if ds[2]["prsActive"][0] == "FALSE":
-            self._logger.info(f"Хранилище {ds_id} неактивно.")
-            return
+        if ds[2]["prsActive"][0] == "TRUE":
+            self._logger.info(f"Чтение данных о хранилище {ds[0]}...")
+
+            connected = False
+            while not connected:
+                try:
+                    self._connection_pools[ds[0]] = await self._create_connection_pool(json.loads(ds[2]["prsJsonConfigString"][0]))
+                    self._logger.info(f"Связь с базой данных {ds[0]} установлена.")
+                    connected = True
+                except Exception as ex:
+                    self._logger.error(f"Ошибка связи с базой данных '{ds[0]}': {ex}")
+                    await asyncio.sleep(5)
+
+        self._build_cache(ds[0])
 
         # добавим в список поддерживаемых хранилищ новое
         self._ds_ids.append(ds[0])
-
         await self._amqp_consume["queue"].bind(
             exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
             routing_key=ds[0]
         )
-
-        self._logger.info(f"Чтение данных о хранилище {ds[0]}...")
-
-        connected = False
-        while not connected:
-            try:
-                self._connection_pools[ds[0]] = await self._create_connection_pool(json.loads(ds[2]["prsJsonConfigString"][0]))
-                self._logger.info(f"Связь с базой данных {ds[0]} установлена.")
-                connected = True
-            except Exception as ex:
-                self._logger.error(f"Ошибка связи с базой данных '{ds[0]}': {ex}")
-                await asyncio.sleep(5)
-
-        self._build_cache(ds[0])
 
     async def on_startup(self) -> None:
 
@@ -195,11 +213,9 @@ class DataStoragesAppBase(svc.Svc):
                         routing_key=self._config.consume["exchanges"]["main"]["routing_key"][0]
                     )
 
-            payload["attributes"] = ["cn"]
-
             dss = await self._hierarchy.search(payload=payload)
             for ds in dss:
-                self._add_supported_ds(ds)
+                self._add_supported_ds(ds[0])
 
             loop = asyncio.get_event_loop()
             loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))
@@ -416,7 +432,7 @@ class DataStoragesAppBase(svc.Svc):
 
                 async with client.pipeline(transaction=True) as pipe:
                     pipe.json().get(
-                        self._config.svc_name,
+                        self._cache_key,
                         f"$.tags.{tag_id}"
                     )
 
@@ -475,7 +491,7 @@ class DataStoragesAppBase(svc.Svc):
 
                     async with client.pipeline(transaction=True) as pipe:
                         pipe.json().set(
-                            self._config.svc_name,
+                            self._cache_key,
                             f"$.data.tags.{tag_id}", tag_cache
                         )
                         res = await pipe.execute()
@@ -600,7 +616,7 @@ class DataStoragesAppBase(svc.Svc):
 
             async with client.pipeline(transaction=True) as pipe:
                 pipe.json().get(
-                    self._config.svc_name,
+                    self._cache_key,
                     f"$.tags.{tag_id}"
                 )
 
@@ -617,7 +633,7 @@ class DataStoragesAppBase(svc.Svc):
                     )
 
                 pipe.json().delete(
-                    self._config.svc_name,
+                    self._cache_key,
                     f"$.tags.{tag_id}"
                 )
                 await pipe.execute()
@@ -638,7 +654,7 @@ class DataStoragesAppBase(svc.Svc):
 
             async with client.pipeline(transaction=True) as pipe:
                 pipe.json().objkeys(
-                    self._config.svc_name,
+                    self._cache_key,
                     f"$.tags"
                 )
                 res = await pipe.execute()
@@ -651,7 +667,7 @@ class DataStoragesAppBase(svc.Svc):
                     set_tags_to_push = set(tags_to_push)
                     unprocess_tags = list(set_tag_ids & set_tags_to_push)
                     if unprocess_tags:
-                        self._logger.warning(f"Теги {unprocess_tags} отсутствуют в кэше {self._config.svc_name}.")
+                        self._logger.warning(f"Теги {unprocess_tags} отсутствуют в кэше {self._cache_key}.")
 
                 if not tags_to_push:
                     self._logger.info(f"Отсутствие тегов, данные которых должны быть записаны в хранилище.")
@@ -659,7 +675,7 @@ class DataStoragesAppBase(svc.Svc):
 
                 for tag_id in tags_to_push:
                     pipe.json().get(
-                        self._config.svc_name,
+                        self._cache_key,
                         f"$.tags.{tag_id}"
                     )
 
@@ -671,8 +687,8 @@ class DataStoragesAppBase(svc.Svc):
                     try:
                         async with connection_pool.acquire() as conn:
                             pipe.multi()
-                            pipe.json().get(self._config.svc_name, f"$.data.{ds_id}.{tag_id}")
-                            pipe.json().delete(self._config.svc_name, f"$.data.{ds_id}.{tag_id}")
+                            pipe.json().get(self._cache_key, f"$.data.{ds_id}.{tag_id}")
+                            pipe.json().delete(self._cache_key, f"$.data.{ds_id}.{tag_id}")
                             res = await pipe.execute()
 
 
@@ -715,7 +731,7 @@ class DataStoragesAppBase(svc.Svc):
         loop = asyncio.get_event_loop()
         loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))
 
-    async def _tag_set(self, mes: dict) -> None:
+    async def _tag_set(self, mes: dict) -> None: # ready
         """
 
         Args:
@@ -733,23 +749,36 @@ class DataStoragesAppBase(svc.Svc):
         """
         try:
             client = redis.Redis(connection_pool=self._cache_pool)
-        except Exception as ex:
-            self._logger.error(f"Ошибка при попытке связи с кэш сервером: {ex}")
-            return
 
-        try:
             async with client.pipeline(transaction=True) as pipe:
                 for tag_data in mes["data"]["data"]:
                     tag_id = tag_data["tagId"]
-                    tag_params = self._tags[tag_id]
-                    ds_id = tag_params["ds_id"]
 
-                    pipe.json().arrappend(self._config.svc_name, f"$.data.{ds_id}.{tag_id}", *tag_data["data"])
-                res = await pipe.execute()
+                    # проверим, активен ли тег и активны ли хранилища
+                    pipe.json().get(self._cache_key, f"$.tags.{tag_id}.prsActive")
+                    pipe.json().objkeys(self._cache_key, f"$.tags.{tag_id}.dsIds")
+                    res = await pipe.execute()
 
-                self._logger.debug(
-                    f"Обновление кэша данных: {json.dumps(mes,indent=4,ensure_ascii=False)}"
-                )
+                    # если тег активен, то записываем данные в кэш
+                    if not res[0][0]:
+                        self._logger.info(f"Тег {tag_id} неактивен, данные не записываются.")
+                    else:
+                        # получим id хранилища, к которому привязан тег
+                        for ds_id in res[1][0]:
+                            # если id хранилища нет в списке обслуживаемых...
+                            # TODO: хотя, если нет хранилища в списке обслуживаемых, то и сервис не должен быть подписан на id тега...
+                            if ds_id not in self._ds_ids:
+                                self._logger.error(f"Хранилища {ds_id} нет в списке обслуживаемых.")
+                                continue
+
+                            ds_data = await pipe.json().get(self._cache_key, f"$.{ds_id}.prsActive").execute()
+                            # если хранилище активно, то записываем данные в кэш
+                            if ds_data[0][0]:
+                                await pipe.json().arrappend(self._cache_key, f"$.data.{ds_id}.{tag_id}", *tag_data["data"]).execute()
+                                self._logger.info(f"Кэш тега {tag_id} обновлён.")
+                            else:
+                                self._logger.info(f"Хранилище {ds_id} неактивно, данные тега не записываются.")
+
         except Exception as ex:
             self._logger.error(f"Ошибка обновления данных в кэше: {ex}")
         finally:
@@ -794,48 +823,94 @@ class DataStoragesAppBase(svc.Svc):
 
         return to_return
 
-    async def _prepare_tag_cache(self, tag_id: str, ds_id: str) -> dict | None:
+    async def _prepare_tag_cache(self, tag_id: str) -> dict | None: # ready
         """Функция подготовки кэша с данными о теге.
+        Если тег уже присутствует в кэше, то:
+        читаем этот кэш и добавляем в список хранилищ,
+        к которым привязан тег, новое.
+
+        Возвращаем всегда сформированный кэш целиком, независимо от того, был
+        тег в кэше или ещё нет.
+
+        Кэш для тега всегда строится на основании данных из иерархии. Текущие
+        данные в кэше не учитываются, это повышает достоверность данных в кэше.
+
+        Формат кэша:
+        {
+		    "prsActive": true,
+            "prsUpdate": true,
+		    "prsValueTypeCode": 1,
+		    "prsStep": false,
+		    "dsIds": {
+		        "<ds_id1>": {"<json из атрибута prsStore класса prsDatastorageTagData>"},
+		        "<ds_id2>": {"<json из атрибута prsStore класса prsDatastorageTagData>"}
+		    } # тег может быть привязан к нескольким хранилищам
+		}
+
         Args:
-            tag_id (str): _description_
-            ds_id (str): _description_
+            tag_id (str): id тега, для которого формируем кэш
+            ds_id (str): id хранилища
 
         Returns:
-            dict | None: _description_
+            dict | None: сформированный кэш тега
         """
+
+        # получим атрибуты тега ---------------------------
         payload = {
             "id": tag_id,
             "attributes": [
+                "prsActive",
                 "prsUpdate",
                 "prsValueTypeCode",
                 "prsStep",
-                "prsActive"]
+                "prsActive"
+            ]
         }
         res = await self._hierarchy.search(payload=payload)
         tag_attrs = res[0][2]
-        if tag_attrs["prsActive"][0] == "FALSE":
-            return None
+        # ------------------------------------------------
 
-        tag_cache = {
-            "prsUpdate": tag_attrs["prsUpdate"][0],
-            "prsValueTypeCode": tag_attrs["prsValueTypeCode"][0],
-            "prsStep": tag_attrs["prsStep"][0],
-            "dsId": ds_id
-        }
-
+        # теперь получим все хранилища и проверим для каждого, привязан ли
+        # к нему тег
         payload = {
-            "base": ds_id,
+            "base": "cn=dataStorages,cn=prs",
+            "scope": CN_SCOPE_ONELEVEL,
             "filter": {
-                "cn": tag_id
+                "objectClass": ["prsDataStorage"]
+            }
+        }
+        res = await self._hierarchy.search(payload=payload)
+        if not res:
+            self._logger.warning((
+                f"Тег {tag_id} не привязан к хранилищам, "
+                f"поэтому кэш не создан."
+            ))
+            return None
+        # ------------------------------------------------------------
+
+        # подготовим кэш тега из атрибутов ---------------------------
+        tag_cache = {
+            "prsActive": tag_attrs["prsActive"][0] == "TRUE",
+            "prsUpdate": tag_attrs["prsUpdate"][0] == "TRUE",
+            "prsValueTypeCode": int(tag_attrs["prsValueTypeCode"][0]),
+            "prsStep": tag_attrs["prsStep"][0] == "TRUE",
+            "dsIds": []
+        }
+        # пройдёмся по всем привязкам тега --------------------------
+        payload = {
+            "filter": {
+                "cn": [tag_id]
             },
             "attributes": ["prsStore"]
         }
-        res = await self._hierarchy.search(payload=payload)
-        tag_attrs = res[0][2]
-        tag_cache["prsStore"] = json.loads(tag_attrs["prsStore"][0])
+        for ds in res:
+            payload["base"] = ds[0]
+            tag_data = self._hierarchy.search(payload=payload)
+            if tag_data:
+                tag_cache["dsIds"][ds[0]] = json.loads(tag_data[0][2]["prsStore"][0])
+        # -----------------------------------------------------------
 
         return tag_cache
-
 
     async def _prepare_alert_data(self, alert_id: str, ds_id: str) -> dict | None:
         get_alert_data = {
@@ -883,10 +958,48 @@ class DataStoragesAppBase(svc.Svc):
         """
         pass
 
-    async def _build_cache(self, ds_id: str) -> None:
+    async def _set_tag_to_cache(self, tag_id: str) -> None:
+        """Регистрация тега в кэше: если тег активен
+
+        Args:
+            tag_id (str): _description_
+        """
+
         client = redis.Redis(connection_pool=self._cache_pool)
 
-        build_key = f"build: {ds_id}"
+        async with client.pipeline(transaction=True) as pipe:
+            self._logger.debug(f"Подготовка кэша тега {tag_id}.")
+            tag_cache = self._prepare_tag_cache(tag_id)
+            if not tag_cache:
+                self._logger.debug(f"Кэш пустой.")
+            else:
+                self._logger.debug(f"Запись кэша тега {tag_id}.")
+                pipe.json().set("dataStorages", f"$.tags.{tag_id}", tag_cache)
+
+            for ds_id in tag_cache["dsIds"].keys():
+                pipe.json().arrappend("dataStorages", f"$.{ds_id}", tag_id)
+
+            await pipe.execute()
+
+            self._logger.debug(f"Привязка очереди.")
+            await self._amqp_consume["queue"].bind(
+                exchange=self._amqp_consume["exchanges"]["tags"]["exchange"],
+                routing_key=tag_id
+            )
+
+        await client.aclose()
+
+    async def _build_cache(self, ds_id: str) -> None: # ready
+        """Функция построения кэша для хранилища данных.
+        Предполагается, функция вызывается из функции ``_add_supported_ds``.
+
+        Args:
+            ds_id (str): id хранилища
+        """
+
+        client = redis.Redis(connection_pool=self._cache_pool)
+
+        build_key = f"build dataStorages"
         async with client.pipeline(transaction=True) as pipe:
             await pipe.watch(build_key)
             res = await pipe.get(build_key)
@@ -897,13 +1010,20 @@ class DataStoragesAppBase(svc.Svc):
 
             if res:
                 await pipe.unwatch()
-                self._logger.info(f"Кэш для хранилища {ds_id} строится другим сервисом.")
+                self._logger.info(f"Кэш для хранилищ строится другим сервисом.")
             else:
                 self._logger.info(f"Построение кэша тегов, привязанных к хранилищу {ds_id}...")
 
                 pipe.multi()
                 await pipe.set(build_key, 1)
                 await pipe.execute()
+
+                get_ds_data = {
+                    "id": ds_id,
+                    "attributes": ["prsActive"]
+                }
+                ds_data = self._hierarchy.search(get_ds_data)
+                ds_active = ds_data[0][2]["prsActive"][0] == "TRUE"
 
                 search_tags = {
                     "base": ds_id,
@@ -913,35 +1033,18 @@ class DataStoragesAppBase(svc.Svc):
                     "attributes": ["cn"]
                 }
 
-                i = 1
-                pipe.multi()
-                pipe.json().set(ds_id, "$.{self._config.svc_name}", [])
+                await pipe.json().set("dataStorages", "$.{ds_id}",
+                    {
+                        "prsActive": ds_active,
+                        "tags": []
+                    }
+                ).execute()
                 tags_ds_data = await self._hierarchy.search(payload=search_tags)
                 for tag_ds in tags_ds_data:
-                    self._logger.debug(f"Текущий тег: {tag_ds}")
-
                     tag_id = tag_ds[2]["cn"][0]
+                    self._set_tag_to_cache(tag_id)
 
-                    self._logger.debug(f"Подготовка кэша тега {tag_id}.")
-                    tag_cache = self._prepare_tag_cache(tag_id, ds_id)
-                    if not tag_cache:
-                        self._logger.debug(f"Кэш пустой.")
-                        continue
-
-                    self._logger.debug(f"Запись кэша тега {tag_id}.")
-                    pipe.json().set(tag_id, f"$.{self._config.svc_name}.tags", tag_cache)
-                    pipe.json().arrappend(ds_id, f"$.{self._config.svc_name}", tag_id)
-
-                    self._logger.debug(f"Привязка очереди.")
-                    await self._amqp_consume["queue"].bind(
-                        exchange=self._amqp_consume["exchanges"]["tags"]["exchange"],
-                        routing_key=tag_id
-                    )
-
-                    self._logger.debug(f"Тег {tag_id} привязан ({i}).")
-                    i += 1
-
-                self._logger.info(f"Хранилище {ds_id}. Теги прочитаны.")
+                self._logger.info(f"Хранилище {ds_id}. Построение кэша тегов завершено.")
 
         await client.aclose()
 
@@ -968,7 +1071,9 @@ class DataStoragesAppBase(svc.Svc):
             _type_: _description_
         """
 
-        self._logger.debug(f"mes: {mes}")
+        # TODO: разобраться, как читать данные, если тег привязан к разным хранилищам
+
+        self._logger.debug(f"Запись данных: {mes}")
 
         tasks = {}
         for tag_id in mes["data"]["tagId"]:
