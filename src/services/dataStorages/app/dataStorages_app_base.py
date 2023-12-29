@@ -645,9 +645,17 @@ class DataStoragesAppBase(svc.Svc):
         self._logger.info(f"Тег {tag_id} отвязан от хранилища.")
 
     async def _write_cache_data(self, tag_ids: [str] = None) -> None:
-        # функция сбрасывает кэш данных тегов в базу
-        # если tag_ids - пустой список, то сбрасываются все теги из кэша
-        # иначе - только те, которые в списке
+        """Функция сбрасывает кэш данных тегов в базу
+        если tag_ids - пустой список, то сбрасываются все теги из кэша
+        иначе - только те, которые в списке.
+
+        При сбросе кэша не проверяется активность/неактивность ни тегов, ни
+        хранилищ: сам вызов этой функции может инициироваться переводом
+        тега или хранилища в неактивное состояние.
+
+        Args:
+            tag_ids (str], optional): список тегов.
+        """
 
         try:
             client = redis.Redis(connection_pool=self._cache_pool)
@@ -974,10 +982,11 @@ class DataStoragesAppBase(svc.Svc):
                 self._logger.debug(f"Кэш пустой.")
             else:
                 self._logger.debug(f"Запись кэша тега {tag_id}.")
-                pipe.json().set("dataStorages", f"$.tags.{tag_id}", tag_cache)
+                pipe.json().set(self._cache_key, f"$.tags.{tag_id}", tag_cache)
 
             for ds_id in tag_cache["dsIds"].keys():
-                pipe.json().arrappend("dataStorages", f"$.{ds_id}", tag_id)
+                pipe.json().arrappend(self._cache_key, f"$.{ds_id}", tag_id)
+                pipe.json().set(self._cache_key, f"$.{ds_id}.{tag_id}", [])
 
             await pipe.execute()
 
