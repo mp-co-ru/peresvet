@@ -3,6 +3,7 @@ import json
 import asyncio
 import numbers
 import copy
+from abc import ABC, abstractmethod
 from typing import Any, List, Tuple
 
 import redis.asyncio as redis
@@ -56,7 +57,7 @@ def linear_interpolated(start_point: Tuple[int, Any],
 
     return (x-x0)/(x1-x0)*(y1-y0)+y0
 
-class DataStoragesAppBase(svc.Svc):
+class DataStoragesAppBase(svc.Svc, ABC):
     """Базовый класс для хранилищ данных.
     Реализует общую логику: работа с кэшем, поддержка нескольких экземпляров
     хранилища одного типа и т.д.
@@ -640,6 +641,7 @@ class DataStoragesAppBase(svc.Svc):
 
         self._logger.info(f"Тег {tag_id} отвязан от хранилища.")
 
+    @abstractmethod
     async def _write_tag_data_to_db(
             self, tag_id: str, ds_id: str,
             update: bool, value_type_code: int,
@@ -1604,7 +1606,3 @@ class DataStoragesAppBase(svc.Svc):
         if finish:
             return tag_data[-count:]
         return tag_data
-
-settings = DataStoragesAppBaseSettings()
-
-app = DataStoragesAppBase(settings=settings, title="DataStoragesAppBase")

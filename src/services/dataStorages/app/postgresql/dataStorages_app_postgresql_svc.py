@@ -14,6 +14,7 @@ import time
 sys.path.append(".")
 
 from src.services.dataStorages.app.postgresql.dataStorages_app_postgresql_settings import DataStoragesAppPostgreSQLSettings
+from src.services.dataStorages.app.dataStorages_app_base import DataStoragesAppBase
 from src.common import svc
 import src.common.times as t
 from src.common.consts import (
@@ -56,7 +57,7 @@ def linear_interpolated(start_point: Tuple[int, Any],
 
     return (x-x0)/(x1-x0)*(y1-y0)+y0
 
-class DataStoragesAppPostgreSQL(svc.Svc):
+class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
     def __init__(
             self, settings: DataStoragesAppPostgreSQLSettings, *args, **kwargs
@@ -497,92 +498,44 @@ class DataStoragesAppPostgreSQL(svc.Svc):
 
         self._logger.info(f"Тег {tag_id} отвязан от хранилища.")
 
-    async def _write_cache_data(self, tag_ids: [str] = None) -> None:
-        # функция сбрасывает кэш данных тегов в базу
-        # если tag_ids - пустой список, то сбрасываются все теги из кэша
-        # иначе - только те, которые в списке
+    async def _write_tag_data_to_db(
+            self, tag_id: str, ds_id: str,
+            update: bool, value_type_code: int,
+            step: bool, store: dict,
+            data: List[tuple]) -> None :
 
+        # метод, переопределяемый в классах-потомках
+        # записывает данные одного тега в хранилище
+        self._logger.debug(f"Запись данных тега '{tag_id}' из кэша в базу '{ds_id}'...")
+        connection_pool = self._connection_pools[ds_id]
         try:
-            client = redis.Redis(connection_pool=self._cache_pool)
+            async with connection_pool.acquire() as conn:
+                tag_tbl = store["table"]
 
-            async with client.pipeline(transaction=True) as pipe:
-                pipe.json().objkeys(
-                    self._config.svc_name,
-                    f"$.tags"
-                )
-                res = await pipe.execute()
-                cache_tags = res[0][0]
-                tags_to_push = cache_tags
-                if tag_ids:
-                    set_cache_tags = set(tags_to_push)
-                    set_tag_ids = set(tag_ids)
-                    tags_to_push = list(set_cache_tags & set_tag_ids)
-                    set_tags_to_push = set(tags_to_push)
-                    unprocess_tags = list(set_tag_ids & set_tags_to_push)
-                    if unprocess_tags:
-                        self._logger.warning(f"Теги {unprocess_tags} отсутствуют в кэше {self._config.svc_name}.")
+                if data:
+                    async with conn.transaction(isolation='read_committed'):
+                        if update:
+                            xs = [str(x) for _, x, _ in data]
+                            q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
+                            await conn.execute(q)
+                        if value_type_code == 4:
+                            new_data = []
+                            for item in data:
+                                new_data.append(
+                                    (json.dumps(item[0], ensure_ascii=False), item[1], item[2])
+                                )
+                            data = new_data
 
-                if not tags_to_push:
-                    self._logger.info(f"Отсутствие тегов, данные которых должны быть записаны в хранилище.")
-                    return
+                        await conn.copy_records_to_table(
+                            tag_tbl,
+                            records=data,
+                            columns=('y', 'x', 'q'))
+                    self._logger.debug(f"В базу {ds_id} для тега {tag_id} записано {len(data)} точек.")
+                else:
+                    self._logger.debug(f"Для тега {tag_id} в кэше нет данных.")
 
-                for tag_id in tags_to_push:
-                    pipe.json().get(
-                        self._config.svc_name,
-                        f"$.tags.{tag_id}"
-                    )
-
-                res_tags_params = await pipe.execute()
-                for tag_params in res_tags_params[0]:
-                    ds_id = tag_params["ds_id"]
-
-                    connection_pool = self._connection_pools[ds_id]
-                    try:
-                        async with connection_pool.acquire() as conn:
-                            pipe.multi()
-                            pipe.json().get(self._config.svc_name, f"$.data.{ds_id}.{tag_id}")
-                            pipe.json().delete(self._config.svc_name, f"$.data.{ds_id}.{tag_id}")
-                            res = await pipe.execute()
-
-
-
-        for ds_id, tags in self._data_cache.items():
-            self._logger.info(f"Запись данных из кэша в базу {ds_id}...")
-            connection_pool = self._connection_pools[ds_id]
-            try:
-                async with connection_pool.acquire() as conn:
-                    for tag_id, data in tags.items():
-                        tag_params = self._tags[tag_id]
-                        tag_tbl = tag_params["table"]
-
-                        if data:
-                            async with conn.transaction(isolation='read_committed'):
-                                if tag_params["update"]:
-                                    xs = [str(x) for _, x, _ in data]
-                                    q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
-                                    await conn.execute(q)
-                                if tag_params["value_type"] == 4:
-                                    new_data = []
-                                    for item in data:
-                                        new_data.append(
-                                            (json.dumps(item[0], ensure_ascii=False), item[1], item[2])
-                                        )
-                                    data = new_data
-
-                                await conn.copy_records_to_table(
-                                    tag_tbl,
-                                    records=data,
-                                    columns=('y', 'x', 'q'))
-                            self._logger.debug(f"В базу {ds_id} для тега {tag_id} записано {len(data)} точек.")
-                            tags[tag_id] = []
-                        else:
-                            self._logger.debug(f"Для тега {tag_id} в кэше нет данных.")
-
-            except Exception as ex:
-                self._logger.error(f"Ошибка записи данных в базу {ds_id}: {ex}")
-
-        loop = asyncio.get_event_loop()
-        loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))
+        except Exception as ex:
+            self._logger.error(f"Ошибка записи данных в базу {ds_id}: {ex}")
 
     async def _tag_set(self, mes: dict) -> None:
         """
@@ -709,7 +662,6 @@ class DataStoragesAppPostgreSQL(svc.Svc):
         """
         return await apg.create_pool(dsn=config["dsn"])
 
-    """
     async def _connect_to_db(self) -> None:
         if not self._config.datastorages_id:
             ds_node_id = await self._hierarchy.get_node_id("cn=dataStorages,cn=prs")
@@ -842,8 +794,6 @@ class DataStoragesAppPostgreSQL(svc.Svc):
                 i += 1
 
             self._logger.info(f"Хранилище {ds[0]}. Тревоги прочитаны.")
-
-    """
 
     async def on_startup(self) -> None:
         await super().on_startup()

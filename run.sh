@@ -3,6 +3,8 @@
 # в первом аргументе в командной строке можно передавать параметры
 # команды compose up.
 
+#-f docker/compose/docker-compose.grafana.yml \
+
 back=""
 if [ -n "$1" ]
 then
@@ -21,5 +23,4 @@ docker compose $back --env-file docker/compose/.cont_all_in_one.env \
 -f docker/compose/docker-compose.nginx.yml \
 -f docker/compose/docker-compose.connectors.all.yml \
 -f docker/compose/docker-compose.retranslator.yml \
--f docker/compose/docker-compose.grafana.yml \
 up

@@ -71,4 +71,4 @@ services:
         - methods_all
         - tags_all
         - schedules_all
-        - grafana
+        #- grafana

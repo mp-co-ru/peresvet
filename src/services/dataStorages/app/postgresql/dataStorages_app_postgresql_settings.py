@@ -1,7 +1,7 @@
 from typing import List
-from src.common.svc_settings import SvcSettings
+from src.services.dataStorages.app.dataStorages_app_base_settings import DataStoragesAppBaseSettings
 
-class DataStoragesAppPostgreSQLSettings(SvcSettings):
+class DataStoragesAppPostgreSQLSettings(DataStoragesAppBaseSettings):
     #: имя сервиса
     svc_name: str = "dataStorages_app_postgresql"
     #: строка коннекта к RabbitMQ
