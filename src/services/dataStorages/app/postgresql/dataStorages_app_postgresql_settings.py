@@ -66,4 +66,4 @@ class DataStoragesAppPostgreSQLSettings(DataStoragesAppBaseSettings):
     # периодичность накопления кэша данных, секунды
     cache_data_period: int = 30
 
-    redis_url: str = "redis://redis:6379?decode_responses=True&protocol=3"
+    cache_url: str = "redis://redis:6379?decode_responses=True&protocol=3"

@@ -157,34 +157,37 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
         payload = {
             "id": [ds_id],
-            "attributes": ["prsJsonConfigString"]
+            "attributes": ["prsJsonConfigString", "prsActive"]
         }
         ds = await self._hierarchy.search(payload=payload)
-        if ds[2]["prsActive"][0] == "TRUE":
-            self._logger.info(f"Чтение данных о хранилище {ds[0]}...")
+        if ds[0][2]["prsActive"][0] == "TRUE":
+            self._logger.info(f"Чтение данных о хранилище {ds[0][0]}...")
 
             connected = False
             while not connected:
                 try:
-                    self._connection_pools[ds[0]] = await self._create_connection_pool(json.loads(ds[2]["prsJsonConfigString"][0]))
-                    self._logger.info(f"Связь с базой данных {ds[0]} установлена.")
+                    self._connection_pools[ds[0]] = await self._create_connection_pool(json.loads(ds[0][2]["prsJsonConfigString"][0]))
+                    self._logger.info(f"Связь с базой данных {ds[0][0]} установлена.")
                     connected = True
                 except Exception as ex:
-                    self._logger.error(f"Ошибка связи с базой данных '{ds[0]}': {ex}")
+                    self._logger.error(f"Ошибка связи с базой данных '{ds[0][0]}': {ex}")
                     await asyncio.sleep(5)
 
-        self._build_cache(ds[0])
+        self._build_cache(ds[0][0])
 
         # добавим в список поддерживаемых хранилищ новое
-        self._ds_ids.append(ds[0])
+        self._ds_ids.append(ds[0][0])
         await self._amqp_consume["queue"].bind(
             exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
-            routing_key=ds[0]
+            routing_key=ds[0][0]
         )
 
     async def on_startup(self) -> None:
 
         await super().on_startup()
+
+        print("Startuped.")
+
         try:
             self._cache_pool = redis.ConnectionPool.from_url(self._config.cache_url)
 
@@ -212,7 +215,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
             dss = await self._hierarchy.search(payload=payload)
             for ds in dss:
-                self._add_supported_ds(ds[0])
+                await self._add_supported_ds(ds[0])
 
             loop = asyncio.get_event_loop()
             loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))

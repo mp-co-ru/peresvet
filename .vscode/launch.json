@@ -18,11 +18,11 @@
             "justMyCode": true
         },
         {
-            "name": "MPC_DEBUG: 5859 model_crud",
+            "name": "MPC_DEBUG: de24 app_psql",
             "type": "python",
             "request": "attach",
             "connect": {
-                "host": "172.27.0.3",
+                "host": "172.18.0.7",
                 "port": 5678
             },
             "pathMappings": [
@@ -34,11 +34,11 @@
             "justMyCode": true
         },
         {
-            "name": "MPC_DEBUG: 44ab app",
+            "name": "MPC_DEBUG: a35b6 app_psql",
             "type": "python",
             "request": "attach",
             "connect": {
-                "host": "172.27.0.11",
+                "host": "172.18.0.11",
                 "port": 5678
             },
             "pathMappings": [
@@ -50,11 +50,11 @@
             "justMyCode": true
         },
         {
-            "name": "MPC_DEBUG: dd84 app",
+            "name": "MPC_DEBUG: e2046 app_psql",
             "type": "python",
             "request": "attach",
             "connect": {
-                "host": "172.27.0.2",
+                "host": "172.18.0.5",
                 "port": 5678
             },
             "pathMappings": [
@@ -66,11 +66,11 @@
             "justMyCode": true
         },
         {
-            "name": "MPC_DEBUG: cdd1 app_psql",
+            "name": "MPC_DEBUG: f11c8 app_psql",
             "type": "python",
             "request": "attach",
             "connect": {
-                "host": "172.27.0.5",
+                "host": "172.18.0.6",
                 "port": 5678
             },
             "pathMappings": [
@@ -82,11 +82,27 @@
             "justMyCode": true
         },
         {
-            "name": "MPC_DEBUG: b354 app_psql",
+            "name": "MPC_DEBUG: b324 app_psql",
             "type": "python",
             "request": "attach",
             "connect": {
-                "host": "172.27.0.8",
+                "host": "172.18.0.10",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "."
+                }
+            ],
+            "justMyCode": true
+        },
+        {
+            "name": "MPC_DEBUG: 38b0 app_psql",
+            "type": "python",
+            "request": "attach",
+            "connect": {
+                "host": "172.18.0.4",
                 "port": 5678
             },
             "pathMappings": [

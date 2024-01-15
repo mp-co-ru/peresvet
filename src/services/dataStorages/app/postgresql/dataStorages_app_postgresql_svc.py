@@ -64,12 +64,9 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         ):
         super().__init__(settings, *args, **kwargs)
 
-        self._connection_pools = {}
         self._tags = {}
         self._alerts = {}
         self._data_cache = {}
-
-        self._cache_pool = redis.ConnectionPool.from_url(self._config.redis_url)
 
     def _set_incoming_commands(self) -> dict:
         return {
@@ -661,151 +658,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             config (dict): _description_
         """
         return await apg.create_pool(dsn=config["dsn"])
-
-    async def _connect_to_db(self) -> None:
-        if not self._config.datastorages_id:
-            ds_node_id = await self._hierarchy.get_node_id("cn=dataStorages,cn=prs")
-            payload = {
-                "base": ds_node_id,
-                "filter": {
-                    "prsEntityTypeCode": [self._config.datastorage_type],
-                    "objectClass": ["prsDataStorage"]
-                }
-            }
-        else:
-            payload = {
-                "id": self._config.datastorages_id
-            }
-            # если указаны конкретные id хранилищ, которые надо обслуживать,
-            # то отменяем базовую привязку очереди прослушивания
-            await self._amqp_consume["queue"].unbind(
-                    exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
-                    routing_key=self._config.consume["exchanges"]["main"]["routing_key"][0]
-                )
-
-        payload["attributes"] = ["prsJsonConfigString"]
-
-        dss = await self._hierarchy.search(payload=payload)
-        for ds in dss:
-            await self._amqp_consume["queue"].bind(
-                exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
-                routing_key=ds[0]
-            )
-
-            self._logger.info(f"Чтение данных о хранилище {ds[0]}...")
-
-            connected = False
-            while not connected:
-                try:
-                    self._connection_pools[ds[0]] = await self._create_connection_pool(json.loads(ds[2]["prsJsonConfigString"][0]))
-                    self._logger.info(f"Связь с базой данных {ds[0]} установлена.")
-                    connected = True
-                except Exception as ex:
-                    self._logger.error(f"Ошибка связи с базой данных '{ds[0]}': {ex}")
-                    await asyncio.sleep(5)
-
-            search_tags = {
-                "base": ds[0],
-                "filter": {
-                    "objectClass": ["prsDatastorageTagData"]
-                },
-                "attributes": ["prsStore", "cn"]
-            }
-
-            self._logger.info("Чтение тегов, привязанных к хранилищу...")
-
-            self._data_cache[ds[0]] = {}
-
-            i = 1
-            #async for tag in self._hierarchy.search(payload=search_tags):
-            tags = await self._hierarchy.search(payload=search_tags)
-            for tag in tags:
-                self._logger.debug(f"Текущий тег: {tag}")
-
-                '''
-                if not tag[0]:
-                    continue
-                '''
-
-                t1 = time.time()
-
-                tag_id = tag[2]["cn"][0]
-
-                self._logger.debug(f"Подготовка кэша тега.")
-                tag_cache = json.loads(tag[2]["prsStore"][0])
-                if not tag_cache:
-                    self._logger.debug(f"Кэш пустой.")
-                    continue
-
-                self._logger.debug(f"Сохранение кэша тега.")
-                tag_cache["ds"] = self._connection_pools[ds[0]]
-                tag_cache["ds_id"] = ds[0]
-                self._tags[tag_id] = tag_cache
-
-                self._data_cache[ds[0]][tag_id] = []
-
-                self._logger.debug(f"Привязка очереди.")
-                await self._amqp_consume["queue"].bind(
-                    exchange=self._amqp_consume["exchanges"]["tags"]["exchange"],
-                    routing_key=tag_id
-                )
-
-                self._logger.debug(f"Тег {tag_id} привязан ({i}). Время: {time.time() - t1}")
-                i += 1
-
-            self._logger.info(f"Хранилище {ds[0]}. Теги прочитаны.")
-
-            search_alerts = {
-                "base": ds[0],
-                "filter": {
-                    "objectClass": ["prsDatastorageAlertData"]
-                },
-                "attributes": ["prsStore", "cn"]
-            }
-
-            self._logger.info("Чтение тревог, привязанных к хранилищу...")
-
-            #async for alert in self._hierarchy.search(payload=search_alerts):
-            alerts = await self._hierarchy.search(payload=search_alerts)
-            for alert in alerts:
-                self._logger.debug(f"Текущая тревога: {alert}")
-
-                t1 = time.time()
-
-                alert_id = alert[2]["cn"][0]
-
-                self._logger.debug(f"Подготовка кэша тревоги.")
-                alert_cache = json.loads(alert[2]["prsStore"][0])
-                if not alert_cache:
-                    self._logger.debug(f"Кэш пустой.")
-                    continue
-
-                self._logger.debug(f"Сохранение кэша тревоги.")
-                alert_cache["ds"] = self._connection_pools[ds[0]]
-                self._alerts[alert_id] = alert_cache
-
-                self._logger.debug(f"Привязка очереди.")
-                await self._amqp_consume["queue"].bind(
-                    exchange=self._amqp_consume["exchanges"]["alerts"]["exchange"],
-                    routing_key=alert_id
-                )
-
-                self._logger.debug(f"Тревога {alert_id} привязана ({i}). Время: {time.time() - t1}")
-                i += 1
-
-            self._logger.info(f"Хранилище {ds[0]}. Тревоги прочитаны.")
-
-    async def on_startup(self) -> None:
-        await super().on_startup()
-        try:
-            await self._connect_to_db()
-
-            loop = asyncio.get_event_loop()
-            loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))
-
-            #await asyncio.gather(asyncio.create_task())
-        except Exception as ex:
-            self._logger.error(f"Ошибка связи с базой данных: {ex}")
 
     async def _tag_get(self, mes: dict) -> dict:
         """_summary_

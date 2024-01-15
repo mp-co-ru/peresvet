@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   nginx:
-      hostname: nginx
+      hostname: ${NGINX_HOST}
       build:
         context: ../..
         dockerfile: docker/docker-files/nginx/Dockerfile.nginx
