@@ -3,7 +3,6 @@
 """
 import json
 import asyncio
-import time
 import uvloop
 from functools import cached_property
 from uuid import uuid4

@@ -205,15 +205,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
     async def _link_tag(self, payload: dict) -> None:
         """Метод привязки тега к хранилищу.
 
-        Логика работы метода: предполагаем, что тег может быть привязан только
-        к одному хранилищу (может, есть смысл в привязке тега сразу к
-        нескольким хранилищам, чтобы данные писались одновременно в разные
-        хранилища; только тут возникает вопрос: при чтении данных, из
-        какого хранилища эти данные брать).
-
-        Если тег уже привязан к какому-либо хранилищу (ищем ссылку на этот тег
-        в иерархии ``cn=dataStorages,cn=prs``\), то сначала отвязываем тег от
-        предыдущего хранилища, затем привязываем к новому.
+        Метод создаёт новый узел в списке тегов хранилища.
 
         Args:
             payload (dict): {
@@ -235,8 +227,6 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                 )
                 return
             payload["dataStorageId"] = datastorage_id
-
-        await self._unlink_tag(payload["tagId"])
 
         # res = {
         #   "prsStore": {...}

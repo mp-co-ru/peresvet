@@ -2,7 +2,7 @@ version: '3.9'
 services:
   rabbitmq:
     image: rabbitmq:3.11.16-management
-    hostname: rabbitmq
+    hostname: ${HOST_RABBIT}
     volumes:
       - ../docker-files/rabbitmq/enabled_plugins/:/etc/rabbitmq/enabled_plugins:rw
     environment:

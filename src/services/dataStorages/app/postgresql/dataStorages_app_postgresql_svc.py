@@ -9,13 +9,16 @@ import redis.asyncio as redis
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 import numpy as np
-import time
+
+try:
+    import uvicorn
+except ModuleNotFoundError as _:
+    pass
 
 sys.path.append(".")
 
 from src.services.dataStorages.app.postgresql.dataStorages_app_postgresql_settings import DataStoragesAppPostgreSQLSettings
 from src.services.dataStorages.app.dataStorages_app_base import DataStoragesAppBase
-from src.common import svc
 import src.common.times as t
 from src.common.consts import (
     CNTagValueTypes as TVT,
@@ -62,6 +65,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
     def __init__(
             self, settings: DataStoragesAppPostgreSQLSettings, *args, **kwargs
         ):
+
         super().__init__(settings, *args, **kwargs)
 
         self._tags = {}
@@ -76,7 +80,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             "alerts.alarmAcked": self._alarm_ack,
             "alerts.alarmOn": self._alarm_on,
             "alerts.alarmOff": self._alarm_off,
-            "dataStorages.linkTag": self._link_tag,
+            "dataStorages.linkTag": self.link_tag,
             "dataStorages.unlinkTag": self._unlink_tag,
             "dataStorages.linkAlert": self._link_alert,
             "dataStorages.unlinkTag": self._unlink_alert,
@@ -250,7 +254,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
     async def _reject_message(self, mes: dict) -> bool:
         return False
 
-    async def _link_tag(self, mes: dict) -> dict:
+    async def link_tag(self, mes: dict) -> dict:
         """Метод привязки тега к хранилищу.
         Атрибут ``prsStore`` должен быть вида
         ``{"tableName": "<some_table>"}`` либо отсутствовать
@@ -1232,3 +1236,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 settings = DataStoragesAppPostgreSQLSettings()
 
 app = DataStoragesAppPostgreSQL(settings=settings, title="DataStoragesAppPostgreSQL")
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
