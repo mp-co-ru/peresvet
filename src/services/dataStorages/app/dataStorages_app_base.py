@@ -68,18 +68,18 @@ class DataStoragesAppBase(svc.Svc, ABC):
     Класс реализует кэш json-вида.
 
     "<service_name>:<tag_id1>": {
-	"prsActive": true,
-	"prsUpdate": true,
-	"prsValueTypeCode": 1,
-	"prsStep": false,
-	"prsStore": {}
-},
-"<service_name>": {
-	"<tag_id1>": {
-		"dsIds": ["<ds_id1>", "<ds_id2>"],
-		"data": [(y, x, q)]
-	}
-}
+        "prsActive": true,
+        "prsUpdate": true,
+        "prsValueTypeCode": 1,
+        "prsStep": false,
+        "prsStore": {}
+    },
+    "<service_name>": {
+        "<tag_id1>": {
+            "dsIds": ["<ds_id1>", "<ds_id2>"],
+            "data": [(y, x, q)]
+        }
+    }
 
 1) Кэш тегов строится по мере того, как происходит обращение
     записи/чтения к тегу
