@@ -387,7 +387,7 @@ class ModelCRUDSvc(Svc):
             for future in done:
                 res = future.result()
                 if res["response"] != "ok":
-                    self._logger.info(
+                    self._logger.warning(
                         f"Нельзя обновить узел {mes_data['id']}. "
                         f"Отрицательный ответ от {future.get_name()}: {res['message']}"
                     )

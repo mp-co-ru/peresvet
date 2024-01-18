@@ -87,6 +87,37 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             "dataStorages.unlinkTag": self._updated,
         }
 
+    async def _create_store_name_for_new_tag(self,
+            ds_id: str, tag_id: str) -> dict | None:
+        """Метод, создающий имя для нового места хранения данных тега.
+
+        Args:
+            ds_id (str): id хранилища
+            tag_id (_type_): id тега
+
+        Returns:
+            dict: json с описанием хранилища тега
+        """
+        return {
+            "table": f"t_{tag_id}"
+        }
+
+    async def _check_store_name_for_new_tag(self, store: dict) -> bool:
+        """Метод проверяет на корректность имя хранилища для нового тега,
+        переданное клиентом.
+
+        Args:
+            store (dict): новое хранилище для тега
+
+        Returns:
+            bool: флаг корректности нового имени
+        """
+        pass
+
+    async def _create_store_for_tag(self, store: dict) -> None:
+        pass
+
+
     async def _updated(self, mes: dict) -> None:
         pass
 
