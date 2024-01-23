@@ -184,7 +184,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
         payload = {
             "base": ds_id,
             "filter": {
-                "objectClass": ["prsDatastorageTagData"]yhhgvb
+                "objectClass": ["prsDatastorageTagData"]
             },
             "attributes": ["cn`"]
         }

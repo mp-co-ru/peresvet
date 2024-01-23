@@ -280,16 +280,10 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         """Факт пропадания тревоги.
 
         Args:
-            mes (dict): {
-                "action": "alerts.alrmOff",
-                "data": {
-                    "alertId": "alert_id",
-                    "x": 123
-                }
-            }
+            mes (dict): {"action": "alerts.alrmOff", "data": {"alertId": "alert_id", "x": 123}}
+
         """
         self._logger.debug(f"Обработка пропадания тревоги: {mes}")
-
         alert_id = mes["data"]["alertId"]
 
         alert_params = self._alerts.get(alert_id)
