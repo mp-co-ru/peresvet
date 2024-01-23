@@ -74,17 +74,17 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
     def _set_incoming_commands(self) -> dict:
         return {
-            "tags.downloadData": self._tag_get,
-            "tags.uploadData": self._tag_set,
+            "tags.downloadData": self.tag_get,
+            "tags.uploadData": self.tag_set,
             #"alerts.getAlarms": self._get_alarms,
-            "alerts.alarmAcked": self._alarm_ack,
-            "alerts.alarmOn": self._alarm_on,
-            "alerts.alarmOff": self._alarm_off,
+            "alerts.alarmAcked": self.alarm_ack,
+            "alerts.alarmOn": self.alarm_on,
+            "alerts.alarmOff": self.alarm_off,
             "dataStorages.linkTag": self.link_tag,
-            "dataStorages.unlinkTag": self._unlink_tag,
-            "dataStorages.linkAlert": self._link_alert,
-            "dataStorages.unlinkTag": self._unlink_alert,
-            "dataStorages.unlinkTag": self._updated,
+            "dataStorages.unlinkTag": self.unlink_tag,
+            "dataStorages.linkAlert": self.link_alert,
+            "dataStorages.unlinkTag": self.unlink_alert,
+            "dataStorages.unlinkTag": self.updated,
         }
 
     async def _create_store_name_for_new_tag(self,
@@ -112,16 +112,63 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         Returns:
             bool: флаг корректности нового имени
         """
+        return bool(store.get("table"))
+
+    async def _create_store_for_tag(self, tag_id: str, ds_id: str, store: dict) -> None:
+        try:
+            async with self._connection_pools[ds_id].acquire() as conn:
+                tbl_name = store["table"]
+                await conn.execute(
+                    f'drop table if exists "{tbl_name}"'
+                )
+
+                payload = {
+                    "id": tag_id,
+                    "attributes": ["prsValueTypeCode"]
+                }
+                res = await self._hierarchy.search(payload=payload)
+                if not res:
+                    self._logger.error(f"Нет данных по тегу {tag_id}")
+                    return
+
+                value_type = int(res[0][2]["prsValueTypeCode"][0])
+
+                match value_type:
+                    case TVT.CN_INT:
+                        s_type = "bigint"
+                    case TVT.CN_DOUBLE:
+                        s_type = "double precision"
+                    case TVT.CN_STR:
+                        s_type = "text"
+                    case TVT.CN_JSON:
+                        s_type = "jsonb"
+                    case _:
+                        er_str = f"Тег: {tag_id}; неизвестный тип данных: {value_type}"
+                        self._logger.error(er_str)
+                        return
+
+                query = (f'CREATE TABLE public."{tbl_name}" ('
+                        f'"id" serial primary key,'
+                        f'"x" bigint NOT NULL,'
+                        f'"y" {s_type},'
+                        f'"q" int);'
+                        # Создание индекса на поле "метка времени" ("ts")
+                        f'CREATE INDEX "{tbl_name}_idx" ON public."{tbl_name}" '
+                        f'USING btree ("x");')
+
+                if value_type == 4:
+                    query += (f'CREATE INDEX "{tbl_name}_json__idx" ON public."{tbl_name}" '
+                                'USING gin ("y" jsonb_path_ops);')
+
+                await conn.execute(query)
+
+        except Exception as ex:
+            self._logger.error(f"Ошибка обновления данных в кэше: {ex}")
+
+    async def updated(self, mes: dict) -> None:
         pass
 
-    async def _create_store_for_tag(self, store: dict) -> None:
-        pass
-
-
-    async def _updated(self, mes: dict) -> None:
-        pass
-
-    async def _alarm_on(self, mes: dict) -> None:
+    async def alarm_on(self, mes: dict) -> None:
         """Факт возникновения тревоги.
 
         Args:
@@ -176,7 +223,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         except PostgresError as ex:
             self._logger.error(f"Ошибка при записи данных тревоги {alert_id}: {ex}")
 
-    async def _alarm_ack(self, mes: dict) -> None:
+    async def alarm_ack(self, mes: dict) -> None:
         """Факт квитирования тревоги.
 
         Args:
@@ -229,7 +276,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         except PostgresError as ex:
             self._logger.error(f"Ошибка при записи данных тревоги {alert_id}: {ex}")
 
-    async def _alarm_off(self, mes: dict) -> None:
+    async def alarm_off(self, mes: dict) -> None:
         """Факт пропадания тревоги.
 
         Args:
@@ -285,120 +332,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
     async def _reject_message(self, mes: dict) -> bool:
         return False
 
-    async def link_tag(self, mes: dict) -> dict:
-        """Метод привязки тега к хранилищу.
-        Атрибут ``prsStore`` должен быть вида
-        ``{"tableName": "<some_table>"}`` либо отсутствовать
-
-        Args:
-            mes (dict): {
-                "action": "dataStorages.linkTag",
-                "data": {
-                    "tagId": "tag_id",
-                    "dataStorageId": "ds_id",
-                    "attributes": {
-                        "prsStore": {"tableName": "<some_table>"}
-                    }
-                }
-
-        """
-
-        cache_for_store = {}
-        tag_id = mes["data"]["tagId"]
-        ds_id = mes["data"]["dataStorageId"]
-
-        async with self._connection_pools[ds_id].acquire() as conn:
-
-            if not mes["data"]["attributes"].get("prsStore"):
-                mes["data"]["attributes"]["prsStore"] = \
-                    {"tableName": f't_{tag_id}'}
-
-            try:
-                client = redis.Redis(connection_pool=self._cache_pool)
-
-                async with client.pipeline(transaction=True) as pipe:
-                    pipe.json().get(
-                        self._config.svc_name,
-                        f"$.tags.{tag_id}"
-                    )
-
-                    res = await pipe.execute()
-                    tag_params = res[0][0]
-
-                    if tag_params:
-                        tbl_name = tag_params['table']
-                        if mes["data"]["attributes"]["prsStore"]["tableName"] == tbl_name:
-                            self._logger.warning(f"Тег {tag_id} уже привязан")
-                            return
-
-                        await conn.execute(
-                            f'drop table if exists "{tbl_name}"'
-                        )
-
-                    tbl_name = mes["data"]["attributes"]["prsStore"]["tableName"]
-
-                    tag_cache = await self._prepare_tag_data(
-                        tag_id,
-                        mes["data"][ds_id]
-                    )
-                    tag_cache["table"] = tbl_name
-                    cache_for_store = copy.deepcopy(tag_cache)
-
-                    #tag_cache["ds"] = self._connection_pools[ds_id]
-                    tag_cache["ds"] = ds_id
-                    match tag_cache["value_type"]:
-                        case TVT.CN_INT:
-                            s_type = "bigint"
-                        case TVT.CN_DOUBLE:
-                            s_type = "double precision"
-                        case TVT.CN_STR:
-                            s_type = "text"
-                        case TVT.CN_JSON:
-                            s_type = "jsonb"
-                        case _:
-                            er_str = f"Тег: {tag_id}; неизвестный тип данных: {tag_cache['value_type']}"
-                            self._logger.error(er_str)
-                            return
-
-                    query = (f'CREATE TABLE public."{tag_cache["table"]}" ('
-                            f'"id" serial primary key,'
-                            f'"x" bigint NOT NULL,'
-                            f'"y" {s_type},'
-                            f'"q" int);'
-                            # Создание индекса на поле "метка времени" ("ts")
-                            f'CREATE INDEX "{tag_cache["table"]}_idx" ON public."{tag_cache["table"]}" '
-                            f'USING btree ("x");')
-
-                    if tag_cache["value_type"] == 4:
-                        query += (f'CREATE INDEX "{tag_cache["table"]}_json__idx" ON public."{tag_cache["table"]}" '
-                                    'USING gin ("y" jsonb_path_ops);')
-
-                    await conn.execute(query)
-
-                    async with client.pipeline(transaction=True) as pipe:
-                        pipe.json().set(
-                            self._config.svc_name,
-                            f"$.data.tags.{tag_id}", tag_cache
-                        )
-                        res = await pipe.execute()
-
-                        if not res[0]:
-                            self._logger.error(f"Ошибка обновления кэша тега {tag_id}.")
-
-                        self._logger.debug(
-                            f"Обновление кэша данных: {json.dumps(mes,indent=4,ensure_ascii=False)}"
-                        )
-
-            except Exception as ex:
-                self._logger.error(f"Ошибка обновления данных в кэше: {ex}")
-            finally:
-                await client.aclose()
-
-        return {
-            "prsStore": json.dumps(cache_for_store)
-        }
-
-    async def _link_alert(self, mes: dict) -> dict:
+    async def link_alert(self, mes: dict) -> dict:
         """Метод привязки тревоги к хранилищу.
         Атрибут ``prsStore`` должен быть вида
         ``{"tableName": "<some_table>"}`` либо отсутствовать
@@ -462,7 +396,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             "prsStore": json.dumps(cache_for_store)
         }
 
-    async def _unlink_alert(self, mes: dict) -> None:
+    async def unlink_alert(self, mes: dict) -> None:
         """_summary_
 
         Args:
@@ -486,7 +420,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
         self._logger.info(f"Тревога {mes['data']['alertId']} отвязана от хранилища.")
 
-    async def _unlink_tag(self, mes: dict) -> None:
+    async def unlink_tag(self, mes: dict) -> None:
         """_summary_
 
         Args:
@@ -531,45 +465,64 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         self._logger.info(f"Тег {tag_id} отвязан от хранилища.")
 
     async def _write_tag_data_to_db(
-            self, tag_id: str, ds_id: str,
-            update: bool, value_type_code: int,
-            step: bool, store: dict,
-            data: List[tuple]) -> None :
+            self, tag_id: str) -> None :
 
         # метод, переопределяемый в классах-потомках
         # записывает данные одного тега в хранилище
-        self._logger.debug(f"Запись данных тега '{tag_id}' из кэша в базу '{ds_id}'...")
-        connection_pool = self._connection_pools[ds_id]
+        self._logger.debug(f"Запись данных тега '{tag_id}' из кэша в хранилища...")
+
         try:
-            async with connection_pool.acquire() as conn:
-                tag_tbl = store["table"]
+            client = redis.Redis(connection_pool=self._cache_pool)
+            # добавим ключ "svc_name:ds_id": {}
+            async with client.pipeline() as pipe:
+                pipe.json().get(f"{self._config.svc_name}:{tag_id}", "$")
+                pipe.json().set(f"{self._config.svc_name}:{tag_id}", "$.data", [])
+                tag_cache = await pipe.execute()
 
-                if data:
-                    async with conn.transaction(isolation='read_committed'):
-                        if update:
-                            xs = [str(x) for _, x, _ in data]
-                            q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
-                            await conn.execute(q)
-                        if value_type_code == 4:
-                            new_data = []
-                            for item in data:
-                                new_data.append(
-                                    (json.dumps(item[0], ensure_ascii=False), item[1], item[2])
-                                )
-                            data = new_data
+                if not tag_cache[0][0]["data"]:
+                    self._logger.info(f"Кэш данных тега {tag_id} пустой.")
+                    return
 
-                        await conn.copy_records_to_table(
-                            tag_tbl,
-                            records=data,
-                            columns=('y', 'x', 'q'))
-                    self._logger.debug(f"В базу {ds_id} для тега {tag_id} записано {len(data)} точек.")
-                else:
-                    self._logger.debug(f"Для тега {tag_id} в кэше нет данных.")
+                for ds_id in tag_cache[0][0]["dss"].keys():
+                    active = await pipe.json().get(
+                        f"{self._config.svc_name}:{ds_id}", "$.prsActive"
+                    ).execute()
+                    if active[0] is None:
+                        self._logger.error(
+                            f"Несоответствие кэша тега {tag_id} c кэшем хранилища {ds_id}")
+                        continue
+
+                    # если хранилище неактивно, данные в него не записываем
+                    if not active[0][0]["prsActive"]:
+                        continue
+
+                    async with self._connection_pools[ds_id].acquire() as conn:
+                        tag_tbl = tag_cache[0][0]["dss"][ds_id]["table"]
+
+                        data = tag_cache[0][0]["data"]
+                        async with conn.transaction(isolation='read_committed'):
+                            if tag_cache[0][0]["prsUpdate"]:
+                                xs = [str(x) for _, x, _ in data]
+                                q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
+                                await conn.execute(q)
+                            if tag_cache[0][0]["prsValueTypeCode"] == 4:
+                                new_data = []
+                                for item in data:
+                                    new_data.append(
+                                        (json.dumps(item[0], ensure_ascii=False), item[1], item[2])
+                                    )
+                                data = new_data
+
+                            await conn.copy_records_to_table(
+                                tag_tbl,
+                                records=data,
+                                columns=('y', 'x', 'q'))
+                        self._logger.debug(f"В базу {ds_id} для тега {tag_id} записано {len(data)} точек.")
 
         except Exception as ex:
             self._logger.error(f"Ошибка записи данных в базу {ds_id}: {ex}")
 
-    async def _tag_set(self, mes: dict) -> None:
+    async def tag_set(self, mes: dict) -> None:
         """
 
         Args:
@@ -694,475 +647,50 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         """
         return await apg.create_pool(dsn=config["dsn"])
 
-    async def _tag_get(self, mes: dict) -> dict:
-        """_summary_
-
-        Args:
-            mes (dict): {
-                "action": "tags.get_data",
-                "data": {
-                    "tagId": [str],
-                    "start": int,
-                    "finish": int,
-                    "maxCount": int,
-                    "format": bool,
-                    "actual": bool,
-                    "value": Any,
-                    "count": int,
-                    "timeStep": int
-                }
-            }
-
-        Returns:
-            _type_: _description_
-        """
-
-        self._logger.debug(f"mes: {mes}")
-
-        tasks = {}
-        for tag_id in mes["data"]["tagId"]:
-            tag_params = self._tags.get(tag_id)
-            if not tag_params:
-                self._logger.error(
-                    f"Тег {tag_id} не привязан к хранилищу."
-                )
-                continue
-
-            # Если ключ actual установлен в true, ключ timeStep не учитывается
-            if mes["data"]["actual"] or (mes["data"]["value"] is not None \
-               and len(mes["data"]["value"]) > 0):
-                mes["data"]["timeStep"] = None
-
-            if mes["data"]["actual"]:
-                self._logger.debug(f"Create task 'data_get_actual")
-                tasks[tag_id]= asyncio.create_task(
-                        self._data_get_actual(
-                            tag_params,
-                            mes["data"]["start"],
-                            mes["data"]["finish"],
-                            mes["data"]["count"],
-                            mes["data"]["value"]
-                        )
-                    )
-
-            elif mes["data"]["timeStep"] is not None:
-                self._logger.debug(f"Create task 'data_get_interpolated")
-                tasks[tag_id]= asyncio.create_task(
-                        self._data_get_interpolated(
-                            tag_params,
-                            mes["data"]["start"], mes["data"]["finish"],
-                            mes["data"]["count"], mes["data"]["timeStep"]
-                        )
-                    )
-
-            elif mes["data"]["start"] is None and \
-                mes["data"]["count"] is None and \
-                (mes["data"]["value"] is None or len(mes["data"]["value"]) == 0):
-                self._logger.debug(f"Create task 'data_get_one")
-                tasks[tag_id] = asyncio.create_task(
-                        self._data_get_one(
-                            tag_params,
-                            mes["data"]["finish"]
-                        )
-                    )
-
-            else:
-                # Множество значений
-                self._logger.debug(f"Create task 'data_get_many")
-
-                tasks[tag_id]= asyncio.create_task(
-                        self._data_get_many(
-                            tag_params,
-                            mes["data"]["start"],
-                            mes["data"]["finish"],
-                            mes["data"]["count"]
-                        )
-                    )
-
-        result = {"data": []}
-
-        if tasks:
-            await asyncio.wait(list(tasks.values()))
-        else:
-            self._logger.debug(f"No data to return")
-            return result
-
-        for tag_id, task in tasks.items():
-            tag_data = task.result()
-
-            if not mes["data"]["actual"] and \
-                (
-                    mes["data"]["value"] is not None and \
-                    len(mes["data"]["value"]) > 0
-                ):
-                tag_data = self._filter_data(
-                    tag_data,
-                    mes["data"]["value"],
-                    self._tags[tag_id]['value_type'],
-                    self._tags[tag_id]['step']
-                )
-                if mes["data"]["from_"] is None:
-                    tag_data = [tag_data[-1]]
-
-            excess = False
-            if mes["data"]["maxCount"] is not None:
-                excess = len(tag_data) > mes["data"]["maxCount"]
-
-                if excess:
-                    if mes["data"]["maxCount"] == 0:
-                        tag_data = []
-                    elif mes["data"]["maxCount"] == 1:
-                        tag_data = tag_data[:1]
-                    elif mes["data"]["maxCount"] == 2:
-                        tag_data = [tag_data[0], tag_data[-1]]
-                    else:
-                        new_tag_data = tag_data[:mes["data"]["maxCount"] - 1]
-                        new_tag_data.append(tag_data[-1])
-                        tag_data = new_tag_data
-
-            '''
-            if mes["data"]["format"]:
-                svc.format_data(tag_data, data.format)
-            '''
-            new_item = {
-                "tagId": tag_id,
-                "data": tag_data
-            }
-            if mes["data"]["maxCount"]:
-                new_item["excess"] = excess
-            result["data"].append(new_item)
-
-        self._logger.debug(f"Data get result: {result}")
-
-        return result
-
-    def _filter_data(
-            self, tag_data: List[tuple], value: List[Any], tag_type_code: int,
-            tag_step: bool) -> List[tuple]:
-        def estimate(x1: int, y1: int | float, x2: int, y2: int | float, y: int | float) -> int:
-            '''
-            Функция принимает на вход две точки прямой и значение, координату X которого возвращает.
-            '''
-            k = (y2 - y1)/(x2 - x1)
-            b = y2 - k * x2
-
-            x = round((y - b) / k)
-
-            return x
-
-
-        res = []
-        if tag_step or tag_type_code not in [0, 1]:
-            for item in tag_data:
-                if tag_type_code == 4:
-                    y = json.loads(item[0])
-                else:
-                    y = item[0]
-                if y in value:
-                    res.append(item)
-        else:
-            for i in range(1, len(tag_data)):
-                y1 = tag_data[i - 1][0]
-                y2 = tag_data[i][0]
-                x1 = tag_data[i - 1][1]
-                x2 = tag_data[i][1]
-                if x1 == x2:
-                    continue
-                if y1 in value:
-                    res.append(tag_data[i - 1])
-                else:
-                    if y1 is None or y2 is None:
-                        continue
-                    for val in value:
-                        if val is None:
-                            continue
-                        if tag_type_code == 0 and isinstance(val, float):
-                            continue
-                        if ((y1 > val and y2 < val) or (y1 < val and y2 > val)):
-                            x = estimate(x1, y1, x2, y2, val)
-                            res.append((val, x, None))
-            if tag_data[-1][0] in value:
-                res.append(tag_data[-1])
-        return res
-
-    async def _data_get_interpolated(self,
-                                     tag_cache: dict,
-                                     start: int,
-                                     finish: int,
-                                     count: int,
-                                     time_step: int) -> List[tuple]:
-        """ Получение интерполированных значений с шагом time_step
-        """
-        tag_data = await self._data_get_many(tag_cache,
-            start or (finish - time_step * (count - 1)),
-            finish, None
-        )
-        # Создание ряда таймстэмпов с шагом `time_step`
-        time_row = self._timestep_row(time_step, count, start, finish)
-
-        if not tag_data:
-            return [(None, x, None) for x in time_row]
-
-        return self._interpolate(tag_data, time_row)
-
-    def _interpolate(self, raw_data: List[tuple], time_row: List[int]) -> List[tuple]:
-        """ Получение линейно интерполированных значений для ряда ``time_row`` по
-        действительным значениям из БД (``raw_data``\)
-
-        :param raw_data: Реальные значения из БД
-        :type raw_data: List[Dict]
-
-        :param time_row: Временной ряд, для которого надо рассчитать значения
-        :type time_row: List[int]
-
-        :return:
-        :rtype: List[Dict]
-        """
-
-        # Разбиение списка ``raw_data`` на подсписки по значению None
-        # Если ``raw_data`` не имеет None, получается список [raw_data]
-        none_indexes = [idx for idx, val in enumerate(raw_data) if val[0] is None]
-        size = len(raw_data)
-        if none_indexes:
-            splitted_by_none = [raw_data[i: j+1] for i, j in
-                zip([0] + none_indexes, none_indexes +
-                ([size] if none_indexes[-1] != size else []))]
-        else:
-            splitted_by_none = [raw_data]
-
-        data = []  # Результирующий список
-        for period in splitted_by_none:
-            if len(period) == 1:
-                continue
-
-            key_x = lambda d: d[1]
-            min_ts = min(period, key=key_x)[1]
-            max_ts = max(period, key=key_x)[1]
-            is_last_period = period == splitted_by_none[-1]
-
-            # В каждый подсписок добавляются значения из ряда ``time_row``
-            period = [(None , ts, None) \
-                      for ts in time_row if min_ts <= ts < max_ts] + period
-            period.sort(key=key_x)
-
-            if not is_last_period:
-                period.pop()
-
-            # Расширенный подсписок заворачивается в DataFrame и индексируется по 'x'
-            df = pd.DataFrame(
-                period,
-                index=[r[1] for r in period]
-            ).drop_duplicates(subset=1, keep='last')
-
-            # линейная интерполяция значений 'y' в датафрейме для числовых тэгов
-            # заполнение NaN полей ближайшими не-NaN для нечисловых тэгов
-            df[[1, 0]] = df[[1, 0]].interpolate(
-                method=('pad', 'index')[is_numeric_dtype(df[0])]
-            )
-
-            # None-значения 'q' заполняются ближайшим не-None значением сверху
-            df[2].fillna(method='ffill', inplace=True)
-
-            # Удаление из датафрейма всех элементов, чьи 'x' не принадлежат ``time_row``
-            df = df.loc[df[1].isin(time_row)]
-            df[[0, 2]] = df[[0, 2]].replace({np.nan: None})
-
-            # Преобразование получившегося датафрейма и добавление значений к
-            # результирующему списку
-            data += list(df.to_dict('index').values())
-
-        return data
-
-    def _timestep_row(self,
-                      time_step: int,
-                      limit: int,
-                      since: int,
-                      till: int) -> List[int]:
-        """ Возвращает временной ряд с шагом `time_step`
-
-        :param time_step: Размер временного шага
-        :type time_step: int
-        :param limit: количество записей
-        :type limit: int
-        :param since: Точка начала отсчета
-        :type since: int
-        :param till: Точка окончания
-        :type till: int
-
-        :return: Ряд целых чисел длиной `limit` с шагом `time_step`
-        :rtype: List[int]
-        """
-
-        if (since is None or till is None) and limit is None:
-            raise AttributeError('Отсутствует параметр "count"')
-
-        start_point = till
-        time_step = -time_step
-        if since is not None:
-            start_point = since
-            time_step = -time_step
-            limit = min(
-                int((till - since) / time_step) + 1,
-                (limit, float('inf'))[limit is None]
-            )
-
-        row = []
-        for i in range(0, limit):
-            val = start_point + i * time_step
-            if val < 0 or (till is not None and val > till):
-                break
-            row.append(val)
-
-        if since is None:
-            row.reverse()
-        return row
-
-    def _last_point(self, x: int, data: List[tuple]) -> Tuple[int, Any]:
-        return (x, list(filter(lambda rec: rec[1] == x, data))[-1][0])
-
-    async def _data_get_one(self,
-                            tag_cache: dict,
-                            finish: int) -> List[dict]:
-        """ Получение значения на текущую метку времени
-        """
-        tag_data = await self._read_data(
-            tag_cache=tag_cache, start=None, finish=finish, count=1,
-            one_before=False, one_after=not tag_cache["step"], order=Order.CN_DESC
-        )
-
-        if not tag_data:
-            if finish is not None:
-                return [(None, finish, None)]
-
-        x0 = tag_data[0][1]
-        y0 = tag_data[0][0]
-        try:
-            x1, y1 = self._last_point(tag_data[1][1], tag_data)
-            if not tag_cache["step"]:
-                tag_data[0] = (
-                    linear_interpolated(
-                        (x0, y0), (x1, y1), finish
-                    ), tag_data[0][1], tag_data[2]
-                )
-
-            # TODO: избавиться от этого try/except логикой приложения, т.к.
-            # try/except отнимает слишком много времени
-
-            tag_data.pop()
-
-        except IndexError:
-            # Если в выборке только одна запись и `to` меньше, чем `x` этой записи...
-            if x0 > finish:
-                tag_data[0] = (None, tag_data[0][1], None)
-        finally:
-            tag_data[0] = (tag_data[0][0], finish, tag_data[0][2])
-
-        return tag_data
-
-    async def _data_get_many(self,
-                             tag_cache: dict,
-                             start: int,
-                             finish: int,
-                             count: int = None) -> List[dict]:
-        """ Получение значения на текущую метку времени
-        """
-        tag_data = await self._read_data(
-            tag_cache, start, finish,
-            (Order.CN_DESC if count is not None and start is None else Order.CN_ASC),
-            count, True, True, None
-        )
-        if not tag_data:
-            return []
-
-        now_ms = t.ts()
-        x0 = tag_data[0][1]
-        y0 = tag_data[0][0]
-
-        if start is not None:
-            if x0 > start:
-                # Если `from_` раньше времени первой записи в выборке
-                tag_data.insert(0, (None, start, None))
-
-            if len(tag_data) == 1:
-                if x0 < start:
-                    tag_data[0] = (tag_data[0][0], start, tag_data[0][2])
-                    tag_data.append((y0, now_ms, tag_data[0][2]))
-                return tag_data
-
-            x1, y1 = self._last_point(tag_data[1][1], tag_data)
-            if x1 == start:
-                # Если время второй записи равно `from`,
-                # то запись "перед from" не нужна
-                tag_data.pop(0)
-
-            if x0 < start < x1:
-                tag_data[0] = (tag_data[0][0], start, tag_data[0][2])
-                if tag_cache["step"]:
-                    tag_data[0] = (y0, tag_data[0][1], tag_data[0][2])
-                else:
-                    tag_data[0] = (
-                        linear_interpolated(
-                            (x0, y0), (x1, y1), start
-                        ), tag_data[0][1], tag_data[0][2]
-                    )
-
-        if finish is not None:
-            # (xn; yn) - запись "после to"
-            xn = tag_data[-1][1]
-            yn = tag_data[-1][0]
-
-            # (xn_1; yn_1) - запись перед значением `to`
-            try:
-                xn_1, yn_1 = self._last_point(tag_data[-2][1], tag_data)
-            except IndexError:
-                xn_1 = -1
-                yn_1 = None
-
-            if xn_1 == finish:
-                # Если время предпоследней записи равно `to`,
-                # то запись "после to" не нужна
-                tag_data.pop()
-
-            if xn_1 < finish < xn:
-                if tag_cache["step"]:
-                    y = yn_1
-                else:
-                    y = linear_interpolated(
-                        (xn_1, yn_1), (xn, yn), finish
-                    )
-                tag_data[-1] = (
-                    y, finish, tag_data[-2][2]
-                )
-
-            if finish > xn:
-                tag_data.append((yn, finish, tag_data[-1][2]))
-
-        if all((finish is None, now_ms > tag_data[-1][1])):
-            tag_data.append((tag_data[-1][0], now_ms, tag_data[-1][2]))
-
-        tag_data = self._limit_data(tag_data, count, start, finish)
-        return tag_data
-
-    async def _data_get_actual(self, tag_cache: dict, start: int, finish: int,
-            count: int, value: Any = None):
-
-        order = Order.CN_ASC
-        if start is None:
-            order = Order.CN_DESC
-            count = (1, count)[bool(count)]
-
-        raw_data = await self._read_data(
-            tag_cache, start, finish, order, count, False, False, value
-        )
-
-        return raw_data
-
-    async def _read_data(self, tag_cache: dict, start: int, finish: int,
+    async def _read_data(self, tag_id: str, start: int, finish: int,
         order: int, count: int, one_before: bool, one_after: bool, value: Any = None):
 
-        #table = self._validate_container(table)
+        actual_ds = None
+        client = redis.Redis(connection_pool=self._cache_pool)
+        async with client.pipeline() as pipe:
+            tag_data = pipe.json().get(
+                f"{self._config.svc_name}:{tag_id}",
+                "prsActive", "prsStore", "dss"
+            ).execute()
+
+            if not tag_data[0]:
+                self._logger.error(f"Тег {tag_id} отсутствует в кэше.")
+                await client.aclose()
+
+                return []
+            if not tag_data[0]["prsActive"]:
+                self._logger.error(f"Тег {tag_id} неактивен.")
+                await client.aclose()
+
+                return []
+
+            # если тег привязан к нескольким хранилищам, пока непонятна логика
+            # из какого хранилища брать данные.
+            # пока будем брать из первого активного
+            for ds_id in tag_data[0]["dss"].keys():
+                ds_res = await pipe.json().get(
+                    f"{self._config.svc_name}:{ds_id}",
+                    "prsActive"
+                ).execute()
+                if not ds_res[0]:
+                    self._logger.error(
+                        f"Хранилище {ds_id} отсутствует в кэше."
+                    )
+                actual_ds = ds_id
+        await client.aclose()
+
+        if not actual_ds:
+            self._logger.error(
+                f"Не найдено актуальное хранилище для тега {tag_id}"
+            )
+
         conditions = ['TRUE']
-        sql_select = f"SELECT id, x, y, q FROM \"{tag_cache['table']}\""
+        sql_select = f"SELECT id, x, y, q FROM \"{tag_data['prsStore']['table']}\""
 
         if start is not None:
             conditions.append(f'x >= {start}')
@@ -1190,7 +718,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             query_args += adapted_value
 
         records = []
-        async with tag_cache["ds"].acquire() as conn:
+        async with self._connection_pools[actual_ds].acquire() as conn:
             async with conn.transaction():
                 async for r in conn.cursor(*query_args):
                     records.append((r.get('y'), r.get('x'), r.get('q')))

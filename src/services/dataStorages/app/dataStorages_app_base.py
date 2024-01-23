@@ -1,4 +1,5 @@
 import sys
+import os
 import json
 import asyncio
 import numbers
@@ -72,25 +73,43 @@ class DataStoragesAppBase(svc.Svc, ABC):
         "prsUpdate": true,
         "prsValueTypeCode": 1,
         "prsStep": false,
-        "prsStore": {}
-    },
-    "<service_name>": {
-        "<tag_id1>": {
-            "dsIds": ["<ds_id1>", "<ds_id2>"],
-            "data": [(y, x, q)]
-        }
+        "dss": {
+            "dsId1": {}, # prsStore
+            "dsId2": {}
+        },
+        "data": [(y, x, q)]
+    }
+    "<service_name>:<ds_id1>": {
+        "prsActive": True,
+        "tags": ["<tag_id1>", "<tag_id2>"]
     }
 
 1) Кэш тегов строится по мере того, как происходит обращение
-    записи/чтения к тегу
+   записи/чтения к тегу
 2) Кэш для баз данных вообще не строится
 3) Каждый экземпляр сервиса создаёт свою уникальную очередь,
-    которая подписывается на изменения поддерживаемых данным сервисом баз данных.
-4) При выполнении команды linkTag кэш тега не строится для упрощения кода:
-    кэш построится при первом обращении к тегу.
-5) Данные кэша разделены на два ключа, чтобы можно было установить время
-    жизни ключа "<service_name>:<tag_id1>". Ключ же "<service_name>" служит
-    для хранения данных. Данные же будут удаляться при сбросе кэша в базу.
+   которая подписывается на изменения поддерживаемых данным
+   сервисом баз данных. В случае удаления базы не забываем эту убрать и
+   подписку.
+4) В случае создания новой базы её должен подхватить сервис, у которого
+   не конкретизированы в конфигурации поддерживаемые им базы.
+   Следствие: если у какого-то сервиса указана поддерживаемая им база(-ы),
+   то у всех сервисов этого типа должны быть тоже указаны базы. Так как
+   возможна ситуация:
+   а) в модели две базы одного типа;
+   б) есть два сервиса одного типа, у одного указана первая база, у второго
+      ничего не указано, поэтому
+   в) первый сервис поддерживает одну, указанную ему, базу, а второй - обе.
+   В принципе, это не ошибка...
+5) При выполнении команды linkTag кэш тега не строится для упрощения кода:
+   кэш построится при первом обращении к тегу.
+6) Данные кэша разделены на два ключа, чтобы можно было установить время
+   жизни ключа "<service_name>:<tag_id1>". Ключ же "<service_name>" служит
+   для хранения данных. Данные же будут удаляться при сбросе кэша в базу.
+7) Сброс кэша в базу: сначала читаем список всех тегов базы из ldap, потом
+   ищем данные уже в кэше.
+8) UnlinkTag, тем не менее, удаляет ключ из "<service_name>:<dsId1>",
+   предварительно сбросив кэш в базу.
 
     Args:
         settings (DataStoragesAppBaseSettings): Параметры конфигурации
@@ -114,19 +133,19 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
     def _set_incoming_commands(self) -> dict:
         return {
-            "tags.downloadData": self._tag_get,
-            "tags.uploadData": self._tag_set,
+            "tags.downloadData": self.tag_get,
+            "tags.uploadData": self.tag_set,
             #"alerts.getAlarms": self._get_alarms,
-            "alerts.alarmAcked": self._alarm_ack,
-            "alerts.alarmOn": self._alarm_on,
-            "alerts.alarmOff": self._alarm_off,
+            "alerts.alarmAcked": self.alarm_ack,
+            "alerts.alarmOn": self.alarm_on,
+            "alerts.alarmOff": self.alarm_off,
             "dataStorages.linkTag": self.link_tag,
-            "dataStorages.unlinkTag": self._unlink_tag,
-            "dataStorages.linkAlert": self._link_alert,
-            "dataStorages.unlinkAlert": self._unlink_alert,
-            "dataStorages.added": self._added,
-            "dataStorages.updated": self._updated,
-            "dataStorages.deleted": self._updated
+            "dataStorages.unlinkTag": self.unlink_tag,
+            "dataStorages.linkAlert": self.link_alert,
+            "dataStorages.unlinkAlert": self.unlink_alert,
+            "dataStorages.added": self.added,
+            "dataStorages.updated": self.updated,
+            "dataStorages.deleted": self.deleted
         }
 
     async def bind_tag(self, tag_id) -> None:
@@ -145,9 +164,6 @@ class DataStoragesAppBase(svc.Svc, ABC):
         Args:
             ds_id (str): _description_
         """
-        # построим кэш для новой базы
-        await self._build_cache(ds_id)
-
         payload = {
             "id": [ds_id],
             "attributes": ["prsJsonConfigString", "prsActive"]
@@ -165,6 +181,28 @@ class DataStoragesAppBase(svc.Svc, ABC):
                     self._logger.error(f"Ошибка связи с базой данных '{ds_id}': {ex}")
                     await asyncio.sleep(5)
 
+        payload = {
+            "base": ds_id,
+            "filter": {
+                "objectClass": ["prsDatastorageTagData"]yhhgvb
+            },
+            "attributes": ["cn`"]
+        }
+        tags = await self._hierarchy.search(payload)
+        tag_ids = [tag[2]["cn"][0] for tag in tags]
+
+        client = redis.Redis(connection_pool=self._cache_pool)
+        # добавим ключ "svc_name:ds_id": {}
+        async with client.pipeline() as pipe:
+            pipe.json().set(
+                f"{self._config.svc_name}:{ds_id}",
+                "$",
+                {
+                    "prsActive": ds[0][2]["prsActive"][0],
+                    "tags": tag_ids
+                }, nx=True)
+            await pipe.execute()
+
         # добавим в список поддерживаемых хранилищ новое
         self._ds_ids.append(ds_id)
         await self._amqp_consume["queue"].bind(
@@ -176,7 +214,6 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
         await super().on_startup()
 
-        # строим кэши для всех баз "своего" типа
         try:
             self._cache_pool = redis.ConnectionPool.from_url(self._config.cache_url)
 
@@ -186,9 +223,9 @@ class DataStoragesAppBase(svc.Svc, ABC):
                 # если указаны конкретные id хранилищ, которые надо обслуживать,
                 # то отменяем базовую привязку очереди прослушивания
                 await self._amqp_consume["queue"].unbind(
-                        exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
-                        routing_key=self._config.consume["exchanges"]["main"]["routing_key"][0]
-                    )
+                    exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
+                    routing_key=self._config.consume["exchanges"]["main"]["routing_key"][0]
+                )
             else:
                 ds_node_id = await self._hierarchy.get_node_id("cn=dataStorages,cn=prs")
                 payload = {
@@ -209,16 +246,16 @@ class DataStoragesAppBase(svc.Svc, ABC):
         except Exception as ex:
             self._logger.error(f"Ошибка инициализации хранилища: {ex}")
 
-    async def _added(self, mes: dict) -> None:
+    async def added(self, mes: dict) -> None:
         pass
 
-    async def _updated(self, mes: dict) -> None:
+    async def updated(self, mes: dict) -> None:
         pass
 
-    async def _deleted(self, mes: dict) -> None:
+    async def deleted(self, mes: dict) -> None:
         pass
 
-    async def _alarm_on(self, mes: dict) -> None:
+    async def alarm_on(self, mes: dict) -> None:
         """Факт возникновения тревоги.
 
         Args:
@@ -273,7 +310,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
         except PostgresError as ex:
             self._logger.error(f"Ошибка при записи данных тревоги {alert_id}: {ex}")
 
-    async def _alarm_ack(self, mes: dict) -> None:
+    async def alarm_ack(self, mes: dict) -> None:
         """Факт квитирования тревоги.
 
         Args:
@@ -326,7 +363,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
         except PostgresError as ex:
             self._logger.error(f"Ошибка при записи данных тревоги {alert_id}: {ex}")
 
-    async def _alarm_off(self, mes: dict) -> None:
+    async def alarm_off(self, mes: dict) -> None:
         """Факт пропадания тревоги.
 
         Args:
@@ -410,7 +447,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
         pass
 
     @abstractmethod
-    async def _create_store_for_tag(self, store: dict) -> None:
+    async def _create_store_for_tag(self, tag_id: str, ds_id: str, store: dict) -> None:
         pass
 
     async def link_tag(self, mes: dict) -> dict | None:
@@ -447,16 +484,11 @@ class DataStoragesAppBase(svc.Svc, ABC):
         else:
             store = self._create_store_name_for_new_tag(ds_id=ds_id, tag_id=tag_id)
 
-        self._create_store_for_tag(store)
+        self._create_store_for_tag(tag_id=tag_id, ds_id=ds_id, store=store)
 
-        tag_cache = self._prepare_tag_cache(ds_id=ds_id, tag_id=tag_id)
-        tag_cache["prsStore"] = store
+        return {"prsStore": store}
 
-        self._set_tag_to_cache(ds_id=ds_id, tag_id=tag_id, cache=tag_cache)
-
-        return tag_cache
-
-    async def _link_alert(self, mes: dict) -> dict:
+    async def link_alert(self, mes: dict) -> dict:
         """Метод привязки тревоги к хранилищу.
         Атрибут ``prsStore`` должен быть вида
         ``{"tableName": "<some_table>"}`` либо отсутствовать
@@ -520,7 +552,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
             "prsStore": json.dumps(cache_for_store)
         }
 
-    async def _unlink_alert(self, mes: dict) -> None:
+    async def unlink_alert(self, mes: dict) -> None:
         """_summary_
 
         Args:
@@ -544,7 +576,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
         self._logger.info(f"Тревога {mes['data']['alertId']} отвязана от хранилища.")
 
-    async def _unlink_tag(self, mes: dict) -> None:
+    async def unlink_tag(self, mes: dict) -> None:
         """_summary_
 
         Args:
@@ -590,19 +622,16 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
     @abstractmethod
     async def _write_tag_data_to_db(
-            self, tag_id: str, ds_id: str,
-            update: bool, value_type_code: int,
-            step: bool, store: dict,
-            data: List[tuple]) -> None :
+            self, tag_id: str) -> None:
 
         # метод, переопределяемый в классах-потомках
         # записывает данные одного тега в хранилище
         pass
 
     async def _write_cache_data(self, tag_ids: [str] = None) -> None:
-        """Функция сбрасывает кэш данных тегов в базу
-        если tag_ids - пустой список, то сбрасываются все теги из кэша
-        иначе - только те, которые в списке.
+        """Функция сбрасывает кэш данных тегов в базу для поддерживаемых
+        баз данных если tag_ids - пустой список, то сбрасываются
+        все теги из кэша иначе - только те, которые в списке.
 
         При сбросе кэша не проверяется активность/неактивность ни тегов, ни
         хранилищ: сам вызов этой функции может инициироваться переводом
@@ -618,49 +647,34 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
                 if not tag_ids:
                     # если пустой список тегов, это значит, что сбрасывается весь кэш
-                        for ds_id in self._ds_ids:
-                            tags_res = await pipe.json().get(
-                                self._cache_key, f"$.{ds_id}.tags"
-                            ).execute()
-                            for tag_id in tags_res[0][0]:
-                                res = await pipe.\
-                                    json().get(self._cache_key, f"$.tags.{tag_id}.['prsUpdate', 'prsValueTypeCode', 'prsStep']").\
-                                    json().get(self._cache_key, f"$.tags.{tag_id}.dsIds.{ds_id}").\
-                                    json().get(self._cache_key, f"$.{ds_id}.data.{tag_id}").\
-                                    json().set(self._cache_key, f"$.{ds_id}.data.{tag_id}", []).\
-                                    execute()
-                                self._write_tag_data_to_db(
-                                    tag_id, ds_id,
-                                    res[0][0], res[0][1], res[0][2], res[1][0], res[2][0]
-                                )
-                else:
-                    # сохраняем только указанные теги
-                    for tag_id in tag_ids:
-                        tags_res = await pipe.json().get(
-                            self._cache_key, f"$.tags.{tag_id}.dsIds"
+                    tag_ids = set()
+                    for ds_id in self._ds_ids:
+                        # определим, активна ли база
+                        res = await pipe.json().get(
+                            f"{self._config.svc_name}:{ds_id}", "$"
                         ).execute()
-                        for ds_id, store in tags_res[0][0].items():
-                            if ds_id in self._ds_ids:
-                                res = json().get(self._cache_key, f"$.tags.{tag_id}.['prsUpdate', 'prsValueTypeCode', 'prsStep']").\
-                                    json().get(self._cache_key, f"$.tags.{tag_id}.dsIds.{ds_id}").\
-                                    json().get(self._cache_key, f"$.{ds_id}.data.{tag_id}").\
-                                    json().set(self._cache_key, f"$.{ds_id}.data.{tag_id}", []).\
-                                    execute()
-                                self._write_tag_data_to_db(
-                                    tag_id, ds_id,
-                                    res[0][0], res[0][1], res[0][2], res[1][0], res[2][0]
-                                )
+                        if res[0] is None:
+                            self._logger.warning(f"Нет кэша для хранилища {ds_id}")
+                            continue
+                        if not res[0][0]["prsActive"]:
+                            self._logger.info(
+                                f"Хранилище {ds_id} неактивно."
+                            )
+                            continue
+                        tag_ids += set(res[0][0].tags)
+
+                    for tag_id in tag_ids:
+                        await self._write_tag_data_to_db(tag_id)
 
         except Exception as ex:
             self._logger.error(f"Ошибка записи данных в базу: {ex}")
         finally:
             await client.aclose()
 
-        if not tag_ids:
-            loop = asyncio.get_event_loop()
-            loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))
+        loop = asyncio.get_event_loop()
+        loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))
 
-    async def _tag_set(self, mes: dict) -> None:
+    async def tag_set(self, mes: dict) -> None:
         """
 
         Args:
@@ -684,75 +698,31 @@ class DataStoragesAppBase(svc.Svc, ABC):
                     tag_id = tag_data["tagId"]
 
                     # проверим, активен ли тег и активны ли хранилища
-                    pipe.json().get(self._cache_key, f"$.tags.{tag_id}.prsActive")
-                    pipe.json().objkeys(self._cache_key, f"$.tags.{tag_id}.dsIds")
+                    pipe.json().get(
+                        f"{self._config.svc_name}:{tag_id}",
+                        f"$"
+                    )
                     res = await pipe.execute()
-
-                    # если тег активен, то записываем данные в кэш
-                    if not res[0][0]:
+                    if res[0] is None:
+                        # если нет кэша у тега
+                        cache = self._create_tag_cache(tag_id)
+                    else:
+                        cache = res[0][0]
+                    if not cache["prsActive"]:
                         self._logger.info(f"Тег {tag_id} неактивен, данные не записываются.")
                     else:
-                        # получим id хранилища, к которому привязан тег
-                        for ds_id in res[1][0]:
-                            # если id хранилища нет в списке обслуживаемых...
-                            # TODO: хотя, если нет хранилища в списке обслуживаемых, то и сервис не должен быть подписан на id тега...
-                            #if ds_id not in self._ds_ids:
-                            #    self._logger.error(f"Хранилища {ds_id} нет в списке обслуживаемых.")
-                            #    continue
-
-                            ds_data = await pipe.json().get(self._cache_key, f"$.{ds_id}.prsActive").execute()
-                            # если хранилище активно, то записываем данные в кэш
-                            if ds_data[0][0]:
-                                await pipe.json().arrappend(self._cache_key, f"$.{ds_id}.data.{tag_id}", *tag_data["data"]).execute()
-                                self._logger.info(f"Кэш тега {tag_id} обновлён.")
-                            else:
-                                self._logger.info(f"Хранилище {ds_id} неактивно, данные тега не записываются.")
+                        await pipe.json().arrappend(
+                            f"{self._config.svc_name}:{tag_id}",
+                            f"$.data", *tag_data["data"]
+                        ).execute()
+                        self._logger.info(f"Кэш тега {tag_id} обновлён.")
 
         except Exception as ex:
             self._logger.error(f"Ошибка обновления данных в кэше: {ex}")
         finally:
             await client.aclose()
 
-    async def _prepare_tag_data(self, tag_id: str, ds_id: str) -> dict | None:
-        get_tag_data = {
-            "id": [tag_id],
-            "attributes": [
-                "prsUpdate", "prsValueTypeCode", "prsActive", "prsStep"
-            ]
-        }
-
-        tag_data = await self._hierarchy.search(payload=get_tag_data)
-
-        if not tag_data:
-            self._logger.info(f"Не найден тег {tag_id}")
-            return None
-
-        to_return = {
-            "table": None,
-            "active": tag_data[0][2]["prsActive"][0] == "TRUE",
-            "update": tag_data[0][2]["prsUpdate"][0] == "TRUE",
-            "value_type": int(tag_data[0][2]["prsValueTypeCode"][0]),
-            "step": tag_data[0][2]["prsStep"][0] == "TRUE"
-        }
-
-        get_link_data = {
-            "base": ds_id,
-            "filter": {
-                "cn": [tag_id]
-            },
-            "attributes": ["prsStore"]
-        }
-
-        link_data = await self._hierarchy.search(payload=get_link_data)
-
-        if not link_data:
-            return to_return
-
-        to_return["table"] = json.loads(link_data[0][2]["prsStore"][0])["table"]
-
-        return to_return
-
-    async def _prepare_tag_cache(self, ds_id: str, tag_id: str) -> dict | None:
+    async def _create_tag_cache(self, tag_id: str) -> dict | None:
         """Функция подготовки кэша с данными о теге.
 
         Возвращаем всегда сформированный кэш целиком, независимо от того, был
@@ -763,12 +733,16 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
         Формат кэша:
         {
-		    "prsActive": true,
+            "prsActive": true,
             "prsUpdate": true,
-		    "prsValueTypeCode": 1,
-		    "prsStep": false,
-		    "prsStore": {}
-		}
+            "prsValueTypeCode": 1,
+            "prsStep": false,
+            "dss": {
+                "dsId1": {}, # prsStore
+                "dsId2": {}
+            },
+            "data": [(y, x, q)]
+        }
 
         Args:
             ds_id (str): id хранилища (тег может быть привязан
@@ -799,26 +773,35 @@ class DataStoragesAppBase(svc.Svc, ABC):
             "prsActive": tag_attrs["prsActive"][0] == "TRUE",
             "prsUpdate": tag_attrs["prsUpdate"][0] == "TRUE",
             "prsValueTypeCode": int(tag_attrs["prsValueTypeCode"][0]),
-            "prsStep": tag_attrs["prsStep"][0] == "TRUE"
+            "prsStep": tag_attrs["prsStep"][0] == "TRUE",
+            "dss": {},
+            "data": []
         }
 
         # попробуем найти привязку тега к хранилищу ------------
-        payload = {
-            "base": ds_id,
-            "scope": CN_SCOPE_SUBTREE,
-            "filter": {
-                "cn": [tag_id]
-            },
-            "attributes": ["prsStore"]
-        }
-        res = await self._hierarchy.search(payload=payload)
-        if not res:
-            # это означает, что привязки тега ещё нет, то есть
-            # вызов функции происходит из link_tag
-            tag_cache["prsStore"] = None
-        else:
-            tag_cache["prsStore"] = json.loads(res[0][2]["prsStore"][0])
+        for ds_id in self._ds_ids:
+            payload = {
+                "base": ds_id,
+                "scope": CN_SCOPE_SUBTREE,
+                "filter": {
+                    "cn": [tag_id]
+                },
+                "attributes": ["prsStore"]
+            }
+            res = await self._hierarchy.search(payload=payload)
+            if res:
+                tag_cache["dss"][ds_id] = res[0][2]["prsStore"][0]
         # ------------------------------------------------------------
+
+        try:
+            client = redis.Redis(connection_pool=self._cache_pool)
+            async with client.pipeline(transaction=True) as pipe:
+                await pipe.json().set(
+                    f"{self._config.svc_name}:{tag_id}", "$",
+                    tag_cache, nx=True
+                )
+        except Exception as ex:
+            self._logger.error(ex)
 
         return tag_cache
 
@@ -868,34 +851,6 @@ class DataStoragesAppBase(svc.Svc, ABC):
         """
         pass
 
-    async def _set_tag_to_cache(self, ds_id: str, tag_id: str, cache: dict = None) -> None:
-        """Регистрация тега в кэше.
-
-        Args:
-            ds_id (str): id хранилища
-            tag_id (str): id тега
-        """
-
-        client = redis.Redis(connection_pool=self._cache_pool)
-
-        async with client.pipeline(transaction=True) as pipe:
-            self._logger.debug(f"Подготовка кэша тега {tag_id}.")
-            if cache is None:
-                tag_cache = self._prepare_tag_cache(ds_id, tag_id)
-            else:
-                tag_cache = cache
-            if not tag_cache:
-                self._logger.debug(f"Кэш пустой.")
-            else:
-                key = self._key_for_ds(ds_id)
-                self._logger.debug(f"Запись кэша тега {tag_id}.")
-                pipe.json().set(key, f"$.tags.{tag_id}", tag_cache)
-                pipe.json().set(key, f"$.data.{tag_id}", [])
-
-            await pipe.execute()
-
-        await client.aclose()
-
     def _key_for_ds(self, ds_id: str) -> str:
         """Метод возвращает имя ключа кэша для хранилища.
 
@@ -907,69 +862,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
         """
         return f"{self._config.svc_name} {ds_id}"
 
-    async def _build_cache(self, ds_id: str) -> None:
-        """Функция построения кэша для хранилища данных.
-        Предполагается, функция вызывается из функции ``_add_supported_ds``.
-
-        Args:
-            ds_id (str): id хранилища
-        """
-
-        client = redis.Redis(connection_pool=self._cache_pool)
-
-        build_key = f"build {self._key_for_ds(ds_id)}"
-        async with client.pipeline(transaction=True) as pipe:
-            await pipe.watch(build_key)
-            res = await pipe.get(build_key)
-            if res is None:
-                res = 0
-            else:
-                res = int(res)
-
-            if res:
-                await pipe.unwatch()
-                self._logger.info(f"Кэш для хранилища {ds_id} строится другим сервисом.")
-            else:
-                self._logger.info(f"Построение кэша тегов, привязанных к хранилищу {ds_id}...")
-
-                pipe.multi()
-                await pipe.set(build_key, 1)
-                await pipe.execute()
-
-                get_ds_data = {
-                    "id": ds_id,
-                    "attributes": ["prsActive", "prsJsonConfigString"]
-                }
-                ds_data = await self._hierarchy.search(get_ds_data)
-                ds_active = ds_data[0][2]["prsActive"][0] == "TRUE"
-
-                await (pipe.json().set(self._key_for_ds(ds_id), "$",
-                    {
-                        "prsActive": ds_active,
-                        "prsJsonConfigString": json.loads(ds_data[0][2]["prsJsonConfigString"][0]),
-                        "tags": {},
-                        "alerts": {},
-                        "data": {}
-                    }
-                ).execute())
-
-                search_tags = {
-                    "base": ds_id,
-                    "filter": {
-                        "objectClass": ["prsDatastorageTagData"]
-                    },
-                    "attributes": ["cn"]
-                }
-                tags_ds_data = await self._hierarchy.search(payload=search_tags)
-                for tag_ds in tags_ds_data:
-                    tag_id = tag_ds[2]["cn"][0]
-                    self._set_tag_to_cache(ds_id, tag_id)
-
-        await client.aclose()
-
-        self._logger.info(f"Хранилище {ds_id}. Построение кэша тегов завершено.")
-
-    async def _tag_get(self, mes: dict) -> dict:
+    async def tag_get(self, mes: dict) -> dict:
         """_summary_
 
         Args:
@@ -1001,23 +894,15 @@ class DataStoragesAppBase(svc.Svc, ABC):
         self._write_cache_data(mes["data"]["tagId"])
 
         for tag_id in mes["data"]["tagId"]:
-            tag_params = self._tags.get(tag_id)
-            if not tag_params:
-                self._logger.error(
-                    f"Тег {tag_id} не привязан к хранилищу."
-                )
-                continue
-
             # Если ключ actual установлен в true, ключ timeStep не учитывается
             if mes["data"]["actual"] or (mes["data"]["value"] is not None \
-               and len(mes["data"]["value"]) > 0):
+            and len(mes["data"]["value"]) > 0):
                 mes["data"]["timeStep"] = None
 
             if mes["data"]["actual"]:
-                self._logger.debug(f"Create task 'data_get_actual")
                 tasks[tag_id]= asyncio.create_task(
                         self._data_get_actual(
-                            tag_params,
+                            tag_id,
                             mes["data"]["start"],
                             mes["data"]["finish"],
                             mes["data"]["count"],
@@ -1026,10 +911,9 @@ class DataStoragesAppBase(svc.Svc, ABC):
                     )
 
             elif mes["data"]["timeStep"] is not None:
-                self._logger.debug(f"Create task 'data_get_interpolated")
                 tasks[tag_id]= asyncio.create_task(
                         self._data_get_interpolated(
-                            tag_params,
+                            tag_id,
                             mes["data"]["start"], mes["data"]["finish"],
                             mes["data"]["count"], mes["data"]["timeStep"]
                         )
@@ -1038,81 +922,78 @@ class DataStoragesAppBase(svc.Svc, ABC):
             elif mes["data"]["start"] is None and \
                 mes["data"]["count"] is None and \
                 (mes["data"]["value"] is None or len(mes["data"]["value"]) == 0):
-                self._logger.debug(f"Create task 'data_get_one")
                 tasks[tag_id] = asyncio.create_task(
                         self._data_get_one(
-                            tag_params,
+                            tag_id,
                             mes["data"]["finish"]
                         )
                     )
 
             else:
                 # Множество значений
-                self._logger.debug(f"Create task 'data_get_many")
-
                 tasks[tag_id]= asyncio.create_task(
                         self._data_get_many(
-                            tag_params,
+                            tag_id,
                             mes["data"]["start"],
                             mes["data"]["finish"],
                             mes["data"]["count"]
                         )
                     )
 
-        result = {"data": []}
+            result = {"data": []}
 
-        if tasks:
-            await asyncio.wait(list(tasks.values()))
-        else:
-            self._logger.debug(f"No data to return")
-            return result
+            if tasks:
+                await asyncio.wait(list(tasks.values()))
+            else:
+                self._logger.debug(f"Нет возвращаемых данных.")
+                return result
 
-        for tag_id, task in tasks.items():
-            tag_data = task.result()
+            for tag_id, task in tasks.items():
+                tag_data = task.result()
 
-            if not mes["data"]["actual"] and \
-                (
-                    mes["data"]["value"] is not None and \
-                    len(mes["data"]["value"]) > 0
-                ):
-                tag_data = self._filter_data(
-                    tag_data,
-                    mes["data"]["value"],
-                    self._tags[tag_id]['value_type'],
-                    self._tags[tag_id]['step']
-                )
-                if mes["data"]["from_"] is None:
-                    tag_data = [tag_data[-1]]
+                if not mes["data"]["actual"] and \
+                    (
+                        mes["data"]["value"] is not None and \
+                        len(mes["data"]["value"]) > 0
+                    ):
+                    tag_data = self._filter_data(
+                        tag_data,
+                        mes["data"]["value"],
+                        self._tags[tag_id]['value_type'],
+                        self._tags[tag_id]['step']
+                    )
+                    if mes["data"]["from_"] is None:
+                        tag_data = [tag_data[-1]]
 
-            excess = False
-            if mes["data"]["maxCount"] is not None:
-                excess = len(tag_data) > mes["data"]["maxCount"]
+                excess = False
+                if mes["data"]["maxCount"] is not None:
+                    excess = len(tag_data) > mes["data"]["maxCount"]
 
-                if excess:
-                    if mes["data"]["maxCount"] == 0:
-                        tag_data = []
-                    elif mes["data"]["maxCount"] == 1:
-                        tag_data = tag_data[:1]
-                    elif mes["data"]["maxCount"] == 2:
-                        tag_data = [tag_data[0], tag_data[-1]]
-                    else:
-                        new_tag_data = tag_data[:mes["data"]["maxCount"] - 1]
-                        new_tag_data.append(tag_data[-1])
-                        tag_data = new_tag_data
+                    if excess:
+                        if mes["data"]["maxCount"] == 0:
+                            tag_data = []
+                        elif mes["data"]["maxCount"] == 1:
+                            tag_data = tag_data[:1]
+                        elif mes["data"]["maxCount"] == 2:
+                            tag_data = [tag_data[0], tag_data[-1]]
+                        else:
+                            new_tag_data = tag_data[:mes["data"]["maxCount"] - 1]
+                            new_tag_data.append(tag_data[-1])
+                            tag_data = new_tag_data
 
-            '''
-            if mes["data"]["format"]:
-                svc.format_data(tag_data, data.format)
-            '''
-            new_item = {
-                "tagId": tag_id,
-                "data": tag_data
-            }
-            if mes["data"]["maxCount"]:
-                new_item["excess"] = excess
-            result["data"].append(new_item)
+                '''
+                if mes["data"]["format"]:
+                    svc.format_data(tag_data, data.format)
+                '''
+                new_item = {
+                    "tagId": tag_id,
+                    "data": tag_data
+                }
+                if mes["data"]["maxCount"]:
+                    new_item["excess"] = excess
+                result["data"].append(new_item)
 
-        self._logger.debug(f"Data get result: {result}")
+            self._logger.debug(f"Получение данных: {result}")
 
         return result
 
@@ -1166,14 +1047,14 @@ class DataStoragesAppBase(svc.Svc, ABC):
         return res
 
     async def _data_get_interpolated(self,
-                                     tag_cache: dict,
+                                     tag_id: str,
                                      start: int,
                                      finish: int,
                                      count: int,
                                      time_step: int) -> List[tuple]:
         """ Получение интерполированных значений с шагом time_step
         """
-        tag_data = await self._data_get_many(tag_cache,
+        tag_data = await self._data_get_many(tag_id,
             start or (finish - time_step * (count - 1)),
             finish, None
         )
@@ -1301,13 +1182,25 @@ class DataStoragesAppBase(svc.Svc, ABC):
         return (x, list(filter(lambda rec: rec[1] == x, data))[-1][0])
 
     async def _data_get_one(self,
-                            tag_cache: dict,
+                            tag_id: str,
                             finish: int) -> List[dict]:
         """ Получение значения на текущую метку времени
         """
+        client = redis.Redis(connection_pool=self._cache_pool)
+        async with client.pipeline() as pipe:
+            tag_cache = await pipe.json().get(
+                f"{self._config.svc_name}:{tag_id}", "prsStep"
+            ).execute()
+            if not tag_cache[0]:
+                self._logger.error(f"Тег {tag_id} отсутствует в кэше.")
+                await client.aclose()
+                return []
+            step = tag_cache[0]["prsStep"]
+        await client.aclose()
+
         tag_data = await self._read_data(
-            tag_cache=tag_cache, start=None, finish=finish, count=1,
-            one_before=False, one_after=not tag_cache["step"], order=Order.CN_DESC
+            tag_id=tag_id, start=None, finish=finish, count=1,
+            one_before=False, one_after=not step, order=Order.CN_DESC
         )
 
         if not tag_data:
@@ -1318,7 +1211,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
         y0 = tag_data[0][0]
         try:
             x1, y1 = self._last_point(tag_data[1][1], tag_data)
-            if not tag_cache["step"]:
+            if not step:
                 tag_data[0] = (
                     linear_interpolated(
                         (x0, y0), (x1, y1), finish
@@ -1340,14 +1233,25 @@ class DataStoragesAppBase(svc.Svc, ABC):
         return tag_data
 
     async def _data_get_many(self,
-                             tag_cache: dict,
+                             tag_id: str,
                              start: int,
                              finish: int,
                              count: int = None) -> List[dict]:
-        """ Получение значения на текущую метку времени
-        """
+
+        client = redis.Redis(connection_pool=self._cache_pool)
+        async with client.pipeline() as pipe:
+            tag_cache = await pipe.json().get(
+                f"{self._config.svc_name}:{tag_id}", "prsStep"
+            ).execute()
+            if not tag_cache[0]:
+                self._logger.error(f"Тег {tag_id} отсутствует в кэше.")
+                await client.aclose()
+                return []
+            step = tag_cache[0]["prsStep"]
+        await client.aclose()
+
         tag_data = await self._read_data(
-            tag_cache, start, finish,
+            tag_id, start, finish,
             (Order.CN_DESC if count is not None and start is None else Order.CN_ASC),
             count, True, True, None
         )
@@ -1377,7 +1281,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
             if x0 < start < x1:
                 tag_data[0] = (tag_data[0][0], start, tag_data[0][2])
-                if tag_cache["step"]:
+                if step:
                     tag_data[0] = (y0, tag_data[0][1], tag_data[0][2])
                 else:
                     tag_data[0] = (
@@ -1404,7 +1308,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
                 tag_data.pop()
 
             if xn_1 < finish < xn:
-                if tag_cache["step"]:
+                if step:
                     y = yn_1
                 else:
                     y = linear_interpolated(
@@ -1423,7 +1327,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
         tag_data = self._limit_data(tag_data, count, start, finish)
         return tag_data
 
-    async def _data_get_actual(self, tag_cache: dict, start: int, finish: int,
+    async def _data_get_actual(self, tag_id: str, start: int, finish: int,
             count: int, value: Any = None):
 
         order = Order.CN_ASC
@@ -1432,87 +1336,16 @@ class DataStoragesAppBase(svc.Svc, ABC):
             count = (1, count)[bool(count)]
 
         raw_data = await self._read_data(
-            tag_cache, start, finish, order, count, False, False, value
+            tag_id, start, finish, order, count, False, False, value
         )
 
         return raw_data
 
-    async def _read_data(self, tag_cache: dict, start: int, finish: int,
+    @abstractmethod
+    async def _read_data(self, tag_id: str, start: int, finish: int,
         order: int, count: int, one_before: bool, one_after: bool, value: Any = None):
 
-        #table = self._validate_container(table)
-        conditions = ['TRUE']
-        sql_select = f"SELECT id, x, y, q FROM \"{tag_cache['table']}\""
-
-        if start is not None:
-            conditions.append(f'x >= {start}')
-        if finish is not None:
-            conditions.append(f'x <= {finish}')
-
-        value_filter, adapted_value = self._get_values_filter(value)
-
-        queries = []
-        if one_before and start:
-            queries.append(f'({sql_select} WHERE x < {start} {value_filter} ORDER BY x DESC, id DESC LIMIT 1)')
-
-        limit_str = ('', f'LIMIT {count}')[isinstance(count, int)]
-        order = ('ASC', 'DESC')[order == Order.CN_DESC]
-        conditions = ' AND '.join(conditions)
-
-        queries.append(f'({sql_select} WHERE {conditions} {value_filter} ORDER BY x {order}, id DESC {limit_str})')
-
-        if one_after and finish:
-            queries.append(f'({sql_select} WHERE x > {finish} {value_filter} ORDER BY x ASC, id DESC LIMIT 1)')
-
-        subquery = ' UNION '.join(queries)
-        query_args = [f'SELECT x, y, q FROM ({subquery}) as sub ORDER BY sub.x ASC, id ASC']
-        if adapted_value is not None:
-            query_args += adapted_value
-
-        records = []
-        async with tag_cache["ds"].acquire() as conn:
-            async with conn.transaction():
-                async for r in conn.cursor(*query_args):
-                    records.append((r.get('y'), r.get('x'), r.get('q')))
-        return records
-
-    def _get_values_filter(self, value: Any) -> tuple:
-        """ Сериализация значения в SQL-фильтр
-
-        :param value: Значение или массив значений
-        :type value: Any
-
-        :return: SQL-условие по полю `value`
-        :rtype: Tuple[str, Any]
-        """
-        if value is None:
-            return '', None
-
-        adapted = []
-        if isinstance(value, dict):
-            condition = 'AND "y" @> $1'
-            adapted.append(json.dumps(value))
-        elif not isinstance(value, (list, tuple)):
-            condition = 'AND "y" = $1'
-            adapted.append(value)
-        else:
-            condition = 'AND (FALSE'
-            if None in value:
-                condition = f'{condition} OR "y" IS NULL'
-                value = list(filter(lambda x: x is not None, value))
-            if value:
-                if isinstance(value[0], dict):
-                    i = 1
-                    for val in value:
-                        condition = f'{condition} OR "y" @> ${i}'
-                        adapted.append(json.dumps(val))
-                        i += 1
-                else:
-                    condition = f'{condition} OR "y" = ANY($1)'
-                    adapted.append(tuple(value))
-            condition = f'{condition})'
-
-        return condition, (None, adapted)[bool(adapted)]
+        pass
 
     def _limit_data(self,
                     tag_data: List[dict],
