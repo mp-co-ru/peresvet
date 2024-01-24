@@ -139,8 +139,15 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         routing_key = self._config["publish"]["main"]["routing_key"][0]
 
-        await self._post_message(mes={"action": "unlinkTag", "id": [tag_id]},
-            routing_key=routing_key)
+        await self._post_message(
+            mes={
+                "action": "dataStorages.unlinkTag",
+                "data": {
+                    "id": [tag_id]
+                }
+            },
+            routing_key=routing_key
+        )
 
         await self._hierarchy.delete(items[0][0])
 

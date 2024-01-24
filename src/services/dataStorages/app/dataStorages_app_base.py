@@ -143,20 +143,26 @@ class DataStoragesAppBase(svc.Svc, ABC):
             "dataStorages.unlinkTag": self.unlink_tag,
             "dataStorages.linkAlert": self.link_alert,
             "dataStorages.unlinkAlert": self.unlink_alert,
-            "dataStorages.added": self.added,
+            "dataStorages.created": self.created,
             "dataStorages.updated": self.updated,
             "dataStorages.deleted": self.deleted
         }
 
-    async def bind_tag(self, tag_id) -> None:
+    async def _bind_tag(self, tag_id: str, bind: bool) -> None:
         """
         Привязка тега для прослушивания.
         """
-        self._logger.debug(f"Привязка очереди для тега {tag_id}.")
-        await self._amqp_consume["queue"].bind(
-            exchange=self._amqp_consume["exchanges"]["tags"]["exchange"],
-            routing_key=tag_id
-        )
+        self._logger.debug(f"Привязка: {bind} очереди для тега {tag_id}.")
+        if bind:
+            await self._amqp_consume["queue"].bind(
+                exchange=self._amqp_consume["exchanges"]["tags"]["exchange"],
+                routing_key=tag_id
+            )
+        else:
+            await self._amqp_consume["queue"].unbind(
+                exchange=self._amqp_consume["exchanges"]["tags"]["exchange"],
+                routing_key=tag_id
+            )
 
     async def _add_supported_ds(self, ds_id: str) -> None:
         """Метод добавляет в список поддерживаемых хранилищ новое.
@@ -198,7 +204,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
                 f"{self._config.svc_name}:{ds_id}",
                 "$",
                 {
-                    "prsActive": ds[0][2]["prsActive"][0],
+                    "prsActive": ds[0][2]["prsActive"][0] == "TRUE",
                     "tags": tag_ids
                 }, nx=True)
             await pipe.execute()
@@ -246,14 +252,58 @@ class DataStoragesAppBase(svc.Svc, ABC):
         except Exception as ex:
             self._logger.error(f"Ошибка инициализации хранилища: {ex}")
 
-    async def added(self, mes: dict) -> None:
-        pass
+    async def created(self, mes: dict) -> None:
+        # команда добавления новой базы данных
+        # если в конфигурации сервиса указаны конкретные id баз для поддержки,
+        # то эта ситуация отслеживается в методе _reject_message
+
+        if self._config.datastorages_id:
+            return
 
     async def updated(self, mes: dict) -> None:
-        pass
+        # обновление атрибутов хранилища
+        # привязка/отвязка тегов и тревог выполняется
+        # методами link/unlink
+        # необслуживаемые хранилища отсекаются методом reject_message
+        ds_id = mes["data"]["id"]
+        payload = {
+            "id": mes["data"]["id"],
+            "attributes": ["prsActive", "prsJsonConfigString"]
+        }
+        ds_data = await self._hierarchy.search (payload=payload)
+        if not ds_data:
+            self._logger.error(f"В модели нет данных по хранилищу {ds_id}")
+            return
+
+        self._connection_pools[ds_id] = None
+
+        connected = False
+        while not connected:
+            try:
+                self._connection_pools[ds_id] = await self._create_connection_pool(json.loads(ds_data[0][2]["prsJsonConfigString"][0]))
+                self._logger.info(f"Связь с базой данных {ds_id} установлена.")
+                connected = True
+            except Exception as ex:
+                self._logger.error(f"Ошибка связи с базой данных '{ds_id}': {ex}")
+                await asyncio.sleep(5)
 
     async def deleted(self, mes: dict) -> None:
-        pass
+        # удаление хранилища
+        ds_id = mes["data"]["id"]
+        client = redis.Redis(connection_pool=self._cache_pool)
+
+        async with client.pipeline(transaction=True) as pipe:
+            res = await pipe.json().get(
+                f"{self._config.svc_name}:{ds_id}", "tags"
+            ).execute()
+            pipe.delete(f"{self._config.svc_name}:{ds_id}")
+
+            for tag_id in res[0]:
+                pipe.json().delete(
+                    f"{self._config.svc_name}:{tag_id}",
+                    f"dss.{ds_id}"
+                )
+            await pipe.execute()
 
     async def alarm_on(self, mes: dict) -> None:
         """Факт возникновения тревоги.
@@ -307,7 +357,8 @@ class DataStoragesAppBase(svc.Svc, ABC):
                     else:
                         self._logger.debug(f"Тревога {alert_id} уже активна.")
 
-        except PostgresError as ex:
+        #except PostgresError as ex:
+        except Exception as ex:
             self._logger.error(f"Ошибка при записи данных тревоги {alert_id}: {ex}")
 
     async def alarm_ack(self, mes: dict) -> None:
@@ -417,6 +468,43 @@ class DataStoragesAppBase(svc.Svc, ABC):
             self._logger.error(f"Ошибка при записи данных тревоги {alert_id}: {ex}")
 
     async def _reject_message(self, mes: dict) -> bool:
+
+        # отсечём необрабатываемые сообщения:
+        # если создано хранилище необслуживаемого типа
+        if mes["action"] == "dataStorages.created":
+            # если указан список поддерживаемых хранилищ
+            if self._config.datastorages_id:
+                return True
+
+            payload = {
+                "id": mes["data"]["id"],
+                "attributes": ["prsEntityTypeCode"]
+            }
+            ds_res = await self._hierarchy.search(payload=payload)
+            if not ds_res:
+                self._logger.error(
+                    f"В модели отсутствует хранилище {mes['data']['id']}"
+                )
+                return True
+
+            if int(ds_res[0][2]["prsEntityTypCode"][0]) != \
+                self._config.datastorage_type:
+                return True
+
+        # ...если приходят другие сообщения относительно необслуживаемых
+        # хранилищ
+        if mes["action"] in [
+            "dataStorages.linkTag", "dataStorages.unlinkTag"
+            "dataStorages.linkAlert", "dataStorages.unlinkAlert"
+            ]:
+            return not mes["data"]["dataStorageId"] in self._ds_ids
+
+        if mes["action"] in [
+            "dataStorages.updated",
+            "dataStorages.deleted"
+        ]:
+            return not mes["data"]["id"] in self._ds_ids
+
         return False
 
     @abstractmethod
@@ -485,6 +573,8 @@ class DataStoragesAppBase(svc.Svc, ABC):
             store = self._create_store_name_for_new_tag(ds_id=ds_id, tag_id=tag_id)
 
         self._create_store_for_tag(tag_id=tag_id, ds_id=ds_id, store=store)
+
+        await self._bind_tag(tag_id, True)
 
         return {"prsStore": store}
 
@@ -583,38 +673,35 @@ class DataStoragesAppBase(svc.Svc, ABC):
             mes (dict): {
                 "action": "datastorages.unlinktag",
                 "data": {
-                    "id": "tag_id"
+                    "tagId": "tag_id",
+                    "dataStorageId": "ds_id"
                 }
         """
         tag_id = mes["data"]["tagId"]
+        ds_id = mes["data"]["dataStorageId"]
         try:
+            # если есть кэш данных, то сначала сохраним его
+            self._write_tag_data_to_db(tag_id)
+
             client = redis.Redis(connection_pool=self._cache_pool)
 
             async with client.pipeline(transaction=True) as pipe:
-                pipe.json().get(
-                    self._cache_key,
-                    f"$.tags.{tag_id}"
-                )
-
-                res = await pipe.execute()
-                tag_params = res[0][0]
-
-                if not tag_params:
-                    self._logger.warning(f"Тег {mes[tag_id]} не привязан к хранилищу.")
-                    return
-
-                async with tag_params["ds"].acquire() as conn:
-                    await conn.execute(
-                        f'drop table if exists "{tag_params["table"]}"'
-                    )
-
                 pipe.json().delete(
-                    self._cache_key,
-                    f"$.tags.{tag_id}"
-                )
-                await pipe.execute()
+                    f"{self._config.svc_name}:{tag_id}",
+                    f"dss.{ds_id}"
+                ).execute()
+
+                index = await pipe.json().arrindex(
+                    f"{self._config.svc_name}:{ds_id}", "tags", tag_id
+                ).execute()
+                if index[0] > -1:
+                    await pipe.json().arrpop(
+                        f"{self._config.svc_name}:{ds_id}", "tags", index[0]
+                    ).execute()
 
             await client.aclose()
+
+            self._bind_tag(tag_id, False)
         except Exception as ex:
             self._logger.error(f"Ошибка отвязки тега: {ex}")
 

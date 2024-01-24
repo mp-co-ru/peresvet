@@ -1,14 +1,10 @@
 import sys
 import json
-import asyncio
 import numbers
 import copy
 from typing import Any, List, Tuple
 
 import redis.asyncio as redis
-import pandas as pd
-from pandas.api.types import is_numeric_dtype
-import numpy as np
 
 try:
     import uvicorn
@@ -165,21 +161,14 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         except Exception as ex:
             self._logger.error(f"Ошибка обновления данных в кэше: {ex}")
 
-    async def updated(self, mes: dict) -> None:
-        pass
-
     async def alarm_on(self, mes: dict) -> None:
         """Факт возникновения тревоги.
 
         Args:
-            mes (dict): {
-                "action": "alerts.alarmOn",
-                "data": {
-                    "alertId": "alert_id",
-                    "x": 123
-                }
-            }
+            mes (dict): сообщение
+
         """
+
         self._logger.debug(f"Обработка возникновения тревоги: {mes}")
 
         alert_id = mes["data"]["alertId"]
@@ -224,17 +213,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             self._logger.error(f"Ошибка при записи данных тревоги {alert_id}: {ex}")
 
     async def alarm_ack(self, mes: dict) -> None:
-        """Факт квитирования тревоги.
 
-        Args:
-            mes (dict): {
-                "action": "alerts.alarmAcked",
-                "data": {
-                    "alertId": "alert_id",
-                    "x": 123
-                }
-            }
-        """
         self._logger.debug(f"Обработка квитирования тревоги: {mes}")
 
         alert_id = mes["data"]["alertId"]
@@ -327,22 +306,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         return False
 
     async def link_alert(self, mes: dict) -> dict:
-        """Метод привязки тревоги к хранилищу.
-        Атрибут ``prsStore`` должен быть вида
-        ``{"tableName": "<some_table>"}`` либо отсутствовать
-
-        Args:
-            mes (dict): {
-                "action": "dataStorages.linkAlert",
-                "data": {
-                    "alertId": "alert_id",
-                    "dataStorageId": "ds_id",
-                    "attributes": {
-                        "prsStore": {"tableName": "<some_table>"}
-                    }
-                }
-
-        """
 
         async with self._connection_pools[mes["data"]["dataStorageId"]].acquire() as conn:
 
@@ -415,15 +378,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         self._logger.info(f"Тревога {mes['data']['alertId']} отвязана от хранилища.")
 
     async def unlink_tag(self, mes: dict) -> None:
-        """_summary_
-
-        Args:
-            mes (dict): {
-                "action": "datastorages.unlinktag",
-                "data": {
-                    "id": "tag_id"
-                }
-        """
         tag_id = mes["data"]["tagId"]
         try:
             client = redis.Redis(connection_pool=self._cache_pool)
@@ -639,6 +593,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         Args:
             config (dict): _description_
         """
+
         return await apg.create_pool(dsn=config["dsn"])
 
     async def _read_data(self, tag_id: str, start: int, finish: int,

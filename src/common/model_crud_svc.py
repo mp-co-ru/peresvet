@@ -420,7 +420,9 @@ class ModelCRUDSvc(Svc):
 
         body = json.dumps({
             "action": self._outgoing_commands["updated"],
-            "id": mes_data["id"]
+            "data": {
+                "id": mes_data["id"]
+            }
         }).encode()
         await self._amqp_publish["main"]["exchange"].publish(
             aio_pika.Message(
@@ -568,8 +570,14 @@ class ModelCRUDSvc(Svc):
 
             await self._further_delete(mes)
 
+            body = {
+                "action": {self._outgoing_commands["deleted"]},
+                "data": {
+                    "id": {id_}
+                }
+            }
             mes = aio_pika.Message(
-                body=f'{{"action": {self._outgoing_commands["deleted"]}, "id": {id_}}}'.encode(),
+                body=f'{body}'.encode(),
                 content_type='application/json',
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             )
@@ -793,8 +801,14 @@ class ModelCRUDSvc(Svc):
 
         await self._further_create(mes, new_id)
 
+        body = {
+            "action": {self._outgoing_commands["created"]},
+            "data": {
+                "id": {new_id}
+            }
+        }
         mes = aio_pika.Message(
-            body=f'{{"action": {self._outgoing_commands["created"]}, "id": {new_id}}}'.encode(),
+            body=f'{body}'.encode(),
             content_type='application/json',
             delivery_mode=aio_pika.DeliveryMode.PERSISTENT
         )

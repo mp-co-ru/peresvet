@@ -140,6 +140,7 @@ class BaseSvc(FastAPI):
 
             reject = await self._reject_message(mes)
             if reject:
+                self._logger.debug(f"Сообщение {mes} отклонено.")
                 await message.reject(True)
                 return
 
