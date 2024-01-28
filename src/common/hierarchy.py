@@ -110,7 +110,7 @@ class Hierarchy:
             passwd=ldap_url.cred,
             size=self.pool_size,
             retry_max=10,
-            retry_delay=0.3
+            retry_delay=1
         )
 
         self._base_dn = ldap_url.dn

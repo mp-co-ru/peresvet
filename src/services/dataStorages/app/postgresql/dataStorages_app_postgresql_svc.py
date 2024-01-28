@@ -68,21 +68,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         self._alerts = {}
         self._data_cache = {}
 
-    def _set_incoming_commands(self) -> dict:
-        return {
-            "tags.downloadData": self.tag_get,
-            "tags.uploadData": self.tag_set,
-            #"alerts.getAlarms": self._get_alarms,
-            "alerts.alarmAcked": self.alarm_ack,
-            "alerts.alarmOn": self.alarm_on,
-            "alerts.alarmOff": self.alarm_off,
-            "dataStorages.linkTag": self.link_tag,
-            "dataStorages.unlinkTag": self.unlink_tag,
-            "dataStorages.linkAlert": self.link_alert,
-            "dataStorages.unlinkTag": self.unlink_alert,
-            "dataStorages.unlinkTag": self.updated,
-        }
-
     async def _create_store_name_for_new_tag(self,
             ds_id: str, tag_id: str) -> dict | None:
         """Метод, создающий имя для нового места хранения данных тега.

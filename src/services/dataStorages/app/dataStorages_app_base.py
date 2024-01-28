@@ -187,12 +187,19 @@ class DataStoragesAppBase(svc.Svc, ABC):
                     self._logger.error(f"Ошибка связи с базой данных '{ds_id}': {ex}")
                     await asyncio.sleep(5)
 
+        # добавим в список поддерживаемых хранилищ новое
+        self._ds_ids.append(ds_id)
+        await self._amqp_consume["queue"].bind(
+            exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
+            routing_key=ds_id
+        )
+
         payload = {
             "base": ds_id,
             "filter": {
                 "objectClass": ["prsDatastorageTagData"]
             },
-            "attributes": ["cn`"]
+            "attributes": ["cn"]
         }
         tags = await self._hierarchy.search(payload)
         tag_ids = [tag[2]["cn"][0] for tag in tags]
@@ -209,12 +216,8 @@ class DataStoragesAppBase(svc.Svc, ABC):
                 }, nx=True)
             await pipe.execute()
 
-        # добавим в список поддерживаемых хранилищ новое
-        self._ds_ids.append(ds_id)
-        await self._amqp_consume["queue"].bind(
-            exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
-            routing_key=ds_id
-        )
+            for tag_id in tag_ids:
+                await self._bind_tag(tag_id, True)
 
     async def on_startup(self) -> None:
 
@@ -566,13 +569,14 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
         store = mes["data"]["attributes"].get("prsStore")
         if store is not None:
-            if not self._check_store_name_for_new_tag(ds_id=ds_id, store=store):
+            check = await self._check_store_name_for_new_tag(ds_id=ds_id, store=store)
+            if not check:
                 self._logger.error(f"{store} не подходит для хранения данных тега {tag_id}")
                 return {"prsStore": None}
         else:
-            store = self._create_store_name_for_new_tag(ds_id=ds_id, tag_id=tag_id)
+            store = await self._create_store_name_for_new_tag(ds_id=ds_id, tag_id=tag_id)
 
-        self._create_store_for_tag(tag_id=tag_id, ds_id=ds_id, store=store)
+        await self._create_store_for_tag(tag_id=tag_id, ds_id=ds_id, store=store)
 
         await self._bind_tag(tag_id, True)
 
@@ -748,10 +752,19 @@ class DataStoragesAppBase(svc.Svc, ABC):
                                 f"Хранилище {ds_id} неактивно."
                             )
                             continue
-                        tag_ids += set(res[0][0].tags)
+                        tag_ids = tag_ids.union(set(res[0][0]["tags"]))
 
-                    for tag_id in tag_ids:
-                        await self._write_tag_data_to_db(tag_id)
+                for tag_id in tag_ids:
+                    pipe.json().get(
+                        f"{self._config.svc_name}:{tag_id}",
+                        f"$"
+                    )
+                    res = await pipe.execute()
+                    if res[0] is None:
+                        # если нет кэша у тега
+                        await self._create_tag_cache(tag_id)
+
+                    await self._write_tag_data_to_db(tag_id)
 
         except Exception as ex:
             self._logger.error(f"Ошибка записи данных в базу: {ex}")
@@ -766,7 +779,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
         Args:
             mes (dict): {
-                "action": "tags.set_data",
+                "action": "tags.uploadData",
                 "data": {
                     "data": [
                         {
@@ -792,7 +805,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
                     res = await pipe.execute()
                     if res[0] is None:
                         # если нет кэша у тега
-                        cache = self._create_tag_cache(tag_id)
+                        cache = await self._create_tag_cache(tag_id)
                     else:
                         cache = res[0][0]
                     if not cache["prsActive"]:
@@ -877,7 +890,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
             }
             res = await self._hierarchy.search(payload=payload)
             if res:
-                tag_cache["dss"][ds_id] = res[0][2]["prsStore"][0]
+                tag_cache["dss"][ds_id] = json.loads(res[0][2]["prsStore"][0])
         # ------------------------------------------------------------
 
         try:
@@ -886,7 +899,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
                 await pipe.json().set(
                     f"{self._config.svc_name}:{tag_id}", "$",
                     tag_cache, nx=True
-                )
+                ).execute()
         except Exception as ex:
             self._logger.error(ex)
 
@@ -974,7 +987,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
         # TODO: разобраться, как читать данные, если тег привязан к разным хранилищам
 
-        self._logger.debug(f"Запись данных: {mes}")
+        self._logger.debug(f"Чтение данных: {mes}")
 
         tasks = {}
 

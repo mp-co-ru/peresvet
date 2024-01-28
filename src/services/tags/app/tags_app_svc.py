@@ -30,8 +30,8 @@ class TagsApp(svc.Svc):
 
     def _set_incoming_commands(self) -> dict:
         return {
-            "tags.setData": self._data_set,
-            "tags.getData": self._data_get
+            "tags.setData": self.data_set,
+            "tags.getData": self.data_get
         }
 
     async def _check_mes_correctness(self, message: aio_pika.abc.AbstractIncomingMessage) -> bool:
@@ -42,7 +42,7 @@ class TagsApp(svc.Svc):
             return False
         return True
 
-    async def _data_get(self, mes: dict) -> dict:
+    async def data_get(self, mes: dict) -> dict:
         self._logger.debug(f"Data get mes: {mes}")
 
         new_payload = copy.deepcopy(mes["data"])
@@ -69,9 +69,7 @@ class TagsApp(svc.Svc):
 
         return final_res
 
-    async def _data_set(self, mes: dict) -> None:
-
-        mes["action"] = "tags.uploadData"
+    async def data_set(self, mes: dict) -> None:
 
         for tag_item in mes["data"]["data"]:
 

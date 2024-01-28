@@ -16,6 +16,38 @@
                 }
             ],
             "justMyCode": true
+        },
+        {
+            "name": "MPC_DEBUG: a5c5 app_psql",
+            "type": "python",
+            "request": "attach",
+            "connect": {
+                "host": "172.18.0.5",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "."
+                }
+            ],
+            "justMyCode": true
+        },
+        {
+            "name": "MPC_DEBUG: 7a8d app_psql",
+            "type": "python",
+            "request": "attach",
+            "connect": {
+                "host": "172.18.0.4",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "."
+                }
+            ],
+            "justMyCode": true
         }
     ]
 }

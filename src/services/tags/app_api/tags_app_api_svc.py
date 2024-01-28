@@ -168,7 +168,7 @@ class TagsAppAPI(svc.Svc):
             payload = DataGet(**payload)
 
         body = {
-            "action": "tags.getData",
+            "action": "tags.downloadData",
             "data": payload.model_dump()
         }
         res = await self._post_message(
@@ -199,7 +199,7 @@ class TagsAppAPI(svc.Svc):
 
     async def data_set(self, payload: AllData) -> None:
         body = {
-            "action": "tags.setData",
+            "action": "tags.uploadData",
             "data": payload.model_dump()
         }
 
