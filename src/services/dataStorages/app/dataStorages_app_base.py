@@ -153,6 +153,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
         Привязка тега для прослушивания.
         """
         self._logger.debug(f"Привязка: {bind} очереди для тега {tag_id}.")
+
         if bind:
             await self._amqp_consume["queue"].bind(
                 exchange=self._amqp_consume["exchanges"]["tags"]["exchange"],
@@ -580,6 +581,19 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
         await self._bind_tag(tag_id, True)
 
+        try:
+            client = redis.Redis(connection_pool=self._cache_pool)
+            # добавим ключ "svc_name:ds_id": {}
+            async with client.pipeline() as pipe:
+                await pipe.json().arrappend(
+                    f"{self._config.svc_name}:{ds_id}",
+                    "$.tags",
+                    tag_id).execute()
+            await client.aclose()
+        except Exception as ex:
+            self._logger.error(f"Ошибка привязки тега {ex}")
+            return {"prsStore": None}
+
         return {"prsStore": store}
 
     async def link_alert(self, mes: dict) -> dict:
@@ -967,7 +981,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
         Args:
             mes (dict): {
-                "action": "tags.get_data",
+                "action": "tags.downloadData",
                 "data": {
                     "tagId": [str],
                     "start": int,
@@ -991,7 +1005,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
         tasks = {}
 
-        self._write_cache_data(mes["data"]["tagId"])
+        await self._write_cache_data(mes["data"]["tagId"])
 
         for tag_id in mes["data"]["tagId"]:
             # Если ключ actual установлен в true, ключ timeStep не учитывается
@@ -1291,11 +1305,11 @@ class DataStoragesAppBase(svc.Svc, ABC):
             tag_cache = await pipe.json().get(
                 f"{self._config.svc_name}:{tag_id}", "prsStep"
             ).execute()
-            if not tag_cache[0]:
+            if tag_cache[0] is None:
                 self._logger.error(f"Тег {tag_id} отсутствует в кэше.")
                 await client.aclose()
                 return []
-            step = tag_cache[0]["prsStep"]
+            step = tag_cache[0]
         await client.aclose()
 
         tag_data = await self._read_data(

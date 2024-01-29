@@ -418,7 +418,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
                 for ds_id in tag_cache[0][0]["dss"].keys():
                     active = await pipe.json().get(
-                        f"{self._config.svc_name}:{ds_id}", "$.prsActive"
+                        f"{self._config.svc_name}:{ds_id}", "prsActive"
                     ).execute()
                     if active[0] is None:
                         self._logger.error(
@@ -426,7 +426,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                         continue
 
                     # если хранилище неактивно, данные в него не записываем
-                    if not active[0][0]["prsActive"]:
+                    if not active[0]:
                         continue
 
                     async with self._connection_pools[ds_id].acquire() as conn:
@@ -454,85 +454,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
         except Exception as ex:
             self._logger.error(f"Ошибка записи данных в базу {ds_id}: {ex}")
-
-    async def tag_set(self, mes: dict) -> None:
-        """
-
-        Args:
-            mes (dict): {
-                "action": "tags.set_data",
-                "data": {
-                    "data": [
-                        {
-                            "tagId": "<some_id>",
-                            "data": [(y,x,q)]
-                        }
-                    ]
-                }
-            }
-        """
-        try:
-            client = redis.Redis(connection_pool=self._cache_pool)
-        except Exception as ex:
-            self._logger.error(f"Ошибка при попытке связи с кэш сервером: {ex}")
-            return
-
-        try:
-            async with client.pipeline(transaction=True) as pipe:
-                for tag_data in mes["data"]["data"]:
-                    tag_id = tag_data["tagId"]
-                    tag_params = self._tags[tag_id]
-                    ds_id = tag_params["ds_id"]
-
-                    pipe.json().arrappend(self._config.svc_name, f"$.data.{ds_id}.{tag_id}", *tag_data["data"])
-                res = await pipe.execute()
-
-                self._logger.debug(
-                    f"Обновление кэша данных: {json.dumps(mes,indent=4,ensure_ascii=False)}"
-                )
-        except Exception as ex:
-            self._logger.error(f"Ошибка обновления данных в кэше: {ex}")
-        finally:
-            await client.aclose()
-
-    async def _prepare_tag_data(self, tag_id: str, ds_id: str) -> dict | None:
-        get_tag_data = {
-            "id": [tag_id],
-            "attributes": [
-                "prsUpdate", "prsValueTypeCode", "prsActive", "prsStep"
-            ]
-        }
-
-        tag_data = await self._hierarchy.search(payload=get_tag_data)
-
-        if not tag_data:
-            self._logger.info(f"Не найден тег {tag_id}")
-            return None
-
-        to_return = {
-            "table": None,
-            "active": tag_data[0][2]["prsActive"][0] == "TRUE",
-            "update": tag_data[0][2]["prsUpdate"][0] == "TRUE",
-            "value_type": int(tag_data[0][2]["prsValueTypeCode"][0]),
-            "step": tag_data[0][2]["prsStep"][0] == "TRUE"
-        }
-
-        get_link_data = {
-            "base": ds_id,
-            "filter": {
-                "cn": [tag_id]
-            },
-            "attributes": ["prsStore"]
-        }
-
-        link_data = await self._hierarchy.search(payload=get_link_data)
-
-        if not link_data:
-            return to_return
-
-        to_return["table"] = json.loads(link_data[0][2]["prsStore"][0])["table"]
-
-        return to_return
 
     async def _prepare_alert_data(self, alert_id: str, ds_id: str) -> dict | None:
         get_alert_data = {
@@ -587,9 +508,9 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         actual_ds = None
         client = redis.Redis(connection_pool=self._cache_pool)
         async with client.pipeline() as pipe:
-            tag_data = pipe.json().get(
+            tag_data = await pipe.json().get(
                 f"{self._config.svc_name}:{tag_id}",
-                "prsActive", "prsStore", "dss"
+                "prsActive", "dss"
             ).execute()
 
             if not tag_data[0]:
@@ -611,20 +532,23 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                     f"{self._config.svc_name}:{ds_id}",
                     "prsActive"
                 ).execute()
-                if not ds_res[0]:
+                if ds_res[0] is None:
                     self._logger.error(
                         f"Хранилище {ds_id} отсутствует в кэше."
                     )
-                actual_ds = ds_id
+                if ds_res[0]:
+                    actual_ds = ds_id
+                    break
         await client.aclose()
 
         if not actual_ds:
             self._logger.error(
                 f"Не найдено актуальное хранилище для тега {tag_id}"
             )
+            return []
 
         conditions = ['TRUE']
-        sql_select = f"SELECT id, x, y, q FROM \"{tag_data['prsStore']['table']}\""
+        sql_select = f"SELECT id, x, y, q FROM \"{tag_data[0]['dss'][actual_ds]['table']}\""
 
         if start is not None:
             conditions.append(f'x >= {start}')
