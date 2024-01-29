@@ -18,11 +18,11 @@
             "justMyCode": true
         },
         {
-            "name": "MPC_DEBUG: 5859 model_crud",
+            "name": "MPC_DEBUG: a5c5 app_psql",
             "type": "python",
             "request": "attach",
             "connect": {
-                "host": "172.27.0.3",
+                "host": "172.18.0.5",
                 "port": 5678
             },
             "pathMappings": [
@@ -34,59 +34,11 @@
             "justMyCode": true
         },
         {
-            "name": "MPC_DEBUG: 44ab app",
+            "name": "MPC_DEBUG: 7a8d app_psql",
             "type": "python",
             "request": "attach",
             "connect": {
-                "host": "172.27.0.11",
-                "port": 5678
-            },
-            "pathMappings": [
-                {
-                    "localRoot": "${workspaceFolder}",
-                    "remoteRoot": "."
-                }
-            ],
-            "justMyCode": true
-        },
-        {
-            "name": "MPC_DEBUG: dd84 app",
-            "type": "python",
-            "request": "attach",
-            "connect": {
-                "host": "172.27.0.2",
-                "port": 5678
-            },
-            "pathMappings": [
-                {
-                    "localRoot": "${workspaceFolder}",
-                    "remoteRoot": "."
-                }
-            ],
-            "justMyCode": true
-        },
-        {
-            "name": "MPC_DEBUG: cdd1 app_psql",
-            "type": "python",
-            "request": "attach",
-            "connect": {
-                "host": "172.27.0.5",
-                "port": 5678
-            },
-            "pathMappings": [
-                {
-                    "localRoot": "${workspaceFolder}",
-                    "remoteRoot": "."
-                }
-            ],
-            "justMyCode": true
-        },
-        {
-            "name": "MPC_DEBUG: b354 app_psql",
-            "type": "python",
-            "request": "attach",
-            "connect": {
-                "host": "172.27.0.8",
+                "host": "172.18.0.4",
                 "port": 5678
             },
             "pathMappings": [

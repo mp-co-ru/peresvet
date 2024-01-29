@@ -110,7 +110,7 @@ class Hierarchy:
             passwd=ldap_url.cred,
             size=self.pool_size,
             retry_max=10,
-            retry_delay=0.3
+            retry_delay=1
         )
 
         self._base_dn = ldap_url.dn
@@ -172,7 +172,7 @@ class Hierarchy:
                 * id
                     список идентификаторов узлов, данные по которым
                     необходимо получить; если присутствует, то не учитываются ключи
-                    ``base``\, ``scope``\, ``attributes``\; по умолчанию - None;
+                    ``base``\, ``scope``\, ``filter``\; по умолчанию - None;
                 * base
                     id (uuid) или dn базового узла, от которого
                     вести поиск;

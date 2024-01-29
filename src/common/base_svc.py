@@ -3,7 +3,6 @@
 """
 import json
 import asyncio
-import time
 import uvloop
 from functools import cached_property
 from uuid import uuid4
@@ -141,6 +140,7 @@ class BaseSvc(FastAPI):
 
             reject = await self._reject_message(mes)
             if reject:
+                self._logger.debug(f"Сообщение {mes} отклонено.")
                 await message.reject(True)
                 return
 

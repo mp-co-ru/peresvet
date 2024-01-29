@@ -1,11 +1,11 @@
 from typing import List
-from src.services.dataStorages.app.dataStorages_app_base_settings import DataStoragesAppBaseSettings
+from src.common.svc_settings import SvcSettings
 
-class DataStoragesAppPostgreSQLSettings(DataStoragesAppBaseSettings):
+class DataStoragesAppBaseSettings(SvcSettings):
     #: имя сервиса
-    svc_name: str = "dataStorages_app_postgresql"
+    svc_name: str = "dataStorages_app_base"
     #: строка коннекта к RabbitMQ
-    amqp_url: str = "amqp://prs:Peresvet21@localhost/"
+    amqp_url: str = "amqp://prs:Peresvet21@rabbitmq/"
 
     # описание обменников, в которые сервис будет публиковать свои сообщения
     # наиболее часто это всего один обменник, описанный в ключе "main"
@@ -28,7 +28,7 @@ class DataStoragesAppPostgreSQLSettings(DataStoragesAppBaseSettings):
     # информацию об обменниках и сообщениях см. в документации на каждый
     # конкретный сервис
     consume: dict = {
-        "queue_name": "dataStorages_app_postgresql_consume",
+        "queue_name": "dataStorages_app_base_consume",
         "exchanges": {
             "main": {
                 #: имя обменника
@@ -54,7 +54,7 @@ class DataStoragesAppPostgreSQLSettings(DataStoragesAppBaseSettings):
     }
 
     #: строка коннекта к OpenLDAP
-    ldap_url: str = "ldap://localhost:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+    ldap_url: str = "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
 
     # код типа хранилища: 0 - Postgresql, 1 - victoriametrics
     datastorage_type: int = 0
@@ -64,6 +64,6 @@ class DataStoragesAppPostgreSQLSettings(DataStoragesAppBaseSettings):
     datastorages_id: List[str] = []
 
     # периодичность накопления кэша данных, секунды
-    cache_data_period: int = 3000
+    cache_data_period: int = 30
 
-    cache_url: str = "redis://localhost:6379?decode_responses=True&protocol=3"
+    cache_url: str = "redis://redis:6379?decode_responses=True&protocol=3"
