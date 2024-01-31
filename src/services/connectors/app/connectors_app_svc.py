@@ -78,13 +78,13 @@ class ConnectorsApp(svc.Svc):
             })
             tag_id, _, tag_attr = tag[0]
             prs_value_type_code = tag_attr.get('prsValueTypeCode')
-            if prs_value_type_code:
-                attributes['prsValueTypeCode'] = [0]
-                if id_:
-                    res["tags"].append({
-                        "tagId": tag_id,
-                        "attributes": attributes
-                    })
+            if not prs_value_type_code:
+                attributes['prsValueTypeCode'] = [1]
+            if id_:
+                res["tags"].append({
+                    "tagId": tag_id,
+                    "attributes": attributes
+                })
         
         return res
         
