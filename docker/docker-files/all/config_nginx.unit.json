@@ -29,10 +29,7 @@
         },
         "*:89": {
             "pass": "applications/tags_app_api"
-        },
-        "*:90": {
-          "pass": "applications/retranslator_app"
-      }
+        }
     },
 
     "applications": {
