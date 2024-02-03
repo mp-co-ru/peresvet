@@ -1,0 +1,41 @@
+FROM nginx/unit:1.28.0-python3.10
+
+# Установить:
+# redis
+# postgresql
+# ldap
+# rabbitmq
+# grafana
+# nginx
+
+ENV LDAP_ORGANISATION mycompany
+ENV LDAP_DOMAIN mycompany.com
+ENV LDAP_ADMIN_PASSWORD 123456
+
+WORKDIR /home
+RUN pip3 install pipenv
+RUN apt-get update && apt-get install -y --no-install-recommends gcc \
+    build-essential python3-dev \
+    libldap2-dev libsasl2-dev tox lcov valgrind
+
+RUN bash -c "DEBIAN_FRONTEND=noninteractive apt install -q -y slapd ldap-utils"
+
+WORKDIR /usr/src
+RUN mkdir mpc-peresvet
+COPY Pipfile /usr/src/mpc-peresvet/
+WORKDIR /usr/src/mpc-peresvet
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
+#RUN apt-get -y purge slapd
+
+COPY src /usr/src/mpc-peresvet/
+#ADD src /usr/src/mpc-peresvet/
+RUN rm -r -f /usr/src/mpc-peresvet/src/__pycache__
+
+RUN addgroup --gid 1024 volume_group
+RUN usermod -a -G volume_group unit
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+COPY docker/docker-files/all/config_nginx.unit.all.json /docker-entrypoint.d/

@@ -35,9 +35,9 @@
     "applications": {
         "alerts_api_crud": {
             "type": "python 3.10",
-            "working_directory": "/usr/src/alerts_api_crud",
-            "path": "/usr/src/alerts_api_crud/src/services/alerts/api_crud/",
-            "home": "/usr/src/alerts_api_crud/.venv/",
+            "working_directory": "/usr/src/mpc-peresvet",
+            "path": "/usr/src/mpc-peresvet/src/services/alerts/api_crud/",
+            "home": "/usr/src/mpc-peresvet/.venv/",
             "module": "alerts_api_crud_svc",
             "callable": "app",
             "environment": {
@@ -48,9 +48,9 @@
         },
         "alerts_model_crud": {
             "type": "python 3.10",
-            "working_directory": "/usr/src/alerts_model_crud",
-            "path": "/usr/src/alerts_model_crud/src/services/alerts/model_crud/",
-            "home": "/usr/src/alerts_model_crud/.venv/",
+            "working_directory": "/usr/src/mpc-peresvet",
+            "path": "/usr/src/mpc-peresvet/src/services/alerts/model_crud/",
+            "home": "/usr/src/mpc-peresvet/.venv/",
             "module": "alerts_model_crud_svc",
             "callable": "app",
             "environment": {
@@ -330,5 +330,3 @@
         }
     }
 }
-
-  
