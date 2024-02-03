@@ -25,14 +25,16 @@ RUN mkdir mpc-peresvet
 COPY Pipfile /usr/src/mpc-peresvet/
 WORKDIR /usr/src/mpc-peresvet
 RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
-#RUN apt-get -y purge slapd
-
-COPY src /usr/src/mpc-peresvet/
-#ADD src /usr/src/mpc-peresvet/
-RUN rm -r -f /usr/src/mpc-peresvet/src/__pycache__
+RUN apt-get -y purge slapd
 
 RUN addgroup --gid 1024 volume_group
 RUN usermod -a -G volume_group unit
+
+RUN mkdir /usr/src/mpc-peresvet/log
+RUN chown unit:volume_group /usr/src/mpc-peresvet/log
+
+COPY src /usr/src/mpc-peresvet/src
+RUN rm -r -f /usr/src/mpc-peresvet/src/__pycache__
 
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
