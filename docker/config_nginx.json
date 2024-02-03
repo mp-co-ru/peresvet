@@ -1,0 +1,334 @@
+{
+    "listeners": {
+        "*:80": {
+            "pass": "applications/alerts_api_crud"
+        },
+        "*:81": {
+            "pass": "applications/alerts_app_api"
+        },
+        "*:82": {
+            "pass": "applications/connectors_api_crud"
+        },
+        "*:83": {
+            "pass": "applications/connectors_app"
+        },
+        "*:84": {
+            "pass": "applications/dataStorages_api_crud"
+          },
+        "*:85": {
+            "pass": "applications/unit_methods_api_crud"
+        },
+        "*:86": {
+            "pass": "applications/unit_objects_api_crud"
+        },
+        "*:87": {
+            "pass": "applications/unit_schedules_api_crud"
+        },
+        "*:88": {
+            "pass": "applications/tags_api_crud"
+        },
+        "*:89": {
+            "pass": "applications/tags_app_api"
+        }
+    },
+
+    "applications": {
+        "alerts_api_crud": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/alerts_api_crud",
+            "path": "/usr/src/alerts_api_crud/src/services/alerts/api_crud/",
+            "home": "/usr/src/alerts_api_crud/.venv/",
+            "module": "alerts_api_crud_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/alerts_api_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@localhost/",
+                "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        },
+        "alerts_model_crud": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/alerts_model_crud",
+            "path": "/usr/src/alerts_model_crud/src/services/alerts/model_crud/",
+            "home": "/usr/src/alerts_model_crud/.venv/",
+            "module": "alerts_model_crud_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/alerts_model_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@localhost/",
+                "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        },
+        "alerts_app": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/alerts_app",
+            "path": "/usr/src/alerts_app/src/services/alerts/app/",
+            "home": "/usr/src/alerts_app/.venv/",
+            "module": "alerts_app_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/alerts_app.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@localhost/",
+                "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        },
+        "alerts_app_api": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/alerts_app_api",
+            "path": "/usr/src/alerts_app_api/src/services/alerts/app_api/",
+            "home": "/usr/src/alerts_app_api/.venv/",
+            "module": "alerts_app_api_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/alerts_app_api.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@localhost/",
+                "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        },
+        "connectors_api_crud": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/connectors_api_crud",
+            "path": "/usr/src/connectors_api_crud/src/services/connectors/api_crud/",
+            "home": "/usr/src/connectors_api_crud/.venv/",
+            "module": "connectors_api_crud_svc",
+            "callable": "app",
+            "environment": {
+              "log": "{\"level\": \"INFO\", \"file_name\": \"log/connectors_api_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+            }
+          },
+          "connectors_model_crud": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/connectors_model_crud",
+            "path": "/usr/src/connectors_model_crud/src/services/connectors/model_crud/",
+            "home": "/usr/src/connectors_model_crud/.venv/",
+            "module": "connectors_model_crud_svc",
+            "callable": "app",
+            "environment": {
+              "log": "{\"level\": \"INFO\", \"file_name\": \"log/connectors_model_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+            }
+          },
+          "connectors_app": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/connectors_app",
+            "path": "/usr/src/connectors_app/src/services/connectors/app/",
+            "home": "/usr/src/connectors_app/.venv/",
+            "module": "connectors_app_svc",
+            "callable": "app",
+            "environment": {
+              "log": "{\"level\": \"INFO\", \"file_name\": \"log/connectors_app.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+            }
+          },
+          "dataStorages_api_crud": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/dataStorages_api_crud",
+            "path": "/usr/src/dataStorages_api_crud/src/services/dataStorages/api_crud/",
+            "home": "/usr/src/dataStorages_api_crud/.venv/",
+            "module": "dataStorages_api_crud_svc",
+            "callable": "app",
+            "environment": {
+              "log": "{\"level\": \"INFO\", \"file_name\": \"log/dataStorages_api_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+              "amqp_url": "amqp://prs:Peresvet21@localhost/",
+              "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+          },
+          "dataStorages_model_crud": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/dataStorages_model_crud",
+            "path": "/usr/src/dataStorages_model_crud/src/services/dataStorages/model_crud/",
+            "home": "/usr/src/dataStorages_model_crud/.venv/",
+            "module": "dataStorages_model_crud_svc",
+            "callable": "app",
+            "environment": {
+              "log": "{\"level\": \"INFO\", \"file_name\": \"log/dataStorages_model_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+              "amqp_url": "amqp://prs:Peresvet21@localhost/",
+              "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+          },
+          "dataStorages_app_psql": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/dataStorages_app_psql",
+            "path": "/usr/src/dataStorages_app_psql/src/services/dataStorages/app/postgresql/",
+            "home": "/usr/src/dataStorages_app_psql/.venv/",
+            "module": "dataStorages_app_postgresql_svc",
+            "callable": "app",
+            "environment": {
+              "log": "{\"level\": \"INFO\", \"file_name\": \"log/dataStorages_app_psql.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+              "amqp_url": "amqp://prs:Peresvet21@localhost/",
+              "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21",
+              "cache_url": "redis://redis:6379?decode_responses=True&protocol=3"
+            }
+          },
+          "dataStorages_app_vm": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/dataStorages_app_vm",
+            "path": "/usr/src/dataStorages_app_vm/src/services/dataStorages/app/victoriametrics/",
+            "home": "/usr/src/dataStorages_app_vm/.venv/",
+            "module": "dataStorages_app_victoriametrics_svc",
+            "callable": "app",
+            "environment": {
+              "log": "{\"level\": \"INFO\", \"file_name\": \"log/dataStorages_app_vm.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+              "amqp_url": "amqp://prs:Peresvet21@localhost/",
+              "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+          },
+          "unit_methods_api_crud": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/methods_api_crud",
+            "path": "/usr/src/methods_api_crud/src/services/methods/api_crud/",
+            "home": "/usr/src/methods_api_crud/.venv/",
+            "module": "methods_api_crud_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/methods_api_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@localhost/",
+                "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        },
+        "unit_methods_model_crud": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/methods_model_crud",
+            "path": "/usr/src/methods_model_crud/src/services/methods/model_crud/",
+            "home": "/usr/src/methods_model_crud/.venv/",
+            "module": "methods_model_crud_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/methods_model_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@localhost/",
+                "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        },
+        "unit_methods_app": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/methods_app",
+            "path": "/usr/src/methods_app/src/services/methods/app/",
+            "home": "/usr/src/methods_app/.venv/",
+            "module": "methods_app_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/methods_app.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@localhost/",
+                "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        },
+        "unit_objects_api_crud": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/objects_api_crud",
+            "path": "/usr/src/objects_api_crud/src/services/objects/api_crud/",
+            "home": "/usr/src/objects_api_crud/.venv/",
+            "module": "objects_api_crud_svc",
+            "callable": "app",
+            "environment": {
+              "log": "{\"level\": \"INFO\", \"file_name\": \"log/objects_api_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+            }
+          },
+          "unit_objects_model_crud": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/objects_model_crud",
+            "path": "/usr/src/objects_model_crud/src/services/objects/model_crud/",
+            "home": "/usr/src/objects_model_crud/.venv/",
+            "module": "objects_model_crud_svc",
+            "callable": "app",
+            "environment": {
+              "log": "{\"level\": \"INFO\", \"file_name\": \"log/objects_model_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+            }
+          },
+          "retranslator_app": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/retranslator_app",
+            "path": "/usr/src/retranslator_app/src/services/retranslator/app/",
+            "home": "/usr/src/retranslator_app/.venv/",
+            "module": "retranslator_app_svc",
+            "callable": "app",
+            "environment": {
+              "log": "{\"level\": \"INFO\", \"file_name\": \"log/retranslator_app.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+            }
+          },
+          "unit_schedules_api_crud": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/schedules_api_crud",
+            "path": "/usr/src/schedules_api_crud/src/services/schedules/api_crud/",
+            "home": "/usr/src/schedules_api_crud/.venv/",
+            "module": "schedules_api_crud_svc",
+            "callable": "app",
+            "environment": {
+              "log": "{\"level\": \"INFO\", \"file_name\": \"log/schedules_api_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+            }
+          },
+          "unit_schedules_model_crud": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/schedules_model_crud",
+            "path": "/usr/src/schedules_model_crud/src/services/schedules/model_crud/",
+            "home": "/usr/src/schedules_model_crud/.venv/",
+            "module": "schedules_model_crud_svc",
+            "callable": "app",
+            "environment": {
+              "log": "{\"level\": \"INFO\", \"file_name\": \"log/schedules_model_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+            }
+          },
+          "unit_schedules_app": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/schedules_app",
+            "path": "/usr/src/schedules_app/src/services/schedules/app/",
+            "home": "/usr/src/schedules_app/.venv/",
+            "module": "schedules_app_svc",
+            "callable": "app",
+            "environment": {
+              "log": "{\"level\": \"INFO\", \"file_name\": \"log/schedules_app.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+            }
+          },
+          "tags_api_crud": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/tags_api_crud",
+            "path": "/usr/src/tags_api_crud/src/services/tags/api_crud/",
+            "home": "/usr/src/tags_api_crud/.venv/",
+            "module": "tags_api_crud_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/tags_api_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@localhost/",
+                "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        },
+        "tags_model_crud": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/tags_model_crud",
+            "path": "/usr/src/tags_model_crud/src/services/tags/model_crud/",
+            "home": "/usr/src/tags_model_crud/.venv/",
+            "module": "tags_model_crud_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/tags_model_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@localhost/",
+                "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        },
+        "tags_app": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/tags_app",
+            "path": "/usr/src/tags_app/src/services/tags/app/",
+            "home": "/usr/src/tags_app/.venv/",
+            "module": "tags_app_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/tags_app.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@localhost/",
+                "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        },
+        "tags_app_api": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/tags_app_api",
+            "path": "/usr/src/tags_app_api/src/services/tags/app_api/",
+            "home": "/usr/src/tags_app_api/.venv/",
+            "module": "tags_app_api_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/tags_app_api.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@localhost/",
+                "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        }
+    }
+}
+
+  
