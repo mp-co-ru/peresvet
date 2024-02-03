@@ -4,7 +4,6 @@
 <сущность>_api_crud.
 """
 import json
-from typing import Optional
 from uuid import UUID
 from pydantic import BaseModel, Field, validator, ConfigDict
 

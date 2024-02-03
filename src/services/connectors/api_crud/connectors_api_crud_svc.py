@@ -3,9 +3,7 @@
 и класс сервиса ``connectors_api_crud_svc``\.
 """
 import sys
-from typing import List
 from pydantic import BaseModel, Field, validator, ConfigDict
-from typing import Optional, List
 
 from fastapi import APIRouter
 
@@ -13,16 +11,6 @@ sys.path.append(".")
 
 from src.common import api_crud_svc as svc
 from connectors_api_crud_settings import ConnectorsAPICRUDSettings
-
-class ConnectorAttributes(svc.NodeAttributes):
-    prsJsonConfigString: dict = Field(
-        title="Способ подключения к источнику данных",
-        description=(
-            "Json, содержащий информацию о том, как коннектор должен "
-            "подключаться к источнику данных. Формат зависит от "
-            "конкретного коннектора."
-        )
-    )
 
 class LinkTagAttributes(svc.NodeAttributes):
 
@@ -54,8 +42,16 @@ class LinkTag(BaseModel):
     tagId: str = Field(title="Идентификатор привязываемого тега")
     attributes: LinkTagAttributes = Field(title="Атрибуты тега")
 
-class ConnectorLinkedTagUpdate(svc.NodeUpdate):
-    attributes: Optional[LinkTagAttributes] = Field(title="Аттрибуты узла опционально")
+
+class ConnectorAttributes(svc.NodeAttributes):
+    prsJsonConfigString: dict = Field(
+        title="Способ подключения к источнику данных",
+        description=(
+            "Json, содержащий информацию о том, как коннектор должен "
+            "подключаться к источнику данных. Формат зависит от "
+            "конкретного коннектора."
+        )
+    )
 
 class ConnectorCreate(svc.NodeCreate):
     attributes: ConnectorAttributes = Field(title="Атрибуты коннектора")
@@ -71,16 +67,23 @@ class ConnectorRead(svc.NodeRead):
     )
 
 class OneConnectorInReadResult(svc.OneNodeInReadResult):
-    pass
+    linkedTags: list[LinkTag] = Field(
+        [],
+        title="Список привязанных к коннектору тегов"
+    )
 
 class ConnectorReadResult(svc.NodeReadResult):
-    data: List[OneConnectorInReadResult] = Field(title="Список коннекторов")
+    data: list[OneConnectorInReadResult] = Field(
+        title="Список коннекторов"
+    )
 
 class ConnectorUpdate(ConnectorCreate):
     id: str = Field(title="Идентификатор изменяемого коннектора.",
                     description="Должен быть в формате GUID.")
 
-    unlinkTags: List[str] = Field(
+    attributes: ConnectorAttributes = Field(None, title="Атрибуты коннектора")
+
+    unlinkTags: list[str] = Field(
         [],
         title="Список отсоединенных тегов для коннектора"
     )
@@ -126,7 +129,7 @@ router = APIRouter()
 async def create(payload: ConnectorCreate):
     return await app.create(payload)
 
-@router.get("/", response_model=svc.NodeReadResult, status_code=200)
+@router.get("/", response_model=ConnectorReadResult, status_code=200)
 async def read(payload: ConnectorRead):
     return await app.read(payload)
 
