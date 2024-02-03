@@ -16,14 +16,20 @@ from connectors_api_crud_settings import ConnectorsAPICRUDSettings
 
 
 class ConnectorCreateAttributes(svc.NodeAttributes):
-    pass
+    prsJsonConfigString: dict = Field(
+        title="Способ подключения к источнику данных",
+        description=(
+            "Json, содержащий информацию о том, как коннектор должен "
+            "подключаться к источнику данных. Формат зависит от "
+            "конкретного коннектора."
+        )
+    )
 
 class ConnectorLinkedTagAttributes(svc.NodeAttributes):
-    prsSource: dict | None = Field(
-        None,
-        title="Словарь источника данных.",
+    prsSource: dict = Field(
+        title="Параметры подключение к источнику данных.",
         description=(
-            "Значения ключей словаря указывают коннектору, как "
+            "Json, хранящий ключи, которые указывают коннектору, как "
             "получать значения тега из источника данных. "
             "Формат словаря зависит от конкретного коннектора."
         )
@@ -48,9 +54,11 @@ class ConnectorLinkedTagUpdate(svc.NodeUpdate):
     attributes: Optional[ConnectorLinkedTagAttributes] = Field(title="Аттрибуты узла опционально")
 
 class ConnectorCreate(svc.NodeCreate):
-    attributes: ConnectorCreateAttributes = Field(title="Атрибуты узла")
-    linkTags: list[ConnectorLinkedTag] = Field(title="Список добавленных тегов для коннектора")
-    # validate_id = validator('parentId', 'dataStorageId', 'connectorId', allow_reuse=True)(svc.valid_uuid)
+    attributes: ConnectorCreateAttributes = Field(title="Атрибуты коннектора")
+    linkTags: list[ConnectorLinkedTag] = Field(
+        [],
+        title="Список добавленных тегов для коннектора"
+    )
 
 class ConnectorRead(svc.NodeRead):
     pass
@@ -62,8 +70,14 @@ class ConnectorReadResult(svc.NodeReadResult):
     data: List[OneConnectorInReadResult] = Field(title="Список коннекторов")
 
 class ConnectorUpdate(svc.NodeUpdate):
-    linkTags: Optional[List[ConnectorLinkedTagUpdate]] = Field(title="Список добавленных тегов для коннектора")
-    unlinkTags: Optional[List[str]] = Field(title="Список отсоединенных тегов для коннектора")
+    linkTags: List[ConnectorLinkedTagUpdate] = Field(
+        [],
+        title="Список добавленных тегов для коннектора"
+    )
+    unlinkTags: List[str] = Field(
+        [],
+        title="Список отсоединенных тегов для коннектора"
+    )
 
 class ConnectorsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с коннекторами в иерархии.
