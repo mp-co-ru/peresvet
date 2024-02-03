@@ -4,7 +4,7 @@
 """
 import sys
 from typing import List
-from pydantic import Field
+from pydantic import BaseModel, Field, validator, ConfigDict
 from typing import Optional, List
 
 from fastapi import APIRouter
@@ -14,8 +14,7 @@ sys.path.append(".")
 from src.common import api_crud_svc as svc
 from connectors_api_crud_settings import ConnectorsAPICRUDSettings
 
-
-class ConnectorCreateAttributes(svc.NodeAttributes):
+class ConnectorAttributes(svc.NodeAttributes):
     prsJsonConfigString: dict = Field(
         title="Способ подключения к источнику данных",
         description=(
@@ -25,8 +24,9 @@ class ConnectorCreateAttributes(svc.NodeAttributes):
         )
     )
 
-class ConnectorLinkedTagAttributes(svc.NodeAttributes):
-    prsSource: dict = Field(
+class LinkTagAttributes(svc.NodeAttributes):
+
+    prsJsonConfigString: dict = Field(
         title="Параметры подключение к источнику данных.",
         description=(
             "Json, хранящий ключи, которые указывают коннектору, как "
@@ -47,21 +47,28 @@ class ConnectorLinkedTagAttributes(svc.NodeAttributes):
         description="Используется коннекторами для снятия `дребезга` значений."
     )
 
-class ConnectorLinkedTag(svc.NodeRead):
-    attributes: ConnectorLinkedTagAttributes = Field(title="Атрибуты тега")
+class LinkTag(BaseModel):
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
+
+    tagId: str = Field(title="Идентификатор привязываемого тега")
+    attributes: LinkTagAttributes = Field(title="Атрибуты тега")
 
 class ConnectorLinkedTagUpdate(svc.NodeUpdate):
-    attributes: Optional[ConnectorLinkedTagAttributes] = Field(title="Аттрибуты узла опционально")
+    attributes: Optional[LinkTagAttributes] = Field(title="Аттрибуты узла опционально")
 
 class ConnectorCreate(svc.NodeCreate):
-    attributes: ConnectorCreateAttributes = Field(title="Атрибуты коннектора")
-    linkTags: list[ConnectorLinkedTag] = Field(
+    attributes: ConnectorAttributes = Field(title="Атрибуты коннектора")
+    linkTags: list[LinkTag] = Field(
         [],
         title="Список добавленных тегов для коннектора"
     )
 
 class ConnectorRead(svc.NodeRead):
-    pass
+    getLinkedTags: bool = Field(
+        False,
+        title="Флаг возврата присоединённых тегов"
+    )
 
 class OneConnectorInReadResult(svc.OneNodeInReadResult):
     pass
@@ -69,15 +76,16 @@ class OneConnectorInReadResult(svc.OneNodeInReadResult):
 class ConnectorReadResult(svc.NodeReadResult):
     data: List[OneConnectorInReadResult] = Field(title="Список коннекторов")
 
-class ConnectorUpdate(svc.NodeUpdate):
-    linkTags: List[ConnectorLinkedTagUpdate] = Field(
-        [],
-        title="Список добавленных тегов для коннектора"
-    )
+class ConnectorUpdate(ConnectorCreate):
+    id: str = Field(title="Идентификатор изменяемого коннектора.",
+                    description="Должен быть в формате GUID.")
+
     unlinkTags: List[str] = Field(
         [],
         title="Список отсоединенных тегов для коннектора"
     )
+
+    validate_id = validator('id', allow_reuse=True)(svc.valid_uuid)
 
 class ConnectorsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с коннекторами в иерархии.

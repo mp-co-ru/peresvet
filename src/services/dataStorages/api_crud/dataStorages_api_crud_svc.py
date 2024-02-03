@@ -2,7 +2,6 @@
 Модуль содержит классы, описывающие входные данные для команд CRUD для хранилищ данных
 и класс сервиса ``dataStorages_api_crud_svc``\.
 """
-import json
 import sys
 from typing import List
 from pydantic import BaseModel, Field, validator, ConfigDict
@@ -77,7 +76,6 @@ class DataStorageReadResult(svc.NodeReadResult):
 class DataStorageUpdate(DataStorageCreate):
     id: str = Field(title="Идентификатор изменяемого узла.",
                     description="Должен быть в формате GUID.")
-    attributes: DataStorageAttributes = Field(None, title="Атрибуты узла")
     unlinkTags: List[str] | None = Field(
         None,
         title="Список id тегов."
