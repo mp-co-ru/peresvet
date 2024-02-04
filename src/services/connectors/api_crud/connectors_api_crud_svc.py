@@ -22,15 +22,15 @@ class LinkTagAttributes(svc.NodeAttributes):
             "Формат словаря зависит от конкретного коннектора."
         )
     )
-    prsValueScale: int | None = Field(
-        None,
+    prsValueScale: int = Field(
+        1,
         title=(
             "Коэффициент, на который умножается значение тега коннектором "
             "перед отправкой в платформу."
         )
     )
-    prsMaxDev: int | None = Field(
-        None,
+    prsMaxDev: int = Field(
+        0,
         title="Величина значащего отклонения.",
         description="Используется коннекторами для снятия `дребезга` значений."
     )

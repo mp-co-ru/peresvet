@@ -3,7 +3,7 @@ import copy
 
 sys.path.append(".")
 
-from connectors_model_crud_settings import ConnectorsModelCRUDSettings
+from src.services.connectors.model_crud.connectors_model_crud_settings import ConnectorsModelCRUDSettings
 from src.common import model_crud_svc
 from src.common import hierarchy
 
@@ -61,10 +61,10 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     async def _further_update(self, mes: dict) -> None:
 
-        ds_id = mes["data"]["id"]
+        cs_id = mes["data"]["id"]
         for item in mes["data"]["linkTags"]:
             copy_item = copy.deepcopy(item)
-            copy_item["connectorId"] = ds_id
+            copy_item["connectorId"] = cs_id
             await self._link_tag(copy_item)
 
     async def _link_tag(self, payload: dict) -> None:
@@ -81,12 +81,14 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
                 }
             }
         """
+        """
         res = await self._post_message(
             mes={"action": "connectors.linkTag", "data": payload},
             reply=True,
             routing_key=payload["connectorId"])
 
         prs_store = res.get("prsJsonConfigString")
+        """
 
         node_dn = await self._hierarchy.get_node_dn(payload['connectorId'])
         tags_node_id = await self._hierarchy.get_node_id(
@@ -97,7 +99,9 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
             attribute_values={
                 "objectClass": ["prsConnectorTagData"],
                 "cn": payload["tagId"],
-                "prsJsonConfigString": prs_store
+                "prsJsonConfigString": payload["attributes"]["prsJsonConfigString"],
+                "prsValueScale": payload["attributes"]["prsValueScale"],
+                "prsMaxDev": payload["attributes"]["prsMaxDev"]
             }
         )
         await self._hierarchy.add_alias(
