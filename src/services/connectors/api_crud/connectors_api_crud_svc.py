@@ -3,9 +3,7 @@
 и класс сервиса ``connectors_api_crud_svc``\.
 """
 import sys
-from typing import List
-from pydantic import Field
-from typing import Optional, List
+from pydantic import BaseModel, Field, validator, ConfigDict
 
 from fastapi import APIRouter
 
@@ -14,8 +12,38 @@ sys.path.append(".")
 from src.common import api_crud_svc as svc
 from connectors_api_crud_settings import ConnectorsAPICRUDSettings
 
+class LinkTagAttributes(svc.NodeAttributes):
 
-class ConnectorCreateAttributes(svc.NodeAttributes):
+    prsJsonConfigString: dict = Field(
+        title="Параметры подключение к источнику данных.",
+        description=(
+            "Json, хранящий ключи, которые указывают коннектору, как "
+            "получать значения тега из источника данных. "
+            "Формат словаря зависит от конкретного коннектора."
+        )
+    )
+    prsValueScale: int = Field(
+        1,
+        title=(
+            "Коэффициент, на который умножается значение тега коннектором "
+            "перед отправкой в платформу."
+        )
+    )
+    prsMaxDev: int = Field(
+        0,
+        title="Величина значащего отклонения.",
+        description="Используется коннекторами для снятия `дребезга` значений."
+    )
+
+class LinkTag(BaseModel):
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
+
+    tagId: str = Field(title="Идентификатор привязываемого тега")
+    attributes: LinkTagAttributes = Field(title="Атрибуты тега")
+
+
+class ConnectorAttributes(svc.NodeAttributes):
     prsJsonConfigString: dict = Field(
         title="Способ подключения к источнику данных",
         description=(
@@ -25,59 +53,42 @@ class ConnectorCreateAttributes(svc.NodeAttributes):
         )
     )
 
-class ConnectorLinkedTagAttributes(svc.NodeAttributes):
-    prsSource: dict = Field(
-        title="Параметры подключение к источнику данных.",
-        description=(
-            "Json, хранящий ключи, которые указывают коннектору, как "
-            "получать значения тега из источника данных. "
-            "Формат словаря зависит от конкретного коннектора."
-        )
-    )
-    prsValueScale: int | None = Field(
-        None,
-        title=(
-            "Коэффициент, на который умножается значение тега коннектором "
-            "перед отправкой в платформу."
-        )
-    )
-    prsMaxDev: int | None = Field(
-        None,
-        title="Величина значащего отклонения.",
-        description="Используется коннекторами для снятия `дребезга` значений."
-    )
-
-class ConnectorLinkedTag(svc.NodeRead):
-    attributes: ConnectorLinkedTagAttributes = Field(title="Атрибуты тега")
-
-class ConnectorLinkedTagUpdate(svc.NodeUpdate):
-    attributes: Optional[ConnectorLinkedTagAttributes] = Field(title="Аттрибуты узла опционально")
-
 class ConnectorCreate(svc.NodeCreate):
-    attributes: ConnectorCreateAttributes = Field(title="Атрибуты коннектора")
-    linkTags: list[ConnectorLinkedTag] = Field(
+    attributes: ConnectorAttributes = Field(title="Атрибуты коннектора")
+    linkTags: list[LinkTag] = Field(
         [],
         title="Список добавленных тегов для коннектора"
     )
 
 class ConnectorRead(svc.NodeRead):
-    pass
+    getLinkedTags: bool = Field(
+        False,
+        title="Флаг возврата присоединённых тегов"
+    )
 
 class OneConnectorInReadResult(svc.OneNodeInReadResult):
-    pass
+    linkedTags: list[LinkTag] = Field(
+        [],
+        title="Список привязанных к коннектору тегов"
+    )
 
 class ConnectorReadResult(svc.NodeReadResult):
-    data: List[OneConnectorInReadResult] = Field(title="Список коннекторов")
-
-class ConnectorUpdate(svc.NodeUpdate):
-    linkTags: List[ConnectorLinkedTagUpdate] = Field(
-        [],
-        title="Список добавленных тегов для коннектора"
+    data: list[OneConnectorInReadResult] = Field(
+        title="Список коннекторов"
     )
-    unlinkTags: List[str] = Field(
+
+class ConnectorUpdate(ConnectorCreate):
+    id: str = Field(title="Идентификатор изменяемого коннектора.",
+                    description="Должен быть в формате GUID.")
+
+    attributes: ConnectorAttributes = Field(None, title="Атрибуты коннектора")
+
+    unlinkTags: list[str] = Field(
         [],
         title="Список отсоединенных тегов для коннектора"
     )
+
+    validate_id = validator('id', allow_reuse=True)(svc.valid_uuid)
 
 class ConnectorsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с коннекторами в иерархии.
@@ -118,7 +129,7 @@ router = APIRouter()
 async def create(payload: ConnectorCreate):
     return await app.create(payload)
 
-@router.get("/", response_model=svc.NodeReadResult, status_code=200)
+@router.get("/", response_model=ConnectorReadResult, status_code=200)
 async def read(payload: ConnectorRead):
     return await app.read(payload)
 
