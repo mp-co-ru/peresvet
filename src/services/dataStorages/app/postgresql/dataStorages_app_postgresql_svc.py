@@ -147,12 +147,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             self._logger.error(f"Ошибка обновления данных в кэше: {ex}")
 
     async def alarm_on(self, mes: dict) -> None:
-        """Факт возникновения тревоги.
-
-        Args:
-            mes (dict): сообщение
-
-        """
 
         self._logger.debug(f"Обработка возникновения тревоги: {mes}")
 
@@ -202,12 +196,9 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         self._logger.debug(f"Обработка квитирования тревоги: {mes}")
 
         alert_id = mes["data"]["alertId"]
-
         alert_params = self._alerts.get(alert_id)
         if not alert_params:
-            self._logger.error(
-                f"Тревога {alert_id} не привязана к хранилищу."
-            )
+            self._logger.error(f"Тревога {alert_id} не привязана к хранилищу.")
             return
 
         connection_pool = alert_params["ds"]
