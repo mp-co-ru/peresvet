@@ -3,7 +3,7 @@ import copy
 
 sys.path.append(".")
 
-from connectors_model_crud_settings import ConnectorsModelCRUDSettings
+from src.services.connectors.model_crud.connectors_model_crud_settings import ConnectorsModelCRUDSettings
 from src.common import model_crud_svc
 from src.common import hierarchy
 
@@ -43,37 +43,76 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
         pass
 
     async def _further_create(self, mes: dict, new_id: str) -> None:
-        system_node = await self._hierarchy.search(payload={
+        sys_ids = await self._hierarchy.search(payload={
             "base": new_id,
             "scope": hierarchy.CN_SCOPE_ONELEVEL,
             "filter": {
                 "cn": ["system"]
-            },
-            "attributes": ["cn"]
+            }
         })
-        if not system_node:
-            self._logger.error(f"В теге {new_id} отсутствует узел `system`.")
-            return
+        sys_id = sys_ids[0][0]
 
-        system_node_id = system_node[0][0]
+        await self._hierarchy.add(sys_id, {"cn": "tags"})
 
-        linkTags = mes.get('data').get('linkTags')
-        self._logger.info(linkTags)
+        for item in mes["data"]["linkTags"]:
+            copy_item = copy.deepcopy(item)
+            copy_item["connectorId"] = new_id
+            await self._link_tag(copy_item)
 
-        if linkTags and isinstance(linkTags, list):
-            for linkTag in linkTags:
-                prsSource = linkTag.get('attributes').get('prsSource')
-                prsMaxDev = linkTag.get('attributes').get('prsMaxDev')
-                prsValueScale = linkTag.get('attributes').get('prsValueScale')
-                prs_connector_tag_data_id = await self._hierarchy.add(system_node_id,
-                                                                    {"objectClass": ["prsConnectorTagData"],
-                                                                     "cn": [linkTag.get('id')],
-                                                                    "prsSource": prsSource,
-                                                                    "prsMaxDev": prsMaxDev,
-                                                                    "prsValueScale": prsValueScale})
-                await self._hierarchy.add_alias(
-                    prs_connector_tag_data_id, linkTag.get('id'), linkTag.get('id')
-                )
+    async def _further_update(self, mes: dict) -> None:
+
+        cs_id = mes["data"]["id"]
+        for item in mes["data"]["linkTags"]:
+            copy_item = copy.deepcopy(item)
+            copy_item["connectorId"] = cs_id
+            await self._link_tag(copy_item)
+
+    async def _link_tag(self, payload: dict) -> None:
+        """Метод привязки тега к коннектору.
+
+        Метод создаёт новый узел в списке тегов коннектора.
+
+        Args:
+            payload (dict): {
+                "tagId": "tag_id",
+                "connectorId": "conn_id",
+                "attributes": {
+                    "prsJsonConfigString":
+                }
+            }
+        """
+        """
+        res = await self._post_message(
+            mes={"action": "connectors.linkTag", "data": payload},
+            reply=True,
+            routing_key=payload["connectorId"])
+
+        prs_store = res.get("prsJsonConfigString")
+        """
+
+        node_dn = await self._hierarchy.get_node_dn(payload['connectorId'])
+        tags_node_id = await self._hierarchy.get_node_id(
+            f"cn=tags,cn=system,{node_dn}"
+        )
+        new_node_id = await self._hierarchy.add(
+            base=tags_node_id,
+            attribute_values={
+                "objectClass": ["prsConnectorTagData"],
+                "cn": payload["tagId"],
+                "prsJsonConfigString": payload["attributes"]["prsJsonConfigString"],
+                "prsValueScale": payload["attributes"]["prsValueScale"],
+                "prsMaxDev": payload["attributes"]["prsMaxDev"]
+            }
+        )
+        await self._hierarchy.add_alias(
+            parent_id=new_node_id,
+            aliased_object_id=payload["tagId"],
+            alias_name=payload["tagId"]
+        )
+
+        self._logger.info(
+            f"Тег {payload['tagId']} привязан к коннектору {payload['connectorId']}"
+        )
 
 settings = ConnectorsModelCRUDSettings()
 

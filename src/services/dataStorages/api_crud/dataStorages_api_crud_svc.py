@@ -2,9 +2,7 @@
 Модуль содержит классы, описывающие входные данные для команд CRUD для хранилищ данных
 и класс сервиса ``dataStorages_api_crud_svc``\.
 """
-import json
 import sys
-from typing import List
 from pydantic import BaseModel, Field, validator, ConfigDict
 from fastapi import APIRouter
 
@@ -37,9 +35,9 @@ class DataStorageAttributes(svc.NodeAttributes):
     pass
 
 class DataStorageCreate(svc.NodeCreate):
-    attributes: DataStorageAttributes = Field(title="Атрибуты узла")
-    linkTags: List[LinkTag] = Field([], title="Список привязываемых тегов")
-    linkAlerts: List[LinkAlert] = Field([], title="Список привязываемых тревог")
+    attributes: DataStorageAttributes = Field(title="Атрибуты хранилища")
+    linkTags: list[LinkTag] = Field([], title="Список привязываемых тегов")
+    linkAlerts: list[LinkAlert] = Field([], title="Список привязываемых тревог")
 
     @validator('attributes')
     @classmethod
@@ -62,28 +60,30 @@ class DataStorageRead(svc.NodeRead):
     )
 
 class OneDataStorageInReadResult(svc.OneNodeInReadResult):
-    linkedTags: List[str] | None = Field(
+    linkedTags: list[str] | None = Field(
         None,
         title="Список id присоединённых тегов."
     )
-    linkedAlerts: List[str] | None = Field(
+    linkedAlerts: list[str] | None = Field(
         None,
         title="Список id присоединённых тревог."
     )
 
 class DataStorageReadResult(svc.NodeReadResult):
-    data: List[OneDataStorageInReadResult] = Field(title="Список хранилищ данных.")
+    data: list[OneDataStorageInReadResult] = Field(title="Список хранилищ данных.")
 
 class DataStorageUpdate(DataStorageCreate):
     id: str = Field(title="Идентификатор изменяемого узла.",
                     description="Должен быть в формате GUID.")
-    attributes: DataStorageAttributes = Field(None, title="Атрибуты узла")
-    unlinkTags: List[str] | None = Field(
-        None,
+
+    attributes: DataStorageAttributes = Field(None, title="Атрибуты хранилища")
+
+    unlinkTags: list[str] | None = Field(
+        [],
         title="Список id тегов."
     )
-    unlinkAlerts: List[str] | None = Field(
-        None,
+    unlinkAlerts: list[str] | None = Field(
+        [],
         title="Список id тревог."
     )
 
