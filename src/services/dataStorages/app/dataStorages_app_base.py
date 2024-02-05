@@ -246,11 +246,11 @@ class DataStoragesAppBase(svc.Svc, ABC):
                     }
                 }
 
+            loop = asyncio.get_event_loop()
             dss = await self._hierarchy.search(payload=payload)
             for ds in dss:
                 await self._add_supported_ds(ds[0])
 
-            loop = asyncio.get_event_loop()
             loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))
 
         except Exception as ex:
@@ -361,7 +361,6 @@ class DataStoragesAppBase(svc.Svc, ABC):
                     else:
                         self._logger.debug(f"Тревога {alert_id} уже активна.")
 
-        #except PostgresError as ex:
         except Exception as ex:
             self._logger.error(f"Ошибка при записи данных тревоги {alert_id}: {ex}")
 
@@ -415,7 +414,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
                     self._logger.debug(f"Тревога {alert_id} квитирована.")
 
-        except PostgresError as ex:
+        except Exception as ex:
             self._logger.error(f"Ошибка при записи данных тревоги {alert_id}: {ex}")
 
     async def alarm_off(self, mes: dict) -> None:
@@ -468,7 +467,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
                     self._logger.debug(f"Тревога {alert_id} закончена.")
 
-        except PostgresError as ex:
+        except Exception as ex:
             self._logger.error(f"Ошибка при записи данных тревоги {alert_id}: {ex}")
 
     async def _reject_message(self, mes: dict) -> bool:
