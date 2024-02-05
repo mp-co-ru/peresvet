@@ -490,8 +490,10 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         Args:
             config (dict): _description_
         """
-
+        #dsn = config["dsn"]
+        #self._logger.info(f"DSN: {dsn}")
         return await apg.create_pool(dsn=config["dsn"])
+        #return None
 
     async def _read_data(self, tag_id: str, start: int, finish: int,
         order: int, count: int, one_before: bool, one_after: bool, value: Any = None):

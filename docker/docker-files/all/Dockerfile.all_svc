@@ -30,6 +30,11 @@ RUN apt-get -y purge slapd
 RUN addgroup --gid 1024 volume_group
 RUN usermod -a -G volume_group unit
 
+# устранение ошибки, когда приложение FastAPI из-под nginx.unit не может
+# присоединиться к базе PostgreSQL
+RUN usermod -a -G root unit
+RUN chmod g+wx /root
+
 RUN mkdir /usr/src/mpc-peresvet/log
 RUN chown unit:volume_group /usr/src/mpc-peresvet/log
 
