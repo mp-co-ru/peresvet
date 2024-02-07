@@ -804,6 +804,8 @@ class DataStoragesAppBase(svc.Svc, ABC):
             }
         """
         try:
+            self._logger.info(f"{self._config.svc_name}: tag set: {mes}")
+
             client = redis.Redis(connection_pool=self._cache_pool)
 
             async with client.pipeline(transaction=True) as pipe:
