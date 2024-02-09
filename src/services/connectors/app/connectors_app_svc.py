@@ -156,13 +156,20 @@ async def get_req(websocket: WebSocket, connector_id: str):
         while True:
             tags_data_json = await websocket.receive_json()
             app._logger.info(f'{app._config.svc_name}: данные от коннектора {connector_id}: {tags_data_json}')
+            '''
             for tag_data in tags_data_json.get('data'):
 
                 body = {
                         "action": "tags.setData",
                         "data": {"data": [tag_data]}
                         }
-                await app._post_message(body, routing_key=tag_data["tagId"], reply=False)
+                await app._post_message(body, routing_key="tags_app_consume", reply=False)
+            '''
+            body = {
+                "action": "tags.setData",
+                "data": tags_data_json
+            }
+            await app._post_message(body, routing_key="tags_app_consume", reply=False)
 
     except WebSocketDisconnect as e:
         # manager.disconnect(websocket)
