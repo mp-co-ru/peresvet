@@ -3,9 +3,9 @@ import copy
 
 sys.path.append(".")
 
-from src.services.connectors.model_crud.connectors_model_crud_settings import ConnectorsModelCRUDSettings
 from src.common import model_crud_svc
 from src.common import hierarchy
+from src.services.connectors.model_crud.connectors_model_crud_settings import ConnectorsModelCRUDSettings
 
 class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
     """Сервис работы с коннекторами в иерархии.

@@ -13,7 +13,7 @@ sys.path.append(".")
 
 from src.common import api_crud_svc as svc
 from src.common import times as t
-from schedules_api_crud_settings import SchedulesAPICRUDSettings
+from src.services.schedules.api_crud.schedules_api_crud_settings import SchedulesAPICRUDSettings
 
 class ScheduleCreateAttributes(svc.NodeAttributes):
     @validator('prsJsonConfigString')

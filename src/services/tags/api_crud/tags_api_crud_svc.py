@@ -13,7 +13,7 @@ from fastapi import APIRouter
 sys.path.append(".")
 
 from src.common import api_crud_svc as svc
-from tags_api_crud_settings import TagsAPICRUDSettings
+from src.services.tags.api_crud.tags_api_crud_settings import TagsAPICRUDSettings
 
 class TagCreateAttributes(svc.NodeAttributes):
     prsArchive: bool = Field(

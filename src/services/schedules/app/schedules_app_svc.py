@@ -4,8 +4,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 sys.path.append(".")
 
-from src.services.schedules.app.schedules_app_settings import SchedulesAppSettings
 from src.common import svc
+from src.services.schedules.app.schedules_app_settings import SchedulesAppSettings
 from src.common.hierarchy import CN_SCOPE_ONELEVEL
 
 class SchedulesApp(svc.Svc):

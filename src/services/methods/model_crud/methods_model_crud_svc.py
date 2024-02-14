@@ -3,9 +3,9 @@ import copy
 
 sys.path.append(".")
 
-from src.services.methods.model_crud.methods_model_crud_settings import MethodsModelCRUDSettings
 from src.common import model_crud_svc
 from src.common import hierarchy
+from src.services.methods.model_crud.methods_model_crud_settings import MethodsModelCRUDSettings
 
 class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
     """Сервис работы с тегами в иерархии.
