@@ -11,13 +11,13 @@ import time
 
 sys.path.append(".")
 
-from src.services.dataStorages.app.victoriametrics.dataStorages_app_victoriametrics_settings import DataStoragesAppVictoriametricsSettings
 from src.common import svc
 import src.common.times as t
 from src.common.consts import (
     CNTagValueTypes as TVT,
     Order
 )
+from src.services.dataStorages.app.victoriametrics.dataStorages_app_victoriametrics_settings import DataStoragesAppVictoriametricsSettings
 
 def linear_interpolated(start_point: Tuple[int, Any],
                         end_point: Tuple[int, Any],

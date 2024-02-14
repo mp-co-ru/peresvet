@@ -16,8 +16,7 @@ from pydantic import BaseModel, ConfigDict
 from pydantic.fields import FieldInfo
 from pydantic_settings import (
     BaseSettings,
-    PydanticBaseSettingsSource,
-    SettingsConfigDict
+    PydanticBaseSettingsSource
 )
 
 class JsonConfigSettingsSource(PydanticBaseSettingsSource):

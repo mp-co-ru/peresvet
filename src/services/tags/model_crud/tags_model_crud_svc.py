@@ -3,9 +3,9 @@ import copy
 
 sys.path.append(".")
 
-from tags_model_crud_settings import TagsModelCRUDSettings
 from src.common import model_crud_svc
 from src.common import hierarchy
+from src.services.tags.model_crud.tags_model_crud_settings import TagsModelCRUDSettings
 
 class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
     """Сервис работы с тегами в иерархии.

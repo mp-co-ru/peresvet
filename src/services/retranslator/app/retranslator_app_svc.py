@@ -10,10 +10,9 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 sys.path.append(".")
 
+from src.common import svc
 from src.services.retranslator.app.retranslator_app_settings import RetranslatorAppSettings
 from src.services.retranslator.app.scheduler_conf import job_defaults, executors
-from src.common import hierarchy
-from src.common import svc
 
 class RetranslatorApp(svc.Svc):
     """Сервис пересылки и дублирования сообщения для правильной визуализации в Grafana.

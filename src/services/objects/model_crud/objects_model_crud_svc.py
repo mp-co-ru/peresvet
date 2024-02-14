@@ -3,8 +3,8 @@ import copy
 
 sys.path.append(".")
 
-from src.services.objects.model_crud.objects_model_crud_settings import ObjectsModelCRUDSettings
 from src.common import model_crud_svc
+from src.services.objects.model_crud.objects_model_crud_settings import ObjectsModelCRUDSettings
 
 class ObjectsModelCRUD(model_crud_svc.ModelCRUDSvc):
     """Сервис работы с объектами в иерархии.

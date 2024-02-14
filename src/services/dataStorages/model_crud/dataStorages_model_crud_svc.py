@@ -5,9 +5,9 @@ from ldap.dn import str2dn, dn2str
 
 sys.path.append(".")
 
-from src.services.dataStorages.model_crud.dataStorages_model_crud_settings import DataStoragesModelCRUDSettings
 from src.common import model_crud_svc
 from src.common import hierarchy
+from src.services.dataStorages.model_crud.dataStorages_model_crud_settings import DataStoragesModelCRUDSettings
 
 class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
     """Сервис работы с хранилищами данных в иерархии.
@@ -52,7 +52,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         for ds in search_result["data"]:
             ds_id = ds["id"]
             new_ds = copy.deepcopy(ds)
-            if mes["getLinkedTags"]:
+            if mes["data"]["getLinkedTags"]:
                 new_ds["linkedTags"] = []
                 items = await self._hierarchy.search(
                     {
@@ -73,7 +73,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                         }
                     )
 
-            if mes["getLinkedAlerts"]:
+            if mes["data"]["getLinkedAlerts"]:
                 new_ds["linkedAlerts"] = []
                 items = await self._hierarchy.search(
                     {

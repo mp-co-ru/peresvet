@@ -14,8 +14,9 @@ import numpy as np
 
 sys.path.append(".")
 
-from src.services.dataStorages.app.dataStorages_app_base_settings import DataStoragesAppBaseSettings
 from src.common import svc
+from src.services.dataStorages.app.dataStorages_app_base_settings import DataStoragesAppBaseSettings
+
 from src.common.hierarchy import (
     CN_SCOPE_BASE, CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
 )
@@ -732,7 +733,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
         # записывает данные одного тега в хранилище
         pass
 
-    async def _write_cache_data(self, tag_ids: [str] = None) -> None:
+    async def _write_cache_data(self, tag_ids: list[str] = None) -> None:
         """Функция сбрасывает кэш данных тегов в базу для поддерживаемых
         баз данных если tag_ids - пустой список, то сбрасываются
         все теги из кэша иначе - только те, которые в списке.
@@ -755,12 +756,12 @@ class DataStoragesAppBase(svc.Svc, ABC):
                     for ds_id in self._ds_ids:
                         # определим, активна ли база
                         res = await pipe.json().get(
-                            f"{self._config.svc_name}:{ds_id}", "$"
+                            f"{self._config.svc_name}:{ds_id}", "prsActive"
                         ).execute()
                         if res[0] is None:
                             self._logger.warning(f"Нет кэша для хранилища {ds_id}")
                             continue
-                        if not res[0][0]["prsActive"]:
+                        if not res[0]:
                             self._logger.info(
                                 f"Хранилище {ds_id} неактивно."
                             )
@@ -770,7 +771,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
                 for tag_id in tag_ids:
                     pipe.json().get(
                         f"{self._config.svc_name}:{tag_id}",
-                        f"$"
+                        f"prsActive"
                     )
                     res = await pipe.execute()
                     if res[0] is None:
@@ -804,6 +805,8 @@ class DataStoragesAppBase(svc.Svc, ABC):
             }
         """
         try:
+            self._logger.info(f"{self._config.svc_name}: tag set: {mes}")
+
             client = redis.Redis(connection_pool=self._cache_pool)
 
             async with client.pipeline(transaction=True) as pipe:

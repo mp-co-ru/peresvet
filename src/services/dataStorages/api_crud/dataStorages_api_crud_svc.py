@@ -9,7 +9,7 @@ from fastapi import APIRouter
 sys.path.append(".")
 
 from src.common import api_crud_svc as svc
-from dataStorages_api_crud_settings import DataStoragesAPICRUDSettings
+from src.services.dataStorages.api_crud.dataStorages_api_crud_settings import DataStoragesAPICRUDSettings
 
 class LinkTagOrAlertAttributes(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
@@ -49,7 +49,7 @@ class DataStorageCreate(svc.NodeCreate):
 
         return v
 
-class DataStorageRead(svc.NodeRead):
+class  DataStorageRead(svc.NodeRead):
     getLinkedTags: bool = Field(
         False,
         title="Флаг возврата присоединённых тегов"

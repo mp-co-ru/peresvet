@@ -83,9 +83,9 @@ router = APIRouter()
 async def create(payload: AlertCreate):
     return await app.create(payload)
 
-@router.get("/", response_model=svc.NodeReadResult, status_code=200)
-async def read(payload: AlertRead):
-    return await app.read(payload)
+@router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
+async def read(q: str | None = None, payload: AlertRead | None = None):
+    return await app.api_get_read(AlertRead, q, payload)
 
 @router.put("/", status_code=202)
 async def update(payload: AlertUpdate):

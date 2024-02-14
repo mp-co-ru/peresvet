@@ -72,7 +72,7 @@ class TagsApp(svc.Svc):
     async def data_set(self, mes: dict) -> None:
 
         for tag_item in mes["data"]["data"]:
-
+            self._logger.info(f"{self._config.svc_name}: uploadData: {tag_item}")
             await self._post_message({
                     "action": "tags.uploadData",
                     "data": {

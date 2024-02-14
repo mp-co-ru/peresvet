@@ -3,8 +3,8 @@ import copy
 
 sys.path.append(".")
 
-from schedules_model_crud_settings import SchedulesModelCRUDSettings
 from src.common import model_crud_svc
+from src.services.schedules.model_crud.schedules_model_crud_settings import SchedulesModelCRUDSettings
 
 class SchedulesModelCRUD(model_crud_svc.ModelCRUDSvc):
     """Сервис работы с расписаниями в иерархии.

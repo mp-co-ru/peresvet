@@ -176,8 +176,8 @@ class ModelCRUDSvc(Svc):
     def __init__(self, settings: ModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-        self._config.hierarchy["node_dn"]: str = None
-        self._config.hierarchy["node_id"]: str = None
+        self._config.hierarchy["node_dn"] = None
+        self._config.hierarchy["node_id"] = None
         if self._config.hierarchy["parent_classes"]:
             classes = self._config.hierarchy["parent_classes"].split(",")
             self._config.hierarchy["parent_classes"] = [

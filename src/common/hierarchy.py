@@ -362,7 +362,7 @@ class Hierarchy:
         переименовывается), то метод возвращает новый DN узла.
 
         Args:
-            node (str): id изменяемого узла. По умолчанию - None.
+            node (str): id изменяемого узла.
             attr_vals (dict): словарь с новыми значениями атрибутов.
 
         Returns:
@@ -378,17 +378,22 @@ class Hierarchy:
 
         cn = attr_vals.pop("cn", None)
 
-        attrs = {
-            key: value if isinstance(value, list) else [value] for key, value in attr_vals.items()
-        }
-        attrs = {
-            key:[v.encode("utf-8") if isinstance(v, str) else v for v in values] for key, values in attrs.items()
-        }
+        attrs = {}
+        for key, value in attr_vals.items():
+            if value is None:
+                attrs[key] = [None]
+            elif isinstance(value, list):
+                attrs[key] = [str(val).encode("utf-8") for val in value]
+            elif isinstance(value, bool):
+                attrs[key] = [("FALSE".encode("utf-8"), "TRUE".encode("utf-8"))[value]]
+            else:
+                attrs[key] = [str(value).encode("utf-8")]
 
         with self._cm.connection() as conn:
             if attrs:
                 res = conn.search_s(real_base, CN_SCOPE_BASE, None, [key for key in attrs.keys()])
                 modlist = ldap.modlist.modifyModlist(res[0][1], attrs)
+
                 conn.modify_s(real_base, modlist)
 
             if cn:
