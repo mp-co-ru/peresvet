@@ -39,8 +39,10 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
             "connectors.delete": self._delete,
         }
 
+    '''
     async def _further_read(self, mes: dict) -> dict:
         pass
+    '''
 
     async def _further_create(self, mes: dict, new_id: str) -> None:
         sys_ids = await self._hierarchy.search(payload={
