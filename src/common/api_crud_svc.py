@@ -247,8 +247,14 @@ class APICRUDSvc(BaseSvc):
 
     async def api_get_read(self, request_model: NodeRead, q: str | None, payload: NodeRead | None):
         if q:
-            p = request_model.model_validate_json(json.loads(q))
-            return await self.read(p)
+            try:
+               #q_js = json.loads(q)
+                p = request_model.model_validate_json(q)
+                return await self.read(p)
+            except Exception as ex:
+                err = f"Ошибка чтения: {ex}"
+                self._logger.exception(err)
+                return {"error": err}
         elif payload:
             p = payload
             return await self.read(p)

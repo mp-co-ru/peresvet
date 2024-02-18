@@ -129,9 +129,9 @@ router = APIRouter()
 async def create(payload: ConnectorCreate):
     return await app.create(payload)
 
-@router.get("/", response_model=ConnectorReadResult, status_code=200)
-async def read(payload: ConnectorRead):
-    return await app.read(payload)
+@router.get("/", response_model=ConnectorReadResult | None, status_code=200)
+async def read(q: str | None = None, payload: ConnectorRead | None = None):
+    return await app.api_get_read(ConnectorRead, q, payload)
 
 @router.put("/", status_code=202)
 async def update(payload: ConnectorUpdate):
