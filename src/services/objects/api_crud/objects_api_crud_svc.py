@@ -2,23 +2,23 @@
 Модуль содержит классы, описывающие входные данные для команд CRUD для объектов
 и класс сервиса ``objects_api_crud_svc``\.
 """
-import json
 import sys
-from uuid import UUID
-from typing import Any, List
-from pydantic import Field, validator
+from typing import List
+from pydantic import Field
 
-from fastapi import APIRouter, Request
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import APIRouter
+#from fastapi.middleware.cors import CORSMiddleware
 
 sys.path.append(".")
 
 from src.common import api_crud_svc as svc
 from src.services.objects.api_crud.objects_api_crud_settings import ObjectsAPICRUDSettings
 
+'''
 origins = [
     "http://localhost:5173",
 ]
+'''
 
 class ObjectCreateAttributes(svc.NodeAttributes):
     pass
@@ -75,6 +75,7 @@ settings = ObjectsAPICRUDSettings()
 
 app = ObjectsAPICRUD(settings=settings, title="`ObjectsAPICRUD` service")
 
+'''
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -82,6 +83,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+'''
 
 router = APIRouter()
 

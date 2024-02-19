@@ -43,7 +43,8 @@
         "log": "{\"level\": \"INFO\", \"file_name\": \"log/dataStorages_app_psql.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
         "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
         "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21",
-        "cache_url": "redis://redis:6379?decode_responses=True&protocol=3"
+        "cache_url": "redis://redis:6379?decode_responses=True&protocol=3",
+        "cache_data_period": 300
       }
     },
     "app_vm": {
