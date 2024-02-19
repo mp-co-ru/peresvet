@@ -756,17 +756,17 @@ class DataStoragesAppBase(svc.Svc, ABC):
                     for ds_id in self._ds_ids:
                         # определим, активна ли база
                         res = await pipe.json().get(
-                            f"{self._config.svc_name}:{ds_id}", "prsActive"
+                            f"{self._config.svc_name}:{ds_id}", "prsActive", "tags"
                         ).execute()
                         if res[0] is None:
                             self._logger.warning(f"Нет кэша для хранилища {ds_id}")
                             continue
-                        if not res[0]:
+                        if not res[0]["prsActive"]:
                             self._logger.info(
                                 f"Хранилище {ds_id} неактивно."
                             )
                             continue
-                        tag_ids = tag_ids.union(set(res[0][0]["tags"]))
+                        tag_ids = tag_ids.union(set(res[0]["tags"]))
 
                 for tag_id in tag_ids:
                     pipe.json().get(
