@@ -15,7 +15,9 @@ class LinkTagOrAlertAttributes(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
 
-    prsStore: dict | None = Field(None, title="Хранилище тега")
+    cn: str = Field(title="Имя привязки")
+    prsStore: dict | None = Field(None, title="Хранилище тега/тревоги")
+    objectClass: str = Field(title="Класс узла")
 
 class LinkTag(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
@@ -60,11 +62,11 @@ class  DataStorageRead(svc.NodeRead):
     )
 
 class OneDataStorageInReadResult(svc.OneNodeInReadResult):
-    linkedTags: list[str] | None = Field(
+    linkedTags: list[LinkTag] | None = Field(
         None,
         title="Список id присоединённых тегов."
     )
-    linkedAlerts: list[str] | None = Field(
+    linkedAlerts: list[LinkAlert] | None = Field(
         None,
         title="Список id присоединённых тревог."
     )
@@ -129,7 +131,7 @@ router = APIRouter()
 async def create(payload: DataStorageCreate):
     return await app.create(payload)
 
-@router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
+@router.get("/", response_model=DataStorageReadResult | None, status_code=200)
 async def read(q: str | None = None, payload: DataStorageRead | None = None):
     return await app.api_get_read(DataStorageRead, q, payload)
 
@@ -138,7 +140,7 @@ async def update(payload: DataStorageUpdate):
     await app.update(payload)
 
 @router.delete("/", status_code=202)
-async def delete(payload: DataStorageRead):
+async def delete(payload: svc.NodeDelete):
     await app.delete(payload)
 
 app.include_router(router, prefix=f"{settings.api_version}/dataStorages", tags=["dataStorages"])
