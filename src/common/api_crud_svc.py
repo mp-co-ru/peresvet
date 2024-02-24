@@ -250,13 +250,11 @@ class APICRUDSvc(BaseSvc):
             try:
                #q_js = json.loads(q)
                 p = request_model.model_validate_json(q)
-                return await self.read(p)
             except Exception as ex:
                 err = f"Ошибка чтения: {ex}"
                 self._logger.exception(err)
                 return {"error": err}
         elif payload:
             p = payload
-            return await self.read(p)
-        else:
-            return None
+
+        return await self.read(p)

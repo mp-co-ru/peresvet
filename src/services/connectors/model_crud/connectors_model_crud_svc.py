@@ -1,5 +1,6 @@
 import sys
 import copy
+import json
 
 sys.path.append(".")
 
@@ -115,6 +116,46 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
         self._logger.info(
             f"Тег {payload['tagId']} привязан к коннектору {payload['connectorId']}"
         )
+
+    async def _further_read(self, mes: dict, search_result: dict) -> dict:
+
+        if not mes["data"]["getLinkedTags"]:
+            return search_result
+
+        res = {"data": []}
+        for connector in search_result["data"]:
+            conn_id = connector["id"]
+            new_conn = copy.deepcopy(connector)
+            new_conn["linkedTags"] = []
+            items = await self._hierarchy.search(
+                {
+                    "base": conn_id,
+                    "filter": {
+                        "objectClass": ["prsConnectorTagData"]
+                    },
+                    "attributes": ["cn", "prsJsonConfigString", "prsMaxDev", "prsValueScale"],
+                    "scope": 2
+                }
+            )
+            if items:
+                for item in items:
+                    new_conn["linkedTags"].append(
+                        {
+                            "tagId": item[2]["cn"][0],
+                            "attributes": {
+                                "cn": item[2]["cn"][0],
+                                "prsJsonConfigString": json.loads(item[2]["prsJsonConfigString"][0]),
+                                "prsMaxDev": item[2]["prsMaxDev"][0],
+                                "prsValueScale": item[2]["prsValueScale"][0],
+                                "objectClass": "prsConnectorTagData"
+                            }
+                        }
+                    )
+
+            res["data"].append(new_conn)
+
+        return res
+
 
 settings = ConnectorsModelCRUDSettings()
 

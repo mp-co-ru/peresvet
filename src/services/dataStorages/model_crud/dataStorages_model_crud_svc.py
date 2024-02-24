@@ -48,6 +48,10 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         }
 
     async def _further_read(self, mes: dict, search_result: dict) -> dict:
+
+        if not mes["data"]["getLinkedTags"] and not mes["data"]["getLinkedAlerts"]:
+            return search_result
+
         res = {"data": []}
         for ds in search_result["data"]:
             ds_id = ds["id"]
@@ -60,18 +64,22 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                         "filter": {
                             "objectClass": ["prsDatastorageTagData"]
                         },
-                        "attributes": ["cn", "prsStore"]
+                        "attributes": ["cn", "prsStore"],
+                        "scope": 2
                     }
                 )
                 if items:
-                    new_ds["linkedTags"].append(
-                        {
-                            "id": items[0][0],
-                            "attributes": {
-                                "prsStore": items[0][2]["prsStore"][0]
+                    for item in items:
+                        new_ds["linkedTags"].append(
+                            {
+                                "tagId": item[2]["cn"][0],
+                                "attributes": {
+                                    "cn": item[2]["cn"][0],
+                                    "prsStore": json.loads(item[2]["prsStore"][0]),
+                                    "objectClass": "prsDatastorageTagData"
+                                }
                             }
-                        }
-                    )
+                        )
 
             if mes["data"]["getLinkedAlerts"]:
                 new_ds["linkedAlerts"] = []
@@ -81,18 +89,22 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                         "filter": {
                             "objectClass": ["prsDatastorageAlertData"]
                         },
-                        "attributes": ["cn", "prsStore"]
+                        "attributes": ["cn", "prsStore"],
+                        "scope": 2
                     }
                 )
                 if items:
-                    new_ds["linkedAlerts"].append(
-                        {
-                            "id": items[0][0],
-                            "attributes": {
-                                "prsStore": items[0][2]["prsStore"][0]
+                    for item in items:
+                        new_ds["linkedAlerts"].append(
+                            {
+                                "alertId": item[2]["cn"][0],
+                                "attributes": {
+                                    "cn": item[2]["cn"][0],
+                                    "prsStore": json.loads(item[2]["prsStore"][0]),
+                                    "objectClass": "prsDatastorageAlertData"
+                                }
                             }
-                        }
-                    )
+                        )
 
             res["data"].append(new_ds)
 

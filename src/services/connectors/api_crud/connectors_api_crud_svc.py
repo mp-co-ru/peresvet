@@ -12,7 +12,9 @@ sys.path.append(".")
 from src.common import api_crud_svc as svc
 from connectors_api_crud_settings import ConnectorsAPICRUDSettings
 
-class LinkTagAttributes(svc.NodeAttributes):
+class LinkTagAttributes(BaseModel):
+    # https://giters.com/pydantic/pydantic/issues/6322
+    model_config = ConfigDict(protected_namespaces=())
 
     prsJsonConfigString: dict = Field(
         title="Параметры подключение к источнику данных.",
@@ -34,6 +36,8 @@ class LinkTagAttributes(svc.NodeAttributes):
         title="Величина значащего отклонения.",
         description="Используется коннекторами для снятия `дребезга` значений."
     )
+
+    objectClass: str = Field(title="Класс объекта")
 
 class LinkTag(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
@@ -68,7 +72,7 @@ class ConnectorRead(svc.NodeRead):
 
 class OneConnectorInReadResult(svc.OneNodeInReadResult):
     linkedTags: list[LinkTag] = Field(
-        [],
+        None,
         title="Список привязанных к коннектору тегов"
     )
 
