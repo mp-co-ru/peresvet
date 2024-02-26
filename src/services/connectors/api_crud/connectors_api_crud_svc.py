@@ -16,6 +16,7 @@ class LinkTagAttributes(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
 
+    cn: str = Field(title="Имя привязки")
     prsJsonConfigString: dict = Field(
         title="Параметры подключение к источнику данных.",
         description=(
