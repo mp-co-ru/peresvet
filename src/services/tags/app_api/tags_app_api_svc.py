@@ -214,7 +214,7 @@ router = APIRouter()
 @router.get("/", response_model=dict | None, status_code=200)
 async def data_get(q: str | None = None, payload: DataGet | None = None):
     if q:
-        p = DataGet.model_validate_json(json.loads(q))
+        p = DataGet.model_validate_json(q)
     elif payload:
         p = payload
     else:
