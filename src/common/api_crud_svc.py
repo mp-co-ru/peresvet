@@ -246,6 +246,8 @@ class APICRUDSvc(BaseSvc):
         return await self._post_message(mes=body, reply=False)
 
     async def api_get_read(self, request_model: NodeRead, q: str | None, payload: NodeRead | None):
+        if q is None and payload is None:
+            q = "{}"
         if q:
             try:
                #q_js = json.loads(q)
@@ -256,5 +258,6 @@ class APICRUDSvc(BaseSvc):
                 return {"error": err}
         elif payload:
             p = payload
-
+        
+        
         return await self.read(p)
