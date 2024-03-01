@@ -38,7 +38,7 @@ class LinkTagAttributes(BaseModel):
         description="Используется коннекторами для снятия `дребезга` значений."
     )
 
-    objectClass: str = Field(title="Класс объекта")
+    objectClass: str = Field("prsConnectorTagData", title="Класс объекта")
 
 class LinkTag(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
