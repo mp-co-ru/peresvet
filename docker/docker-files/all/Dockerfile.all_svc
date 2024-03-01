@@ -1,13 +1,5 @@
 FROM nginx/unit:1.28.0-python3.10
 
-# Установить:
-# redis
-# postgresql
-# ldap
-# rabbitmq
-# grafana
-# nginx
-
 ENV LDAP_ORGANISATION mycompany
 ENV LDAP_DOMAIN mycompany.com
 ENV LDAP_ADMIN_PASSWORD 123456
