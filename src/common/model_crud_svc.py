@@ -795,27 +795,27 @@ class ModelCRUDSvc(Svc):
             }
             self._logger.info(f"Создан новый узел {new_id}")
 
-        # при необходимости создадим узел ``system``
-        system_id = await self._hierarchy.add(new_id, {"cn": ["system"]})
-        await self._hierarchy.add(system_id, {"cn": ["subscribers"]})
+            # при необходимости создадим узел ``system``
+            system_id = await self._hierarchy.add(new_id, {"cn": ["system"]})
+            await self._hierarchy.add(system_id, {"cn": ["subscribers"]})
 
-        await self._further_create(mes, new_id)
+            await self._further_create(mes, new_id)
 
-        body = {
-            "action": {self._outgoing_commands["created"]},
-            "data": {
-                "id": {new_id}
+            body = {
+                "action": {self._outgoing_commands["created"]},
+                "data": {
+                    "id": {new_id}
+                }
             }
-        }
-        mes = aio_pika.Message(
-            body=f'{body}'.encode(),
-            content_type='application/json',
-            delivery_mode=aio_pika.DeliveryMode.PERSISTENT
-        )
-        for r_k in self._config.publish["main"]["routing_key"]:
-            await self._amqp_publish["main"]["exchange"].publish(
-                mes, routing_key=r_k
+            mes = aio_pika.Message(
+                body=f'{body}'.encode(),
+                content_type='application/json',
+                delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             )
+            for r_k in self._config.publish["main"]["routing_key"]:
+                await self._amqp_publish["main"]["exchange"].publish(
+                    mes, routing_key=r_k
+                )
 
         return res
 

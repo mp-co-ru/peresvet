@@ -10,7 +10,7 @@ from fastapi import APIRouter
 sys.path.append(".")
 
 from src.common import api_crud_svc as svc
-from connectors_api_crud_settings import ConnectorsAPICRUDSettings
+from src.services.connectors.api_crud.connectors_api_crud_settings import ConnectorsAPICRUDSettings
 
 class LinkTagAttributes(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322

@@ -8,7 +8,8 @@
       "module": "retranslator_app_svc",
       "callable": "app",
       "environment": {
-        "log": "{\"level\": \"INFO\", \"file_name\": \"log/retranslator_app.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}"
+        "log": "{\"level\": \"INFO\", \"file_name\": \"log/retranslator_app.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+        "tags_app_url": "http://peresvet/v1/data/"
       }
     }
   }

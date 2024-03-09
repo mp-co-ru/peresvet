@@ -339,7 +339,6 @@
                 "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
                 "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21",
                 "tags_app_url": "http://nginx/v1/data/"
-
             }
         }
     }

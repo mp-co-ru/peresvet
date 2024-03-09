@@ -89,7 +89,10 @@ router = APIRouter()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: ObjectCreate):
-    return await app.create(payload)
+    res = await app.create(payload)
+    if res.get("error"):
+        ....
+    return res
 
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
 async def read(q: str | None = None, payload: ObjectRead | None = None):

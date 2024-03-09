@@ -184,6 +184,7 @@ class NodeCreateResult(BaseModel):
 
     id: str
 
+
 class OneNodeInReadResult(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
@@ -258,6 +259,6 @@ class APICRUDSvc(BaseSvc):
                 return {"error": err}
         elif payload:
             p = payload
-        
-        
+
+
         return await self.read(p)

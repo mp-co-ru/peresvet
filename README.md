@@ -103,6 +103,13 @@ $ docker compose --env-file docker/compose/.cont_all_in_one.env -f docker/compos
 2. На хостовую машину не маппируются никакие порты из контейнеров.
 3. Одна точка входа в платформу - через контейнер ``nginx`` по порту 80.
 
+## <a name="building_image_for_arm64"></a>Построение образа для архитектуры ARM64
+Руководство по построению образов для разных платформ:
+https://devdotnet.org/post/sborka-docker-konteinerov-dlya-arm-arhitekturi-ispolzuya-buildx/
+
+Команда построения образа для linux/arm64
+docker buildx build --platform linux/arm64 -f docker/docker-files/all/Dockerfile.all_svc.uvicorn --build-arg IMAGE_VERSION=mpc:0.4 -t mpc/peresvet_all-svc:0.4-arm64 . --load
+
 # <a name="debugging"></a> Отладка
 
 **Пересвет** разрабатывается с использованием VSCode, поэтому отладка описана
@@ -432,3 +439,6 @@ $ pdflatex mpc_peresvet.tex
 $ pdflatex sources.tex
 $ pdflatex sources.tex
 ```
+# <a name="swap_on_raspberry_pi"></a>Настройка swap-файла на Raspberry Pi
+
+https://linuxtut.com/en/71e3874cb83ed12ec405/
