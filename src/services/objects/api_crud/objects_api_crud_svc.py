@@ -6,7 +6,7 @@ import sys
 from typing import List
 from pydantic import Field
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 #from fastapi.middleware.cors import CORSMiddleware
 
 sys.path.append(".")
@@ -90,8 +90,8 @@ router = APIRouter()
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: ObjectCreate):
     res = await app.create(payload)
-    if res.get("error"):
-        ....
+    if res["error"]["code"]==406:
+        raise HTTPException(status_code=406, detail=res["error"]["message"])
     return res
 
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
