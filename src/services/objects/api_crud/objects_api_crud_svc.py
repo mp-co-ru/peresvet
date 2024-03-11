@@ -5,8 +5,8 @@
 import sys
 from typing import List
 from pydantic import Field
-
-from fastapi import APIRouter, HTTPException
+import json
+from fastapi import APIRouter, HTTPException, Response, status
 #from fastapi.middleware.cors import CORSMiddleware
 
 sys.path.append(".")
@@ -91,7 +91,8 @@ router = APIRouter()
 async def create(payload: ObjectCreate):
     res = await app.create(payload)
     if res["error"]["code"]==406:
-        raise HTTPException(status_code=406, detail=res["error"]["message"])
+        raise HTTPException(status_code=406, detail=res)
+        # raise HTTPException(status_code=406, detail=res["error"]["message"])
     return res
 
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
