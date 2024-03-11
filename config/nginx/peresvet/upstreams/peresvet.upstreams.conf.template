@@ -46,6 +46,6 @@ upstream tags_app_api {
 }
 
 #grafana
-#upstream grafana {
-#    server ${HOST_GRAFANA}:${PORT_GRAFANA};
-#}
+upstream grafana {
+    server ${HOST_GRAFANA}:${PORT_GRAFANA};
+}
