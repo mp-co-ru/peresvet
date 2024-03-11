@@ -145,4 +145,3 @@ tests/load/tags_in_vm.json
 .vscode/launch.json
 
 docker/compose/config/nginx/
-docker/images/

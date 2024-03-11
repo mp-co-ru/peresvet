@@ -273,7 +273,7 @@ class BaseSvc(FastAPI):
         Функция, выполняемая при старте сервиса: выполняется связь с
         amqp-сервером.
         """
-        self._logger.debug(f"{self._config.svc_name}: on_startup.")
+        self._logger.info(f"{self._config.svc_name}: on_startup.")
         await self._amqp_connect()
 
     async def on_shutdown(self) -> None:

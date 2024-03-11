@@ -7,6 +7,11 @@ import sys
 import copy
 import aio_pika.abc
 
+try:
+    import uvicorn
+except ModuleNotFoundError as _:
+    pass
+
 sys.path.append(".")
 
 from src.common import svc
@@ -88,3 +93,6 @@ class TagsApp(svc.Svc):
 settings = TagsAppSettings()
 
 app = TagsApp(settings=settings, title="`TagsApp` service")
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
