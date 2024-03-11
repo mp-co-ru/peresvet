@@ -4,7 +4,7 @@ services:
     image: rabbitmq:3.11.16-management
     hostname: ${HOST_RABBIT}
     volumes:
-      - ../docker-files/rabbitmq/enabled_plugins/:/etc/rabbitmq/enabled_plugins:rw
+      - ../docker-files/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:rw
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBIT_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBIT_PASSWORD}
