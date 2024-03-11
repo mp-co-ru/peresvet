@@ -161,20 +161,8 @@
                 "log": "{\"level\": \"INFO\", \"file_name\": \"log/dataStorages_app_psql.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
                 "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
                 "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21",
-                "cache_url": "redis://redis:6379?decode_responses=True&protocol=3"
-            }
-        },
-        "dataStorages_app_vm": {
-            "type": "python 3.10",
-            "working_directory": "/usr/src/mpc-peresvet",
-            "path": "/usr/src/mpc-peresvet/src/services/dataStorages/app/victoriametrics/",
-            "home": "/usr/src/mpc-peresvet/.venv/",
-            "module": "dataStorages_app_victoriametrics_svc",
-            "callable": "app",
-            "environment": {
-                "log": "{\"level\": \"INFO\", \"file_name\": \"log/dataStorages_app_vm.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
-                "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
-                "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+                "cache_url": "redis://redis:6379?decode_responses=True&protocol=3",
+                "cache_data_period": "2"
             }
         },
         "methods_api_crud": {
@@ -338,8 +326,7 @@
                 "log": "{\"level\": \"INFO\", \"file_name\": \"log/tags_app_api.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
                 "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
                 "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21",
-                "tags_app_url": "http://nginx/v1/data/"
-
+                "tags_app_url": "http://peresvet/v1/data/"
             }
         }
     }

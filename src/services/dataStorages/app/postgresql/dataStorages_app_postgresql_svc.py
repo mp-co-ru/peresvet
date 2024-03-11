@@ -404,7 +404,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                 tag_cache = await pipe.execute()
 
                 if not tag_cache[0][0]["data"]:
-                    self._logger.info(f"Кэш данных тега {tag_id} пустой.")
+                    self._logger.debug(f"Кэш данных тега {tag_id} пустой.")
                     return
 
                 for ds_id in tag_cache[0][0]["dss"].keys():
