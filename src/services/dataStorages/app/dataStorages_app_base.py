@@ -1363,7 +1363,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
                 self._logger.error(f"Тег {tag_id} отсутствует в кэше.")
                 await client.aclose()
                 return []
-            step = tag_cache[0]["prsStep"]
+            step = tag_cache[0]
         await client.aclose()
 
         tag_data = await self._read_data(
