@@ -48,6 +48,11 @@ class NodeAttributes(BaseModel):
             "недонастроен."
         )
     )
+    prsStep: bool = Field(False, title="Флаг ?.",
+        description=(
+            "?"
+        )
+    )
     prsDefault: bool | None = Field(None, title="Сущность по умолчанию.",
         description=(
             "Если = ``True``\, то данный экземпляр считается узлом по умолчанию "
