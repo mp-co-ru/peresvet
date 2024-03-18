@@ -6,7 +6,7 @@ import sys
 from typing import List
 from pydantic import Field
 import json
-from fastapi import APIRouter, HTTPException, Response, status
+from fastapi import APIRouter, HTTPException, Response, status, Depends
 #from fastapi.middleware.cors import CORSMiddleware
 
 sys.path.append(".")
@@ -87,12 +87,23 @@ app.add_middleware(
 
 router = APIRouter()
 
+# класс с методами обработки ошибок в выоде для пользователя
+class ErrorHandler:
+    async def handle_e406(self,res):
+        if ("error" in res and "code" in res["error"]):
+            if (res["error"]["code"]==406):
+                raise HTTPException(status_code=406, detail=res)         
+    async def handle_new_parent_is_child(self, res):
+        if res["response"]== "Новый родительский узел содержиться в подиерархии":
+            raise HTTPException(status_code=400, detail="Новый родительский узел содержиться в подиерархии")
+        
+	
+error_handler = ErrorHandler()
+
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
-async def create(payload: ObjectCreate):
+async def create(payload: ObjectCreate, error_handler: ErrorHandler = Depends()):
     res = await app.create(payload)
-    if res["error"]["code"]==406:
-        raise HTTPException(status_code=406, detail=res)
-        # raise HTTPException(status_code=406, detail=res["error"]["message"])
+    await error_handler.handle_e406(res)
     return res
 
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
@@ -100,8 +111,10 @@ async def read(q: str | None = None, payload: ObjectRead | None = None):
     return await app.api_get_read(ObjectRead, q, payload)
 
 @router.put("/", status_code=202)
-async def update(payload: ObjectUpdate):
-    await app.update(payload)
+async def update(payload: ObjectUpdate, error_handler: ErrorHandler = Depends()):
+    res = await app.update(payload)
+    await error_handler.handle_new_parent_is_child(res)
+    return res
 
 @router.delete("/", status_code=202)
 async def delete(payload: ObjectRead):

@@ -234,7 +234,7 @@ class APICRUDSvc(BaseSvc):
             "data": payload.model_dump()
         }
 
-        return await self._post_message(mes=body, reply=False)
+        return await self._post_message(mes=body, reply=True)
 
     async def delete(self, payload: NodeDelete) -> dict:
         """Удаление узлов в иерархии.
