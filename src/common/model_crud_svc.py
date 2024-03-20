@@ -10,7 +10,6 @@ import copy
 import json
 import asyncio
 from uuid import uuid4
-from typing import Union
 
 import aio_pika
 import aio_pika.abc
@@ -311,7 +310,7 @@ class ModelCRUDSvc(Svc):
             "response": "ok"
         }
 
-    async def _updating(self, mes) -> Union[dict,None]:
+    async def _updating(self, mes) -> dict | None:
         return {
             "response": "ok"
         }
@@ -420,8 +419,14 @@ class ModelCRUDSvc(Svc):
                 }
             })
             if res:
-                error={"response": "Новый родительский узел содержиться в подиерархии"}
-                return error
+                res_response = {
+                    "id": None,
+                    "error": {
+                        "code": 400,
+                        "message": "Новый родительский узел содержится в подиерархии."
+                    }
+                }
+                return res_response
             await self._hierarchy.move(mes_data['id'], new_parent)
 
         if mes_data.get("attributes"):
@@ -444,7 +449,16 @@ class ModelCRUDSvc(Svc):
             routing_key=mes_data["id"]
         )
         self._logger.info(f'Узел {mes_data["id"]} обновлён.')
-        return {"response": "успешное обновление узла"}
+        # error={"msg": "Новый родительский узел содержиться в подиерархии",
+        #                "error": {"id":200}}
+
+        res_response = {
+            "id": None,
+            "code": 400,
+            "message": "Новый родительский узел содержится в подиерархии."
+        }
+        return res_response
+
 
     async def _further_update(self, mes: dict) -> None:
         """Метод переопределяется в сервисах-наследниках.

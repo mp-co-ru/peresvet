@@ -6,7 +6,7 @@
 import json
 from uuid import UUID
 from pydantic import BaseModel, Field, validator, ConfigDict
-
+from fastapi import HTTPException
 from src.common.base_svc import BaseSvc
 from src.common.api_crud_settings import APICRUDSettings
 
@@ -24,6 +24,17 @@ def valid_uuid(id: str | list[str]) -> str | list[str]:
         except ValueError as ex:
             raise ValueError('id должен быть в виде GUID') from ex
     return id
+
+
+# класс с методами обработки ошибок в выоде для пользователя
+class ErrorHandler:
+    async def handle_e406(self,res):
+        if ("error" in res and "code" in res["error"]):
+            if (res["error"]["code"]==406):
+                raise HTTPException(status_code=406, detail=res)         
+    async def handle_new_parent_is_child(self, res):
+        if res["error"]["code"]==400:
+            raise HTTPException(status_code=400, detail=res["error"]["message"])
 
 
 class NodeAttributes(BaseModel):

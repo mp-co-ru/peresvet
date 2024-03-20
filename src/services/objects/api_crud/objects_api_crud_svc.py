@@ -88,20 +88,20 @@ app.add_middleware(
 router = APIRouter()
 
 # класс с методами обработки ошибок в выоде для пользователя
-class ErrorHandler:
-    async def handle_e406(self,res):
-        if ("error" in res and "code" in res["error"]):
-            if (res["error"]["code"]==406):
-                raise HTTPException(status_code=406, detail=res)         
-    async def handle_new_parent_is_child(self, res):
-        if res["response"]== "Новый родительский узел содержиться в подиерархии":
-            raise HTTPException(status_code=400, detail="Новый родительский узел содержиться в подиерархии")
+# class ErrorHandler:
+#     async def handle_e406(self,res):
+#         if ("error" in res and "code" in res["error"]):
+#             if (res["error"]["code"]==406):
+#                 raise HTTPException(status_code=406, detail=res)         
+#     async def handle_new_parent_is_child(self, res):
+#         if res["error"]["code"]==400:
+#             raise HTTPException(status_code=400, detail=res["error"]["message"])
         
 	
-error_handler = ErrorHandler()
+error_handler = svc.ErrorHandler()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
-async def create(payload: ObjectCreate, error_handler: ErrorHandler = Depends()):
+async def create(payload: ObjectCreate, error_handler: svc.ErrorHandler = Depends()):
     res = await app.create(payload)
     await error_handler.handle_e406(res)
     return res
@@ -111,7 +111,7 @@ async def read(q: str | None = None, payload: ObjectRead | None = None):
     return await app.api_get_read(ObjectRead, q, payload)
 
 @router.put("/", status_code=202)
-async def update(payload: ObjectUpdate, error_handler: ErrorHandler = Depends()):
+async def update(payload: ObjectUpdate, error_handler: svc.ErrorHandler = Depends()):
     res = await app.update(payload)
     await error_handler.handle_new_parent_is_child(res)
     return res
