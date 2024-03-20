@@ -134,7 +134,7 @@ class BaseSvc(FastAPI):
                 return
             #mes["action"] = mes["action"].lower()
             if not mes["action"] in self._incoming_commands.keys():
-                self._logger.error(f"Неизвестное действие {mes['action']}.")
+                self._logger.error(f"Сервис `{self._config.svc_name}`. Неизвестное действие {mes['action']}.")
                 await message.ack()
                 return
 

@@ -158,7 +158,7 @@
             "module": "dataStorages_app_postgresql_svc",
             "callable": "app",
             "environment": {
-                "log": "{\"level\": \"DEBUG\", \"file_name\": \"log/dataStorages_app_psql.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/dataStorages_app_psql.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
                 "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
                 "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21",
                 "cache_url": "redis://redis:6379?decode_responses=True&protocol=3",
@@ -297,7 +297,7 @@
             "module": "tags_app_svc",
             "callable": "app",
             "environment": {
-                "log": "{\"level\": \"DEBUG\", \"file_name\": \"log/tags_app.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/tags_app.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
                 "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
                 "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
             }
@@ -308,19 +308,6 @@
             "path": "/usr/src/mpc-peresvet/src/services/tags/app_api/",
             "home": "/usr/src/mpc-peresvet/.venv/",
             "module": "tags_app_api_svc",
-            "callable": "app",
-            "environment": {
-                "log": "{\"level\": \"DEBUG\", \"file_name\": \"log/tags_app_api.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
-                "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
-                "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
-            }
-        },
-        "retranslator_app": {
-            "type": "python 3.10",
-            "working_directory": "/usr/src/mpc-peresvet",
-            "path": "/usr/src/mpc-peresvet/src/services/retranslator/app/",
-            "home": "/usr/src/mpc-peresvet/.venv/",
-            "module": "retranslator_app_svc",
             "callable": "app",
             "environment": {
                 "log": "{\"level\": \"INFO\", \"file_name\": \"log/tags_app_api.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
