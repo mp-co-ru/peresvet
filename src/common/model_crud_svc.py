@@ -449,14 +449,15 @@ class ModelCRUDSvc(Svc):
             routing_key=mes_data["id"]
         )
         self._logger.info(f'Узел {mes_data["id"]} обновлён.')
-        # error={"msg": "Новый родительский узел содержиться в подиерархии",
-        #                "error": {"id":200}}
 
         res_response = {
-            "id": None,
-            "code": 400,
-            "message": "Новый родительский узел содержится в подиерархии."
-        }
+                    "id": None,
+                    "error": {
+                        "code": 200,
+                        "message": "Узел обновлён"
+                    }
+                }
+
         return res_response
 
 
