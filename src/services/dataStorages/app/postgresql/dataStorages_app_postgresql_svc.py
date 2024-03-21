@@ -503,7 +503,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         async with client.pipeline() as pipe:
             tag_data = await pipe.json().get(
                 f"{self._config.svc_name}:{tag_id}",
-                "prsActive", "dss"
+                "prsActive", "dss", "prsValueTypeCode"
             ).execute()
 
             if not tag_data[0]:
@@ -572,7 +572,10 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         async with self._connection_pools[actual_ds].acquire() as conn:
             async with conn.transaction():
                 async for r in conn.cursor(*query_args):
-                    records.append((r.get('y'), r.get('x'), r.get('q')))
+                    val = r.get('y')
+                    if tag_data[0]["prsValueTypeCode"] == 4:
+                        val = json.loads(val)
+                    records.append((val, r.get('x'), r.get('q')))
         return records
 
     def _get_values_filter(self, value: Any) -> tuple:

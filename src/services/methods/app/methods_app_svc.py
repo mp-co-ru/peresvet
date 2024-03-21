@@ -130,8 +130,8 @@ class MethodsApp(svc.Svc):
                 ) as broker:
                     res = await broker.call(method_name[0][2]["prsMethodAddress"][0], *params_data)
 
-                    if isinstance(res, dict) and res.get["error"] is not None:
-                        self._logger.error(f"Ошибка при вычислении тега {tag_id}: {res.get['error']}")
+                    if isinstance(res, dict) and res.get("error") is not None:
+                        self._logger.error(f"Ошибка при вычислении тега {tag_id}: {res.get('error')}")
                         return
 
                     self._logger.debug(f"Результат: {res}. Тег: {tag_id}")
