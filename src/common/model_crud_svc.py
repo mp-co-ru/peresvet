@@ -802,20 +802,25 @@ class ModelCRUDSvc(Svc):
             await self._further_create(mes, new_id)
 
             body = {
-                "action": {self._outgoing_commands["created"]},
+                "action": self._outgoing_commands["created"],
                 "data": {
-                    "id": {new_id}
+                    "id": new_id
                 }
             }
+            '''
             mes = aio_pika.Message(
-                body=f'{body}'.encode(),
+                body=body,
                 content_type='application/json',
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             )
+            '''
             for r_k in self._config.publish["main"]["routing_key"]:
+                '''
                 await self._amqp_publish["main"]["exchange"].publish(
                     mes, routing_key=r_k
                 )
+                '''
+                await self._post_message(mes=body, reply=False, routing_key=r_k)
 
         return res
 
