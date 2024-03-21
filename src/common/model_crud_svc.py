@@ -418,20 +418,15 @@ class ModelCRUDSvc(Svc):
 
         await self._further_update(mes)
 
-        body = json.dumps({
+        body = {
             "action": self._outgoing_commands["updated"],
             "data": {
                 "id": mes_data["id"]
             }
-        }).encode()
-        await self._amqp_publish["main"]["exchange"].publish(
-            aio_pika.Message(
-                body=body,
-                content_type='application/json',
-                delivery_mode=aio_pika.DeliveryMode.PERSISTENT
-            ),
-            routing_key=mes_data["id"]
-        )
+        }
+
+        await self._post_message(mes=body, reply=False, routing_key=mes_data["id"])
+
         self._logger.info(f'Узел {mes_data["id"]} обновлён.')
 
     async def _further_update(self, mes: dict) -> None:
@@ -571,19 +566,13 @@ class ModelCRUDSvc(Svc):
             await self._further_delete(mes)
 
             body = {
-                "action": {self._outgoing_commands["deleted"]},
+                "action": self._outgoing_commands["deleted"],
                 "data": {
-                    "id": {id_}
+                    "id": id_
                 }
             }
-            mes = aio_pika.Message(
-                body=f'{body}'.encode(),
-                content_type='application/json',
-                delivery_mode=aio_pika.DeliveryMode.PERSISTENT
-            )
-            await self._amqp_publish["main"]["exchange"].publish(
-                mes, routing_key=id_
-            )
+
+            await self._post_message(mes=body, reply=False, routing_key=id_)
 
             self._logger.info(f'Узел {id_} удален.')
 
@@ -807,19 +796,8 @@ class ModelCRUDSvc(Svc):
                     "id": new_id
                 }
             }
-            '''
-            mes = aio_pika.Message(
-                body=body,
-                content_type='application/json',
-                delivery_mode=aio_pika.DeliveryMode.PERSISTENT
-            )
-            '''
+
             for r_k in self._config.publish["main"]["routing_key"]:
-                '''
-                await self._amqp_publish["main"]["exchange"].publish(
-                    mes, routing_key=r_k
-                )
-                '''
                 await self._post_message(mes=body, reply=False, routing_key=r_k)
 
         return res
