@@ -28,6 +28,8 @@ class MethodsApp(svc.Svc):
         super().__init__(settings, *args, **kwargs)
         self._cache = Cache(settings.ldap_url)
         self._method_broker = None
+        self._executor = None
+        self._broker = None
 
     def _set_incoming_commands(self) -> dict:
         return {
@@ -124,6 +126,7 @@ class MethodsApp(svc.Svc):
         self._logger.debug(f"Before call: method_id: {method_id}; method_name: {method_name}")
 
         try:
+            '''
             async with NullExecutor(Registry(project=self._config.svc_name)) as executor:
                 async with RabbitMQBroker(
                     executor, amqp_url=self._config.amqp_url,
@@ -135,6 +138,15 @@ class MethodsApp(svc.Svc):
                         return
 
                     self._logger.debug(f"Результат: {res}. Тег: {tag_id}")
+                '''
+
+            res = await self._broker.call(method_name[0][2]["prsMethodAddress"][0], *params_data)
+            if isinstance(res, dict) and res.get("error") is not None:
+                self._logger.error(f"Ошибка при вычислении тега {tag_id}: {res.get('error')}")
+                return
+
+            self._logger.debug(f"Результат: {res}. Тег: {tag_id}")
+
         except Exception as ex:
             self._logger.error(f"Критическая ошибка при вычислении тега {tag_id}: {ex}")
             return
@@ -213,13 +225,14 @@ class MethodsApp(svc.Svc):
     async def _amqp_connect(self) -> None:
         await super()._amqp_connect()
 
-        """
-        executor = NullExecutor(Registry(project=self._config.svc_name))
-        self._method_broker = RabbitMQBroker(
-            executor, amqp_url="amqp://prs:Peresvet21@localhost/"
+        self._executor = NullExecutor(Registry(project=self._config.svc_name))
+        await self._executor.setup()
+        self._broker = RabbitMQBroker(
+            self._executor, amqp_url=self._config.amqp_url
         )
+        await self._broker.setup()
         self._logger.debug(f"Methods broker: {self._method_broker}")
-        """
+
 
 settings = MethodsAppSettings()
 
