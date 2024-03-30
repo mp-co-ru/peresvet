@@ -85,7 +85,7 @@ app.add_middleware(
 )
 '''
 
-router = APIRouter()
+router = APIRouter(prefix=f"{settings.api_version}/objects")
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: ObjectCreate):
@@ -107,4 +107,4 @@ async def update(payload: ObjectUpdate):
 async def delete(payload: ObjectRead):
     await app.delete(payload)
 
-app.include_router(router, prefix=f"{settings.api_version}/objects", tags=["objects"])
+app.include_router(router, tags=["objects"])
