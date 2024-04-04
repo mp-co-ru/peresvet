@@ -209,7 +209,7 @@ settings = TagsAppAPISettings()
 
 app = TagsAppAPI(settings=settings, title="`TagsAppAPI` service")
 
-router = APIRouter()
+router = APIRouter(prefix=f"{settings.api_version}/data")
 
 @router.get("/", response_model=dict | None, status_code=200)
 async def data_get(q: str | None = None, payload: DataGet | None = None):
@@ -226,7 +226,8 @@ async def data_get(q: str | None = None, payload: DataGet | None = None):
 async def data_set(payload: AllData):
     return await app.data_set(payload)
 
-@app.websocket(f"{settings.api_version}/ws/data")
+'''
+@router.websocket("/ws/data")
 async def websocket_endpoint(websocket: WebSocket):
 
     try:
@@ -264,5 +265,6 @@ async def websocket_endpoint(websocket: WebSocket):
 
     except Exception as ex:
         app._logger.error(f"Разрыв ws-связи: {ex}")
+'''
 
-app.include_router(router, prefix=f"{settings.api_version}/data", tags=["data"])
+app.include_router(router, tags=["data"])

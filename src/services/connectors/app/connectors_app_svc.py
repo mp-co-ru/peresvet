@@ -113,14 +113,13 @@ class ConnectorsApp(svc.Svc):
 
         return res
 
-
-
 settings = ConnectorsAppSettings()
 
 app = ConnectorsApp(settings=settings, title="ConnectorsApp")
 
-router = APIRouter()
+router = APIRouter(prefix=f"{settings.api_version}/connectors")
 
+'''
 class ConnectionManager:
     def __init__(self):
         self.active_connections: list[WebSocket] = []
@@ -140,6 +139,7 @@ class ConnectionManager:
             await connection.send_text(message)
 
 manager = ConnectionManager()
+'''
 
 @router.websocket("/{connector_id}")
 async def get_req(websocket: WebSocket, connector_id: str):
@@ -175,5 +175,4 @@ async def get_req(websocket: WebSocket, connector_id: str):
         # manager.disconnect(websocket)
         app._logger.error(f"Разрыв связи с коннектором {connector_id}. Ошибка: {e}")
 
-
-app.include_router(router, prefix=f"{settings.api_version}/connectors", tags=["connectors_app"])
+app.include_router(router, tags=["connectors_app"])
