@@ -76,7 +76,7 @@ settings = MethodsAPICRUDSettings()
 
 app = MethodsAPICRUD(settings=settings, title="`MethodsAPICRUD` service")
 
-router = APIRouter()
+router = APIRouter(prefix=f"{settings.api_version}/methods")
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: MethodCreate):
@@ -94,4 +94,4 @@ async def update(payload: MethodUpdate):
 async def delete(payload: svc.NodeDelete):
     await app.delete(payload)
 
-app.include_router(router, prefix=f"{settings.api_version}/methods", tags=["methods"])
+app.include_router(router, tags=["methods"])

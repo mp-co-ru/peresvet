@@ -126,7 +126,7 @@ settings = AlertsAppAPISettings()
 
 app = AlertsAppAPI(settings=settings, title="`TagsAppAPI` service")
 
-router = APIRouter()
+router = APIRouter(prefix=f"{settings.api_version}/alarms")
 
 @router.get("/", response_model=dict, status_code=200)
 async def alarms_get(payload: AlarmsGet):
@@ -178,4 +178,4 @@ async def websocket_endpoint(websocket: WebSocket):
         app._logger.error(f"Разрыв ws-связи: {ex}")
 '''
 
-app.include_router(router, prefix=f"{settings.api_version}/alarms", tags=["alarms"])
+app.include_router(router, tags=["alarms"])

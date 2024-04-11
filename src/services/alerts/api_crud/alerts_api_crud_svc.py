@@ -77,7 +77,7 @@ settings = AlertsAPICRUDSettings()
 
 app = AlertsAPICRUD(settings=settings, title="`AlertsAPICRUD` service")
 
-router = APIRouter()
+router = APIRouter(prefix=f"{settings.api_version}/alerts")
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: AlertCreate):
@@ -95,4 +95,4 @@ async def update(payload: AlertUpdate):
 async def delete(payload: svc.NodeDelete):
     await app.delete(payload)
 
-app.include_router(router, prefix=f"{settings.api_version}/alerts", tags=["alerts"])
+app.include_router(router, tags=["alerts"])

@@ -128,7 +128,7 @@ settings = ConnectorsAPICRUDSettings()
 
 app = ConnectorsAPICRUD(settings=settings, title="`ConnectorsAPICRUD` service")
 
-router = APIRouter()
+router = APIRouter(prefix=f"{settings.api_version}/connectors")
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: ConnectorCreate):
@@ -146,4 +146,4 @@ async def update(payload: ConnectorUpdate):
 async def delete(payload: ConnectorRead):
     await app.delete(payload)
 
-app.include_router(router, prefix=f"{settings.api_version}/connectors", tags=["connectors"])
+app.include_router(router, tags=["connectors"])

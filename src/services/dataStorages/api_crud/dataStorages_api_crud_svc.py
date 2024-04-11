@@ -125,7 +125,7 @@ settings = DataStoragesAPICRUDSettings()
 
 app = DataStoragesAPICRUD(settings=settings, title="`DataStoragesAPICRUD` service")
 
-router = APIRouter()
+router = APIRouter(prefix=f"{settings.api_version}/dataStorages")
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: DataStorageCreate):
@@ -143,4 +143,4 @@ async def update(payload: DataStorageUpdate):
 async def delete(payload: svc.NodeDelete):
     await app.delete(payload)
 
-app.include_router(router, prefix=f"{settings.api_version}/dataStorages", tags=["dataStorages"])
+app.include_router(router, tags=["dataStorages"])
