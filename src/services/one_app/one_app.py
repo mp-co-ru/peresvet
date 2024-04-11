@@ -29,12 +29,16 @@ from src.services.tags.app_api.tags_app_api_svc \
         app as tags_app_api,
         router as tags_app_api_router
     )
+
+'''
 # connectors app
 from src.services.connectors.app.connectors_app_svc \
     import (
         app as connectors_app,
         router as connectors_app_router
     )
+'''
+
 # methods app
 from src.services.methods.app.methods_app_svc \
     import app as methods_app
@@ -56,7 +60,7 @@ api_router = APIRouter(prefix="")
 # tags_app_api
 api_router.include_router(router=tags_app_api_router)
 # connectors_app
-api_router.include_router(router=connectors_app_router)
+#api_router.include_router(router=connectors_app_router)
 
 app.include_router(api_router)
 
@@ -67,7 +71,7 @@ app.mount(path="/", app=tags_app)
 # tags app api
 app.mount(path="/", app=tags_app_api)
 # connectors app
-app.mount(path="/", app=connectors_app)
+#app.mount(path="/", app=connectors_app)
 # methods app
 app.mount(path="/", app=methods_app)
 
