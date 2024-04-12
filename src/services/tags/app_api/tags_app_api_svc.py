@@ -3,19 +3,14 @@
 и класс сервиса ``tags_api_crud_svc``\.
 """
 import sys
-import asyncio
 from typing import Any, List, NamedTuple
 from typing_extensions import Annotated
 from pydantic import (
     BaseModel, Field, field_validator,
     validator, BeforeValidator, ValidationError, ConfigDict
 )
-import json
-import numpy as np
 
 from fastapi import APIRouter
-from fastapi import WebSocket, WebSocketDisconnect, status
-from fastapi.exceptions import HTTPException, WebSocketException
 
 sys.path.append(".")
 

@@ -112,7 +112,7 @@ settings = SchedulesAPICRUDSettings()
 
 app = SchedulesAPICRUD(settings=settings, title="`SchedulesAPICRUD` service")
 
-router = APIRouter()
+router = APIRouter(prefix=f"{settings.api_version}/schedules")
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: ScheduleCreate):
@@ -130,4 +130,4 @@ async def update(payload: ScheduleUpdate):
 async def delete(payload: ScheduleRead):
     await app.delete(payload)
 
-app.include_router(router, prefix=f"{settings.api_version}/schedules", tags=["schedules"])
+app.include_router(router, tags=["schedules"])
