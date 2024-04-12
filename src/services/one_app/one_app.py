@@ -288,6 +288,8 @@ app.mount(path="/", app=tags_api_crud)
 app.mount(path="/", app=tags_model_crud)
 # tags_app
 app.mount(path="/", app=tags_app)
+# tags_app_api
+app.mount(path="/", app=tags_app_api)
 # -----------------------------------------------------------------------------
 
 # =============================================================================
