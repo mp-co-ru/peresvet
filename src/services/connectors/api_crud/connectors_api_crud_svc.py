@@ -25,6 +25,7 @@ class LinkTagAttributes(BaseModel):
             "Формат словаря зависит от конкретного коннектора."
         )
     )
+    description: str | None = Field(None, title="Пояснение")
     prsValueScale: int = Field(
         1,
         title=(
