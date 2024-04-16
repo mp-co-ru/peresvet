@@ -4,14 +4,13 @@
 """
 import sys
 import json
-from ldap.dn import str2dn, dn2str
 from patio import NullExecutor, Registry
 from patio_rabbitmq import RabbitMQBroker
 
 sys.path.append(".")
 
 from src.common import svc
-from src.common.hierarchy import CN_SCOPE_BASE, CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
+from src.common.hierarchy import CN_SCOPE_ONELEVEL
 from src.common.cache import Cache
 from src.services.methods.app.methods_app_settings import MethodsAppSettings
 
@@ -232,7 +231,6 @@ class MethodsApp(svc.Svc):
         )
         await self._broker.setup()
         self._logger.debug(f"Methods broker: {self._method_broker}")
-
 
 settings = MethodsAppSettings()
 

@@ -139,7 +139,7 @@ settings = TagsAPICRUDSettings()
 
 app = TagsAPICRUD(settings=settings, title="`TagsAPICRUD` service")
 
-router = APIRouter()
+router = APIRouter(prefix=f"{settings.api_version}/tags")
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: TagCreate):
@@ -157,4 +157,4 @@ async def update(payload: TagUpdate):
 async def delete(payload: svc.NodeDelete):
     await app.delete(payload)
 
-app.include_router(router, prefix=f"{settings.api_version}/tags", tags=["tags"])
+app.include_router(router, tags=["tags"])

@@ -75,25 +75,14 @@ settings = ObjectsAPICRUDSettings()
 
 app = ObjectsAPICRUD(settings=settings, title="`ObjectsAPICRUD` service")
 
-'''
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-'''
-
-router = APIRouter()
+router = APIRouter(prefix=f"{settings.api_version}/objects")
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: ObjectCreate):
     res = await app.create(payload)
-    if "code" in res["error"]:
-        if res["error"]["code"]==406:
-            raise HTTPException(status_code=406, detail=res)
-            # raise HTTPException(status_code=406, detail=res["error"]["message"])
+
+    if res["error"].get("code", 202)==406:
+        raise HTTPException(status_code=406, detail=res)        
     return res
 
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
@@ -108,4 +97,4 @@ async def update(payload: ObjectUpdate):
 async def delete(payload: ObjectRead):
     await app.delete(payload)
 
-app.include_router(router, prefix=f"{settings.api_version}/objects", tags=["objects"])
+app.include_router(router, tags=["objects"])

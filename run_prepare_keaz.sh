@@ -11,11 +11,7 @@ then
     back=$1
 fi
 docker compose $back --env-file docker/compose/.cont_all_svc_in_one.env \
--f docker/compose/docker-compose.grafana.yml \
 -f docker/compose/docker-compose.redis.yml \
--f docker/compose/docker-compose.rabbitmq.yml \
--f docker/compose/docker-compose.ldap.yml \
--f docker/compose/docker-compose.postgresql.data_in_container.yml \
--f docker/compose/docker-compose.all_svc_in_one-retranslator.yml \
+-f docker/compose/docker-compose.all_svc_in_one.yml \
 -f docker/compose/docker-compose.nginx.all_svc_in_one.yml \
 up

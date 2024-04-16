@@ -8,9 +8,11 @@ services:
     container_name: grafana
     hostname: ${HOST_GRAFANA}
     restart: unless-stopped
-    #environment:
-    #  - GF_INSTALL_PLUGINS=grafana-mqtt-datasource,https://github.com/mp-co-ru/grafana-ui-plugin/releases/download/v0.2.0/mp-co-peresvet-app-0-2-0.zip;mp-co-peresvet-app
-    #  - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=mp-co-peresvet-app
+    environment:
+      #- GF_INSTALL_PLUGINS=grafana-mqtt-datasource,https://github.com/mp-co-ru/grafana-ui-plugin/releases/download/v0.2.0/mp-co-peresvet-app-0-2-0.zip;mp-co-peresvet-app
+      - GF_INSTALL_PLUGINS
+      #- GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=mp-co-peresvet-app
+      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS
     volumes:
       - 'grafana_storage:/var/lib/grafana'
     ports:

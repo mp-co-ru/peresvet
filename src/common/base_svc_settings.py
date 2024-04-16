@@ -27,7 +27,7 @@ class JsonConfigSettingsSource(PydanticBaseSettingsSource):
         encoding = self.config.get('env_file_encoding')
         try:
             file_content_json = json.loads(
-                Path(os.getenv('config_file', 'config.json')).read_text(encoding)
+                Path(os.getenv('config_file', f'{self.svc_name}_config.json')).read_text(encoding)
             )
             field_value = file_content_json.get(field_name)
         except Exception as _:
@@ -123,8 +123,8 @@ class BaseSvcSettings(BaseSettings, BaseModel):
     ) -> Tuple[PydanticBaseSettingsSource, ...]:
         return (
             env_settings,
-            init_settings,
             JsonConfigSettingsSource(settings_cls),
+            init_settings,
             dotenv_settings,
             file_secret_settings,
         )
