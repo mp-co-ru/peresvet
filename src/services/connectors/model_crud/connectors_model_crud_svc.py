@@ -104,7 +104,8 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
                 "cn": payload["tagId"],
                 "prsJsonConfigString": payload["attributes"]["prsJsonConfigString"],
                 "prsValueScale": payload["attributes"]["prsValueScale"],
-                "prsMaxDev": payload["attributes"]["prsMaxDev"]
+                "prsMaxDev": payload["attributes"]["prsMaxDev"],
+                "description": payload["attributes"]["description"]
             }
         )
         await self._hierarchy.add_alias(
