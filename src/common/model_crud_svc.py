@@ -799,8 +799,7 @@ class ModelCRUDSvc(Svc):
 
         else:
             res = {
-                "id": new_id,
-                "error": {}
+                "id": new_id
             }
             self._logger.info(f"Создан новый узел {new_id}")
 
