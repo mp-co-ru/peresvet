@@ -55,6 +55,11 @@ class NodeAttributes(BaseModel):
             "недонастроен."
         )
     )
+    prsStep: bool = Field(False, title="Флаг 'шагового' тега.",
+        description=(
+            "Если флаг = True, то значения тега не интерполируются." 
+        )
+    )
     prsDefault: bool | None = Field(None, title="Сущность по умолчанию.",
         description=(
             "Если = ``True``\, то данный экземпляр считается узлом по умолчанию "

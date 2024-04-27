@@ -1,5 +1,6 @@
 import datetime
 from dateutil import tz
+import dateutil.parser as p
 import time
 import ciso8601
 
@@ -16,6 +17,8 @@ def ts (time_data: int | str = None) -> int:
     :param time_data: Входящая метка времени. По умолчанию - None.
         Если целое число - будет возвращена она же,
         если строка - будет преобразована к целому числу микросекунд.
+        Если строка не содержит даты, то вместо даты будут выбраны текущие
+        сутки.
     :type time_data: int | str = None
     :returns: Целое число микросекунд с 01.01.1970
     :rtype: int
@@ -25,9 +28,18 @@ def ts (time_data: int | str = None) -> int:
     elif isinstance (time_data, int):
         return time_data
 
-    timestampFrom = ciso8601.parse_datetime (time_data)
-    if timestampFrom.tzinfo is None:
-        timestampFrom = timestampFrom.replace (tzinfo=datetime.timezone.utc)
+    def parse_ts(string: str) -> datetime.datetime:
+        timestampFrom = ciso8601.parse_datetime (string)
+        if timestampFrom.tzinfo is None:
+            timestampFrom = timestampFrom.replace (tzinfo=datetime.timezone.utc)
+
+        return timestampFrom
+
+    try:
+        timestampFrom = parse_ts(time_data)
+    except ValueError as _:
+        # предполагаем, что строка не содержит даты, только время
+        timestampFrom = parse_ts(str(p.parse(time_data, default=datetime.datetime.now())))
 
     return int ((timestampFrom - start_ts).total_seconds() * microsec)
 

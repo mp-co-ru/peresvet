@@ -1,0 +1,11 @@
+version: '3.9'
+
+services:
+  one_app:
+    hostname: ${ALL_SVC_HOST}
+    build:
+      context: ../..
+      dockerfile: docker/docker-files/all/Dockerfile.one_app.uvicorn
+
+    environment:
+      TZ: ${TIME_ZONE}

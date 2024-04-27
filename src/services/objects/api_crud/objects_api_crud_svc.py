@@ -75,17 +75,7 @@ settings = ObjectsAPICRUDSettings()
 
 app = ObjectsAPICRUD(settings=settings, title="`ObjectsAPICRUD` service")
 
-'''
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-'''
-
-router = APIRouter()
+router = APIRouter(prefix=f"{settings.api_version}/objects")
 
 # класс с методами обработки ошибок в выоде для пользователя
 # class ErrorHandler:
@@ -120,4 +110,4 @@ async def update(payload: ObjectUpdate, error_handler: svc.ErrorHandler = Depend
 async def delete(payload: ObjectRead):
     await app.delete(payload)
 
-app.include_router(router, prefix=f"{settings.api_version}/objects", tags=["objects"])
+app.include_router(router, tags=["objects"])

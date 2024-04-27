@@ -314,19 +314,6 @@
                 "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
                 "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
             }
-        },
-        "retranslator_app": {
-            "type": "python 3.10",
-            "working_directory": "/usr/src/mpc-peresvet",
-            "path": "/usr/src/mpc-peresvet/src/services/retranslator/app/",
-            "home": "/usr/src/mpc-peresvet/.venv/",
-            "module": "retranslator_app_svc",
-            "callable": "app",
-            "environment": {
-                "log": "{\"level\": \"INFO\", \"file_name\": \"log/tags_app_api.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
-                "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
-                "ldap_url": "ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
-            }
         }
     }
 }

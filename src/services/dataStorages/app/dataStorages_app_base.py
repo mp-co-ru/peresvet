@@ -1359,11 +1359,11 @@ class DataStoragesAppBase(svc.Svc, ABC):
             tag_cache = await pipe.json().get(
                 f"{self._config.svc_name}:{tag_id}", "prsStep"
             ).execute()
-            if not tag_cache[0]:
+            if tag_cache[0] is None:
                 self._logger.error(f"Тег {tag_id} отсутствует в кэше.")
                 await client.aclose()
                 return []
-            step = tag_cache[0]["prsStep"]
+            step = tag_cache[0]
         await client.aclose()
 
         tag_data = await self._read_data(
