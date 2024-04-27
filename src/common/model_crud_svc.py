@@ -450,16 +450,9 @@ class ModelCRUDSvc(Svc):
         )
         self._logger.info(f'Узел {mes_data["id"]} обновлён.')
 
-        res_response = {
-                    "id": None,
-                    "error": {
-                        "code": 200,
-                        "message": "Узел обновлён"
-                    }
-                }
+        res_response = {}
 
         return res_response
-
 
     async def _further_update(self, mes: dict) -> None:
         """Метод переопределяется в сервисах-наследниках.

@@ -28,13 +28,9 @@ def valid_uuid(id: str | list[str]) -> str | list[str]:
 
 # класс с методами обработки ошибок в выоде для пользователя
 class ErrorHandler:
-    async def handle_e406(self,res):
-        if ("error" in res and "code" in res["error"]):
-            if (res["error"]["code"]==406):
-                raise HTTPException(status_code=406, detail=res)         
-    async def handle_new_parent_is_child(self, res):
-        if res["error"]["code"]==400:
-            raise HTTPException(status_code=400, detail=res["error"]["message"])
+    async def handle_error(self,res):
+        if "error" in res:
+            raise HTTPException(status_code=res["error"]["code"], detail=res["error"]["message"])
 
 
 class NodeAttributes(BaseModel):
