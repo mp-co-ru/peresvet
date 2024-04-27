@@ -18,7 +18,7 @@ sys.path.append(".")
 
 from src.common import svc
 from src.common.api_crud_svc import valid_uuid
-from src.services.tags.pandas_app_api.pandas_app_api_settings import TagsAppAPISettings
+from src.services.tags.pandas_app_api.pandas_app_api_settings import PandasAppAPISettings
 import src.common.times as t
 from src.services.tags.app_api.tags_app_api_svc import TagsAppAPI, DataGet
 
@@ -70,11 +70,9 @@ class TagsAppAPIPandas(TagsAppAPI):
             df['duration'] = df['duration'] * (-1)
             df = df.groupby('code')['duration'].sum()
 
-            df = pd.DataFrame(df)['duration'].astype(int)
+            df = df.astype(int)
 
-            final_value = {}
-            for code, row in df.iterrows():
-                final_value[str(code)] = row['duration']
+            final_value = df.to_dict()
 
             final_res['data'].append({
                 "tagId": tag["tagId"],
@@ -85,11 +83,11 @@ class TagsAppAPIPandas(TagsAppAPI):
 
         return final_res
 
-settings = TagsAppAPISettings()
+settings = PandasAppAPISettings()
 
 app = TagsAppAPIPandas(settings=settings, title="`TagsAppAPIPandas` service")
 
-router = APIRouter(prefix=f"{settings.api_version}/data/pandas/")
+router = APIRouter(prefix=f"{settings.api_version}/pandas")
 
 @router.get("/", response_model=dict | None, status_code=200)
 async def data_get(q: str | None = None, payload: DataGet | None = None):
@@ -102,49 +100,4 @@ async def data_get(q: str | None = None, payload: DataGet | None = None):
     res = await app.data_get(p)
     return res
 
-@router.post("/", status_code=200)
-async def data_set(payload: AllData):
-    return await app.data_set(payload)
-
-'''
-@router.websocket("/ws/data")
-async def websocket_endpoint(websocket: WebSocket):
-
-    try:
-        await websocket.accept()
-        app._logger.debug(f"Установлена ws-связь.")
-
-        while True:
-            try:
-                received_data = await websocket.receive_json()
-                action = received_data.get("action")
-                if not action:
-                    raise ValueError("Не указано действие в команде.")
-                data = received_data.get("data")
-                if not data:
-                    raise ValueError("Не указаны данные команды.")
-
-                match action:
-                    case "get":
-                        res = await app.data_get(DataGet(**data))
-                    case "set":
-                        await app.data_set(AllData(**data))
-                        res = {
-                            "error": {"id": 0}
-                        }
-                await websocket.send_json(res)
-
-            except TypeError as ex:
-                app._logger.error(f"Неверный формат данных: {ex}")
-            except ValidationError as ex:
-                app._logger.error(f"Неверные данные сообщения: {ex}")
-            except json.JSONDecodeError as ex:
-                app._logger.error(f"Сообщение должно быть в виде json: {ex}")
-            except ValueError as ex:
-                app._logger.error(ex)
-
-    except Exception as ex:
-        app._logger.error(f"Разрыв ws-связи: {ex}")
-'''
-
-app.include_router(router, tags=["data"])
+app.include_router(router, tags=["pandas"])

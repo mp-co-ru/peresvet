@@ -26,7 +26,11 @@ class TagsAppSettings(SvcSettings):
                 #: тип обменника
                 "type": "direct",
                 #: привязка для очереди
-                "routing_key": ["tags_app_consume", "tags_app_api_publish"]
+                "routing_key": [
+                    "tags_app_consume",
+                    "tags_app_api_publish",
+                    "pandas_app_api_publish"
+                ]
             }
         }
     }
