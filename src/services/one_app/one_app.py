@@ -164,6 +164,15 @@ from src.services.tags.app_api.tags_app_api_svc \
     )
 # -----------------------------------------------------------------------------
 
+# pandas ----------------------------------------------------------------------
+# pandas app api
+from src.services.tags.pandas_app_api.pandas_app_api_svc \
+    import (
+        app as pandas_app_api,
+        router as pandas_app_api_router
+    )
+# -----------------------------------------------------------------------------
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     for route in app.router.routes:
@@ -220,10 +229,14 @@ api_router.include_router(router=tags_api_crud_router)
 # tags_app_api
 api_router.include_router(router=tags_app_api_router)
 # -----------------------------------------------------------------------------
+
+# pandas ----------------------------------------------------------------------
+# pandas_app_api
+api_router.include_router(router=pandas_app_api_router)
+# -----------------------------------------------------------------------------
 # =============================================================================
 
 app.include_router(api_router)
-
 
 # монтирование приложений =====================================================
 
@@ -292,6 +305,9 @@ app.mount(path="/", app=tags_app)
 app.mount(path="/", app=tags_app_api)
 # -----------------------------------------------------------------------------
 
+# pandas ----------------------------------------------------------------------
+app.mount(path="/", app=pandas_app_api)
+# -----------------------------------------------------------------------------
 # =============================================================================
 
 if __name__ == "__main__":
