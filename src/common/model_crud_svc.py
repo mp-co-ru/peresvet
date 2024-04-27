@@ -11,7 +11,6 @@ import json
 import asyncio
 from uuid import uuid4
 
-
 import aio_pika
 import aio_pika.abc
 
@@ -311,12 +310,12 @@ class ModelCRUDSvc(Svc):
             "response": "ok"
         }
 
-    async def _updating(self, mes) -> dict:
+    async def _updating(self, mes) -> dict | None:
         return {
             "response": "ok"
         }
 
-    async def _update(self, mes: dict) -> None:
+    async def _update(self, mes: dict) -> dict:
         """Метод обновления данных узла. Также метод может перемещать узел
         по иерархии.
 
@@ -410,7 +409,24 @@ class ModelCRUDSvc(Svc):
                 tasks, return_when=asyncio.ALL_COMPLETED
             )
 
+        # тут мы делаем проверку не является ли новый родитель потомком текущего узла
         if new_parent:
+            res = await self._hierarchy.search({
+                "base": mes_data['id'],
+                "scope": 2,
+                "filter": {
+                    "entryUUID": [new_parent]
+                }
+            })
+            if res:
+                res_response = {
+                    "id": None,
+                    "error": {
+                        "code": 400,
+                        "message": "Новый родительский узел содержится в подиерархии."
+                    }
+                }
+                return res_response
             await self._hierarchy.move(mes_data['id'], new_parent)
 
         if mes_data.get("attributes"):
@@ -428,6 +444,10 @@ class ModelCRUDSvc(Svc):
         await self._post_message(mes=body, reply=False, routing_key=mes_data["id"])
 
         self._logger.info(f'Узел {mes_data["id"]} обновлён.')
+
+        res_response = {}
+
+        return res_response
 
     async def _further_update(self, mes: dict) -> None:
         """Метод переопределяется в сервисах-наследниках.

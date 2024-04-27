@@ -6,7 +6,7 @@
 import json
 from uuid import UUID
 from pydantic import BaseModel, Field, validator, ConfigDict
-
+from fastapi import HTTPException
 from src.common.base_svc import BaseSvc
 from src.common.api_crud_settings import APICRUDSettings
 
@@ -24,6 +24,13 @@ def valid_uuid(id: str | list[str]) -> str | list[str]:
         except ValueError as ex:
             raise ValueError('id должен быть в виде GUID') from ex
     return id
+
+
+# класс с методами обработки ошибок в выоде для пользователя
+class ErrorHandler:
+    async def handle_error(self,res):
+        if "error" in res:
+            raise HTTPException(status_code=res["error"]["code"], detail=res["error"]["message"])
 
 
 class NodeAttributes(BaseModel):
@@ -239,7 +246,7 @@ class APICRUDSvc(BaseSvc):
             "data": payload.model_dump()
         }
 
-        return await self._post_message(mes=body, reply=False)
+        return await self._post_message(mes=body, reply=True)
 
     async def delete(self, payload: NodeDelete) -> dict:
         """Удаление узлов в иерархии.
