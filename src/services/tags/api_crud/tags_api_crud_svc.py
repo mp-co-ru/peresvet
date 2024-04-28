@@ -78,14 +78,7 @@ class TagCreate(svc.NodeCreate):
     validate_id = validator('parentId', allow_reuse=True)(svc.valid_uuid)
 
 class TagRead(svc.NodeRead):
-    getDataStorageId: bool = Field(
-        False,
-        title="Флаг возврата id хранилища данных."
-    )
-    getConnectorId: bool = Field(
-        False,
-        title="Флаг возврата id источника данных."
-    )
+    pass
 
 class TagUpdate(svc.NodeUpdate):
     dataStorageId: str | None = Field(
