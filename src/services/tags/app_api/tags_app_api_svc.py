@@ -10,7 +10,7 @@ from pydantic import (
     validator, BeforeValidator, ValidationError, ConfigDict
 )
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
 
 sys.path.append(".")
 
@@ -209,7 +209,10 @@ router = APIRouter(prefix=f"{settings.api_version}/data")
 @router.get("/", response_model=dict | None, status_code=200)
 async def data_get(q: str | None = None, payload: DataGet | None = None):
     if q:
-        p = DataGet.model_validate_json(q)
+        try:
+            p = DataGet.model_validate_json(q)
+        except:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Некорректный JSON")
     elif payload:
         p = payload
     else:
