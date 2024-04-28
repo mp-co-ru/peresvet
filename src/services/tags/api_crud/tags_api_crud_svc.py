@@ -81,17 +81,7 @@ class TagRead(svc.NodeRead):
     pass
 
 class TagUpdate(svc.NodeUpdate):
-    dataStorageId: str | None = Field(
-        None,
-        title="Id хранилища данных, в котором будет храниться история значений тега.",
-        description="Если = None, тег будет привязан к хранилищу по умолчанию."
-    )
-    connectorId: str | None = Field(
-        None,
-        title="Id коннектора-поставщика данных."
-    )
-
-    validate_id = validator('parentId', 'id', 'dataStorageId', 'connectorId', allow_reuse=True)(svc.valid_uuid)
+    validate_id = validator('parentId', 'id', allow_reuse=True)(svc.valid_uuid)
 
 class TagsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с тегами в иерархии.

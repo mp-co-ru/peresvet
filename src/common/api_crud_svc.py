@@ -55,6 +55,7 @@ class NodeAttributes(BaseModel):
             "недонастроен."
         )
     )
+
     prsDefault: bool | None = Field(None, title="Сущность по умолчанию.",
         description=(
             "Если = ``True``\, то данный экземпляр считается узлом по умолчанию "
