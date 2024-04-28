@@ -74,23 +74,11 @@ class TagCreateAttributes(svc.NodeAttributes):
     )
 
 class TagCreate(svc.NodeCreate):
-    connectorId: str | None = Field(
-        None,
-        title="Id коннектора-поставщика данных."
-    )
     attributes: TagCreateAttributes = Field({}, title="Атрибуты узла")
-
-    validate_id = validator('parentId', 'connectorId', allow_reuse=True)(svc.valid_uuid)
+    validate_id = validator('parentId', allow_reuse=True)(svc.valid_uuid)
 
 class TagRead(svc.NodeRead):
-    getDataStorageId: bool = Field(
-        False,
-        title="Флаг возврата id хранилища данных."
-    )
-    getConnectorId: bool = Field(
-        False,
-        title="Флаг возврата id источника данных."
-    )
+    pass
 
 class TagUpdate(svc.NodeUpdate):
     dataStorageId: str | None = Field(
