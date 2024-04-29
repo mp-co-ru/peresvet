@@ -6,7 +6,7 @@ import json
 import sys
 from typing import List
 from pydantic import BaseModel, Field, validator
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 sys.path.append(".")
 
@@ -78,9 +78,13 @@ app = MethodsAPICRUD(settings=settings, title="`MethodsAPICRUD` service")
 
 router = APIRouter(prefix=f"{settings.api_version}/methods")
 
+error_handler = svc.ErrorHandler()
+
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
-async def create(payload: MethodCreate):
-    return await app.create(payload)
+async def create(payload: MethodCreate, error_handler: svc.ErrorHandler = Depends()):
+    res = await app.create(payload)
+    await error_handler.handle_error(res)
+    return res
 
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
 async def read(q: str | None = None, payload: MethodRead | None = None):

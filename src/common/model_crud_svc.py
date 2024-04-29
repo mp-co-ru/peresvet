@@ -732,6 +732,17 @@ class ModelCRUDSvc(Svc):
 
             return res
 
+        if (parent_node in mes['data'].get("initiatedBy")) and (mes['data'].get("initiatedBy") != None):
+            res = {
+                "id": None,
+                "error": {
+                    "code": 400,
+                    "message": "ParentId не может быть в списке InitiatedBy."
+                }
+            }
+
+            return res
+
         if not await self._check_parent_class(parent_node):
             res = {
                 "id": None,

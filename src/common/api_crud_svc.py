@@ -4,6 +4,7 @@
 <сущность>_api_crud.
 """
 import json
+from typing import Union
 from uuid import UUID
 from pydantic import BaseModel, Field, validator, ConfigDict
 from fastapi import HTTPException
@@ -190,7 +191,7 @@ class NodeCreateResult(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
 
-    id: str
+    id: Union[str, None]
 
 
 class OneNodeInReadResult(BaseModel):
