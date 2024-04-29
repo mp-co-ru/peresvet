@@ -253,7 +253,7 @@ class APICRUDSvc(BaseSvc):
             "data": payload.model_dump()
         }
 
-        return await self._post_message(mes=body, reply=False)
+        return await self._post_message(mes=body, reply=True)
 
     async def api_get_read(self, request_model: NodeRead, q: str | None, payload: NodeRead | None):
         if q is None and payload is None:
