@@ -137,10 +137,12 @@ async def read(q: str | None = None, payload: DataStorageRead | None = None):
 
 @router.put("/", status_code=202)
 async def update(payload: DataStorageUpdate):
-    await app.update(payload)
+    res = await app.update(payload)
+    return res
 
 @router.delete("/", status_code=202)
 async def delete(payload: svc.NodeDelete):
-    await app.delete(payload)
+    res = await app.delete(payload)
+    return res
 
 app.include_router(router, tags=["dataStorages"])
