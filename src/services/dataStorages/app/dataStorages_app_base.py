@@ -900,8 +900,10 @@ class DataStoragesAppBase(svc.Svc, ABC):
                 "base": ds_id,
                 "scope": CN_SCOPE_SUBTREE,
                 "filter": {
-                    "cn": [tag_id]
+                    "cn": [tag_id],
+                    "objectClass": ["prsDatastorageTagData"]
                 },
+                "deref": False,
                 "attributes": ["prsStore"]
             }
             res = await self._hierarchy.search(payload=payload)
