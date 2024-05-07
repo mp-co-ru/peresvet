@@ -746,12 +746,16 @@ class DataStoragesAppBase(svc.Svc, ABC):
             tag_ids (str], optional): список тегов.
         """
 
+        self._logger.info("Запись кэша данных в хранилища...")
+        scheduled = False
         try:
             client = redis.Redis(connection_pool=self._cache_pool)
             async with client.pipeline() as pipe:
 
                 if not tag_ids:
-                    # если пустой список тегов, это значит, что сбрасывается весь кэш
+                    # если пустой список тегов, это значит, что сбрасывается весь кэш,
+                    # то есть происходит запуск процедуры по расписанию
+                    scheduled = True
                     tag_ids = set()
                     for ds_id in self._ds_ids:
                         # определим, активна ли база
@@ -786,7 +790,9 @@ class DataStoragesAppBase(svc.Svc, ABC):
             await client.aclose()
 
         loop = asyncio.get_event_loop()
-        loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))
+
+        if scheduled:
+            loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))
 
     async def tag_set(self, mes: dict) -> None:
         """
