@@ -30,8 +30,9 @@ def valid_uuid(id: str | list[str]) -> str | list[str]:
 # класс с методами обработки ошибок в выоде для пользователя
 class ErrorHandler:
     async def handle_error(self,res):
-        if "error" in res:
-            raise HTTPException(status_code=res["error"]["code"], detail=res["error"]["message"])
+        if res != None:
+            if "error" in res:
+                raise HTTPException(status_code=res["error"]["code"], detail=res["error"]["message"])
 
 
 class NodeAttributes(BaseModel):

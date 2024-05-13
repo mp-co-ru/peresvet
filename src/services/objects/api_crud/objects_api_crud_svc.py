@@ -97,8 +97,10 @@ async def create(payload: ObjectCreate, error_handler: svc.ErrorHandler = Depend
     return res
 
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
-async def read(q: str | None = None, payload: ObjectRead | None = None):
-    return await app.api_get_read(ObjectRead, q, payload)
+async def read(q: str | None = None, payload: ObjectRead | None = None, error_handler: svc.ErrorHandler = Depends()):
+    res = await app.api_get_read(ObjectRead, q, payload)
+    await error_handler.handle_error(res)
+    return res
 
 @router.put("/", status_code=202)
 async def update(payload: ObjectUpdate, error_handler: svc.ErrorHandler = Depends()):
@@ -107,7 +109,9 @@ async def update(payload: ObjectUpdate, error_handler: svc.ErrorHandler = Depend
     return res
 
 @router.delete("/", status_code=202)
-async def delete(payload: ObjectRead):
-    await app.delete(payload)
+async def delete(payload: ObjectRead, error_handler: svc.ErrorHandler = Depends()):
+    res = await app.delete(payload)
+    await error_handler.handle_error(res)
+    return res
 
 app.include_router(router, tags=["objects"])
