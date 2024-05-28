@@ -88,17 +88,21 @@ async def create(payload: MethodCreate, error_handler: svc.ErrorHandler = Depend
     return res
 
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
-async def read(q: str | None = None, payload: MethodRead | None = None):
-    return await app.api_get_read(MethodRead, q, payload)
+async def read(q: str | None = None, payload: MethodRead | None = None, error_handler: svc.ErrorHandler = Depends()):
+    res = await app.api_get_read(MethodRead, q, payload)
+    await error_handler.handle_error(res)
+    return res
 
 @router.put("/", status_code=202)
-async def update(payload: MethodUpdate):
+async def update(payload: MethodUpdate, error_handler: svc.ErrorHandler = Depends()):
     res = await app.update(payload)
+    await error_handler.handle_error(res)
     return res
 
 @router.delete("/", status_code=202)
-async def delete(payload: svc.NodeDelete):
+async def delete(payload: svc.NodeDelete, error_handler: svc.ErrorHandler = Depends()):
     res = await app.delete(payload)
+    await error_handler.handle_error(res)
     return res
 
 app.include_router(router, tags=["methods"])
