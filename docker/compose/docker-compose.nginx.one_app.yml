@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   nginx_one_app:
+      container_name: nginx_one_app
       hostname: ${NGINX_HOST}
       build:
         context: ../..
