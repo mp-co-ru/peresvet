@@ -733,7 +733,7 @@ class ModelCRUDSvc(Svc):
             return res
 
         if (mes['data'].get("initiatedBy") is not None):
-            if (parent_node in mes['data'].get("initiatedBy")) and (mes['data'].get("initiatedBy") is not None):
+            if (parent_node in mes['data'].get("initiatedBy")):
                 res = {
                     "id": None,
                     "error": {

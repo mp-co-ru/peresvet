@@ -6,7 +6,7 @@ import sys
 from typing import Any, List, NamedTuple
 from typing_extensions import Annotated
 from pydantic import (
-    BaseModel, Field, field_validator,
+    BaseModel, Field,
     validator, BeforeValidator, ValidationError, ConfigDict
 )
 
