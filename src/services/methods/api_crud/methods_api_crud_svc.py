@@ -44,7 +44,8 @@ class MethodRead(svc.NodeRead):
     pass
 
 class MethodUpdate(MethodCreate):
-    pass
+    # не было поля для id, для обновляемого метода
+    id: str = Field(title="id обновляемого метода")
 
 class MethodsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с методами в иерархии.
@@ -92,10 +93,12 @@ async def read(q: str | None = None, payload: MethodRead | None = None):
 
 @router.put("/", status_code=202)
 async def update(payload: MethodUpdate):
-    await app.update(payload)
+    res = await app.update(payload)
+    return res
 
 @router.delete("/", status_code=202)
 async def delete(payload: svc.NodeDelete):
-    await app.delete(payload)
+    res = await app.delete(payload)
+    return res
 
 app.include_router(router, tags=["methods"])

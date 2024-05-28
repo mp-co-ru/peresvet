@@ -77,17 +77,6 @@ app = ObjectsAPICRUD(settings=settings, title="`ObjectsAPICRUD` service")
 
 router = APIRouter(prefix=f"{settings.api_version}/objects")
 
-# класс с методами обработки ошибок в выоде для пользователя
-# class ErrorHandler:
-#     async def handle_e406(self,res):
-#         if ("error" in res and "code" in res["error"]):
-#             if (res["error"]["code"]==406):
-#                 raise HTTPException(status_code=406, detail=res)
-#     async def handle_new_parent_is_child(self, res):
-#         if res["error"]["code"]==400:
-#             raise HTTPException(status_code=400, detail=res["error"]["message"])
-
-
 error_handler = svc.ErrorHandler()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
@@ -108,6 +97,7 @@ async def update(payload: ObjectUpdate, error_handler: svc.ErrorHandler = Depend
 
 @router.delete("/", status_code=202)
 async def delete(payload: ObjectRead):
-    await app.delete(payload)
+    res = await app.delete(payload)
+    return res
 
 app.include_router(router, tags=["objects"])
