@@ -162,7 +162,7 @@ class NodeRead(BaseModel):
             "2 - поиск по всему дереву, начиная с указанного в ``base`` узла."
         )
     )
-    filter: dict | None = Field(
+    filter: dict | str | None = Field(
          None,
          title=(
             "Словарь из атрибутов и их значений, из "

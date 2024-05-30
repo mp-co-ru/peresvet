@@ -667,6 +667,10 @@ class ModelCRUDSvc(Svc):
 
             mes_data["base"] = self._config.hierarchy["node_id"]
 
+        # если в запросе cn был в качестве строки, то превращаем в список
+        if mes_data["filter"].get("cn") and type(mes_data["filter"].get("cn")) is not list:
+            mes_data["filter"]["cn"] = [mes_data["filter"]["cn"]]
+
         items = await self._hierarchy.search(mes_data)
         for item in items:
             res["data"].append({
@@ -732,16 +736,17 @@ class ModelCRUDSvc(Svc):
 
             return res
 
-        if (parent_node in mes['data'].get("initiatedBy")) and (mes['data'].get("initiatedBy") != None):
-            res = {
-                "id": None,
-                "error": {
-                    "code": 400,
-                    "message": "ParentId не может быть в списке InitiatedBy."
+        if (mes['data'].get("initiatedBy") is not None):
+            if (parent_node in mes['data'].get("initiatedBy")):
+                res = {
+                    "id": None,
+                    "error": {
+                        "code": 400,
+                        "message": "ParentId не может быть в списке InitiatedBy."
+                    }
                 }
-            }
 
-            return res
+                return res
 
         if not await self._check_parent_class(parent_node):
             res = {
