@@ -83,8 +83,6 @@ error_handler = svc.ErrorHandler()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: MethodCreate, error_handler: svc.ErrorHandler = Depends()):
-    # if len(payload.attributes) == 0:
-    #     raise HTTPException(status_code=400, detail="требуется полеprsMethodAddress")
     res = await app.create(payload)
     await error_handler.handle_error(res)
     return res
