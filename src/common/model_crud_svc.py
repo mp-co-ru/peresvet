@@ -667,10 +667,11 @@ class ModelCRUDSvc(Svc):
 
             mes_data["base"] = self._config.hierarchy["node_id"]
 
-        for item in mes_data["filter"]:
-            # если в запросе cn был в качестве строки, то превращаем в список
-            if type(mes_data["filter"].get(item)) is not list:
-                mes_data["filter"][item] = [mes_data["filter"][item]]
+        if mes_data["filter"] is not None:
+            for item in mes_data["filter"]:
+                # если в запросе одно из полей было в качестве строки, то превращаем его в список
+                if type(mes_data["filter"].get(item)) is not list:
+                    mes_data["filter"][item] = [mes_data["filter"][item]]
 
         items = await self._hierarchy.search(mes_data)
         for item in items:
@@ -737,8 +738,9 @@ class ModelCRUDSvc(Svc):
 
             return res
 
-        if (mes['data'].get("initiatedBy") is not None):
-            if (parent_node in mes['data'].get("initiatedBy")):
+        initiator = mes['data'].get("initiatedBy")
+        if (initiator is not None):
+            if (parent_node in initiator):
                 res = {
                     "id": None,
                     "error": {
