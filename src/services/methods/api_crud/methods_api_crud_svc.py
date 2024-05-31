@@ -6,7 +6,7 @@ import json
 import sys
 from typing import List
 from pydantic import BaseModel, Field, validator
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 sys.path.append(".")
 
@@ -14,14 +14,14 @@ from src.common import api_crud_svc as svc
 from src.services.methods.api_crud.methods_api_crud_settings import MethodsAPICRUDSettings
 
 class MethodCreateAttributes(svc.NodeAttributes):
-    prsMethodAddress: str = Field(title="Адрес метода")
+    prsMethodAddress: str = Field(title="Адрес метода", required=True)
     prsEntityTypeCode: int = Field(0, title="Тип метода")
 
 class MethodParameter(svc.NodeCreate):
     pass
 
 class MethodCreate(svc.NodeCreate):
-    attributes: MethodCreateAttributes = Field({}, title="Атрибуты метода")
+    attributes: MethodCreateAttributes = Field({}, title="Атрибуты метода", required=True)
     initiatedBy: str | list[str] = Field([], title="Список id экземпляров сущностей, инициирующих вычисление тега.")
     parameters: List[MethodParameter] = Field(
         [],
@@ -83,6 +83,8 @@ error_handler = svc.ErrorHandler()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: MethodCreate, error_handler: svc.ErrorHandler = Depends()):
+    if len(payload.attributes) == 0:
+        raise HTTPException(status_code=400, detail="требуется полеprsMethodAddress")
     res = await app.create(payload)
     await error_handler.handle_error(res)
     return res
