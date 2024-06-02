@@ -670,7 +670,7 @@ class ModelCRUDSvc(Svc):
 
         if mes_data["filter"] is not None:
             for key, item in mes_data["filter"].items():
-                # если в запросе одно из полей было не списком, то делаем его списоком
+                # если в запросе одно из полей было не списком, то делаем его списком
                 if type(item) is not list:
                     mes_data["filter"][key] = [mes_data["filter"][key]]
 
@@ -739,9 +739,9 @@ class ModelCRUDSvc(Svc):
 
             return res
 
-        initiator = mes['data'].get("initiatedBy")
-        if (initiator is not None):
-            if (parent_node in initiator):
+        initiators = mes['data'].get("initiatedBy")
+        if (initiators is not None):
+            if (parent_node in initiators):
                 res = {
                     "id": None,
                     "error": {
