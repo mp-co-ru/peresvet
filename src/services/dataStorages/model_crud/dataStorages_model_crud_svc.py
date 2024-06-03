@@ -122,6 +122,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             copy_item["dataStorageId"] = ds_id
             await self._link_alert(copy_item)
 
+
     async def _unlink_tag(self, tag_id: str) -> None:
         """Метод отвязки тега от хранилища.
         Ищем, к какому хранилищу привязан тег и посылаем этому хранилищу
