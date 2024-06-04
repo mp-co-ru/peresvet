@@ -6,6 +6,7 @@ sys.path.append(".")
 
 from src.services.connectors.app.connectors_app_settings import ConnectorsAppSettings
 from src.common import svc, hierarchy
+import src.common.times as t
 
 class ConnectorsApp(svc.Svc):
     """Сервис работы с коннекторами.
@@ -174,5 +175,15 @@ async def get_req(websocket: WebSocket, connector_id: str):
     except WebSocketDisconnect as e:
         # manager.disconnect(websocket)
         app._logger.error(f"Разрыв связи с коннектором {connector_id}. Ошибка: {e}")
+        now_ts = t.now_int()
+        data = {"data": []}
+        for tag in connector_tag_data["tags"]:
+            tag_data = {"tagId": tag["tagId"], "data": [None, now_ts, None]}
+            data["data"].append(tag_data)
+        body = {
+            "action": "tags.setData",
+            "data": data
+        }
+        await app._post_message(body, routing_key="tags_app_consume", reply=False)
 
 app.include_router(router, tags=["connectors_app"])
