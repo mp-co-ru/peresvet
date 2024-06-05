@@ -178,7 +178,7 @@ async def get_req(websocket: WebSocket, connector_id: str):
         now_ts = t.now_int()
         data = {"data": []}
         for tag in connector_tag_data["tags"]:
-            tag_data = {"tagId": tag["tagId"], "data": [None, now_ts, None]}
+            tag_data = {"tagId": tag["tagId"], "data": [[None, now_ts, None]]}
             data["data"].append(tag_data)
         body = {
             "action": "tags.setData",

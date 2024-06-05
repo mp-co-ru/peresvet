@@ -22,9 +22,9 @@ patio = "0.1.4"
 patio-rabbitmq = "0.1.1"
 apscheduler = "3.10.4"
 asyncpg = "0.29.0"
-uvicorn = "0.24.0.post1"
 aiohttp = "3.9.0"
-redis = {extras = ["hiredis"], version = "*"}
+redis = {extras = ["hiredis"], version = "5.0.4"}
+uvicorn = {extras = ["standard"], version = "0.30.1"}
 
 [dev-packages]
 pylint = "3.0.2"
