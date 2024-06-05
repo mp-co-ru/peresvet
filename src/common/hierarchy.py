@@ -228,11 +228,13 @@ class Hierarchy:
                 filterstr = Hierarchy.__form_filterstr(payload["filter"])
 
                 id_ = payload.get("base")
+                # id_ = payload.get("cn")
                 if not id_:
                     node = self._base_dn
                 else:
                     if self._is_node_id_uuid(id_):
                         node = await self.get_node_dn(payload.get("base"))
+                        # node = await self.get_node_dn(payload["filter"]["cn"])
                     else:
                         node = id_
 

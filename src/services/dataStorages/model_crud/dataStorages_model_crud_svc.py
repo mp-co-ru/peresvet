@@ -121,6 +121,10 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             copy_item = copy.deepcopy(item)
             copy_item["dataStorageId"] = ds_id
             await self._link_alert(copy_item)
+        for item in mes["data"]["unlinkTags"]:
+            await self._unlink_tag(item)
+        for item in mes["data"]["unlinkAlerts"]:
+            await self._unlink_alert(item)
 
     async def _unlink_tag(self, tag_id: str) -> None:
         """Метод отвязки тега от хранилища.
@@ -134,8 +138,8 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             "base": self._config.hierarchy["node_id"],
             "scope": hierarchy.CN_SCOPE_SUBTREE,
             "filter": {
-                "cn": f"{tag_id}",
-                "objectClass": f"prsDatastorageTagData"
+                "cn": [f"{tag_id}"],
+                "objectClass": [f"prsDatastorageTagData"]
             },
             "attributes": ["cn"]
         })
