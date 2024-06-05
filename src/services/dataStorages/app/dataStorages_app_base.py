@@ -780,9 +780,16 @@ class DataStoragesAppBase(svc.Svc, ABC):
                     res = await pipe.execute()
                     if res[0] is None:
                         # если нет кэша у тега
-                        await self._create_tag_cache(tag_id)
-
-                    await self._write_tag_data_to_db(tag_id)
+                        if not await self._create_tag_cache(tag_id):
+                            index = await pipe.json().arrindex(
+                                f"{self._config.svc_name}:{ds_id}", "tags", tag_id
+                            ).execute()
+                            if index[0] > -1:
+                                await pipe.json().arrpop(
+                                    f"{self._config.svc_name}:{ds_id}", "tags", index[0]
+                                ).execute()
+                    else:
+                        await self._write_tag_data_to_db(tag_id)
 
         except Exception as ex:
             self._logger.error(f"Ошибка записи данных в базу: {ex}")
@@ -844,7 +851,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
         finally:
             await client.aclose()
 
-    async def _create_tag_cache(self, tag_id: str) -> dict | None:
+    async def _create_tag_cache(self, tag_id: str) -> dict | bool | None:
         """Функция подготовки кэша с данными о теге.
 
         Возвращаем всегда сформированный кэш целиком, независимо от того, был
@@ -887,6 +894,8 @@ class DataStoragesAppBase(svc.Svc, ABC):
             ]
         }
         res = await self._hierarchy.search(payload=payload)
+        if not res:
+            return False
         tag_attrs = res[0][2]
         # ------------------------------------------------
 
