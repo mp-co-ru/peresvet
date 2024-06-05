@@ -20,11 +20,20 @@ class SchedulesModelCRUD(model_crud_svc.ModelCRUDSvc):
     def __init__(self, settings: SchedulesModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    async def _reading(self, mes: dict) -> dict:
-        pass
+    def _set_incoming_commands(self) -> dict:
+        return {
+            "schedules.create": self._create,
+            "schedules.read": self._read
+        }
 
-    async def _creating(self, mes: dict, new_id: str) -> None:
-        pass
+    def __init__(self, settings: SchedulesModelCRUDSettings, *args, **kwargs):
+        super().__init__(settings, *args, **kwargs)
+
+    # async def _reading(self, mes: dict) -> dict:
+    #     pass
+
+    # async def _creating(self, mes: dict, new_id: str) -> None:
+    #     pass
 
 settings = SchedulesModelCRUDSettings()
 
