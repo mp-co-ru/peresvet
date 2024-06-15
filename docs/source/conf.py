@@ -53,15 +53,14 @@ release = '0.0.1'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-'''
 extensions = [
     'sphinx.ext.autodoc',
     'sphinxcontrib.httpdomain',
     'sphinxcontrib.httpexample',
     'sphinx.ext.todo',
 ]
-'''
 
+'''
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
@@ -75,6 +74,7 @@ extensions = [
     # uncomment to build pdf
     #'rst2pdf.pdfbuilder',
 ]
+'''
 
 httpexample_scheme = 'http'
 

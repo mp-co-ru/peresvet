@@ -1,6 +1,6 @@
 """
 Модуль содержит классы, описывающие входные данные для команд CRUD для тегов
-и класс сервиса ``tags_api_crud_svc``\.
+и класс сервиса ``alerts_api_crud_svc``.
 """
 import sys
 from uuid import UUID
@@ -83,6 +83,33 @@ error_handler = svc.ErrorHandler()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: AlertCreate, error_handler: svc.ErrorHandler = Depends()):
+    """
+    Метод добавляет ссылку (alias) на узел в иерархии.
+
+    .. http:example:: python-requests
+       :request: ../../../../docs/source/samples/alerts/addAliasIn.txt
+       :response: ../../../../docs/source/samples/alerts/addAliasOut.txt
+
+    **Request**:
+
+        * **parentId** (str) - идентификатор узла, в который нужно добавить ссылку,
+        * **attributes** (dict) -
+
+          * **cn** (str) - имя сслыки; необязательный атрибут;
+          * **aliasedObjectName** (str) - идентификатор объекта,
+            на который создается ссылка
+
+    **Response**:
+
+        * **error** (dict) - объект, содержащий информацию об ошибке,
+        * **id** (str) - идентификатор созданной ссылки
+        * **uuid** (str) - идентификатор созданной ссылки (uuid)
+
+    .. note::
+        Если в запросе переданы атрибуты, не описанные в документации,
+        они не будут обработаны функцией. Ошибка при этом возникать не будет.
+    """
+
     res = await app.create(payload)
     await error_handler.handle_error(res)
     return res
