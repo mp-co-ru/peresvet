@@ -4,8 +4,6 @@ Access-Control-Allow-Origin: *
 Content-type: application/json
 
 {
-    "error": {
-        "id": 0
-    },
-    "id": "new alias id"
+    "detail": "error description",
+    "id": "new alert id"
 }

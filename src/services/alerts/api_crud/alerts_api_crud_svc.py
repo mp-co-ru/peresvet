@@ -84,15 +84,52 @@ error_handler = svc.ErrorHandler()
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: AlertCreate, error_handler: svc.ErrorHandler = Depends()):
     """
-    Метод добавляет ссылку (alias) на узел в иерархии.
-
-    .. http:example:: python-requests
-       :request: ../../../../docs/source/samples/alerts/addAliasIn.txt
-       :response: ../../../../docs/source/samples/alerts/addAliasOut.txt
+    Метод добавляет тревогу в иерархию.
 
     **Request**:
 
-        * **parentId** (str) - идентификатор узла, в который нужно добавить ссылку,
+        .. http:example::
+            :request: ../../../../docs/source/samples/alerts/addAlertIn.txt
+            :response: ../../../../docs/source/samples/alerts/addAlertOut.txt
+
+        * **parentId** (str) - id тега к которому привязывается тревога, обязательный атрибут
+        * **attributes** (dict) - необязательное поле.
+
+          * **cn** (str) - имя тревоги; необязательный атрибут;
+          * **description** (str) - описание экземпляра, необязательный атрибут;
+          * **prsJsonConfigString** (str) - Строка содержит, в случае необходимости,
+            конфигурацию узла. Интерпретируется сервисом, управляющим сущностью,
+            которой принадлежит экземпляр. Необязательный аттрибут
+          * **prsActive** (bool) - Определяет, активен ли экземпляр
+          * **prsDefault** (bool) - Если = ``True``, то данный экземпляр
+            считается узлом по умолчанию в списке равноправных узлов данного уровня иерархии.
+            Необязательный атрибут.
+          * **prsIndex** (int) - Если у узлов одного уровня иерархии проставлены индексы, то
+            "перед отдачей клиенту списка экземпляров они сортируются "
+            "в соответствии с их индексами."
+
+    **Response**:
+
+        * **id** (str) - идентификатор созданной тревоги
+
+    """
+
+    res = await app.create(payload)
+    await error_handler.handle_error(res)
+    return res
+
+@router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
+async def read(q: str | None = None, payload: AlertRead | None = None, error_handler: svc.ErrorHandler = Depends()):
+    """
+    Метод читает тревогу из иерархии.
+
+    .. http:example::
+       :request: ../../../../docs/source/samples/alerts/getAlertsIn.txt
+       :response: ../../../../docs/source/samples/alerts/getAlertsOut.txt
+
+    **Request**:
+
+        * **id** (str | list(str)) - идентификатор тревоги, которую хотитим прочитать
         * **attributes** (dict) -
 
           * **cn** (str) - имя сслыки; необязательный атрибут;
@@ -110,12 +147,6 @@ async def create(payload: AlertCreate, error_handler: svc.ErrorHandler = Depends
         они не будут обработаны функцией. Ошибка при этом возникать не будет.
     """
 
-    res = await app.create(payload)
-    await error_handler.handle_error(res)
-    return res
-
-@router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
-async def read(q: str | None = None, payload: AlertRead | None = None, error_handler: svc.ErrorHandler = Depends()):
     res = await app.api_get_read(AlertRead, q, payload)
     await error_handler.handle_error(res)
     return res
