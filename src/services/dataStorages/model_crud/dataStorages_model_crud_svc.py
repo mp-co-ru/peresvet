@@ -126,6 +126,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         for item in mes["data"]["unlinkAlerts"]:
             await self._unlink_alert(item)
 
+
     async def _unlink_tag(self, tag_id: str) -> None:
         """Метод отвязки тега от хранилища.
         Ищем, к какому хранилищу привязан тег и посылаем этому хранилищу

@@ -336,7 +336,13 @@ class ModelCRUDSvc(Svc):
 
         # получим список всех подписавшихся на уведомления
         subscribers = []
-        node_dn = await self._hierarchy.get_node_dn(mes_data['id'])
+        try:
+            node_dn = await self._hierarchy.get_node_dn(mes_data['id'])
+        except ValueError:
+            self._logger.error("Узел с указанным id не найден")
+            return
+
+
         subscribers_id = await self._hierarchy.get_node_id(
             f"cn=subscribers,cn=system,{node_dn}"
         )
