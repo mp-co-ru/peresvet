@@ -6,7 +6,7 @@ import sys
 from typing import Any, List, NamedTuple
 from typing_extensions import Annotated
 from pydantic import (
-    BaseModel, Field, field_validator,
+    BaseModel, Field,
     validator, BeforeValidator, ValidationError, ConfigDict
 )
 
@@ -20,7 +20,7 @@ from src.services.tags.app_api.tags_app_api_settings import TagsAppAPISettings
 import src.common.times as t
 
 class DataPointItem(NamedTuple):
-    y: float | dict | str | int | None = None
+    y: float | dict | str | list | int | None = None
     x: int | str | None = None
     q: int | None = None
 

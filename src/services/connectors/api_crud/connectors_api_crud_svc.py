@@ -5,7 +5,7 @@
 import sys
 from pydantic import BaseModel, Field, validator, ConfigDict
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 sys.path.append(".")
 
@@ -131,20 +131,30 @@ app = ConnectorsAPICRUD(settings=settings, title="`ConnectorsAPICRUD` service")
 
 router = APIRouter(prefix=f"{settings.api_version}/connectors")
 
+error_handler = svc.ErrorHandler()
+
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
-async def create(payload: ConnectorCreate):
-    return await app.create(payload)
+async def create(payload: ConnectorCreate, error_handler: svc.ErrorHandler = Depends()):
+    res = await app.create(payload)
+    await error_handler.handle_error(res)
+    return res
 
 @router.get("/", response_model=ConnectorReadResult | None, status_code=200)
-async def read(q: str | None = None, payload: ConnectorRead | None = None):
-    return await app.api_get_read(ConnectorRead, q, payload)
+async def read(q: str | None = None, payload: ConnectorRead | None = None, error_handler: svc.ErrorHandler = Depends()):
+    res = await app.api_get_read(ConnectorRead, q, payload)
+    await error_handler.handle_error(res)
+    return res
 
 @router.put("/", status_code=202)
-async def update(payload: ConnectorUpdate):
-    await app.update(payload)
+async def update(payload: ConnectorUpdate, error_handler: svc.ErrorHandler = Depends()):
+    res = await app.update(payload)
+    await error_handler.handle_error(res)
+    return res
 
 @router.delete("/", status_code=202)
-async def delete(payload: ConnectorRead):
-    await app.delete(payload)
+async def delete(payload: ConnectorRead, error_handler: svc.ErrorHandler = Depends()):
+    res = await app.delete(payload)
+    await error_handler.handle_error(res)
+    return res
 
 app.include_router(router, tags=["connectors"])

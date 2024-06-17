@@ -6,7 +6,7 @@ import json
 import sys
 from typing import List
 from pydantic import BaseModel, Field, validator
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 sys.path.append(".")
 
@@ -14,14 +14,14 @@ from src.common import api_crud_svc as svc
 from src.services.methods.api_crud.methods_api_crud_settings import MethodsAPICRUDSettings
 
 class MethodCreateAttributes(svc.NodeAttributes):
-    prsMethodAddress: str = Field(title="Адрес метода")
+    prsMethodAddress: str = Field(title="Адрес метода", required=True)
     prsEntityTypeCode: int = Field(0, title="Тип метода")
 
 class MethodParameter(svc.NodeCreate):
     pass
 
 class MethodCreate(svc.NodeCreate):
-    attributes: MethodCreateAttributes = Field({}, title="Атрибуты метода")
+    attributes: MethodCreateAttributes = Field(title="Атрибуты метода", required=True)
     initiatedBy: str | list[str] = Field([], title="Список id экземпляров сущностей, инициирующих вычисление тега.")
     parameters: List[MethodParameter] = Field(
         [],
@@ -44,7 +44,8 @@ class MethodRead(svc.NodeRead):
     pass
 
 class MethodUpdate(MethodCreate):
-    pass
+    # не было поля для id, для обновляемого метода
+    id: str = Field(title="id обновляемого метода")
 
 class MethodsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с методами в иерархии.
@@ -87,15 +88,21 @@ async def create(payload: MethodCreate, error_handler: svc.ErrorHandler = Depend
     return res
 
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
-async def read(q: str | None = None, payload: MethodRead | None = None):
-    return await app.api_get_read(MethodRead, q, payload)
+async def read(q: str | None = None, payload: MethodRead | None = None, error_handler: svc.ErrorHandler = Depends()):
+    res = await app.api_get_read(MethodRead, q, payload)
+    await error_handler.handle_error(res)
+    return res
 
 @router.put("/", status_code=202)
-async def update(payload: MethodUpdate):
-    await app.update(payload)
+async def update(payload: MethodUpdate, error_handler: svc.ErrorHandler = Depends()):
+    res = await app.update(payload)
+    await error_handler.handle_error(res)
+    return res
 
 @router.delete("/", status_code=202)
-async def delete(payload: svc.NodeDelete):
-    await app.delete(payload)
+async def delete(payload: svc.NodeDelete, error_handler: svc.ErrorHandler = Depends()):
+    res = await app.delete(payload)
+    await error_handler.handle_error(res)
+    return res
 
 app.include_router(router, tags=["methods"])

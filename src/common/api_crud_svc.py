@@ -30,8 +30,9 @@ def valid_uuid(id: str | list[str]) -> str | list[str]:
 # класс с методами обработки ошибок в выоде для пользователя
 class ErrorHandler:
     async def handle_error(self,res):
-        if "error" in res:
-            raise HTTPException(status_code=res["error"]["code"], detail=res["error"]["message"])
+        if res is not None:
+            if "error" in res:
+                raise HTTPException(status_code=res["error"]["code"], detail=res["error"]["message"])
 
 
 class NodeAttributes(BaseModel):
@@ -253,7 +254,7 @@ class APICRUDSvc(BaseSvc):
             "data": payload.model_dump()
         }
 
-        return await self._post_message(mes=body, reply=False)
+        return await self._post_message(mes=body, reply=True)
 
     async def api_get_read(self, request_model: NodeRead, q: str | None, payload: NodeRead | None):
         if q is None and payload is None:
