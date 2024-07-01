@@ -105,12 +105,13 @@ async def create(payload: AlertCreate, error_handler: svc.ErrorHandler = Depends
             считается узлом по умолчанию в списке равноправных узлов данного уровня иерархии.
             Необязательный атрибут.
           * **prsIndex** (int) - Если у узлов одного уровня иерархии проставлены индексы, то
-            "перед отдачей клиенту списка экземпляров они сортируются "
-            "в соответствии с их индексами."
+            перед отдачей клиенту списка экземпляров они сортируются в соответствии
+            с их индексами. Необязательный атрибут.
 
     **Response**:
 
-        * **id** (str) - идентификатор созданной тревоги
+        * **id** (str) - идентификатор созданной тревоги.
+        * **detail** (str) - пояснение к возникшей ошибке.
 
     """
 
@@ -121,7 +122,7 @@ async def create(payload: AlertCreate, error_handler: svc.ErrorHandler = Depends
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
 async def read(q: str | None = None, payload: AlertRead | None = None, error_handler: svc.ErrorHandler = Depends()):
     """
-    Метод читает тревогу из иерархии.
+    Метод читает тревогу из иерархии (не сделано, т.к. метод работает некорректно).
 
     .. http:example::
        :request: ../../../../docs/source/samples/alerts/getAlertsIn.txt
@@ -130,6 +131,15 @@ async def read(q: str | None = None, payload: AlertRead | None = None, error_han
     **Request**:
 
         * **id** (str | list(str)) - идентификатор тревоги, которую хотитим прочитать
+        * **base** (str) - Базовый узел для поиска. Необязательный аттрибут.
+          Если не указан, то поиск ведётся от главного узла иерархии.
+        * **deref** (bool) - Флаг разыменования ссылок. По умолчанию true.
+        * **scope** (int) - Масштаб поиска. По умолчанию 1.\n
+          0 - получение данных по указанному в ключе ``base`` узлу \n
+          1 - поиск среди непосредственных потомков указанного в ``base`` узла\n
+          2 - поиск по всему дереву, начиная с указанного в ``base`` узла.
+        * **filter** (dict) - Словарь из атрибутов и их значений, из которых
+          формируется фильтр для поиска.
         * **attributes** (dict) -
 
           * **cn** (str) - имя сслыки; необязательный атрибут;
@@ -138,13 +148,7 @@ async def read(q: str | None = None, payload: AlertRead | None = None, error_han
 
     **Response**:
 
-        * **error** (dict) - объект, содержащий информацию об ошибке,
-        * **id** (str) - идентификатор созданной ссылки
-        * **uuid** (str) - идентификатор созданной ссылки (uuid)
 
-    .. note::
-        Если в запросе переданы атрибуты, не описанные в документации,
-        они не будут обработаны функцией. Ошибка при этом возникать не будет.
     """
 
     res = await app.api_get_read(AlertRead, q, payload)
@@ -153,12 +157,60 @@ async def read(q: str | None = None, payload: AlertRead | None = None, error_han
 
 @router.put("/", status_code=202)
 async def update(payload: AlertUpdate, error_handler: svc.ErrorHandler = Depends()):
+    """
+    Метод обновляет тревогу в иерархии.
+
+    **Request**:
+
+        .. http:example::
+            :request: ../../../../docs/source/samples/alerts/putAlertIn.txt
+            :response: ../../../../docs/source/samples/alerts/putAlertOut.txt
+
+        * **id** (str) - id тревоги для обновления. Обязательное поле.
+        * **attributes** (dict) - словарь с параметрами для обновления.
+
+          * **cn** (str) - имя тревоги; необязательный атрибут;
+          * **description** (str) - описание экземпляра, необязательный атрибут;
+          * **prsJsonConfigString** (str) - Строка содержит, в случае необходимости,
+            конфигурацию узла. Интерпретируется сервисом, управляющим сущностью,
+            которой принадлежит экземпляр. Необязательный аттрибут
+          * **prsActive** (bool) - Определяет, активен ли экземпляр
+          * **prsDefault** (bool) - Если = ``True``, то данный экземпляр
+            считается узлом по умолчанию в списке равноправных узлов данного уровня иерархии.
+            Необязательный атрибут.
+          * **prsIndex** (int) - Если у узлов одного уровня иерархии проставлены индексы, то
+            перед отдачей клиенту списка экземпляров они сортируются
+            в соответствии с их индексами. Необязательный атрибут
+
+    **Response**:
+
+        * {} - пустой словарь
+        * **detail** (list) - список с поснениями к ошибке
+
+    """
     res = await app.update(payload)
     await error_handler.handle_error(res)
     return res
 
 @router.delete("/", status_code=202)
 async def delete(payload: svc.NodeDelete, error_handler: svc.ErrorHandler = Depends()):
+    """
+    Метод удаляет тревогу из иерархии.
+
+    **Request**:
+
+        .. http:example::
+            :request: ../../../../docs/source/samples/alerts/deleteAlertIn.txt
+            :response: ../../../../docs/source/samples/alerts/deleteAlertOut.txt
+
+        * **id** (str) - id тревоги для удаления. Обязательное поле.
+
+    **Response**:
+
+        * null - в случае успешного запроса
+        * **detail** (list) - список с поснениями к ошибке
+
+    """
     res = await app.delete(payload)
     await error_handler.handle_error(res)
     return res

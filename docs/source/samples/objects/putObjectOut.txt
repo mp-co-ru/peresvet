@@ -1,0 +1,9 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Content-type: application/json
+
+{
+    "пустой словарь в случае успешного запроса",
+    "detail": ["слоаврь с пояснениями об ошибке, в случае таковой"]
+}
