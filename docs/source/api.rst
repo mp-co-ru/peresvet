@@ -109,6 +109,6 @@ API Платформы Пересвет
 
 .. toctree::
    :maxdepth: 6
-   
-   Тревоги<alerts>
 
+   Тревоги<alerts>
+   Теги<tags>
