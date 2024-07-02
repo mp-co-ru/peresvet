@@ -116,3 +116,4 @@ API Платформы Пересвет
    Коннекторы<connectors>
    Хранилища данных<dataStorages_api_doc>
    Расписания<schedules>
+   Методы<methods_api_doc>
