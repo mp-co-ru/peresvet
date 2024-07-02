@@ -113,3 +113,5 @@ API Платформы Пересвет
    Тревоги<alerts>
    Теги<tags>
    Обьекты<objects>
+   Коннекторы<connectors>
+   Хранилища данных<dataStorages_api_doc>
