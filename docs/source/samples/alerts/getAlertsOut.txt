@@ -4,6 +4,37 @@ Access-Control-Allow-Origin: *
 Content-type: application/json
 
 {
-    "detail": "error description",
-    "id": "new alert id"
+    "data": [
+        {
+            "id": "fd58e5c0-cc61-103e-9325-555c1a8a1358",
+            "attributes": {
+                "cn": [
+                    "alert1"
+                ],
+                "prsActive": [
+                    "TRUE"
+                ],
+                "prsDefault": [
+                    "TRUE"
+                ],
+                "objectClass": [
+                    "prsAlert"
+                ]
+            }
+        }
+    ],
+    "detail": [
+        {
+            "type": "json_invalid",
+            "loc": [
+                "body",
+                72
+            ],
+            "msg": "JSON decode error",
+            "input": {},
+            "ctx": {
+                "error": "Invalid control character at"
+            }
+        }
+    ]
 }

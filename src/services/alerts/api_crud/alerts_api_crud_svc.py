@@ -122,7 +122,7 @@ async def create(payload: AlertCreate, error_handler: svc.ErrorHandler = Depends
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
 async def read(q: str | None = None, payload: AlertRead | None = None, error_handler: svc.ErrorHandler = Depends()):
     """
-    Метод читает тревогу из иерархии (не сделано, т.к. метод работает некорректно).
+    Метод читает тревогу из иерархии.
 
     .. http:example::
        :request: ../../../../docs/source/samples/alerts/getAlertsIn.txt
@@ -130,9 +130,8 @@ async def read(q: str | None = None, payload: AlertRead | None = None, error_han
 
     **Request**:
 
-        * **id** (str | list(str)) - идентификатор тревоги, которую хотитим прочитать
-        * **base** (str) - Базовый узел для поиска. Необязательный аттрибут.
-          Если не указан, то поиск ведётся от главного узла иерархии.
+        * **id** (str | list(str)) - идентификатор тревоги, которую хотитим прочитать. Необязательный атрибут
+        * **base** (str) - Базовый узел для поиска. Обязательный атрибут.
         * **deref** (bool) - Флаг разыменования ссылок. По умолчанию true.
         * **scope** (int) - Масштаб поиска. По умолчанию 1.\n
           0 - получение данных по указанному в ключе ``base`` узлу \n
@@ -140,14 +139,12 @@ async def read(q: str | None = None, payload: AlertRead | None = None, error_han
           2 - поиск по всему дереву, начиная с указанного в ``base`` узла.
         * **filter** (dict) - Словарь из атрибутов и их значений, из которых
           формируется фильтр для поиска.
-        * **attributes** (dict) -
-
-          * **cn** (str) - имя сслыки; необязательный атрибут;
-          * **aliasedObjectName** (str) - идентификатор объекта,
-            на который создается ссылка
+        * **attributes** (list[str]) - Список атрибутов, значения которых необходимо вернуть в ответе. По умолчанию - ['\*'], то есть все атрибуты (кроме системных).
 
     **Response**:
 
+        * **data** (list) - найденные тревоги с их параметрами.
+        * **detail** (str) - пояснение к возникшей ошибке.
 
     """
 
@@ -184,7 +181,7 @@ async def update(payload: AlertUpdate, error_handler: svc.ErrorHandler = Depends
 
     **Response**:
 
-        * {} - пустой словарь
+        * {} - пустой словарь в случае успешного запроса
         * **detail** (list) - список с поснениями к ошибке
 
     """
