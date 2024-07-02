@@ -5,5 +5,5 @@ Content-type: application/json
 
 {
     "detail": "error description",
-    "id": "3e21924a-cc59-103e-9312-555c1a8a1358"
+    {}
 }

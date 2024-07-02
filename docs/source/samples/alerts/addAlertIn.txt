@@ -5,13 +5,12 @@ Content-Type: application/json
 Authorization: No Auth
 
 {
-    "parentId": "parent object Id",
+    "parentId": "99a8bc4a-b2d4-103e-83ba-b9a6d48c0bf6",
     "attributes": {
-        "cn": "alert name",
-        "description": "description of the instance",
+        "cn": "alert2",
+        "description": "test_alert",
         "prsJsonConfigString": "node configuration",
         "prsActive": true,
-        "prsDefault": false,
-        "prsIndex": 12345
+        "prsDefault": false
     }
 }

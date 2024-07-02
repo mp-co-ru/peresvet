@@ -135,24 +135,154 @@ error_handler = svc.ErrorHandler()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: ConnectorCreate, error_handler: svc.ErrorHandler = Depends()):
+    """
+    Метод добавления коннектора в иерархию.
+
+    **Request**:
+
+        .. http:example::
+            :request: ../../../../docs/source/samples/connectors/addConnectorIn.txt
+            :response: ../../../../docs/source/samples/connectors/addConnectorOut.txt
+
+        * **attributes** (dict) - словарь с параметрами для создания коннектора.
+          Обязательный параметр.
+
+          * **prsJsonConfigString** (str) - Способ подключения к источнику данных.
+            Обязательный атрибут.
+          * **cn** (str) - имя коннектора; Необязательный атрибут;
+          * **description** (str) - описание коннектора. Необязательный атрибут;
+          * **prsActive** (bool) - Определяет, активен ли экземпляр. Необязательный атрибут;
+          * **prsDefault** (bool) - Если = ``True``, то данный экземпляр. Необязательный атрибут;
+            считается узлом по умолчанию в списке равноправных узлов данного уровня иерархии.
+            Необязательный атрибут.
+          * **prsIndex** (int) - Если у узлов одного уровня иерархии проставлены индексы, то
+            перед отдачей клиенту списка экземпляров они сортируются
+            в соответствии с их индексами. Необязательный атрибут
+
+        * **linkTags** (list[LinkTag]) - список тегов к которым прикреплен
+          указанный коннектор; Обязательный атрибут;
+
+          * **tagId** (str) - id прилинкованного тега. Обязательный атрибут;
+          * **attributes** (dict) - словарь с параметрами для прилинкованного тега.
+            Обязательный атрибут;
+
+            * **cn** (str) - словарь с параметрами для прилинкованного тега.
+              Необязательный атрибут.
+            * **prsJsonConfigString** (dict) - Параметры подключение к источнику данных.
+              Обязательный атрибут.
+            * **description** (str) - Пояснение. Необязательный атрибут.
+            * **prsValueScale** (int) - Коэффициент, на который умножается значение
+              тега коннектором перед отправкой в платформу. Необязательный атрибут.
+            * **prsMaxDev** (int) - Величина значащего отклонения. Необязательный атрибут.
+            * **objectClass** (str) - Класс объекта. Необязательный атрибут.
+
+    **Response**:
+
+        * **id** (uuid) - id созданного коннектора
+        * **detail** (str) - пояснения к ошибке
+
+    """
     res = await app.create(payload)
     await error_handler.handle_error(res)
     return res
 
 @router.get("/", response_model=ConnectorReadResult | None, status_code=200)
 async def read(q: str | None = None, payload: ConnectorRead | None = None, error_handler: svc.ErrorHandler = Depends()):
+    """
+    Метод чтения коннектора из иерархии.
+
+    **Request**:
+
+        .. http:example::
+            :request: ../../../../docs/source/samples/connectors/getConnectorIn.txt
+            :response: ../../../../docs/source/samples/connectors/getConnectorOut.txt
+
+        * **getLinkedTags** (bool) - Флаг возврата присоединённых тегов.
+          Необязательный аттрибут.
+        * **id** (str | list(str)) - идентификатор коннектора в формате uuid,
+          который мы хотим прочитать. В случае отсутствия будут выведены все
+          коннекторы или те, которые соответствуют фильтру. Необязательный аттрибут.
+        * **attributes** (list[str]) - Список атрибутов, значения которых необходимо
+          вернуть в ответе. По умолчанию - ['\*'], то есть все атрибуты (кроме системных).
+          Необязательный аттрибут.
+        * **base** (str) - Базовый узел для поиска. Если не указан, то поиск
+          ведётся от главного узла иерархии. Необязательный аттрибут.
+        * **deref** (bool) - Флаг разыменования ссылок. По умолчанию true.
+          Необязательный аттрибут.
+        * **scope** (int) - Масштаб поиска. По умолчанию 1. Необязательный аттрибут.\n
+          0 - получение данных по указанному в ключе ``base`` узлу \n
+          1 - поиск среди непосредственных потомков указанного в ``base`` узла\n
+          2 - поиск по всему дереву, начиная с указанного в ``base`` узла.
+        * **filter** (dict) - Словарь из атрибутов и их значений, из которых
+          формируется фильтр для поиска. Необязательный аттрибут.
+
+
+    **Response**:
+
+        * **data** (list) - данные прочитанного коннектора/коннекторов. Если
+          ничего не найденно - пустой лист.
+        * **detail** (list) - Детали ошибки.
+
+    """
     res = await app.api_get_read(ConnectorRead, q, payload)
     await error_handler.handle_error(res)
     return res
 
 @router.put("/", status_code=202)
 async def update(payload: ConnectorUpdate, error_handler: svc.ErrorHandler = Depends()):
+    """
+    Метод обновления коннектора из иерархии.
+
+    **Request**:
+
+        .. http:example::
+            :request: ../../../../docs/source/samples/connectors/putConnectorIn.txt
+            :response: ../../../../docs/source/samples/connectors/putConnectorOut.txt
+
+        * **id** (bool) - Идентификатор изменяемого коннектора.
+          Обязательный аттрибут.
+        * **unlinkTags** (list[str]) - Список тегов для отсоединения от коннектора
+          Необязательный аттрибут.
+        * **attributes** (dict) - Атрибуты коннектора
+
+            * **prsJsonConfigString** (dict) - Способ подключения к источнику данных. Необязательный аттрибут.
+            * **cn** (str) - имя коннектора; Необязательный атрибут;
+            * **description** (str) - описание коннектора. Необязательный атрибут;
+            * **prsActive** (bool) - Параметр активности коннектора. Необязательный атрибут;
+            * **prsDefault** (bool) - Если = ``True``\, то данный коннектор считается узлом по умолчанию в списке равноправных узлов данного уровня иерархии.
+            * **prsEntityTypeCode** (int) - Атрибут используется для определения типа. К примеру, хранилища данных могут быть разных типов.
+            * **prsIndex** (int) - Если у узлов одного уровня иерархии проставлены индексы, то перед отдачей клиенту списка экземпляров они сортируются в соответствии с их индексами.
+
+    **Response**:
+
+        * {} - Пустой словарь в случае успешного запроса.
+        * **detail** (list) - Детали ошибки.
+
+    """
     res = await app.update(payload)
     await error_handler.handle_error(res)
     return res
 
 @router.delete("/", status_code=202)
 async def delete(payload: ConnectorRead, error_handler: svc.ErrorHandler = Depends()):
+    """
+    Метод удаления коннектора в иерархии.
+
+    **Request**:
+
+        .. http:example::
+            :request: ../../../../docs/source/samples/connectors/deleteConnectorIn.txt
+            :response: ../../../../docs/source/samples/connectors/deleteConnectorOut.txt
+
+        * **id** (str | list[str]) - Идентификатор/ы удаляемого узла.
+
+
+    **Response**:
+
+        * null - в случае успешного запроса.
+        * **detail** (list) - Детали ошибки.
+
+    """
     res = await app.delete(payload)
     await error_handler.handle_error(res)
     return res

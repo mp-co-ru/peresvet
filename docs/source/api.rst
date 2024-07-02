@@ -115,3 +115,4 @@ API Платформы Пересвет
    Обьекты<objects>
    Коннекторы<connectors>
    Хранилища данных<dataStorages_api_doc>
+   Расписания<schedules>

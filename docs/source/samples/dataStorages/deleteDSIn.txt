@@ -1,0 +1,9 @@
+DELETE /v1/tags/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
+
+{
+    "id": "id of a tag to delete"
+}

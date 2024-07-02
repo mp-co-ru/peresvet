@@ -131,6 +131,58 @@ error_handler = svc.ErrorHandler()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: DataStorageCreate, error_handler: svc.ErrorHandler = Depends()):
+    """
+    Метод добавляет Хранилище данных в иерархию.
+
+    **Request**:
+
+        .. http:example::
+            :request: ../../../../docs/source/samples/dataStorages/addDSIn.txt
+            :response: ../../../../docs/source/samples/dataStorages/addDSOut.txt
+
+        * **linkTags** (list[LinkTag]) - Список привязываемых тегов.
+
+          * **LinkTag** - Привязываемый тег. Включает в себя:
+
+            * **tagId** (str) - идентификатор привязываемого тега.
+            * **attributes** - список параметров привязываемого тега.
+
+              * **cn** (str) - Имя привязки.
+              * **prsStore** (dict) - Хранилище тега.
+              * **objectClass** (str) - Класс узла.
+
+        * **linkAlerts** (list[LinkAlert]) - Список привязываемых тревог
+
+          * **LinkAlert** - Привязываемая тревога. Включает в себя:
+
+            * **alertId** (str) - Идентификатор привязываемой тревоги
+            * **attributes** - список параметров привязываемой тревоги. Включает в себя:
+
+              * **cn** (str) - Имя привязки.
+              * **prsStore** (dict) - Хранилище тревоги.
+              * **objectClass** (str) - Класс узла.
+
+        * **attributes** (dict) - Атрибуты хранилища
+
+          * **cn** (str) - имя хранилища; Необязательный атрибут;
+          * **description** (str) - описание хранилища. Необязательный атрибут;
+          * **prsJsonConfigString** (str) - Строка содержит, в случае необходимости,
+            конфигурацию узла. Интерпретируется сервисом, управляющим сущностью,
+            которой принадлежит экземпляр. Необязательный аттрибут
+          * **prsActive** (bool) - Определяет, активно ли хранилище. Необязательный атрибут;
+          * **prsDefault** (bool) - Если = ``True``, то данный экземпляр. Необязательный атрибут;
+            считается узлом по умолчанию в списке равноправных узлов данного уровня иерархии.
+            Необязательный атрибут.
+          * **prsIndex** (int) - Если у узлов одного уровня иерархии проставлены индексы, то
+            перед отдачей клиенту списка экземпляров они сортируются
+            в соответствии с их индексами. Необязательный атрибут
+
+    **Response**:
+
+        * **id** (uuid) - id созданного тега
+        * **detail** (str) - пояснения к ошибке
+
+    """
     res = await app.create(payload)
     await error_handler.handle_error(res)
     return res

@@ -1,0 +1,24 @@
+POST /v1/tags/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
+
+{
+    "attributes": {
+        "cn": "tag1",
+        "description": "describtion",
+        "prsJsonConfigString": "configuration parameters",
+        "prsActive": true,
+        "prsDefault": true,
+        "prsIndex": 1,
+        "prsArchive": true,
+        "prsCompress": true,
+        "prsMaxLineDev": 12,
+        "prsStep": true,
+        "prsUpdate": true,
+        "prsValueTypeCode": 1,
+        "prsDefaultValue": 123,
+        "prsMeasureUnits": "degrees"
+    }
+}
