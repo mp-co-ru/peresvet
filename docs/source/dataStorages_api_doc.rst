@@ -1,5 +1,5 @@
 Хранилища данных
-~~~~~~~
+~~~~~~~~~~~~~~~~
 
 .. automodule:: dataStorages_api_crud_svc
    :members:

@@ -1,5 +1,5 @@
 Коннекторы
-~~~~~~~
+~~~~~~~~~~
 
 .. automodule:: connectors_api_crud_svc
    :members:

@@ -1,5 +1,5 @@
 Расписания
-~~~~~~~
+~~~~~~~~~~
 
 .. automodule:: schedules_api_crud_svc
    :members:
