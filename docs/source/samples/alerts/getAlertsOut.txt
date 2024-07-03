@@ -22,19 +22,5 @@ Content-type: application/json
                 ]
             }
         }
-    ],
-    "detail": [
-        {
-            "type": "json_invalid",
-            "loc": [
-                "body",
-                72
-            ],
-            "msg": "JSON decode error",
-            "input": {},
-            "ctx": {
-                "error": "Invalid control character at"
-            }
-        }
     ]
 }
