@@ -1,6 +1,6 @@
 """
-Модуль содержит классы, описывающие входные данные для команд CRUD для хранилищ данных
-и класс сервиса ``dataStorages_api_crud_svc``\.
+Модуль содержит примеры запросов и ответов на них, параметров которые могут входить в
+запрос, в сервисе methods.
 """
 import json
 import sys
@@ -83,6 +83,48 @@ error_handler = svc.ErrorHandler()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: MethodCreate, error_handler: svc.ErrorHandler = Depends()):
+    """
+    Метод добавляет метод в иерархию.
+
+    **Request**:
+
+        .. http:example::
+            :request: ../../../../docs/source/samples/methods/addMethodIn.txt
+            :response: ../../../../docs/source/samples/methods/addMethodOut.txt
+
+        * **parentId** (str) - Id родительского узла. Обязательное поле.
+        * **initiatedBy** (str | list[str]) - Список id экземпляров сущностей,
+          инициирующих вычисление тега. Необязательный атрибут.
+        * **attributes** (dict) - Атрибуты метода. Обязательное поле. Включает в себя:
+
+          * **prsMethodAddress** (str) - Адрес метода. Обязательное поле.
+          * **prsEntityTypeCode** (int) - Тип метода. Необязательное поле.
+
+        * **parameters** (List[MethodParameter]) - Параметры метода. Необязательное поле.
+
+          * **MethodParameter** - Включает в себя:
+
+            * **attributes** (dict) - Атрибуты узла. Необязательное поле.
+
+                * **cn** (str) - имя тега. Необязательный атрибут.
+                * **description** (str) - описание экземпляра. Необязательный атрибут.
+                * **prsJsonConfigString** (str) - Строка содержит, в случае необходимости,
+                    конфигурацию узла. Интерпретируется сервисом, управляющим сущностью,
+                    которой принадлежит экземпляр. Необязательный аттрибут
+                * **prsActive** (bool) - Определяет, активен ли экземпляр. Необязательный атрибут.
+                * **prsDefault** (bool) - Если = ``True``, то данный экземпляр. Необязательный атрибут.
+                    считаеться узлом по умолчанию в списке равноправных узлов данного уровня иерархии.
+                    Необязательный атрибут.
+                * **prsIndex** (int) - Если у узлов одного уровня иерархии проставлены индексы, то
+                    перед отдачей клиенту списка экземпляров они сортируются соответственно  их индексам. Необязательный атрибут.
+
+
+    **Response**:
+
+        * **id** (uuid) - id созданного тега
+        * **detail** (str) - пояснения к ошибке
+
+    """
     res = await app.create(payload)
     await error_handler.handle_error(res)
     return res

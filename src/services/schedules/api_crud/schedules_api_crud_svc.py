@@ -1,6 +1,6 @@
 """
-Модуль содержит классы, описывающие входные данные для команд CRUD для расписаний
-и класс сервиса ``schedules_api_crud_svc``\.
+Модуль содержит примеры запросов и ответов на них, параметров которые могут входить в
+запрос, в сервисе schedules.
 """
 import sys
 import json
@@ -123,7 +123,7 @@ async def create(payload: ScheduleCreate):
 
         .. http:example::
             :request: ../../../../docs/source/samples/schedules/addScheduleIn.txt
-            :response: ../../../../docs/source/samples/schedules/addSchedulesOut.txt
+            :response: ../../../../docs/source/samples/schedules/addScheduleOut.txt
 
         * **attributes** (dict) - словарь с параметрами для создания расписания.
 
