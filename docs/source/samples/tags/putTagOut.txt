@@ -4,6 +4,5 @@ Access-Control-Allow-Origin: *
 Content-type: application/json
 
 {
-    "detail": "error description",
-    {}
+
 }

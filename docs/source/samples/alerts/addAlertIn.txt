@@ -5,7 +5,7 @@ Content-Type: application/json
 Authorization: No Auth
 
 {
-    "parentId": "99a8bc4a-b2d4-103e-83ba-b9a6d48c0bf6",
+    "parentId": "id of parent node",
     "attributes": {
         "cn": "alert2",
         "description": "test_alert",

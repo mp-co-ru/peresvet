@@ -5,8 +5,8 @@ Content-Type: application/json
 Authorization: No Auth
 
 {
-    "base": "31387b10-b747-103e-82e0-757bba63f467",
-    "id": "fd58e5c0-cc61-103e-9325-555c1a8a1358",
+    "base": "id of a node where to search",
+    "id": "id of an alert to find",
     "deref": true,
     "scope":1
 }

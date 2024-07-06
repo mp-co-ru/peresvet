@@ -1,4 +1,4 @@
-GET /v1/alerts/?q={"base":"6f18cafa-b2da-103e-83c0-b9a6d48c0bf6","id":"4d440216-c809-103e-8748-05e8cc7fd715","deref":true,"scope":1} HTTP/1.1
+GET /v1/alerts/?q={"base":"id_of_a_node_where_to_search","id":"id_of_an_alert_to_find","deref":true,"scope":1} HTTP/1.1
 Host: localhost
 Accept: application/json
 Content-Type: application/json

@@ -5,7 +5,7 @@ Content-Type: application/json
 Authorization: No Auth
 
 {
-    "id":"alert_id",
+    "id":"id of an alert to update",
     "attributes": {
         "cn": "alert name",
         "description": "description of the alert",
