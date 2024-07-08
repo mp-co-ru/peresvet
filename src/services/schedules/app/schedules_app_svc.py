@@ -52,40 +52,40 @@ class SchedulesApp(svc.Svc):
         }
 
         schedules = await self._hierarchy.search(search_schedules)
-        if schedules[0][2]["prsJsonConfigString"][0] is not None:
-            for schedule_id, _, attrs in schedules:
-                sched_config = json.loads(attrs["prsJsonConfigString"])
-                match sched_config["interval_type"]:
-                    case "seconds":
-                        self._scheduler.add_job(
-                            self._generate_event, 'interval',
-                            kwargs={'sched_id': schedule_id},
-                            seconds=sched_config["interval_value"],
-                            start_date=sched_config["start"],
-                            end_date=sched_config.get("end"))
-                    case "minutes":
-                        self._scheduler.add_job(
-                            self._generate_event, 'interval',
-                            kwargs={'sched_id': schedule_id},
-                            minutes=sched_config["interval_value"],
-                            start_date=sched_config["start"],
-                            end_date=sched_config.get("end"))
-                    case "hours":
-                        self._scheduler.add_job(
-                            self._generate_event, 'interval',
-                            kwargs={'sched_id': schedule_id},
-                            hours=sched_config["interval_value"],
-                            start_date=sched_config["start"],
-                            end_date=sched_config.get("end"))
-                    case "days":
-                        self._scheduler.add_job(
-                            self._generate_event, 'interval',
-                            kwargs={'sched_id': schedule_id},
-                            days=sched_config["interval_value"],
-                            start_date=sched_config["start"],
-                            end_date=sched_config.get("end"))
+        # if schedules[0][2]["prsJsonConfigString"][0] is not None:
+        for schedule_id, _, attrs in schedules:
+            sched_config = json.loads(attrs["prsJsonConfigString"])
+            match sched_config["interval_type"]:
+                case "seconds":
+                    self._scheduler.add_job(
+                        self._generate_event, 'interval',
+                        kwargs={'sched_id': schedule_id},
+                        seconds=sched_config["interval_value"],
+                        start_date=sched_config["start"],
+                        end_date=sched_config.get("end"))
+                case "minutes":
+                    self._scheduler.add_job(
+                        self._generate_event, 'interval',
+                        kwargs={'sched_id': schedule_id},
+                        minutes=sched_config["interval_value"],
+                        start_date=sched_config["start"],
+                        end_date=sched_config.get("end"))
+                case "hours":
+                    self._scheduler.add_job(
+                        self._generate_event, 'interval',
+                        kwargs={'sched_id': schedule_id},
+                        hours=sched_config["interval_value"],
+                        start_date=sched_config["start"],
+                        end_date=sched_config.get("end"))
+                case "days":
+                    self._scheduler.add_job(
+                        self._generate_event, 'interval',
+                        kwargs={'sched_id': schedule_id},
+                        days=sched_config["interval_value"],
+                        start_date=sched_config["start"],
+                        end_date=sched_config.get("end"))
 
-                self._logger.info(f"Расписание {schedule_id} инициировано.")
+            self._logger.info(f"Расписание {schedule_id} инициировано.")
 
         self._scheduler.start()
 
