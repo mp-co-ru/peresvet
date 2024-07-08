@@ -171,11 +171,19 @@ async def read(q: str | None = None, payload: TagRead | None = None, error_handl
     """
     Метод чтения тега в иерархии.
 
-    **Request**:
+    **Пример запроса в формате JSON.**
 
         .. http:example::
             :request: ../../../../docs/source/samples/tags/getTagIn.txt
             :response: ../../../../docs/source/samples/tags/getTagOut.txt
+
+    **Пример query запроса.**
+
+        .. http:example::
+            :request: ../../../../docs/source/samples/tags/getTagIn_query.txt
+            :response: ../../../../docs/source/samples/tags/getTagOut.txt
+
+    **Параметры запроса.**
 
         * **id** (str | list(str)) - идентификатор тега, который мы хотим прочитать.
           Необязательный аттрибут.

@@ -121,11 +121,19 @@ async def read(q: str | None = None, payload: ObjectRead | None = None, error_ha
     """
     Метод чтения обьекта в иерархии.
 
-    **Request**:
+    **Пример запроса в формате JSON.**
 
         .. http:example::
             :request: ../../../../docs/source/samples/objects/getObjectIn.txt
             :response: ../../../../docs/source/samples/objects/getObjectOut.txt
+
+    **Пример query запроса.**
+
+        .. http:example::
+            :request: ../../../../docs/source/samples/objects/getObjectIn_query.txt
+            :response: ../../../../docs/source/samples/objects/getObjectOut.txt
+
+    **Параметры запроса.**
 
         * **id** (str | list(str)) - идентификатор объекта, который мы хотим прочитать
           Необязательный аттрибут.

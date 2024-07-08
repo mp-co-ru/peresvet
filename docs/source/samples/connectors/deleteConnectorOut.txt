@@ -3,20 +3,4 @@ Content-Type: application/json
 Access-Control-Allow-Origin: *
 Content-type: application/json
 
-{
-    null,
-    "detail": [
-        {
-            "type": "json_invalid",
-            "loc": [
-                "body",
-                45
-            ],
-            "msg": "JSON decode error",
-            "input": {},
-            "ctx": {
-                "error": "Invalid control character at"
-            }
-        }
-    ]
-}
+    null

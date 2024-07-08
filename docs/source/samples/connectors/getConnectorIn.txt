@@ -11,5 +11,5 @@ Authorization: No Auth
     "base":"base node",
     "deref": true,
     "scope": 1,
-    "filter": {"cn": "connector1"}:
+    "filter": {"cn": "connector1"}
 }

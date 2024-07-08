@@ -14,19 +14,5 @@ Content-type: application/json
             },
             "linkedTags": null
         }
-    ],
-    "detail": [
-        {
-            "type": "json_invalid",
-            "loc": [
-                "body",
-                22
-            ],
-            "msg": "JSON decode error",
-            "input": {},
-            "ctx": {
-                "error": "Expecting value"
-            }
-        }
     ]
 }

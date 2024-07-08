@@ -1,0 +1,5 @@
+GET /v1/tags/?q={"id":"tag_id_which_we_want_to_find","base":"base_node_for_search","deref":true,"scope":1,"attributes":["params_to_select"],"filter":{"key":"value_for_filtering"}} HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
