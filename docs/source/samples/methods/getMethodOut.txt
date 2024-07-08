@@ -4,6 +4,32 @@ Access-Control-Allow-Origin: *
 Content-type: application/json
 
 {
-    "detail": "error description",
-    "data": "founded tag and it's params"
+    "data": [
+        {
+            "id": "id of a founded method",
+            "attributes": {
+                "cn": [
+                    "name_of_a_method"
+                ],
+                "description": [
+                    "method1_description"
+                ],
+                "prsJsonConfigString": [
+                    "method1_config_string"
+                ],
+                "prsActive": [
+                    "TRUE"
+                ],
+                "prsEntityTypeCode": [
+                    "0"
+                ],
+                "prsMethodAddress": [
+                    "method_adress"
+                ],
+                "objectClass": [
+                    "prsMethod"
+                ]
+            }
+        }
+    ]
 }
