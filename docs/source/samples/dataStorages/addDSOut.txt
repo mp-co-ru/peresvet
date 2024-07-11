@@ -4,5 +4,5 @@ Access-Control-Allow-Origin: *
 Content-type: application/json
 
 {
-    "id": "new tag id"
+    "id": "<id_of_created_dataStorage>"
 }
