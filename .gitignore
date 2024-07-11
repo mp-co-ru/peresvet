@@ -141,6 +141,7 @@ test_*.py
 tests/dev/
 tests/load/tags_in_postgres.json
 tests/load/tags_in_vm.json
+tests/grafana/
 
 .vscode/launch.json
 
