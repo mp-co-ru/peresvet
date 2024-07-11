@@ -17,7 +17,6 @@ class LinkTagOrAlertAttributes(BaseModel):
 
     cn: str = Field(title="Имя привязки")
     prsStore: dict | None = Field(None, title="Хранилище тега/тревоги")
-    objectClass: str = Field(title="Класс узла")
 
 class LinkTag(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
