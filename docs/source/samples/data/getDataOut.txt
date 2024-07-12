@@ -1,0 +1,26 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Content-type: application/json
+
+{
+    "data": [
+        {
+            "id": "fd58e5c0-cc61-103e-9325-555c1a8a1358",
+            "attributes": {
+                "cn": [
+                    "alert1"
+                ],
+                "prsActive": [
+                    "TRUE"
+                ],
+                "prsDefault": [
+                    "TRUE"
+                ],
+                "objectClass": [
+                    "prsAlert"
+                ]
+            }
+        }
+    ]
+}
