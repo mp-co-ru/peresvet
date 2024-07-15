@@ -16,6 +16,12 @@ from src.common import times as t
 from src.services.schedules.api_crud.schedules_api_crud_settings import SchedulesAPICRUDSettings
 
 class ScheduleCreateAttributes(svc.NodeAttributes):
+    prsJsonConfigString: str = Field(title="Конфигурация экземпляра.",
+        description=(
+            "Строка содержит, в случае необходимости, конфигурацию узла. "
+            "Интерпретируется сервисом, управляющим сущностью, которой "
+            "принадлежит экземпляр."
+        ))
     @validator('prsJsonConfigString')
     @classmethod
     def config_str(cls, v: str) -> str:
@@ -36,7 +42,7 @@ class ScheduleCreateAttributes(svc.NodeAttributes):
             raise_exception()
 
         try:
-            config = json.loads()
+            config = json.loads(v)
             start = config.get("start")
             end = config.get("end")
             interval_type = config.get("interval_type")

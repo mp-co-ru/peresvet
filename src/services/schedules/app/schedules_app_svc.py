@@ -54,7 +54,7 @@ class SchedulesApp(svc.Svc):
         schedules = await self._hierarchy.search(search_schedules)
         # if schedules[0][2]["prsJsonConfigString"][0] is not None:
         for schedule_id, _, attrs in schedules:
-            sched_config = json.loads(attrs["prsJsonConfigString"])
+            sched_config = json.loads(attrs["prsJsonConfigString"][0])
             match sched_config["interval_type"]:
                 case "seconds":
                     self._scheduler.add_job(
