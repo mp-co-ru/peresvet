@@ -1,0 +1,9 @@
+DELETE /v1/connectors/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
+
+{
+    "id":"949823fa-cbf5-103e-9301-555c1a8a1358"
+}

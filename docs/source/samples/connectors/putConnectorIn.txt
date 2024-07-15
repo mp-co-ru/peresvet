@@ -1,0 +1,15 @@
+PUT /v1/connectors/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
+
+{
+    "id":"949823fa-cbf5-103e-9301-555c1a8a1358",
+    "unlinkTags":["94b1f028-cbf5-103e-9305-555c1a8a1358"],
+    "attributes":{
+        "prsJsonConfigString":{"way_of_connecting":"new_way"},
+        "cn": "new_name",
+        "prsActive":false
+    }
+}

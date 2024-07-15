@@ -1,0 +1,5 @@
+GET /v1/connectors/?q={"getLinkedTags":false,"id":"connector_id_to_find","attributes":["cn"],"base":"base_node","deref":true,"scope":1,"filter":{"cn":"connector1"}} HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth

@@ -1,0 +1,34 @@
+PUT /v1/dataStorages/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
+
+{
+    "id":"<id_of_dataStorage_to_update",
+    "linkTags":[{
+        "tagId":"<id_of_a_tag_to_link>",
+        "attributes":{
+            "cn":"tag4",
+            "objectClass":"prsTag"
+        }
+    }],
+    "linkAlerts":[{
+        "alertId":"<id_of_an_alert_to_link>",
+        "attributes":{
+            "cn":"alert1",
+            "objectClass":"prsAlert"
+        }
+    }],
+    "unlinkTags":["<id_of_tags_to_unlink>"],
+    "unlinkAlerts":["<id_of_alerts_to_unlink>"],
+    "attributes":{
+        "cn":"test_dataStorage",
+        "description":"dataStorage_description",
+        "prsJsonConfigString":"dataStorage_configuration_string",
+        "prsActive":true,
+        "prsDefault":false,
+        "prsEntityTypeCode":"<type_of_data_storage>",
+        "prsIndex":null
+    }
+}

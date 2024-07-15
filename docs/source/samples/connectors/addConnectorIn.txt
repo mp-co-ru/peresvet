@@ -1,0 +1,29 @@
+POST /v1/connectors/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
+
+{
+    "linkTags": [
+        {
+            "tagId":"99a8bc4a-b2d4-103e-83ba-b9a6d48c0bf6",
+            "attributes": {
+                "prsJsonConfigString":{},
+                "description":"description",
+                "cn": "name of a linked tag",
+                "prsValueScale": 1,
+                "prsMaxDev":1,
+                "objectClass":"objectClass"
+            }
+        }
+    ],
+    "attributes": {
+        "cn": "connector1",
+        "prsJsonConfigString": {"param1":"val1"},
+        "description": "description",
+        "prsActive": true,
+        "prsDefault": true,
+        "prsIndex":1
+    }
+}

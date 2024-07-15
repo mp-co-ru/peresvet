@@ -1,0 +1,64 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Content-type: application/json
+
+{
+    "data": [
+        {
+            "id": "<id_of_found_dataStorages>",
+            "attributes": {
+                "cn": [
+                    "dataStorage_test"
+                ],
+                "description": [
+                    "test_DS"
+                ],
+                "prsJsonConfigString": [
+                    "{\"dsn\":\"postgresql://postgres:Peresvet21@psql/peresvet\"}"
+                ],
+                "prsActive": [
+                    "TRUE"
+                ],
+                "prsEntityTypeCode": [
+                    "0"
+                ],
+                "objectClass": [
+                    "prsDataStorage"
+                ]
+            },
+            "linkedTags": [
+                {
+                    "tagId": "<id_of_a_found_tag>",
+                    "attributes": {
+                        "cn": "<cn_of_a_found_tag>",
+                        "prsStore": {
+                            "table": "t_<cn_of_a_found_tag>"
+                        }
+                    }
+                },
+                {
+                    "tagId": "<id_of_a_found_tag>",
+                    "attributes": {
+                        "cn": "<cn_of_a_found_tag>",
+                        "prsStore": {
+                            "table": "t_<cn_of_a_found_tag>"
+                        }
+                    }
+                },
+            ],
+            "linkedAlerts": [
+                {
+                    "alertId": "<id_of_a_found_alert>",
+                    "attributes": {
+                        "cn": "<cn_of_a_found_alert>",
+                        "prsStore": {
+                            "table": "a_<cn_of_a_found_alert>",
+                            "active": true
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

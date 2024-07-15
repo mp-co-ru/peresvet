@@ -1,0 +1,29 @@
+HTTP/1.1 201 OK
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Content-type: application/json
+
+{
+    "data": [
+        {
+            "id": "id of found schedule",
+            "attributes": {
+                "cn": [
+                    "cn of found schedule"
+                ],
+                "prsJsonConfigString": [
+                    "{\"start\":\"2024-07-07\",\"end\":\"2025-07-07\",\"interval_type\":\"seconds\",\"interval_value\":4}"
+                ],
+                "prsActive": [
+                    "TRUE"
+                ],
+                "prsDefault": [
+                    "TRUE"
+                ],
+                "objectClass": [
+                    "prsSchedule"
+                ]
+            }
+        }
+    ]
+}
