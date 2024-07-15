@@ -1,0 +1,2141 @@
+Исторические данные
+-------------------
+Одна из главных задач Платформы - обеспечение клентов сохранёнными
+историческими данными.
+Клиенты получают данные с помощью команды ``/smt/data/get``.
+Эта команда будет подробно объяснена ниже.
+
+.. _timeStampFormat:
+
+Правила работы с данными
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. important::
+  **При работе с историческими данными запомним следующие правила:**
+
+  #. Для правильной работы с историческими данными все сервера, устройства,
+     клиенты должны быть синхронизированы по времени.
+  #. Если в тэге нет значений с метками времени из будущего, то последнее
+     сохранённое на текущий момент времени в тэге значение является
+     текущим значением тэга.
+  #. Если значения тэга числовые:
+
+     #. Если атрибут тэга ``smtTagStep`` равен ``true``, тогда значения тэга
+        между двумя метками времени не интерполируются.
+     #. Если атрибут тэга ``smtTagStep`` равен ``false`` (по умолчанию),
+        тогда значения тэга между двумя метками времени вычисляются
+        с помощью линейной интерполяции.
+     #. Программы, предоставляющие данные пользователям, ответственны за
+        верную интерпретацию атрибута ``smtTagStep`` у тэга.
+        К примеру, тренд должен правильно показывать значения тэга
+        между соседними метками времени.
+  #. Все метки времени внутри платформы и в исторической базе данных
+     хранятся и обрабатываются как целочисленные данные.
+     Каждая метка времени - это количество микросекунд, начиная с
+     01-01-1970 00:00:00+00:00.
+     Пример: 1000000 = 01-01-1970 00:00:01+00:00
+  #. Если клиент посылает в платформу метку времени как строку в формате
+     ISO 8601 и не указывает временнУю зону, то Платформа устанавливает для
+     такой метки времени зону по умолчанию UTC (+00:00).
+  #. Клиенты могут записывать значения тэгов с метками времени из будущего.
+  #. Ответ на команду ``/smt/data/get/`` содержит массив значений тэга,
+     отсортированный по метке времени в возрастающем порядке.
+  #. Если тэг содержит несколько значений на одну и ту же метку времени,
+     то текущим значением тэга на эту метку времени считается записанное
+     последним.
+  #. Каждое значение в тэге содержит код качества ``q``. Если ``q`` = 0,
+     то значению тэга можно доверять. Иначе значение тэга ошибочно, код
+     ``q`` определяет ошибку. См. :ref:`коды качества <qualityCodes>`.
+
+     Следующие правила касаются ключей ``count``, ``start``, ``finish`` и ``timeStep``
+     в запросе ``/smt/data/get``.
+
+  #. Комбинации ключей ``start``, ``finish`` и ``timeStep`` совместно с ключом
+     ``count`` определяют границы периода для возвращаемых данных.
+  #. Ключ ``count`` определяет количество возвращаемых данных.
+     Учитывается общее количество: и реально записанные в базе данных, и
+     интерполированные значения тэгов.
+  #. В случае отсутствия ключа ``finish`` его значение принимается равным
+     текущему моменту времени.
+     Это правило по умолчанию отсекает данные, записанные с метками времени
+     из будущего.
+
+.. _qualityCodes:
+
+Коды качества
+~~~~~~~~~~~~~
+У каждого записанного в базу значения тэга есть так называемый "код качества",
+который возвращается в ключе ``q``.
+
+Код качества - это, другими словами, код ошибки данных.
+
+.. list-table:: Коды качества
+   :widths: 15 40
+   :header-rows: 1
+
+   * - Код
+     - Описание
+   * - 0
+     - Обычное значение. Данные "хорошие".
+   * - 100
+     - Разорвана связь между платформой и коннектором, записывающим данные
+       в тэг. Используется совместно со значением тэга ``null``.
+   * - 101
+     - Платформа завершила работу. Используется совместно со
+       значением тэга ``null`` и записывается в процессе завершения платформой
+       работы.
+   * - 102
+     - Разорвана связь между коннектором и поставщиком данных.
+       Используется совместно со значением тэга ``null``.
+
+.. note::
+   Приведённые ниже примеры получения данных не включают, если это не
+   оговаривается отдельно, в ответе поле ``q`` для упрощения.
+
+Получение данных
+~~~~~~~~~~~~~~~~
+Подробно рассмотрим примеры получения исторических данных.
+
+Пример массива данных
+"""""""""""""""""""""
+Допустим, у нас есть тэг ``Tag1`` у объекта ``Object1``.
+Атрибут ``smtTagValueTypeCode`` этого тэга равен 1 и это значит, что тэг
+хранит вещественные значения.
+Исторические данные этого тэга:
+
+.. image:: pics/dataGet/datapool.png
+
+.. note::
+  Для простоты будем оперировать только часами и минутами в качестве меток
+  времени.
+
+Итак, исторические данные тэга ``Tag1``:
+
+.. code-block:: json
+
+   [
+     {"x": "09:30", "y": 1},
+     {"x": "09:35", "y": 3},
+     {"x": "09:40", "y": 2.5},
+     {"x": "09:45", "y": 5},
+     {"x": "09:50", "y": 4}
+   ]
+
+Формат /smt/data/get
+""""""""""""""""""""
+Здесь приведено объяснение каждого ключа в теле запроса.
+
+.. code-block:: json
+
+   {
+     "tagId": ["ID первого тэга", "ID второго тэга"],
+     "start": "2018-12-09 12:00:00+03:00",
+     "finish": "2018-12-09 14:00:00+03:00",
+     "count": 8,
+     "timeStep": 60000000,
+     "maxCount": 700,
+     "actual": false,
+     "format": true
+   }
+
+* **tagId** (масиив из str и json), обязательный -
+  тэг(и) для которых необходимо получить данные.
+
+  Этот ключ может быть массивом значений нескольких типов:
+
+    * **str** - ``tagId`` - идентификатор тэга:
+
+      .. code-block:: json
+
+        {
+          "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"]
+        }
+
+    * **json** - в этом случае ``tagId`` - json-объект с двумя ключами:
+      ``tagName`` and ``parentObjectId``:
+
+      .. code-block:: json
+
+        {
+          "tagId": [
+            {
+               "tagName": "Tag1",
+               "parentObjectId": "cn=Object1,cn=objects,cn=smt"
+            }
+          ]
+        }
+
+  Одновременно в массиве могут присутствовать значения обоих типов.
+
+* **start** (int, str), необязательный - метка времени начала периода
+  для получения данных (:ref:`see <timeStampFormat>`).
+  Если ``start`` - строка, то ее значение обрабатывается в соответствии со
+  стандартом `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_.
+
+  Возможные значения:
+
+  * **"2018-12-20 00:00:00+03:00"**
+  * **"2018-12-20 00:00:00"** - временнАя зона для этого значения
+    будет установлена в UTC (00:00), что значит, что время будет равно
+    "2018-12-20 03:00:00+03:00"
+  * **1544662830000000** значение равно:
+    "2018-12-13 01:00:30+00:00", "2018-12-13 04:00:30+03:00"
+  * **"01:00"** предположим, что текущая дата на сервере платформы -
+    2018-12-20, тогда "01:00" будет преобразовано в "2018-12-20 01:00:00+00:00"
+  * **"01:00,5+03:00"** равно (оставим предыдущее предположение о дате)
+    "2018-12-20 01:00:30+3:00"
+  * другие примеры указания времени можно посмотреть на
+    `странице стандарта ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_
+
+* **finish** (int, str), необязательный - метка времени конца периода,
+  соответствует тем же правилам, что и ключ ``start``.
+* **count** (int), необязательный - количество значений, ожидаемых в ответе
+* **timeStep** (int), необязательный - промежуток времени между соседними
+  возвращаемыми значениями тэга
+* **maxCount** (int), необязательный - ключ используется, в основном, виджетами
+  и принимает значение ширины виджета в пикселях. Таким образом, Платформа
+  знает, что виджет не может показать больше значений, чем указано в
+  ``maxCount``. В этом случае платформа возвращает не больше значений, чем
+  указано в ``maxCount``.
+
+  Ключ ``maxCount`` предотвращает излишнюю загрузку платформы при работе
+  с большими массивами данных.
+* **format** (любой тип и значение), необязательный -
+  если этот ключ присутствует и не равен ``None``, тогда метки времени
+  возвращаются в виде строк в формате ISO 8601, часовая зон - зона сервера,
+  на котором работает платформа.
+* **actual** (bool), необязательный -
+  если этот ключ присутствует и установлен в ``true``,
+  тогда в ответе на запрос присутствуют только реальные записанные базу данных
+  значения тэга.
+
+Ниже - несколько примеров запросов.
+
+.. _getCurrentValue:
+
+Получение текущего значения тэга
+""""""""""""""""""""""""""""""""
+Самый простой запрос на получение данных выглядит так:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"]
+  }
+
+Запрос выше показывает, как можно получить текущее значение одного тэга.
+
+Допустим, текущий момент времени - 09:53:
+
+.. image:: pics/dataGet/tagId_step.png
+
+Ответом будет:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": 1545288780000000, "y": 4}
+        ]
+      }
+    ]
+  }
+
+:ref:`В соответствии с правилом 2<timeStampFormat>` текущее значение тэга - 4.
+Метка времени (ключ ``x``) соответствует текущему моменту времени.
+Такой ответ будет идентичен для тэгов с атрибутом ``smtTagStep``, равным
+``true`` и ``false``.
+
+.. note::
+  Ключ ``excess`` в ответе имеет смысл при задании в запросе ключа ``maxCount``. Устанавливается в ``true``, если
+  количество выводимых значений больше заданного в ``maxCount``. В остальных случаях устанавливается в ``false``.
+
+.. note::
+   #. Для простоты понимания меток времени во всех следующих запросах будем
+      использовать ключ ``format``.
+   #. Опять же для простоты исключим из всех дальнейших меток времени дату.
+
+Метки времени в будущем и ``smtTagStep`` = false
+++++++++++++++++++++++++++++++++++++++++++++++++
+Допустим, текущий момент времени 09:47:30.
+Это значит, что мы имеем одно значение тэга, сохранённое с меткой времени
+в будущем.
+Пусть ``smtTagStep`` = ``false``, то есть мы должны интерполировать значения
+тэгов.
+
+.. image:: pics/dataGet/tagId_stepFalse.png
+
+Тогда запрос
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true
+  }
+
+Вернёт:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:47:30", "y": 4.5}
+        ]
+      }
+    ]
+  }
+
+Метки времени в будущем, ``smtTagStep`` = true
+++++++++++++++++++++++++++++++++++++++++++++++
+Этот пример отличается от предыдущего тем, что ``smtTagStep`` = ``true``.
+
+.. image:: pics/dataGet/tagId_stepTrue.png
+
+Тогда запрос
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true
+  }
+
+Вернёт:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:47:30", "y": 5}
+        ]
+      }
+    ]
+  }
+
+Ключ ``start``
+"""""""""""""
+``smtTagStep`` = false
+++++++++++++++++++++++
+Давайте добавим к нашему запросу ключ ``start``.
+Ключ ``start`` устанавливает начало периода для получения данных.
+Пусть ``start`` = 09:32:30 и ``smtTagStep`` = ``false``.
+
+.. image:: pics/dataGet/period_fromStepFalse.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:32:30"
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:32:30", "y": 2},
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:45:00", "y": 5},
+          {"x": "09:50:00", "y": 4},
+          {"x": "09:53:00", "y": 4}
+        ]
+      }
+    ]
+  }
+
+``smtTagStep`` = ``true``
++++++++++++++++++++++++++
+``smtTagStep`` = ``true``.
+
+.. image:: pics/dataGet/period_fromStepTrue.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:32:30"
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:32:30", "y": 1},
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:45:00", "y": 5},
+          {"x": "09:50:00", "y": 4},
+          {"x": "09:53:00", "y": 4}
+        ]
+      }
+    ]
+  }
+
+Начало периода в запросе - перед любой меткой времени в базе
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Пусть ``start`` = 09:27:30.
+
+.. image:: pics/dataGet/period_fromBeforeData.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:27:30"
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:27:30", "y": null},
+          {"x": "09:30:00", "y": 1},
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:45:00", "y": 5},
+          {"x": "09:50:00", "y": 4},
+          {"x": "09:53:00", "y": 4}
+        ]
+      }
+    ]
+  }
+
+Начало периода в запросе - после любой метки времени в базе
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Пусть ``start`` = 09:52:30.
+
+.. image:: pics/dataGet/period_fromAfterData.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:52:30"
+  }
+
+Возвращается последнее значение в базе как на метку ``start``, так и на текущую метку времени
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:52:30", "y": 4},
+          {"x": "09:55:00", "y": 4}
+        ]
+      }
+    ]
+  }
+
+Ключ ``finish``
+"""""""""""
+``finish`` = произвольной метке времени
++++++++++++++++++++++++++++++++++++
+Устанавливая ключ ``finish``, мы ограничиваем конец периода получения данных.
+
+.. image:: pics/dataGet/period_to.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "finish": "09:32:30"
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:32:30", "y": 2}
+        ]
+      }
+    ]
+  }
+
+Ключ ``finish`` установлен перед любой существующей в базе меткой времени
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+.. image:: pics/dataGet/period_toBefore.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "finish": "09:27:30"
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:27:30", "y": null}
+        ]
+      }
+    ]
+  }
+
+Ключ ``finish`` равен текущей метке времени
++++++++++++++++++++++++++++++++++++++++
+Если мы установим ключ ``finish`` на текущую метку времени, то запрос
+будет в точности таким же, как в запросе :ref:`getCurrentValue`.
+
+Ключи ``start`` и ``finish``
+"""""""""""""""""""""""
+Ниже - несколько примеров одновременно установленных ключей ``start`` и ``finish``.
+
+``start`` и ``finish`` внутри существующих в базе меток
+++++++++++++++++++++++++++++++++++++++++++++++++++
+.. image:: pics/dataGet/period_fromAndToReal.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:32:30",
+    "finish": "09:47:30"
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:32:30", "y": 2},
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:45:00", "y": 5},
+          {"x": "09:47:30", "y": 4.5}
+        ]
+      }
+    ]
+  }
+
+``start`` выходит за пределы меток
++++++++++++++++++++++++++++++++++
+.. image:: pics/dataGet/period_fromNotReal.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:27:30",
+    "finish": "09:47:30"
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:27:30", "y": null},
+          {"x": "09:30:00", "y": 1},
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:45:00", "y": 5},
+          {"x": "09:47:30", "y": 4.5}
+        ]
+      }
+    ]
+  }
+
+``start`` и ``finish`` вне меток времени
++++++++++++++++++++++++++++++++++++
+.. image:: pics/dataGet/period_fromToOutside.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:27:30",
+    "finish": "09:55:00"
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:27:30", "y": null},
+          {"x": "09:30:00", "y": 1},
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:45:00", "y": 5},
+          {"x": "09:50:00", "y": 4},
+          {"x": "09:55:00", "y": 4}
+        ]
+      }
+    ]
+  }
+
+Ключ ``count``
+""""""""""""""
+Ключ ``count`` определяет запрашиваемое количество данных.
+
+В соответствии с :ref:`правилом 10<timeStampFormat>` ключ ``finish``
+равен текущей метке времени в случае, если установлен только ключ ``count``.
+
+Ключи ``count`` и ``finish``
+++++++++++++++++++++++++
+Предположим, что мы установили ключ ``finish`` на момент времени, не существующий
+в базе данных:
+
+.. image:: pics/dataGet/toAndCount.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "finish": "09:47:30",
+    "count": 3
+  }
+
+Этот запрос вернёт два сохранённых значения и одно интерполированное.
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:45:00", "y": 5},
+          {"x": "09:47:30", "y": 4.5}
+        ]
+      }
+    ]
+  }
+
+Следующий пример показывает, что мы получим в случае, если ключ ``finish``
+равен существующей в базе метке времени:
+
+.. image:: pics/dataGet/toAndCount2.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "finish": "09:45:00",
+    "count": 3
+  }
+
+Запрос вернёт три сохранённых значения.
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:45:00", "y": 5}
+        ]
+      }
+    ]
+  }
+
+Запрос:
+
+Ключ ``count`` превышает количество существующих значений
+(основываемся на предыдущей картинке).
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "finish": "09:45:00",
+    "count": 5
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:30:00", "y": 1},
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:45:00", "y": 5}
+        ]
+      }
+    ]
+  }
+
+Ключ ``finish`` превышает последнюю существующую метку времени:
+
+.. image:: pics/dataGet/toAndCount3.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "finish": "09:52:30",
+    "count": 3
+  }
+
+Будут возвращены два сохранённых и последнее существующее значение на метку времени ``finish``:
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:45:00", "y": 5},
+          {"x": "09:50:00", "y": 4},
+          {"x": "09:52:30", "y": 4}
+        ]
+      }
+    ]
+  }
+
+Ключи ``count`` и ``start``
+""""""""""""""""""""""""""
+Совместное использование ключей ``count`` и ``start`` похоже на случай
+совместного использования ключей ``finish`` и ``count`` за исключением того,
+что мы ограничиваем не конец периода, а начало.
+
+Несколько следующих примеров основываются на следующей картинке:
+
+.. image:: pics/dataGet/fromAndCount.png
+
+Запрос ``count`` = 1:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:42:30",
+    "count": 1
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:42:30", "y": 3.3}
+        ]
+      }
+    ]
+  }
+
+Запрос ``count`` = 2:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:42:30",
+    "count": 2
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:42:30", "y": 3.3},
+          {"x": "09:45:00", "y": 5}
+        ]
+      }
+    ]
+  }
+
+Запрос ``count`` = 3:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:42:30",
+    "count": 3
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:42:30", "y": 3.3},
+          {"x": "09:45:00", "y": 5},
+          {"x": "09:50:00", "y": 4}
+        ]
+      }
+    ]
+  }
+
+Запрос ``count = 4``:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:42:30",
+    "count": 4
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:42:30", "y": 3.3},
+          {"x": "09:45:00", "y": 5},
+          {"x": "09:50:00", "y": 4},
+          {"x": "09:52:30", "y": 4}
+        ]
+      }
+    ]
+  }
+
+Запрос ``count = 5``: ответ будет в точности таким же, как предыдущий.
+
+Давайте переместим текущую метку времени:
+
+.. image:: pics/dataGet/fromAndCount2.png
+
+Запрос ``count`` = 3:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:42:30",
+    "count": 3
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:42:30", "y": 3.3},
+          {"x": "09:45:00", "y": 5},
+          {"x": "09:47:30", "y": 4.5}
+        ]
+      }
+    ]
+  }
+
+Запрос ``count`` = 4: ответ будет таким же, как предыдущий в связи с
+:ref:`правилом 10 <timeStampFormat>`, вне зависимости от того, что существует
+значение с меткой времени в будущем (09:50:00).
+
+Ключ ``timeStep``
+"""""""""""""""""
+Ключ ``timeStep`` устанавливает временнОй период между соседними возвращаемыми
+значениями. Используйте этот ключ совместно с ключом ``count``.
+
+Значения ключа ``timeStep`` измеряется в микросекундах.
+
+``timeStep`` и ``count``
+++++++++++++++++++++++++
+Как определено в :ref:`правиле 2 <timeStampFormat>`, значение по умолчанию
+ключа ``finish`` - текущая метка времени.
+
+.. image:: pics/dataGet/timeStepAndCount.png
+
+Запрос (``timeStep`` равен 5 минутам):
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "timeStep": 300000000,
+    "count": 3
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:42:30", "y": 3.7},
+          {"x": "09:47:30", "y": 4.5},
+          {"x": "09:52:30", "y": 4}
+        ]
+      }
+    ]
+  }
+
+Теперь рассмотрим тот же запрос, но выполненный в момент времени ``10:05``:
+
+.. image:: pics/dataGet/timestep_count_2.png
+
+Запрос (``timeStep`` равен 5 минутам):
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "timeStep": 300000000,
+    "count": 3
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:55:00", "y": 4},
+          {"x": "10:00:00", "y": 4},
+          {"x": "10:05:00", "y": 4}
+        ]
+      }
+    ]
+  }
+
+Запрос (``count`` = 6):
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "timeStep": 300000000,
+    "count": 6
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:27:30", "y": null},
+          {"x": "09:32:30", "y": 2},
+          {"x": "09:37:30", "y": 2.725},
+          {"x": "09:42:30", "y": 3.3},
+          {"x": "09:47:30", "y": 4.5},
+          {"x": "09:52:30", "y": 4}
+        ]
+      }
+    ]
+  }
+
+``timeStep``, ``count`` и ``finish``
+++++++++++++++++++++++++++++++++
+Поведение запросов с ключами ``timeStep``, ``count`` и ``finish`` такое же,
+как в предыдущих примерх, за исключением того, что ключ ``finish``
+явно задаёт окончание периода.
+
+``timeStep``, ``count`` и ``start``
+++++++++++++++++++++++++++++++++++
+В этом случае ключ ``finish`` вычисляется в соответствии с
+:ref:`правилом 12 <timeStampFormat>`.
+
+.. image:: pics/dataGet/timeStepFromCount.png
+
+Запрос (``timeStep`` равен 5 минутам):
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:35:00",
+    "timeStep": 300000000,
+    "count": 4
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:45:00", "y": 4.5}
+        ]
+      }
+    ]
+  }
+
+Несмотря на то, что ключ ``count`` равен 4, возвращено только 3 значения,
+т.к. еще одно значение, имеющееся в базе, относится к будущему.
+
+``timeStep``, ``start`` и ``finish``
++++++++++++++++++++++++++++++++
+
+.. image:: pics/dataGet/timeStepFromTo.png
+
+Запрос (``timeStep`` равен 5 минутам):
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:35:00",
+    "finish": "09:42:30",
+    "timeStep": 300000000
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5}
+        ]
+      }
+    ]
+  }
+
+Запрос (``timeStep`` равен 10 минутам):
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:35:00",
+    "finish": "09:42:30",
+    "timeStep": 600000000
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:35:00", "y": 3}
+        ]
+      }
+    ]
+  }
+
+Ключ ``maxCount``
+"""""""""""""""""
+Этот ключ используется клиентами для того, чтобы информировать платформу,
+какое максимальное количество значений тэга должно быть возвращено.
+
+Представим тренд на экране. Его ширина - 800 пикселей. Это значит, что тренд
+может отрисовать не более 800 значений по оси x.
+
+Тренд устанавливает ключ ``maxCount`` в 800, при любом запросе на получение
+данных. Если в хранилище больше, чем 800 значений за выбранный период,
+платформа установит в ответе ключ ``excess`` в ``true`` и вернёт только
+800 значений.
+
+.. note::
+   ``maxCount`` имеет приоритет над ``count``.
+
+.. note::
+   Использование ключа ``maxCount`` предотвращает крах платформы и повышает
+   скорость работы. Установка этого ключа не обязательна, но рекомендуется.
+
+Ключ ``actual``
+"""""""""""""""
+Если ключ ``actual`` установлен в ``true``, выводятся только данные,
+находящиеся в базе данных без интерполяции/присвоения на границах диапазона.
+По умолчанию ключ ``actual`` установлен в ``false``.
+Если ключ ``actual`` установлен в ``true``, ключ ``timeStep`` не учитывается.
+
+Ниже представлены случаи использования ключа ``actual``
+с различными комбинациями других ключей.
+
+``start`` и ``actual``
++++++++++++++++++++++
+В этом случае возвращаются данные от метки времени,
+заданной ``start``, до текущего момента времени.
+Если на метку ``start`` и/или на текущий момент времени данных нет,
+на эти метки времени ничего не возвращается.
+
+.. image:: pics/dataGet/fromAndCountActual.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:32:00",
+    "actual": true
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:45:00", "y": 5},
+          {"x": "09:50:00", "y": 4}
+        ]
+      }
+    ]
+  }
+
+
+``start``, ``count``, ``actual``
++++++++++++++++++++++++++++++++
+Возвращаются данные в количестве, заданном в ``count``.
+Если данных в базе меньше, чем задано в ``count``,
+возвращаются только имеющиеся данные.
+
+.. image:: pics/dataGet/fromAndCountActual.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:32:00",
+    "count": 3,
+    "actual": true
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:45:00", "y": 5}
+        ]
+      }
+    ]
+  }
+
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:32:00",
+    "count": 10,
+    "actual": true
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:45:00", "y": 5},
+          {"x": "09:50:00", "y": 4}
+        ]
+      }
+    ]
+  }
+
+
+``finish`` и ``actual``
++++++++++++++++++++
+В этом случае возвращается значение на метку времени ``finish``
+или последнее имеющееся значение перед меткой времени ``finish``
+с соответствующей меткой
+времени, если значения на метку времени ``finish`` нет.
+
+.. image:: pics/dataGet/toAndCountActual.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "finish": "09:47:30",
+    "actual": true
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:45:00", "y": 5}
+        ]
+      }
+    ]
+  }
+
+
+``finish``, ``count``, ``actual``
++++++++++++++++++++++++++++++
+Возвращаются данные в количестве,
+заданном в ``count``, от метки времени ``finish``.
+Если данных в базе меньше, чем задано в ``count``,
+возвращаются только имеющиеся данные.
+
+.. image:: pics/dataGet/toAndCountActual.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "finish": "09:47:30",
+    "count": 3,
+    "actual": true
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:45:00", "y": 5}
+        ]
+      }
+    ]
+  }
+
+``start``, ``finish``, ``actual``
+++++++++++++++++++++++++++++
+В этом случае возвращаются имеющиеся в базе данные от метки
+времени ``start`` до метки времени ``finish``.
+
+.. image:: pics/dataGet/period_fromAndToRealActual.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:32:30",
+    "finish": "09:47:30",
+    "actual": true
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:45:00", "y": 5}
+        ]
+      }
+    ]
+  }
+
+
+``start``, ``finish``, ``count``, ``actual``
++++++++++++++++++++++++++++++++++++++++
+Возвращаются данные в количестве, заданном в ``count``.
+Если данных в базе меньше, чем задано в ``count``,
+возвращаются только имеющиеся данные.
+
+.. image:: pics/dataGet/period_fromAndToRealActual.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:32:30",
+    "finish": "09:47:30",
+    "count":2,
+    "actual": true
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5}
+        ]
+      }
+    ]
+  }
+
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:32:30",
+    "finish": "09:47:30",
+    "count":10,
+    "actual": true
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:45:00", "y": 5}
+        ]
+      }
+    ]
+  }
+
+
+``start``, ``finish``, ``maxCount``, ``actual``
+++++++++++++++++++++++++++++++++++++++++++
+Возвращаются данные в количестве, заданном в ``maxCount``.
+Если данных в базе меньше, чем задано в maxCount, возвращаются все данные
+из базы и флаг ``excess`` устанавливается в false.
+Если данных в базе больше, чем задано в ``maxCount``,
+интервал времени разбивается на отрезки в соответствии с
+``maxCount``. Данные интерполируются/заполняются. Если на метку ``start``
+нет данных, возвращается ``null``. Если на метку ``finish`` нет данных,
+возвращается последнее имеющееся значение перед меткой времени ``finish``.
+
+.. image:: pics/dataGet/period_fromAndToRealActual.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:32:30",
+    "finish": "09:47:30",
+    "maxCount": 10,
+    "actual": true
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:45:00", "y": 5},
+        ]
+      }
+    ]
+  }
+
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:32:30",
+    "finish": "09:47:30",
+    "maxCount": 2,
+    "actual": true
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": true,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:32:30", "y": null},
+          {"x": "09:47:30", "y": 5}
+        ]
+      }
+    ]
+  }
+
+Ключ ``value``
+""""""""""""""
+Ключ ``value`` используется для фильтрации запрошенных данных.
+Применяется в том случае,
+когда необходимо получить конкретные значения тэга.
+
+.. image:: pics/dataGet/value.png
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:32:30",
+    "value": [3]
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:42:00", "y": 3}
+        ]
+      }
+    ]
+  }
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:32:30",
+    "value": [3, 4]
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:41:00", "y": 3},
+          {"x": "09:43:00", "y": 4},
+          {"x": "09:50:00", "y": 4},
+          {"x": "09:53:00", "y": 4}
+        ]
+      }
+    ]
+  }
+
+``value`` и ``actual``
+++++++++++++++++++++++
+В этом случае запрос при фильтрации данных будет учитывать только
+реальные данные, не интерполируя промежуточные значения.
+
+Запрос:
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:32:30",
+    "value": [3, 4],
+    "actual": true
+  }
+
+Ответ:
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": false,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:50:00", "y": 4}
+        ]
+      }
+    ]
+  }
+
+
+``null`` в истории данных
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Важным моментом при работе с данными является случай, когда значением тэга
+является ``null``.
+
+Получение значения ``null`` в качестве данных тэга возможно, в первую очередь,
+тогда, когда тэг создан и в его историю ещё ничего не записано (для этого
+атрибут тэга ``smtTagDefaultValue`` должен быть пустым).
+
+Кроме того, значение ``null`` записывается в тэг, когда:
+
+#. Тэг привязан к источнику данных и с коннектором, записывающим данные в тэг,
+   рвётся связь. В этом случае Платформа запишет в тэг значение ``null``, код
+   качества значения ``q`` = 100.
+#. Платформа завершает работу. В этом случае во все тэги записывается значение
+   ``null``, код качества значения ``q`` = 101.
+#. Тэг привязан к источнику данных и у коннектора рвётся связь с поставщиком
+   данных. В этом случае коннектор запишет в тэг значение ``null`` с кодом
+   качества значения ``q`` = 102.
+#. Тэг привязан к источнику данных и коннектор получает от поставщика данных
+   значение ``null``.
+#. В тэг было записано значение ``null`` командой ``data/set``.
+
+Считается, что с момента записи в тэг значения ``null`` до записи следующего
+значения мы ничего не знаем о данных тэга, в них как бы образовывается дыра.
+Поэтому значения тэга не интерполируются на этом промежутке.
+
+При запросе данных за период ``null`` возвращается клиенту, если попадает в
+этот промежуток.
+
+На картинке ниже показывается, как интерпретируются данные в случае, если
+в истории есть ``null``.
+
+.. image:: pics/dataGet/withNull.png
+
+Далее - несколько примеров запросов к данным, показанным на картинке выше
+с ответами.
+
+Запрос 1
+""""""""
+
+.. image:: pics/dataGet/withNull2.png
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:30:00",
+    "finish": "09:50:00"
+  }
+
+**Ответ без ``null``:**
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": true,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:30:00", "y": 1},
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:45:00", "y": 5},
+          {"x": "09:50:00", "y": 4}
+        ]
+      }
+    ]
+  }
+
+**Ответ с ``null``:**
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": true,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:30:00", "y": 1},
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:37:00", "y": null},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:45:00", "y": 5},
+          {"x": "09:50:00", "y": 4}
+        ]
+      }
+    ]
+  }
+
+Запрос 2
+""""""""
+
+.. image:: pics/dataGet/withNull3.png
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:32:30",
+    "finish": "09:39:00"
+  }
+
+**Ответ без ``null``:**
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": true,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:32:30", "y": 2},
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:39:00", "y": 2.6}
+        ]
+      }
+    ]
+  }
+
+**Ответ с ``null``:**
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": true,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:32:30", "y": 2},
+          {"x": "09:35:00", "y": 3},
+          {"x": "09:37:00", "y": null},
+          {"x": "09:39:00", "y": null}
+        ]
+      }
+    ]
+  }
+
+Запрос 3
+""""""""
+
+.. image:: pics/dataGet/withNull4.png
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:38:00",
+    "finish": "09:39:00"
+  }
+
+**Ответ без ``null``:**
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": true,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:38:00", "y": 2.7},
+          {"x": "09:39:00", "y": 2.6}
+        ]
+      }
+    ]
+  }
+
+**Ответ с ``null``:**
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": true,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:38:00", "y": null},
+          {"x": "09:39:00", "y": null}
+        ]
+      }
+    ]
+  }
+
+Запрос 4. ``timeStep``
+""""""""""""""""""""""
+Сделаем запрос с флагом ``timeStep`` в 4 минуты:
+
+.. image:: pics/dataGet/timestep_none_1.png
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:32:00",
+    "finish": "09:43:00",
+    "timeStep": 240000000
+  }
+
+**Ответ без ``null``:**
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": true,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:32:00", "y": 1.8},
+          {"x": "09:36:00", "y": 2.9},
+          {"x": "09:40:00", "y": 2.5}
+        ]
+      }
+    ]
+  }
+
+**Ответ с ``null``:**
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": true,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:32:00", "y": 1.8},
+          {"x": "09:36:00", "y": 3},
+          {"x": "09:40:00", "y": 2.5}
+        ]
+      }
+    ]
+  }
+
+Запрос 5. ``timeStep``
+""""""""""""""""""""""
+Теперь сделаем запрос с флагом ``timeStep`` в 2 минуты:
+
+.. image:: pics/dataGet/timestep_none_2.png
+
+.. code-block:: json
+
+  {
+    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "format": true,
+    "start": "09:32:00",
+    "finish": "09:43:00",
+    "timeStep": 120000000
+  }
+
+**Ответ без ``null``:**
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": true,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:32:00", "y": 1.8},
+          {"x": "09:34:00", "y": 2.6},
+          {"x": "09:36:00", "y": 2.9},
+          {"x": "09:38:00", "y": 2.7},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:42:00", "y": 3.5}
+        ]
+      }
+    ]
+  }
+
+**Ответ с ``null``:**
+
+.. code-block:: json
+
+  {
+    "error": {
+      "id": 0
+    },
+    "data": [
+      {
+        "excess": true,
+        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "data": [
+          {"x": "09:32:00", "y": 1.8},
+          {"x": "09:34:00", "y": 2.6},
+          {"x": "09:36:00", "y": 3},
+          {"x": "09:38:00", "y": null},
+          {"x": "09:40:00", "y": 2.5},
+          {"x": "09:42:00", "y": 3.5}
+        ]
+      }
+    ]
+  }

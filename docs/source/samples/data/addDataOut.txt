@@ -1,0 +1,8 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Content-type: application/json
+
+{
+    "id": "3e21924a-cc59-103e-9312-555c1a8a1358"
+}
