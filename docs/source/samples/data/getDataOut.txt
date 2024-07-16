@@ -6,21 +6,19 @@ Content-type: application/json
 {
     "data": [
         {
-            "id": "fd58e5c0-cc61-103e-9325-555c1a8a1358",
-            "attributes": {
-                "cn": [
-                    "alert1"
+            "tagId": "<id_of_a_tag>",
+            "data": [
+                [
+                    1.0,
+                    "<timestamp>",
+                    3
                 ],
-                "prsActive": [
-                    "TRUE"
-                ],
-                "prsDefault": [
-                    "TRUE"
-                ],
-                "objectClass": [
-                    "prsAlert"
+                [
+                    7.0,
+                    "<timestamp>",
+                    9
                 ]
-            }
+            ]
         }
     ]
 }

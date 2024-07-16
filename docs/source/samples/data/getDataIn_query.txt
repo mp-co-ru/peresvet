@@ -1,0 +1,5 @@
+GET /v1/data/?q={"tagId":"<id_of_a_tag>","format":true,"actual":false,"count":100,"start":"<start_of_a_period>","finish":"<end_of_a_period>"} HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth

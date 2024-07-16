@@ -79,3 +79,4 @@ API Платформы Пересвет
    Хранилища данных<dataStorages_api_doc>
    Расписания<schedules>
    Методы<methods_api_doc>
+   Запись/получение данных<data_api>
