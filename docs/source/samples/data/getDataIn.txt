@@ -1,12 +1,15 @@
-GET /v1/alerts/ HTTP/1.1
+GET /v1/data/ HTTP/1.1
 Host: localhost
 Accept: application/json
 Content-Type: application/json
 Authorization: No Auth
 
 {
-    "base": "id of a node where to search",
-    "id": "id of an alert to find",
-    "deref": true,
-    "scope":1
+    "tagId":"<id_of_a_tag_to_read_from>",
+    "format": true,
+    "actual": false,
+    "count": "<number_of_data_points>",
+    "start": "<start_of_a_period>",
+    "finish": "<end_of_a_period>",
+    "timeStep": "<step_between_data_points>"
 }
