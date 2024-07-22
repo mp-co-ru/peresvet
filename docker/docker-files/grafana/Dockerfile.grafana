@@ -1,5 +1,5 @@
 #FROM grafana/grafana-enterprise
-FROM grafana/grafana-enterprise:10.4.0-ubuntu
+FROM grafana/grafana-enterprise:10.4.4-ubuntu
 
 ENV GF_INSTALL_PLUGINS grafana-mqtt-datasource,https://github.com/mp-co-ru/grafana-ui-plugin/releases/download/v0.2.0/mp-co-peresvet-app-0-2-0.zip;mp-co-peresvet-app
 ENV GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS mp-co-peresvet-app
