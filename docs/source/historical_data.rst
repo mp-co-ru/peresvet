@@ -20,13 +20,13 @@
      текущим значением тэга.
   #. Если значения тэга числовые:
 
-     #. Если атрибут тэга ``prsTagStep`` равен ``true``, тогда значения тэга
+     #. Если атрибут тэга ``prsStep`` равен ``true``, тогда значения тэга
         между двумя метками времени не интерполируются.
-     #. Если атрибут тэга ``prsTagStep`` равен ``false`` (по умолчанию),
+     #. Если атрибут тэга ``prsStep`` равен ``false`` (по умолчанию),
         тогда значения тэга между двумя метками времени вычисляются
         с помощью линейной интерполяции.
      #. Программы, предоставляющие данные пользователям, ответственны за
-        верную интерпретацию атрибута ``prsTagStep`` у тэга.
+        верную интерпретацию атрибута ``prsStep`` у тэга.
         К примеру, тренд должен правильно показывать значения тэга
         между соседними метками времени.
   #. Все метки времени внутри платформы и в исторической базе данных
@@ -43,8 +43,9 @@
   #. Если тэг содержит несколько значений на одну и ту же метку времени,
      то текущим значением тэга на эту метку времени считается записанное
      последним.
-  #. Каждое значение в тэге содержит код качества ``q``. Если ``q`` = 0,
-     то значению тэга можно доверять. Иначе значение тэга ошибочно, код
+  #. Каждое значение в тэге содержит код качества ``q``. Если ``q`` = 0 
+     или ``null``, то значению тэга можно доверять. 
+     Иначе значение тэга ошибочно, код
      ``q`` определяет ошибку. См. :ref:`коды качества <qualityCodes>`.
 
      Следующие правила касаются ключей ``count``, ``start``, ``finish`` и ``timeStep``
@@ -70,12 +71,12 @@
 Код качества - это, другими словами, код ошибки данных.
 
 .. list-table:: Коды качества
-   :widths: 15 40
+   :widths: 20 40
    :header-rows: 1
 
    * - Код
      - Описание
-   * - 0
+   * - 0 | null
      - Обычное значение. Данные "хорошие".
    * - 100
      - Разорвана связь между платформой и коннектором, записывающим данные
@@ -88,17 +89,13 @@
      - Разорвана связь между коннектором и поставщиком данных.
        Используется совместно со значением тэга ``null``.
 
-.. note::
-   Приведённые ниже примеры получения данных не включают, если это не
-   оговаривается отдельно, в ответе поле ``q`` для упрощения.
-
 Получение данных
 ~~~~~~~~~~~~~~~~
 Подробно рассмотрим примеры получения исторических данных.
 
 Пример массива данных
 """""""""""""""""""""
-Допустим, у нас есть тэг ``Tag1`` у объекта ``Object1``.
+Допустим, у нас есть тэг ``Tag1`` у объекта ``Object1``. Идентификатор тега - ``1500c712-726a-103e-9264-a5021ec2dae1``.
 Атрибут ``prsTagValueTypeCode`` этого тэга равен 1 и это значит, что тэг
 хранит вещественные значения.
 Исторические данные этого тэга:
@@ -114,21 +111,21 @@
 .. code-block:: json
 
    [
-     {"x": "09:30", "y": 1},
-     {"x": "09:35", "y": 3},
-     {"x": "09:40", "y": 2.5},
-     {"x": "09:45", "y": 5},
-     {"x": "09:50", "y": 4}
+     [1, "09:30"],
+     [3, "09:35"],
+     [2.5, "09:40"],
+     [5, "09:45"],
+     [4, "09:50"]
    ]
 
-Формат /smt/data/get
-""""""""""""""""""""
-Здесь приведено объяснение каждого ключа в теле запроса.
+Формат запроса на получение данных
+""""""""""""""""""""""""""""""""""
+Пример:
 
 .. code-block:: json
 
    {
-     "tagId": ["ID первого тэга", "ID второго тэга"],
+     "tagId": ["id первого тэга", "id второго тэга"],
      "start": "2018-12-09 12:00:00+03:00",
      "finish": "2018-12-09 14:00:00+03:00",
      "count": 8,
@@ -138,10 +135,8 @@
      "format": true
    }
 
-* **tagId** (массив из str), обязательный -
+* **tagId** (str или массив из str), обязательный -
   тэг(и) для которых необходимо получить данные.
-
-  Этот ключ может быть либо строкой, либо массивом строк.
 
 * **start** (int, str), необязательный - метка времени начала периода
   для получения данных (:ref:`see <timeStampFormat>`).
@@ -152,10 +147,9 @@
 
   * **"2018-12-20 00:00:00+03:00"**
   * **"2018-12-20 00:00:00"** - временнАя зона для этого значения
-    будет установлена в UTC (00:00), что значит, что время будет равно
-    "2018-12-20 03:00:00+03:00"
+    будет установлена в UTC (00:00)
   * **1544662830000000** значение равно:
-    "2018-12-13 01:00:30+00:00", "2018-12-13 04:00:30+03:00"
+    "2018-12-13 01:00:30+00:00"
   * **"01:00"** предположим, что текущая дата на сервере платформы -
     2018-12-20, тогда "01:00" будет преобразовано в "2018-12-20 01:00:00+00:00"
   * **"01:00,5+03:00"** равно (оставим предыдущее предположение о дате)
@@ -178,14 +172,55 @@
   с большими массивами данных.
 * **format** (любой тип и значение), необязательный -
   если этот ключ присутствует и не равен ``None``, тогда метки времени
-  возвращаются в виде строк в формате ISO 8601, часовая зон - зона сервера,
+  возвращаются в виде строк в формате ISO 8601, часовая зона - зона сервера,
   на котором работает платформа.
 * **actual** (bool), необязательный -
   если этот ключ присутствует и установлен в ``true``,
   тогда в ответе на запрос присутствуют только реальные записанные базу данных
   значения тэга.
 
-Ниже - несколько примеров запросов.
+Формат ответа на запрос на получение данных
+"""""""""""""""""""""""""""""""""""""""""""
+Пример:
+
+.. code-block:: json
+
+   {
+      "data": [
+        {
+          "exceed": false,
+          "tagId": "id тега",
+          "data": [
+            [1, "2018-12-31T00:00:00+03:00", null],
+            [120, "2018-12-31T00:01:00+03:00", null]
+          ]
+        }
+      ]
+   }
+
+Если запрос выполнен без ошибок, ответ всегда содержит один ключ - ``data``,
+который является массивом элементов типа json, каждый элемент - данные по одному
+тегу из запроса.
+
+Ключи элемента из массива:
+
+* **exceed** (bool) - флаг того, что данных в архиве больше, чем запрошено; 
+  логика работы флага: если в запросе указан ключ :ref:`maxCount <maxCount>`,
+  то в ответе устанавливается флаг ``exceed``; если этот флаг = ``true``, то
+  это означает, что в архиве содержится больше значений, чем указано в запросе в ключе
+  ``maxCount``, поэтому возвращённые значения тега усреденены и лучший выход - 
+  изменить запрос, запросив меньшее количество значений тега; если в запросе нет ключа
+  ``maxCount``, то ключ ``exceed`` в ответе отсутствует;
+* **tagId** (str) - идентификатор тега;
+* **data** (массив массивов) - массив значений, попадающих в запрошенный период; 
+  каждый элемент массива - в свою очередь, тоже массив и состоит из трёх элементов:
+  ``[y, x , q]``, где: 
+
+  ``y`` - значение тега;
+  ``x`` - метка времени, с которой записано значение тега;
+  ``q`` - код :ref:`качества значения <qualityCodes>`.
+  
+Ниже - примеры запросов.
 
 .. _getCurrentValue:
 
@@ -196,7 +231,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"]
+    "tagId": "1500c712-726a-103e-9264-a5021ec"
   }
 
 Запрос выше показывает, как можно получить текущее значение одного тэга.
@@ -210,40 +245,32 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": 1545288780000000, "y": 4}
+          [4, 1545288780000000, null]
         ]
       }
     ]
   }
 
 :ref:`В соответствии с правилом 2<timeStampFormat>` текущее значение тэга - 4.
-Метка времени (ключ ``x``) соответствует текущему моменту времени.
-Такой ответ будет идентичен для тэгов с атрибутом ``prsTagStep``, равным
+Метка времени (``1545288780000000``) соответствует текущему моменту времени.
+Такой ответ будет идентичен для тэгов с атрибутом ``prsStep``, равным
 ``true`` и ``false``.
-
-.. note::
-  Ключ ``excess`` в ответе имеет смысл при задании в запросе ключа ``maxCount``. Устанавливается в ``true``, если
-  количество выводимых значений больше заданного в ``maxCount``. В остальных случаях устанавливается в ``false``.
 
 .. note::
    #. Для простоты понимания меток времени во всех следующих запросах будем
       использовать ключ ``format``.
    #. Опять же для простоты исключим из всех дальнейших меток времени дату.
 
-Метки времени в будущем и ``prsTagStep`` = false
-++++++++++++++++++++++++++++++++++++++++++++++++
+Метки времени в будущем и ``prsStep`` = false
++++++++++++++++++++++++++++++++++++++++++++++
 Допустим, текущий момент времени 09:47:30.
 Это значит, что мы имеем одно значение тэга, сохранённое с меткой времени
 в будущем.
-Пусть ``prsTagStep`` = ``false``, то есть мы должны интерполировать значения
+Пусть ``prsStep`` = ``false``, то есть мы должны интерполировать значения
 тэгов.
 
 .. image:: pics/dataGet/tagId_stepFalse.png
@@ -253,7 +280,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
     "format": true
   }
 
@@ -262,23 +289,19 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:47:30", "y": 4.5}
+          [4.5, "09:47:30", null]
         ]
       }
     ]
   }
 
-Метки времени в будущем, ``prsTagStep`` = true
-++++++++++++++++++++++++++++++++++++++++++++++
-Этот пример отличается от предыдущего тем, что ``prsTagStep`` = ``true``.
+Метки времени в будущем, ``prsStep`` = true
++++++++++++++++++++++++++++++++++++++++++++
+Этот пример отличается от предыдущего тем, что ``prsStep`` = ``true``.
 
 .. image:: pics/dataGet/tagId_stepTrue.png
 
@@ -287,7 +310,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
     "format": true
   }
 
@@ -296,15 +319,11 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:47:30", "y": 5}
+          [5, "09:47:30", null]
         ]
       }
     ]
@@ -312,11 +331,11 @@
 
 Ключ ``start``
 """"""""""""""
-``prsTagStep`` = false
-++++++++++++++++++++++
-Давайте добавим к нашему запросу ключ ``start``.
+``prsStep`` = false
++++++++++++++++++++
+Добавим к нашему запросу ключ ``start``.
 Ключ ``start`` устанавливает начало периода для получения данных.
-Пусть ``start`` = 09:32:30 и ``prsTagStep`` = ``false``.
+Пусть ``start`` = 09:32:30 и ``prsStep`` = ``false``.
 
 .. image:: pics/dataGet/period_fromStepFalse.png
 
@@ -325,7 +344,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
     "format": true,
     "start": "09:32:30"
   }
@@ -335,29 +354,23 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:32:30", "y": 2},
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:45:00", "y": 5},
-          {"x": "09:50:00", "y": 4},
-          {"x": "09:53:00", "y": 4}
+          [2, "09:32:30", null],
+          [3, "09:35:00", null],
+          [2.5, "09:40:00", null],
+          [5, "09:45:00", null],
+          [4, "09:50:00", null],
+          [4, "09:53:00", null]
         ]
       }
     ]
   }
 
-``prsTagStep`` = ``true``
-+++++++++++++++++++++++++
-``prsTagStep`` = ``true``.
-
+``prsStep`` = ``true``
+++++++++++++++++++++++
 .. image:: pics/dataGet/period_fromStepTrue.png
 
 Запрос:
@@ -365,7 +378,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
     "format": true,
     "start": "09:32:30"
   }
@@ -375,20 +388,16 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:32:30", "y": 1},
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:45:00", "y": 5},
-          {"x": "09:50:00", "y": 4},
-          {"x": "09:53:00", "y": 4}
+          [1, "09:32:30", null],
+          [3, "09:35:00", null],
+          [2.5, "09:40:00", null],
+          [5, "09:45:00", null],
+          [4, "09:50:00", null],
+          [4, "09:53:00", null]
         ]
       }
     ]
@@ -405,7 +414,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:27:30"
   }
@@ -415,21 +424,17 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:27:30", "y": null},
-          {"x": "09:30:00", "y": 1},
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:45:00", "y": 5},
-          {"x": "09:50:00", "y": 4},
-          {"x": "09:53:00", "y": 4}
+          [null ,"09:27:30", null],
+          [1, "09:30:00", null],
+          [3, "09:35:00", null],
+          [2.5, "09:40:00", null],
+          [5, "09:45:00", null],
+          [4, "09:50:00", null],
+          [4, "09:53:00", null]
         ]
       }
     ]
@@ -446,7 +451,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:52:30"
   }
@@ -458,16 +463,12 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:52:30", "y": 4},
-          {"x": "09:55:00", "y": 4}
+          [4, "09:52:30", null],
+          [4, "09:55:00", null]
         ]
       }
     ]
@@ -486,7 +487,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "finish": "09:32:30"
   }
@@ -496,15 +497,11 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:32:30", "y": 2}
+          [2, "09:32:30"]
         ]
       }
     ]
@@ -519,7 +516,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "finish": "09:27:30"
   }
@@ -529,15 +526,11 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:27:30", "y": null}
+          ["09:27:30", "y": null}
         ]
       }
     ]
@@ -561,7 +554,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:32:30",
     "finish": "09:47:30"
@@ -572,19 +565,15 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:32:30", "y": 2},
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:45:00", "y": 5},
-          {"x": "09:47:30", "y": 4.5}
+          ["09:32:30", "y": 2},
+          ["09:35:00", "y": 3},
+          ["09:40:00", "y": 2.5},
+          ["09:45:00", "y": 5},
+          ["09:47:30", "y": 4.5}
         ]
       }
     ]
@@ -599,7 +588,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:27:30",
     "finish": "09:47:30"
@@ -610,20 +599,16 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:27:30", "y": null},
-          {"x": "09:30:00", "y": 1},
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:45:00", "y": 5},
-          {"x": "09:47:30", "y": 4.5}
+          [null, "09:27:30", null},
+          ["09:30:00", "y": 1},
+          ["09:35:00", "y": 3},
+          ["09:40:00", "y": 2.5},
+          ["09:45:00", "y": 5},
+          ["09:47:30", "y": 4.5}
         ]
       }
     ]
@@ -638,7 +623,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:27:30",
     "finish": "09:55:00"
@@ -649,21 +634,17 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:27:30", "y": null},
-          {"x": "09:30:00", "y": 1},
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:45:00", "y": 5},
-          {"x": "09:50:00", "y": 4},
-          {"x": "09:55:00", "y": 4}
+          ["09:27:30", "y": null},
+          ["09:30:00", "y": 1},
+          ["09:35:00", "y": 3},
+          ["09:40:00", "y": 2.5},
+          ["09:45:00", "y": 5},
+          ["09:50:00", "y": 4},
+          ["09:55:00", "y": 4}
         ]
       }
     ]
@@ -688,7 +669,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "finish": "09:47:30",
     "count": 3
@@ -701,17 +682,13 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:45:00", "y": 5},
-          {"x": "09:47:30", "y": 4.5}
+          ["09:40:00", "y": 2.5},
+          ["09:45:00", "y": 5},
+          ["09:47:30", "y": 4.5}
         ]
       }
     ]
@@ -727,7 +704,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "finish": "09:45:00",
     "count": 3
@@ -740,17 +717,13 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:45:00", "y": 5}
+          ["09:35:00", "y": 3},
+          ["09:40:00", "y": 2.5},
+          ["09:45:00", "y": 5}
         ]
       }
     ]
@@ -764,7 +737,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "finish": "09:45:00",
     "count": 5
@@ -775,18 +748,14 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:30:00", "y": 1},
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:45:00", "y": 5}
+          ["09:30:00", "y": 1},
+          ["09:35:00", "y": 3},
+          ["09:40:00", "y": 2.5},
+          ["09:45:00", "y": 5}
         ]
       }
     ]
@@ -801,7 +770,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "finish": "09:52:30",
     "count": 3
@@ -814,17 +783,13 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:45:00", "y": 5},
-          {"x": "09:50:00", "y": 4},
-          {"x": "09:52:30", "y": 4}
+          ["09:45:00", "y": 5},
+          ["09:50:00", "y": 4},
+          ["09:52:30", "y": 4}
         ]
       }
     ]
@@ -845,7 +810,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:42:30",
     "count": 1
@@ -856,15 +821,11 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:42:30", "y": 3.3}
+          ["09:42:30", "y": 3.3}
         ]
       }
     ]
@@ -875,7 +836,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:42:30",
     "count": 2
@@ -886,16 +847,12 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:42:30", "y": 3.3},
-          {"x": "09:45:00", "y": 5}
+          ["09:42:30", "y": 3.3},
+          ["09:45:00", "y": 5}
         ]
       }
     ]
@@ -906,7 +863,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:42:30",
     "count": 3
@@ -917,17 +874,13 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:42:30", "y": 3.3},
-          {"x": "09:45:00", "y": 5},
-          {"x": "09:50:00", "y": 4}
+          ["09:42:30", "y": 3.3},
+          ["09:45:00", "y": 5},
+          ["09:50:00", "y": 4}
         ]
       }
     ]
@@ -938,7 +891,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:42:30",
     "count": 4
@@ -949,18 +902,14 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:42:30", "y": 3.3},
-          {"x": "09:45:00", "y": 5},
-          {"x": "09:50:00", "y": 4},
-          {"x": "09:52:30", "y": 4}
+          ["09:42:30", "y": 3.3},
+          ["09:45:00", "y": 5},
+          ["09:50:00", "y": 4},
+          ["09:52:30", "y": 4}
         ]
       }
     ]
@@ -977,7 +926,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:42:30",
     "count": 3
@@ -988,17 +937,13 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:42:30", "y": 3.3},
-          {"x": "09:45:00", "y": 5},
-          {"x": "09:47:30", "y": 4.5}
+          ["09:42:30", "y": 3.3},
+          ["09:45:00", "y": 5},
+          ["09:47:30", "y": 4.5}
         ]
       }
     ]
@@ -1027,7 +972,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "timeStep": 300000000,
     "count": 3
@@ -1038,17 +983,13 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:42:30", "y": 3.7},
-          {"x": "09:47:30", "y": 4.5},
-          {"x": "09:52:30", "y": 4}
+          ["09:42:30", "y": 3.7},
+          ["09:47:30", "y": 4.5},
+          ["09:52:30", "y": 4}
         ]
       }
     ]
@@ -1063,7 +1004,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "timeStep": 300000000,
     "count": 3
@@ -1074,17 +1015,13 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:55:00", "y": 4},
-          {"x": "10:00:00", "y": 4},
-          {"x": "10:05:00", "y": 4}
+          ["09:55:00", "y": 4},
+          ["10:00:00", "y": 4},
+          ["10:05:00", "y": 4}
         ]
       }
     ]
@@ -1095,7 +1032,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "timeStep": 300000000,
     "count": 6
@@ -1106,20 +1043,16 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:27:30", "y": null},
-          {"x": "09:32:30", "y": 2},
-          {"x": "09:37:30", "y": 2.725},
-          {"x": "09:42:30", "y": 3.3},
-          {"x": "09:47:30", "y": 4.5},
-          {"x": "09:52:30", "y": 4}
+          ["09:27:30", "y": null},
+          ["09:32:30", "y": 2},
+          ["09:37:30", "y": 2.725},
+          ["09:42:30", "y": 3.3},
+          ["09:47:30", "y": 4.5},
+          ["09:52:30", "y": 4}
         ]
       }
     ]
@@ -1143,7 +1076,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:35:00",
     "timeStep": 300000000,
@@ -1155,17 +1088,13 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:45:00", "y": 4.5}
+          ["09:35:00", "y": 3},
+          ["09:40:00", "y": 2.5},
+          ["09:45:00", "y": 4.5}
         ]
       }
     ]
@@ -1184,7 +1113,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:35:00",
     "finish": "09:42:30",
@@ -1196,16 +1125,12 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5}
+          ["09:35:00", "y": 3},
+          ["09:40:00", "y": 2.5}
         ]
       }
     ]
@@ -1216,7 +1141,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:35:00",
     "finish": "09:42:30",
@@ -1228,19 +1153,17 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:35:00", "y": 3}
+          ["09:35:00", "y": 3}
         ]
       }
     ]
   }
+
+.. _maxCount:
 
 Ключ ``maxCount``
 """""""""""""""""
@@ -1286,7 +1209,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:32:00",
     "actual": true
@@ -1297,18 +1220,14 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:45:00", "y": 5},
-          {"x": "09:50:00", "y": 4}
+          ["09:35:00", "y": 3},
+          ["09:40:00", "y": 2.5},
+          ["09:45:00", "y": 5},
+          ["09:50:00", "y": 4}
         ]
       }
     ]
@@ -1327,7 +1246,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:32:00",
     "count": 3,
@@ -1339,17 +1258,13 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:45:00", "y": 5}
+          ["09:35:00", "y": 3},
+          ["09:40:00", "y": 2.5},
+          ["09:45:00", "y": 5}
         ]
       }
     ]
@@ -1361,7 +1276,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:32:00",
     "count": 10,
@@ -1373,18 +1288,14 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:45:00", "y": 5},
-          {"x": "09:50:00", "y": 4}
+          ["09:35:00", "y": 3},
+          ["09:40:00", "y": 2.5},
+          ["09:45:00", "y": 5},
+          ["09:50:00", "y": 4}
         ]
       }
     ]
@@ -1405,7 +1316,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "finish": "09:47:30",
     "actual": true
@@ -1416,15 +1327,11 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:45:00", "y": 5}
+          ["09:45:00", "y": 5}
         ]
       }
     ]
@@ -1445,7 +1352,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "finish": "09:47:30",
     "count": 3,
@@ -1457,17 +1364,13 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:45:00", "y": 5}
+          ["09:35:00", "y": 3},
+          ["09:40:00", "y": 2.5},
+          ["09:45:00", "y": 5}
         ]
       }
     ]
@@ -1485,7 +1388,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:32:30",
     "finish": "09:47:30",
@@ -1497,17 +1400,13 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:45:00", "y": 5}
+          ["09:35:00", "y": 3},
+          ["09:40:00", "y": 2.5},
+          ["09:45:00", "y": 5}
         ]
       }
     ]
@@ -1527,7 +1426,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:32:30",
     "finish": "09:47:30",
@@ -1540,16 +1439,12 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5}
+          ["09:35:00", "y": 3},
+          ["09:40:00", "y": 2.5}
         ]
       }
     ]
@@ -1561,7 +1456,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:32:30",
     "finish": "09:47:30",
@@ -1574,17 +1469,13 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:45:00", "y": 5}
+          ["09:35:00", "y": 3},
+          ["09:40:00", "y": 2.5},
+          ["09:45:00", "y": 5}
         ]
       }
     ]
@@ -1609,7 +1500,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:32:30",
     "finish": "09:47:30",
@@ -1622,17 +1513,13 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:45:00", "y": 5},
+          ["09:35:00", "y": 3},
+          ["09:40:00", "y": 2.5},
+          ["09:45:00", "y": 5},
         ]
       }
     ]
@@ -1644,7 +1531,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:32:30",
     "finish": "09:47:30",
@@ -1657,16 +1544,13 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
         "excess": true,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:32:30", "y": null},
-          {"x": "09:47:30", "y": 5}
+          ["09:32:30", "y": null},
+          ["09:47:30", "y": 5}
         ]
       }
     ]
@@ -1685,7 +1569,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:32:30",
     "value": [3]
@@ -1696,16 +1580,12 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:42:00", "y": 3}
+          ["09:35:00", "y": 3},
+          ["09:42:00", "y": 3}
         ]
       }
     ]
@@ -1716,7 +1596,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:32:30",
     "value": [3, 4]
@@ -1727,19 +1607,15 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:41:00", "y": 3},
-          {"x": "09:43:00", "y": 4},
-          {"x": "09:50:00", "y": 4},
-          {"x": "09:53:00", "y": 4}
+          ["09:35:00", "y": 3},
+          ["09:41:00", "y": 3},
+          ["09:43:00", "y": 4},
+          ["09:50:00", "y": 4},
+          ["09:53:00", "y": 4}
         ]
       }
     ]
@@ -1755,7 +1631,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:32:30",
     "value": [3, 4],
@@ -1767,16 +1643,12 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
-        "excess": false,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:50:00", "y": 4}
+          ["09:35:00", "y": 3},
+          ["09:50:00", "y": 4}
         ]
       }
     ]
@@ -1829,7 +1701,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:30:00",
     "finish": "09:50:00"
@@ -1840,19 +1712,16 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
         "excess": true,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:30:00", "y": 1},
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:45:00", "y": 5},
-          {"x": "09:50:00", "y": 4}
+          ["09:30:00", "y": 1},
+          ["09:35:00", "y": 3},
+          ["09:40:00", "y": 2.5},
+          ["09:45:00", "y": 5},
+          ["09:50:00", "y": 4}
         ]
       }
     ]
@@ -1863,20 +1732,17 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
         "excess": true,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:30:00", "y": 1},
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:37:00", "y": null},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:45:00", "y": 5},
-          {"x": "09:50:00", "y": 4}
+          ["09:30:00", "y": 1},
+          ["09:35:00", "y": 3},
+          ["09:37:00", "y": null},
+          ["09:40:00", "y": 2.5},
+          ["09:45:00", "y": 5},
+          ["09:50:00", "y": 4}
         ]
       }
     ]
@@ -1890,7 +1756,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:32:30",
     "finish": "09:39:00"
@@ -1901,17 +1767,14 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
         "excess": true,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:32:30", "y": 2},
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:39:00", "y": 2.6}
+          ["09:32:30", "y": 2},
+          ["09:35:00", "y": 3},
+          ["09:39:00", "y": 2.6}
         ]
       }
     ]
@@ -1922,18 +1785,15 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
         "excess": true,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:32:30", "y": 2},
-          {"x": "09:35:00", "y": 3},
-          {"x": "09:37:00", "y": null},
-          {"x": "09:39:00", "y": null}
+          ["09:32:30", "y": 2},
+          ["09:35:00", "y": 3},
+          ["09:37:00", "y": null},
+          ["09:39:00", "y": null}
         ]
       }
     ]
@@ -1947,7 +1807,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:38:00",
     "finish": "09:39:00"
@@ -1958,16 +1818,13 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
         "excess": true,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:38:00", "y": 2.7},
-          {"x": "09:39:00", "y": 2.6}
+          ["09:38:00", "y": 2.7},
+          ["09:39:00", "y": 2.6}
         ]
       }
     ]
@@ -1978,16 +1835,13 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
         "excess": true,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:38:00", "y": null},
-          {"x": "09:39:00", "y": null}
+          ["09:38:00", "y": null},
+          ["09:39:00", "y": null}
         ]
       }
     ]
@@ -2002,7 +1856,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:32:00",
     "finish": "09:43:00",
@@ -2014,17 +1868,14 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
         "excess": true,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:32:00", "y": 1.8},
-          {"x": "09:36:00", "y": 2.9},
-          {"x": "09:40:00", "y": 2.5}
+          ["09:32:00", "y": 1.8},
+          ["09:36:00", "y": 2.9},
+          ["09:40:00", "y": 2.5}
         ]
       }
     ]
@@ -2035,17 +1886,14 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
         "excess": true,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:32:00", "y": 1.8},
-          {"x": "09:36:00", "y": 3},
-          {"x": "09:40:00", "y": 2.5}
+          ["09:32:00", "y": 1.8},
+          ["09:36:00", "y": 3},
+          ["09:40:00", "y": 2.5}
         ]
       }
     ]
@@ -2060,7 +1908,7 @@
 .. code-block:: json
 
   {
-    "tagId": ["cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt"],
+    "tagId": "1500c712-726a-103e-9264-a5021ec",
     "format": true,
     "start": "09:32:00",
     "finish": "09:43:00",
@@ -2072,20 +1920,17 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
         "excess": true,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:32:00", "y": 1.8},
-          {"x": "09:34:00", "y": 2.6},
-          {"x": "09:36:00", "y": 2.9},
-          {"x": "09:38:00", "y": 2.7},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:42:00", "y": 3.5}
+          ["09:32:00", "y": 1.8},
+          ["09:34:00", "y": 2.6},
+          ["09:36:00", "y": 2.9},
+          ["09:38:00", "y": 2.7},
+          ["09:40:00", "y": 2.5},
+          ["09:42:00", "y": 3.5}
         ]
       }
     ]
@@ -2096,20 +1941,17 @@
 .. code-block:: json
 
   {
-    "error": {
-      "id": 0
-    },
     "data": [
       {
         "excess": true,
-        "tagId": "cn=Tag1,cn=tags,cn=system,cn=Object1,cn=objects,cn=smt",
+        "tagId": "1500c712-726a-103e-9264-a5021ec2dae1",
         "data": [
-          {"x": "09:32:00", "y": 1.8},
-          {"x": "09:34:00", "y": 2.6},
-          {"x": "09:36:00", "y": 3},
-          {"x": "09:38:00", "y": null},
-          {"x": "09:40:00", "y": 2.5},
-          {"x": "09:42:00", "y": 3.5}
+          ["09:32:00", "y": 1.8},
+          ["09:34:00", "y": 2.6},
+          ["09:36:00", "y": 3},
+          ["09:38:00", "y": null},
+          ["09:40:00", "y": 2.5},
+          ["09:42:00", "y": 3.5}
         ]
       }
     ]
