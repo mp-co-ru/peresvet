@@ -1322,13 +1322,14 @@ class DataStoragesAppBase(svc.Svc, ABC):
         client = redis.Redis(connection_pool=self._cache_pool)
         async with client.pipeline() as pipe:
             tag_cache = await pipe.json().get(
-                f"{self._config.svc_name}:{tag_id}", "prsStep"
+                f"{self._config.svc_name}:{tag_id}", "prsStep", "prsValueTypeCode"
             ).execute()
             if tag_cache[0] is None:
                 self._logger.error(f"Тег {tag_id} отсутствует в кэше.")
                 await client.aclose()
                 return []
-            step = tag_cache[0]
+            step = tag_cache[0]["prsStep"]
+            value_type_code = tag_cache[0]["prsValueTypeCode"]
         await client.aclose()
 
         tag_data = await self._read_data(
@@ -1345,11 +1346,12 @@ class DataStoragesAppBase(svc.Svc, ABC):
         try:
             x1, y1 = self._last_point(tag_data[1][1], tag_data)
             if not step:
-                tag_data[0] = (
-                    linear_interpolated(
+                y = linear_interpolated(
                         (x0, y0), (x1, y1), finish
-                    ), tag_data[0][1], tag_data[2]
-                )
+                    )
+                if value_type_code == 0:
+                    y = round(y)
+                tag_data[0] = (y, tag_data[0][1], tag_data[0][2])
 
             # TODO: избавиться от этого try/except логикой приложения, т.к.
             # try/except отнимает слишком много времени
