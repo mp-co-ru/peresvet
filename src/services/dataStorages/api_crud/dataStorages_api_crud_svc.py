@@ -134,7 +134,7 @@ async def create(payload: DataStorageCreate, error_handler: svc.ErrorHandler = D
     """
     Метод добавляет Хранилище данных в иерархию.
 
-    **Request**:
+    **Запрос:**
 
         .. http:example::
             :request: ../../../../docs/source/samples/dataStorages/addDSIn.txt
@@ -177,7 +177,7 @@ async def create(payload: DataStorageCreate, error_handler: svc.ErrorHandler = D
             перед отдачей клиенту списка экземпляров они сортируются
             в соответствии с их индексами. Необязательный атрибут.
 
-    **Response**:
+    **Ответ:**
 
         * **id** (uuid) - id созданного тега
         * **detail** (str) - пояснения к ошибке

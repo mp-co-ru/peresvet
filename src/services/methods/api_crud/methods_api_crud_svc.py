@@ -86,7 +86,7 @@ async def create(payload: MethodCreate, error_handler: svc.ErrorHandler = Depend
     """
     Метод добавляет метод в иерархию.
 
-    **Request**:
+    **Запрос:**
 
         .. http:example::
             :request: ../../../../docs/source/samples/methods/addMethodIn.txt
@@ -119,7 +119,7 @@ async def create(payload: MethodCreate, error_handler: svc.ErrorHandler = Depend
                     перед отдачей клиенту списка экземпляров они сортируются соответственно  их индексам. Необязательный атрибут.
 
 
-    **Response**:
+    **Ответ:**
 
         * **id** (uuid) - id созданного тега
         * **detail** (str) - пояснения к ошибке

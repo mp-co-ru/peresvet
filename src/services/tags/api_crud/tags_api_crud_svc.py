@@ -126,7 +126,7 @@ async def create(payload: TagCreate, error_handler: svc.ErrorHandler = Depends()
     """
     Метод добавляет тег в иерархию.
 
-    **Request**:
+    **Запрос:**
 
         .. http:example::
             :request: ../../../../docs/source/samples/tags/addTagIn.txt
@@ -156,7 +156,7 @@ async def create(payload: TagCreate, error_handler: svc.ErrorHandler = Depends()
           * **prsMeasureUnits** (str) - Единицы измерения тега. Необязательный атрибут.
 
 
-    **Response**:
+    **Ответ:**
 
         * **id** (uuid) - id созданного тега
         * **detail** (str) - пояснения к ошибке
@@ -202,7 +202,7 @@ async def read(q: str | None = None, payload: TagRead | None = None, error_handl
           формируется фильтр для поиска. Необязательный аттрибут.
 
 
-    **Response**:
+    **Ответ:**
 
         * **data** (list) - данные прочитанного тега/тегов. Если ничего не найденно -
           пустой лист.
@@ -218,7 +218,7 @@ async def update(payload: TagUpdate, error_handler: svc.ErrorHandler = Depends()
     """
     Метод обновления тега в иерархии.
 
-    **Request**:
+    **Запрос:**
 
         .. http:example::
             :request: ../../../../docs/source/samples/tags/putTagIn.txt
@@ -244,7 +244,7 @@ async def update(payload: TagUpdate, error_handler: svc.ErrorHandler = Depends()
             в соответствии с их индексами.
 
 
-    **Response**:
+    **Ответ:**
 
         * {} - пустой словарь в случае успешного запроса.
         * **detail** (list) - Детали ошибки.
@@ -259,7 +259,7 @@ async def delete(payload: svc.NodeDelete, error_handler: svc.ErrorHandler = Depe
     """
     Метод удаления тега в иерархии.
 
-    **Request**:
+    **Запрос:**
 
         .. http:example::
             :request: ../../../../docs/source/samples/tags/deleteTagIn.txt
@@ -268,7 +268,7 @@ async def delete(payload: svc.NodeDelete, error_handler: svc.ErrorHandler = Depe
         * **id** (str | list[str]) - Идентификатор/ы удаляемого узла.
 
 
-    **Response**:
+    **Ответ:**
 
         * null - в случае успешного запроса.
         * **detail** (list) - Детали ошибки.

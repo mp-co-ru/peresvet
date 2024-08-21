@@ -47,8 +47,8 @@ sys.path.insert(0, os.path.abspath('../../src/services/tags/model_crud/'))
 project = 'МПК Пересвет'
 copyright = f'{datetime.date.today().year}, ООО Матч Поинт Консалтинг'
 author = 'V.Badashkin'
-version = '0.0'
-release = '0.0.1'
+version = '0.4'
+release = '0.4'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

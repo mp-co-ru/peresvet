@@ -2,16 +2,8 @@
 ====================
 Установим платформу и Grafana: :ref:`installation`.
 
-Grafana получает данные из платформы по протоколу MQTT, а также может
-отправлять данные в платформу.
-
-Для этого необходимы два плагина:
-
-#. `MQTT data source <https://grafana.com/grafana/plugins/grafana-mqtt-datasource/>`_
-#. `Ручной ввод данных <https://github.com/mp-co-ru/grafana-ui-plugin/releases/download/v0.2.0/mp-co-peresvet-app-0-2-0.zip>`_
-
-Оба плагина уже находятся в контейнере с Grafana,
-развёрнутом в процессе установки.
+Grafana обменивается данными с платформой с помощью плагина 
+`JSON API <https://grafana.com/docs/plugins/marcusolsson-json-datasource/latest/>`_.
 
 Первый запуск Grafana
 ---------------------

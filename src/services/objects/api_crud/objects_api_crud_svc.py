@@ -84,7 +84,7 @@ async def create(payload: ObjectCreate, error_handler: svc.ErrorHandler = Depend
     """
     Метод добавляет обьект в иерархию.
 
-    **Request**:
+    **Запрос:**
 
         .. http:example::
             :request: ../../../../docs/source/samples/objects/addObjectIn.txt
@@ -106,7 +106,7 @@ async def create(payload: ObjectCreate, error_handler: svc.ErrorHandler = Depend
             в соответствии с их индексами. Необязательный атрибут.
 
 
-    **Response**:
+    **Ответ:**
 
         * **id** (uuid) - id созданного обьекта
         * **detail** (str) - пояснения к ошибке
@@ -154,7 +154,7 @@ async def read(q: str | None = None, payload: ObjectRead | None = None, error_ha
           формируется фильтр для поиска. Необязательный атрибут.
 
 
-    **Response**:
+    **Ответ:**
 
         * **data** (list) - данные прочитанного тега/тегов. Если ничего не найденно -
           пустой лист.
@@ -170,7 +170,7 @@ async def update(payload: ObjectUpdate, error_handler: svc.ErrorHandler = Depend
     """
     Метод обновления обьекта в иерархии.
 
-    **Request**:
+    **Запрос:**
 
         .. http:example::
             :request: ../../../../docs/source/samples/objects/putObjectIn.txt
@@ -197,7 +197,7 @@ async def update(payload: ObjectUpdate, error_handler: svc.ErrorHandler = Depend
             в соответствии с их индексами. Необязательный аттрибут.
 
 
-    **Response**:
+    **Ответ:**
 
         * {} - пустой словарь в случае успешного запроса.
         * **detail** (list) - детали ошибки.
@@ -212,7 +212,7 @@ async def delete(payload: ObjectRead, error_handler: svc.ErrorHandler = Depends(
     """
     Метод удаления объекта в иерархии.
 
-    **Request**:
+    **Запрос:**
 
         .. http:example::
             :request: ../../../../docs/source/samples/objects/deleteObjectIn.txt
@@ -221,7 +221,7 @@ async def delete(payload: ObjectRead, error_handler: svc.ErrorHandler = Depends(
         * **id** (str | list[str]) - Идентификатор/ы удаляемого объекта.
 
 
-    **Response**:
+    **Ответ:**
 
         * null - в случае успешного запроса.
         * **detail** (list) - детали ошибки.
