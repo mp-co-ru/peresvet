@@ -9,8 +9,11 @@ services:
     restart: unless-stopped
     environment:
       - GF_RENDERING_SERVER_URL=http://renderer:8081/render
-      - GF_RENDERING_CALLBACK_URL=http://${HOST_GRAFANA}:3000/
+      - GF_RENDERING_CALLBACK_URL=http://${HOST_GRAFANA}:${PORT_GRAFANA}/
       - GF_LOG_FILTERS=rendering:debug
+      - GF_SERVER_DOMAIN=${NGINX_HOST}
+      - GF_SERVER_ROOT_URL=http://${NGINX_HOST}:${PORT_GRAFANA}/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
     volumes:
       - 'grafana_storage:/var/lib/grafana'
     ports:
