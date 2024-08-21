@@ -10,7 +10,6 @@ Authorization: No Auth
         "cn": "alert2",
         "description": "test_alert",
         "prsJsonConfigString": "node configuration",
-        "prsActive": true,
-        "prsDefault": false
+        "prsActive": true
     }
 }

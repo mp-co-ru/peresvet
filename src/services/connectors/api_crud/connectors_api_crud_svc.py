@@ -138,7 +138,7 @@ async def create(payload: ConnectorCreate, error_handler: svc.ErrorHandler = Dep
     """
     Метод добавления коннектора в иерархию.
 
-    **Request**:
+    **Запрос:**
 
         .. http:example::
             :request: ../../../../docs/source/samples/connectors/addConnectorIn.txt
@@ -176,7 +176,7 @@ async def create(payload: ConnectorCreate, error_handler: svc.ErrorHandler = Dep
             * **prsMaxDev** (int) - Величина значащего отклонения. Необязательный атрибут.
             * **objectClass** (str) - Класс объекта. Необязательный атрибут.
 
-    **Response**:
+    **Ответ:**
 
         * **id** (uuid) - id созданного коннектора.
         * **detail** (str) - пояснения к ошибке.
@@ -225,7 +225,7 @@ async def read(q: str | None = None, payload: ConnectorRead | None = None, error
          формируется фильтр для поиска. Необязательный аттрибут.
 
 
-    **Response**:
+    **Ответ:**
 
         * **data** (list) - данные прочитанного коннектора/коннекторов. Если
           ничего не найденно - пустой лист.
@@ -241,7 +241,7 @@ async def update(payload: ConnectorUpdate, error_handler: svc.ErrorHandler = Dep
     """
     Метод обновления коннектора из иерархии.
 
-    **Request**:
+    **Запрос:**
 
         .. http:example::
             :request: ../../../../docs/source/samples/connectors/putConnectorIn.txt
@@ -261,7 +261,7 @@ async def update(payload: ConnectorUpdate, error_handler: svc.ErrorHandler = Dep
             * **prsEntityTypeCode** (int) - Атрибут используется для определения типа. К примеру, хранилища данных могут быть разных типов.
             * **prsIndex** (int) - Если у узлов одного уровня иерархии проставлены индексы, то перед отдачей клиенту списка экземпляров они сортируются в соответствии с их индексами.
 
-    **Response**:
+    **Ответ:**
 
         * {} - Пустой словарь в случае успешного запроса.
         * **detail** (list) - Детали ошибки.
@@ -276,7 +276,7 @@ async def delete(payload: ConnectorRead, error_handler: svc.ErrorHandler = Depen
     """
     Метод удаления коннектора в иерархии.
 
-    **Request**:
+    **Запрос:**
 
         .. http:example::
             :request: ../../../../docs/source/samples/connectors/deleteConnectorIn.txt
@@ -285,7 +285,7 @@ async def delete(payload: ConnectorRead, error_handler: svc.ErrorHandler = Depen
         * **id** (str | list[str]) - Идентификатор/ы удаляемого узла.
 
 
-    **Response**:
+    **Ответ:**
 
         * null - в случае успешного запроса.
         * **detail** (list) - Детали ошибки.

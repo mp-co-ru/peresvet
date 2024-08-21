@@ -125,7 +125,7 @@ async def create(payload: ScheduleCreate):
     """
     Метод добавляет расписание в иерархию.
 
-    **Request**:
+    **Запрос:**
 
         .. http:example::
             :request: ../../../../docs/source/samples/schedules/addScheduleIn.txt
@@ -156,7 +156,7 @@ async def create(payload: ScheduleCreate):
           * **prsMeasureUnits** (str) - Единицы измерения тега. Необязательный атрибут;
 
 
-    **Response**:
+    **Ответ:**
 
         * **id** (uuid) - id созданного тега
         * **detail** (str) - пояснения к ошибке

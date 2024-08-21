@@ -1,10 +1,7 @@
 """
-Модуль содержит примеры запросов и ответов на них, параметров которые могут входить в
-запрос, в сервисе alerts.
+Запросы на создание, чтение, обновление, удаление тревог.
 """
 import sys
-from uuid import UUID
-from typing import Any, List
 from pydantic import Field
 from fastapi import APIRouter, Depends
 
@@ -46,7 +43,7 @@ class AlertUpdate(svc.NodeUpdate):
 class AlertsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с тегами в иерархии.
 
-    Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``\,
+    Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``,
     в которую публикует сообщения сервис ``tags_api_crud`` (все имена
     указываются в переменных окружения).
 
@@ -84,31 +81,44 @@ error_handler = svc.ErrorHandler()
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: AlertCreate, error_handler: svc.ErrorHandler = Depends()):
     """
-    Метод добавляет тревогу в иерархию.
+    Метод добавляет тревогу в модель.
 
-    **Request**:
+    **Запрос:**
 
         .. http:example::
             :request: ../../../../docs/source/samples/alerts/addAlertIn.txt
             :response: ../../../../docs/source/samples/alerts/addAlertOut.txt
 
-        * **parentId** (str) - id тега к которому привязывается тревога. Обязательный атрибут
+        * **parentId** (str) - id тега, к которому привязывается тревога. Обязательный атрибут.
         * **attributes** (dict) - параметры создаваемой тревоги. Необязательное поле.
 
           * **cn** (str) - имя тревоги. Необязательный атрибут.
           * **description** (str) - описание экземпляра. Необязательный атрибут.
           * **prsJsonConfigString** (str) - Строка содержит, в случае необходимости,
             конфигурацию узла. Интерпретируется сервисом, управляющим сущностью,
-            которой принадлежит экземпляр. Необязательный аттрибут
-          * **prsActive** (bool) - Определяет, активен ли экземпляр. Необязательный атрибут
-          * **prsDefault** (bool) - Если = ``True``, то данная тревога считаеться
-            тревогой по умолчанию в списке равноправных узлов данного уровня иерархии.
+            которой принадлежит экземпляр. 
+            При создании тревоги атрибут ``prsJsonConfigString`` имеет формат
+
+            .. code:: python
+
+                {
+                    # "тревожное" значение тега
+                    "value": 0
+                    # способ сравнения значения тега с "тревожным":
+                    # если high = true, то тревога возникает, если значение тега >= value
+                    # иначе - значение тега < value
+                    "high": true
+                    # флаг автоквитирования
+                    "autoAck": true
+                }
+            Обязательный аттрибут.
+          * **prsActive** (bool) - Определяет, активен ли экземпляр. По умолчанию = ``true``.
             Необязательный атрибут.
           * **prsIndex** (int) - Если у узлов одного уровня иерархии проставлены индексы, то
             перед отдачей клиенту списка экземпляров они сортируются в соответствии
             с их индексами. Необязательный атрибут.
 
-    **Response**:
+    **Ответ:**
 
         * **id** (str) - идентификатор созданной тревоги.
         * **detail** (str) - пояснение к возникшей ошибке.
@@ -138,7 +148,8 @@ async def read(q: str | None = None, payload: AlertRead | None = None, error_han
 
     **Параметры запроса.**
 
-       * **id** (str | list(str)) - идентификатор тревоги, которую хотитим прочитать. Необязательный атрибут.
+       * **id** (str | list(str)) - идентификатор тревоги (тревог), данные о которой(-ых) хотим прочитать. 
+         Необязательный атрибут.
        * **base** (str) - Базовый узел для поиска. Обязательный атрибут.
        * **deref** (bool) - Флаг разыменования ссылок. По умолчанию true.
        * **scope** (int) - Масштаб поиска. По умолчанию 1.\n
@@ -149,7 +160,7 @@ async def read(q: str | None = None, payload: AlertRead | None = None, error_han
          формируется фильтр для поиска.
        * **attributes** (list[str]) - Список атрибутов, значения которых необходимо вернуть в ответе. По умолчанию - ['\*'], то есть все атрибуты (кроме системных).
 
-    **Response**:
+    **Ответ:**
 
         * **data** (list) - найденные тревоги с их параметрами.
         * **detail** (str) - пояснение к возникшей ошибке.
@@ -165,7 +176,7 @@ async def update(payload: AlertUpdate, error_handler: svc.ErrorHandler = Depends
     """
     Метод обновляет тревогу в иерархии.
 
-    **Request**:
+    **Запрос:**
 
         .. http:example::
             :request: ../../../../docs/source/samples/alerts/putAlertIn.txt
@@ -187,7 +198,7 @@ async def update(payload: AlertUpdate, error_handler: svc.ErrorHandler = Depends
             перед отдачей клиенту списка экземпляров они сортируются
             в соответствии с их индексами. Необязательный атрибут
 
-    **Response**:
+    **Ответ:**
 
         * {} - пустой словарь в случае успешного запроса.
         * **detail** (list) - список с поснениями к ошибке.
@@ -202,7 +213,7 @@ async def delete(payload: svc.NodeDelete, error_handler: svc.ErrorHandler = Depe
     """
     Метод удаляет тревогу из иерархии.
 
-    **Request**:
+    **Запрос:**
 
         .. http:example::
             :request: ../../../../docs/source/samples/alerts/deleteAlertIn.txt
@@ -210,7 +221,7 @@ async def delete(payload: svc.NodeDelete, error_handler: svc.ErrorHandler = Depe
 
         * **id** (str) - id тревоги для удаления. Обязательное поле.
 
-    **Response**:
+    **Ответ:**
 
         * null - в случае успешного запроса
         * **detail** (list) - список с поснениями к ошибке
