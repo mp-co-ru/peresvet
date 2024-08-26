@@ -78,7 +78,7 @@ class BaseSvcSettings(BaseSettings, BaseModel):
         #    "type": "direct",
             #: routing_key, с которым будут публиковаться сообщения обменником
             #: pub_exchange_type
-        #    "routing_key": ["base_svc_publish"]
+        #    "routing_key": "base_svc_publish"
         #}
     }
 

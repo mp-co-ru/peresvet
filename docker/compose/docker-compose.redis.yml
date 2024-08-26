@@ -1,4 +1,3 @@
-version: '3.9'
 services:
   redis:
     image: redis/redis-stack:7.2.0-v6
@@ -6,3 +5,13 @@ services:
     ports:
       - ${PORT_REDIS}:${PORT_REDIS}
       - ${PORT_REDIS_INSIGHT}:${PORT_REDIS_INSIGHT}
+    networks:
+      - peresvet
+
+networks:
+  peresvet:
+    driver: bridge
+    ipam:
+      config:
+          - subnet: 10.66.0.0/16
+            gateway: 10.66.0.1

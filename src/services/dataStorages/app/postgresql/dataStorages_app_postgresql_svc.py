@@ -418,6 +418,8 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
                     # если хранилище неактивно, данные в него не записываем
                     if not active[0]:
+                        self._logger.error(
+                            f"Хранилище {ds_id} неактивно.")
                         continue
 
                     async with self._connection_pools[ds_id].acquire() as conn:
