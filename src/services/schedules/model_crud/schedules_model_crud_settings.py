@@ -13,7 +13,7 @@ class SchedulesModelCRUDSettings(ModelCRUDSettings):
         "main": {
             "name": "peresvet",
             "type": "direct",
-            "routing_key": ["schedules_model_crud_publish"]
+            "routing_key": "schedules_model_crud_publish"
         }
     }
 

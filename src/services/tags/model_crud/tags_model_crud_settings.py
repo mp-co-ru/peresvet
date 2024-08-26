@@ -13,7 +13,7 @@ class TagsModelCRUDSettings(ModelCRUDSettings):
         "main": {
             "name": "peresvet",
             "type": "direct",
-            "routing_key": ["tags_model_crud_publish"]
+            "routing_key": "tags_model_crud_publish"
         }
     }
 

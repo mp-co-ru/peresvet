@@ -8,9 +8,9 @@ services:
     hostname: ${HOST_GRAFANA}
     restart: unless-stopped
     environment:
-      - GF_RENDERING_SERVER_URL=http://renderer:8081/render
-      - GF_RENDERING_CALLBACK_URL=http://${HOST_GRAFANA}:${PORT_GRAFANA}/
-      - GF_LOG_FILTERS=rendering:debug
+      #- GF_RENDERING_SERVER_URL=http://renderer:8081/render
+      #- GF_RENDERING_CALLBACK_URL=http://${HOST_GRAFANA}:${PORT_GRAFANA}/
+      #- GF_LOG_FILTERS=rendering:debug
       - GF_SERVER_DOMAIN=${NGINX_HOST}
       - GF_SERVER_ROOT_URL=http://${NGINX_HOST}:${PORT_GRAFANA}/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
@@ -18,12 +18,24 @@ services:
       - 'grafana_storage:/var/lib/grafana'
     ports:
       - 3000:3000
+    networks:
+      - peresvet
     
-  renderer:
-    image: grafana/grafana-image-renderer:latest
-    hostname: renderer
-    ports:
-      - 8081
+  #renderer:
+  #  image: grafana/grafana-image-renderer:latest
+  #  hostname: renderer
+  #  ports:
+  #    - 8081
+  #  networks:
+  #    - peresvet
+
+networks:
+  peresvet:
+    driver: bridge
+    ipam:
+      config:
+          - subnet: 10.66.0.0/16
+            gateway: 10.66.0.1
 
 volumes:
   grafana_storage: {}

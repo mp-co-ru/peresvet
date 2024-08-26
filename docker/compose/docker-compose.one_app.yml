@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   one_app:
     container_name: one_app
@@ -10,3 +8,13 @@ services:
 
     environment:
       TZ: ${TIME_ZONE}
+    networks:
+      - peresvet
+
+networks:
+  peresvet:
+    driver: bridge
+    ipam:
+      config:
+          - subnet: 10.66.0.0/16
+            gateway: 10.66.0.1
