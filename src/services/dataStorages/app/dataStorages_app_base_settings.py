@@ -20,7 +20,7 @@ class DataStoragesAppBaseSettings(SvcSettings):
             "type": "direct",
             #: routing_key, с которым будут публиковаться сообщения,
             # вычисляется во время работы сервиса: это - tag_id или alert_id
-            #"routing_key": ["dataStorages_app_postgresql"]
+            #"routing_key": "dataStorages_app_postgresql"
         }
     }
 

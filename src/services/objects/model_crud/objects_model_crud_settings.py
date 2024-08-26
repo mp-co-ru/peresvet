@@ -13,7 +13,7 @@ class ObjectsModelCRUDSettings(ModelCRUDSettings):
         "main": {
             "name": "peresvet",
             "type": "direct",
-            "routing_key": ["objects_model_crud_publish"]
+            "routing_key": "objects_model_crud_publish"
         }
     }
 

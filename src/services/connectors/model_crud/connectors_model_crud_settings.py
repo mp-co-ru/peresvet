@@ -13,7 +13,7 @@ class ConnectorsModelCRUDSettings(ModelCRUDSettings):
         "main": {
             "name": "peresvet",
             "type": "direct",
-            "routing_key": ["connectors_model_crud_publish"]
+            "routing_key": "connectors_model_crud_publish"
         }
     }
 

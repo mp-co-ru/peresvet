@@ -61,34 +61,6 @@ class Svc(BaseSvc):
                 self._logger.error(f"Ошибка связи с сервером ldap: {ex}")
                 await asyncio.sleep(5)
 
-    async def _amqp_connect(self) -> None:
-        await super()._amqp_connect()
-
-        # создадим подписки
-        for key, item in self._config.subscribe.items():
-            self._amqp_subscribe[key] = {
-                "publish": {},
-                "consume": {}
-            }
-
-            # сюда будем публиковать заявки на уведомления
-            self._amqp_subscribe[key]["publish"]["exchange"] = \
-                await self._amqp_channel.declare_exchange(
-                    item["publish"]["name"], item["publish"]["type"], durable=True
-            )
-            self._amqp_subscribe[key]["publish"]["routing_key"] = \
-                item["publish"]["routing_key"]
-
-            # для получения уведомлений подсоединим свою главную очередь
-            self._amqp_subscribe[key]["consume"]["exchange"] = \
-                await self._amqp_channel.declare_exchange(
-                    item["consume"]["name"], item["consume"]["type"], durable=True
-            )
-            await self._amqp_consume["queue"].bind(
-                exchange=self._amqp_subscribe[key]["consume"]["exchange"],
-                routing_key=self._amqp_subscribe[key]["consume"]["routing_key"]
-            )
-
     async def _get_subscribers_node_id(self, node_id: str) -> str:
         """Метод возвращает id подузла ``cn=subscribers,cn=system`` для
         родительского узла ``node_id``\.

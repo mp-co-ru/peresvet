@@ -843,8 +843,11 @@ class ModelCRUDSvc(Svc):
                 }
             }
 
-            for r_k in self._config.publish["main"]["routing_key"]:
-                await self._post_message(mes=body, reply=False, routing_key=r_k)
+            await self._post_message(
+                mes=body, 
+                reply=False, 
+                routing_key=self._config.publish["main"]["routing_key"]
+            )
 
         return res
 

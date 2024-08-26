@@ -13,7 +13,7 @@ class AlertsModelCRUDSettings(ModelCRUDSettings):
         "main": {
             "name": "peresvet",
             "type": "direct",
-            "routing_key": ["alerts_model_crud_publish"]
+            "routing_key": "alerts_model_crud_publish"
         }
     }
 

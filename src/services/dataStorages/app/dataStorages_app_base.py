@@ -264,6 +264,8 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
         if self._config.datastorages_id:
             return
+        
+        await self._add_supported_ds(mes["data"]["id"])
 
     async def updated(self, mes: dict) -> None:
         # обновление атрибутов хранилища
