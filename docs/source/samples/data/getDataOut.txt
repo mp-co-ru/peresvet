@@ -11,12 +11,12 @@ Content-type: application/json
                 [
                     1.0,
                     "<timestamp>",
-                    3
+                    null
                 ],
                 [
                     7.0,
                     "<timestamp>",
-                    9
+                    null
                 ]
             ]
         }

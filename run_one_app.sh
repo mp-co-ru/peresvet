@@ -10,7 +10,7 @@ if [ -n "$1" ]
 then
     back=$1
 fi
-sed -i "s/NGINXHOST=.*/$HOSTNAME/" docker/compose/.cont_one_app.env
+sed -i "s/NGINX_HOST=.*/NGINX_HOST=$HOSTNAME/" docker/compose/.cont_one_app.env
 docker compose $back --env-file docker/compose/.cont_one_app.env \
 -f docker/compose/docker-compose.redis.yml \
 -f docker/compose/docker-compose.rabbitmq.yml \
