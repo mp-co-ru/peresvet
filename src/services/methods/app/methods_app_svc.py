@@ -25,7 +25,6 @@ class MethodsApp(svc.Svc):
 
     def __init__(self, settings: MethodsAppSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
-        self._cache = Cache(settings.ldap_url)
         self._method_broker = None
         self._executor = None
         self._broker = None
@@ -56,10 +55,10 @@ class MethodsApp(svc.Svc):
         for tag_item in mes["data"]["data"]:
             tag_id = tag_item["tagId"]
             tag_data = tag_item["data"]
-            methods_ids = await self._cache.get_key(
-                self._cache_key(tag_id, self._config.svc_name), json_loads=True
-            )
-            if not methods_ids:
+            methods_ids = await self._cache.get(
+                name=self._cache_key(tag_id, self._config.svc_name)
+            ).exec()
+            if not methods_ids[0]:
                 self._logger.debug(f"К тегу {tag_id} не привязаны методы.")
                 continue
 
@@ -71,8 +70,8 @@ class MethodsApp(svc.Svc):
                 }
             ]
             """
-            self._logger.debug(f"methods_ids: {methods_ids}")
-            for item in methods_ids:
+            self._logger.debug(f"methods_ids: {methods_ids[0]}")
+            for item in methods_ids[0]:
                 parameters = await self._hierarchy.search({
                     "base": item["methodId"],
                     "filter": {"cn": ["*"], "objectClass": ["prsMethodParameter"]},
@@ -125,20 +124,6 @@ class MethodsApp(svc.Svc):
         self._logger.debug(f"Before call: method_id: {method_id}; method_name: {method_name}")
 
         try:
-            '''
-            async with NullExecutor(Registry(project=self._config.svc_name)) as executor:
-                async with RabbitMQBroker(
-                    executor, amqp_url=self._config.amqp_url,
-                ) as broker:
-                    res = await broker.call(method_name[0][2]["prsMethodAddress"][0], *params_data)
-
-                    if isinstance(res, dict) and res.get("error") is not None:
-                        self._logger.error(f"Ошибка при вычислении тега {tag_id}: {res.get('error')}")
-                        return
-
-                    self._logger.debug(f"Результат: {res}. Тег: {tag_id}")
-                '''
-
             res = await self._broker.call(method_name[0][2]["prsMethodAddress"][0], *params_data)
             if isinstance(res, dict) and res.get("error") is not None:
                 self._logger.error(f"Ошибка при вычислении тега {tag_id}: {res.get('error')}")
@@ -208,14 +193,14 @@ class MethodsApp(svc.Svc):
             self._logger.debug(f"Метод {method[0]} прочитан.")
 
         for tag_id, methods_ids in cache_data.items():
-            await self._cache.set_key(
-                self._cache_key(tag_id, self._config.svc_name),
-                methods_ids
+            self._cache.set(
+                name=self._cache_key(tag_id, self._config.svc_name),
+                obj=methods_ids
             )
+        await self._cache.exec()
 
     async def on_startup(self) -> None:
         await super().on_startup()
-        await self._cache.connect()
         try:
             await self._read_methods()
         except Exception as ex:

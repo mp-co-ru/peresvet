@@ -128,3 +128,5 @@ class BaseSvcSettings(BaseSettings, BaseModel):
             dotenv_settings,
             file_secret_settings,
         )
+    
+    cache_url: str = "redis://redis:6379?decode_responses=True&protocol=3"
