@@ -145,7 +145,7 @@ class AlertsApp(svc.Svc):
                 alert_id = alert[0]
                 alert_cache_key = self._cache_key(alert_id, self._config.svc_name)
                 alert_data = await self._cache.get(
-                    name=alert_cache_key
+                    alert_cache_key
                 ).exec()
 
                 self._logger.debug(f"Alert cache data: {alert_data}")

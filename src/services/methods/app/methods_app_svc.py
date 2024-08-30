@@ -56,7 +56,7 @@ class MethodsApp(svc.Svc):
             tag_id = tag_item["tagId"]
             tag_data = tag_item["data"]
             methods_ids = await self._cache.get(
-                name=self._cache_key(tag_id, self._config.svc_name)
+                self._cache_key(tag_id, self._config.svc_name)
             ).exec()
             if not methods_ids[0]:
                 self._logger.debug(f"К тегу {tag_id} не привязаны методы.")
