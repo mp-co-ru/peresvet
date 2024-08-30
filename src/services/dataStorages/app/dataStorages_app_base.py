@@ -206,20 +206,15 @@ class DataStoragesAppBase(svc.Svc, ABC):
         tags = await self._hierarchy.search(payload)
         tag_ids = [tag[2]["cn"][0] for tag in tags]
 
-        client = redis.Redis(connection_pool=self._cache_pool)
         # добавим ключ "svc_name:ds_id": {}
-        async with client.pipeline() as pipe:
-            pipe.json().set(
-                f"{self._config.svc_name}:{ds_id}",
-                "$",
-                {
+        await (self._cache.set(name=f"{self._config.svc_name}:{ds_id}",
+                obj={
                     "prsActive": ds[0][2]["prsActive"][0] == "TRUE",
                     "tags": tag_ids
-                }, nx=True)
-            await pipe.execute()
+                }, nx=True)).exec()
 
-            for tag_id in tag_ids:
-                await self._bind_tag(tag_id, True)
+        for tag_id in tag_ids:
+            await self._bind_tag(tag_id, True)
 
     async def on_startup(self) -> None:
 
@@ -297,20 +292,18 @@ class DataStoragesAppBase(svc.Svc, ABC):
     async def deleted(self, mes: dict) -> None:
         # удаление хранилища
         ds_id = mes["data"]["id"]
-        client = redis.Redis(connection_pool=self._cache_pool)
+        res = await self._cache.get(
+            f"{self._config.svc_name}:{ds_id}", "tags"
+        ).exec()
 
-        async with client.pipeline(transaction=True) as pipe:
-            res = await pipe.json().get(
-                f"{self._config.svc_name}:{ds_id}", "tags"
-            ).execute()
-            pipe.delete(f"{self._config.svc_name}:{ds_id}")
+        self._cache.delete(f"{self._config.svc_name}:{ds_id}")
 
-            for tag_id in res[0]:
-                pipe.json().delete(
-                    f"{self._config.svc_name}:{tag_id}",
-                    f"dss.{ds_id}"
-                )
-            await pipe.execute()
+        for tag_id in res[0]:
+            self._cache.delete(
+                f"{self._config.svc_name}:{tag_id}",
+                f"dss.{ds_id}"
+            )
+        await self._cache.exec()
 
     async def alarm_on(self, mes: dict) -> None:
         """Факт возникновения тревоги.
@@ -584,14 +577,12 @@ class DataStoragesAppBase(svc.Svc, ABC):
         await self._bind_tag(tag_id, True)
 
         try:
-            client = redis.Redis(connection_pool=self._cache_pool)
             # добавим ключ "svc_name:ds_id": {}
-            async with client.pipeline() as pipe:
-                await pipe.json().arrappend(
-                    f"{self._config.svc_name}:{ds_id}",
-                    "$.tags",
-                    tag_id).execute()
-            await client.aclose()
+            await self._cache.append(
+                f"{self._config.svc_name}:{ds_id}",
+                    "tags",
+                    tag_id
+            ).exec()            
         except Exception as ex:
             self._logger.error(f"Ошибка привязки тега {ex}")
             return {"prsStore": None}
@@ -703,24 +694,19 @@ class DataStoragesAppBase(svc.Svc, ABC):
             # если есть кэш данных, то сначала сохраним его
             self._write_tag_data_to_db(tag_id)
 
-            client = redis.Redis(connection_pool=self._cache_pool)
+            await self._cache.delete(
+                f"{self._config.svc_name}:{tag_id}",
+                f"dss.{ds_id}"
+            ).exec()
 
-            async with client.pipeline(transaction=True) as pipe:
-                pipe.json().delete(
-                    f"{self._config.svc_name}:{tag_id}",
-                    f"dss.{ds_id}"
-                ).execute()
-
-                index = await pipe.json().arrindex(
-                    f"{self._config.svc_name}:{ds_id}", "tags", tag_id
-                ).execute()
-                if index[0] > -1:
-                    await pipe.json().arrpop(
-                        f"{self._config.svc_name}:{ds_id}", "tags", index[0]
-                    ).execute()
-
-            await client.aclose()
-
+            index = await self._cache.index(
+                f"{self._config.svc_name}:{ds_id}", "tags", tag_id
+            ).exec()
+            if index[0] > -1:
+                await self._cache.pop(
+                    f"{self._config.svc_name}:{ds_id}", "tags", index[0]
+                ).exec()
+            
             self._bind_tag(tag_id, False)
         except Exception as ex:
             self._logger.error(f"Ошибка отвязки тега: {ex}")
@@ -751,53 +737,49 @@ class DataStoragesAppBase(svc.Svc, ABC):
         self._logger.info("Запись кэша данных в хранилища...")
         scheduled = False
         try:
-            client = redis.Redis(connection_pool=self._cache_pool)
-            async with client.pipeline() as pipe:
-
-                if not tag_ids:
-                    # если пустой список тегов, это значит, что сбрасывается весь кэш,
-                    # то есть происходит запуск процедуры по расписанию
-                    scheduled = True
-                    tag_ids = set()
-                    for ds_id in self._ds_ids:
-                        # определим, активна ли база
-                        res = await pipe.json().get(
-                            f"{self._config.svc_name}:{ds_id}", "prsActive", "tags"
-                        ).execute()
-                        if res[0] is None:
-                            self._logger.warning(f"Нет кэша для хранилища {ds_id}")
-                            continue
-                        if not res[0]["prsActive"]:
-                            self._logger.info(
-                                f"Хранилище {ds_id} неактивно."
-                            )
-                            continue
-                        tag_ids = tag_ids.union(set(res[0]["tags"]))
-
-                for tag_id in tag_ids:
-                    pipe.json().get(
-                        f"{self._config.svc_name}:{tag_id}",
-                        f"prsActive"
-                    )
-                    res = await pipe.execute()
+            
+            if not tag_ids:
+                # если пустой список тегов, это значит, что сбрасывается весь кэш,
+                # то есть происходит запуск процедуры по расписанию
+                scheduled = True
+                tag_ids = set()
+                for ds_id in self._ds_ids:
+                    # определим, активна ли база
+                    res = await self._cache.get(
+                        f"{self._config.svc_name}:{ds_id}", "prsActive", "tags"
+                    ).exec()
                     if res[0] is None:
-                        # если нет кэша у тега
-                        if not await self._create_tag_cache(tag_id):
-                            index = await pipe.json().arrindex(
-                                f"{self._config.svc_name}:{ds_id}", "tags", tag_id
-                            ).execute()
-                            if index[0] > -1:
-                                await pipe.json().arrpop(
-                                    f"{self._config.svc_name}:{ds_id}", "tags", index[0]
-                                ).execute()
-                    else:
-                        await self._write_tag_data_to_db(tag_id)
+                        self._logger.warning(f"Нет кэша для хранилища {ds_id}")
+                        continue
+                    if not res[0]["prsActive"]:
+                        self._logger.info(
+                            f"Хранилище {ds_id} неактивно."
+                        )
+                        continue
+                    tag_ids = tag_ids.union(set(res[0]["tags"]))
+
+            for tag_id in tag_ids:
+                res = await self._cache.get(
+                    f"{self._config.svc_name}:{tag_id}",
+                    f"prsActive"
+                ).exec()
+                if res[0] is None:
+                    # если нет кэша у тега
+                    if not await self._create_tag_cache(tag_id):
+                        index = await self._cache.index(
+                            f"{self._config.svc_name}:{ds_id}", "tags", tag_id
+                        ).exec()
+
+                        if index[0] > -1:
+                            await self._cache.pop(
+                                f"{self._config.svc_name}:{ds_id}", "tags", index[0]
+                            ).exec()
+                else:
+                    await self._write_tag_data_to_db(tag_id)
 
         except Exception as ex:
             self._logger.error(f"Ошибка записи данных в базу: {ex}")
-        finally:
-            await client.aclose()
-
+        
         loop = asyncio.get_event_loop()
 
         if scheduled:
@@ -822,37 +804,32 @@ class DataStoragesAppBase(svc.Svc, ABC):
         try:
             self._logger.info(f"{self._config.svc_name}: tag set: {mes}")
 
-            client = redis.Redis(connection_pool=self._cache_pool)
+            for tag_data in mes["data"]["data"]:
+                tag_id = tag_data["tagId"]
 
-            async with client.pipeline(transaction=True) as pipe:
-                for tag_data in mes["data"]["data"]:
-                    tag_id = tag_data["tagId"]
+                # проверим, активен ли тег и активны ли хранилища
+                res = await self._cache.get(
+                    f"{self._config.svc_name}:{tag_id}",
+                    f"$"
+                ).exec()
 
-                    # проверим, активен ли тег и активны ли хранилища
-                    pipe.json().get(
+                if res[0] is None:
+                    # если нет кэша у тега
+                    cache = await self._create_tag_cache(tag_id)
+                else:
+                    cache = res[0][0]
+                if not cache["prsActive"]:
+                    self._logger.info(f"Тег {tag_id} неактивен, данные не записываются.")
+                else:
+                    await self._cache.append(
                         f"{self._config.svc_name}:{tag_id}",
-                        f"$"
-                    )
-                    res = await pipe.execute()
-                    if res[0] is None:
-                        # если нет кэша у тега
-                        cache = await self._create_tag_cache(tag_id)
-                    else:
-                        cache = res[0][0]
-                    if not cache["prsActive"]:
-                        self._logger.info(f"Тег {tag_id} неактивен, данные не записываются.")
-                    else:
-                        await pipe.json().arrappend(
-                            f"{self._config.svc_name}:{tag_id}",
-                            f"$.data", *tag_data["data"]
-                        ).execute()
-                        self._logger.info(f"Кэш тега {tag_id} обновлён.")
+                        f"$.data", *tag_data["data"]
+                    ).exec()
+                    self._logger.info(f"Кэш тега {tag_id} обновлён.")
 
         except Exception as ex:
             self._logger.error(f"Ошибка обновления данных в кэше: {ex}")
-        finally:
-            await client.aclose()
-
+        
     async def _create_tag_cache(self, tag_id: str) -> dict | bool | None:
         """Функция подготовки кэша с данными о теге.
 
@@ -929,12 +906,9 @@ class DataStoragesAppBase(svc.Svc, ABC):
         # ------------------------------------------------------------
 
         try:
-            client = redis.Redis(connection_pool=self._cache_pool)
-            async with client.pipeline(transaction=True) as pipe:
-                await pipe.json().set(
-                    f"{self._config.svc_name}:{tag_id}", "$",
-                    tag_cache, nx=True
-                ).execute()
+            await self._cache.set(
+                name=f"{self._config.svc_name}:{tag_id}", obj=tag_cache, nx=True
+            ).exec()
         except Exception as ex:
             self._logger.error(ex)
 
@@ -1321,19 +1295,15 @@ class DataStoragesAppBase(svc.Svc, ABC):
                             finish: int) -> List[dict]:
         """ Получение значения на текущую метку времени
         """
-        client = redis.Redis(connection_pool=self._cache_pool)
-        async with client.pipeline() as pipe:
-            tag_cache = await pipe.json().get(
-                f"{self._config.svc_name}:{tag_id}", "prsStep", "prsValueTypeCode"
-            ).execute()
-            if tag_cache[0] is None:
-                self._logger.error(f"Тег {tag_id} отсутствует в кэше.")
-                await client.aclose()
-                return []
-            step = tag_cache[0]["prsStep"]
-            value_type_code = tag_cache[0]["prsValueTypeCode"]
-        await client.aclose()
-
+        tag_cache = await self._cache.get(
+            f"{self._config.svc_name}:{tag_id}", "prsStep", "prsValueTypeCode"
+        ).exec()
+        if tag_cache[0] is None:
+            self._logger.error(f"Тег {tag_id} отсутствует в кэше.")
+            return []
+        step = tag_cache[0]["prsStep"]
+        value_type_code = tag_cache[0]["prsValueTypeCode"]
+        
         tag_data = await self._read_data(
             tag_id=tag_id, start=None, finish=finish, count=1,
             one_before=False, one_after=not step, order=Order.CN_DESC
@@ -1375,18 +1345,14 @@ class DataStoragesAppBase(svc.Svc, ABC):
                              finish: int,
                              count: int = None) -> List[dict]:
 
-        client = redis.Redis(connection_pool=self._cache_pool)
-        async with client.pipeline() as pipe:
-            tag_cache = await pipe.json().get(
-                f"{self._config.svc_name}:{tag_id}", "prsStep"
-            ).execute()
-            if tag_cache[0] is None:
-                self._logger.error(f"Тег {tag_id} отсутствует в кэше.")
-                await client.aclose()
-                return []
-            step = tag_cache[0]
-        await client.aclose()
-
+        tag_cache = await self._cache.get(
+            f"{self._config.svc_name}:{tag_id}", "prsStep"
+        ).exec()
+        if tag_cache[0] is None:
+            self._logger.error(f"Тег {tag_id} отсутствует в кэше.")
+            return []
+        step = tag_cache[0]
+        
         tag_data = await self._read_data(
             tag_id, start, finish,
             (Order.CN_DESC if count is not None and start is None else Order.CN_ASC),

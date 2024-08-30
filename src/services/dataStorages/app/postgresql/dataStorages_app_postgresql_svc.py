@@ -356,33 +356,28 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
     async def unlink_tag(self, mes: dict) -> None:
         tag_id = mes["data"]["tagId"]
         try:
-            client = redis.Redis(connection_pool=self._cache_pool)
+            res = await self._cache.get(
+                self._config.svc_name,
+                f"$.tags.{tag_id}"
+            ).exec()
 
-            async with client.pipeline(transaction=True) as pipe:
-                pipe.json().get(
-                    self._config.svc_name,
-                    f"$.tags.{tag_id}"
+            tag_params = res[0][0]
+
+            if not tag_params:
+                self._logger.warning(f"Тег {mes[tag_id]} не привязан к хранилищу.")
+                return
+
+            async with tag_params["ds"].acquire() as conn:
+                await conn.execute(
+                    f'drop table if exists "{tag_params["table"]}"'
                 )
 
-                res = await pipe.execute()
-                tag_params = res[0][0]
+            await self._cache.delete(
+                self._config.svc_name,
+                f"$.tags.{tag_id}"
+            ).exec()
 
-                if not tag_params:
-                    self._logger.warning(f"Тег {mes[tag_id]} не привязан к хранилищу.")
-                    return
-
-                async with tag_params["ds"].acquire() as conn:
-                    await conn.execute(
-                        f'drop table if exists "{tag_params["table"]}"'
-                    )
-
-                pipe.json().delete(
-                    self._config.svc_name,
-                    f"$.tags.{tag_id}"
-                )
-                await pipe.execute()
-
-            await client.aclose()
+            
         except Exception as ex:
             self._logger.error(f"Ошибка отвязки тега: {ex}")
 
@@ -396,54 +391,53 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         self._logger.debug(f"Запись данных тега '{tag_id}' из кэша в хранилища...")
 
         try:
-            client = redis.Redis(connection_pool=self._cache_pool)
-            # добавим ключ "svc_name:ds_id": {}
-            async with client.pipeline() as pipe:
-                pipe.json().get(f"{self._config.svc_name}:{tag_id}", "$")
-                pipe.json().set(f"{self._config.svc_name}:{tag_id}", "$.data", [])
-                tag_cache = await pipe.execute()
+            tag_cache = await self._cache.get(
+                f"{self._config.svc_name}:{tag_id}", "$"
+            ).set(
+                f"{self._config.svc_name}:{tag_id}", "$.data", []
+            ).exec()
 
-                if not tag_cache[0][0]["data"]:
-                    self._logger.debug(f"Кэш данных тега {tag_id} пустой.")
-                    return
+            if not tag_cache[0][0]["data"]:
+                self._logger.debug(f"Кэш данных тега {tag_id} пустой.")
+                return
 
-                for ds_id in tag_cache[0][0]["dss"].keys():
-                    active = await pipe.json().get(
-                        f"{self._config.svc_name}:{ds_id}", "prsActive"
-                    ).execute()
-                    if active[0] is None:
-                        self._logger.error(
-                            f"Несоответствие кэша тега {tag_id} c кэшем хранилища {ds_id}")
-                        continue
+            for ds_id in tag_cache[0][0]["dss"].keys():
+                active = await self._cache.get(
+                    f"{self._config.svc_name}:{ds_id}", "prsActive"
+                ).exec()
+                if active[0] is None:
+                    self._logger.error(
+                        f"Несоответствие кэша тега {tag_id} c кэшем хранилища {ds_id}")
+                    continue
 
-                    # если хранилище неактивно, данные в него не записываем
-                    if not active[0]:
-                        self._logger.error(
-                            f"Хранилище {ds_id} неактивно.")
-                        continue
+                # если хранилище неактивно, данные в него не записываем
+                if not active[0]:
+                    self._logger.error(
+                        f"Хранилище {ds_id} неактивно.")
+                    continue
 
-                    async with self._connection_pools[ds_id].acquire() as conn:
-                        tag_tbl = tag_cache[0][0]["dss"][ds_id]["table"]
+                async with self._connection_pools[ds_id].acquire() as conn:
+                    tag_tbl = tag_cache[0][0]["dss"][ds_id]["table"]
 
-                        data = tag_cache[0][0]["data"]
-                        async with conn.transaction(isolation='read_committed'):
-                            if tag_cache[0][0]["prsUpdate"]:
-                                xs = [str(x) for _, x, _ in data]
-                                q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
-                                await conn.execute(q)
-                            if tag_cache[0][0]["prsValueTypeCode"] == 4:
-                                new_data = []
-                                for item in data:
-                                    new_data.append(
-                                        (json.dumps(item[0], ensure_ascii=False), item[1], item[2])
-                                    )
-                                data = new_data
+                    data = tag_cache[0][0]["data"]
+                    async with conn.transaction(isolation='read_committed'):
+                        if tag_cache[0][0]["prsUpdate"]:
+                            xs = [str(x) for _, x, _ in data]
+                            q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
+                            await conn.execute(q)
+                        if tag_cache[0][0]["prsValueTypeCode"] == 4:
+                            new_data = []
+                            for item in data:
+                                new_data.append(
+                                    (json.dumps(item[0], ensure_ascii=False), item[1], item[2])
+                                )
+                            data = new_data
 
-                            await conn.copy_records_to_table(
-                                tag_tbl,
-                                records=data,
-                                columns=('y', 'x', 'q'))
-                        self._logger.debug(f"В базу {ds_id} для тега {tag_id} записано {len(data)} точек.")
+                        await conn.copy_records_to_table(
+                            tag_tbl,
+                            records=data,
+                            columns=('y', 'x', 'q'))
+                    self._logger.debug(f"В базу {ds_id} для тега {tag_id} записано {len(data)} точек.")
 
         except Exception as ex:
             self._logger.error(f"Ошибка записи данных в базу {ds_id}: {ex}")
@@ -501,41 +495,36 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         order: int, count: int, one_before: bool, one_after: bool, value: Any = None):
 
         actual_ds = None
-        client = redis.Redis(connection_pool=self._cache_pool)
-        async with client.pipeline() as pipe:
-            tag_data = await pipe.json().get(
-                f"{self._config.svc_name}:{tag_id}",
-                "prsActive", "dss", "prsValueTypeCode"
-            ).execute()
+        tag_data = await self._cache.get(
+            f"{self._config.svc_name}:{tag_id}",
+            "prsActive", "dss", "prsValueTypeCode"
+        ).exec()
 
-            if not tag_data[0]:
-                self._logger.error(f"Тег {tag_id} отсутствует в кэше.")
-                await client.aclose()
+        if not tag_data[0]:
+            self._logger.error(f"Тег {tag_id} отсутствует в кэше.")
+            
+            return []
+        if not tag_data[0]["prsActive"]:
+            self._logger.error(f"Тег {tag_id} неактивен.")
+            
+            return []
 
-                return []
-            if not tag_data[0]["prsActive"]:
-                self._logger.error(f"Тег {tag_id} неактивен.")
-                await client.aclose()
-
-                return []
-
-            # если тег привязан к нескольким хранилищам, пока непонятна логика
-            # из какого хранилища брать данные.
-            # пока будем брать из первого активного
-            for ds_id in tag_data[0]["dss"].keys():
-                ds_res = await pipe.json().get(
-                    f"{self._config.svc_name}:{ds_id}",
-                    "prsActive"
-                ).execute()
-                if ds_res[0] is None:
-                    self._logger.error(
-                        f"Хранилище {ds_id} отсутствует в кэше."
-                    )
-                if ds_res[0]:
-                    actual_ds = ds_id
-                    break
-        await client.aclose()
-
+        # если тег привязан к нескольким хранилищам, пока непонятна логика
+        # из какого хранилища брать данные.
+        # пока будем брать из первого активного
+        for ds_id in tag_data[0]["dss"].keys():
+            ds_res = await self._cache.get(
+                f"{self._config.svc_name}:{ds_id}",
+                "prsActive"
+            ).exec()
+            if ds_res[0] is None:
+                self._logger.error(
+                    f"Хранилище {ds_id} отсутствует в кэше."
+                )
+            if ds_res[0]:
+                actual_ds = ds_id
+                break
+        
         if not actual_ds:
             self._logger.error(
                 f"Не найдено актуальное хранилище для тега {tag_id}"

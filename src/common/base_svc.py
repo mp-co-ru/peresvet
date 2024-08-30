@@ -14,6 +14,7 @@ import aio_pika.abc
 
 from src.common.logger import PrsLogger
 from src.common.base_svc_settings import BaseSvcSettings
+from src.common.redis_cache import RedisCache
 
 class BaseSvc(FastAPI):
     _outgoing_commands = {}
@@ -73,6 +74,8 @@ class BaseSvc(FastAPI):
         self._incoming_commands = self._set_incoming_commands()
         self._incoming_commands["subscribe"] = self._subscribe
         self._incoming_commands["unsubscribe"] = self._unsubscribe
+
+        self._cache = None
 
         self._initialized = False
 
@@ -275,6 +278,11 @@ class BaseSvc(FastAPI):
         """
         self._logger.info(f"{self._config.svc_name}: on_startup.")
         await self._amqp_connect()
+
+        await self._cache_connect()
+
+    async def _cache_connect(self):
+        self._cache = RedisCache(self._config.cache_url)
 
     async def on_shutdown(self) -> None:
         """
