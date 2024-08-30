@@ -217,6 +217,8 @@ class DataStoragesAppBase(svc.Svc, ABC):
                     "tags": tag_ids
                 }, nx=True)
             await pipe.execute()
+        
+        #self._cache.set()
 
             for tag_id in tag_ids:
                 await self._bind_tag(tag_id, True)
