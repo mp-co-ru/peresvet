@@ -1,4 +1,4 @@
-from base_cache import ABCCache, JsonType
+from src.common.base_cache import ABCCache, JsonType
 from typing import Union, Dict, Any, List
 import redis.asyncio as redis
 
@@ -9,11 +9,11 @@ class RedisCache(ABCCache):
         self._client = redis.Redis.from_pool(connection_pool=self._pool)
         self._pipe = self._client.pipeline(transaction=True)
 
-    def set(self, name: str, key: str, obj: JsonType, nx: bool = False, xx: bool = False):
-        self._pipe.json().set(name=name, path=key, obj=obj, nx=nx, xx=xx)
+    def set(self, name: str, key: str = "$", obj: JsonType = {}, nx: bool = False, xx: bool = False):
+        self._pipe.json().set(name, key, obj, nx=nx, xx=xx)
         return self
 
-    def get(self, name: str, *keys):
+    def get(self, name: str, *keys: Any):
         """Метод должен возвращать self.
         Как и все другие методы, встраивается в цепочку выполнения.
         Если в качестве keys указаны несколько ключей, они возвращаются в виде одного словаря.
@@ -22,34 +22,34 @@ class RedisCache(ABCCache):
         Если name нет в кэше, или в списке ключей keys указан ключ, которого нет в кэше name, то 
         генерируется исключение.
         """
-        self._pipe.json().get(name=name, *keys)
+        self._pipe.json().get(name, *keys)
         return self
     
-    def delete(self, name: str, key: str):
+    def delete(self, name: str, key: str = None):
         """Метод должен возвращать self
         """
-        self._pipe.json().delete(key=name, path=key)
+        self._pipe.json().delete(name, key)
         return self
 
     def append(self, name: str, key: str, *objs: List[JsonType]):
         """Метод добавляет в массив список объектов.
         Должен возвращать self.
         """
-        self._pipe.json().arrappend(name=name, path=key, *objs)
+        self._pipe.json().arrappend(name, key, *objs)
         return self
 
     def index(self, name: str, key: str, obj: JsonType):
         """Метод определяет индекс объекта в массиве.
         Должен возвращать self.
         """
-        self._pipe.json().arrindex(name=name, path=key, scalar=obj)
+        self._pipe.json().arrindex(name, key, obj)
         return self
 
     def pop(self, name: str, key: str, index: int):
         """Метод удаляет из массива объект с индексом index.
         Должен возвращать self.
         """
-        self._pipe.json().arrpop(name=name, path=key, index=index)
+        self._pipe.json().arrpop(name, key, index)
         return self
 
     async def exec(self):

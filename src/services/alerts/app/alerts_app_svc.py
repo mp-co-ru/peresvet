@@ -24,7 +24,6 @@ class AlertsApp(svc.Svc):
 
     def __init__(self, settings: AlertsAppSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
-        self._cache = Cache(settings.ldap_url)
 
     def _set_incoming_commands(self) -> dict:
         return {
@@ -81,25 +80,24 @@ class AlertsApp(svc.Svc):
         """
         alert_id = mes["data"]["id"]
         alert_cache_key = self._cache_key(alert_id, self._config.svc_name)
-        alert_data = self._cache.get_key(
-            key=alert_cache_key,
-            json_loads=True
-        )
+        alert_data = await self._cache.get(
+            name=alert_cache_key
+        ).exec()
 
         if not alert_data:
-            self._debug(f"Отсутствует кэш по тревоге {alert_id}.")
+            self._logger.debug(f"Отсутствует кэш по тревоге {alert_id}.")
             return
 
-        if not alert_data["fired"]:
-            self._debug(f"Тревога {alert_id} неактивна.")
+        if not alert_data[0]["fired"]:
+            self._logger.debug(f"Тревога {alert_id} неактивна.")
             return
 
-        if alert_data["acked"]:
-            self._debug(f"Тревога {alert_id} уже квитирована.")
+        if alert_data[0]["acked"]:
+            self._logger.debug(f"Тревога {alert_id} уже квитирована.")
             return
 
-        alert_data["acked"] = mes["data"]["x"]
-        self._cache.set_key(key=alert_cache_key, value=alert_data)
+        alert_data[0]["acked"] = mes["data"]["x"]
+        await self._cache.set(name=alert_cache_key, obj=alert_data)
         await self._post_message(
             {
                 "action": "alerts.alarmAcked",
@@ -146,14 +144,13 @@ class AlertsApp(svc.Svc):
             for alert in alerts:
                 alert_id = alert[0]
                 alert_cache_key = self._cache_key(alert_id, self._config.svc_name)
-                alert_data = await self._cache.get_key(
-                    key=alert_cache_key,
-                    json_loads=True
-                )
+                alert_data = await self._cache.get(
+                    name=alert_cache_key
+                ).exec()
 
                 self._logger.debug(f"Alert cache data: {alert_data}")
 
-                if not alert_data:
+                if not alert_data[0]:
                     self._logger.error(f"Нет кэша тревоги {alert_id}.")
                     continue
 
@@ -162,24 +159,24 @@ class AlertsApp(svc.Svc):
                     self._logger.debug(f"Data item: {data_item}")
 
                     # если данные более ранние, чем уже обработанные...
-                    if alert_data["fired"]:
-                        if data_item[1] <= alert_data["fired"]:
+                    if alert_data[0]["fired"]:
+                        if data_item[1] <= alert_data[0]["fired"]:
                             continue
-                        if alert_data["acked"] and (data_item[1] <= alert_data["acked"]):
+                        if alert_data[0]["acked"] and (data_item[1] <= alert_data[0]["acked"]):
                             continue
 
                     alert_on = (
-                        data_item[0] < alert_data["value"],
-                        data_item[0] >= alert_data["value"],
-                    )[alert_data["high"]]
+                        data_item[0] < alert_data[0]["value"],
+                        data_item[0] >= alert_data[0]["value"],
+                    )[alert_data[0]["high"]]
 
                     self._logger.debug(f"Alarm on: {alert_on}")
 
-                    if (alert_data["fired"] and alert_on) or \
-                        (not alert_data["fired"] and not alert_on):
+                    if (alert_data[0]["fired"] and alert_on) or \
+                        (not alert_data[0]["fired"] and not alert_on):
                         continue
 
-                    if not alert_data["fired"] and alert_on:
+                    if not alert_data[0]["fired"] and alert_on:
                         await self._post_message(
                             {
                                 "action": "alerts.alarmOn",
@@ -191,9 +188,9 @@ class AlertsApp(svc.Svc):
                             reply=False,
                             routing_key=alert_id
                         )
-                        alert_data["fired"] = data_item[1]
+                        alert_data[0]["fired"] = data_item[1]
 
-                        if alert_data["autoAck"]:
+                        if alert_data[0]["autoAck"]:
                             await self._post_message(
                                 {
                                     "action": "alerts.alarmAcked",
@@ -205,10 +202,10 @@ class AlertsApp(svc.Svc):
                                 reply=False,
                                 routing_key=alert_id
                             )
-                            alert_data["acked"] = data_item[1]
+                            alert_data[0]["acked"] = data_item[1]
 
 
-                    if alert_data["fired"] and not alert_on:
+                    if alert_data[0]["fired"] and not alert_on:
                         await self._post_message(
                             {
                                 "action": "alerts.alrmOff",
@@ -220,12 +217,13 @@ class AlertsApp(svc.Svc):
                             reply=False,
                             routing_key=alert_id
                         )
-                        alert_data["fired"] = None
-                        alert_data["acked"] = None
+                        alert_data[0]["fired"] = None
+                        alert_data[0]["acked"] = None
 
-                await self._cache.set_key(
-                    key=alert_cache_key,
-                    value=alert_data)
+                await self._cache.set(
+                    name=alert_cache_key,
+                    obj=alert_data
+                ).exec()
 
     def _cache_key(self, *args):
         '''
@@ -268,17 +266,16 @@ class AlertsApp(svc.Svc):
                 "description": alert[2]["description"][0]
             }
 
-            await self._cache.set_key(
-                self._cache_key(alert_id, self._config.svc_name),
-                alert_data
-            )
+            await self._cache.set(
+                name=self._cache_key(alert_id, self._config.svc_name),
+                obj=alert_data
+            ).exec()
 
             self._logger.debug(f"Тревога {alert_id} прочитана.")
 
     async def on_startup(self) -> None:
         await super().on_startup()
 
-        await self._cache.connect()
         try:
             await self._get_alerts()
         except Exception as ex:

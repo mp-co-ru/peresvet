@@ -36,7 +36,7 @@ class ABCCache(ABC):
         pass
     
     @abstractmethod
-    def delete(self, name: str, key: str):
+    def delete(self, name: str, key: str = None):
         """Метод должен возвращать self
         """
         pass
