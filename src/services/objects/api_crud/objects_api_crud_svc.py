@@ -133,7 +133,7 @@ async def read(q: str | None = None, payload: ObjectRead | None = None, error_ha
             :request: ../../../../docs/source/samples/objects/getObjectIn_query.txt
             :response: ../../../../docs/source/samples/objects/getObjectOut.txt
 
-    **Параметры запроса.**
+    **Параметры запроса:**
 
         * **id** (str | list(str)) - идентификатор объекта, который мы хотим прочитать
           Необязательный аттрибут.

@@ -8,7 +8,7 @@ Authorization: No Auth
 	"data":[{
 	    "tagId":"<id_of_a_tag>",
 	    "data": [
-	        [7,8,9]
+	        ["value", "<time_stamp>", 100]
 	    ]
 	}]
 }

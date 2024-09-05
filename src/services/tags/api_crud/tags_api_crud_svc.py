@@ -183,7 +183,7 @@ async def read(q: str | None = None, payload: TagRead | None = None, error_handl
             :request: ../../../../docs/source/samples/tags/getTagIn_query.txt
             :response: ../../../../docs/source/samples/tags/getTagOut.txt
 
-    **Параметры запроса.**
+    **Параметры запроса:**
 
         * **id** (str | list(str)) - идентификатор тега, который мы хотим прочитать.
           Необязательный аттрибут.

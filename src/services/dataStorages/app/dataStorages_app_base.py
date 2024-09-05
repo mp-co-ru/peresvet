@@ -809,8 +809,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
                 # проверим, активен ли тег и активны ли хранилища
                 res = await self._cache.get(
-                    f"{self._config.svc_name}:{tag_id}",
-                    f"$"
+                    f"{self._config.svc_name}:{tag_id}"
                 ).exec()
 
                 if res[0] is None:

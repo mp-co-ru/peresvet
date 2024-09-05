@@ -358,7 +358,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         try:
             res = await self._cache.get(
                 self._config.svc_name,
-                f"$.tags.{tag_id}"
+                f"tags.{tag_id}"
             ).exec()
 
             tag_params = res[0][0]

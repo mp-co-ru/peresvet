@@ -203,7 +203,7 @@ async def read(q: str | None = None, payload: ConnectorRead | None = None, error
        :request: ../../../../docs/source/samples/connectors/getConnectorIn_query.txt
        :response: ../../../../docs/source/samples/connectors/getConnectorOut.txt
 
-    **Параметры запроса.**
+    **Параметры запроса:**
 
        * **getLinkedTags** (bool) - Флаг возврата присоединённых тегов.
          Необязательный аттрибут.

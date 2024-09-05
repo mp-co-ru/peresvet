@@ -8,5 +8,11 @@ Authorization: No Auth
     "base": "id of a node where to search",
     "id": "id of an alert to find",
     "deref": true,
-    "scope":1
+    "scope":1,
+    "filter": {
+        "cn": ["alert*"],
+        "prsActive": [true],
+        "prsIndex": [1, 2, 3]
+    },
+    "attributes": ["cn"]
 }

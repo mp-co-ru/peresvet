@@ -1,6 +1,8 @@
 """
-Модуль содержит классы, описывающие входные данные для команд CRUD для тегов
-и класс сервиса ``tags_api_crud_svc``\.
+Запись и получение исторических данных.
+
+Подробно работа с историческими данными и примеры использования ключей в запросе 
+рассмотрены в разделе :ref:`historical_data`.
 """
 import sys
 from typing import Any, List, NamedTuple
@@ -208,6 +210,40 @@ router = APIRouter(prefix=f"{settings.api_version}/data")
 
 @router.get("/", response_model=dict | None, status_code=200)
 async def data_get(q: str | None = None, payload: DataGet | None = None):
+    """
+    Запрос исторических данных.
+
+    **Пример запроса в формате JSON.**
+
+    .. http:example::
+       :request: ../../../../docs/source/samples/data/getDataIn.txt
+       :response: ../../../../docs/source/samples/data/getDataOut.txt
+
+    **Пример query запроса.**
+
+    .. http:example::
+       :request: ../../../../docs/source/samples/data/getDataIn_query.txt
+       :response: ../../../../docs/source/samples/data/getDataOut.txt
+
+    **Параметры запроса:**
+
+       * **tagId** (str | [str]): тег или список тегов, по которым запрашиваются данные;
+       * **format** (bool): флаг перевода меток времени в ответе в формат ISO8601;
+       * **actual** (bool): если = true, то возвращаются только реально записанные в базу данные,
+         без интерполируемых значений на границах диапазона;
+       * **count** (int): количество значений тега, которое необходимо возвратить;
+       * **start** (int | str): начало запрашиваемого периода;
+       * **finish** (int | str): окончание запрашиваемого периода;
+       * **timeStep** (int): шаг в микросекундах между соседними возвращаемыми значениями тега;
+       * **maxCount** (int): максимальное количество значений одного тега в ответе на запрос;
+       * **value** (any): фильтр на значения тега.
+
+    **Ответ:**
+
+        * **data** (list) - возвращаемые данные;
+        * **detail** (str) - пояснение к возникшей ошибке.
+
+    """
     if q:
         try:
             p = DataGet.model_validate_json(q)
@@ -222,6 +258,28 @@ async def data_get(q: str | None = None, payload: DataGet | None = None):
 
 @router.post("/", status_code=200)
 async def data_set(payload: AllData):
+    """Запись исторических данных тега.
+
+    .. http:example::
+       :request: ../../../../docs/source/samples/data/addDataIn.txt
+       :response: ../../../../docs/source/samples/data/addDataOut.txt
+
+    **Параметры запроса:**
+
+      * **data** ([json]) - массив данных тегов; каждый элемент этого массива - 
+        json с данными одного тега. Json имеет формат:
+
+        * **tagId** (str) - id тега;
+        * **data** ([[value, timestamp, quality_code]]) - массив значений тега; каждое значение - 
+          массив из трёх элементов: значение тега, метка времени (целое число микросекунд или
+          строка в формате ISO8601). В случае отсутствия метки времени берётся текущий момент времени.
+          В случае отсутствия кода качества берётся значение ``null``, означающее нормальное качество.
+
+    **Ответ:**
+
+      null
+
+    """
     return await app.data_set(payload)
 
 '''

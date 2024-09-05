@@ -7,9 +7,10 @@ Authorization: No Auth
 {
     "parentId": "id of parent node",
     "attributes": {
-        "cn": "alert2",
+        "cn": "alert_name",
         "description": "test_alert",
-        "prsJsonConfigString": "node configuration",
-        "prsActive": true
+        "prsJsonConfigString": "{\"value\": 10, \"high\": true, \"autoAck\": true}",
+        "prsActive": true,
+        "prsIndex": 1
     }
 }

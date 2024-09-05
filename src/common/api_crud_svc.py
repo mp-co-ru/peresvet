@@ -26,6 +26,11 @@ def valid_uuid(id: str | list[str]) -> str | list[str]:
             raise ValueError('id должен быть в виде GUID') from ex
     return id
 
+# base может быть пустой строкой
+def valid_base(base: str | None) -> str | None:
+    if base.strip() == "":
+        return None
+    return valid_uuid(base)
 
 # класс с методами обработки ошибок в выоде для пользователя
 class ErrorHandler:
@@ -33,7 +38,6 @@ class ErrorHandler:
         if res is not None:
             if "error" in res:
                 raise HTTPException(status_code=res["error"]["code"], detail=res["error"]["message"])
-
 
 class NodeAttributes(BaseModel):
     """Атрибуты для создания базового узла.
@@ -184,7 +188,8 @@ class NodeRead(BaseModel):
         )
     )
 
-    validate_id = validator('id', 'base', allow_reuse=True)(valid_uuid)
+    validate_id = validator('id', allow_reuse=True)(valid_uuid)
+    validate_base = validator('base', allow_reuse=True)(valid_base)
 
 class NodeCreateResult(BaseModel):
     """Результат выполнения команды создания узла.
@@ -257,18 +262,23 @@ class APICRUDSvc(BaseSvc):
         return await self._post_message(mes=body, reply=True)
 
     async def api_get_read(self, request_model: NodeRead, q: str | None, payload: NodeRead | None):
-        if q is None and payload is None:
+        if (q is None or q.strip() == "") and payload is None:
             q = "{}"
         if q:
             try:
-               #q_js = json.loads(q)
+                d = json.loads(q)
+            except json.JSONDecodeError as ex:
+                err = {"code": 500, "message": f"Ошибка чтения: {ex}"}
+                self._logger.exception(err)
+                return {"error": err}
+            
+            try:
                 p = request_model.model_validate_json(q)
             except Exception as ex:
-                err = f"Ошибка чтения: {ex}"
+                err = {"code": 500, "message": f"Ошибка чтения: {ex}"}
                 self._logger.exception(err)
                 return {"error": err}
         elif payload:
             p = payload
-
 
         return await self.read(p)
