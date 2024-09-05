@@ -657,6 +657,20 @@ class ModelCRUDSvc(Svc):
 
         """
 
+        async def hierarchy_search(payload):
+            res = []
+            items = await self._hierarchy.search(payload)
+            for item in items:
+                new_payload = copy.deepcopy(payload)
+                new_payload["base"] = item[0]
+
+                new_item = {}
+                new_item["id"] = item[0]
+                new_item["attributes"] = item[2]
+                new_item["children"] = await hierarchy_search(new_payload)
+                res.append(new_item)
+            return res
+
         res = {
             "data": []
         }
@@ -665,7 +679,8 @@ class ModelCRUDSvc(Svc):
 
         if mes_data.get("filter") is None:
             mes_data["filter"] = {}
-        mes_data["filter"]["objectClass"] = [self._config.hierarchy["class"]]
+        if mes_data["filter"].get("objectClass") is None:
+            mes_data["filter"]["objectClass"] = [self._config.hierarchy["class"]]
 
         if not mes_data.get("base"):
             if not self._config.hierarchy["node"]:
@@ -678,12 +693,18 @@ class ModelCRUDSvc(Svc):
             if type(item) is not list:
                 mes_data["filter"][key] = [mes_data["filter"][key]]
 
-        items = await self._hierarchy.search(mes_data)
-        for item in items:
-            res["data"].append({
-                "id": item[0],
-                "attributes": item[2]
-            })
+        if not mes_data["hierarchy"] or mes_data["scope"] < 2:
+            items = await self._hierarchy.search(mes_data)
+            for item in items:
+                res["data"].append({
+                    "id": item[0],
+                    "attributes": item[2]
+                })
+        else:
+            mes_data["scope"] = CN_SCOPE_ONELEVEL
+            items = await hierarchy_search(mes_data)
+            for item in items:
+                res["data"].append(item)
 
         return await self._further_read(mes, res)
 

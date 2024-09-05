@@ -187,6 +187,14 @@ class NodeRead(BaseModel):
             "(кроме системных)."
         )
     )
+    hierarchy: bool = Field(
+        False,
+        title="Возвращать результат в виде иерархии.",
+        description=(
+            "По умолчанию = ``False``. В случае, если = ``True``, "
+            "то результат возвращается в виде иерархии."
+        )
+    )
 
     validate_id = validator('id', allow_reuse=True)(valid_uuid)
     validate_base = validator('base', allow_reuse=True)(valid_base)
@@ -199,13 +207,16 @@ class NodeCreateResult(BaseModel):
 
     id: Union[str, None]
 
-
 class OneNodeInReadResult(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
 
     id: str = Field(title="Id узла.")
     attributes: dict = Field(title="Атрибуты узла")
+    children: list[dict] = Field(
+        None,
+        title="Список дочерних узлов"
+    )
 
 class NodeReadResult(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
