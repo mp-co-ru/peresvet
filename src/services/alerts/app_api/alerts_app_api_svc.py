@@ -128,7 +128,7 @@ app = AlertsAppAPI(settings=settings, title="`TagsAppAPI` service")
 
 router = APIRouter(prefix=f"{settings.api_version}/alarms")
 
-@router.get("/", response_model=dict, status_code=200)
+@router.get("/", response_model=dict, status_code=200, response_model_exclude_none=True)
 async def alarms_get(payload: AlarmsGet):
     res = await app.alarms_get(payload)
     return res

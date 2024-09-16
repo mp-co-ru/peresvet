@@ -272,7 +272,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
             "id": mes["data"]["id"],
             "attributes": ["prsActive", "prsJsonConfigString"]
         }
-        ds_data = await self._hierarchy.search (payload=payload)
+        ds_data = await self._hierarchy.search(payload=payload)
         if not ds_data:
             self._logger.error(f"В модели нет данных по хранилищу {ds_id}")
             return

@@ -15,6 +15,7 @@ services:
       - GF_SERVER_ROOT_URL=http://${NGINX_HOST}:${PORT_GRAFANA}/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
       - GF_PANELS_DISABLE_SANITIZE_HTML=true
+      - TZ=${TIME_ZONE}
     volumes:
       - 'grafana_storage:/var/lib/grafana'
     ports:

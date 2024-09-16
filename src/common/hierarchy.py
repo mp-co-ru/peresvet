@@ -1,5 +1,6 @@
 # Модуль содержит класс для работы с иерархией
 
+from copy import deepcopy
 from typing import Any, Tuple, List
 import json
 
@@ -214,9 +215,10 @@ class Hierarchy:
             Tuple: (id, dn, attributes)
         """
 
+        new_payload = deepcopy(payload)
         with self._cm.connection() as conn:
 
-            ids = payload.get("id")
+            ids = new_payload.get("id")
             if isinstance(ids, str):
                 ids = [ids]
             if ids:
@@ -225,21 +227,21 @@ class Hierarchy:
                 node = self._base_dn
                 scope = CN_SCOPE_SUBTREE
             else:
-                filterstr = Hierarchy.__form_filterstr(payload["filter"])
+                filterstr = Hierarchy.__form_filterstr(new_payload["filter"])
 
-                id_ = payload.get("base")
+                id_ = new_payload.get("base")
                 # id_ = payload.get("cn")
                 if not id_:
                     node = self._base_dn
                 else:
                     if self._is_node_id_uuid(id_):
-                        node = await self.get_node_dn(payload.get("base"))
+                        node = await self.get_node_dn(new_payload.get("base"))
                         # node = await self.get_node_dn(payload["filter"]["cn"])
                     else:
                         node = id_
 
-                scope = payload.get("scope", CN_SCOPE_SUBTREE)
-                deref = payload.get("deref", True)
+                scope = new_payload.get("scope", CN_SCOPE_SUBTREE)
+                deref = new_payload.get("deref", True)
                 old_deref = conn.deref
 
                 if deref:
@@ -247,7 +249,7 @@ class Hierarchy:
                 else:
                     conn.deref = ldap.DEREF_NEVER
 
-            return_attributes = payload.get("attributes", ["*"])
+            return_attributes = new_payload.get("attributes", ["*"])
             id_in_attrs = False
             if 'entryUUID' in return_attributes:
                 id_in_attrs = True

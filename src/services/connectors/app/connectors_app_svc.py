@@ -61,7 +61,7 @@ class ConnectorsApp(svc.Svc):
     async def get_connector_tag_data(self, connector_id: str) -> dict:
 
         connector_data = await self._hierarchy.search(
-            payload={
+            new_payload={
                 "id": connector_id,
                 "attributes": [
                     "prsActive", "prsJsonConfigString"

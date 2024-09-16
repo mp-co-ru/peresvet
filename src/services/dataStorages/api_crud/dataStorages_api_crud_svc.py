@@ -187,7 +187,7 @@ async def create(payload: DataStorageCreate, error_handler: svc.ErrorHandler = D
     await error_handler.handle_error(res)
     return res
 
-@router.get("/", response_model=DataStorageReadResult | None, status_code=200)
+@router.get("/", response_model=DataStorageReadResult | None, status_code=200, response_model_exclude_none=True)
 async def read(q: str | None = None, payload: DataStorageRead | None = None, error_handler: svc.ErrorHandler = Depends()):
     res = await app.api_get_read(DataStorageRead, q, payload)
     await error_handler.handle_error(res)

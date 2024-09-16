@@ -76,6 +76,51 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
                 parameter["attributes"]
             )
 
+    async def _further_read(self, mes: dict, search_result: dict) -> dict:
+        # добавим в результат параметры и initiatedBy
+        
+        new_result = {
+            "data": []
+        }
+
+        for method_item in search_result["data"]:
+            new_method_item = copy.deepcopy(method_item)
+            new_method_item["initiatedBy"] = []
+            new_method_item["parameters"] = []
+
+            # TODO: переработать, т.к. получать DN, потом составлять новый - плохая практика
+            method_dn = await self._hierarchy.get_node_dn(new_method_item["id"])
+
+            # ищем инициаторов
+            initiated_by_node_dn = f"cn=initiatedBy,cn=system,{method_dn}"
+            payload = {
+                "base": initiated_by_node_dn,
+                "scope": 1,
+                "filter": {"cn": ["*"]},
+                "attributes": ["cn"]
+            }
+            initiators = await self._hierarchy.search(payload)
+            for initiator in initiators:
+                new_method_item["initiatedBy"].append(initiator[2]["cn"][0])
+
+            # ищем параметры
+            parameters_node_dn = f"cn=parameters,cn=system,{method_dn}"
+            payload = {
+                "base": parameters_node_dn,
+                "scope": 1,
+                "filter": {"objectClass": ["prsMethodParameter"]},
+                "attributes": ["cn", "description", "prsActive", "prsIndex", "prsJsonConfigString"]
+            }
+            parameters = await self._hierarchy.search(payload)
+            for parameter in parameters:
+                new_method_item["parameters"].append({
+                    "attributes": parameter[2]
+                })
+
+            new_result["data"].append(new_method_item)
+            
+        return new_result
+
 settings = MethodsModelCRUDSettings()
 
 app = MethodsModelCRUD(settings=settings, title="TagsModelCRUD")

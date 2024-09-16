@@ -1,0 +1,895 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PERESVET",
+      "label": "peresvet",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "marcusolsson-json-datasource",
+      "pluginName": "JSON API"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.4.4"
+    },
+    {
+      "type": "panel",
+      "id": "marcusolsson-dynamictext-panel",
+      "name": "Business Text",
+      "version": "5.3.0"
+    },
+    {
+      "type": "datasource",
+      "id": "marcusolsson-json-datasource",
+      "name": "JSON API",
+      "version": "1.3.16"
+    },
+    {
+      "type": "panel",
+      "id": "volkovlabs-form-panel",
+      "name": "Business Forms",
+      "version": "4.4.0"
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "marcusolsson-json-datasource",
+        "uid": "${DS_PERESVET}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 21,
+        "w": 10,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "afterRender": "/* buttons reactions ----------------------------------------------------- */\nenter_teal_but = (button) => { button.classList.toggle(\"bg-light-teal\") };\nleave_teal_but = (button) => { button.classList.toggle(\"bg-light-teal\") };\nenter_red_but = (button) => { button.classList.toggle(\"bg-light-red\") };\nleave_red_but = (button) => { button.classList.toggle(\"bg-light-red\") };\n\ngetFocus = (event, element) => {\n  event.stopPropagation();\n\n  els = document.getElementsByClassName(\"currentNode\");\n  elsArray = [...els];\n  elsArray.map((el) => {\n    el.classList.toggle(\"currentNode\");\n  });\n  el = event.target;\n  el.classList.toggle(\"currentNode\");\n};\n\ndeleteNodeFromHierarchy = () => {\n  parentId = context.grafana.replaceVariables(\"${currentNodeId}\");\n  api = context.grafana.replaceVariables(\"${ds_api}\");\n\n  payload = {\n    id: parentId\n  }\n  url = window.location.protocol + \"//\" + window.location.hostname + \"/v1\" + api;\n\n  fetch(url, {\n    method: \"DELETE\",\n    body: JSON.stringify(payload),\n    headers: new Headers({\n      'Content-Type': 'application/json'\n    })\n  }).then((response) => {\n    if (response.status !== 202) {\n      alert(`Ошибка удаления узла: ${JSON.stringify(response.json())}`);\n      return;\n    }\n\n    li = document.getElementById(\"li_\" + parentId);\n    li.remove();\n  });\n};\n\naddNodeToHierarchy = (api) => {\n  url = window.location.protocol + \"//\" + window.location.hostname + \"/v1/\" + api + \"/\";\n  parentId = context.grafana.replaceVariables(\"${currentNodeId}\");\n  payload = { attributes: {} };\n  if (parentId !== \"\") {\n    payload.parentId = parentId;\n  }\n\n  fetch(url, {\n    method: \"POST\",\n    body: JSON.stringify(payload),\n    headers: new Headers({\n      'Content-Type': 'application/json'\n    })\n  }).then((response) => {\n    if (response.status !== 201) {\n      alert(`Ошибка создания объекта: ${JSON.stringify(response.json())}`);\n      return;\n    }\n    return response.json();\n  }).then((data) => {\n    new_id = data.id;\n    url += `?q=${encodeURIComponent(JSON.stringify({\n      id: new_id,\n      attributes: [\"cn\", \"objectClass\"]\n    }))}`;\n    data = fetch(url, {\n      headers: {\n        \"Content-type\": \"application/json\",\n      }\n    }).then((response) => {\n      if (response.status !== 200) {\n        alert(`Ошибка получения данных по вновь созданному объекту ${new_id}`);\n        return;\n      }\n      return response.json();\n    }).then((data) => {\n      if (parentId !== \"\") {\n        ulToExtend = document.getElementById(`ul_${parentId}`);\n      } else {\n        ulToExtend = document.getElementById(\"ul_\" + api);\n      };\n\n      addNode(ulToExtend, data.data[0], true);\n      new_node = document.getElementById(`${data.data[0].id}`);\n\n      var clickEvent = new MouseEvent(\"click\", {\n        \"view\": window,\n        \"bubbles\": true,\n        \"cancelable\": false\n      });\n\n      // привяжем тег к хранилищу\n      if (api === \"tags\") {\n        dataStorageId = context.grafana.replaceVariables(\"${dataStorageId}\");\n        payload = {\n          id: dataStorageId,\n          linkTags: [{ tagId: data.data[0].id }]\n        }\n        urlDs = window.location.protocol + \"//\" + window.location.hostname + \"/v1/dataStorages/\";\n        fetch(urlDs, {\n          method: \"PUT\",\n          body: JSON.stringify(payload),\n          headers: new Headers({\n            'Content-Type': 'application/json'\n          })\n        }).then((response) => {\n          if (response.status !== 202) {\n            alert(`Ошибка привязки тега к хранилищу: ${JSON.stringify(response.json())}`);\n            return;\n          }\n        })\n      }\n\n      new_node.dispatchEvent(clickEvent);\n      new_node.focus();\n\n    });\n  });\n}\n\nclickTopNodes = (event) => {\n  event.stopPropagation();\n\n  context.grafana.locationService.partial(\n    {\n      \"var-currentNodeId\": \"\",\n      \"var-currentNodeClass\": \"\",\n      \"var-ds_api\": \"/objects/\"\n    }, true\n  );\n\n  el = event.target;\n  el_id = el.id;\n  buttons_div = document.getElementById(\"buttons_div\");\n\n  add_object_but = document.getElementById(\"add_object_button\");\n  add_tag_but = document.getElementById(\"add_tag_button\");\n  add_alert_but = document.getElementById(\"add_alert_button\");\n  add_method_but = document.getElementById(\"add_method_button\");\n  add_connector_but = document.getElementById(\"add_connector_button\");\n  del_node_but = document.getElementById(\"delete_node_button\");\n\n  if (el_id === \"objects\") {\n    add_object_but.hidden = false;\n    add_tag_but.hidden = true;\n    add_alert_but.hidden = true;\n    add_method_but.hidden = true;\n    add_connector_but.hidden = true;\n    del_node_but.hidden = true;\n  } else if (el_id === \"tags\") {\n    add_object_but.hidden = true;\n    add_tag_but.hidden = false;\n    add_alert_but.hidden = true;\n    add_method_but.hidden = true;\n    add_connector_but.hidden = true;\n    del_node_but.hidden = true;\n  } else {\n    add_object_but.hidden = true;\n    add_tag_but.hidden = true;\n    add_alert_but.hidden = true;\n    add_method_but.hidden = true;\n    add_connector_but.hidden = false;\n    del_node_but.hidden = true;\n  }\n\n  buttons_div.hidden = false;\n}\n\nclickNode = (event, element) => {\n  event.stopPropagation();\n  targetElement = event.target;\n  id = targetElement.id;\n  objectClass = targetElement.getAttribute(\"objectClass\");\n  api = \"\";\n\n  add_object_but = document.getElementById(\"add_object_button\");\n  add_tag_but = document.getElementById(\"add_tag_button\");\n  add_alert_but = document.getElementById(\"add_alert_button\");\n  add_method_but = document.getElementById(\"add_method_button\");\n  add_connector_but = document.getElementById(\"add_connector_button\");\n  del_node_but = document.getElementById(\"delete_node_button\");\n\n  if (objectClass == \"prsObject\") {\n    api = \"/objects/\";\n    add_object_but.hidden = false;\n    add_tag_but.hidden = false;\n    add_alert_but.hidden = true;\n    add_method_but.hidden = true;\n    add_connector_but.hidden = true;\n  } else if (objectClass == \"prsTag\") {\n    api = \"/tags/\";\n    add_object_but.hidden = true;\n    add_tag_but.hidden = true;\n    add_alert_but.hidden = false;\n    add_method_but.hidden = false;\n    add_connector_but.hidden = true;\n  } else if (objectClass == \"prsAlert\") {\n    api = \"/alerts/\";\n    add_object_but.hidden = true;\n    add_tag_but.hidden = true;\n    add_alert_but.hidden = true;\n    add_method_but.hidden = false;\n    add_connector_but.hidden = true;\n  } else if (objectClass == \"prsMethod\") {\n    api = \"/methods/\";\n    add_object_but.hidden = true;\n    add_tag_but.hidden = true;\n    add_alert_but.hidden = true;\n    add_method_but.hidden = true;\n    add_connector_but.hidden = true;\n  } else if (objectClass == \"prsConnector\") {\n    api = \"/connectors/\";\n    add_object_but.hidden = true;\n    add_tag_but.hidden = true;\n    add_alert_but.hidden = true;\n    add_method_but.hidden = true;\n    add_connector_but.hidden = false;\n  }\n  del_node_but.hidden = false;\n\n  context.grafana.locationService.partial(\n    { \"var-currentNodeId\": id, \"var-currentNodeClass\": objectClass, \"var-ds_api\": api },\n    false\n  );\n};\n\nsortList = (ul) => {\n  var new_ul = ul.cloneNode(false);\n  // Add all lis to an array\n  var lis = [];\n  for (var i = 0; i < ul.childNodes.length; i++) {\n    if (ul.childNodes[i].nodeName === 'LI')\n      lis.push(ul.childNodes[i]);\n  }\n  // Sort the lis in descending order\n  lis.sort((a, b) => {\n    res = 1;\n\n    if ((a.getAttribute(\"objectClass\") == \"prsObject\") &&\n      (b.getAttribute(\"objectClass\") == \"prsTag\")) {\n      res = -1;\n    } else if ((a.getAttribute(\"objectClass\") == \"prsTag\") &&\n      (b.getAttribute(\"objectClass\") == \"prsObject\")) {\n      res = 1;\n    } else if (a.getAttribute(\"nodeName\") < b.getAttribute(\"nodeName\")) {\n      res = -1;\n    } else {\n      res = 1;\n    }\n\n    return res;\n  });\n  // Add them into the ul in order\n  for (var i = 0; i < lis.length; i++)\n    new_ul.appendChild(lis[i]);\n\n  if (ul.parentNode !== null) {\n    ul.parentNode.replaceChild(new_ul, ul);\n  };\n};\n\naddNode = (parentUl, node, top) => {\n  li = document.createElement(\"li\");\n\n  li.setAttribute(\"id\", `li_${node.id}`);\n  li.setAttribute(\"objectClass\", `${node.attributes.objectClass[0]}`);\n  li.setAttribute(\"nodeName\", `${node.attributes.cn[0]}`);\n\n  details = document.createElement(\"details\");\n  details.setAttribute(\"id\", `details_${node.id}`);\n\n  summary = document.createElement(\"summary\");\n  summary.setAttribute(\"id\", `${node.id}`);\n  summary.appendChild(document.createTextNode(node.attributes.cn[0]));\n  summary.setAttribute(\"objectClass\", `${node.attributes.objectClass[0]}`);\n  summary.setAttribute(\"class\", `${node.attributes.objectClass[0]}`);\n  summary.setAttribute(\"onclick\", \"clickNode(event,this)\");\n  summary.setAttribute(\"onfocus\", \"getFocus(event,this)\");\n  details.appendChild(summary);\n\n  ul = document.createElement(\"ul\");\n  ul.setAttribute(\"id\", `ul_${node.id}`);\n  details.appendChild(ul);\n\n  li.appendChild(details);\n\n  if ((top) && (parentUl.children.length > 0)) {\n    parentUl.insertBefore(li, parentUl.firstChild);\n  } else {\n    parentUl.appendChild(li);\n  };\n\n  if ((typeof (node.children) !== undefined) && (node.children)) {\n\n    if (node.children.length > 0) {\n\n      for (let i = 0; i < node.children.length; i++) {\n        ul = document.getElementById(`ul_${node.id}`);\n        addNode(ul, node.children[i], false);\n      }\n      ul = document.getElementById(`ul_${node.id}`);\n      sortList(ul);\n    }\n  }\n};\n// --------------------------------------------------------------------------\n\n// гарантируем, что страница генерируется только один раз -------------------\ninitiated = document.getElementById(\"pageInitiated\");\nif (initiated)\n  return;\nnodes = document.getElementById(\"prsHeirarchy\");\ninitiated = document.createElement(\"div\");\ninitiated.setAttribute(\"id\", \"pageInitiated\");\nnodes.appendChild(initiated);\n// -------------------------------------------------------------------------\n\nobjects_serie = [];\ntags_serie = [];\nconnectors_serie = [];\n\ncontext.panelData.series.map((serie) => {\n  if (serie.name === \"objects\") {\n    objects_serie = serie.fields[0].values;\n  } else if (serie.name === \"tags\") {\n    tags_serie = serie.fields[0].values;\n  } else if (serie.name === \"connectors\") {\n    connectors_serie = serie.fields[0].values;\n  }\n});\n\n/*\n// обход ошибки графаны: в коде мы меняем переменные дашборда,\n// это приводит к тому, что обновляется панель данных\n// и строится дополнительная иерархия\nif (objects_serie[0] !== 0) {\n  console.log(\"объекты\");\n  console.log(objects_serie);\n  el = document.getElementById(objects_serie[0].id);\n  console.log(el);\n  if (el) return;\n} else if (tags_serie[0] !== 0) {\n  el = document.getElementById(tags_serie[0].id);\n  if (el) return;\n} else if (connectors_serie[0] !== 0) {\n  el = document.getElementById(connectors_serie[0].id);\n  if (el) return;\n}\n*/\nobjects_ul = document.getElementById(\"ul_objects\");\ntags_ul = document.getElementById(\"ul_tags\");\nconnectors_ul = document.getElementById(\"ul_connectors\");\n\nfor (let i = 0; i < objects_serie.length; i++) {\n  if (objects_serie[i] !== 0) {\n    addNode(objects_ul, objects_serie[i], false);\n  }\n};\nsortList(objects_ul);\n\nfor (let i = 0; i < tags_serie.length; i++) {\n  if (tags_serie[i] !== 0) {\n    addNode(tags_ul, tags_serie[i], false);\n  }\n};\n\nfor (let i = 0; i < connectors_serie.length; i++) {\n  if (connectors_serie[i] !== 0) {\n    addNode(connectors_ul, connectors_serie[i], false);\n  }\n};",
+        "content": "<div id=\"buttons_div\" hidden>\n  Добавить:\n  <button type=\"button\" name=\"popup-button\" hidden\n   onmouseenter=\"enter_teal_but(this);\" onmouseleave=\"leave_teal_but(this);\"\n   id=\"add_object_button\" class=\"prs-button bg-teal\" onclick=\"addNodeToHierarchy('objects');\">объект</button>\n  <button type=\"button\" name=\"popup-button\" hidden\n   onmouseenter=\"enter_teal_but(this);\" onmouseleave=\"leave_teal_but(this);\"\n   id=\"add_tag_button\" class=\"prs-button bg-teal\" onclick=\"addNodeToHierarchy('tags');\">тег</button>\n  <button type=\"button\" name=\"popup-button\" hidden\n   onmouseenter=\"enter_teal_but(this);\" onmouseleave=\"leave_teal_but(this);\"\n   id=\"add_alert_button\" class=\"prs-button bg-teal\" onclick=\"addNodeToHierarchy('alerts');\">тревога</button>\n  <button type=\"button\" name=\"popup-button\" hidden\n   onmouseenter=\"enter_teal_but(this);\" onmouseleave=\"leave_teal_but(this);\"\n   id=\"add_method_button\" class=\"prs-button bg-teal\" onclick=\"addNodeToHierarchy('methods');\">метод</button>\n  <button type=\"button\" name=\"popup-button\" hidden\n   onmouseenter=\"enter_teal_but(this);\" onmouseleave=\"leave_teal_but(this);\"\n   id=\"add_connector_button\" class=\"prs-button bg-teal\" onclick=\"addNodeToHierarchy('connectors');\">коннектор</button>\n  <button type=\"button\" name=\"popup-button\" hidden\n   onmouseenter=\"enter_red_but(this);\" onmouseleave=\"leave_red_but(this);\"\n   id=\"delete_node_button\" class=\"prs-button-del bg-dark-red\"\n   style=\"float:right;\" onclick=\"deleteNodeFromHierarchy();\">удалить</button>\n</div>\n<div style=\"height:10px\"></div>\n<div class=\"hierarchy\" id=\"prsHeirarchy\">\n  <ul class=\"tree\">\n    <li id=\"li_objects\">\n      <details id=\"details_objects\">\n        <summary id=\"objects\" onclick=\"clickTopNodes(event)\" objectClass=\"prsObject\">Объекты</summary>\n        <ul id=\"ul_objects\"></ul>\n      </details>\n    </li>\n    <li id=\"li_tags\">\n      <details id=\"details_tags\">\n        <summary id=\"tags\" onclick=\"clickTopNodes(event)\" objectClass=\"prsTag\">Теги</summary>\n        <ul id=\"ul_tags\"></ul>\n      </details>\n    </li>\n    <li id=\"li_connectors\">\n      <details id=\"details_connectors\">\n        <summary id=\"connectors\" onclick=\"clickTopNodes(event)\" prsClass=\"prsConnector\">Коннекторы</summary>\n        <ul id=\"ul_connectors\"></ul>\n      </details>\n    </li>\n    <li id=\"li_schedules\">\n      <details id=\"details_schedules\">\n        <summary id=\"schedules\" onclick=\"clickTopNodes(event)\" prsClass=\"prsSchedule\">Расписания</summary>\n        <ul id=\"ul_schedules\"></ul>\n      </details>\n    </li>\n  </ul>\n</div>",
+        "contentPartials": [],
+        "defaultContent": "The query didn't return any results.",
+        "editor": {
+          "format": "auto",
+          "language": "html"
+        },
+        "editors": [
+          "styles",
+          "afterRender"
+        ],
+        "externalStyles": [],
+        "helpers": "",
+        "renderMode": "data",
+        "styles": "div.hierarchy {\n  padding: 1px 1px 1px 1px;\n  //background-color: #fafafa;\n  margin: 0 auto;\n  max-height: 580px;\n  overflow: scroll;\n}\n\n.prs-button {padding:5px;border:none;color:white;width:85px;}\n.prs-button-del {padding:5px;border:none;color:white;width:85px;}\n.bg-teal { background: teal; }\n.bg-light-teal { background-color: rgb(100,228,228); }\n.bg-dark-red { background:rgb(150,0,0); }\n.bg-light-red { background-color:rgb(250,100,100); }\n\n.tree{\n  --spacing : 1.5rem;\n  --radius  : 7px;\n}\n\n.tree li{\n  display      : block;\n  position     : relative;\n  padding-left : calc(2 * var(--spacing) - var(--radius) - 2px);\n}\n\n.tree ul{\n  margin-left  : calc(var(--radius) - var(--spacing));\n  padding-left : 0;\n}\n\n.tree ul li{\n  border-left : 2px solid #ddd;\n  left : -16px;\n}\n\n.tree ul li:last-child{\n  border-color : transparent;\n}\n\n.prsObject{\n  font-weight: bolder;\n}\n\n.prsTag{\n  color: rgb(100,100,100);\n}\n\n.prsMethod{\n  color: rgb(0,0,100);\n}\n\n.prsAlert{\n  color: rgb(100,0,0);\n}\n\n\n.tree ul li::before{\n  content      : '';\n  display      : block;\n  position     : absolute;\n  top          : calc(var(--spacing) / -2);\n  left         : -2px;\n  width        : calc(var(--spacing) + 2px);\n  height       : calc(var(--spacing) + 1px);\n  border       : solid #ddd;\n  border-width : 0 0 2px 2px;\n}\n\n.tree summary{\n  display : block;\n  cursor  : pointer;\n}\n\n.tree summary::marker,\n.tree summary::-webkit-details-marker{\n  display : none;\n}\n\n/*\n.tree summary:focus{\n  outline : none;\n}\n\n.tree summary:focus-visible{\n  outline : 1px dotted #000;\n}\n*/\n.tree summary:focus{\n  outline : 1px dotted #000;\n  background-color: rgba(180, 180, 195, 100);\n}\n\n.currentNode{\n  outline : none;  \n  background-color: rgba(220, 220, 235, 200);\n}\n\n.tree li::after,\n.tree summary::before{\n  content       : '';\n  display       : block;\n  position      : absolute;\n  top           : calc(var(--spacing) / 2 - var(--radius));\n  left          : calc(var(--spacing) - var(--radius) - 1px);\n  width         : calc(2 * var(--radius));\n  height        : calc(2 * var(--radius));\n  border-radius : 50%;\n  background    : #ddd;\n}\n\n.tree summary::before{\n  content     : '+';\n  z-index     : 1;\n  background  : #696;\n  color       : #fff;\n  line-height : calc(2 * var(--radius) - 2px);\n  text-align  : center;\n}\n\n.tree details[open] > summary::before{\n  content : '−';\n}\n\n.tree li a:focus, .tree li a:hover {\n    background-color: #c5c5c5;\n}",
+        "wrap": false
+      },
+      "pluginVersion": "5.3.0",
+      "targets": [
+        {
+          "cacheDurationSeconds": 0,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "${DS_PERESVET}"
+          },
+          "fields": [
+            {
+              "jsonPath": "$count(data) ? data : [0]",
+              "language": "jsonata",
+              "name": "ids_objects"
+            }
+          ],
+          "hide": false,
+          "method": "GET",
+          "params": [
+            [
+              "q",
+              "{\"base\": \"\",\"attributes\":[\"cn\",\"objectClass\"],\"scope\":2,\"hierarchy\":true,\"filter\":{\"objectClass\":[\"prsObject\",\"prsMethod\",\"prsTag\",\"prsAlert\"]}}"
+            ]
+          ],
+          "queryParams": "",
+          "refId": "objects",
+          "urlPath": "/objects/"
+        },
+        {
+          "cacheDurationSeconds": 0,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "${DS_PERESVET}"
+          },
+          "fields": [
+            {
+              "jsonPath": "$count(data) ? data : [0]",
+              "language": "jsonata",
+              "name": "ids_tags"
+            }
+          ],
+          "hide": false,
+          "method": "GET",
+          "params": [
+            [
+              "q",
+              "{\"base\":\"\", \"attributes\":[\"cn\",\"objectClass\"],\"scope\":2,\"hierarchy\":true,\"filter\":{\"objectClass\":[\"prsMethod\",\"prsTag\",\"prsAlert\"]}}"
+            ]
+          ],
+          "queryParams": "",
+          "refId": "tags",
+          "urlPath": "/tags/"
+        }
+      ],
+      "title": "Иерархия",
+      "type": "marcusolsson-dynamictext-panel"
+    },
+    {
+      "datasource": {
+        "type": "marcusolsson-json-datasource",
+        "uid": "${DS_PERESVET}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 14,
+        "x": 10,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "afterRender": "console.log(context.data[0][0]);\ncn = context.data[0][0].cn;\nid = context.data[0][0].id;\nobjectClass = context.data[0][0].objectClass;\n\nnodeType = \"\";\nswitch (objectClass) {\n  case (\"prsObject\"):\n    nodeType = \"Объект\";\n    break;\n  case (\"prsTag\"):\n    nodeType = \"Тег\";\n    break;\n  case (\"prsAlert\"):\n    nodeType = \"Тревога\";\n    break;\n  case (\"prsMethod\"):\n    nodeType = \"Метод\";\n    break;\n  case (\"prsConnector\"):\n    nodeType = \"Коннектор\";\n};\n\nif (nodeType !== \"\") {\n  document.getElementById('nodeName').innerText = `\"${cn}\"`;\n  document.getElementById('nodeId').innerText = `(${id})`;\n  document.getElementById('nodeType').innerText = nodeType;\n} else {\n  document.getElementById('nodeName').innerText = ``;\n  document.getElementById('nodeId').innerText = ``;\n  document.getElementById('nodeType').innerText = ``;\n}",
+        "content": "<div id=\"nodeHeader\">\n  <p id=\"nodeType\"></p>\n  <p id=\"nodeName\"></p>\n  <p id=\"nodeId\"></p>\n</div>",
+        "contentPartials": [],
+        "defaultContent": "The query didn't return any results.",
+        "editor": {
+          "format": "auto",
+          "language": "html"
+        },
+        "editors": [
+          "styles",
+          "afterRender"
+        ],
+        "externalStyles": [],
+        "helpers": "",
+        "renderMode": "data",
+        "styles": "#nodeType, #nodeName{\n   color: rgb(0, 0, 100);\n   font-size: x-large;\n   display: inline-block;\n   position: relative;\n}\n\n#nodeId {\n   color: rgb(0, 0, 100);\n   font-size: large;\n   display: inline-block;\n   position: relative;\n}\n\ndiv {\n   //display: flex;\n   position: relative;\n   height: fit-content;\n}\n\np + p {\n   margin-left: 1rem;\n}",
+        "wrap": true
+      },
+      "pluginVersion": "5.3.0",
+      "targets": [
+        {
+          "cacheDurationSeconds": 0,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "${DS_PERESVET}"
+          },
+          "fields": [
+            {
+              "jsonPath": "$.data[0].attributes.cn[0]",
+              "name": "cn"
+            },
+            {
+              "jsonPath": "$.data[0].attributes.objectClass[0]",
+              "language": "jsonpath",
+              "name": "objectClass"
+            },
+            {
+              "jsonPath": "$.data[0].id",
+              "language": "jsonpath",
+              "name": ""
+            }
+          ],
+          "method": "GET",
+          "params": [
+            [
+              "q",
+              "{\"id\":\"$currentNodeId\",\"attributes\":[\"cn\", \"objectClass\"]}"
+            ]
+          ],
+          "queryParams": "",
+          "refId": "A",
+          "urlPath": "$ds_api"
+        }
+      ],
+      "type": "marcusolsson-dynamictext-panel"
+    },
+    {
+      "datasource": {
+        "type": "marcusolsson-json-datasource",
+        "uid": "${DS_PERESVET}"
+      },
+      "description": "",
+      "gridPos": {
+        "h": 9,
+        "w": 14,
+        "x": 10,
+        "y": 2
+      },
+      "id": 3,
+      "options": {
+        "buttonGroup": {
+          "orientation": "center",
+          "size": "md"
+        },
+        "confirmModal": {
+          "body": "Please confirm to update changed values",
+          "cancel": "Cancel",
+          "columns": {
+            "include": [
+              "name",
+              "oldValue",
+              "newValue"
+            ],
+            "name": "Label",
+            "newValue": "New Value",
+            "oldValue": "Old Value"
+          },
+          "confirm": "Confirm",
+          "elementDisplayMode": "modified",
+          "title": "Confirm update request"
+        },
+        "elementValueChanged": "",
+        "elements": [
+          {
+            "background": "#f0f0ff",
+            "id": "node_id",
+            "labelBackground": "#00000000",
+            "labelColor": "#000064",
+            "labelWidth": 20,
+            "options": [],
+            "optionsSource": "Custom",
+            "queryField": {
+              "label": "attributes:node_id",
+              "refId": "attributes",
+              "value": "node_id"
+            },
+            "section": "",
+            "showIf": "/*\nid = context.grafana.replaceVariables(\"${currentNodeId}\");\nreturn (id !== \"\");\n*/\nreturn false;",
+            "title": "Объект",
+            "tooltip": "",
+            "type": "disabled",
+            "uid": "98db3ff3-eafd-4628-bcb2-9ff8bcb49068",
+            "unit": "",
+            "value": ""
+          },
+          {
+            "fieldName": "cn",
+            "hidden": false,
+            "id": "cn",
+            "labelBackground": "",
+            "labelWidth": 20,
+            "queryField": {
+              "label": "attributes:cn",
+              "refId": "attributes",
+              "value": "cn"
+            },
+            "section": "attributes",
+            "showIf": "id = context.grafana.replaceVariables(\"${currentNodeId}\");\nreturn (id !== \"\");",
+            "title": "Имя",
+            "tooltip": "Имя узла. На одном уровне иерархии не может быть узлов с одинаковыми именами.",
+            "type": "string",
+            "uid": "dd54f49d-f90e-4239-b7de-f9e2021f2ee4",
+            "unit": "",
+            "value": ""
+          },
+          {
+            "fieldName": "",
+            "hidden": false,
+            "id": "description",
+            "labelBackground": "",
+            "labelWidth": 20,
+            "queryField": {
+              "label": "attributes:description",
+              "refId": "attributes",
+              "value": "description"
+            },
+            "section": "attributes",
+            "showIf": "id = context.grafana.replaceVariables(\"${currentNodeId}\");\nreturn (id !== \"\");",
+            "title": "Описание",
+            "tooltip": "",
+            "type": "string",
+            "uid": "7e2be50e-c779-468a-99c6-2d37f59f215e",
+            "unit": "",
+            "value": ""
+          },
+          {
+            "hidden": false,
+            "id": "prsMethodAddress",
+            "labelWidth": 20,
+            "queryField": {
+              "label": "attributes:methodAddress",
+              "refId": "attributes",
+              "value": "methodAddress"
+            },
+            "section": "",
+            "showIf": "objectClass = context.grafana.replaceVariables(\"${currentNodeClass}\");\nreturn (objectClass === \"prsMethod\");",
+            "title": "Адрес",
+            "tooltip": "Название метода, под которым он зарегистрирован в системе",
+            "type": "string",
+            "uid": "5256f380-b34e-47d3-a02e-dcc9da77355d",
+            "unit": "",
+            "value": ""
+          },
+          {
+            "id": "prsValueTypeCode",
+            "labelWidth": 20,
+            "options": [
+              {
+                "id": "0",
+                "label": "целый",
+                "type": "number",
+                "value": 0
+              },
+              {
+                "id": "1",
+                "label": "вещественный",
+                "type": "number",
+                "value": 1
+              },
+              {
+                "id": "2",
+                "label": "строковый",
+                "type": "number",
+                "value": 2
+              },
+              {
+                "id": "4",
+                "label": "json",
+                "type": "number",
+                "value": 4
+              }
+            ],
+            "optionsSource": "Custom",
+            "queryField": {
+              "label": "attributes:valueTypeCode",
+              "refId": "attributes",
+              "value": "valueTypeCode"
+            },
+            "section": "attributes",
+            "showIf": "objectClass = context.grafana.replaceVariables(\"${currentNodeClass}\");\nreturn (objectClass === \"prsTag\");",
+            "title": "Тип значений",
+            "tooltip": "Тип значений, хранящихся в теге. Поддерживаются типы: целочисленный, вещественный, строковый и json.",
+            "type": "select",
+            "uid": "28e564c7-1c50-4f76-b825-c129233a1738",
+            "unit": "",
+            "value": []
+          },
+          {
+            "id": "prsActive",
+            "labelWidth": 20,
+            "queryField": {
+              "label": "attributes:active",
+              "refId": "attributes",
+              "value": "active"
+            },
+            "section": "attributes",
+            "showIf": "objectClass = context.grafana.replaceVariables(\"${currentNodeClass}\");\nreturn (objectClass !== \"\");\n",
+            "title": "Активный",
+            "tooltip": "Активность узла. Если этот флаг сброшен, узел перестаёт функционировать, как и все его дочерние узлы. Но у дочерних узлов флаг активности не изменяется (не реализовано).",
+            "type": "boolean",
+            "uid": "8c117f8c-0798-4e67-89b2-a59479efbdb7",
+            "unit": "",
+            "value": false,
+            "width": 40
+          },
+          {
+            "id": "prsIndex",
+            "labelWidth": 20,
+            "queryField": {
+              "label": "attributes:index",
+              "refId": "attributes",
+              "value": "index"
+            },
+            "section": "secondary",
+            "showIf": "/*\nobjectClass = context.grafana.replaceVariables(\"${currentNodeClass}\");\nreturn (objectClass !== \"\");\n*/\nreturn false;",
+            "title": "Индекс",
+            "tooltip": "Индекс узла на текущем уровне иерархии. Если у узлов на одном уровне иерархии выставлены индексы, платформа будет возвращать список этих узлов, отсортированный в порядке возрастания индексов.",
+            "type": "number",
+            "uid": "d6b5d46e-5fb0-4304-b827-5949924263e6",
+            "unit": "",
+            "value": 0
+          },
+          {
+            "id": "prsEntityTypeCode",
+            "labelWidth": 20,
+            "options": [
+              {
+                "icon": "process",
+                "id": "0",
+                "label": "Расчётный метод тега",
+                "type": "number",
+                "value": 0
+              }
+            ],
+            "optionsSource": "Custom",
+            "section": "secondary",
+            "showIf": "objectClass = context.grafana.replaceVariables(\"${currentNodeClass}\");\nreturn (objectClass === \"prsMethod\");",
+            "title": "Тип",
+            "tooltip": "Код типа узла. Для методов: 0 - вычислительный метод тега.",
+            "type": "disabled",
+            "uid": "1bb8abfb-e463-4542-be90-c630972f641d",
+            "unit": "",
+            "value": 0
+          },
+          {
+            "height": 100,
+            "id": "prsJsonConfigString",
+            "labelWidth": 20,
+            "language": "json",
+            "queryField": {
+              "label": "attributes:jsonConfigString",
+              "refId": "attributes",
+              "value": "jsonConfigString"
+            },
+            "section": "secondary",
+            "showIf": "objectClass = context.grafana.replaceVariables(\"${currentNodeClass}\");\nreturn ((objectClass === \"prsConnector\") || (objectClass === \"prsAlert\"));",
+            "title": "Конфигурация",
+            "tooltip": "Конфигурация узла. Как и атрибут \"Тип\" не интерпретируется платформой и нужен для моделей или других приложений. Предполагается, что конфигурация указывается в виде json.",
+            "type": "code",
+            "uid": "2fb01b6e-a380-4268-83f2-956dcf2539b1",
+            "unit": "",
+            "value": ""
+          },
+          {
+            "id": "prsUpdate",
+            "labelWidth": 20,
+            "queryField": {
+              "label": "attributes:update",
+              "refId": "attributes",
+              "value": "update"
+            },
+            "section": "secondary",
+            "showIf": "objectClass = context.grafana.replaceVariables(\"${currentNodeClass}\");\nreturn (objectClass === \"prsTag\");",
+            "title": "Обновлять",
+            "tooltip": "Флаг обновления значений тега. Если = ``true``, то на каждую метку времени может быть записано только одно значение тега. Иначе на одну метку времени может быть несколько значений.",
+            "type": "boolean",
+            "uid": "e3b136dd-804a-4860-8341-08ad423393f1",
+            "unit": "",
+            "value": false,
+            "width": 40
+          },
+          {
+            "id": "prsDefault",
+            "labelWidth": 20,
+            "queryField": {
+              "label": "attributes:default",
+              "refId": "attributes",
+              "value": "default"
+            },
+            "section": "secondary",
+            "showIf": "/*\nobjectClass = context.grafana.replaceVariables(\"${currentNodeClass}\");\nreturn (objectClass !== \"\");\n*/\nreturn false;",
+            "title": "По умолчанию",
+            "tooltip": "Флаг узла по умолчанию. На каждом уровне иерархии может быть только один узел по умолчанию. Если создаётся новый узел с флагом Default = true, то платформа сбросит этот флаг у старого узла на соответствующем уровне иерархии и узлом по умолчанию будет новый.",
+            "type": "boolean",
+            "uid": "ac5b5689-14f2-464c-a604-276a7a5ef63c",
+            "unit": "",
+            "value": false,
+            "width": 40
+          },
+          {
+            "id": "prsStep",
+            "labelWidth": 20,
+            "queryField": {
+              "label": "attributes:step",
+              "refId": "attributes",
+              "value": "step"
+            },
+            "section": "secondary",
+            "showIf": "objectClass = context.grafana.replaceVariables(\"${currentNodeClass}\");\nreturn (objectClass === \"prsTag\");",
+            "title": "Шаговый",
+            "tooltip": "Флаг \"шагового\" тега. Если = true, то значение тега между двумя соседними метками не интерполируется.",
+            "type": "boolean",
+            "uid": "4337d452-e960-4f88-8373-692682ad12bd",
+            "unit": "",
+            "value": false,
+            "width": 40
+          },
+          {
+            "disableIf": "",
+            "hidden": false,
+            "id": "prsMeasureUnits",
+            "labelWidth": 20,
+            "queryField": {
+              "label": "attributes:measureUnits",
+              "refId": "attributes",
+              "value": "measureUnits"
+            },
+            "section": "secondary",
+            "showIf": "objectClass = context.grafana.replaceVariables(\"currentNodeClass\");\nreturn (objectClass === \"prsTag\");",
+            "title": "Единицы измерения",
+            "tooltip": "",
+            "type": "string",
+            "uid": "579a053c-4717-4cf7-9158-0e5a54792574",
+            "unit": "",
+            "value": ""
+          },
+          {
+            "hidden": false,
+            "id": "objectClass",
+            "labelWidth": 10,
+            "queryField": {
+              "label": "attributes:objectClass",
+              "refId": "attributes",
+              "value": "objectClass"
+            },
+            "section": "",
+            "showIf": "return false;",
+            "title": "obj",
+            "tooltip": "",
+            "type": "string",
+            "uid": "0383f954-b1f1-4e9d-adae-a73097c8b572",
+            "unit": "",
+            "value": ""
+          }
+        ],
+        "initial": {
+          "code": "",
+          "contentType": "application/json",
+          "datasource": "peresvet",
+          "getPayload": "return {\n  \"id\": \"9ce145ae-fd88-103e-9fda-a1d49071b3fb\",\n  \"api\": \"/objects/\"\n}",
+          "highlight": true,
+          "highlightColor": "#000096",
+          "method": "query",
+          "payload": {
+            "cacheDurationSeconds": 300,
+            "fields": [
+              {
+                "jsonPath": "$.data[0].attributes.cn[0]",
+                "name": "cn"
+              },
+              {
+                "jsonPath": "$.data[0].attributes.description[0]",
+                "language": "jsonpath",
+                "name": "description"
+              }
+            ],
+            "method": "GET",
+            "params": [
+              [
+                "q",
+                "{\"id\": \"${payload.id}\",\"attributes\":[\"cn\",\"prsActive\",\"prsIndex\",\"prsEntityTypeCode\",\"prsJsonConfigString\",\"description\"]}"
+              ]
+            ],
+            "queryParams": "",
+            "urlPath": "${payload.api}"
+          }
+        },
+        "layout": {
+          "orientation": "vertical",
+          "padding": 10,
+          "sectionVariant": "collapsable",
+          "sections": [],
+          "variant": "single"
+        },
+        "reset": {
+          "backgroundColor": "purple",
+          "foregroundColor": "yellow",
+          "icon": "process",
+          "text": "Reset",
+          "variant": "hidden"
+        },
+        "resetAction": {
+          "code": "if (context.panel.response) {\n  context.grafana.notifySuccess(['Update', 'Values updated successfully.']);\n  context.grafana.locationService.reload();\n} else {\n  context.grafana.notifyError(['Update', 'An error occurred updating values.']);\n}",
+          "confirm": false,
+          "getPayload": "return {}",
+          "mode": "initial",
+          "payload": {}
+        },
+        "saveDefault": {
+          "icon": "save",
+          "text": "Save Default",
+          "variant": "hidden"
+        },
+        "submit": {
+          "backgroundColor": "purple",
+          "foregroundColor": "yellow",
+          "icon": "save",
+          "text": "Сохранить",
+          "variant": "primary"
+        },
+        "sync": true,
+        "update": {
+          "code": "switch (context.panel.initial.objectClass) {\n  case (\"prsObject\"): {\n    api = \"/v1/objects/\";\n    break;\n  }\n  case (\"prsTag\"): {\n    api = \"/v1/tags/\";\n    break;\n  }\n  case (\"prsAlert\"): {\n    api = \"/v1/alerts/\";\n    break;\n  }\n  case (\"prsMethod\"): {\n    api = \"/v1/methods/\";\n    break;\n  }\n  case (\"prsConnector\"): {\n    api = \"/v1/connectors/\";\n    break;\n  }\n}\n\nurl = window.location.protocol + \"//\" + window.location.hostname + api;\npayload = { attributes: {} };\ncnChanged = false;\nnewCn = null;\ncontext.panel.elements.forEach((element) => {\n  if (element.id === \"node_id\") {\n    payload.id = element.value;\n  } else if (element.value !== context.panel.initial[element.id]) {\n    if (element.id === \"cn\") {\n      cnChanged = true;\n      newCn = element.value;\n    }\n    payload.attributes[element.id] = element.value;\n  }\n});\n\nfetch(url, {\n  method: \"PUT\",\n  body: JSON.stringify(payload),\n  headers: new Headers({\n    'Content-Type': 'application/json'\n  })\n}).then((response) => {\n  if (response.status !== 202) {\n    alert(`Ошибка обновления: ${JSON.stringify(response.json())}`);\n    return\n  }\n\n  // иначе - нам надо обновить иерархию, если был изменён cn\n  if (!cnChanged) return;\n\n  li = document.getElementById(\"li_\" + payload.id);\n  li.setAttribute(\"nodename\", newCn);\n  node = document.getElementById(payload.id);\n  node.firstChild.nodeValue = newCn;\n\n  node = document.getElementById(\"nodeName\");\n  node.innerText = `\"${newCn}\"`;\n\n  context.panel.setInitial({ value: newCn, name: \"cn\" });\n});",
+          "confirm": false,
+          "contentType": "application/json",
+          "datasource": "peresvet",
+          "getPayload": "payload = {\n  id: null\n};\n\ncontext.panel.elements.forEach((element) => {\n  console.warn(\"element\");\n  console.log(element);\n  /*\n  if (element.id === \"node_id\") {\n    payload.id = element.value;\n  } else if (element.)\n    console.warn(\"element\");\n  console.log(element);\n  if (!element.value) {\n    return;\n  }\n  */\n\n  payload[element.id] = element.value;\n})\n\nconsole.warn(\"panel initial\");\nconsole.log(context.panel.initial[\"cn\"]);\n\npayload = {\n  \"id\": \"01c9f190-039d-103f-992f-e5b90cb6686d\";\n  \"attributes\": {\n    \"cn\": \"tst_ppp\"\n  }\n};\nreturn payload;",
+          "method": "-",
+          "payload": {
+            "body": "{\n  \"id\": null\n}",
+            "cacheDurationSeconds": 300,
+            "fields": [
+              {
+                "jsonPath": ""
+              }
+            ],
+            "method": "POST",
+            "queryParams": "",
+            "urlPath": "$ds_api"
+          },
+          "payloadMode": "custom"
+        },
+        "updateEnabled": "auto"
+      },
+      "pluginVersion": "4.4.0",
+      "targets": [
+        {
+          "cacheDurationSeconds": 0,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "${DS_PERESVET}"
+          },
+          "fields": [
+            {
+              "jsonPath": "$.data[0].attributes.cn[0]",
+              "language": "jsonpath",
+              "name": "cn"
+            },
+            {
+              "jsonPath": "$.data[0].attributes.objectClass[0]",
+              "language": "jsonpath",
+              "name": "objectClass"
+            },
+            {
+              "jsonPath": "$.data[0].attributes.description[0]",
+              "language": "jsonpath",
+              "name": "description"
+            },
+            {
+              "jsonPath": "data[0].attributes.prsActive[0] = \"TRUE\" ? true : false",
+              "language": "jsonata",
+              "name": "active"
+            },
+            {
+              "jsonPath": "$type(data[0].attributes.prsArchive[0]) = \"null\" ? null : (data[0].attributes.prsArchive[0] = \"TRUE\" ? true : false)",
+              "language": "jsonata",
+              "name": "archive"
+            },
+            {
+              "jsonPath": "$type(data[0].attributes.prsCompress[0]) = \"null\" ? null : (data[0].attributes.prsCompress[0] = \"TRUE\" ? true : false)",
+              "language": "jsonata",
+              "name": "compress"
+            },
+            {
+              "jsonPath": "data[0].attributes.prsDefault[0] = \"TRUE\" ? true : false",
+              "language": "jsonata",
+              "name": "default"
+            },
+            {
+              "jsonPath": "$type(data[0].attributes.prsStep[0]) = \"null\" ? null : (data[0].attributes.prsStep[0] = \"TRUE\" ? true : false)",
+              "language": "jsonata",
+              "name": "step"
+            },
+            {
+              "jsonPath": "$type(data[0].attributes.prsUpdate[0]) = \"null\" ? null : (data[0].attributes.prsUpdate[0] = \"TRUE\" ? true : false)",
+              "language": "jsonata",
+              "name": "update"
+            },
+            {
+              "jsonPath": "$type(data[0].attributes.prsValueTypeCode[0]) = \"null\" ? null : $number(data[0].attributes.prsValueTypeCode[0])",
+              "language": "jsonata",
+              "name": "valueTypeCode"
+            },
+            {
+              "jsonPath": "$.data[0].attributes.prsEntityTypeCode[0]",
+              "language": "jsonpath",
+              "name": "entityTypeCode"
+            },
+            {
+              "jsonPath": "$.data[0].attributes.prsIndex[0]",
+              "language": "jsonpath",
+              "name": "index"
+            },
+            {
+              "jsonPath": "$.data[0].attributes.prsJsonConfigString[0]",
+              "language": "jsonpath",
+              "name": "jsonConfigString"
+            },
+            {
+              "jsonPath": "$.data[0].attributes.prsMeasureUnits[0]",
+              "language": "jsonpath",
+              "name": "measureUnits"
+            },
+            {
+              "jsonPath": "$.data[0].id",
+              "language": "jsonpath",
+              "name": "node_id"
+            },
+            {
+              "jsonPath": "$.data[0].attributes.prsMethodAddress[0]",
+              "language": "jsonpath",
+              "name": "methodAddress"
+            }
+          ],
+          "method": "GET",
+          "params": [
+            [
+              "q",
+              "{\"id\":\"$currentNodeId\",\"attributes\":[\"cn\",\"objectClass\",\"description\",\"prsActive\",\"prsArchive\",\"prsCompress\",\"prsDefault\",\"prsStep\",\"prsUpdate\",\"prsValueTypeCode\",\"prsEntityTypeCode\",\"prsIndex\",\"prsJsonConfigString\",\"prsMeasureUnits\", \"prsMethodAddress\"]}"
+            ]
+          ],
+          "queryParams": "",
+          "refId": "attributes",
+          "urlPath": "$ds_api"
+        }
+      ],
+      "type": "volkovlabs-form-panel"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "includeAll": false,
+        "multi": false,
+        "name": "currentNodeId",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": " ",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "includeAll": false,
+        "multi": false,
+        "name": "currentNodeClass",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": " ",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "/objects/",
+          "value": "/objects/"
+        },
+        "hide": 2,
+        "includeAll": false,
+        "multi": false,
+        "name": "ds_api",
+        "options": [
+          {
+            "selected": true,
+            "text": "/objects/",
+            "value": "/objects/"
+          }
+        ],
+        "query": "/objects/",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "marcusolsson-json-datasource",
+          "uid": "${DS_PERESVET}"
+        },
+        "definition": "$.data[0].id",
+        "hide": 2,
+        "includeAll": false,
+        "multi": false,
+        "name": "dataStorageId",
+        "options": [],
+        "query": {
+          "cacheDurationSeconds": 300,
+          "fields": [
+            {
+              "jsonPath": "$.data[0].id"
+            }
+          ],
+          "method": "GET",
+          "params": [
+            [
+              "q",
+              "{\"base\": \"\", \"attributes\": [\"cn\"]}"
+            ]
+          ],
+          "queryParams": "",
+          "urlPath": "/dataStorages/"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "timepicker": {
+    "hidden": true
+  },
+  "timezone": "browser",
+  "title": "Hierarchy new",
+  "uid": "fdwvpcljpn8jka",
+  "version": 510,
+  "weekStart": ""
+}

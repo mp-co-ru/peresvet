@@ -1,21 +1,62 @@
 location / {
     root   /var/www;
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
     index  index.html index.htm;
 }
 
 location = /v1/alerts/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
     proxy_pass $proto://alerts_api_crud;
 }
 
 location = /v1/alarms/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
     proxy_pass $proto://alerts_app_api;
 }
 
 location = /v1/connectors/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
     proxy_pass $proto://connectors_api_crud;
 }
 
 location /v1/connectors/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
+
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header Host $host;
 
@@ -27,22 +68,62 @@ location /v1/connectors/ {
 }
 
 location = /v1/dataStorages/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
     proxy_pass $proto://datastorages_api_crud;
 }
 
 location = /v1/methods/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
     proxy_pass $proto://methods_api_crud;
 }
 
 location = /v1/objects/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
     proxy_pass $proto://objects_api_crud;
 }
 
 location = /v1/schedules/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
     proxy_pass $proto://schedules_api_crud;
 }
 
 location = /v1/tags/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
     proxy_pass $proto://tags_api_crud;
 }
 

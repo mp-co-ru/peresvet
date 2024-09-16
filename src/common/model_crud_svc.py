@@ -7,12 +7,7 @@
 """
 import sys
 import copy
-import json
 import asyncio
-from uuid import uuid4
-
-import aio_pika
-import aio_pika.abc
 
 sys.path.append(".")
 
@@ -682,9 +677,9 @@ class ModelCRUDSvc(Svc):
         if mes_data["filter"].get("objectClass") is None:
             mes_data["filter"]["objectClass"] = [self._config.hierarchy["class"]]
 
-        if not mes_data.get("base"):
+        if (not mes_data.get("base")) and (not mes_data.get("id")):
             if not self._config.hierarchy["node"]:
-                return {"error": "Должен быть указан родительский узел для поиска."}
+                return {"error": {"code": 500, "message": "Должен быть указан родительский узел для поиска."}}
 
             mes_data["base"] = self._config.hierarchy["node_id"]
 
@@ -706,7 +701,8 @@ class ModelCRUDSvc(Svc):
             for item in items:
                 res["data"].append(item)
 
-        return await self._further_read(mes, res)
+        final_res = await self._further_read(mes, res)
+        return final_res
 
     async def _further_read(self, mes: dict, search_result: dict) -> dict:
         """Метод переопределяется в классах-потомках, чтобы

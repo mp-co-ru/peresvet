@@ -26,6 +26,27 @@ def valid_uuid(id: str | list[str]) -> str | list[str]:
             raise ValueError('id должен быть в виде GUID') from ex
     return id
 
+def valid_uuid_for_read(id: str | list[str]) -> str | list[str]:
+    """Валидатор идентификаторов.
+    Идентификатор должен быть в виде GUID.
+    """
+    if id is not None:
+        try:
+            # специальный случай, будем отдавать пустой массив
+            id_stripped = id.strip()
+            if id_stripped == "":
+                return id_stripped
+            
+            if isinstance(id, str):
+                UUID(id)
+            else:
+                for item in id:
+                    UUID(item)
+        except ValueError as ex:
+            raise ValueError('id должен быть в виде GUID') from ex
+    return id
+
+
 # base может быть пустой строкой
 def valid_base(base: str | None) -> str | None:
     if base.strip() == "":
@@ -196,7 +217,7 @@ class NodeRead(BaseModel):
         )
     )
 
-    validate_id = validator('id', allow_reuse=True)(valid_uuid)
+    validate_id = validator('id', allow_reuse=True)(valid_uuid_for_read)
     validate_base = validator('base', allow_reuse=True)(valid_base)
 
 class NodeCreateResult(BaseModel):
@@ -213,7 +234,7 @@ class OneNodeInReadResult(BaseModel):
 
     id: str = Field(title="Id узла.")
     attributes: dict = Field(title="Атрибуты узла")
-    children: list[dict] = Field(
+    children: list[dict] | None = Field(
         None,
         title="Список дочерних узлов"
     )
@@ -246,6 +267,17 @@ class APICRUDSvc(BaseSvc):
         return await self._post_message(mes=body, reply=True)
 
     async def read(self, payload: NodeRead) -> dict:
+        if payload.id == "":
+            attrs = {attr:[None] for attr in payload.attributes}
+            return {
+                "data": [
+                    {
+                        "id": "",
+                        "attributes": attrs
+                    }
+                ]
+            }
+
         body = {
             "action": self._outgoing_commands["read"],
             "data": payload.model_dump()

@@ -116,7 +116,7 @@ async def create(payload: ObjectCreate, error_handler: svc.ErrorHandler = Depend
     await error_handler.handle_error(res)
     return res
 
-@router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
+@router.get("/", response_model=svc.NodeReadResult | None, status_code=200, response_model_exclude_none=True)
 async def read(q: str | None = None, payload: ObjectRead | None = None, error_handler: svc.ErrorHandler = Depends()):
     """
     Метод чтения обьекта в иерархии.

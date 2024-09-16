@@ -2,11 +2,10 @@
 Модуль содержит примеры запросов и ответов на них, параметров которые могут входить в
 запрос, в сервисе methods.
 """
-import json
 import sys
 from typing import List
-from pydantic import BaseModel, Field, validator
-from fastapi import APIRouter, Depends, HTTPException
+from pydantic import Field, validator, ConfigDict
+from fastapi import APIRouter, Depends
 
 sys.path.append(".")
 
@@ -42,6 +41,23 @@ class MethodCreate(svc.NodeCreate):
 
 class MethodRead(svc.NodeRead):
     pass
+
+class OneMethodInReadResult(svc.OneNodeInReadResult):
+    attributes: dict = Field(title="Атрибуты метода", required=True)
+    initiatedBy: str | list[str] = Field([], title="Список id экземпляров сущностей, инициирующих вычисление тега.")
+    parameters: List[dict] = Field(
+        [],
+        title="Параметры метода.",
+        description=(
+            "При создании параметров метода они должны быть пронумерованы ",
+            "с помощью атрибута prsIndex. В противном случае параметры ",
+            "будут переданы в вычислительный метод в случайном порядке."
+        )
+    )
+
+class MethodReadResult(svc.NodeReadResult):
+    data: list[OneMethodInReadResult] = Field(title="Список узлов")
+
 
 class MethodUpdate(MethodCreate):
     # не было поля для id, для обновляемого метода
@@ -129,7 +145,7 @@ async def create(payload: MethodCreate, error_handler: svc.ErrorHandler = Depend
     await error_handler.handle_error(res)
     return res
 
-@router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
+@router.get("/", response_model=MethodReadResult | None, status_code=200, response_model_exclude_none=True)
 async def read(q: str | None = None, payload: MethodRead | None = None, error_handler: svc.ErrorHandler = Depends()):
     res = await app.api_get_read(MethodRead, q, payload)
     await error_handler.handle_error(res)

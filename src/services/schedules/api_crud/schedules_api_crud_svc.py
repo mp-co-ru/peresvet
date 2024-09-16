@@ -164,7 +164,7 @@ async def create(payload: ScheduleCreate):
     """
     return await app.create(payload)
 
-@router.get("/", response_model=svc.NodeReadResult | None, status_code=200)
+@router.get("/", response_model=svc.NodeReadResult | None, status_code=200, response_model_exclude_none=True)
 async def read(q: str | None = None, payload: ScheduleRead | None = None):
     return await app.api_get_read(ScheduleRead, q, payload)
 

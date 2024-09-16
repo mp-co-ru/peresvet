@@ -186,7 +186,7 @@ async def create(payload: ConnectorCreate, error_handler: svc.ErrorHandler = Dep
     await error_handler.handle_error(res)
     return res
 
-@router.get("/", response_model=ConnectorReadResult | None, status_code=200)
+@router.get("/", response_model=ConnectorReadResult | None, status_code=200, response_model_exclude_none=True)
 async def read(q: str | None = None, payload: ConnectorRead | None = None, error_handler: svc.ErrorHandler = Depends()):
     """
     Метод чтения коннектора из иерархии.
