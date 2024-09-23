@@ -33,11 +33,10 @@ def valid_uuid_for_read(id: str | list[str]) -> str | list[str]:
     if id is not None:
         try:
             # специальный случай, будем отдавать пустой массив
-            id_stripped = id.strip()
-            if id_stripped == "":
-                return id_stripped
-            
             if isinstance(id, str):
+                id_stripped = id.strip()
+                if id_stripped == "":
+                    return id_stripped
                 UUID(id)
             else:
                 for item in id:
