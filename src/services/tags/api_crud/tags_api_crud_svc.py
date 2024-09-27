@@ -104,14 +104,14 @@ class TagsAPICRUD(svc.APICRUDSvc):
     def __init__(self, settings: TagsAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    async def create(self, payload: TagCreate) -> dict:
-        return await super().create(payload=payload)
+    async def _create(self, payload: TagCreate) -> dict:
+        return await super()._create(payload=payload)
 
-    async def read(self, payload: TagRead) -> dict:
-        return await super().read(payload=payload)
+    async def _read(self, payload: TagRead) -> dict:
+        return await super()._read(payload=payload)
 
-    async def update(self, payload: TagUpdate) -> dict:
-        return await super().update(payload=payload)
+    async def _update(self, payload: TagUpdate) -> dict:
+        return await super()._update(payload=payload)
 
 settings = TagsAPICRUDSettings()
 
@@ -162,7 +162,7 @@ async def create(payload: TagCreate, error_handler: svc.ErrorHandler = Depends()
         * **detail** (str) - пояснения к ошибке
 
     """
-    res = await app.create(payload)
+    res = await app._create(payload)
     await error_handler.handle_error(res)
     return res
 
@@ -250,7 +250,7 @@ async def update(payload: TagUpdate, error_handler: svc.ErrorHandler = Depends()
         * **detail** (list) - Детали ошибки.
 
     """
-    res = await app.update(payload)
+    res = await app._update(payload)
     await error_handler.handle_error(res)
     return res
 

@@ -3,6 +3,7 @@ from src.common.model_crud_settings import ModelCRUDSettings
 class AlertsModelCRUDSettings(ModelCRUDSettings):
     #: имя сервиса
     svc_name: str = "alerts_model_crud"
+    entity: str = "alerts"
     #: строка коннекта к RabbitMQ
     amqp_url: str = "amqp://prs:Peresvet21@rabbitmq/"
     #: строка коннекта к OpenLDAP

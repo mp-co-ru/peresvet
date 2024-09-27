@@ -29,7 +29,6 @@ class Svc(BaseSvc):
     def __init__(self, settings: SvcSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
         self._hierarchy = Hierarchy(settings.ldap_url)
-        self._amqp_subscribe = {}
 
     async def _ldap_connect(self) -> None:
         """
@@ -60,21 +59,6 @@ class Svc(BaseSvc):
             except ldap.LDAPError as ex:
                 self._logger.error(f"Ошибка связи с сервером ldap: {ex}")
                 await asyncio.sleep(5)
-
-    async def _get_subscribers_node_id(self, node_id: str) -> str:
-        """Метод возвращает id подузла ``cn=subscribers,cn=system`` для
-        родительского узла ``node_id``\.
-
-        Args:
-            node_id (str): id родительского узла
-
-        Returns:
-            str: id узла с подписчиками
-        """
-        dn = await self._hierarchy.get_node_dn(node_id)
-        return await self._hierarchy.get_node_id(
-            f"cn=subscribers,cn=system,{dn}"
-        )
 
     async def on_startup(self) -> None:
         await super().on_startup()

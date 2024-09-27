@@ -17,26 +17,9 @@ class AlertsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     """
 
-    _outgoing_commands = {
-        "created": "alerts.created",
-        "mayUpdate": "alerts.mayUpdate",
-        "updating": "alerts.updating",
-        "updated": "alerts.updated",
-        "mayDelete": "alerts.mayDelete",
-        "deleting": "alerts.deleting",
-        "deleted": "alerts.deleted"
-    }
-
     def __init__(self, settings: AlertsModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
-
-    def _set_incoming_commands(self) -> dict:
-        return {
-            "alerts.create": self._create,
-            "alerts.read": self._read,
-            "alerts.update": self._update,
-            "alerts.delete": self._delete,
-        }
+    
 
 settings = AlertsModelCRUDSettings()
 

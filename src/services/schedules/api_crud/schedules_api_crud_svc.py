@@ -105,14 +105,14 @@ class SchedulesAPICRUD(svc.APICRUDSvc):
     def __init__(self, settings: SchedulesAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    async def create(self, payload: ScheduleCreate) -> dict:
-        return await super().create(payload=payload)
+    async def _create(self, payload: ScheduleCreate) -> dict:
+        return await super()._create(payload=payload)
 
-    async def read(self, payload: ScheduleRead) -> dict:
-        return await super().read(payload=payload)
+    async def _read(self, payload: ScheduleRead) -> dict:
+        return await super()._read(payload=payload)
 
-    async def update(self, payload: ScheduleUpdate) -> dict:
-        return await super().update(payload=payload)
+    async def _update(self, payload: ScheduleUpdate) -> dict:
+        return await super()._update(payload=payload)
 
 settings = SchedulesAPICRUDSettings()
 
@@ -162,7 +162,7 @@ async def create(payload: ScheduleCreate):
         * **detail** (str) - пояснения к ошибке
 
     """
-    return await app.create(payload)
+    return await app._create(payload)
 
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200, response_model_exclude_none=True)
 async def read(q: str | None = None, payload: ScheduleRead | None = None):
@@ -170,7 +170,7 @@ async def read(q: str | None = None, payload: ScheduleRead | None = None):
 
 @router.put("/", status_code=202)
 async def update(payload: ScheduleUpdate):
-    await app.update(payload)
+    await app._update(payload)
 
 @router.delete("/", status_code=202)
 async def delete(payload: ScheduleRead):

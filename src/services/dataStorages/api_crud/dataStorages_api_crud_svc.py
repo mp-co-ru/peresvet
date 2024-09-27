@@ -112,14 +112,14 @@ class DataStoragesAPICRUD(svc.APICRUDSvc):
     def __init__(self, settings: DataStoragesAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    async def create(self, payload: DataStorageCreate) -> dict:
-        return await super().create(payload=payload)
+    async def _create(self, payload: DataStorageCreate) -> dict:
+        return await super()._create(payload=payload)
 
-    async def read(self, payload: DataStorageRead) -> dict:
-        return await super().read(payload=payload)
+    async def _read(self, payload: DataStorageRead) -> dict:
+        return await super()._read(payload=payload)
 
-    async def update(self, payload: DataStorageUpdate) -> dict:
-        return await super().update(payload=payload)
+    async def _update(self, payload: DataStorageUpdate) -> dict:
+        return await super()._update(payload=payload)
 
 settings = DataStoragesAPICRUDSettings()
 
@@ -183,7 +183,7 @@ async def create(payload: DataStorageCreate, error_handler: svc.ErrorHandler = D
         * **detail** (str) - пояснения к ошибке
 
     """
-    res = await app.create(payload)
+    res = await app._create(payload)
     await error_handler.handle_error(res)
     return res
 
@@ -195,7 +195,7 @@ async def read(q: str | None = None, payload: DataStorageRead | None = None, err
 
 @router.put("/", status_code=202)
 async def update(payload: DataStorageUpdate, error_handler: svc.ErrorHandler = Depends()):
-    res = await app.update(payload)
+    res = await app._update(payload)
     await error_handler.handle_error(res)
     return res
 

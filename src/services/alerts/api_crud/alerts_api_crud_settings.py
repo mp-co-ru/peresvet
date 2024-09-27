@@ -4,6 +4,7 @@ class AlertsAPICRUDSettings(APICRUDSettings):
 
     #: имя сервиса
     svc_name: str = "alerts_api_crud"
+    entity: str = "alerts"
     #: строка коннекта к RabbitMQ
     amqp_url: str = "amqp://prs:Peresvet21@rabbitmq/"
 

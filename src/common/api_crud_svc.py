@@ -247,19 +247,41 @@ class NodeReadResult(BaseModel):
     data: list[OneNodeInReadResult] = Field(title="Список узлов")
 
 class APICRUDSvc(BaseSvc):
-    _outgoing_commands = {
-        "create": "create",
-        "read": "read",
-        "update": "update",
-        "delete": "delete"
-    }
-
+    """
+    Правила отсылки сообщений: все сообщения отсылаются с одним, указанным в конфигурации routing_key, так как:
+    1) все сообщения этого сервиса нужны только сервису model_crud
+    2) команды чтения/обновления/удаления могут применяться к группам экземпляров
+    """
+    
     def __init__(self, settings: APICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
         self.api_version = settings.api_version
 
-    async def create(self, payload: NodeCreate | None) -> dict:
+    def _set_incoming_commands(self) -> dict:
+        return {
+            f"{self._config.hierarchy['class']}.client.create": self._create,
+            f"{self._config.hierarchy['class']}.client.read": self._read,
+            f"{self._config.hierarchy['class']}.client.update": self._update,
+            f"{self._config.hierarchy['class']}.client.delete": self._delete,
+        }
+
+    def _set_outgoing_commands(self) -> dict:
+        return {
+            "create": f"{self._config.hierarchy['class']}.model.create",
+            "read":  f"{self._config.hierarchy['class']}.model.read",
+            "update":  f"{self._config.hierarchy['class']}.model.update",
+            "delete":  f"{self._config.hierarchy['class']}.model.delete"
+        }
+
+    async def _bind_for_consume(self):
+        for bind in ["create", "read.*", "update.*", "delete.*"]:
+            await self._amqp_consume["queue"].bind(
+                exchange=self._amqp_consume["exchange"],
+                routing_key=f"{self._config.hierarchy['class']}.client.{bind}"
+            )
+
+    async def _create(self, payload: NodeCreate | None) -> dict:
         body = {
             "action": self._outgoing_commands["create"],
             "data": None
@@ -270,7 +292,7 @@ class APICRUDSvc(BaseSvc):
         
         return await self._post_message(mes=body, reply=True)
 
-    async def read(self, payload: NodeRead) -> dict:
+    async def _read(self, payload: NodeRead) -> dict:
         if payload.id == "":
             attrs = {attr:[None] for attr in payload.attributes}
             return {
@@ -289,8 +311,7 @@ class APICRUDSvc(BaseSvc):
 
         return await self._post_message(mes=body, reply=True)
 
-
-    async def update(self, payload: dict) -> dict:
+    async def _update(self, payload: dict) -> dict:
         body = {
             "action": self._outgoing_commands["update"]
         }
@@ -301,7 +322,7 @@ class APICRUDSvc(BaseSvc):
 
         return await self._post_message(mes=body, reply=True)
 
-    async def delete(self, payload: NodeDelete) -> dict:
+    async def _delete(self, payload: NodeDelete) -> dict:
         """Удаление узлов в иерархии.
         """
         body = {
@@ -331,4 +352,4 @@ class APICRUDSvc(BaseSvc):
         elif payload:
             p = payload
 
-        return await self.read(p)
+        return await self._read(p)

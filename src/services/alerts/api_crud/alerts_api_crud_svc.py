@@ -51,24 +51,17 @@ class AlertsAPICRUD(svc.APICRUDSvc):
 
     """
 
-    _outgoing_commands = {
-        "create": "alerts.create",
-        "read": "alerts.read",
-        "update": "alerts.update",
-        "delete": "alerts.delete"
-    }
-
     def __init__(self, settings: AlertsAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    async def create(self, payload: AlertCreate) -> dict:
-        return await super().create(payload=payload)
+    async def _create(self, payload: AlertCreate) -> dict:
+        return await super()._create(payload=payload)
 
-    async def read(self, payload: AlertRead) -> dict:
-        return await super().read(payload=payload)
+    async def _read(self, payload: AlertRead) -> dict:
+        return await super()._read(payload=payload)
 
-    async def update(self, payload: AlertUpdate) -> dict:
-        return await super().update(payload=payload)
+    async def _update(self, payload: AlertUpdate) -> dict:
+        return await super()._update(payload=payload)
 
 settings = AlertsAPICRUDSettings()
 
@@ -125,7 +118,7 @@ async def create(payload: AlertCreate, error_handler: svc.ErrorHandler = Depends
 
     """
 
-    res = await app.create(payload)
+    res = await app._create(payload)
     await error_handler.handle_error(res)
     return res
 
@@ -212,7 +205,7 @@ async def update(payload: AlertUpdate, error_handler: svc.ErrorHandler = Depends
         * **detail** (list) - список с пояснениями к ошибке.
 
     """
-    res = await app.update(payload)
+    res = await app._update(payload)
     await error_handler.handle_error(res)
     return res
 

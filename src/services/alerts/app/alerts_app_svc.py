@@ -29,8 +29,16 @@ class AlertsApp(svc.Svc):
         return {
             "alerts.getAlarms": self._get_alarms,
             "alerts.ackAlarms": self._ack_alarms,
-            "tags.uploadData": self._tag_changed
+            "tags.uploadData": self._tag_changed,
+            "tags.deleting": self._tag_deleting,
+            "alerts.created": self._alert_created,
+            "alerts.updated": self._alert_updated,
+            "alerts.deleting": self._alert_deleted,
         }
+    
+    async def _tag_deleting(self, mes: dict):
+        pass
+
 
     async def _get_alarms(self, mes: dict) -> dict:
         """_summary_
@@ -232,6 +240,42 @@ class AlertsApp(svc.Svc):
         ).hexdigest()   # SHA3-256
         '''
         return f"{'.'.join(args)}"
+    
+    async def _get_alert(self, alert) -> None:
+        alert_id = alert[0]
+        alert_config = json.loads(alert[2]["prsJsonConfigString"][0])
+        tag_id = await self._hierarchy.get_node_id(
+            dn2str(str2dn(alert[1])[1:])
+        )
+
+        await self._amqp_consume["queue"].bind(
+            exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
+            routing_key=tag_id
+        )
+
+        await self._amqp_consume["queue"].bind(
+            exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
+            routing_key=alert_id
+        )
+
+        alert_data = {
+            "tagId": tag_id,
+            "alertId": alert_id,
+            "fired": None,
+            "acked": None,
+            "value": alert_config["value"],
+            "high": alert_config["high"],
+            "autoAck": alert_config["autoAck"],
+            "cn": alert[2]["cn"][0],
+            "description": alert[2]["description"][0]
+        }
+
+        await self._cache.set(
+            name=self._cache_key(alert_id, self._config.svc_name),
+            obj=alert_data
+        ).exec()
+
+        self._logger.debug(f"Тревога {alert_id} прочитана.")
 
     async def _get_alerts(self) -> None:
         get_alerts = {
@@ -243,35 +287,7 @@ class AlertsApp(svc.Svc):
         }
         alerts = await self._hierarchy.search(get_alerts)
         for alert in alerts:
-            alert_id = alert[0]
-            alert_config = json.loads(alert[2]["prsJsonConfigString"][0])
-            tag_id = await self._hierarchy.get_node_id(
-                dn2str(str2dn(alert[1])[1:])
-            )
-
-            await self._amqp_consume["queue"].bind(
-                exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
-                routing_key=tag_id
-            )
-
-            alert_data = {
-                "tagId": tag_id,
-                "alertId": alert_id,
-                "fired": None,
-                "acked": None,
-                "value": alert_config["value"],
-                "high": alert_config["high"],
-                "autoAck": alert_config["autoAck"],
-                "cn": alert[2]["cn"][0],
-                "description": alert[2]["description"][0]
-            }
-
-            await self._cache.set(
-                name=self._cache_key(alert_id, self._config.svc_name),
-                obj=alert_data
-            ).exec()
-
-            self._logger.debug(f"Тревога {alert_id} прочитана.")
+            self._get_alert(alert)
 
     async def on_startup(self) -> None:
         await super().on_startup()

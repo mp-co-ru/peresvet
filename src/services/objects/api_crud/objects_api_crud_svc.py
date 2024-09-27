@@ -62,14 +62,14 @@ class ObjectsAPICRUD(svc.APICRUDSvc):
     def __init__(self, settings: ObjectsAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    async def create(self, payload: ObjectCreate | None) -> dict:
-        return await super().create(payload=payload)
+    async def _create(self, payload: ObjectCreate | None) -> dict:
+        return await super()._create(payload=payload)
 
-    async def read(self, payload: ObjectRead) -> dict:
-        return await super().read(payload=payload)
+    async def _read(self, payload: ObjectRead) -> dict:
+        return await super()._read(payload=payload)
 
-    async def update(self, payload: ObjectUpdate) -> dict:
-        return await super().update(payload=payload)
+    async def _update(self, payload: ObjectUpdate) -> dict:
+        return await super()._update(payload=payload)
 
 settings = ObjectsAPICRUDSettings()
 
@@ -112,7 +112,7 @@ async def create(payload: ObjectCreate | None, error_handler: svc.ErrorHandler =
         * **detail** (str) - пояснения к ошибке
 
     """
-    res = await app.create(payload)
+    res = await app._create(payload)
     await error_handler.handle_error(res)
     return res
 
@@ -203,7 +203,7 @@ async def update(payload: ObjectUpdate, error_handler: svc.ErrorHandler = Depend
         * **detail** (list) - детали ошибки.
 
     """
-    res = await app.update(payload)
+    res = await app._update(payload)
     await error_handler.handle_error(res)
     return res
 
