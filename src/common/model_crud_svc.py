@@ -157,18 +157,18 @@ class ModelCRUDSvc(Svc):
         }
 
     """
-    _outgoing_commands = {
-        "created": "created",
-        "mayUpdate": "mayUpdate",
-        "updating": "updating",
-        "updated": "updated",
-        "mayDelete": "mayDelete",
-        "deleting": "deleting",
-        "deleted": "deleted"
-    }
-
     def __init__(self, settings: ModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
+
+        self._outgoing_commands = {
+            "created": f"{self._config.svc_name}.created",
+            "mayUpdate": f"{self._config.svc_name}.mayUpdate",
+            "updating": f"{self._config.svc_name}.updating",
+            "updated": f"{self._config.svc_name}.updated",
+            "mayDelete": f"{self._config.svc_name}.mayDelete",
+            "deleting": f"{self._config.svc_name}.deleting",
+            "deleted": f"{self._config.svc_name}.deleted"
+        }
 
         self._config.hierarchy["node_dn"] = None
         self._config.hierarchy["node_id"] = None
@@ -682,7 +682,9 @@ class ModelCRUDSvc(Svc):
                 return {"error": {"code": 500, "message": "Должен быть указан родительский узел для поиска."}}
 
             mes_data["base"] = self._config.hierarchy["node_id"]
-
+        if mes_data["base"] == "prs":
+            mes_data["base"] = await self._hierarchy.get_node_id("cn=prs")
+            
         for key, item in mes_data["filter"].items():
             # если в запросе одно из полей было не списком, то делаем его списком
             if type(item) is not list:
@@ -742,8 +744,11 @@ class ModelCRUDSvc(Svc):
 
         """
 
-        parent_node = mes["data"].get("parentId")
-        parent_node = parent_node if parent_node else self._config.hierarchy["node_id"]
+        mes_data = mes["data"]
+        if mes_data is None:
+            mes_data = {}
+        parent_node = mes_data.get("parentId")
+        parent_node = (self._config.hierarchy["node_id"], parent_node)[bool(parent_node)]
         if not parent_node:
             res = {
                 "id": None,
@@ -759,20 +764,6 @@ class ModelCRUDSvc(Svc):
             ))
 
             return res
-
-        initiators = mes['data'].get("initiatedBy")
-        if (initiators is not None):
-            if (parent_node in initiators):
-
-                res = {
-                    "id": None,
-                    "error": {
-                        "code": 400,
-                        "message": "ParentId не может быть в списке InitiatedBy."
-                    }
-                }
-
-                return res
 
         if not await self._check_parent_class(parent_node):
             res = {

@@ -3,7 +3,8 @@
 запрос, в сервисе methods.
 """
 import sys
-from typing import List
+from typing import List, Optional
+import json
 from pydantic import Field, validator, ConfigDict
 from fastapi import APIRouter, Depends
 
@@ -13,17 +14,20 @@ from src.common import api_crud_svc as svc
 from src.services.methods.api_crud.methods_api_crud_settings import MethodsAPICRUDSettings
 
 class MethodCreateAttributes(svc.NodeAttributes):
-    prsMethodAddress: str = Field(title="Адрес метода", required=True)
+    prsMethodAddress: str = Field(" ", title="Адрес метода")
     prsEntityTypeCode: int = Field(0, title="Тип метода")
+
+class MethodUpdateAttributes(svc.NodeAttributes):
+    prsMethodAddress: Optional[str] = None
 
 class MethodParameter(svc.NodeCreate):
     pass
 
 class MethodCreate(svc.NodeCreate):
     attributes: MethodCreateAttributes = Field(title="Атрибуты метода", required=True)
-    initiatedBy: str | list[str] = Field([], title="Список id экземпляров сущностей, инициирующих вычисление тега.")
-    parameters: List[MethodParameter] = Field(
-        [],
+    initiatedBy: str | list[str] | None = Field(None, title="Список id экземпляров сущностей, инициирующих вычисление тега.")
+    parameters: List[MethodParameter] | None = Field(
+        None,
         title="Параметры метода.",
         description=(
             "При создании параметров метода они должны быть пронумерованы ",
@@ -62,6 +66,7 @@ class MethodReadResult(svc.NodeReadResult):
 class MethodUpdate(MethodCreate):
     # не было поля для id, для обновляемого метода
     id: str = Field(title="id обновляемого метода")
+    attributes: MethodUpdateAttributes | None = None
 
 class MethodsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с методами в иерархии.
@@ -152,7 +157,15 @@ async def read(q: str | None = None, payload: MethodRead | None = None, error_ha
     return res
 
 @router.put("/", status_code=202)
-async def update(payload: MethodUpdate, error_handler: svc.ErrorHandler = Depends()):
+async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
+    s = json.dumps(payload)
+    try:
+        p = MethodUpdate.model_validate_json(s)
+    except Exception as ex:
+        res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+        app._logger.exception(res)
+        await error_handler.handle_error(res)
+
     res = await app.update(payload)
     await error_handler.handle_error(res)
     return res

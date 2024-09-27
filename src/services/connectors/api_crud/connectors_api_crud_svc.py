@@ -48,9 +48,8 @@ class LinkTag(BaseModel):
     tagId: str = Field(title="Идентификатор привязываемого тега")
     attributes: LinkTagAttributes = Field(title="Атрибуты тега")
 
-
 class ConnectorAttributes(svc.NodeAttributes):
-    prsJsonConfigString: dict = Field(
+    prsJsonConfigString: dict = Field({},
         title="Способ подключения к источнику данных",
         description=(
             "Json, содержащий информацию о том, как коннектор должен "
@@ -60,7 +59,7 @@ class ConnectorAttributes(svc.NodeAttributes):
     )
 
 class ConnectorCreate(svc.NodeCreate):
-    attributes: ConnectorAttributes = Field(title="Атрибуты коннектора")
+    attributes: ConnectorAttributes | None = Field(None, title="Атрибуты коннектора")
     linkTags: list[LinkTag] = Field(
         [],
         title="Список добавленных тегов для коннектора"

@@ -16,11 +16,10 @@ from src.common import times as t
 from src.services.schedules.api_crud.schedules_api_crud_settings import SchedulesAPICRUDSettings
 
 class ScheduleCreateAttributes(svc.NodeAttributes):
-    prsJsonConfigString: str = Field(title="Конфигурация экземпляра.",
+    '''
+    prsJsonConfigString: str | None = Field(None, title="Конфигурация экземпляра.",
         description=(
-            "Строка содержит, в случае необходимости, конфигурацию узла. "
-            "Интерпретируется сервисом, управляющим сущностью, которой "
-            "принадлежит экземпляр."
+            "Строка содержит конфигурацию расписания."
         ))
     @validator('prsJsonConfigString')
     @classmethod
@@ -65,6 +64,7 @@ class ScheduleCreateAttributes(svc.NodeAttributes):
             raise_exception()
 
         return v
+    '''
 
 class ScheduleCreate(svc.NodeCreate):
     attributes: ScheduleCreateAttributes = Field(title="Атрибуты узла")

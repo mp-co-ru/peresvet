@@ -255,6 +255,12 @@ class Hierarchy:
                 id_in_attrs = True
             else:
                 return_attributes.append('entryUUID')
+            
+            index_in_attrs = False
+            if 'prsIndex' in return_attributes:
+                index_in_attrs = True
+            else:
+                return_attributes.append('prsIndex')
 
             res = conn.search_s(base=node, scope=scope,
                 filterstr=filterstr, attrlist=return_attributes)
@@ -275,6 +281,16 @@ class Hierarchy:
 
                 #yield (item[1]['entryUUID'][0].decode(), item[0], item_data)
                 result.append((item[1]['entryUUID'][0].decode(), item[0], item_data))
+
+            def key_sort(val):
+                if val[2]["prsIndex"][0] is None:
+                    return 0
+                return int(val[2]["prsIndex"][0])
+
+            result.sort(key=key_sort)
+            if not index_in_attrs:
+                for item in result:
+                    item[2].pop("prsIndex")
 
             if not ids:
                 conn.deref = old_deref

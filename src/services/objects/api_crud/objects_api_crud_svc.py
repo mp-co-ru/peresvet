@@ -24,7 +24,7 @@ class ObjectCreateAttributes(svc.NodeAttributes):
     pass
 
 class ObjectCreate(svc.NodeCreate):
-    attributes: ObjectCreateAttributes = Field(title="Атрибуты объекта")
+    attributes: ObjectCreateAttributes = Field({}, title="Атрибуты объекта")
 
     # validate_id = validator('parentId', 'dataStorageId', 'connectorId', allow_reuse=True)(svc.valid_uuid)
 
@@ -62,7 +62,7 @@ class ObjectsAPICRUD(svc.APICRUDSvc):
     def __init__(self, settings: ObjectsAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    async def create(self, payload: ObjectCreate) -> dict:
+    async def create(self, payload: ObjectCreate | None) -> dict:
         return await super().create(payload=payload)
 
     async def read(self, payload: ObjectRead) -> dict:
@@ -80,7 +80,7 @@ router = APIRouter(prefix=f"{settings.api_version}/objects")
 error_handler = svc.ErrorHandler()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
-async def create(payload: ObjectCreate, error_handler: svc.ErrorHandler = Depends()):
+async def create(payload: ObjectCreate | None, error_handler: svc.ErrorHandler = Depends()):
     """
     Метод добавляет обьект в иерархию.
 

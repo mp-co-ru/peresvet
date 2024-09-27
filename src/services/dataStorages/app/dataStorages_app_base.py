@@ -816,7 +816,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
                     # если нет кэша у тега
                     cache = await self._create_tag_cache(tag_id)
                 else:
-                    cache = res[0][0]
+                    cache = res[0]
                 if not cache["prsActive"]:
                     self._logger.info(f"Тег {tag_id} неактивен, данные не записываются.")
                 else:

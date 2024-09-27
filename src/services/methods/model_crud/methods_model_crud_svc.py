@@ -38,7 +38,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             "methods.update": self._update,
             "methods.delete": self._delete,
         }
-
+    
     async def _further_create(self, mes: dict, new_id: str) -> None:
         system_node = await self._hierarchy.search(payload={
             "base": new_id,
@@ -59,22 +59,41 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             system_node_id,
             {"cn": ["initiatedBy"]}
         )
-        for initiator_id in mes["data"]["initiatedBy"]:
-            await self._hierarchy.add(
-                initiatedBy_node_id,
-                {"cn": [initiator_id]}
-            )
+
+        mes_data = mes["data"]
+        parent_node = mes_data["parentId"]
+        initiators = mes_data.get("initiatedBy")
+        if (initiators is not None):
+            if (parent_node in initiators):
+                res = {
+                    "id": None,
+                    "error": {
+                        "code": 400,
+                        "message": "ParentId не может быть в списке 'initiatedBy'."
+                    }
+                }
+
+                return res
+
+
+        if mes["data"].get("initiatedBy"):
+            for initiator_id in mes["data"]["initiatedBy"]:
+                await self._hierarchy.add(
+                    initiatedBy_node_id,
+                    {"cn": [initiator_id]}
+                )
         # создадим узлы-параметры
         parameters_node_id = await self._hierarchy.add(
             system_node_id,
             {"cn": ["parameters"]}
         )
-        for parameter in mes["data"]["parameters"]:
-            parameter["attributes"]["objectClass"] = ["prsMethodParameter"]
-            await self._hierarchy.add(
-                parameters_node_id,
-                parameter["attributes"]
-            )
+        if mes["data"].get("parameters"):
+            for parameter in mes["data"]["parameters"]:
+                parameter["attributes"]["objectClass"] = ["prsMethodParameter"]
+                await self._hierarchy.add(
+                    parameters_node_id,
+                    parameter["attributes"]
+                )
 
     async def _further_read(self, mes: dict, search_result: dict) -> dict:
         # добавим в результат параметры и initiatedBy
@@ -120,6 +139,39 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             new_result["data"].append(new_method_item)
             
         return new_result
+
+    async def _further_update(self, mes: dict) -> None:
+        if (not ("initiatedBy" in mes["data"].keys()) and
+            not ("parameters" in mes["data"].keys())):
+            return
+        
+        if "initiatedBy" in mes["data"].keys():
+            initiatedBy_node = await self._hierarchy.search(payload={
+                "base": mes["data"]["id"],
+                "scope": hierarchy.CN_SCOPE_SUBTREE,
+                "filter": {
+                    "cn": ["initiatedBy"]
+                },
+                "attributes": ["cn"]
+            })
+            if initiatedBy_node:
+                initiatedBy_node_id = initiatedBy_node[0][0]
+                await self._hierarchy.delete(initiatedBy_node_id)
+
+        if "parameters" in mes["data"].keys():
+            parameters_node = await self._hierarchy.search(payload={
+                "base": mes["data"]["id"],
+                "scope": hierarchy.CN_SCOPE_SUBTREE,
+                "filter": {
+                    "cn": ["parameters"]
+                },
+                "attributes": ["cn"]
+            })
+            if parameters_node:
+                parameters_node_id = parameters_node[0][0]
+                await self._hierarchy.delete(parameters_node_id)
+
+        await self._further_create(mes, mes["data"]["id"])
 
 settings = MethodsModelCRUDSettings()
 

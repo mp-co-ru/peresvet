@@ -50,9 +50,11 @@ def valid_uuid_for_read(id: str | list[str]) -> str | list[str]:
 def valid_base(base: str | None) -> str | None:
     if base.strip() == "":
         return None
+    if base == "prs":
+        return base
     return valid_uuid(base)
 
-# класс с методами обработки ошибок в выоде для пользователя
+# класс с методами обработки ошибок в выводе для пользователя
 class ErrorHandler:
     async def handle_error(self,res):
         if res is not None:
@@ -257,12 +259,15 @@ class APICRUDSvc(BaseSvc):
 
         self.api_version = settings.api_version
 
-    async def create(self, payload: NodeCreate) -> dict:
+    async def create(self, payload: NodeCreate | None) -> dict:
         body = {
             "action": self._outgoing_commands["create"],
-            "data": payload.model_dump()
+            "data": None
         }
 
+        if not (payload is None):
+            body["data"] = payload.model_dump()
+        
         return await self._post_message(mes=body, reply=True)
 
     async def read(self, payload: NodeRead) -> dict:
@@ -285,11 +290,14 @@ class APICRUDSvc(BaseSvc):
         return await self._post_message(mes=body, reply=True)
 
 
-    async def update(self, payload: NodeUpdate) -> dict:
+    async def update(self, payload: dict) -> dict:
         body = {
-            "action": self._outgoing_commands["update"],
-            "data": payload.model_dump()
+            "action": self._outgoing_commands["update"]
         }
+        if isinstance(payload, dict):
+            body["data"] = payload
+        else:
+            body["data"] = payload.model_dump()
 
         return await self._post_message(mes=body, reply=True)
 

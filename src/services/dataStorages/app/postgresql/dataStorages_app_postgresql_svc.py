@@ -144,7 +144,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                 await conn.execute(query)
 
         except Exception as ex:
-            self._logger.error(f"Ошибка обновления данных в кэше: {ex}")
+            self._logger.error(f"Ошибка создания хранилища тега: {ex}")
 
     async def alarm_on(self, mes: dict) -> None:
 
