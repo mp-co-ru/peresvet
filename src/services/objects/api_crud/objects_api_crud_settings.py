@@ -6,27 +6,4 @@ class ObjectsAPICRUDSettings(APICRUDSettings):
 
     #: имя сервиса
     svc_name: str = "objects_api_crud"
-    #: строка коннекта к RabbitMQ
-    amqp_url: str = "amqp://prs:Peresvet21@rabbitmq/"
-
-    #: обменник для публикаций
-    publish: dict = {
-        "main": {
-            "name": "peresvet",
-            "type": "direct",
-            "routing_key": "objects_api_crud_publish"
-        }
-    }
-    consume: dict = {
-        "queue_name": "objects_api_crud_consume",
-        "exchanges": {
-            "main": {
-                #: имя обменника
-                "name": "peresvet",
-                #: тип обменника
-                "type": "direct",
-                #: привзяка для очереди
-                "routing_key": ["objects_api_crud_consume"]
-            }
-        }
-    }
+        

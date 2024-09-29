@@ -14,12 +14,6 @@ sys.path.append(".")
 from src.common import api_crud_svc as svc
 from src.services.objects.api_crud.objects_api_crud_settings import ObjectsAPICRUDSettings
 
-'''
-origins = [
-    "http://localhost:5173",
-]
-'''
-
 class ObjectCreateAttributes(svc.NodeAttributes):
     pass
 
@@ -51,13 +45,6 @@ class ObjectsAPICRUD(svc.APICRUDSvc):
     Формат ожидаемых сообщений
 
     """
-
-    _outgoing_commands = {
-        "create": "objects.create",
-        "read": "objects.read",
-        "update": "objects.update",
-        "delete": "objects.delete"
-    }
 
     def __init__(self, settings: ObjectsAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)

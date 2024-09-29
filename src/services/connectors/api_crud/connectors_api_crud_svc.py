@@ -105,13 +105,6 @@ class ConnectorsAPICRUD(svc.APICRUDSvc):
     Формат ожидаемых сообщений
 
     """
-    _outgoing_commands = {
-        "create": "connectors.create",
-        "read": "connectors.read",
-        "update": "connectors.update",
-        "delete": "connectors.delete"
-    }
-
     def __init__(self, settings: ConnectorsAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 

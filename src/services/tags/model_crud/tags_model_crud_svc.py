@@ -18,26 +18,8 @@ class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     """
 
-    _outgoing_commands = {
-        "created": "tags.created",
-        "mayUpdate": "tags.mayUpdate",
-        "updating": "tags.updating",
-        "updated": "tags.updated",
-        "mayDelete": "tags.mayDelete",
-        "deleting": "tags.deleting",
-        "deleted": "tags.deleted"
-    }
-
     def __init__(self, settings: TagsModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
-
-    def _set_incoming_commands(self) -> dict:
-        return {
-            "tags.create": self._create,
-            "tags.read": self._read,
-            "tags.update": self._update,
-            "tags.delete": self._delete,
-        }
 
     async def _further_create(self, mes: dict, new_id: str) -> None:
         system_node = await self._hierarchy.search(payload={
@@ -54,15 +36,14 @@ class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         system_node_id = system_node[0][0]
 
-        if mes["data"].get("dataStorageId"):
+        if mes.get("dataStorageId"):
             await self._hierarchy.add_alias(
                 system_node_id, mes["data"]["dataStorageId"], "dataStorage"
             )
 
-
-        if mes["data"].get("connectorId"):
+        if mes.get("connectorId"):
             await self._hierarchy.add_alias(
-                system_node_id, mes["data"]["connectorId"], "connector"
+                system_node_id, mes["connectorId"], "connector"
             )
 
 settings = TagsModelCRUDSettings()

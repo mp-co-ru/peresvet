@@ -255,8 +255,8 @@ class DataStoragesAppVictoriametrics(svc.Svc):
             }
             # если указаны конкретные id хранилищ, которые надо обслуживать,
             # то отменяем базовую привязку очереди прослушивания
-            await self._amqp_consume["queue"].unbind(
-                    exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
+            await self._amqp_consume_queue["queue"].unbind(
+                    exchange=self._amqp_consume_queue["exchanges"]["main"]["exchange"],
                     routing_key=self._config.consume["exchanges"]["main"]["routing_key"][0]
                 )
 
@@ -264,8 +264,8 @@ class DataStoragesAppVictoriametrics(svc.Svc):
 
         dss = await self._hierarchy.search(payload=payload)
         for ds in dss:
-            await self._amqp_consume["queue"].bind(
-                exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
+            await self._amqp_consume_queue["queue"].bind(
+                exchange=self._amqp_consume_queue["exchanges"]["main"]["exchange"],
                 routing_key=ds[0]
             )
 
@@ -317,8 +317,8 @@ class DataStoragesAppVictoriametrics(svc.Svc):
                 self._tags[tag_id] = tag_cache
 
                 self._logger.debug(f"Привязка очереди.")
-                await self._amqp_consume["queue"].bind(
-                    exchange=self._amqp_consume["exchanges"]["tags"]["exchange"],
+                await self._amqp_consume_queue["queue"].bind(
+                    exchange=self._amqp_consume_queue["exchanges"]["tags"]["exchange"],
                     routing_key=tag_id
                 )
 

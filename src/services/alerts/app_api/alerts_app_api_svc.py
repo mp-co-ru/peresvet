@@ -3,16 +3,12 @@
 и класс сервиса ``alerts_app_api_svc``\.
 """
 import sys
-from typing import Any, List, NamedTuple
-from typing_extensions import Annotated
+from typing import Any
 from pydantic import (
-    BaseModel, Field, field_validator,
-    validator, BeforeValidator, ValidationError, ConfigDict
+    BaseModel, Field, validator, ConfigDict
 )
-import json
 
 from fastapi import APIRouter
-from fastapi import WebSocket
 
 sys.path.append(".")
 
@@ -92,19 +88,17 @@ class AlertsAppAPI(svc.Svc):
 
     """
 
-    _outgoing_commands = {}
-
     def __init__(self, settings: AlertsAppAPISettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
     async def alarms_get(self, payload: AlarmsGet) -> dict:
 
-        body = {
-            "action": "alerts.getAlarms",
-            "data": payload.model_dump()
-        }
+        body = payload.model_dump()
 
-        res = await self._post_message(mes=body, reply=True)
+        res = await self._post_message(
+            mes=body, 
+            reply=True, 
+            routing_key=f"{self._config.hierarchy['class']}.app.getAlarms")
 
         if payload.format:
             for alarm_item in res["data"]:
@@ -115,12 +109,13 @@ class AlertsAppAPI(svc.Svc):
         return res
 
     async def ack_alarm(self, payload: AckAlarm) -> None:
-        body = {
-            "action": "alerts.ackAlarms",
-            "data": payload.model_dump()
-        }
+        body = payload.model_dump()
 
-        return await self._post_message(mes=body, reply=False)
+        return await self._post_message(
+            mes=body, 
+            reply=False,
+            routing_key=f"{self._config.hierarchy['class']}.app.ackAlarms"
+        )
 
 settings = AlertsAppAPISettings()
 

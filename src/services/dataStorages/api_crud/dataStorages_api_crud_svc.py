@@ -101,14 +101,6 @@ class DataStoragesAPICRUD(svc.APICRUDSvc):
     Формат ожидаемых сообщений
 
     """
-
-    _outgoing_commands = {
-        "create": "dataStorages.create",
-        "read": "dataStorages.read",
-        "update": "dataStorages.update",
-        "delete": "dataStorages.delete"
-    }
-
     def __init__(self, settings: DataStoragesAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 

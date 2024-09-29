@@ -27,7 +27,7 @@ class MethodsApp(svc.Svc):
         super().__init__(settings, *args, **kwargs)
         self._method_broker = None
         self._executor = None
-        self._broker = None
+        self._exchange = None
 
     def _set_incoming_commands(self) -> dict:
         return {
@@ -124,7 +124,7 @@ class MethodsApp(svc.Svc):
         self._logger.debug(f"Before call: method_id: {method_id}; method_name: {method_name}")
 
         try:
-            res = await self._broker.call(method_name[0][2]["prsMethodAddress"][0], *params_data)
+            res = await self._exchange.call(method_name[0][2]["prsMethodAddress"][0], *params_data)
             if isinstance(res, dict) and res.get("error") is not None:
                 self._logger.error(f"Ошибка при вычислении тега {tag_id}: {res.get('error')}")
                 return
@@ -180,8 +180,8 @@ class MethodsApp(svc.Svc):
             parent_tag_id = await self._hierarchy.get_parent(method[0])
             for initiatedBy_id in initiatedBy_nodes:
                 tag_initiator = initiatedBy_id[2]["cn"][0]
-                await self._amqp_consume["queue"].bind(
-                    exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
+                await self._amqp_consume_queue["queue"].bind(
+                    exchange=self._amqp_consume_queue["exchanges"]["main"]["exchange"],
                     routing_key=tag_initiator
                 )
                 cache_data.setdefault(tag_initiator, [])
@@ -211,10 +211,10 @@ class MethodsApp(svc.Svc):
 
         self._executor = NullExecutor(Registry(project=self._config.svc_name))
         await self._executor.setup()
-        self._broker = RabbitMQBroker(
+        self._exchange = RabbitMQBroker(
             self._executor, amqp_url=self._config.amqp_url
         )
-        await self._broker.setup()
+        await self._exchange.setup()
         self._logger.debug(f"Methods broker: {self._method_broker}")
 
 settings = MethodsAppSettings()

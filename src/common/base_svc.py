@@ -11,6 +11,8 @@ from fastapi import FastAPI
 
 import aio_pika
 import aio_pika.abc
+from aiormq.abc import DeliveredMessage
+from pamqp.commands import Basic
 
 from src.common.logger import PrsLogger
 from src.common.base_svc_settings import BaseSvcSettings
@@ -48,11 +50,8 @@ class BaseSvc(FastAPI):
         self._amqp_connection: aio_pika.abc.AbstractRobustConnection = None
         self._amqp_is_connected: bool = False
         self._amqp_channel: aio_pika.abc.AbstractRobustChannel = None
-        self._amqp_publish: None
-        self._amqp_consume: dict = {
-            "queue": None,
-            "exchange": None
-        }
+        self._exchange = None
+        self._amqp_consume_queue = None
         self._amqp_callback_queue: aio_pika.abc.AbstractRobustQueue = None
         self._callback_futures: MutableMapping[str, asyncio.Future] = {}
 
@@ -69,8 +68,7 @@ class BaseSvc(FastAPI):
         # _set_incoming_commands, которая переписывается в каждом
         # классе-наследнике. 
         self._incoming_commands = self._set_incoming_commands()
-        self._outgoing_commands = self._set_outgoing_commands()
-
+        
         self._cache = None
 
         self._initialized = False
@@ -78,8 +76,14 @@ class BaseSvc(FastAPI):
     def _set_incoming_commands(self) -> dict:
         return {}
 
-    def _set_outgoing_commands(self) -> dict:
-        return {}
+    async def _bind_for_consume(self):
+        # метод реализует потенциально сложную логику привязки очереди прослушивания
+        # типовое поведение - список ключей _incoming_commands - это список routing_key
+        for key in self._incoming_commands.keys():
+            await self._amqp_consume_queue.bind(
+                exchange=self._exchange,
+                routing_key=key
+            )
 
     @cached_property
     def _config(self):
@@ -124,13 +128,8 @@ class BaseSvc(FastAPI):
                 await message.ack()
                 return
 
-            if not mes.get("action"):
-                self._logger.error(f"В сообщении {mes} не указано действие.")
-                await message.ack()
-                return
-            #mes["action"] = mes["action"].lower()
-            if not mes["action"] in self._incoming_commands.keys():
-                self._logger.error(f"Сервис `{self._config.svc_name}`. Неизвестное действие {mes['action']}.")
+            if not message.routing_key in self._incoming_commands.keys():
+                self._logger.error(f"Сервис `{self._config.svc_name}`. Неизвестное действие {message.routing_key}.")
                 await message.ack()
                 return
 
@@ -140,7 +139,7 @@ class BaseSvc(FastAPI):
                 await message.reject(True)
                 return
 
-            func = self._incoming_commands.get(mes["action"])
+            func = self._incoming_commands[message.routing_key]
 
             res = await func(mes)
 
@@ -148,7 +147,7 @@ class BaseSvc(FastAPI):
                 await message.ack()
                 return
 
-            await self._amqp_consume["exchanges"]["main"]["exchange"].publish(
+            await self._exchanges.publish(
                 aio_pika.Message(
                     body=json.dumps(res,ensure_ascii=False).encode(),
                     correlation_id=message.correlation_id,
@@ -167,19 +166,26 @@ class BaseSvc(FastAPI):
         if reply:
             correlation_id = str(uuid4())
             reply_to = self._amqp_callback_queue.name
-            future = asyncio.get_running_loop().create_future()
-            self._callback_futures[correlation_id] = future
-
+            
         if not routing_key:
-            routing_key = self._config.publish["main"]["routing_key"]
+            self._logger.error(f"{self._config.svc_name} :: Не указан routing_key для публикации сообщения.")
 
-        await self._amqp_publish["main"]["exchange"].publish(
+        res = await self._exchange.publish(
             message=aio_pika.Message(
                 body=body, correlation_id=correlation_id, reply_to=reply_to
             ), routing_key=routing_key
         )
         if not reply:
             return
+        
+        if isinstance(res, DeliveredMessage):
+            if isinstance(res.delivery, Basic.Return):
+                if res.delivery.reply_code == 312:
+                    self._logger.warning(f"{self._config.svc_name} :: Нет подписчиков на сообщение с ключом {routing_key}.")
+                    return
+        
+        future = asyncio.get_running_loop().create_future()
+        self._callback_futures[correlation_id] = future
 
         return await future
 
@@ -191,9 +197,6 @@ class BaseSvc(FastAPI):
         else:
             future: asyncio.Future = self._callback_futures.pop(message.correlation_id, None)
             future.set_result(json.loads(message.body.decode()))
-
-    async def _bind_for_consume(self):
-        pass
 
     async def _amqp_connect(self) -> None:
         """Функция связи с AMQP-сервером.
@@ -216,42 +219,41 @@ class BaseSvc(FastAPI):
         while not self._initialized:
             try:
                 self._logger.debug("Установление связи с брокером сообщений...")
-                self._amqp_connection = await aio_pika.connect_robust(self._config.amqp_url)
+                self._amqp_connection = await aio_pika.connect_robust(self._config.broker["amqp_url"])
                 self._amqp_channel = await self._amqp_connection.channel()
                 await self._amqp_channel.set_qos(1)
 
-                self._amqp_publish = await self._amqp_channel.declare_exchange(
-                    self._config.publish["name"], self._config.publish["type"], durable=True
+                self._exchange = await self._amqp_channel.declare_exchange(
+                    self._config.broker["name"], self._config.broker["type"], durable=True
                 )
 
-                self._amqp_consume["queue"] = \
-                    await self._amqp_channel.declare_queue(
-                        self._config.consume["queue_name"], durable=True
-                    )
-                self._amqp_consume["exchange"] = (
-                    await self._amqp_channel.declare_exchange(
-                        self._config.consume["name"], self._config.consume["type"], durable=True
-                    )
+                consume_queue_name = self._config.broker.get["queue_name"]
+                if not consume_queue_name:
+                    consume_queue_name = f"{self._config.svc_name}_consume"
+
+                self._amqp_consume_queue = await self._amqp_channel.declare_queue(
+                    consume_queue_name, durable=True
                 )
-                r_ks = self._config.consume.get("routing_key")
+                
+                r_ks = self._config.consume.get("routing_keys")
                 if r_ks:
                     if not isinstance(r_ks, list):
                         r_ks = [r_ks]
                     for r_k in r_ks:
-                        await self._amqp_consume["queue"].bind(
-                            exchange=self._amqp_consume["exchange"],
+                        await self._amqp_consume_queue.bind(
+                            exchange=self._exchange,
                             routing_key=r_k
                         )
                 else:
                     await self._bind_for_consume()
 
-                await self._amqp_consume["queue"].consume(self._process_message)
+                await self._amqp_consume_queue.consume(self._process_message)
 
                 self._amqp_callback_queue = await self._amqp_channel.declare_queue(
                     durable=True, exclusive=True
                 )
                 await self._amqp_callback_queue.bind(
-                    exchange=self._amqp_publish["main"]["exchange"],
+                    exchange=self._exchange["main"]["exchange"],
                     routing_key=self._amqp_callback_queue.name
                 )
 

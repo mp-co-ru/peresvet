@@ -19,16 +19,6 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     """
 
-    _outgoing_commands = {
-        "created": "connectors.created",
-        "mayUpdate": "connectors.mayUpdate",
-        "updating": "connectors.updating",
-        "updated": "connectors.updated",
-        "mayDelete": "connetors.mayDelete",
-        "deleting": "connectors.deleting",
-        "deleted": "connectors.deleted"
-    }
-
     def __init__(self, settings: ConnectorsModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 

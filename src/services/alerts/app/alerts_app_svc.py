@@ -10,43 +10,29 @@ from ldap.dn import str2dn, dn2str
 
 sys.path.append(".")
 
-from src.common import svc
+from src.common.app_svc import AppSvc
 import src.common.times as t
 from src.services.alerts.app.alerts_app_settings import AlertsAppSettings
 from src.common.cache import Cache
-from src.common.hierarchy import CN_SCOPE_ONELEVEL
+from src.common.hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
 
-class AlertsApp(svc.Svc):
+class AlertsApp(AppSvc):
     """Сервис работы с тревогами.
     """
-
-    _outgoing_commands = {}
 
     def __init__(self, settings: AlertsAppSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
     def _set_incoming_commands(self) -> dict:
-        return {
-            "alerts.getAlarms": self._get_alarms,
-            "alerts.ackAlarms": self._ack_alarms,
-            "tags.uploadData": self._tag_changed,
-            "tags.deleting": self._tag_deleting,
-            "alerts.created": self._alert_created,
-            "alerts.updated": self._alert_updated,
-            "alerts.deleting": self._alert_deleted,
-        }
-    
-    async def _tag_deleting(self, mes: dict):
-        pass
-
+        commands = super()._set_incoming_commands()
+        commands[f"{self._config.hierarchy['class']}.app.getAlarms"] = self._get_alarms
+        commands[f"{self._config.hierarchy['class']}.app.ackAlarms"] = self._ack_alarms
 
     async def _get_alarms(self, mes: dict) -> dict:
         """_summary_
 
         Args:
-            mes (dict): {
-                "action": "alerts:getAlarms"
-            }
+            
 
         Returns:
             dict: _description_
@@ -244,18 +230,11 @@ class AlertsApp(svc.Svc):
     async def _get_alert(self, alert) -> None:
         alert_id = alert[0]
         alert_config = json.loads(alert[2]["prsJsonConfigString"][0])
-        tag_id = await self._hierarchy.get_node_id(
-            dn2str(str2dn(alert[1])[1:])
-        )
+        tag_id, _ = await self._hierarchy.get_parent(alert_id)
 
-        await self._amqp_consume["queue"].bind(
-            exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
-            routing_key=tag_id
-        )
-
-        await self._amqp_consume["queue"].bind(
-            exchange=self._amqp_consume["exchanges"]["main"]["exchange"],
-            routing_key=alert_id
+        await self._amqp_consume_queue.bind(
+            exchange=self._exchange,
+            routing_key=f"tags.app.uploadData.{tag_id}"
         )
 
         alert_data = {

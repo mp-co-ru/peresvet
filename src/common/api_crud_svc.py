@@ -260,37 +260,23 @@ class APICRUDSvc(BaseSvc):
 
     def _set_incoming_commands(self) -> dict:
         return {
-            f"{self._config.hierarchy['class']}.client.create": self._create,
-            f"{self._config.hierarchy['class']}.client.read": self._read,
-            f"{self._config.hierarchy['class']}.client.update": self._update,
-            f"{self._config.hierarchy['class']}.client.delete": self._delete,
+            f"{self._config.hierarchy['class']}.api_crud_client.create": self._create,
+            f"{self._config.hierarchy['class']}.api_crud_client.read.*": self._read,
+            f"{self._config.hierarchy['class']}.api_crud_client.update.*": self._update,
+            f"{self._config.hierarchy['class']}.api_crud_client.delete.*": self._delete,
         }
-
-    def _set_outgoing_commands(self) -> dict:
-        return {
-            "create": f"{self._config.hierarchy['class']}.model.create",
-            "read":  f"{self._config.hierarchy['class']}.model.read",
-            "update":  f"{self._config.hierarchy['class']}.model.update",
-            "delete":  f"{self._config.hierarchy['class']}.model.delete"
-        }
-
-    async def _bind_for_consume(self):
-        for bind in ["create", "read.*", "update.*", "delete.*"]:
-            await self._amqp_consume["queue"].bind(
-                exchange=self._amqp_consume["exchange"],
-                routing_key=f"{self._config.hierarchy['class']}.client.{bind}"
-            )
 
     async def _create(self, payload: NodeCreate | None) -> dict:
-        body = {
-            "action": self._outgoing_commands["create"],
-            "data": None
-        }
+        body = {}
 
         if not (payload is None):
-            body["data"] = payload.model_dump()
+            body = payload.model_dump()
         
-        return await self._post_message(mes=body, reply=True)
+        return await self._post_message(
+            mes=body, 
+            reply=True, 
+            routing_key=f"{self._config.hierarchy['class']}.api_crud.create"
+        )
 
     async def _read(self, payload: NodeRead) -> dict:
         if payload.id == "":
@@ -304,33 +290,37 @@ class APICRUDSvc(BaseSvc):
                 ]
             }
 
-        body = {
-            "action": self._outgoing_commands["read"],
-            "data": payload.model_dump()
-        }
+        body = payload.model_dump()
 
-        return await self._post_message(mes=body, reply=True)
+        return await self._post_message(
+            mes=body, 
+            reply=True, 
+            routing_key=f"{self._config.hierarchy['class']}.api_crud.create"
+        )
 
     async def _update(self, payload: dict) -> dict:
-        body = {
-            "action": self._outgoing_commands["update"]
-        }
+        body = {}
         if isinstance(payload, dict):
-            body["data"] = payload
+            body = payload
         else:
-            body["data"] = payload.model_dump()
+            body = payload.model_dump()
 
-        return await self._post_message(mes=body, reply=True)
+        return await self._post_message(
+            mes=body, 
+            reply=True,
+            routing_key=f"{self._config.hierarchy['class']}.api_crud.update"
+        )
 
     async def _delete(self, payload: NodeDelete) -> dict:
         """Удаление узлов в иерархии.
         """
-        body = {
-            "action": self._outgoing_commands["delete"],
-            "data": payload.model_dump()
-        }
+        body = payload.model_dump()
 
-        return await self._post_message(mes=body, reply=True)
+        return await self._post_message(
+            mes=body, 
+            reply=True,
+            routing_key=f"{self._config.hierarchy['class']}.api_crud.delete"
+        )
 
     async def api_get_read(self, request_model: NodeRead, q: str | None, payload: NodeRead | None):
         if (q is None or q.strip() == "") and payload is None:

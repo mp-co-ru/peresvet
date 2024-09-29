@@ -176,71 +176,14 @@ class ModelCRUDSvc(Svc):
                 object_class.strip() for object_class in classes
             ]
 
-    async def _bind_for_consume(self):
-        for bind in ["create", "read.*", "update.*", "delete.*"]:
-            await self._amqp_consume["queue"].bind(
-                exchange=self._amqp_consume["exchange"],
-                routing_key=f"{self._config.hierarchy['class']}.model.{bind}"
-            )
-
-        for parent_class in self._config.hierarchy["parent_classes"]:
-            for bind in ["mayUpdate.*", "updating.*", "mayDelete.*", "deleting.*"]:
-                await self._amqp_consume["queue"].bind(
-                    exchange=self._amqp_consume["exchange"],
-                    routing_key=f"{parent_class}.model.{bind}"
-                )
-
-
-    def _set_outgoing_commands (self) -> dict:
-        return {
-            "created": f"{self._config.hierarchy['class']}.created",
-            "updated": f"{self._config.hierarchy['class']}.updated",
-            "deleted": f"{self._config.hierarchy['class']}.deleted"
-        }
-
     def _set_incoming_commands(self) -> dict:
-        # словарь входящих команд переопределяем в каждом классе-наследнике,
-        # так как CRUD-команды в каждой группе сервисов начинаются с
-        # с имени "своей" сущности
-        # если сервис зависит от нескольких сущностей, как, к примеру,
-        # методы могут быть привязаны к тегам, тревогам, расписаниям,
-        # то в _incoming_messages может быть несколько ключей
-        # ...mayUpdate, ...updating и т.д.
-
-        commands = {
-            f"{self._config.hierarchy['class']}.create": self._create,
-            f"{self._config.hierarchy['class']}.read": self._read,
-            f"{self._config.hierarchy['class']}.update": self._update,
-            f"{self._config.hierarchy['class']}.delete": self._delete,
+        return {
+            f"{self._config.hierarchy['class']}.api_crud.create": self._create,
+            f"{self._config.hierarchy['class']}.api_crud.read": self._read,
+            f"{self._config.hierarchy['class']}.api_crud.update": self._update,
+            f"{self._config.hierarchy['class']}.api_crud.delete": self._delete,
         }
-        for parent_class in self._config.hierarchy["parent_classes"]:
-            commands[f"{parent_class}.mayUpdate"] = self._may_update
-            commands[f"{parent_class}.updating"] = self._updating,
-            commands[f"{parent_class}.mayDelete"] = self._may_delete,
-            commands[f"{parent_class}.deleting"] = self._deleting
-
-        return commands
             
-    async def _deleting(self, mes: dict) -> dict:
-        return {
-            "response": "ok"
-        }
-
-    async def _may_delete(self, mes: dict) -> dict:
-        return {
-            "response": "ok"
-        }
-
-    async def _may_update(self, mes: dict) -> dict:
-        return {
-            "response": "ok"
-        }
-
-    async def _updating(self, mes) -> dict | None:
-        return {
-            "response": "ok"
-        }
-
     async def _update(self, mes: dict) -> dict:
         """Метод обновления данных узла. Также метод может перемещать узел
         по иерархии.
@@ -248,12 +191,11 @@ class ModelCRUDSvc(Svc):
         Args:
             data (dict): данные узла.
         """
-        mes_data = mes["data"]
-        id = mes_data['id']
+        id = mes['id']
 
-        self._logger.debug(f"Обновление узла {mes_data['id']}...")
+        self._logger.debug(f"Обновление узла {id}...")
 
-        new_parent = mes_data.get("parentId")
+        new_parent = mes.get("parentId")
         if new_parent:
             if not self._check_parent_class(new_parent):
                 self._logger.error("Неправильный класс нового родительского узла.")
@@ -276,86 +218,40 @@ class ModelCRUDSvc(Svc):
                     }
                 }
                 return res_response
-            
-            await self._hierarchy.move(mes_data['id'], new_parent)
 
-        # логика уведомлений заинтересованных сервисов в обновлении узла
-
-        # получим список всех непосредственных детей
-        classes = []
-        items = await self._hierarchy.search(
-            {
-                "base": mes_data['id'],
-                "scope": CN_SCOPE_ONELEVEL,
-                "filter": {
-                    "cn": ["*"]
-                },
-                "attributes": ["objectClass"]
-            }
+        # уведомим свой собственный сервис app об обновлении узла
+        res = await self._post_message(
+            mes=mes,
+            reply=True,
+            routing_key=f"{self._config.hierarchy['class']}.model.mayUpdate.{id}"
         )
-        for item in items:
-            objectClass = item[2]["objectClass"][0]
-            if objectClass != "prsModelNode":
-                classes.append(objectClass)
-        classes = set(classes)
+        if res is None:
+            res = {"response": True}
 
-        if classes:
-            tasks = []
-            for child in classes:
-                future = asyncio.create_task(
-                    self._post_message({
-                        "action": self._outgoing_commands["mayUpdate"],
-                        "data": mes_data
-                    },
-                    reply=True,
-                    routing_key=f"{self._outgoing_commands['mayUpdate']}.{id}"),
-                    name=child
-                )
-                tasks.append(future)
-
-            done, _ = await asyncio.wait(
-                tasks, return_when=asyncio.ALL_COMPLETED
+        if not res["response"]:
+            self._logger.warning(
+                f"Нельзя обновить узел {id}."
             )
+            return
 
-            for future in done:
-                res = future.result()
-                if res["response"] != 1:
-                    self._logger.warning(
-                        f"Нельзя обновить узел {mes_data['id']}. "
-                        f"Отрицательный ответ от {future.get_name()}: {res.get('message')}"
-                    )
-                return
-
-            tasks = []
-            for child in classes:
-                future = asyncio.create_task(
-                    self._post_message({
-                        "action": self._outgoing_commands["updating"],
-                        "data": mes_data
-                    },
-                    reply=True,
-                    routing_key=f"{self._outgoing_commands['updating']}.{id}"),
-                    name=child
-                )
-                tasks.append(future)
-
-            done, _ = await asyncio.wait(
-                tasks, return_when=asyncio.ALL_COMPLETED
-            )
-
-        if mes_data.get("attributes"):
-            await self._hierarchy.modify(mes_data["id"], mes_data["attributes"])
+        await self._post_message(
+            mes=mes,
+            reply=True,
+            routing_key=f"{self._config.hierarchy['class']}.model.updating.{id}"
+        )
 
         await self._further_update(mes)
 
-        body = {
-            "action": self._outgoing_commands["updated"],
-            "data": {
-                "id": id
-            }
-        }
+        if mes.get("attributes"):
+            await self._hierarchy.modify(id, mes["attributes"])
+        if new_parent:
+            await self._hierarchy.move(id, new_parent)
 
-        await self._post_message(mes=body, reply=False, routing_key=f"{self._outgoing_commands["updated"]}.{id}")
+        await self._post_message(
+            mes={"id": id}, 
+            reply=False, 
+            routing_key=f"{self._config.hierarchy['class']}.model.updated.{id}"
+        )
 
         self._logger.info(f'Узел {id} обновлён.')
 
@@ -382,22 +278,36 @@ class ModelCRUDSvc(Svc):
             mes (dict): {"action": "delete", "data": {"id": "..."}}
 
         """
-
         
-        mes_data = mes["data"]
-        id = mes_data["id"]
+        id = mes["id"]
         
-        self._logger.debug(f"Удаление узла {mes_data['id']}...")
-
+        self._logger.debug(f"Удаление узла {id}...")
         
-        # логика уведомлений заинтересованных сервисов в обновлении узла
+        # логика уведомлений при удалении узла
+        # уведомим свой собственный сервис app 
+        res = await self._post_message(
+            mes=mes,
+            reply=True,
+            routing_key=f"{self._config.hierarchy['class']}.model.mayDelete.{id}"
+        )
 
-        # получим список всех непосредственных детей
-        classes = []
+        if res is None:
+            # нет подписчика на сообщение
+            self._logger.warning(f"{self._config.svc_name} :: На сообщение на удаление узла не подписан сервис приложения.")
+            res = {"response": True}
+
+        if not res["response"]:
+            self._logger.warning(
+                f"Нельзя удалить узел {id}."
+            )
+            return
+
+        # получим список всех детей
+        children = []
         items = await self._hierarchy.search(
             {
                 "base": id,
-                "scope": CN_SCOPE_ONELEVEL,
+                "scope": CN_SCOPE_SUBTREE,
                 "filter": {
                     "cn": ["*"]
                 },
@@ -407,20 +317,21 @@ class ModelCRUDSvc(Svc):
         for item in items:
             objectClass = item[2]["objectClass"][0]
             if objectClass != "prsModelNode":
-                classes.append(objectClass)
-        classes = set(classes)
-
-        if classes:
+                children.append({
+                    "id": item[0],
+                    "objectClass": objectClass
+                })
+        
+        if children:
             tasks = []
-            for child in classes:
+            for child in children:
                 future = asyncio.create_task(
-                    self._post_message({
-                        "action": f"{child}.model.mayDelete",
-                        "data": id
-                    },
-                    reply=True,
-                    routing_key=f"{child}.model.mayDelete.{id}"),
-                    name=child
+                    self._post_message(
+                        mes={"id": id},
+                        reply=True,
+                        routing_key=f"{child['objectClass']}.model.mayDelete.{id}"
+                    ),
+                    name=child['id']
                 )
                 tasks.append(future)
 
@@ -430,23 +341,25 @@ class ModelCRUDSvc(Svc):
 
             for future in done:
                 res = future.result()
-                if res["response"] != 1:
+                if res is None:
+                    res = {"response": True}
+
+                if not res["response"]:
                     self._logger.warning(
-                        f"Нельзя удалить узел {mes_data['id']}. "
+                        f"Нельзя удалить узел {id}. "
                         f"Отрицательный ответ от {future.get_name()}: {res.get('message')}"
                     )
                 return
 
             tasks = []
-            for child in classes:
+            for child in children:
                 future = asyncio.create_task(
-                    self._post_message({
-                        "action": f"{child}.model.deleting",
-                        "data": mes_data
-                    },
-                    reply=True,
-                    routing_key=f"{child}.model.deleting.{id}"),
-                    name=child
+                    self._post_message(
+                        {"id": id},
+                        reply=True,
+                        routing_key=f"{child['objectClass']}.model.deleting.{id}"
+                    ),
+                    name=child['id']
                 )
                 tasks.append(future)
 
@@ -458,23 +371,21 @@ class ModelCRUDSvc(Svc):
 
         await self._hierarchy.delete(id)
 
-        body = {
-            "action": self._outgoing_commands["deleted"],
-            "data": {
-                "id": mes_data["id"]
-            }
-        }
-
         await self._post_message(
-            mes=body, reply=False, 
-            routing_key=f"{self._outgoing_commands["deleted"]}.{id}")
+            mes={"id": id}, reply=False, 
+            routing_key=f"{self._config.hierarchy['class']}.model.deleted.{id}")
+        for child in children:
+            await self._post_message(
+                {"id": id},
+                reply=False,
+                routing_key=f"{child['objectClass']}.model.deleted.{id}"
+            )
 
         self._logger.info(f'Узел {id} удалён.')
 
         res_response = {}
 
         return res_response
-        
 
     async def _further_delete(self, mes: dict) -> None:
         """Метод переопределяется в сервисах-наследниках.
@@ -623,10 +534,9 @@ class ModelCRUDSvc(Svc):
 
         """
 
-        mes_data = mes["data"]
-        if mes_data is None:
-            mes_data = {}
-        parent_node = mes_data.get("parentId")
+        if mes is None:
+            mes = {}
+        parent_node = mes.get("parentId")
         parent_node = (self._config.hierarchy["node_id"], parent_node)[bool(parent_node)]
         if not parent_node:
             res = {
@@ -660,19 +570,19 @@ class ModelCRUDSvc(Svc):
 
             return res
 
-        if not mes["data"].get("attributes"):
-            mes["data"]["attributes"] = {
+        if not mes.get("attributes"):
+            mes["attributes"] = {
                 "objectClass": [self._config.hierarchy["class"]]
             }
         else:
-            mes["data"]["attributes"]["objectClass"] = [self._config.hierarchy["class"]]
+            mes["attributes"]["objectClass"] = [self._config.hierarchy["class"]]
 
         items = await self._hierarchy.search(
                 {
                     "base": parent_node,
                     "scope": CN_SCOPE_ONELEVEL,
                     "filter": {
-                        "objectClass": [mes["data"]["attributes"]["objectClass"][0]],
+                        "objectClass": [mes["attributes"]["objectClass"][0]],
                         "prsDefault": ["TRUE"]
                     },
                     "attributes": ["cn"]
@@ -684,11 +594,11 @@ class ModelCRUDSvc(Svc):
         # поэтому если по поиску выше не найдено узлов, то узлов в данном
         # уровне нет вообще
         if not items:
-            mes["data"]["attributes"]["prsDefault"] = True
+            mes["attributes"]["prsDefault"] = True
         else:
             # если есть уже дефолтный узел и делается попытка создать тоже
             # дефолтный, то существующий дефолтный должен стать обычным
-            if mes["data"]["attributes"].get("prsDefault", False):
+            if mes["attributes"].get("prsDefault", False):
                 await self._hierarchy.modify(
                     node=items[0][0],
                     attr_vals={
@@ -696,7 +606,7 @@ class ModelCRUDSvc(Svc):
                     }
                 )
 
-        new_id = await self._hierarchy.add(parent_node, mes["data"]["attributes"])
+        new_id = await self._hierarchy.add(parent_node, mes["attributes"])
 
         if not new_id:
             res = {
@@ -720,17 +630,10 @@ class ModelCRUDSvc(Svc):
             
             await self._further_create(mes, new_id)
 
-            body = {
-                "action": self._outgoing_commands["created"],
-                "data": {
-                    "id": new_id
-                }
-            }
-
             await self._post_message(
-                mes=body, 
+                mes={"id": new_id}, 
                 reply=False,
-                routing_key=self._outgoing_commands["created"]
+                routing_key=f"{self._config.hierarchy['class']}.model.created.{id}"
             )           
 
         return res

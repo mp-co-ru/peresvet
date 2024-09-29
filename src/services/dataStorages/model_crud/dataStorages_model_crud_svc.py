@@ -19,17 +19,6 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
     Формат ожидаемых сообщений
 
     """
-
-    _outgoing_commands = {
-        "created": "dataStorages.created",
-        "mayUpdate": "dataStorages.mayUpdate",
-        "updating": "dataStorages.updating",
-        "updated": "dataStorages.updated",
-        "mayDelete": "dataStorages.mayDelete",
-        "deleting": "dataStorages.deleting",
-        "deleted": "dataStorages.deleted"
-    }
-
     def __init__(self, settings: DataStoragesModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
