@@ -8,6 +8,7 @@ from functools import cached_property
 from uuid import uuid4
 from collections.abc import MutableMapping
 from fastapi import FastAPI
+import re
 
 import aio_pika
 import aio_pika.abc
@@ -30,7 +31,7 @@ class BaseSvc(FastAPI):
             rotation=settings.log["rotation"]
         )
 
-        self._logger.debug(f"Начало инициализации сервиса {settings.svc_name}.")
+        self._logger.debug(f"{self._config.svc_name} :: Начало инициализации сервиса {settings.svc_name}.")
 
         if kwargs.get("on_startup"):
             kwargs.append(self.on_startup)
@@ -43,7 +44,7 @@ class BaseSvc(FastAPI):
 
         super().__init__(*args, **kwargs)
 
-        self._logger.debug("Смена петли событий...")
+        self._logger.debug(f"{self._config.svc_name} :: Смена петли событий...")
 
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
@@ -51,39 +52,34 @@ class BaseSvc(FastAPI):
         self._amqp_is_connected: bool = False
         self._amqp_channel: aio_pika.abc.AbstractRobustChannel = None
         self._exchange = None
-        self._amqp_consume_queue = None
+        self._amqp_consume_queues: list[aio_pika.abc.AbstractRobustQueue] = []
         self._amqp_callback_queue: aio_pika.abc.AbstractRobustQueue = None
         self._callback_futures: MutableMapping[str, asyncio.Future] = {}
 
         # Словарь {
-        #   "<action>": function
+        #   "re-pattern": function
         # }
-        # используется для вызова соответствующей функции при получении
-        # определённого сообщения.
+        # Полагаемся на правило, введённое в Python 3.6 и подтверждённое для всех версий
+        # >= 3.6 : порядок выборки ключей соответствует порядку их вставки.
+        # Это нам нужно для того, что мы ищем первое соответствие ключа (регулярного выражения)
+        # ключу маршрутазации сообщения. Как только будет найдено первое соответствие,
+        # именно эта функция и будет вызвана для обработки сообщения.
         # Набор команд и функций определяется в каждом классе-наследнике.
         # Предполагается, что функция асинхронная, принимает на вход
         # пришедшее сообщение отдаёт и какой-то ответ, который будет переслан
         # обратно, если у сообщения выставлен параметр reply_to.
         # Список входящих команд переопределяется в специальной функции
-        # _set_incoming_commands, которая переписывается в каждом
-        # классе-наследнике. 
-        self._incoming_commands = self._set_incoming_commands()
+        # _set_handlers, которая переписывается в каждом
+        # классе-наследнике.
+
+        self._handlers = self._set_handlers()
         
         self._cache = None
 
         self._initialized = False
 
-    def _set_incoming_commands(self) -> dict:
+    def _set_handlers(self) -> dict:
         return {}
-
-    async def _bind_for_consume(self):
-        # метод реализует потенциально сложную логику привязки очереди прослушивания
-        # типовое поведение - список ключей _incoming_commands - это список routing_key
-        for key in self._incoming_commands.keys():
-            await self._amqp_consume_queue.bind(
-                exchange=self._exchange,
-                routing_key=key
-            )
 
     @cached_property
     def _config(self):
@@ -104,56 +100,71 @@ class BaseSvc(FastAPI):
 
         return False
 
-    async def _check_mes_correctness(self, message: aio_pika.abc.AbstractIncomingMessage) -> bool:
+    async def _check_mes_correctness(self, message: dict) -> bool:
+        """Проверка корректности входящего сообщения.
+        По умолчанию возвращает True.
+        Переопределяется в классах-наследниках.
+
+        Args:
+            message (dict): Входящее сообщение
+
+        Returns:
+            bool: True, если сообщение корректно, False - в обратном случае.
+        """
         return True
 
     async def _process_message(self, message: aio_pika.abc.AbstractIncomingMessage) -> None:
+        """Метод обработки сообщений во всех очередях.
+        Логика:
+        1) Тело сообщения должно быть в формате json
+        2) Проверяем на корректность тело сообщения
+        3) Проверяем, надо ли вернуть сообщение в очередь
+        4) Ищем первое соответствие routing_key сообщения ключу в словаре incoming_commands
+           и вызываем соответствующую функцию.
+
+        Args:
+            message (aio_pika.abc.AbstractIncomingMessage): _description_
+        """
 
         while not self._initialized:
             await asyncio.sleep(0.5)
 
-        correct = await self._check_mes_correctness(message)
-        if not correct:
-            self._logger.error(f"Неправильный формат сообщения")
-            await message.ack()
-            return
-
         async with message.process(ignore_processed=True):
             mes = message.body.decode()
+
+            correct = await self._check_mes_correctness(mes)
+            if not correct:
+                self._logger.error(f"{self._config.svc_name} :: Неправильный формат сообщения")
+                await message.ack()
+                return
 
             try:
                 mes = json.loads(mes)
             except json.decoder.JSONDecodeError:
-                self._logger.error(f"Сообщение {mes} не в формате json.")
+                self._logger.error(f"{self._config.svc_name} :: Сообщение {mes} не в формате json.")
                 await message.ack()
                 return
-
-            if not message.routing_key in self._incoming_commands.keys():
-                self._logger.error(f"Сервис `{self._config.svc_name}`. Неизвестное действие {message.routing_key}.")
-                await message.ack()
-                return
-
+            
             reject = await self._reject_message(mes)
             if reject:
-                self._logger.debug(f"Сообщение {mes} отклонено.")
+                self._logger.debug(f"{self._config.svc_name} :: Сообщение {mes} отклонено.")
                 await message.reject(True)
                 return
 
-            func = self._incoming_commands[message.routing_key]
+            # обработка сообщения
+            passed = False
+            for key in self._handlers.keys():
+                if re.fullmatch(key, message.routing_key):
+                    passed = True
+                    res = await self._handlers[key](mes)
 
-            res = await func(mes)
+                    if message.reply_to:
+                        await self._post_message(mes=res, reply=False, routing_key=message.reply_to)
+                    break
 
-            if not message.reply_to:
-                await message.ack()
-                return
-
-            await self._exchanges.publish(
-                aio_pika.Message(
-                    body=json.dumps(res,ensure_ascii=False).encode(),
-                    correlation_id=message.correlation_id,
-                ),
-                routing_key=message.reply_to,
-            )
+            if not passed:
+                self._logger.warning(f"{self._config.svc_name} :: Сообщение с ключом {message.routing_key} не обработано.")
+            
             await message.ack()
 
     async def _post_message(
@@ -194,10 +205,21 @@ class BaseSvc(FastAPI):
             self, message: aio_pika.abc.AbstractIncomingMessage
     ) -> None:
         if message.correlation_id is None:
-            self._logger.error("У сообщения не выставлен параметр `correlation_id`")
+            self._logger.error(f"{self._config.svc_name} :: У сообщения не выставлен параметр `correlation_id`")
         else:
             future: asyncio.Future = self._callback_futures.pop(message.correlation_id, None)
             future.set_result(json.loads(message.body.decode()))
+
+    async def _generate_and_bind_queues(self):
+        '''
+        consume_queue_name = self._config.broker.get["queue_name"]
+        if not consume_queue_name:
+            consume_queue_name = f"{self._config.svc_name}_consume"
+
+        self._amqp_consume_queues = await self._amqp_channel.declare_queue(
+            consume_queue_name, durable=True
+        )
+        '''
 
     async def _amqp_connect(self) -> None:
         """Функция связи с AMQP-сервером.
@@ -219,26 +241,19 @@ class BaseSvc(FastAPI):
         """
         while not self._initialized:
             try:
-                self._logger.debug("Установление связи с брокером сообщений...")
+                self._logger.debug(f"{self._config.svc_name} :: Установление связи с брокером сообщений...")
                 self._amqp_connection = await aio_pika.connect_robust(self._config.broker["amqp_url"])
                 self._amqp_channel = await self._amqp_connection.channel()
                 await self._amqp_channel.set_qos(1)
 
                 self._exchange = await self._amqp_channel.declare_exchange(
-                    self._config.broker["name"], self._config.broker["type"], durable=True
+                    self._config.broker["name"], "TOPIC", durable=True
                 )
 
-                consume_queue_name = self._config.broker.get["queue_name"]
-                if not consume_queue_name:
-                    consume_queue_name = f"{self._config.svc_name}_consume"
-
-                self._amqp_consume_queue = await self._amqp_channel.declare_queue(
-                    consume_queue_name, durable=True
-                )
-                
-                await self._bind_for_consume()
-
-                await self._amqp_consume_queue.consume(self._process_message)
+                await self._generate_and_bind_queues()
+                                
+                for queue in self._amqp_consume_queues:
+                    await queue.consume(self._process_message)
 
                 self._amqp_callback_queue = await self._amqp_channel.declare_queue(
                     durable=True, exclusive=True
@@ -255,7 +270,7 @@ class BaseSvc(FastAPI):
                 self._initialized = True
 
             except aio_pika.AMQPException as ex:
-                self._logger.error(f"Ошибка связи с брокером: {ex}")
+                self._logger.error(f"{self._config.svc_name} :: Ошибка связи с брокером: {ex}")
                 await asyncio.sleep(5)
 
     async def on_startup(self) -> None:
@@ -263,7 +278,7 @@ class BaseSvc(FastAPI):
         Функция, выполняемая при старте сервиса: выполняется связь с
         amqp-сервером.
         """
-        self._logger.info(f"{self._config.svc_name}: on_startup.")
+        self._logger.info(f"{self._config.svc_name} :: on_startup.")
         await self._amqp_connect()
 
         await self._cache_connect()

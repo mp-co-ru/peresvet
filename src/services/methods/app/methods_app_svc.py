@@ -29,7 +29,7 @@ class MethodsApp(svc.Svc):
         self._executor = None
         self._exchange = None
 
-    def _set_incoming_commands(self) -> dict:
+    def _set_handlers(self) -> dict:
         return {
             "tags.uploadData": self._tag_changed
         }
@@ -180,8 +180,8 @@ class MethodsApp(svc.Svc):
             parent_tag_id = await self._hierarchy.get_parent(method[0])
             for initiatedBy_id in initiatedBy_nodes:
                 tag_initiator = initiatedBy_id[2]["cn"][0]
-                await self._amqp_consume_queue["queue"].bind(
-                    exchange=self._amqp_consume_queue["exchanges"]["main"]["exchange"],
+                await self._amqp_consume_queues["queue"].bind(
+                    exchange=self._amqp_consume_queues["exchanges"]["main"]["exchange"],
                     routing_key=tag_initiator
                 )
                 cache_data.setdefault(tag_initiator, [])

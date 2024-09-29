@@ -22,7 +22,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
     def __init__(self, settings: DataStoragesModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    def _set_incoming_commands(self) -> dict:
+    def _set_handlers(self) -> dict:
         return {
             "dataStorages.create": self._create,
             "dataStorages.read": self._read,

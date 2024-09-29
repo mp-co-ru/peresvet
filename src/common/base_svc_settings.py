@@ -67,12 +67,7 @@ class BaseSvcSettings(BaseSettings, BaseModel):
         #: строка коннекта к RabbitMQ
         "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
         #: имя обменника
-        "name": "peresvet",
-        #: тип обменника
-        "type": "topic",
-        #: имя очереди, из которой сервис будет получать сообщения
-        #: в случае отсутствия имя очереди генерируется автоматически как svc_name + consume
-        #"queue_name": "base_svc_consume"        
+        "name": "peresvet"        
     }
 
     hierarchy: dict = {

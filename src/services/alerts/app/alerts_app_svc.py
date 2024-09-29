@@ -23,8 +23,8 @@ class AlertsApp(AppSvc):
     def __init__(self, settings: AlertsAppSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    def _set_incoming_commands(self) -> dict:
-        commands = super()._set_incoming_commands()
+    def _set_handlers(self) -> dict:
+        commands = super()._set_handlers()
         commands[f"{self._config.hierarchy['class']}.app.getAlarms"] = self._get_alarms
         commands[f"{self._config.hierarchy['class']}.app.ackAlarms"] = self._ack_alarms
 
@@ -232,7 +232,7 @@ class AlertsApp(AppSvc):
         alert_config = json.loads(alert[2]["prsJsonConfigString"][0])
         tag_id, _ = await self._hierarchy.get_parent(alert_id)
 
-        await self._amqp_consume_queue.bind(
+        await self._amqp_consume_queues.bind(
             exchange=self._exchange,
             routing_key=f"tags.app.uploadData.{tag_id}"
         )

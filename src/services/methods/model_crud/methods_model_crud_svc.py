@@ -31,7 +31,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
     def __init__(self, settings: MethodsModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    def _set_incoming_commands(self) -> dict:
+    def _set_handlers(self) -> dict:
         return {
             "methods.create": self._create,
             "methods.read": self._read,

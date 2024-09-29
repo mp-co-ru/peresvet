@@ -29,7 +29,7 @@ class ObjectsModelCRUD(model_crud_svc.ModelCRUDSvc):
     def __init__(self, settings: ObjectsModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    def _set_incoming_commands(self) -> dict:
+    def _set_handlers(self) -> dict:
         return {
             "objects.create": self._create,
             "objects.read": self._read,

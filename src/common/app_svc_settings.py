@@ -10,4 +10,6 @@
 from src.common.svc_settings import SvcSettings
 
 class AppSvcSettings(SvcSettings):
-   pass
+   # список обслуживаемых узлов
+   # если None, то обслуживаются все узлы данной сущности
+   nodes: list[str] = []

@@ -33,7 +33,7 @@ class TagsApp(svc.Svc):
     def __init__(self, settings: TagsAppSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    def _set_incoming_commands(self) -> dict:
+    def _set_handlers(self) -> dict:
         return {
             "tags.setData": self.data_set,
             "tags.getData": self.data_get

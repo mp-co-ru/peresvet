@@ -22,7 +22,7 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
     def __init__(self, settings: ConnectorsModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    def _set_incoming_commands(self) -> dict:
+    def _set_handlers(self) -> dict:
         return {
             "connectors.create": self._create,
             "connectors.read": self._read,

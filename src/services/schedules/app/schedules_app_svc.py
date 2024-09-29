@@ -15,7 +15,7 @@ class SchedulesApp(svc.Svc):
 
         self._scheduler = AsyncIOScheduler()
 
-    def _set_incoming_commands(self) -> dict:
+    def _set_handlers(self) -> dict:
         return {
             "schedules_model_crud.created": self._schedule_created,
             "schedules_model_crud.updated": self._schedule_updated,

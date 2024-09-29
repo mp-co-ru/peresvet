@@ -154,7 +154,7 @@ class TagsAppAPI(svc.Svc):
     def __init__(self, settings: TagsAppAPISettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    def _set_incoming_commands(self) -> dict:
+    def _set_handlers(self) -> dict:
         return {
             "client.getData": self.data_get
         }

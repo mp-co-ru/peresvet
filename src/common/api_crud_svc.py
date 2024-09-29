@@ -103,7 +103,6 @@ class NodeAttributes(BaseModel):
             "в соответствии с их индексами."
         )
     )
-
 class NodeCreate(BaseModel):
     """Базовый класс для команды создания экземпляра сущности.
     """
@@ -258,12 +257,24 @@ class APICRUDSvc(BaseSvc):
 
         self.api_version = settings.api_version
 
-    def _set_incoming_commands(self) -> dict:
+    async def _generate_and_bind_queues(self):
+        
+        queue = await self._amqp_channel.declare_queue(
+            name=f"{self._config.svc_name}_consume",
+            durable=True, exclusive=True
+        )
+        await self._amqp_callback_queue.bind(
+            exchange=self._exchange, 
+            routing_key=f"{self._config.svc_name}.api_crud_client.*")
+        
+        self._amqp_consume_queues.append(queue)
+
+    def _set_handlers(self) -> dict:
         return {
             f"{self._config.hierarchy['class']}.api_crud_client.create": self._create,
-            f"{self._config.hierarchy['class']}.api_crud_client.read.*": self._read,
-            f"{self._config.hierarchy['class']}.api_crud_client.update.*": self._update,
-            f"{self._config.hierarchy['class']}.api_crud_client.delete.*": self._delete,
+            f"{self._config.hierarchy['class']}.api_crud_client.read": self._read,
+            f"{self._config.hierarchy['class']}.api_crud_client.update": self._update,
+            f"{self._config.hierarchy['class']}.api_crud_client.delete": self._delete,
         }
 
     async def _create(self, payload: NodeCreate | None) -> dict:
