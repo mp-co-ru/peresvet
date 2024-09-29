@@ -169,6 +169,7 @@ class BaseSvc(FastAPI):
             
         if not routing_key:
             self._logger.error(f"{self._config.svc_name} :: Не указан routing_key для публикации сообщения.")
+            return
 
         res = await self._exchange.publish(
             message=aio_pika.Message(
@@ -235,17 +236,7 @@ class BaseSvc(FastAPI):
                     consume_queue_name, durable=True
                 )
                 
-                r_ks = self._config.consume.get("routing_keys")
-                if r_ks:
-                    if not isinstance(r_ks, list):
-                        r_ks = [r_ks]
-                    for r_k in r_ks:
-                        await self._amqp_consume_queue.bind(
-                            exchange=self._exchange,
-                            routing_key=r_k
-                        )
-                else:
-                    await self._bind_for_consume()
+                await self._bind_for_consume()
 
                 await self._amqp_consume_queue.consume(self._process_message)
 
