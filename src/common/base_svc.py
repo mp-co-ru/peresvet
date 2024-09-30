@@ -159,7 +159,9 @@ class BaseSvc(FastAPI):
                     res = await self._handlers[key](mes)
 
                     if message.reply_to:
-                        await self._post_message(mes=res, reply=False, routing_key=message.reply_to)
+                        await self._post_message(
+                            mes=res, reply=False, correlation_id=message.correlation_id, routing_key=message.reply_to
+                        )
                     break
 
             if not passed:
