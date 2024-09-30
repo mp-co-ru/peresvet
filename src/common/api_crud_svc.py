@@ -294,7 +294,7 @@ class APICRUDSvc(BaseSvc):
         return await self._post_message(
             mes=body, 
             reply=True, 
-            routing_key=f"{self._config.hierarchy['class']}.api_crud.create"
+            routing_key=f"{self._config.hierarchy['class']}.api_crud.read"
         )
 
     async def _update(self, payload: dict) -> dict:

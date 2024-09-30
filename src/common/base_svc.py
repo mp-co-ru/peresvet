@@ -159,8 +159,13 @@ class BaseSvc(FastAPI):
                     res = await self._handlers[key](mes)
 
                     if message.reply_to:
-                        await self._post_message(
-                            mes=res, reply=False, correlation_id=message.correlation_id, routing_key=message.reply_to
+                        # здесь нельзя использовать self._post_message
+                        await self._exchange.publish(
+                            aio_pika.Message(
+                                body=json.dumps(res,ensure_ascii=False).encode(),
+                                correlation_id=message.correlation_id,
+                            ),
+                            routing_key=message.reply_to,
                         )
                     break
 
@@ -171,7 +176,19 @@ class BaseSvc(FastAPI):
 
     async def _post_message(
             self, mes: dict, reply: bool = False, routing_key: str = None
-    ) -> dict | None:
+    ) -> dict | bool | None:
+        """Метод отсылает сообщение в брокер.
+
+        Args:
+            mes (dict): Тело сообщения
+            reply (bool, optional): Флаг необходимости получения ответа на сообщение. Defaults to False.
+            routing_key (str, optional): Ключ маршрутизации. Defaults to None.
+
+        Returns:
+            dict | bool | None: Возвращает ответ в виде словаря, если флаг reply = True, 
+              None - если нет подписчика на посланное сообщение
+              True - если reply = False и сообщение успешно отправлено.
+        """
 
         body = json.dumps(mes, ensure_ascii=False).encode()
         correlation_id = None
@@ -189,14 +206,13 @@ class BaseSvc(FastAPI):
                 body=body, correlation_id=correlation_id, reply_to=reply_to
             ), routing_key=routing_key
         )
-        if not reply:
-            return
-        
         if isinstance(res, DeliveredMessage):
             if isinstance(res.delivery, Basic.Return):
                 if res.delivery.reply_code == 312:
-                    self._logger.warning(f"{self._config.svc_name} :: Нет подписчиков на сообщение с ключом {routing_key}.")
+                    #self._logger.warning(f"{self._config.svc_name} :: Нет подписчиков на сообщение с ключом {routing_key}.")
                     return
+        if not reply:
+            return True
         
         future = asyncio.get_running_loop().create_future()
         self._callback_futures[correlation_id] = future

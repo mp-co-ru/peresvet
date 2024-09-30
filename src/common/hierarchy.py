@@ -32,7 +32,7 @@ class Hierarchy:
         self._cm : ConnectionManager = None
         self._base_dn : str = None
 
-    async def _does_node_exist(self, node: str) -> bool:
+    async def does_node_exist(self, node: str) -> bool:
         """Проверка существования узла с указанным id.
 
         Args:

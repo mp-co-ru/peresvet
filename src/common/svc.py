@@ -2,11 +2,7 @@
 Модуль содержит базовый класс ``Svc`` - предок всех сервисов.
 """
 import asyncio
-from functools import cached_property
 import ldap
-
-import aio_pika
-import aio_pika.abc
 
 from src.common.hierarchy import Hierarchy
 from src.common.svc_settings import SvcSettings

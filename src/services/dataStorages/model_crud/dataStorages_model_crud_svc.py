@@ -30,9 +30,9 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             "dataStorages.delete": self._delete,
 
             #TODO: этот блок надо доработать
-            ".mayUpdate": self._may_update,
+            ".may_update": self._may_update,
             ".updating": self._updating,
-            ".mayDelete": self._may_delete,
+            ".may_delete": self._may_delete,
             ".deleting": self._deleting
         }
 

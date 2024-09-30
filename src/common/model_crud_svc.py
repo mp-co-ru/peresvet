@@ -155,7 +155,7 @@ class ModelCRUDSvc(Svc):
     Методы update и delete реализуют логику (разберем на примере update):
     1) Для узла ищутся все дети первого уровня.
     2) Определяется их класс
-    3) Запускается сообщение <класс>.model.mayUpdate. 
+    3) Запускается сообщение <класс>.model.may_update. 
        Это сообщение - вопрос всем "детям", можно ли удалить их родителя. 
        Получаем на каждое сообщение ответ - можно или нет. Если хотя бы один ребёнок ответит "нет", то процедура
        прекращается.
@@ -193,13 +193,54 @@ class ModelCRUDSvc(Svc):
         """
         id = mes['id']
 
+        if not self._hierarchy.does_node_exist((id)):
+            err_mes = f"Узел {id} не существует."
+            self._logger.error(f"{self._config.svc_name} :: {err_mes}")
+            res_response = {
+                "error": {
+                    "code": 406,
+                    "message": err_mes
+                }
+            }
+            return res_response
+
+        node_class = await self._hierarchy.get_node_class(id)
+        if node_class != self._config.hierarchy["class"]:
+            err_mes = f"Узел {id} имеет необрабатываемый класс {node_class}."
+            self._logger.error(f"{self._config.svc_name} :: {err_mes}")
+            res_response = {
+                "error": {
+                    "code": 406,
+                    "message": err_mes
+                }
+            }
+            return res_response
+
         self._logger.debug(f"Обновление узла {id}...")
 
         new_parent = mes.get("parentId")
         if new_parent:
+            if not self._hierarchy.does_node_exist(new_parent):
+                err_mes = f"Указанный в качестве нового родителя узел {new_parent} не существует."
+                self._logger.error(f"{self._config.svc_name} :: {err_mes}")
+                res_response = {
+                    "error": {
+                        "code": 406,
+                        "message": err_mes
+                    }
+                }
+                return res_response
+
             if not self._check_parent_class(new_parent):
-                self._logger.error("Неправильный класс нового родительского узла.")
-                return
+                err_mes = "Неправильный класс нового родительского узла."
+                self._logger.error(f"{self._config.svc_name} :: {err_mes}")
+                res_response = {
+                    "error": {
+                        "code": 406,
+                        "message": err_mes
+                    }
+                }
+                return res_response
             
         # тут мы делаем проверку не является ли новый родитель потомком текущего узла
         if new_parent:
@@ -211,28 +252,48 @@ class ModelCRUDSvc(Svc):
                 }
             })
             if res:
+                err_mes = "Новый родительский узел содержится в подиерархии."
+                self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                 res_response = {
                     "error": {
-                        "code": 400,
-                        "message": "Новый родительский узел содержится в подиерархии."
+                        "code": 406,
+                        "message": err_mes
                     }
                 }
-                return res_response
+                return res_response                
 
         # уведомим свой собственный сервис app об обновлении узла
         res = await self._post_message(
             mes=mes,
             reply=True,
-            routing_key=f"{self._config.hierarchy['class']}.model.mayUpdate.{id}"
+            routing_key=f"{self._config.hierarchy['class']}.model.may_update.{id}"
         )
         if res is None:
             res = {"response": True}
 
         if not res["response"]:
-            self._logger.warning(
-                f"Нельзя обновить узел {id}."
-            )
-            return
+            if not self._hierarchy.does_node_exist((id)):
+                err_mes = f"Узел {id} не существует."
+                self._logger.error(f"{self._config.svc_name} :: {err_mes}")
+                res_response = {
+                    "error": {
+                        "code": 406,
+                        "message": err_mes
+                    }
+                }
+                return res_response
+
+        node_class = await self._hierarchy.get_node_class(id)
+        if node_class != self._config.hierarchy["class"]:
+            err_mes = f"Нельзя обновить узел {id}."
+            self._logger.error(f"{self._config.svc_name} :: {err_mes}")
+            res_response = {
+                "error": {
+                    "code": 409,
+                    "message": err_mes
+                }
+            }
+            return res_response
 
         await self._post_message(
             mes=mes,
@@ -280,6 +341,30 @@ class ModelCRUDSvc(Svc):
         """
         
         id = mes["id"]
+
+
+        if not (await self._hierarchy.does_node_exist((id))):
+            err_mes = f"Узел {id} не существует."
+            self._logger.error(f"{self._config.svc_name} :: {err_mes}")
+            res_response = {
+                "error": {
+                    "code": 406,
+                    "message": err_mes
+                }
+            }
+            return res_response
+
+        node_class = await self._hierarchy.get_node_class(id)
+        if node_class != self._config.hierarchy["class"]:
+            err_mes = f"Узел {id} имеет необрабатываемый класс {node_class}."
+            self._logger.error(f"{self._config.svc_name} :: {err_mes}")
+            res_response = {
+                "error": {
+                    "code": 406,
+                    "message": err_mes
+                }
+            }
+            return res_response
         
         self._logger.debug(f"Удаление узла {id}...")
         
@@ -288,19 +373,23 @@ class ModelCRUDSvc(Svc):
         res = await self._post_message(
             mes=mes,
             reply=True,
-            routing_key=f"{self._config.hierarchy['class']}.model.mayDelete.{id}"
+            routing_key=f"{self._config.hierarchy['class']}.model.may_delete.{id}"
         )
 
         if res is None:
             # нет подписчика на сообщение
-            self._logger.warning(f"{self._config.svc_name} :: На сообщение на удаление узла не подписан сервис приложения.")
             res = {"response": True}
 
         if not res["response"]:
-            self._logger.warning(
-                f"Нельзя удалить узел {id}."
-            )
-            return
+            err_mes = f"Нельзя удалить узел {id}."
+            self._logger.error(f"{self._config.svc_name} :: {err_mes}")
+            res_response = {
+                "error": {
+                    "code": 409,
+                    "message": err_mes
+                }
+            }
+            return res_response
 
         # получим список всех детей
         children = []
@@ -315,6 +404,10 @@ class ModelCRUDSvc(Svc):
             }
         )
         for item in items:
+            if item[0] == id:
+                # пропустим самого себя
+                continue
+
             objectClass = item[2]["objectClass"][0]
             if objectClass != "prsModelNode":
                 children.append({
@@ -327,9 +420,9 @@ class ModelCRUDSvc(Svc):
             for child in children:
                 future = asyncio.create_task(
                     self._post_message(
-                        mes={"id": id},
+                        mes={"id": child["id"]},
                         reply=True,
-                        routing_key=f"{child['objectClass']}.model.mayDelete.{id}"
+                        routing_key=f"{child['objectClass']}.model.may_delete.{child['id']}"
                     ),
                     name=child['id']
                 )
@@ -345,11 +438,15 @@ class ModelCRUDSvc(Svc):
                     res = {"response": True}
 
                 if not res["response"]:
-                    self._logger.warning(
-                        f"Нельзя удалить узел {id}. "
-                        f"Отрицательный ответ от {future.get_name()}: {res.get('message')}"
-                    )
-                return
+                    err_mes = f"Нельзя удалить узел {id}. Запрет от {future.get_name()}: {res.get('message')}"
+                    self._logger.error(f"{self._config.svc_name} :: {err_mes}")
+                    res_response = {
+                        "error": {
+                            "code": 409,
+                            "message": err_mes
+                        }
+                    }
+                    return res_response
 
             tasks = []
             for child in children:
@@ -374,11 +471,12 @@ class ModelCRUDSvc(Svc):
         await self._post_message(
             mes={"id": id}, reply=False, 
             routing_key=f"{self._config.hierarchy['class']}.model.deleted.{id}")
+        
         for child in children:
             await self._post_message(
                 {"id": id},
                 reply=False,
-                routing_key=f"{child['objectClass']}.model.deleted.{id}"
+                routing_key=f"{child['objectClass']}.model.deleted.{child['id']}"
             )
 
         self._logger.info(f'Узел {id} удалён.')
@@ -460,7 +558,7 @@ class ModelCRUDSvc(Svc):
             "data": []
         }
 
-        mes_data = copy.deepcopy(mes["data"])
+        mes_data = copy.deepcopy(mes)
 
         if mes_data.get("filter") is None:
             mes_data["filter"] = {}
@@ -469,7 +567,15 @@ class ModelCRUDSvc(Svc):
 
         if (not mes_data.get("base")) and (not mes_data.get("id")):
             if not self._config.hierarchy["node"]:
-                return {"error": {"code": 500, "message": "Должен быть указан родительский узел для поиска."}}
+                err_mes = "Должен быть указан родительский узел для поиска."
+                self._logger.error(f"{self._config.svc_name} :: {err_mes}")
+                res_response = {
+                    "error": {
+                        "code": 406,
+                        "message": err_mes
+                    }
+                }
+                return res_response
 
             mes_data["base"] = self._config.hierarchy["node_id"]
         if mes_data["base"] == "prs":

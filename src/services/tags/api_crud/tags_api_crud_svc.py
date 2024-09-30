@@ -94,13 +94,6 @@ class TagsAPICRUD(svc.APICRUDSvc):
 
     """
 
-    _outgoing_commands = {
-        "create": "tags.create",
-        "read": "tags.read",
-        "update": "tags.update",
-        "delete": "tags.delete"
-    }
-
     def __init__(self, settings: TagsAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
@@ -122,7 +115,7 @@ router = APIRouter(prefix=f"{settings.api_version}/tags")
 error_handler = svc.ErrorHandler()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
-async def create(payload: TagCreate, error_handler: svc.ErrorHandler = Depends()):
+async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends()):
     """
     Метод добавляет тег в иерархию.
 
@@ -162,7 +155,18 @@ async def create(payload: TagCreate, error_handler: svc.ErrorHandler = Depends()
         * **detail** (str) - пояснения к ошибке
 
     """
-    res = await app._create(payload)
+    if payload is None:
+        payload = {}
+    
+    try:
+        s = json.dumps(payload)
+        p = TagCreate.model_validate_json(s)
+    except Exception as ex:
+        res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+        app._logger.exception(res)
+        await error_handler.handle_error(res)
+
+    res = await app._create(p)
     await error_handler.handle_error(res)
     return res
 

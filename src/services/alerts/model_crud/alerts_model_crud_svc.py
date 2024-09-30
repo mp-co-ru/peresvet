@@ -1,5 +1,4 @@
 import sys
-import copy
 
 sys.path.append(".")
 
@@ -20,7 +19,6 @@ class AlertsModelCRUD(model_crud_svc.ModelCRUDSvc):
     def __init__(self, settings: AlertsModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
     
-
 settings = AlertsModelCRUDSettings()
 
 app = AlertsModelCRUD(settings=settings, title="AlertsModelCRUD")

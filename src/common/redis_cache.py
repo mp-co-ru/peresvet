@@ -59,3 +59,6 @@ class RedisCache(ABCCache):
     
     async def reset(self):
         await self._pipe.reset()
+
+    async def close(self):
+        await self._client.aclose()

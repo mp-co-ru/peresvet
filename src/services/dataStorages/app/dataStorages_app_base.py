@@ -126,9 +126,6 @@ class DataStoragesAppBase(svc.Svc, ABC):
         #    "<ds_id>": <connection_pool>
         # }
         self._connection_pools = {}
-        # коннект к кеш-серверу
-        self._cache_pool = None
-
         # список id хранилищ, которые обслуживает сервис
         self._ds_ids = []
 
@@ -221,8 +218,6 @@ class DataStoragesAppBase(svc.Svc, ABC):
         await super().on_startup()
 
         try:
-            self._cache_pool = redis.ConnectionPool.from_url(self._config.cache_url)
-
             payload = {}
             if self._config.datastorages_id:
                 payload["id"] = self._config.datastorages_id

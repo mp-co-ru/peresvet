@@ -143,7 +143,7 @@ from src.services.schedules.app.schedules_app_svc \
     )
 
 # -----------------------------------------------------------------------------
-
+"""
 # tags ------------------------------------------------------------------------
 # tags_api_crud
 from src.services.tags.api_crud.tags_api_crud_svc \
@@ -166,7 +166,7 @@ from src.services.tags.app_api.tags_app_api_svc \
         router as tags_app_api_router
     )
 # -----------------------------------------------------------------------------
-
+"""
 # pandas ----------------------------------------------------------------------
 # pandas app api
 from src.services.tags.pandas_app_api.pandas_app_api_svc \
@@ -229,14 +229,14 @@ api_router.include_router(router=objects_api_crud_router)
 # schedules_api_crud
 api_router.include_router(router=schedules_api_crud_router)
 # -----------------------------------------------------------------------------
-
+"""
 # tags ------------------------------------------------------------------------
 # tags_api_crud
 api_router.include_router(router=tags_api_crud_router)
 # tags_app_api
 api_router.include_router(router=tags_app_api_router)
 # -----------------------------------------------------------------------------
-
+"""
 # pandas ----------------------------------------------------------------------
 # pandas_app_api
 api_router.include_router(router=pandas_app_api_router)
@@ -304,7 +304,7 @@ app.mount(path="/", app=schedules_model_crud)
 # schedules_app
 app.mount(path="/", app=schedules_app)
 # -----------------------------------------------------------------------------
-
+"""
 # tags ------------------------------------------------------------------------
 # tags_api_crud
 app.mount(path="/", app=tags_api_crud)
@@ -315,7 +315,7 @@ app.mount(path="/", app=tags_app)
 # tags_app_api
 app.mount(path="/", app=tags_app_api)
 # -----------------------------------------------------------------------------
-
+"""
 # pandas ----------------------------------------------------------------------
 app.mount(path="/", app=pandas_app_api)
 # -----------------------------------------------------------------------------

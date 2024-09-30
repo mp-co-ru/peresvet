@@ -98,7 +98,7 @@ class AlertsAppAPI(svc.Svc):
         res = await self._post_message(
             mes=body, 
             reply=True, 
-            routing_key=f"{self._config.hierarchy['class']}.app.getAlarms")
+            routing_key=f"{self._config.hierarchy['class']}.app_api.get_alarms")
 
         if payload.format:
             for alarm_item in res["data"]:
@@ -114,12 +114,12 @@ class AlertsAppAPI(svc.Svc):
         return await self._post_message(
             mes=body, 
             reply=False,
-            routing_key=f"{self._config.hierarchy['class']}.app.ackAlarms"
+            routing_key=f"{self._config.hierarchy['class']}.app_api.ack_alarm"
         )
 
 settings = AlertsAppAPISettings()
 
-app = AlertsAppAPI(settings=settings, title="`TagsAppAPI` service")
+app = AlertsAppAPI(settings=settings, title="`AlertsAppAPI` service")
 
 router = APIRouter(prefix=f"{settings.api_version}/alarms")
 

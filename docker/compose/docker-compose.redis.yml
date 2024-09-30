@@ -7,6 +7,8 @@ services:
       - ${PORT_REDIS_INSIGHT}:${PORT_REDIS_INSIGHT}
     networks:
       - peresvet
+    environment:
+      TZ: ${TIME_ZONE}
 
 networks:
   peresvet:

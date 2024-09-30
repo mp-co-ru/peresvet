@@ -11,9 +11,7 @@ from ldap.dn import str2dn, dn2str
 sys.path.append(".")
 
 from src.common.app_svc import AppSvc
-import src.common.times as t
 from src.services.alerts.app.alerts_app_settings import AlertsAppSettings
-from src.common.cache import Cache
 from src.common.hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
 
 class AlertsApp(AppSvc):
@@ -23,10 +21,9 @@ class AlertsApp(AppSvc):
     def __init__(self, settings: AlertsAppSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    def _set_handlers(self) -> dict:
-        commands = super()._set_handlers()
-        commands[f"{self._config.hierarchy['class']}.app.getAlarms"] = self._get_alarms
-        commands[f"{self._config.hierarchy['class']}.app.ackAlarms"] = self._ack_alarms
+    def _add_app_handlers(self) -> dict:
+        self._handlers[f"{self._config.hierarchy['class']}.app_api.get_alarms"] = self._get_alarms
+        self._handlers[f"{self._config.hierarchy['class']}.app_api.ack_alarm"] = self._ack_alarm
 
     async def _get_alarms(self, mes: dict) -> dict:
         """_summary_
@@ -60,7 +57,7 @@ class AlertsApp(AppSvc):
 
         return result
 
-    async def _ack_alarms(self, mes: dict):
+    async def _ack_alarm(self, mes: dict):
         """_summary_
 
         Args:

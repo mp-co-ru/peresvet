@@ -20,10 +20,10 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     _outgoing_commands = {
         "created": "methods.created",
-        "mayUpdate": "methods.mayUpdate",
+        "may_update": "methods.may_update",
         "updating": "methods.updating",
         "updated": "methods.updated",
-        "mayDelete": "methods.mayDelete",
+        "may_delete": "methods.may_delete",
         "deleting": "methods.deleting",
         "deleted": "methods.deleted"
     }

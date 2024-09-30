@@ -33,21 +33,26 @@ class AppSvc(Svc):
 
         if not self._config.nodes:
             self._handlers[f"{self._config.hierarchy['class']}.model.created"] = self._created
-            self._handlers[f"{self._config.hierarchy['class']}.model.mayUpdate.*"] = self._mayUpdate
+            self._handlers[f"{self._config.hierarchy['class']}.model.may_update.*"] = self._may_update
             self._handlers[f"{self._config.hierarchy['class']}.model.updating.*"] = self._updating
-            self._handlers[f"{self._config.hierarchy['class']}.model.mayDelete.*"] = self._mayDelete
+            self._handlers[f"{self._config.hierarchy['class']}.model.updated.*"] = self._updated
+            self._handlers[f"{self._config.hierarchy['class']}.model.may_delete.*"] = self._may_delete
             self._handlers[f"{self._config.hierarchy['class']}.model.deleting.*"] = self._deleting
+            self._handlers[f"{self._config.hierarchy['class']}.model.deleted.*"] = self._deleted
         else:
             for node in self._config.nodes:
-                self._handlers[f"{self._config.hierarchy['class']}.model.mayUpdate.{node}"] = self._mayUpdate
+                self._handlers[f"{self._config.hierarchy['class']}.model.may_update.{node}"] = self._may_update
                 self._handlers[f"{self._config.hierarchy['class']}.model.updating.{node}"] = self._updating
-                self._handlers[f"{self._config.hierarchy['class']}.model.mayDelete.{node}"] = self._mayDelete
+                self._handlers[f"{self._config.hierarchy['class']}.model.updated.{node}"] = self._updated
+                self._handlers[f"{self._config.hierarchy['class']}.model.may_delete.{node}"] = self._may_delete
                 self._handlers[f"{self._config.hierarchy['class']}.model.deleting.{node}"] = self._deleting
+                self._handlers[f"{self._config.hierarchy['class']}.model.deleted.{node}"] = self._deleted
 
         self._add_app_handlers()
         
     def _add_app_handlers(self):
-        self._handlers[f"{self._config.hierarchy['class']}.app_api.*"] = self._messages_from_app_api
+        #self._handlers[f"{self._config.hierarchy['class']}.app_api.*"] = self._messages_from_app_api
+        pass
     
     async def _generate_queue(self):
         if not self._config.nodes:
@@ -60,20 +65,22 @@ class AppSvc(Svc):
 
     async def _created(self, mes):
         pass
-
-    async def _mayUpdate(self,mes):
+        
+    async def _may_update(self, mes):
         return {"response": True}
     
-    async def _updating(self,mes):
+    async def _updating(self, mes):
         return {"response": True}
     
-    async def _mayDelete(self,mes):
-        return {"response": True}
-
-    async def _deleting(self,mes):
+    async def _updated(self, mes):
         return {"response": True}
     
-    async def _messages_from_app_api(self,mes):
-        return
+    async def _may_delete(self, mes):
+        return {"response": True}
 
+    async def _deleting(self, mes):
+        return {"response": True}
+      
+    async def _deleted(self, mes):
+        return {"response": True}
     

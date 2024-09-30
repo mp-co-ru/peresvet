@@ -9,15 +9,15 @@ from typing import Any, List, NamedTuple
 from typing_extensions import Annotated
 from pydantic import (
     BaseModel, Field,
-    validator, BeforeValidator, ValidationError, ConfigDict
+    validator, BeforeValidator, ConfigDict
 )
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends
 
 sys.path.append(".")
 
-from src.common import svc
-from src.common.api_crud_svc import valid_uuid
+from src.common.base_svc import BaseSvc
+from src.common.api_crud_svc import valid_uuid, ErrorHandler
 from src.services.tags.app_api.tags_app_api_settings import TagsAppAPISettings
 import src.common.times as t
 
@@ -49,7 +49,6 @@ class TagData(BaseModel):
     data: List[Annotated[DataPointItem, BeforeValidator(x_must_be_int)]]
 
     validate_id = validator('tagId', allow_reuse=True)(valid_uuid)
-
 class AllData(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
@@ -57,7 +56,6 @@ class AllData(BaseModel):
     data: List[TagData] = Field(
         title="Данные"
     )
-
 class DataGet(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
@@ -137,8 +135,7 @@ class DataGet(BaseModel):
             )
 
     validate_id = validator('tagId', allow_reuse=True)(valid_uuid)
-
-class TagsAppAPI(svc.Svc):
+class TagsAppAPI(BaseSvc):
     """Сервис работы с тегами в иерархии.
 
     Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``\,
@@ -154,25 +151,29 @@ class TagsAppAPI(svc.Svc):
     def __init__(self, settings: TagsAppAPISettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    def _set_handlers(self) -> dict:
-        return {
-            "client.getData": self.data_get
+    def _set_handlers(self):
+        self._handlers = {
+            f"{self._config.hierarchy['class']}.app_api_client.get_data": self.data_get,
+            f"{self._config.hierarchy['class']}.app_api_client.set_data": self.data_set
         }
 
     async def data_get(self, payload: DataGet) -> dict:
+        new_payload = payload
         if isinstance(payload, dict):
-            payload = payload["data"]
-            payload = DataGet(**payload)
+            new_payload = DataGet(**payload)
 
-        body = {
-            "action": "tags.getData",
-            "data": payload.model_dump()
-        }
+        body = new_payload.model_dump()
+
         res = await self._post_message(
-            mes=body, reply=True,
+            mes=body, reply=True, routing_key=f"{self._config.hierarchy['class']}.app_api.data_get"
         )
+        # нет подписчика
+        if res is None:
+            res = {"error": {"code": 424, "message": f"Нет обработчика для команды чтения данных."}}
+            app._logger.error(res)
+            return res
 
-        if payload.format:
+        if new_payload.format:
             final_res = {
                 "data": []
             }
@@ -195,12 +196,14 @@ class TagsAppAPI(svc.Svc):
         return res
 
     async def data_set(self, payload: AllData) -> None:
-        body = {
-            "action": "tags.setData",
-            "data": payload.model_dump()
-        }
+        body = payload.model_dump()
 
-        return await self._post_message(mes=body, reply=False)
+        res = await self._post_message(mes=body, reply=False, routing_key = f"{self._config.hierarchy['class']}.app_api.data_set")
+        # нет подписчика
+        if res is None:
+            res = {"error": {"code": 424, "message": f"Нет обработчика для команды записи данных."}}
+            app._logger.error(res)
+        return res
 
 settings = TagsAppAPISettings()
 
@@ -209,7 +212,7 @@ app = TagsAppAPI(settings=settings, title="`TagsAppAPI` service")
 router = APIRouter(prefix=f"{settings.api_version}/data")
 
 @router.get("/", response_model=dict | None, status_code=200)
-async def data_get(q: str | None = None, payload: DataGet | None = None):
+async def data_get(q: str | None = None, payload: DataGet | None = None, error_handler: ErrorHandler = Depends()):
     """
     Запрос исторических данных.
 
@@ -247,17 +250,20 @@ async def data_get(q: str | None = None, payload: DataGet | None = None):
     if q:
         try:
             p = DataGet.model_validate_json(q)
-        except:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Некорректный JSON")
+        except ValueError as ex:
+            res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+            app._logger.error(res)
+            await error_handler.handle_error(res)
     elif payload:
         p = payload
     else:
         return None
     res = await app.data_get(p)
+    await error_handler.handle_error(res)
     return res
 
 @router.post("/", status_code=200)
-async def data_set(payload: AllData):
+async def data_set(payload: AllData, error_handler: ErrorHandler = Depends()):
     """Запись исторических данных тега.
 
     .. http:example::
@@ -280,7 +286,9 @@ async def data_set(payload: AllData):
       null
 
     """
-    return await app.data_set(payload)
+    res = await app.data_set(payload)
+    await error_handler.handle_error(res)
+    return res
 
 '''
 @router.websocket("/ws/data")

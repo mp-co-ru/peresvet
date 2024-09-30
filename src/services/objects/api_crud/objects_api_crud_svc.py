@@ -6,7 +6,7 @@ import sys
 from typing import List
 from pydantic import Field
 import json
-from fastapi import APIRouter, HTTPException, Response, status, Depends
+from fastapi import APIRouter, Depends
 #from fastapi.middleware.cors import CORSMiddleware
 
 sys.path.append(".")
@@ -18,7 +18,7 @@ class ObjectCreateAttributes(svc.NodeAttributes):
     pass
 
 class ObjectCreate(svc.NodeCreate):
-    attributes: ObjectCreateAttributes = Field({}, title="Атрибуты объекта")
+    attributes: ObjectCreateAttributes | None = Field({}, title="Атрибуты объекта")
 
     # validate_id = validator('parentId', 'dataStorageId', 'connectorId', allow_reuse=True)(svc.valid_uuid)
 
@@ -67,7 +67,7 @@ router = APIRouter(prefix=f"{settings.api_version}/objects")
 error_handler = svc.ErrorHandler()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
-async def create(payload: ObjectCreate | None, error_handler: svc.ErrorHandler = Depends()):
+async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends()):
     """
     Метод добавляет обьект в иерархию.
 
@@ -99,7 +99,18 @@ async def create(payload: ObjectCreate | None, error_handler: svc.ErrorHandler =
         * **detail** (str) - пояснения к ошибке
 
     """
-    res = await app._create(payload)
+    if payload is None:
+        payload = {}
+    
+    try:
+        s = json.dumps(payload)
+        p = ObjectCreate.model_validate_json(s)
+    except Exception as ex:
+        res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+        app._logger.exception(res)
+        await error_handler.handle_error(res)
+
+    res = await app._create(p)
     await error_handler.handle_error(res)
     return res
 
@@ -214,7 +225,7 @@ async def delete(payload: ObjectRead, error_handler: svc.ErrorHandler = Depends(
         * **detail** (list) - детали ошибки.
 
     """
-    res = await app.delete(payload)
+    res = await app._delete(payload)
     await error_handler.handle_error(res)
     return res
 
