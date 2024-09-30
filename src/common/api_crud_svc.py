@@ -257,20 +257,8 @@ class APICRUDSvc(BaseSvc):
 
         self.api_version = settings.api_version
 
-    async def _generate_and_bind_queues(self):
-        
-        queue = await self._amqp_channel.declare_queue(
-            name=f"{self._config.svc_name}_consume",
-            durable=True, exclusive=True
-        )
-        await self._amqp_callback_queue.bind(
-            exchange=self._exchange, 
-            routing_key=f"{self._config.svc_name}.api_crud_client.*")
-        
-        self._amqp_consume_queues.append(queue)
-
-    def _set_handlers(self) -> dict:
-        return {
+    def _set_handlers(self):
+        self._handlers = {
             f"{self._config.hierarchy['class']}.api_crud_client.create": self._create,
             f"{self._config.hierarchy['class']}.api_crud_client.read": self._read,
             f"{self._config.hierarchy['class']}.api_crud_client.update": self._update,

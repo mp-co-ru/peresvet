@@ -156,13 +156,13 @@ class DataStoragesAppBase(svc.Svc, ABC):
         self._logger.debug(f"Привязка: {bind} очереди для тега {tag_id}.")
 
         if bind:
-            await self._amqp_consume_queues["queue"].bind(
-                exchange=self._amqp_consume_queues["exchanges"]["tags"]["exchange"],
+            await self._amqp_consume_queue["queue"].bind(
+                exchange=self._amqp_consume_queue["exchanges"]["tags"]["exchange"],
                 routing_key=tag_id
             )
         else:
-            await self._amqp_consume_queues["queue"].unbind(
-                exchange=self._amqp_consume_queues["exchanges"]["tags"]["exchange"],
+            await self._amqp_consume_queue["queue"].unbind(
+                exchange=self._amqp_consume_queue["exchanges"]["tags"]["exchange"],
                 routing_key=tag_id
             )
 
@@ -191,8 +191,8 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
         # добавим в список поддерживаемых хранилищ новое
         self._ds_ids.append(ds_id)
-        await self._amqp_consume_queues["queue"].bind(
-            exchange=self._amqp_consume_queues["exchanges"]["main"]["exchange"],
+        await self._amqp_consume_queue["queue"].bind(
+            exchange=self._amqp_consume_queue["exchanges"]["main"]["exchange"],
             routing_key=ds_id
         )
 
@@ -228,8 +228,8 @@ class DataStoragesAppBase(svc.Svc, ABC):
                 payload["id"] = self._config.datastorages_id
                 # если указаны конкретные id хранилищ, которые надо обслуживать,
                 # то отменяем базовую привязку очереди прослушивания
-                await self._amqp_consume_queues["queue"].unbind(
-                    exchange=self._amqp_consume_queues["exchanges"]["main"]["exchange"],
+                await self._amqp_consume_queue["queue"].unbind(
+                    exchange=self._amqp_consume_queue["exchanges"]["main"]["exchange"],
                     routing_key=self._config.consume["exchanges"]["main"]["routing_key"][0]
                 )
             else:

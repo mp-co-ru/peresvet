@@ -232,7 +232,7 @@ class AlertsApp(AppSvc):
         alert_config = json.loads(alert[2]["prsJsonConfigString"][0])
         tag_id, _ = await self._hierarchy.get_parent(alert_id)
 
-        await self._amqp_consume_queues.bind(
+        await self._amqp_consume_queue.bind(
             exchange=self._exchange,
             routing_key=f"tags.app.uploadData.{tag_id}"
         )

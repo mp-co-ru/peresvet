@@ -176,27 +176,14 @@ class ModelCRUDSvc(Svc):
                 object_class.strip() for object_class in classes
             ]
 
-    def _set_handlers(self) -> dict:
-        return {
+    def _set_handlers(self):
+        self._handlers = {
             f"{self._config.hierarchy['class']}.api_crud.create": self._create,
             f"{self._config.hierarchy['class']}.api_crud.read": self._read,
             f"{self._config.hierarchy['class']}.api_crud.update": self._update,
             f"{self._config.hierarchy['class']}.api_crud.delete": self._delete,
         }
     
-    async def _generate_and_bind_queues(self):
-        
-        queue = await self._amqp_channel.declare_queue(
-            name=f"{self._config.svc_name}_consume",
-            durable=True, exclusive=True
-        )
-        await queue.bind(
-            exchange=self._exchange, 
-            routing_key=f"{self._config.svc_name}.api_crud.*"
-        )
-        
-        self._amqp_consume_queues.append(queue)
-            
     async def _update(self, mes: dict) -> dict:
         """Метод обновления данных узла. Также метод может перемещать узел
         по иерархии.
@@ -646,7 +633,7 @@ class ModelCRUDSvc(Svc):
             await self._post_message(
                 mes={"id": new_id}, 
                 reply=False,
-                routing_key=f"{self._config.hierarchy['class']}.model.created.{id}"
+                routing_key=f"{self._config.hierarchy['class']}.model.created"
             )           
 
         return res

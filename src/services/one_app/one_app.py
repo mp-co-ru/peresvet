@@ -17,6 +17,7 @@ except ModuleNotFoundError as _:
 
 sys.path.append(".")
 
+"""
 # alerts ----------------------------------------------------------------------
 # alerts api crud
 from src.services.alerts.api_crud.alerts_api_crud_svc \
@@ -103,6 +104,7 @@ from src.services.methods.app.methods_app_svc \
         app as methods_app
     )
 # -----------------------------------------------------------------------------
+"""
 
 # objects ---------------------------------------------------------------------
 # objects_api_crud
@@ -120,6 +122,7 @@ from src.services.objects.model_crud.objects_model_crud_svc \
 
 # -----------------------------------------------------------------------------
 
+"""
 # schedules ---------------------------------------------------------------------
 # schedules_api_crud
 from src.services.schedules.api_crud.schedules_api_crud_svc \
@@ -172,6 +175,7 @@ from src.services.tags.pandas_app_api.pandas_app_api_svc \
         router as pandas_app_api_router
     )
 # -----------------------------------------------------------------------------
+"""
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -189,6 +193,7 @@ api_router = APIRouter(prefix="")
 
 # монтирование роутеров =======================================================
 
+"""
 # alerts ----------------------------------------------------------------------
 # alerts_api_crud
 api_router.include_router(router=alerts_api_crud_router)
@@ -212,12 +217,14 @@ api_router.include_router(router=dataStorages_api_crud_router)
 # methods_api_crud
 api_router.include_router(router=methods_api_crud_router)
 # -----------------------------------------------------------------------------
+"""
 
 # objects ---------------------------------------------------------------------
 # objects_api_crud
 api_router.include_router(router=objects_api_crud_router)
 # -----------------------------------------------------------------------------
 
+"""
 # schedules ---------------------------------------------------------------------
 # schedules_api_crud
 api_router.include_router(router=schedules_api_crud_router)
@@ -235,11 +242,13 @@ api_router.include_router(router=tags_app_api_router)
 api_router.include_router(router=pandas_app_api_router)
 # -----------------------------------------------------------------------------
 # =============================================================================
+"""
 
 app.include_router(api_router)
 
 # монтирование приложений =====================================================
 
+"""
 # alerts ----------------------------------------------------------------------
 # alerts_api_crud
 app.mount(path="/", app=alerts_api_crud)
@@ -277,6 +286,7 @@ app.mount(path="/", app=methods_model_crud)
 # methods app
 app.mount(path="/", app=methods_app)
 # -----------------------------------------------------------------------------
+"""
 
 # objects ---------------------------------------------------------------------
 # objects_api_crud
@@ -285,6 +295,7 @@ app.mount(path="/", app=objects_api_crud)
 app.mount(path="/", app=objects_model_crud)
 # -----------------------------------------------------------------------------
 
+"""
 # schedules ---------------------------------------------------------------------
 # schedules_api_crud
 app.mount(path="/", app=schedules_api_crud)
@@ -309,6 +320,6 @@ app.mount(path="/", app=tags_app_api)
 app.mount(path="/", app=pandas_app_api)
 # -----------------------------------------------------------------------------
 # =============================================================================
-
+"""
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")

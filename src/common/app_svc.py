@@ -1,12 +1,7 @@
 """
 Модуль содержит базовый класс ``Svc`` - предок всех сервисов.
 """
-import asyncio
-from functools import cached_property
-import ldap
-
-import aio_pika
-import aio_pika.abc
+from uuid import uuid4
 
 from src.common.hierarchy import Hierarchy
 from src.common.app_svc_settings import AppSvcSettings
@@ -34,41 +29,36 @@ class AppSvc(Svc):
         await super().on_startup()
         await self._ldap_connect()
 
-    def _set_handlers(self) -> dict:
-        return {
-            f"{self._config.hierarchy['class']}.model.created.*": self._created,
-            f"{self._config.hierarchy['class']}.model.mayUpdate.*": self._mayUpdate,
-            f"{self._config.hierarchy['class']}.model.updating.*": self._updating,
-            f"{self._config.hierarchy['class']}.model.mayDelete.*": self._mayDelete,
-            f"{self._config.hierarchy['class']}.model.deleting.*": self._deleting,
-            f"{self._config.hierarchy['class']}.app_api.*": self._messages_from_app_api
-        }
-    
-    async def _generate_and_bind_queues(self):
-        
-        queue = await self._amqp_channel.declare_queue(
-            durable=True, exclusive=True
-        )
+    def _set_handlers(self):
+
         if not self._config.nodes:
-            await queue.bind(
-                exchange=self._exchange, 
-                routing_key=f"{self._config.svc_name}.model.*")
+            self._handlers[f"{self._config.hierarchy['class']}.model.created"] = self._created
+            self._handlers[f"{self._config.hierarchy['class']}.model.mayUpdate.*"] = self._mayUpdate
+            self._handlers[f"{self._config.hierarchy['class']}.model.updating.*"] = self._updating
+            self._handlers[f"{self._config.hierarchy['class']}.model.mayDelete.*"] = self._mayDelete
+            self._handlers[f"{self._config.hierarchy['class']}.model.deleting.*"] = self._deleting
         else:
             for node in self._config.nodes:
-                await queue.bind(exchange=self._exchange, routing_key=f"{self._config.svc_name}.model.mayUpdate.{node}")
-                await queue.bind(exchange=self._exchange, routing_key=f"{self._config.svc_name}.model.updating.{node}")
-                await queue.bind(exchange=self._exchange, routing_key=f"{self._config.svc_name}.model.mayDelete.{node}")
-                await queue.bind(exchange=self._exchange, routing_key=f"{self._config.svc_name}.model.deleting.{node}")
-        self._amqp_consume_queues.append(queue)
-        
-        queue = await self._amqp_channel.declare_queue(
-            name=f"{self._config.svc_name}_consume",
-            durable=True, exclusive=True
-        )
-        await queue.bind(exchange=self._exchange, routing_key=f"{self._config.svc_name}.app_api.*")
-        self._amqp_consume_queues.append(queue)
+                self._handlers[f"{self._config.hierarchy['class']}.model.mayUpdate.{node}"] = self._mayUpdate
+                self._handlers[f"{self._config.hierarchy['class']}.model.updating.{node}"] = self._updating
+                self._handlers[f"{self._config.hierarchy['class']}.model.mayDelete.{node}"] = self._mayDelete
+                self._handlers[f"{self._config.hierarchy['class']}.model.deleting.{node}"] = self._deleting
 
-    async def _created(self,mes):
+        self._add_app_handlers()
+        
+    def _add_app_handlers(self):
+        self._handlers[f"{self._config.hierarchy['class']}.app_api.*"] = self._messages_from_app_api
+    
+    async def _generate_queue(self):
+        if not self._config.nodes:
+            await super()._generate_queue()
+            return
+        
+        self._amqp_consume_queue = await self._amqp_channel.declare_queue(
+            f"{self._config.svc_name}_consume_{self._config.nodes[0]}", durable=True
+        )
+
+    async def _created(self, mes):
         pass
 
     async def _mayUpdate(self,mes):

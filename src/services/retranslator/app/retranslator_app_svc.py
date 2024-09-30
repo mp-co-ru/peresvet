@@ -98,13 +98,13 @@ class RetranslatorApp(svc.Svc):
             await message.ack()
 
     async def subscribe_to_tag(self, tag_id):
-        await self._amqp_consume_queues["queue"].bind(
-                        exchange=self._amqp_consume_queues["exchanges"]["main"]["exchange"],
+        await self._amqp_consume_queue["queue"].bind(
+                        exchange=self._amqp_consume_queue["exchanges"]["main"]["exchange"],
                         routing_key=tag_id)
 
     async def unsubscribe_from_tag(self, tag_id):
-        await self._amqp_consume_queues["queue"].unbind(
-                        exchange=self._amqp_consume_queues["exchanges"]["main"]["exchange"],
+        await self._amqp_consume_queue["queue"].unbind(
+                        exchange=self._amqp_consume_queue["exchanges"]["main"]["exchange"],
                         routing_key=tag_id)
 
     async def retranslate(self, routing_key: str, data: str):

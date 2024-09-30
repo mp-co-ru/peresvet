@@ -52,7 +52,7 @@ class BaseSvc(FastAPI):
         self._amqp_is_connected: bool = False
         self._amqp_channel: aio_pika.abc.AbstractRobustChannel = None
         self._exchange = None
-        self._amqp_consume_queues: list[aio_pika.abc.AbstractRobustQueue] = []
+        self._amqp_consume_queue: aio_pika.abc.AbstractRobustQueue = None
         self._amqp_callback_queue: aio_pika.abc.AbstractRobustQueue = None
         self._callback_futures: MutableMapping[str, asyncio.Future] = {}
 
@@ -72,14 +72,14 @@ class BaseSvc(FastAPI):
         # _set_handlers, которая переписывается в каждом
         # классе-наследнике.
 
-        self._handlers = self._set_handlers()
-        
+        self._handlers = {}
+        self._set_handlers()
         self._cache = None
 
         self._initialized = False
 
-    def _set_handlers(self) -> dict:
-        return {}
+    def _set_handlers(self):
+        pass
 
     @cached_property
     def _config(self):
@@ -210,16 +210,16 @@ class BaseSvc(FastAPI):
             future: asyncio.Future = self._callback_futures.pop(message.correlation_id, None)
             future.set_result(json.loads(message.body.decode()))
 
-    async def _generate_and_bind_queues(self):
-        '''
-        consume_queue_name = self._config.broker.get["queue_name"]
-        if not consume_queue_name:
-            consume_queue_name = f"{self._config.svc_name}_consume"
-
-        self._amqp_consume_queues = await self._amqp_channel.declare_queue(
-            consume_queue_name, durable=True
+    async def _generate_queue(self):
+        """Логика генерации очереди/очередей сообщений
+        """
+        self._amqp_consume_queue = await self._amqp_channel.declare_queue(
+            f"{self._config.svc_name}_consume", durable=True
         )
-        '''
+        
+    async def _bind_queue(self):
+        for key in self._handlers.keys():
+            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=key)
 
     async def _amqp_connect(self) -> None:
         """Функция связи с AMQP-сервером.
@@ -247,19 +247,19 @@ class BaseSvc(FastAPI):
                 await self._amqp_channel.set_qos(1)
 
                 self._exchange = await self._amqp_channel.declare_exchange(
-                    self._config.broker["name"], "TOPIC", durable=True
+                    self._config.broker["name"], "topic", durable=True
                 )
 
-                await self._generate_and_bind_queues()
+                await self._generate_queue()
+                await self._bind_queue()
                                 
-                for queue in self._amqp_consume_queues:
-                    await queue.consume(self._process_message)
+                await self._amqp_consume_queue.consume(self._process_message)
 
                 self._amqp_callback_queue = await self._amqp_channel.declare_queue(
                     durable=True, exclusive=True
                 )
                 await self._amqp_callback_queue.bind(
-                    exchange=self._exchange["main"]["exchange"],
+                    exchange=self._exchange,
                     routing_key=self._amqp_callback_queue.name
                 )
 
