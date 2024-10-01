@@ -17,7 +17,6 @@ except ModuleNotFoundError as _:
 
 sys.path.append(".")
 
-"""
 # alerts ----------------------------------------------------------------------
 # alerts api crud
 from src.services.alerts.api_crud.alerts_api_crud_svc \
@@ -42,7 +41,7 @@ from src.services.alerts.model_crud.alerts_model_crud_svc \
         app as alerts_model_crud
     )
 # -----------------------------------------------------------------------------
-
+"""
 # connectors ------------------------------------------------------------------
 from src.services.connectors.api_crud.connectors_api_crud_svc \
     import (
@@ -193,7 +192,6 @@ api_router = APIRouter(prefix="")
 
 # монтирование роутеров =======================================================
 
-"""
 # alerts ----------------------------------------------------------------------
 # alerts_api_crud
 api_router.include_router(router=alerts_api_crud_router)
@@ -201,6 +199,7 @@ api_router.include_router(router=alerts_api_crud_router)
 api_router.include_router(router=alerts_app_api_router)
 # -----------------------------------------------------------------------------
 
+"""
 # connectors ------------------------------------------------------------------
 # connectors_api_crud
 api_router.include_router(router=connectors_api_crud_router)
@@ -249,17 +248,6 @@ app.include_router(api_router)
 # монтирование приложений =====================================================
 
 """
-# alerts ----------------------------------------------------------------------
-# alerts_api_crud
-app.mount(path="/", app=alerts_api_crud)
-# alerts_app
-app.mount(path="/", app=alerts_app)
-# alerts_app_api
-app.mount(path="/", app=alerts_app_api)
-# alerts_model_crud
-app.mount(path="/", app=alerts_model_crud)
-# -----------------------------------------------------------------------------
-
 # connectors ------------------------------------------------------------------
 # connectors_api_crud
 app.mount(path="/", app=connectors_api_crud)
@@ -295,16 +283,6 @@ app.mount(path="/", app=objects_api_crud)
 app.mount(path="/", app=objects_model_crud)
 # -----------------------------------------------------------------------------
 
-"""
-# schedules ---------------------------------------------------------------------
-# schedules_api_crud
-app.mount(path="/", app=schedules_api_crud)
-# schedules_model_crud
-app.mount(path="/", app=schedules_model_crud)
-# schedules_app
-app.mount(path="/", app=schedules_app)
-# -----------------------------------------------------------------------------
-"""
 # tags ------------------------------------------------------------------------
 # tags_api_crud
 app.mount(path="/", app=tags_api_crud)
@@ -315,6 +293,28 @@ app.mount(path="/", app=tags_app)
 # tags_app_api
 app.mount(path="/", app=tags_app_api)
 # -----------------------------------------------------------------------------
+
+# alerts ----------------------------------------------------------------------
+# alerts_api_crud
+app.mount(path="/", app=alerts_api_crud)
+# alerts_app
+app.mount(path="/", app=alerts_app)
+# alerts_app_api
+app.mount(path="/", app=alerts_app_api)
+# alerts_model_crud
+app.mount(path="/", app=alerts_model_crud)
+# -----------------------------------------------------------------------------
+
+"""
+# schedules ---------------------------------------------------------------------
+# schedules_api_crud
+app.mount(path="/", app=schedules_api_crud)
+# schedules_model_crud
+app.mount(path="/", app=schedules_model_crud)
+# schedules_app
+app.mount(path="/", app=schedules_app)
+# -----------------------------------------------------------------------------
+"""
 """
 # pandas ----------------------------------------------------------------------
 app.mount(path="/", app=pandas_app_api)

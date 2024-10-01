@@ -146,8 +146,6 @@ class TagsAppAPI(BaseSvc):
 
     """
 
-    _outgoing_commands = {}
-
     def __init__(self, settings: TagsAppAPISettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 

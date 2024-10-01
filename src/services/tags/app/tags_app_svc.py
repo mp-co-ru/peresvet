@@ -44,7 +44,7 @@ class TagsApp(AppSvc):
             if not res:
                 self._logger.error(f"{self._config.svc_name} :: Нет тега c id = '{tag_id}'.")
                 continue
-            if res[0] == "FALSE":
+            if not res[0]:
                 self._logger.warning(f"{self._config.svc_name} :: Тег '{tag_id}' неактивен.")
                 continue
 
@@ -67,13 +67,13 @@ class TagsApp(AppSvc):
             # сам кэш есть, но нет такого ключа
             res = [None]
         
-        # 
         if res[0] is None:
             res = await self._make_tag_cache(tag_id)
             # если метод перестроения кэша возвращает False - значит, нет такого узла
             if not res:
                 return False
-            res = await self._cache.get(f"{tag_id}.{self._config.svc_name}", "prsActive").exec()
+            
+            res = await self._cache.get(f"{tag_id}.{self._config.svc_name}", key).exec()
 
         if res[0] == 'null':
             res = [None]
@@ -91,7 +91,7 @@ class TagsApp(AppSvc):
             if not res:
                 self._logger.error(f"{self._config.svc_name} :: Нет тега c id = '{tag_id}'.")
                 continue
-            if res[0] == "FALSE":
+            if not res[0]:
                 self._logger.warning(f"{self._config.svc_name} :: Тег '{tag_id}' неактивен.")
                 continue
             
@@ -126,7 +126,10 @@ class TagsApp(AppSvc):
         return res[0]
 
     async def _updated(self, mes):
-        await self._make_tag_cache(mes["id"])
+        # просто удалим кэш тега
+        # при попытке чтения/записи данных кэш будет создан
+        #await self._make_tag_cache(mes["id"])
+        self._delete_tag_cache(mes["id"])
     
     async def _deleted(self, mes):
         await self._delete_tag_cache(mes["id"])

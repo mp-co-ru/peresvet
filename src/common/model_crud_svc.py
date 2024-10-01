@@ -336,152 +336,153 @@ class ModelCRUDSvc(Svc):
         Удаляем пока по одному узлу.
 
         Args:
-            mes (dict): {"action": "delete", "data": {"id": "..."}}
+            mes (dict): {"id": ["..."]}
 
         """
         
-        id = mes["id"]
+        ids = mes["id"]
 
+        for id in ids:
 
-        if not (await self._hierarchy.does_node_exist((id))):
-            err_mes = f"Узел {id} не существует."
-            self._logger.error(f"{self._config.svc_name} :: {err_mes}")
-            res_response = {
-                "error": {
-                    "code": 406,
-                    "message": err_mes
-                }
-            }
-            return res_response
-
-        node_class = await self._hierarchy.get_node_class(id)
-        if node_class != self._config.hierarchy["class"]:
-            err_mes = f"Узел {id} имеет необрабатываемый класс {node_class}."
-            self._logger.error(f"{self._config.svc_name} :: {err_mes}")
-            res_response = {
-                "error": {
-                    "code": 406,
-                    "message": err_mes
-                }
-            }
-            return res_response
-        
-        self._logger.debug(f"Удаление узла {id}...")
-        
-        # логика уведомлений при удалении узла
-        # уведомим свой собственный сервис app 
-        res = await self._post_message(
-            mes=mes,
-            reply=True,
-            routing_key=f"{self._config.hierarchy['class']}.model.may_delete.{id}"
-        )
-
-        if res is None:
-            # нет подписчика на сообщение
-            res = {"response": True}
-
-        if not res["response"]:
-            err_mes = f"Нельзя удалить узел {id}."
-            self._logger.error(f"{self._config.svc_name} :: {err_mes}")
-            res_response = {
-                "error": {
-                    "code": 409,
-                    "message": err_mes
-                }
-            }
-            return res_response
-
-        # получим список всех детей
-        children = []
-        items = await self._hierarchy.search(
-            {
-                "base": id,
-                "scope": CN_SCOPE_SUBTREE,
-                "filter": {
-                    "cn": ["*"]
-                },
-                "attributes": ["objectClass"]
-            }
-        )
-        for item in items:
-            if item[0] == id:
-                # пропустим самого себя
-                continue
-
-            objectClass = item[2]["objectClass"][0]
-            if objectClass != "prsModelNode":
-                children.append({
-                    "id": item[0],
-                    "objectClass": objectClass
-                })
-        
-        if children:
-            tasks = []
-            for child in children:
-                future = asyncio.create_task(
-                    self._post_message(
-                        mes={"id": child["id"]},
-                        reply=True,
-                        routing_key=f"{child['objectClass']}.model.may_delete.{child['id']}"
-                    ),
-                    name=child['id']
-                )
-                tasks.append(future)
-
-            done, _ = await asyncio.wait(
-                tasks, return_when=asyncio.ALL_COMPLETED
-            )
-
-            for future in done:
-                res = future.result()
-                if res is None:
-                    res = {"response": True}
-
-                if not res["response"]:
-                    err_mes = f"Нельзя удалить узел {id}. Запрет от {future.get_name()}: {res.get('message')}"
-                    self._logger.error(f"{self._config.svc_name} :: {err_mes}")
-                    res_response = {
-                        "error": {
-                            "code": 409,
-                            "message": err_mes
-                        }
+            if not (await self._hierarchy.does_node_exist((id))):
+                err_mes = f"Узел {id} не существует."
+                self._logger.error(f"{self._config.svc_name} :: {err_mes}")
+                res_response = {
+                    "error": {
+                        "code": 406,
+                        "message": err_mes
                     }
-                    return res_response
+                }
+                return res_response
 
-            tasks = []
-            for child in children:
-                future = asyncio.create_task(
-                    self._post_message(
-                        {"id": id},
-                        reply=True,
-                        routing_key=f"{child['objectClass']}.model.deleting.{id}"
-                    ),
-                    name=child['id']
+            node_class = await self._hierarchy.get_node_class(id)
+            if node_class != self._config.hierarchy["class"]:
+                err_mes = f"Узел {id} имеет необрабатываемый класс {node_class}."
+                self._logger.error(f"{self._config.svc_name} :: {err_mes}")
+                res_response = {
+                    "error": {
+                        "code": 406,
+                        "message": err_mes
+                    }
+                }
+                return res_response
+            
+            self._logger.debug(f"Удаление узла {id}...")
+            
+            # логика уведомлений при удалении узла
+            # уведомим свой собственный сервис app 
+            res = await self._post_message(
+                mes=mes,
+                reply=True,
+                routing_key=f"{self._config.hierarchy['class']}.model.may_delete.{id}"
+            )
+
+            if res is None:
+                # нет подписчика на сообщение
+                res = {"response": True}
+
+            if not res["response"]:
+                err_mes = f"Нельзя удалить узел {id}."
+                self._logger.error(f"{self._config.svc_name} :: {err_mes}")
+                res_response = {
+                    "error": {
+                        "code": 409,
+                        "message": err_mes
+                    }
+                }
+                return res_response
+
+            # получим список всех детей
+            children = []
+            items = await self._hierarchy.search(
+                {
+                    "base": id,
+                    "scope": CN_SCOPE_SUBTREE,
+                    "filter": {
+                        "cn": ["*"]
+                    },
+                    "attributes": ["objectClass"]
+                }
+            )
+            for item in items:
+                if item[0] == id:
+                    # пропустим самого себя
+                    continue
+
+                objectClass = item[2]["objectClass"][0]
+                if objectClass != "prsModelNode":
+                    children.append({
+                        "id": item[0],
+                        "objectClass": objectClass
+                    })
+            
+            if children:
+                tasks = []
+                for child in children:
+                    future = asyncio.create_task(
+                        self._post_message(
+                            mes={"id": child["id"]},
+                            reply=True,
+                            routing_key=f"{child['objectClass']}.model.may_delete.{child['id']}"
+                        ),
+                        name=child['id']
+                    )
+                    tasks.append(future)
+
+                done, _ = await asyncio.wait(
+                    tasks, return_when=asyncio.ALL_COMPLETED
                 )
-                tasks.append(future)
 
-            done, _ = await asyncio.wait(
-                tasks, return_when=asyncio.ALL_COMPLETED
-            )
+                for future in done:
+                    res = future.result()
+                    if res is None:
+                        res = {"response": True}
 
-        await self._further_delete(mes)
+                    if not res["response"]:
+                        err_mes = f"Нельзя удалить узел {id}. Запрет от {future.get_name()}: {res.get('message')}"
+                        self._logger.error(f"{self._config.svc_name} :: {err_mes}")
+                        res_response = {
+                            "error": {
+                                "code": 409,
+                                "message": err_mes
+                            }
+                        }
+                        return res_response
 
-        await self._hierarchy.delete(id)
+                tasks = []
+                for child in children:
+                    future = asyncio.create_task(
+                        self._post_message(
+                            {"id": id},
+                            reply=True,
+                            routing_key=f"{child['objectClass']}.model.deleting.{id}"
+                        ),
+                        name=child['id']
+                    )
+                    tasks.append(future)
 
-        await self._post_message(
-            mes={"id": id}, reply=False, 
-            routing_key=f"{self._config.hierarchy['class']}.model.deleted.{id}")
-        
-        for child in children:
+                done, _ = await asyncio.wait(
+                    tasks, return_when=asyncio.ALL_COMPLETED
+                )
+
+            await self._further_delete(mes)
+
+            await self._hierarchy.delete(id)
+
             await self._post_message(
-                {"id": id},
-                reply=False,
-                routing_key=f"{child['objectClass']}.model.deleted.{child['id']}"
-            )
+                mes={"id": id}, reply=False, 
+                routing_key=f"{self._config.hierarchy['class']}.model.deleted.{id}")
+            
+            for child in children:
+                await self._post_message(
+                    {"id": id},
+                    reply=False,
+                    routing_key=f"{child['objectClass']}.model.deleted.{child['id']}"
+                )
 
-        self._logger.info(f'Узел {id} удалён.')
+            self._logger.info(f'Узел {id} удалён.')
 
-        res_response = {}
+            res_response = {}
 
         return res_response
 

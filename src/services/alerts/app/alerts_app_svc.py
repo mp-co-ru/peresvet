@@ -21,9 +21,62 @@ class AlertsApp(AppSvc):
     def __init__(self, settings: AlertsAppSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    def _add_app_handlers(self) -> dict:
+    def _add_app_handlers(self):
         self._handlers[f"{self._config.hierarchy['class']}.app_api.get_alarms"] = self._get_alarms
         self._handlers[f"{self._config.hierarchy['class']}.app_api.ack_alarm"] = self._ack_alarm
+        self._handlers["prsTag.app.data_set.*"] = self._tag_value_changed
+        self._handlers["prsTag.model.deleteing.*"] = self._tag_deleting
+
+    async def _tag_deleting(self, mes):
+        payload = {
+            "base": mes['id'],
+            "scope": CN_SCOPE_SUBTREE, # по идее, у тега могут быть только тревоги и методы, то есть уровень ниже, но - на всякий случай
+            "filter": {
+                "objectClass": ["prsAlert"]
+            },
+            "attributes": ["cn"]
+        }
+        alerts = await self._hierarchy.search(payload=payload)
+        for alert in alerts:
+            self._delete_alert_cache(alert[0])
+        
+        await self._amqp_consume_queue.unbind(f"prsTag.model.deleteing.{mes['id']}")
+        await self._amqp_consume_queue.unbind(f"prsTag.app.data_set.{mes['id']}")
+
+    async def _created(self, mes):
+        # тревога создана
+        await self._get_alert(mes['id'])
+
+    async def _updated(self, mes):
+        # метод, срабатывающий на изменение экземпляра сущности в иерархии
+        # сервис <>.app подписан на это событие по умолчанию
+
+        # поступаем так: удаляем кэш
+        # читаем данные по тревоге
+
+        #TODO: не учитываем пока возможности переноса тревоги на другого родителя!
+
+        await self._make_alert_cache(mes["id"])
+    
+    async def _deleted(self, mes):
+        await self._delete_alert_cache(mes["id"])
+
+    async def _delete_alert_cache(self, alert_id: str):
+        await self._cache.delete(f"{alert_id}.{self._config.svc_name}").exec()
+
+    async def _make_alert_cache(self, tag_id: str):
+        await self._delete_alert_cache(tag_id=tag_id)
+
+        res = await self._hierarchy.search({
+            "id": tag_id,
+            "attributes": ["prsActive"]
+        })
+        if not res:
+            return False
+        
+        active = res[0][2]["prsActive"][0] == 'TRUE'
+        res = await self._cache.set(name=f"{tag_id}.{self._config.svc_name}", obj={"prsActive": active}).exec()
+        return res[0]
 
     async def _get_alarms(self, mes: dict) -> dict:
         """_summary_
@@ -62,51 +115,42 @@ class AlertsApp(AppSvc):
 
         Args:
             mes (dict): {
-                "action": "alerts.ackAlarms",
-                "data": {
-                    "id": "alert_id",
-                    "x": 123
-                }
+                "id": "alert_id",
+                "x": 123                
             }
         """
-        alert_id = mes["data"]["id"]
-        alert_cache_key = self._cache_key(alert_id, self._config.svc_name)
-        alert_data = await self._cache.get(
-            name=alert_cache_key
-        ).exec()
+        alert_id = mes["id"]
+        alert_cache_key = f"{alert_id}.{self._config.svc_name}"
+        alert_data = await self._cache.get(name=alert_cache_key).exec()
 
-        if not alert_data:
-            self._logger.debug(f"Отсутствует кэш по тревоге {alert_id}.")
+        if not alert_data[0]:
+            self._logger.error(f"{self._config.svc_name} :: Отсутствует кэш по тревоге {alert_id}.")
             return
 
         if not alert_data[0]["fired"]:
-            self._logger.debug(f"Тревога {alert_id} неактивна.")
+            self._logger.warning(f"{self._config.svc_name} :: Тревога {alert_id} неактивна.")
             return
 
         if alert_data[0]["acked"]:
-            self._logger.debug(f"Тревога {alert_id} уже квитирована.")
+            self._logger.warning(f"{self._config.svc_name} :: Тревога {alert_id} уже квитирована.")
             return
 
-        alert_data[0]["acked"] = mes["data"]["x"]
+        alert_data[0]["acked"] = mes["x"]
         await self._cache.set(name=alert_cache_key, obj=alert_data)
         await self._post_message(
             {
-                "action": "alerts.alarmAcked",
-                "data": {
-                    "alertId": alert_id,
-                    "x": mes["data"]["x"]
-                }
+                "alertId": alert_id,
+                "x": mes["data"]["x"]                
             },
             reply=False,
-            routing_key=alert_id
+            routing_key=f"{self._config.svc_name}.alarm_acked.{alert_id}"
         )
 
-    async def _tag_changed(self, mes: dict) -> None:
+    async def _tag_value_changed(self, mes: dict) -> None:
         """_summary_
 
         Args:
             mes (dict): {
-                "action": "tags.uploadData",
                 "data": {
                     "data": [
                         {
@@ -134,20 +178,15 @@ class AlertsApp(AppSvc):
             alerts = await self._hierarchy.search(get_alerts)
             for alert in alerts:
                 alert_id = alert[0]
-                alert_cache_key = self._cache_key(alert_id, self._config.svc_name)
                 alert_data = await self._cache.get(
-                    alert_cache_key
+                    f"{alert_id}.{self._config.svc_name}"
                 ).exec()
-
-                self._logger.debug(f"Alert cache data: {alert_data}")
 
                 if not alert_data[0]:
                     self._logger.error(f"Нет кэша тревоги {alert_id}.")
                     continue
 
                 for data_item in tag_item["data"]:
-
-                    self._logger.debug(f"Data item: {data_item}")
 
                     # если данные более ранние, чем уже обработанные...
                     if alert_data[0]["fired"]:
@@ -169,29 +208,23 @@ class AlertsApp(AppSvc):
 
                     if not alert_data[0]["fired"] and alert_on:
                         await self._post_message(
-                            {
-                                "action": "alerts.alarmOn",
-                                "data": {
-                                    "alertId": alert_id,
-                                    "x": data_item[1]
-                                }
+                            {                                
+                                "alertId": alert_id,
+                                "x": data_item[1]
                             },
                             reply=False,
-                            routing_key=alert_id
+                            routing_key=f"{self._config.svc_name}.alarm_on.{alert_id}"
                         )
                         alert_data[0]["fired"] = data_item[1]
 
                         if alert_data[0]["autoAck"]:
                             await self._post_message(
-                                {
-                                    "action": "alerts.alarmAcked",
-                                    "data": {
-                                        "alertId": alert_id,
-                                        "x": data_item[1]
-                                    }
+                                {                                    
+                                    "alertId": alert_id,
+                                    "x": data_item[1]                                    
                                 },
                                 reply=False,
-                                routing_key=alert_id
+                                routing_key=f"{self._config.svc_name}.alarm_acked.{alert_id}"
                             )
                             alert_data[0]["acked"] = data_item[1]
 
@@ -199,20 +232,17 @@ class AlertsApp(AppSvc):
                     if alert_data[0]["fired"] and not alert_on:
                         await self._post_message(
                             {
-                                "action": "alerts.alrmOff",
-                                "data": {
-                                    "alertId": alert_id,
-                                    "x": data_item[1]
-                                }
+                                "alertId": alert_id,
+                                "x": data_item[1]                             
                             },
                             reply=False,
-                            routing_key=alert_id
+                            routing_key=f"{self._config.svc_name}.alarm_off.{alert_id}"
                         )
                         alert_data[0]["fired"] = None
                         alert_data[0]["acked"] = None
 
                 await self._cache.set(
-                    name=alert_cache_key,
+                    name=f"{alert_id}.{self._config.svc_name}",
                     obj=alert_data
                 ).exec()
 
@@ -224,21 +254,41 @@ class AlertsApp(AppSvc):
         '''
         return f"{'.'.join(args)}"
     
-    async def _get_alert(self, alert) -> None:
-        alert_id = alert[0]
-        alert_config = json.loads(alert[2]["prsJsonConfigString"][0])
+    async def _get_alert(self, alert_id) -> None:
+        payload = {
+            "id": alert_id,
+            "attributes": ['prsActive', 'cn', 'description', 'prsJsonConfigString']
+        }
+        alert_data = await self._hierarchy.search((payload))
+        if not alert_data:
+            self._logger.error(f"{self._config.svc_name} :: Нет данных по тревоге {alert_id}")
+            return
+        alert = alert_data[0]
+
+        active = alert[2]["prsActive"][0] == 'TRUE'
+        if not active:
+            self._logger.warning(f"{self._config.svc_name} :: Тревога {alert_id} неактивна.")
+            return
+
+        try:
+            # json.loads вполне может возвращать целые и вещественные числа,
+            # то есть преобразует строку не только в словарь, но и в другие типы
+            alert_config = json.loads(alert[2]["prsJsonConfigString"][0])
+        except (json.JSONDecodeError, TypeError):
+            alert_config = None
+
+        if not isinstance(alert_config, dict):
+            self._logger.error(f"{self._config.svc_name} :: У тревоги '{alert_id}' неверная конфигурация.")
+            self._delete_alert_cache(alert_id=alert_id)
+            return
+
         tag_id, _ = await self._hierarchy.get_parent(alert_id)
 
-        await self._amqp_consume_queue.bind(
-            exchange=self._exchange,
-            routing_key=f"tags.app.uploadData.{tag_id}"
-        )
-
         alert_data = {
-            "tagId": tag_id,
+            #"tagId": tag_id,
             "alertId": alert_id,
-            "fired": None,
-            "acked": None,
+            "fired": False,
+            "acked": False,
             "value": alert_config["value"],
             "high": alert_config["high"],
             "autoAck": alert_config["autoAck"],
@@ -247,11 +297,35 @@ class AlertsApp(AppSvc):
         }
 
         await self._cache.set(
-            name=self._cache_key(alert_id, self._config.svc_name),
+            name=f"{alert_id}.{self._config.svc_name}",
             obj=alert_data
         ).exec()
 
-        self._logger.debug(f"Тревога {alert_id} прочитана.")
+        # проведём активацию тревоги ---------------
+        payload = {
+            "tagId": tag_id
+        }
+        res = await self._post_message(
+            mes=payload, 
+            reply=True, 
+            routing_key="prsTag.app_api_client.get_data"
+        )
+        if res.get('data'):
+            await self._tag_value_changed(res)
+            
+        # -----------------------------------------
+
+        # подпишемся на события изменения значений тега
+        await self._amqp_consume_queue.bind(
+            exchange=self._exchange,
+            routing_key=f"tags.app.data_set.{tag_id}"
+        )
+        await self._amqp_consume_queue.bind(
+            exchange=self._exchange,
+            routing_key=f"prsTag.model.deleting.{tag_id}"
+        )
+        
+        self._logger.debug(f"{self._config.svc_name} :: Тревога {alert_id} прочитана.")
 
     async def _get_alerts(self) -> None:
         get_alerts = {
@@ -263,10 +337,16 @@ class AlertsApp(AppSvc):
         }
         alerts = await self._hierarchy.search(get_alerts)
         for alert in alerts:
-            self._get_alert(alert)
+            await self._get_alert(alert[0])
 
     async def on_startup(self) -> None:
         await super().on_startup()
+
+        # по умолчанию очередь привязывается к изменениям всех тегов
+        # нам же нужны только изменения тегов, у которых есть тревоги
+        await self._amqp_consume_queue.unbind(self._exchange, "prsTag.app.data_set.*")
+        # будем подписываться на удаление только тех тегов, к которым привязаны алерты
+        await self._amqp_consume_queue.unbind(self._exchange, "prsTag.model.deleting.*")
 
         try:
             await self._get_alerts()

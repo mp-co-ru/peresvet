@@ -298,8 +298,7 @@ class BaseSvc(FastAPI):
         """
         self._logger.info(f"{self._config.svc_name} :: on_startup.")
         await self._amqp_connect()
-
-        await self._cache_connect()
+        await self._cache_connect()        
 
     async def _cache_connect(self):
         self._cache = RedisCache(self._config.cache_url)

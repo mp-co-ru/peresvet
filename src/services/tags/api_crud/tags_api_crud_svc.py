@@ -278,7 +278,7 @@ async def delete(payload: svc.NodeDelete, error_handler: svc.ErrorHandler = Depe
         * **detail** (list) - Детали ошибки.
 
     """
-    res = await app.delete(payload)
+    res = await app._delete(payload)
     await error_handler.handle_error(res)
     return res
 

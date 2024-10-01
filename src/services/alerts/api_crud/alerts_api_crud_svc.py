@@ -2,6 +2,7 @@
 Запросы на создание, чтение, обновление, удаление тревог.
 """
 import sys
+import json
 from pydantic import Field
 from fastapi import APIRouter, Depends
 
@@ -72,7 +73,7 @@ router = APIRouter(prefix=f"{settings.api_version}/alerts")
 error_handler = svc.ErrorHandler()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
-async def create(payload: AlertCreate, error_handler: svc.ErrorHandler = Depends()):
+async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
     """
     Метод добавляет тревогу в модель.
 
@@ -117,6 +118,17 @@ async def create(payload: AlertCreate, error_handler: svc.ErrorHandler = Depends
         * **detail** (str) - пояснение к возникшей ошибке.
 
     """
+    try:
+        s = json.dumps(payload)
+        p = AlertCreate.model_validate_json(s)
+    except Exception as ex:
+        res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+        app._logger.exception(f"{settings.svc_name} :: {res['message']}")
+        await error_handler.handle_error(res)
+
+    res = await app._create(p)
+    await error_handler.handle_error(res)
+    return res
 
     res = await app._create(payload)
     await error_handler.handle_error(res)

@@ -27,7 +27,7 @@ class SchedulesApp(svc.Svc):
             "id": mes["data"]["id"],
             "attributes": ["prsJsonConfigString", "prsActive"]
         }
-        schedule = self._hierarchy.search(payload)
+        schedule = await self._hierarchy.search(payload)
         if not schedule:
             self._logger.error(f"{self._config.svc_name} :: Нет данных по расписанию {payload['id']}")
             return {}
