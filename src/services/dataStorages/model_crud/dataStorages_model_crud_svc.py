@@ -24,16 +24,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     def _set_handlers(self) -> dict:
         return {
-            "dataStorages.create": self._create,
-            "dataStorages.read": self._read,
-            "dataStorages.update": self._update,
-            "dataStorages.delete": self._delete,
-
-            #TODO: этот блок надо доработать
-            ".may_update": self._may_update,
-            ".updating": self._updating,
-            ".may_delete": self._may_delete,
-            ".deleting": self._deleting
+            # хранилище в Community одно и всегда активное
         }
 
     async def _further_read(self, mes: dict, search_result: dict) -> dict:
