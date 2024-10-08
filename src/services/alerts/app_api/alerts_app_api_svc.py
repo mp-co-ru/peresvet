@@ -34,6 +34,7 @@ class AlarmsGet(BaseModel):
     parentId: str | list[str] = Field(None, title="Объект, тревоги которого запрашиваем.")
     getChildren: bool = Field(False, title="Учитывать тревоги дочерних объектов.")
     format: bool = Field(False, title="Флаг форматирования меток времени.")
+    fired: bool = Field(True, title="Флаг возврата только активных алярмов.")
 
     validate_id = validator('parentId', allow_reuse=True)(valid_uuid)
 
@@ -50,6 +51,7 @@ class AlarmData(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
 
     id: str = Field(title="Id тревоги.")
+    cn: str = Field(title="Имя тревоги.")
     description: str = Field(title="Описание тревоги.")
     start: int | str = Field(title="Время возникновения тревоги.")
     finish: int | str = Field(None, title="Время пропадания тревоги.")

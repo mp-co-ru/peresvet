@@ -17,6 +17,7 @@ from pamqp.commands import Basic
 
 from src.common.logger import PrsLogger
 from src.common.base_svc_settings import BaseSvcSettings
+#from src.common.local_cache import LocalCache
 from src.common.redis_cache import RedisCache
 
 class BaseSvc(FastAPI):
@@ -301,6 +302,7 @@ class BaseSvc(FastAPI):
         await self._cache_connect()        
 
     async def _cache_connect(self):
+        #self._cache = LocalCache()
         self._cache = RedisCache(self._config.cache_url)
 
     async def on_shutdown(self) -> None:

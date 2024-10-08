@@ -22,11 +22,6 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
     def __init__(self, settings: DataStoragesModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    def _set_handlers(self) -> dict:
-        return {
-            # хранилище в Community одно и всегда активное
-        }
-
     async def _further_read(self, mes: dict, search_result: dict) -> dict:
 
         if not mes["data"]["getLinkedTags"] and not mes["data"]["getLinkedAlerts"]:
@@ -92,6 +87,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     async def _further_update(self, mes: dict) -> None:
 
+        '''
         ds_id = mes["data"]["id"]
         for item in mes["data"]["linkTags"]:
             copy_item = copy.deepcopy(item)
@@ -112,6 +108,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             copy_item = copy.deepcopy(item)
             copy_item["dataStorageId"] = ds_id
             await self._unlink_tag(copy_item)
+        '''
 
     async def _unlink_tag(self, tag_id: str) -> None:
         """Метод отвязки тега от хранилища.
@@ -232,7 +229,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             datastorage_id = await self._get_default_datastorage_id()
             if not datastorage_id:
                 self._logger.info(
-                    f"Невозможно привязать тег: "
+                    f"{self._config.svc_name} :: Невозможно привязать тег: "
                     f"нет хранилища данных по умолчанию."
                 )
                 return
@@ -241,11 +238,13 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         # res = {
         #   "prsStore": {...}
         # }
-        # сообщение о привязке тега посылается с routing_key = <id хранилища>
         res = await self._post_message(
-            mes={"action": "dataStorages.linkTag", "data": payload},
+            mes=payload,
             reply=True,
-            routing_key=payload["dataStorageId"])
+            routing_key=f"{self._config.hierarchy['class']}.model.link_tag.{datastorage_id}")
+        if not res:
+            self._logger.error(f"{self._config.svc_name} :: Нет обработчика для хранилища {datastorage_id}.")
+            return
 
         prs_store = res.get("prsStore")
 
@@ -268,7 +267,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         )
 
         self._logger.info(
-            f"Тег {payload['tagId']} привязан к хранилищу {payload['dataStorageId']}"
+            f"{self._config.svc_name} :: Тег {payload['tagId']} привязан к хранилищу {payload['dataStorageId']}"
         )
 
     async def _link_alert(self, payload: dict) -> None:
@@ -300,22 +299,22 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             datastorage_id = await self._get_default_datastorage_id()
             if not datastorage_id:
                 self._logger.info(
-                    f"Невозможно привязать тревогу: "
+                    f"{self._config.svc_name} :: Невозможно привязать тревогу: "
                     f"нет хранилища данных по умолчанию."
                 )
                 return
             payload["dataStorageId"] = datastorage_id
 
-        await self._unlink_alert(payload["alertId"])
+        #await self._unlink_alert(payload["alertId"])
 
         # res = {
         #   "prsStore": {...}
         # }
         # сообщение о привязке тега посылается с routing_key = <id хранилища>
         res = await self._post_message(
-            mes={"action": "dataStorages.linkAlert", "data": payload},
+            mes=payload,
             reply=True,
-            routing_key=payload["dataStorageId"])
+            routing_key=f"{self._config.hierarchy['class']}.model.link_alert.{datastorage_id}")
 
         prs_store = res.get("prsStore")
 
@@ -338,7 +337,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         )
 
         self._logger.info(
-            f"Тревога {payload['alertId']} привязана к хранилищу {payload['dataStorageId']}"
+            f"{self._config.svc_name} :: Тревога {payload['alertId']} привязана к хранилищу {payload['dataStorageId']}"
         )
 
     async def _further_create(self, mes: dict, new_id: str) -> None:
