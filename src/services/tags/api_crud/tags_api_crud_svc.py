@@ -2,10 +2,9 @@
 Модуль содержит примеры запросов и ответов на них, параметров которые могут входить в
 запрос, в сервисе tags.
 """
-import json
 import sys
-from uuid import UUID
-from typing import Any, List
+import json
+from typing import Any
 from pydantic import Field, validator
 
 from fastapi import APIRouter, Depends
@@ -74,13 +73,14 @@ class TagCreateAttributes(svc.NodeAttributes):
     )
 
 class TagCreate(svc.NodeCreate):
-    attributes: TagCreateAttributes = Field({}, title="Атрибуты узла")
+    attributes: TagCreateAttributes = Field(TagCreateAttributes(), title="Атрибуты узла")
     validate_id = validator('parentId', allow_reuse=True)(svc.valid_uuid)
 
 class TagRead(svc.NodeRead):
     pass
 
 class TagUpdate(svc.NodeUpdate):
+    attributes: TagCreateAttributes = Field({}, title="Атрибуты узла")
     validate_id = validator('parentId', 'id', allow_reuse=True)(svc.valid_uuid)
 
 class TagsAPICRUD(svc.APICRUDSvc):

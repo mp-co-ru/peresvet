@@ -1,6 +1,6 @@
-from src.common.svc_settings import SvcSettings
+from src.common.app_svc_settings import AppSvcSettings
 
-class TagsAppSettings(SvcSettings):
+class TagsAppSettings(AppSvcSettings):
     #: имя сервиса
     svc_name: str = "tags_app"
     
@@ -8,5 +8,3 @@ class TagsAppSettings(SvcSettings):
         #: класс экзмепляров сущности в иерархии
         "class": "prsTag"
     }
-
-    nodes: list[str] = []

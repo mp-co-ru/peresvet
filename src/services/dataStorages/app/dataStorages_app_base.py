@@ -14,7 +14,7 @@ import numpy as np
 
 sys.path.append(".")
 
-from src.common import svc
+from src.common import app_svc
 from src.services.dataStorages.app.dataStorages_app_base_settings import DataStoragesAppBaseSettings
 
 from src.common.hierarchy import (
@@ -58,7 +58,7 @@ def linear_interpolated(start_point: Tuple[int, Any],
 
     return (x-x0)/(x1-x0)*(y1-y0)+y0
 
-class DataStoragesAppBase(svc.Svc, ABC):
+class DataStoragesAppBase(app_svc.AppSvc, ABC):
     """Базовый класс для хранилищ данных.
     Реализует общую логику: работа с кэшем, поддержка нескольких экземпляров
     хранилища одного типа и т.д.
@@ -69,7 +69,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
     Класс реализует кэш json-вида.
 
-    "<service_name>:<tag_id1>": {
+    "<tag_id1>.<service_name>": {
         "prsActive": true,
         "prsUpdate": true,
         "prsValueTypeCode": 1,
@@ -80,7 +80,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
         },
         "data": [(y, x, q)]
     }
-    "<service_name>:<ds_id1>": {
+    "<ds_id1>.<service_name>": {
         "prsActive": True,
         "tags": ["<tag_id1>", "<tag_id2>"]
     }
@@ -126,24 +126,20 @@ class DataStoragesAppBase(svc.Svc, ABC):
         #    "<ds_id>": <connection_pool>
         # }
         self._connection_pools = {}
-        # список id хранилищ, которые обслуживает сервис
-        self._ds_ids = []
-
-    def _set_handlers(self) -> dict:
-        return {
-            "prsTag.app.data_get.*": self.tag_get,
-            "prsTag.app.data_set.*": self.tag_set,
-            "prsAlert.app.alarm_acked.*": self.alarm_ack,
-            "prsAlert.app.alarm_on.*": self.alarm_on,
-            "prsAlert.app.alarm_off.*": self.alarm_off,
-            #"prsDataStorage.model.linkTag.*": self.link_tag,
-            #"prsDataStorage.model.unlinkTag.*": self.unlink_tag,
-            #"prsDataStorage.model.linkAlert.*": self.link_alert,
-            #"prsDataStorage.model.unlinkAlert.*": self.unlink_alert,
-            "prsDataStorage.model.created": self.created,
-            "prsDataStorage.model.updating.*": self.updating,
-            "prsDataStorage.model.deleting.*": self.deleting
-        }
+        
+    def _add_app_handlers(self):
+        self._handlers["prsTag.app.data_get.*"] = self._tag_get
+        self._handlers["prsTag.app.data_set.*"] = self._tag_set
+        self._handlers["prsTag.model.updated.*"] = self._tag_updated
+        self._handlers["prsTag.model.deleted.*"] = self._tag_deleted
+        self._handlers["prsAlert.app.alarm_acked.*"] = self._alarm_ack
+        self._handlers["prsAlert.app.alarm_on.*"] = self._alarm_on
+        self._handlers["prsAlert.app.alarm_off.*"] = self._alarm_off
+        self._handlers["prsAlert.model.deleted.*"] = self._alert_deleted
+        self._handlers["prsDataStorage.model.link_tag.*"] = self._link_tag
+        self._handlers["prsDataStorage.model.unlink_tag.*"] = self._unlink_tag
+        self._handlers["prsDataStorage.model.link_alert.*"] = self._link_alert
+        self._handlers["prsDataStorage.model.unlink_alert.*"] = self._unlink_alert
 
     async def _bind_tag(self, tag_id: str, bind: bool) -> None:
         """
@@ -154,12 +150,15 @@ class DataStoragesAppBase(svc.Svc, ABC):
         if bind:
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsTag.app.data_get.{tag_id}")
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsTag.app.data_set.{tag_id}")
-            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsTag.model.updating.{tag_id}")
+            #await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsTag.model.updating.{tag_id}")
+            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsTag.model.updated.{tag_id}")
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsTag.model.deleting.{tag_id}")
+            
         else:
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsTag.app.data_get.{tag_id}")
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsTag.app.data_set.{tag_id}")
-            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsTag.model.updating.{tag_id}")
+            #await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsTag.model.updating.{tag_id}")
+            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsTag.model.updated.{tag_id}")
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsTag.model.deleting.{tag_id}")
 
     async def _bind_alert(self, alert_id: str, bind: bool) -> None:
@@ -176,11 +175,33 @@ class DataStoragesAppBase(svc.Svc, ABC):
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_acked.{alert_id}")
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_on.{alert_id}")
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_off.{alert_id}")
+            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsAlert.model.deleting.{alert_id}")
         else:
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_acked.{alert_id}")
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_on.{alert_id}")
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_off.{alert_id}")
+            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.model.deleting.{alert_id}")
 
+    async def _bind_ds(self, ds_id: str, bind: bool = True):
+        if bind: 
+            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.link_tag.{ds_id}")
+            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.unlink_tag.{ds_id}")
+            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.link_alert.{ds_id}")
+            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.unlink_alert.{ds_id}")
+            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.updating.{ds_id}")
+            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.may_update.{ds_id}")
+            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.may_delete.{ds_id}")
+            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.deleting.{ds_id}")
+        else:
+            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsDataStorage.model.link_tag.{ds_id}")
+            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsDataStorage.model.unlink_tag.{ds_id}")
+            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsDataStorage.model.link_alert.{ds_id}")
+            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsDataStorage.model.unlink_alert.{ds_id}")
+            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsDataStorage.model.updating.{ds_id}")
+            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsDataStorage.model.may_update.{ds_id}")
+            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsDataStorage.model.may_delete.{ds_id}")
+            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsDataStorage.model.deleting.{ds_id}")
+    
     async def _add_supported_ds(self, ds_id: str) -> None:
         
         """Метод добавляет в список поддерживаемых хранилищ новое.
@@ -193,28 +214,23 @@ class DataStoragesAppBase(svc.Svc, ABC):
             "attributes": ["prsJsonConfigString", "prsActive"]
         }
         ds = await self._hierarchy.search(payload=payload)
-
         
         # привяжемся к сообщениям, касающимся изменениям хранилища ---------------------------------
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.linkTag.{ds_id}")
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.unlinkTag.{ds_id}")
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.linkAlert.{ds_id}")
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.unlinkAlert.{ds_id}")
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.updating.{ds_id}")
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.deleting.{ds_id}")
+        await self._bind_ds(ds_id, True)
         # ----------------------------------------------------------------------------------------
         if ds[0][2]["prsActive"][0] == "TRUE":
-
             # если хранилище активно, то подсоединимся к нему
             connected = False
             while not connected:
                 try:
                     self._connection_pools[ds_id] = await self._create_connection_pool(json.loads(ds[0][2]["prsJsonConfigString"][0]))
-                    self._logger.info(f"Связь с базой данных {ds_id} установлена.")
+                    self._logger.info(f"{self._config.svc_name} :: Связь с базой данных {ds_id} установлена.")
                     connected = True
                 except Exception as ex:
-                    self._logger.error(f"Ошибка связи с базой данных '{ds_id}': {ex}")
+                    self._logger.error(f"{self._config.svc_name} :: Ошибка связи с базой данных '{ds_id}': {ex}")
                     await asyncio.sleep(5)
+
+        
 
         payload = {
             "base": ds_id,
@@ -223,19 +239,18 @@ class DataStoragesAppBase(svc.Svc, ABC):
             },
             "attributes": ["cn"]
         }
-        tags = await self._hierarchy.search(payload)
-        #tag_ids = [tag[2]["cn"][0] for tag in tags]
 
-        # добавим ключ "svc_name:ds_id": {}
-        '''
-        await (self._cache.set(name=f"{self._config.svc_name}:{ds_id}",
-                obj={
-                    "prsActive": ds[0][2]["prsActive"][0] == "TRUE",
-                    "tags": tag_ids
-                }, nx=True)).exec()
-        '''
+        ds_cache = {
+            "prsActive": ds[0][2]["prsActive"][0] == "TRUE",
+            "prsJsonConfigString": json.loads(ds[0][2]["prsJsonConfigString"][0]),
+            "tags": [],
+            "alerts": []
+        }
+
+        tags = await self._hierarchy.search(payload)
         for tag in tags:
-            await self._bind_tag(tag[0], True)
+            await self._bind_tag(tag[2]["cn"][0], True)
+            ds_cache["tags"].append(tag[2]["cn"][0])
 
         payload = {
             "base": ds_id,
@@ -245,19 +260,11 @@ class DataStoragesAppBase(svc.Svc, ABC):
             "attributes": ["cn"]
         }
         alerts = await self._hierarchy.search(payload)
-        '''
-        alert_ids = [alert[2]["cn"][0] for alert in alerts]
-
-        # добавим ключ "svc_name:ds_id": {}
-        await (self._cache.set(name=f"{self._config.svc_name}:{ds_id}",
-                obj={
-                    "prsActive": ds[0][2]["prsActive"][0] == "TRUE",
-                    "tags": tag_ids
-                }, nx=True)).exec()
-        '''
-
         for alert in alerts:
-            await self._bind_alert(alert[0], True)
+            await self._bind_alert(alert[2]["cn"][0], True)
+            ds_cache["alerts"].append(alert[2]["cn"][0])
+
+        await self._cache.set(name=f"{ds_id}.{self._config.svc_name}", obj=ds_cache).exec()
 
     async def on_startup(self) -> None:
 
@@ -265,20 +272,31 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
         # сделаем перепривязку очереди, так как слушать будем только нужные сообщения
         # группа сообщений, где вместо * передается id тега или тревоги --------------------------
-        await self._amqp_consume_queue.unbind("prsTag.app.data_get.*")
-        await self._amqp_consume_queue.unbind("prsTag.app.data_set.*")
-        await self._amqp_consume_queue.unbind("prsAlert.app.alarm_acked.*")
-        await self._amqp_consume_queue.unbind("prsAlert.app.alarm_on.*")
-        await self._amqp_consume_queue.unbind("prsAlert.app.alarm_off.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.app.data_get.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.app.data_set.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.model.updating.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.model.updated.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.model.deleting.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.model.deleted.*")
+        
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.app.alarm_acked.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.app.alarm_on.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.app.alarm_off.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.model.deleting.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.model.deleted.*")
         # ----------------------------------------------------------------------------------------
 
         # группа сообщений, где вместо * передается id хранилища ---------------------------------
-        await self._amqp_consume_queue.unbind("prsDataStorage.model.linkTag.*")
-        await self._amqp_consume_queue.unbind("prsDataStorage.model.unlinkTag.*")
-        await self._amqp_consume_queue.unbind("prsDataStorage.model.linkAlert.*")
-        await self._amqp_consume_queue.unbind("prsDataStorage.model.unlinkAlert.*")
-        await self._amqp_consume_queue.unbind("prsDataStorage.model.updated.*")
-        await self._amqp_consume_queue.unbind("prsDataStorage.model.deleted.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.link_tag.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.unlink_tag.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.link_alert.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.unlink_alert.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.may_update.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.updating.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.updated.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.deleting.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.may_delete.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.deleted.*")
         # ----------------------------------------------------------------------------------------
 
         try:
@@ -303,8 +321,17 @@ class DataStoragesAppBase(svc.Svc, ABC):
             loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))
 
         except Exception as ex:
-            self._logger.error(f"Ошибка инициализации хранилища: {ex}")
+            self._logger.error(f"{self._config.svc_name} :: Ошибка инициализации хранилища: {ex}")
 
+    async def _alert_deleted(self, mes: dict):
+        pass
+
+    async def _tag_updated(self, mes: dict):
+        pass
+
+    async def _tag_deleted(self, mes: dict):
+        pass
+    
     async def created(self, mes: dict) -> None:
         # команда добавления новой базы данных
         # если в конфигурации сервиса указаны конкретные id баз для поддержки,
@@ -342,151 +369,20 @@ class DataStoragesAppBase(svc.Svc, ABC):
                 self._logger.error(f"{self._config.svc_name} :: Ошибка связи с базой данных '{ds_id}': {ex}")
                 await asyncio.sleep(5)
 
-        link_tags = mes.get("linkTags")
-        if link_tags:
-            for tag in link_tags:
-                self.link_tag(ds_id, tag)
-
-        link_alerts = mes.get("linkAlerts")
-        if link_alerts:
-            for alert in link_alerts:
-                self.link_alert(ds_id, alert)
-
-        unlink_tags = mes.get("unlinkTags")
-        if unlink_tags:
-            for tag in unlink_tags:
-                self.unlink_tag(ds_id, tag)
-
-        unlink_alerts = mes.get("unlinkAlerts")
-        if unlink_alerts:
-            for alert in unlink_alerts:
-                self.unlink_alert(ds_id, alert)
-
+        return {"response": True}
+        
     async def deleting(self, mes: dict) -> None:
         # удаление хранилища
-        ds_id = mes["data"]["id"]
-        res = await self._cache.get(
-            f"{self._config.svc_name}:{ds_id}", "tags"
-        ).exec()
+        # операция, неподдерживаемая Community версией
+        pass
 
-        self._cache.delete(f"{self._config.svc_name}:{ds_id}")
+    async def _alarm_on(self, mes: dict) -> None:
+        pass
 
-        for tag_id in res[0]:
-            self._cache.delete(
-                f"{self._config.svc_name}:{tag_id}",
-                f"dss.{ds_id}"
-            )
-        await self._cache.exec()
+    async def _alarm_ack(self, mes: dict) -> None:
+        pass
 
-    async def alarm_on(self, mes: dict) -> None:
-        """Факт возникновения тревоги.
-
-        Args:
-            mes (dict): {
-                "action": "alerts.alarmOn",
-                "data": {
-                    "alertId": "alert_id",
-                    "x": 123
-                }
-            }
-        """
-        self._logger.debug(f"Обработка возникновения тревоги: {mes}")
-
-        alert_id = mes["data"]["alertId"]
-
-        alert_params = self._alerts.get(alert_id)
-        if not alert_params:
-            self._logger.error(
-                f"Тревога {alert_id} не привязана к хранилищу."
-            )
-            return
-
-        connection_pool = alert_params["ds"]
-        alert_tbl = alert_params["table"]
-
-        try:
-            records = []
-            async with connection_pool.acquire() as conn:
-                async with conn.transaction():
-                    q = [f'select * from \"{alert_tbl}\" order by x desc limit 1;']
-                    async for r in conn.cursor(*q):
-                        records.append((r.get('id'), r.get('x'), r.get('cx'), r.get('e')))
-
-                    # если алярмов у тревоги вообще нет или закончились...
-                    if not records or records[0][0] is None or records[0][3]:
-                        await conn.copy_records_to_table(
-                            alert_tbl,
-                            records=[(mes["data"]["x"], None, None)],
-                            columns=('x', 'cx', 'e'))
-
-                        await self._post_message(mes={
-                                "action": "dataStorages.alertOnArchived",
-                                "data": mes["data"]
-                            },
-                            reply=False, routing_key=alert_id
-                        )
-
-                        self._logger.debug(f"Тревога {alert_id} зафиксирована.")
-                    else:
-                        self._logger.debug(f"Тревога {alert_id} уже активна.")
-
-        except Exception as ex:
-            self._logger.error(f"Ошибка при записи данных тревоги {alert_id}: {ex}")
-
-    async def alarm_ack(self, mes: dict) -> None:
-        """Факт квитирования тревоги.
-
-        Args:
-            mes (dict): {
-                "action": "alerts.alarmAcked",
-                "data": {
-                    "alertId": "alert_id",
-                    "x": 123
-                }
-            }
-        """
-        self._logger.debug(f"Обработка квитирования тревоги: {mes}")
-
-        alert_id = mes["data"]["alertId"]
-
-        alert_params = self._alerts.get(alert_id)
-        if not alert_params:
-            self._logger.error(
-                f"Тревога {alert_id} не привязана к хранилищу."
-            )
-            return
-
-        connection_pool = alert_params["ds"]
-        alert_tbl = alert_params["table"]
-
-        try:
-            records = []
-            async with connection_pool.acquire() as conn:
-                async with conn.transaction():
-                    q = [f'select * from \"{alert_tbl}\" order by x desc limit 1;']
-                    async for r in conn.cursor(*q):
-                        records.append((r.get('id'), r.get('x'), r.get('cx'), r.get('e')))
-
-                    # если алярмов у тревоги вообще нет или уже квитирована...
-                    if records[0][0] is None or records[0][2]:
-                        self._logger.debug(f"Тревоги {alert_id} нет, либо уже квитирована.")
-                        return
-
-                    q = f"update \"{alert_tbl}\" set cx = {mes['data']['x']}"
-                    await conn.execute(q)
-                    await self._post_message(mes={
-                            "action": "dataStorages.alertAckArchived",
-                            "data": mes["data"]
-                        },
-                        reply=False, routing_key=alert_id
-                    )
-
-                    self._logger.debug(f"Тревога {alert_id} квитирована.")
-
-        except Exception as ex:
-            self._logger.error(f"Ошибка при записи данных тревоги {alert_id}: {ex}")
-
-    async def alarm_off(self, mes: dict) -> None:
+    async def _alarm_off(self, mes: dict) -> None:
         """Факт пропадания тревоги.
 
         Args:
@@ -498,49 +394,11 @@ class DataStoragesAppBase(svc.Svc, ABC):
                 }
             }
         """
-        self._logger.debug(f"Обработка пропадания тревоги: {mes}")
-
-        alert_id = mes["data"]["alertId"]
-
-        alert_params = self._alerts.get(alert_id)
-        if not alert_params:
-            self._logger.error(
-                f"Тревога {alert_id} не привязана к хранилищу."
-            )
-            return
-
-        connection_pool = alert_params["ds"]
-        alert_tbl = alert_params["table"]
-
-        try:
-            records = []
-            async with connection_pool.acquire() as conn:
-                async with conn.transaction():
-                    q = [f'select * from \"{alert_tbl}\" order by x desc limit 1;']
-                    async for r in conn.cursor(*q):
-                        records.append((r.get('id'), r.get('x'), r.get('cx'), r.get('e')))
-
-                    # если алярмов у тревоги вообще нет или закончились...
-                    if records[0][0] is None or records[0][3]:
-                        self._logger.debug(f"Нет активной тревоги {alert_id}.")
-                        return
-
-                    q = f"update \"{alert_tbl}\" set e = {mes['data']['x']}"
-                    await conn.execute(q)
-                    await self._post_message(mes={
-                            "action": "dataStorages.alertOffArchived",
-                            "data": mes["data"]
-                        },
-                        reply=False, routing_key=alert_id
-                    )
-
-                    self._logger.debug(f"Тревога {alert_id} закончена.")
-
-        except Exception as ex:
-            self._logger.error(f"Ошибка при записи данных тревоги {alert_id}: {ex}")
+        pass
 
     async def _reject_message(self, mes: dict) -> bool:
 
+        """
         # отсечём необрабатываемые сообщения:
         # если создано хранилище необслуживаемого типа
         if mes["action"] == "dataStorages.created":
@@ -549,13 +407,13 @@ class DataStoragesAppBase(svc.Svc, ABC):
                 return True
 
             payload = {
-                "id": mes["data"]["id"],
+                "id": mes["id"],
                 "attributes": ["prsEntityTypeCode"]
             }
             ds_res = await self._hierarchy.search(payload=payload)
             if not ds_res:
                 self._logger.error(
-                    f"В модели отсутствует хранилище {mes['data']['id']}"
+                    f"{self._config.svc_name} :: В модели отсутствует хранилище {mes['data']['id']}"
                 )
                 return True
 
@@ -569,14 +427,15 @@ class DataStoragesAppBase(svc.Svc, ABC):
             "dataStorages.linkTag", "dataStorages.unlinkTag"
             "dataStorages.linkAlert", "dataStorages.unlinkAlert"
             ]:
-            return not mes["data"]["dataStorageId"] in self._ds_ids
+            return not mes["dataStorageId"] in self._connection_pools.keys()
 
         if mes["action"] in [
             "dataStorages.updated",
             "dataStorages.deleted"
         ]:
-            return not mes["data"]["id"] in self._ds_ids
-
+            return not mes["id"] in self._connection_pools.keys()
+        """
+            
         return False
 
     @abstractmethod
@@ -593,7 +452,6 @@ class DataStoragesAppBase(svc.Svc, ABC):
         """
         pass
 
-    @abstractmethod
     async def _check_store_name_for_new_tag(self, ds_id: str, store: dict) -> bool:
         """Метод проверяет на корректность имя хранилища для нового тега,
         переданное клиентом.
@@ -604,13 +462,42 @@ class DataStoragesAppBase(svc.Svc, ABC):
         Returns:
             bool: флаг корректности нового имени
         """
-        pass
+        return True
 
     @abstractmethod
     async def _create_store_for_tag(self, tag_id: str, ds_id: str, store: dict) -> None:
         pass
 
-    async def link_tag(self, ds_id: str, mes: dict) -> dict | None:
+    @abstractmethod
+    async def _create_store_name_for_new_alert(self,
+            ds_id: str, alert_id: str) -> dict | None:
+        """Метод, создающий имя для нового места хранения данных тревоги.
+
+        Args:
+            ds_id (str): id хранилища
+            alert_id (_type_): id тревоги
+
+        Returns:
+            dict: json с описанием хранилища тревоги
+        """
+        pass
+
+    async def _check_store_name_for_new_alert(self, ds_id: str, store: dict) -> bool:
+        """Метод проверяет на корректность имя хранилища для новой тревоги, переданное клиентом.
+
+        Args:
+            store (dict): новое хранилище для тревоги
+
+        Returns:
+            bool: флаг корректности нового имени
+        """
+        return True
+
+    @abstractmethod
+    async def _create_store_for_alert(self, alert_id: str, ds_id: str, store: dict) -> None:
+        pass
+
+    async def _link_tag(self, mes: dict) -> dict | None:
         """Метод привязки тега к хранилищу.
         В сообщении может приходить атрибут prsStore: пользователь знает,
         как организовать хранение данных для тега
@@ -628,7 +515,8 @@ class DataStoragesAppBase(svc.Svc, ABC):
         """
 
         tag_id = mes["tagId"]
-        if ds_id not in self._ds_ids:
+        ds_id = mes["dataStorageId"]
+        if ds_id not in self._connection_pools.keys():
             self._logger.error(f"{self._config.svc_name} :: Хранилища {ds_id} нет в списке поддерживаемых.")
             return
 
@@ -645,144 +533,53 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
         await self._bind_tag(tag_id, True)
 
-        '''
-        try:
-            # добавим ключ "svc_name:ds_id": {}
-            await self._cache.append(
-                f"{self._config.svc_name}:{ds_id}",
-                    "tags",
-                    tag_id
-            ).exec()            
-        except Exception as ex:
-            self._logger.error(f"Ошибка привязки тега {ex}")
-            return {"prsStore": None}
-        '''
+        await self._cache.append(f"{ds_id}.{self._config.svc_name}", "tags", tag_id).exec()
 
         return {"prsStore": store}
 
-    async def link_alert(self, mes: dict) -> dict:
+    async def _link_alert(self, mes: dict) -> dict:
         """Метод привязки тревоги к хранилищу.
         Атрибут ``prsStore`` должен быть вида
         ``{"tableName": "<some_table>"}`` либо отсутствовать
 
         Args:
             mes (dict): {
-                "action": "dataStorages.linkAlert",
-                "data": {
-                    "alertId": "alert_id",
-                    "dataStorageId": "ds_id",
-                    "attributes": {
-                        "prsStore": {"tableName": "<some_table>"}
-                    }
-                }
+                "alertId": "alert_id",
+                "dataStorageId": "ds_id",
+                "attributes": {
+                    "prsStore": {"tableName": "<some_table>"}
+            }
 
         """
 
-        async with self._connection_pools[mes["data"]["dataStorageId"]].acquire() as conn:
-
-            if not mes["data"]["attributes"].get("prsStore"):
-                mes["data"]["attributes"]["prsStore"] = \
-                    {"tableName": f'a_{mes["data"]["alertId"]}'}
-
-            alert_params = self._alerts.get(mes["data"]["alertId"])
-            if alert_params:
-                tbl_name = alert_params['table']
-                if mes["data"]["attributes"]["prsStore"]["tableName"] == tbl_name:
-                    self._logger.warning(f"Тревога {mes['data']['alertId']} уже привязана.")
-                    return
-
-                await conn.execute(
-                    f'drop table if exists "{tbl_name}"'
-                )
-
-            tbl_name = mes["data"]["attributes"]["prsStore"]["tableName"]
-
-            alert_cache = await self._prepare_alert_data(
-                mes["data"]["alertId"],
-                mes["data"]["dataStorageId"]
-            )
-            alert_cache["table"] = tbl_name
-            cache_for_store = copy.deepcopy(alert_cache)
-
-            alert_cache["ds"] = self._connection_pools[mes["data"]["dataStorageId"]]
-
-            query = (f'CREATE TABLE public."{alert_cache["table"]}" ('
-                    f'"id" serial primary key,'
-                    f'"x" bigint NOT NULL,' # время возникновения тревоги
-                    f'"cx" bigint,'         # время квитирования
-                    f'"e" bigint);'         # время пропадания тревоги
-                    # Создание индекса на поле "метка времени" ("ts")
-                    f'CREATE INDEX "{alert_cache["table"]}_idx" ON public."{alert_cache["table"]}" '
-                    f'USING btree ("x");')
-
-            await conn.execute(query)
-
-            self._alerts[mes["data"]["alertId"]] = alert_cache
-
-
-        return {
-            "prsStore": json.dumps(cache_for_store)
-        }
-
-    async def unlink_alert(self, mes: dict) -> None:
-        """_summary_
-
-        Args:
-            mes (dict): {
-                "action": "dataStorages.unlinkAlert",
-                "data": {
-                    "alertId": "alert_id"
-                }
-        """
-        alert_params = self._alerts.get(mes["data"]["alertId"])
-        if not alert_params:
-            self._logger.warning(f"Тревога {mes['data']['alertId']} не привязана к хранилищу.")
+        alert_id = mes["alertId"]
+        ds_id = mes['dataStorageId']
+        if ds_id not in self._connection_pools.keys():
+            self._logger.error(f"{self._config.svc_name} :: Хранилища {ds_id} нет в списке поддерживаемых.")
             return
 
-        async with alert_params["ds"].acquire() as conn:
-            await conn.execute(
-                f'drop table if exists "{alert_params["table"]}"'
-            )
+        store = mes["attributes"].get("prsStore")
+        if store is not None:
+            check = await self._check_store_name_for_new_alert(ds_id=ds_id, store=store)
+            if not check:
+                self._logger.error(f"{self._config.svc_name} :: '{store}' не подходит для хранения данных тревоги '{alert_id}'.")
+                return {"prsStore": None}
+        else:
+            store = await self._create_store_name_for_new_alert(ds_id=ds_id, tag_id=alert_id)
 
-        self._alerts.pop(mes["data"]["alertId"])
+        await self._create_store_for_alert(alert_id=alert_id, ds_id=ds_id, store=store)
 
-        self._logger.info(f"Тревога {mes['data']['alertId']} отвязана от хранилища.")
+        await self._bind_alert(alert_id, True)
 
-    async def unlink_tag(self, mes: dict) -> None:
-        """_summary_
+        await self._cache.append(f"{ds_id}.{self._config.svc_name}", "alerts", alert_id)
 
-        Args:
-            mes (dict): {
-                "action": "datastorages.unlinktag",
-                "data": {
-                    "tagId": "tag_id",
-                    "dataStorageId": "ds_id"
-                }
-        """
-        tag_id = mes["data"]["tagId"]
-        ds_id = mes["data"]["dataStorageId"]
-        try:
-            # если есть кэш данных, то сначала сохраним его
-            self._write_tag_data_to_db(tag_id)
+        return {"prsStore": store}
 
-            await self._cache.delete(
-                f"{self._config.svc_name}:{tag_id}",
-                f"dss.{ds_id}"
-            ).exec()
+    async def _unlink_alert(self, mes: dict) -> None:
+        pass
 
-            index = await self._cache.index(
-                f"{self._config.svc_name}:{ds_id}", "tags", tag_id
-            ).exec()
-            if index[0] > -1:
-                await self._cache.pop(
-                    f"{self._config.svc_name}:{ds_id}", "tags", index[0]
-                ).exec()
-            
-            self._bind_tag(tag_id, False)
-        except Exception as ex:
-            self._logger.error(f"Ошибка отвязки тега: {ex}")
-
-        self._logger.info(f"Тег {tag_id} отвязан от хранилища.")
+    async def _unlink_tag(self, mes: dict) -> None:
+        pass
 
     @abstractmethod
     async def _write_tag_data_to_db(
@@ -805,82 +602,78 @@ class DataStoragesAppBase(svc.Svc, ABC):
             tag_ids (str], optional): список тегов.
         """
 
-        self._logger.info("Запись кэша данных в хранилища...")
+        self._logger.debug(f"Запись кэша данных в хранилища для тегов {tag_ids}...")
         scheduled = False
-        try:
-            
+        try:            
             if not tag_ids:
                 # если пустой список тегов, это значит, что сбрасывается весь кэш,
                 # то есть происходит запуск процедуры по расписанию
                 scheduled = True
                 tag_ids = set()
-                for ds_id in self._ds_ids:
+                for ds_id in self._connection_pools.keys():
                     # определим, активна ли база
                     res = await self._cache.get(
-                        f"{self._config.svc_name}:{ds_id}", "prsActive", "tags"
+                        f"{ds_id}.{self._config.svc_name}", "prsActive", "tags"
                     ).exec()
                     if res[0] is None:
-                        self._logger.warning(f"Нет кэша для хранилища {ds_id}")
+                        self._logger.error(f"{self._config.svc_name} :: Нет кэша для хранилища {ds_id}")
                         continue
                     if not res[0]["prsActive"]:
                         self._logger.info(
-                            f"Хранилище {ds_id} неактивно."
+                            f"{self._config.svc_name} :: Хранилище {ds_id} неактивно."
                         )
                         continue
                     tag_ids = tag_ids.union(set(res[0]["tags"]))
 
             for tag_id in tag_ids:
                 res = await self._cache.get(
-                    f"{self._config.svc_name}:{tag_id}",
+                    f"{tag_id}.{self._config.svc_name}",
                     f"prsActive"
                 ).exec()
                 if res[0] is None:
                     # если нет кэша у тега
                     if not await self._create_tag_cache(tag_id):
                         index = await self._cache.index(
-                            f"{self._config.svc_name}:{ds_id}", "tags", tag_id
+                            f"{ds_id}.{self._config.svc_name}", "tags", tag_id
                         ).exec()
 
                         if index[0] > -1:
                             await self._cache.pop(
-                                f"{self._config.svc_name}:{ds_id}", "tags", index[0]
+                                f"{ds_id}.{self._config.svc_name}", "tags", index[0]
                             ).exec()
                 else:
                     await self._write_tag_data_to_db(tag_id)
 
         except Exception as ex:
-            self._logger.error(f"Ошибка записи данных в базу: {ex}")
+            self._logger.error(f"{self._config.svc_name} :: Ошибка записи данных в базу: {ex}")
         
         loop = asyncio.get_event_loop()
 
         if scheduled:
             loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))
 
-    async def tag_set(self, mes: dict) -> None:
+    async def _tag_set(self, mes: dict) -> None:
         """
 
         Args:
             mes (dict): {
-                "action": "tags.uploadData",
-                "data": {
-                    "data": [
-                        {
-                            "tagId": "<some_id>",
-                            "data": [(y,x,q)]
-                        }
-                    ]
-                }
+                "data": [
+                    {
+                        "tagId": "<some_id>",
+                        "data": [(y,x,q)]
+                    }
+                ]
             }
         """
         try:
-            self._logger.info(f"{self._config.svc_name}: tag set: {mes}")
+            self._logger.debug(f"Tag set: {mes}")
 
-            for tag_data in mes["data"]["data"]:
-                tag_id = tag_data["tagId"]
+            for tag_item in mes["data"]:
+                tag_id = tag_item["tagId"]
 
                 # проверим, активен ли тег и активны ли хранилища
                 res = await self._cache.get(
-                    f"{self._config.svc_name}:{tag_id}"
+                    f"{tag_id}.{self._config.svc_name}"
                 ).exec()
 
                 if res[0] is None:
@@ -889,16 +682,16 @@ class DataStoragesAppBase(svc.Svc, ABC):
                 else:
                     cache = res[0]
                 if not cache["prsActive"]:
-                    self._logger.info(f"Тег {tag_id} неактивен, данные не записываются.")
+                    self._logger.info(f"{self._config.svc_name} :: Тег {tag_id} неактивен, данные не записываются.")
                 else:
                     await self._cache.append(
-                        f"{self._config.svc_name}:{tag_id}",
-                        f"$.data", *tag_data["data"]
+                        f"{tag_id}.{self._config.svc_name}",
+                        f"data", *tag_item["data"]
                     ).exec()
-                    self._logger.info(f"Кэш тега {tag_id} обновлён.")
+                    self._logger.info(f"{self._config.svc_name} :: Кэш тега {tag_id} обновлён.")
 
         except Exception as ex:
-            self._logger.error(f"Ошибка обновления данных в кэше: {ex}")
+            self._logger.error(f"{self._config.svc_name} :: Ошибка обновления данных в кэше: {ex}")
         
     async def _create_tag_cache(self, tag_id: str) -> dict | bool | None:
         """Функция подготовки кэша с данными о теге.
@@ -923,11 +716,8 @@ class DataStoragesAppBase(svc.Svc, ABC):
         }
 
         Args:
-            ds_id (str): id хранилища (тег может быть привязан
-                к нескольким хранилищам, для каждого - свой prsStore)
             tag_id (str): id тега, для которого формируем кэш
-            ds_id (str): id хранилища
-
+            
         Returns:
             dict | None: сформированный кэш тега
         """
@@ -959,7 +749,7 @@ class DataStoragesAppBase(svc.Svc, ABC):
         }
 
         # попробуем найти привязку тега к хранилищу ------------
-        for ds_id in self._ds_ids:
+        for ds_id in self._connection_pools.keys():
             payload = {
                 "base": ds_id,
                 "scope": CN_SCOPE_SUBTREE,
@@ -977,48 +767,67 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
         try:
             await self._cache.set(
-                name=f"{self._config.svc_name}:{tag_id}", obj=tag_cache, nx=True
+                name=f"{tag_id}.{self._config.svc_name}", obj=tag_cache, nx=True
             ).exec()
         except Exception as ex:
-            self._logger.error(ex)
+            self._logger.error(f"{self._config.svc_name} :: {ex}")
 
         return tag_cache
 
-    async def _prepare_alert_data(self, alert_id: str, ds_id: str) -> dict | None:
-        get_alert_data = {
-            "id": [alert_id],
-            "attributes": [
-                "prsActive"
-            ]
+    async def _create_alert_cache(self, alert_id: str) -> dict | bool | None:
+        """Функция подготовки кэша с данными о тревоге.
+
+        Возвращаем всегда сформированный кэш целиком, независимо от того, была
+        тревога в кэше или ещё нет.
+
+        Кэш для тревоги всегда строится на основании данных из иерархии. Текущие
+        данные в кэше не учитываются, это повышает достоверность данных в кэше.
+
+        Формат кэша:
+        {
+            "dss": {
+                "dsId1": {}, # prsStore
+                "dsId2": {}
+            }
         }
 
-        alert_data = await self._hierarchy.search(payload=get_alert_data)
+        Args:
+            alert_id (str): id тревоги, для которой формируем кэш
 
-        if not alert_data:
-            self._logger.info(f"Не найдена тревога {alert_id}")
-            return None
+        Returns:
+            dict | None: сформированный кэш тега
+        """
 
-        to_return = {
-            "table": None,
-            "active": alert_data[0][2]["prsActive"][0] == "TRUE"
+        # подготовим первоначальный кэш тревоги ----------------
+        alert_cache = {
+            "dss": {}
         }
 
-        get_link_data = {
-            "base": ds_id,
-            "filter": {
-                "cn": [alert_id]
-            },
-            "attributes": ["prsStore"]
-        }
+        # попробуем найти привязку тега к хранилищу ------------
+        for ds_id in self._connection_pools.keys():
+            payload = {
+                "base": ds_id,
+                "scope": CN_SCOPE_SUBTREE,
+                "filter": {
+                    "cn": [alert_id],
+                    "objectClass": ["prsDatastorageAlertData"]
+                },
+                "deref": False,
+                "attributes": ["prsStore"]
+            }
+            res = await self._hierarchy.search(payload=payload)
+            if res:
+                alert_cache["dss"][ds_id] = json.loads(res[0][2]["prsStore"][0])
+        # ------------------------------------------------------------
 
-        link_data = await self._hierarchy.search(payload=get_link_data)
+        try:
+            await self._cache.set(
+                name=f"{alert_id}.{self._config.svc_name}", obj=alert_cache, nx=True
+            ).exec()
+        except Exception as ex:
+            self._logger.error(f"{self._config.svc_name} :: {ex}")
 
-        if not link_data:
-            return to_return
-
-        to_return["table"] = json.loads(link_data[0][2]["prsStore"][0])["table"]
-
-        return to_return
+        return alert_cache
 
     async def _create_connection_pool(self, config: dict) -> Any:
         """Метод создаёт пул коннектов к базе.
@@ -1030,34 +839,20 @@ class DataStoragesAppBase(svc.Svc, ABC):
         """
         pass
 
-    def _key_for_ds(self, ds_id: str) -> str:
-        """Метод возвращает имя ключа кэша для хранилища.
-
-        Args:
-            ds_id (str): id хранилища
-
-        Returns:
-            str: имя ключа
-        """
-        return f"{self._config.svc_name} {ds_id}"
-
-    async def tag_get(self, mes: dict) -> dict:
+    async def _tag_get(self, mes: dict) -> dict:
         """_summary_
 
         Args:
             mes (dict): {
-                "action": "tags.downloadData",
-                "data": {
-                    "tagId": [str],
-                    "start": int,
-                    "finish": int,
-                    "maxCount": int,
-                    "format": bool,
-                    "actual": bool,
-                    "value": Any,
-                    "count": int,
-                    "timeStep": int
-                }
+                "tagId": [str],
+                "start": int,
+                "finish": int,
+                "maxCount": int,
+                "format": bool,
+                "actual": bool,
+                "value": Any,
+                "count": int,
+                "timeStep": int                
             }
 
         Returns:
@@ -1070,41 +865,41 @@ class DataStoragesAppBase(svc.Svc, ABC):
 
         tasks = {}
 
-        await self._write_cache_data(mes["data"]["tagId"])
+        await self._write_cache_data(mes["tagId"])
 
-        for tag_id in mes["data"]["tagId"]:
+        for tag_id in mes["tagId"]:
             # Если ключ actual установлен в true, ключ timeStep не учитывается
-            if mes["data"]["actual"] or (mes["data"]["value"] is not None \
-            and len(mes["data"]["value"]) > 0):
-                mes["data"]["timeStep"] = None
+            if mes["actual"] or (mes["value"] is not None \
+            and len(mes["value"]) > 0):
+                mes["timeStep"] = None
 
-            if mes["data"]["actual"]:
+            if mes["actual"]:
                 tasks[tag_id]= asyncio.create_task(
-                        self._data_get_actual(
-                            tag_id,
-                            mes["data"]["start"],
-                            mes["data"]["finish"],
-                            mes["data"]["count"],
-                            mes["data"]["value"]
-                        )
+                    self._data_get_actual(
+                        tag_id,
+                        mes["start"],
+                        mes["finish"],
+                        mes["count"],
+                        mes["value"]
                     )
+                )
 
-            elif mes["data"]["timeStep"] is not None:
+            elif mes["timeStep"] is not None:
                 tasks[tag_id]= asyncio.create_task(
                         self._data_get_interpolated(
                             tag_id,
-                            mes["data"]["start"], mes["data"]["finish"],
-                            mes["data"]["count"], mes["data"]["timeStep"]
+                            mes["start"], mes["finish"],
+                            mes["count"], mes["timeStep"]
                         )
                     )
 
-            elif mes["data"]["start"] is None and \
-                mes["data"]["count"] is None and \
-                (mes["data"]["value"] is None or len(mes["data"]["value"]) == 0):
+            elif mes["start"] is None and \
+                mes["count"] is None and \
+                (mes["value"] is None or len(mes["value"]) == 0):
                 tasks[tag_id] = asyncio.create_task(
                         self._data_get_one(
                             tag_id,
-                            mes["data"]["finish"]
+                            mes["finish"]
                         )
                     )
 
@@ -1113,9 +908,9 @@ class DataStoragesAppBase(svc.Svc, ABC):
                 tasks[tag_id]= asyncio.create_task(
                         self._data_get_many(
                             tag_id,
-                            mes["data"]["start"],
-                            mes["data"]["finish"],
-                            mes["data"]["count"]
+                            mes["start"],
+                            mes["finish"],
+                            mes["count"]
                         )
                     )
 
@@ -1130,45 +925,45 @@ class DataStoragesAppBase(svc.Svc, ABC):
             for tag_id, task in tasks.items():
                 tag_data = task.result()
 
-                if not mes["data"]["actual"] and \
+                if not mes["actual"] and \
                     (
-                        mes["data"]["value"] is not None and \
-                        len(mes["data"]["value"]) > 0
+                        mes["value"] is not None and \
+                        len(mes["value"]) > 0
                     ):
                     tag_data = self._filter_data(
                         tag_data,
-                        mes["data"]["value"],
+                        mes["value"],
                         self._tags[tag_id]['value_type'],
                         self._tags[tag_id]['step']
                     )
-                    if mes["data"]["from_"] is None:
+                    if mes["from_"] is None:
                         tag_data = [tag_data[-1]]
 
                 excess = False
-                if mes["data"]["maxCount"] is not None:
-                    excess = len(tag_data) > mes["data"]["maxCount"]
+                if mes["maxCount"] is not None:
+                    excess = len(tag_data) > mes["maxCount"]
 
                     if excess:
-                        if mes["data"]["maxCount"] == 0:
+                        if mes["maxCount"] == 0:
                             tag_data = []
-                        elif mes["data"]["maxCount"] == 1:
+                        elif mes["maxCount"] == 1:
                             tag_data = tag_data[:1]
-                        elif mes["data"]["maxCount"] == 2:
+                        elif mes["maxCount"] == 2:
                             tag_data = [tag_data[0], tag_data[-1]]
                         else:
-                            new_tag_data = tag_data[:mes["data"]["maxCount"] - 1]
+                            new_tag_data = tag_data[:mes["maxCount"] - 1]
                             new_tag_data.append(tag_data[-1])
                             tag_data = new_tag_data
 
                 '''
-                if mes["data"]["format"]:
+                if mes["format"]:
                     svc.format_data(tag_data, data.format)
                 '''
                 new_item = {
                     "tagId": tag_id,
                     "data": tag_data
                 }
-                if mes["data"]["maxCount"]:
+                if mes["maxCount"]:
                     new_item["excess"] = excess
                 result["data"].append(new_item)
 
@@ -1366,10 +1161,10 @@ class DataStoragesAppBase(svc.Svc, ABC):
         """ Получение значения на текущую метку времени
         """
         tag_cache = await self._cache.get(
-            f"{self._config.svc_name}:{tag_id}", "prsStep", "prsValueTypeCode"
+            f"{tag_id}.{self._config.svc_name}", "prsStep", "prsValueTypeCode"
         ).exec()
         if tag_cache[0] is None:
-            self._logger.error(f"Тег {tag_id} отсутствует в кэше.")
+            self._logger.error(f"{self._config.svc_name} :: Тег {tag_id} отсутствует в кэше.")
             return []
         step = tag_cache[0]["prsStep"]
         value_type_code = tag_cache[0]["prsValueTypeCode"]
@@ -1416,10 +1211,10 @@ class DataStoragesAppBase(svc.Svc, ABC):
                              count: int = None) -> List[dict]:
 
         tag_cache = await self._cache.get(
-            f"{self._config.svc_name}:{tag_id}", "prsStep"
+            f"{tag_id}.{self._config.svc_name}", "prsStep"
         ).exec()
         if tag_cache[0] is None:
-            self._logger.error(f"Тег {tag_id} отсутствует в кэше.")
+            self._logger.error(f"{self._config.svc_name} :: Тег {tag_id} отсутствует в кэше.")
             return []
         step = tag_cache[0]
         

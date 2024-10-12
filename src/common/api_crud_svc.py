@@ -70,7 +70,7 @@ class NodeAttributes(BaseModel):
     cn: str = Field(None, title="Имя узла")
     description: str | None = Field(None, title="Описание",
         description="Описание экземпляра.")
-    prsJsonConfigString: str | None = Field(None, title="Конфигурация экземпляра.",
+    prsJsonConfigString: dict | None = Field(None, title="Конфигурация экземпляра.",
         description=(
             "Строка содержит, в случае необходимости, конфигурацию узла. "
             "Интерпретируется сервисом, управляющим сущностью, которой "
@@ -121,7 +121,6 @@ class NodeCreate(BaseModel):
     attributes: NodeAttributes = Field({}, title="Атрибуты узла")
 
     validate_id = validator('parentId', allow_reuse=True)(valid_uuid)
-
 class NodeDelete(BaseModel):
     """Базовый класс, описывающий параметры
     команды для удаления узла.
@@ -144,7 +143,6 @@ class NodeDelete(BaseModel):
         if isinstance(v, str):
             return [v]
         return v
-
 class NodeUpdate(NodeCreate):
     """Базовый класс для изменения узла
     """
@@ -152,7 +150,6 @@ class NodeUpdate(NodeCreate):
                     description="Должен быть в формате GUID.")
 
     validate_id = validator('parentId', 'id', allow_reuse=True)(valid_uuid)
-
 class NodeRead(BaseModel):
     """Базовый класс, описывающий параметры для команды
     поиска/чтения узлов.
@@ -259,10 +256,10 @@ class APICRUDSvc(BaseSvc):
 
     def _set_handlers(self):
         self._handlers = {
-            f"{self._config.hierarchy['class']}.api_crud_client.create": self._create,
-            f"{self._config.hierarchy['class']}.api_crud_client.read": self._read,
-            f"{self._config.hierarchy['class']}.api_crud_client.update": self._update,
-            f"{self._config.hierarchy['class']}.api_crud_client.delete": self._delete,
+            f"{self._config.hierarchy['class']}.api_crud_client.create.*": self._create,
+            f"{self._config.hierarchy['class']}.api_crud_client.read.*": self._read,
+            f"{self._config.hierarchy['class']}.api_crud_client.update.*": self._update,
+            f"{self._config.hierarchy['class']}.api_crud_client.delete.*": self._delete,
         }
 
     async def _create(self, payload: NodeCreate | None) -> dict:
@@ -294,7 +291,7 @@ class APICRUDSvc(BaseSvc):
         return await self._post_message(
             mes=body, 
             reply=True, 
-            routing_key=f"{self._config.hierarchy['class']}.api_crud.read"
+            routing_key=f"{self._config.hierarchy['class']}.api_crud.read.*"
         )
 
     async def _update(self, payload: dict) -> dict:
@@ -304,11 +301,13 @@ class APICRUDSvc(BaseSvc):
         else:
             body = payload.model_dump()
 
-        return await self._post_message(
+        res = await self._post_message(
             mes=body, 
             reply=True,
-            routing_key=f"{self._config.hierarchy['class']}.api_crud.update"
+            routing_key=f"{self._config.hierarchy['class']}.api_crud.update.{body['id']}"
         )
+
+        return res
 
     async def _delete(self, payload: NodeDelete) -> dict:
         """Удаление узлов в иерархии.
@@ -318,7 +317,7 @@ class APICRUDSvc(BaseSvc):
         return await self._post_message(
             mes=body, 
             reply=True,
-            routing_key=f"{self._config.hierarchy['class']}.api_crud.delete"
+            routing_key=f"{self._config.hierarchy['class']}.api_crud.delete.{payload['id']}"
         )
 
     async def api_get_read(self, request_model: NodeRead, q: str | None, payload: NodeRead | None):

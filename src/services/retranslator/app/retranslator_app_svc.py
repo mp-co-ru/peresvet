@@ -143,7 +143,7 @@ class RetranslatorApp(svc.Svc):
                 self._logger.info("Создание очереди и топиков для передачи данных тегов завершено.")
 
             except aio_pika.AMQPException as ex:
-                self._logger.error(f"Ошибка связи с брокером: {ex}")
+                self._logger.error(f"{self._config.svc_name} :: Ошибка связи с брокером: {ex}")
                 await asyncio.sleep(5)
         return
 
@@ -162,7 +162,7 @@ class RetranslatorApp(svc.Svc):
                     await self.retranslate(routing_key=routing_key, data=str(tag_data))
                 await message.ack()
             except json.decoder.JSONDecodeError:
-                self._logger.error(f"Сообщение {mes} не в формате json.")
+                self._logger.error(f"{self._config.svc_name} :: Сообщение {mes} не в формате json.")
                 await message.ack()
                 return
         return

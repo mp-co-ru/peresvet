@@ -33,7 +33,7 @@ class AlertCreateAttributes(svc.NodeAttributes):
     pass
 
 class AlertCreate(svc.NodeCreate):
-    attributes: AlertCreateAttributes = Field({}, title="Атрибуты тревоги")
+    attributes: AlertCreateAttributes = Field(AlertCreateAttributes(), title="Атрибуты тревоги")
 
 class AlertRead(svc.NodeRead):
     pass
@@ -129,11 +129,7 @@ async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
     res = await app._create(p)
     await error_handler.handle_error(res)
     return res
-
-    res = await app._create(payload)
-    await error_handler.handle_error(res)
-    return res
-
+    
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200, response_model_exclude_none=True)
 async def read(q: str | None = None, payload: AlertRead | None = None, error_handler: svc.ErrorHandler = Depends()):
     """

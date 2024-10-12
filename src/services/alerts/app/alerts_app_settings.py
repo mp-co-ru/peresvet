@@ -1,6 +1,6 @@
-from src.common.svc_settings import SvcSettings
+from src.common.app_svc_settings import AppSvcSettings
 
-class AlertsAppSettings(SvcSettings):
+class AlertsAppSettings(AppSvcSettings):
 
     #: имя сервиса
     svc_name: str = "alerts_app"
@@ -9,6 +9,3 @@ class AlertsAppSettings(SvcSettings):
         #: класс экзмепляров сущности в иерархии
         "class": "prsAlert"
     }
-
-    nodes: list[str] = []
-    

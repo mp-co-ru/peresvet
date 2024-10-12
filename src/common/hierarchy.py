@@ -406,6 +406,8 @@ class Hierarchy:
                 attrs[key] = [str(val).encode("utf-8") for val in value]
             elif isinstance(value, bool):
                 attrs[key] = [("FALSE".encode("utf-8"), "TRUE".encode("utf-8"))[value]]
+            elif isinstance(value, dict):
+                attrs[key] = [json.dumps(value, ensure_ascii=False).encode("utf-8")]
             else:
                 attrs[key] = [str(value).encode("utf-8")]
 

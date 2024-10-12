@@ -151,8 +151,8 @@ class TagsAppAPI(BaseSvc):
 
     def _set_handlers(self):
         self._handlers = {
-            f"{self._config.hierarchy['class']}.app_api_client.get_data": self.data_get,
-            f"{self._config.hierarchy['class']}.app_api_client.set_data": self.data_set
+            f"{self._config.hierarchy['class']}.app_api_client.data_get.*": self.data_get,
+            f"{self._config.hierarchy['class']}.app_api_client.data_set.*": self.data_set
         }
 
     async def data_get(self, payload: DataGet) -> dict:
@@ -163,12 +163,11 @@ class TagsAppAPI(BaseSvc):
         body = new_payload.model_dump()
 
         res = await self._post_message(
-            mes=body, reply=True, routing_key=f"{self._config.hierarchy['class']}.app_api.data_get"
+            mes=body, reply=True, routing_key=f"{self._config.hierarchy['class']}.app_api.data_get.*"
         )
         # нет подписчика
         if res is None:
             res = {"error": {"code": 424, "message": f"Нет обработчика для команды чтения данных."}}
-            app._logger.error(res)
             return res
 
         if new_payload.format:
@@ -196,12 +195,12 @@ class TagsAppAPI(BaseSvc):
     async def data_set(self, payload: AllData) -> None:
         body = payload.model_dump()
 
-        res = await self._post_message(mes=body, reply=False, routing_key = f"{self._config.hierarchy['class']}.app_api.data_set")
+        res = await self._post_message(mes=body, reply=False, routing_key = f"{self._config.hierarchy['class']}.app_api.data_set.*")
         # нет подписчика
         if res is None:
             res = {"error": {"code": 424, "message": f"Нет обработчика для команды записи данных."}}
-            app._logger.error(res)
-        return res
+            #app._logger.error(res)
+        return {}
 
 settings = TagsAppAPISettings()
 
@@ -250,7 +249,6 @@ async def data_get(q: str | None = None, payload: DataGet | None = None, error_h
             p = DataGet.model_validate_json(q)
         except ValueError as ex:
             res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
-            app._logger.error(res)
             await error_handler.handle_error(res)
     elif payload:
         p = payload

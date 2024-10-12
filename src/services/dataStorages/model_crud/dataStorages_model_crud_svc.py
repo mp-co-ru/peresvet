@@ -1,7 +1,6 @@
 import sys
 import copy
 import json
-from ldap.dn import str2dn, dn2str
 
 sys.path.append(".")
 
@@ -87,30 +86,30 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     async def _further_update(self, mes: dict) -> None:
 
-        '''
-        ds_id = mes["data"]["id"]
-        for item in mes["data"]["linkTags"]:
+        ds_id = mes["id"]
+        for item in mes["linkTags"]:
             copy_item = copy.deepcopy(item)
             copy_item["dataStorageId"] = ds_id
             await self._link_tag(copy_item)
-        for item in mes["data"]["linkAlerts"]:
+        for item in mes["linkAlerts"]:
             copy_item = copy.deepcopy(item)
             copy_item["dataStorageId"] = ds_id
             await self._link_alert(copy_item)
-        for item in mes["data"]["unlinkTags"]:
+
+        for tag_id in mes["unlinkTags"]:
+            item = {
+                "tagId": tag_id,
+                "dataStorageId": ds_id
+            }
             await self._unlink_tag(item)
-        for item in mes["data"]["unlinkAlerts"]:
+        for alert_id in mes["unlinkAlerts"]:
+            item = {
+                "alertId": alert_id,
+                "dataStorageId": ds_id
+            }
             await self._unlink_alert(item)
-
-
-        # реализация отвязки тегов
-        for item in mes["data"]["unlinkTags"]:
-            copy_item = copy.deepcopy(item)
-            copy_item["dataStorageId"] = ds_id
-            await self._unlink_tag(copy_item)
-        '''
-
-    async def _unlink_tag(self, tag_id: str) -> None:
+        
+    async def _unlink_tag(self, item: dict) -> None:
         """Метод отвязки тега от хранилища.
         Ищем, к какому хранилищу привязан тег и посылаем этому хранилищу
         сообщение об отвязке, после удаляем ссылку на тег.
@@ -118,45 +117,32 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         Args:
             tag_id (str): id отвязываемого тега
         """
-        items = await self._hierarchy.search({
-            "base": self._config.hierarchy["node_id"],
-            "scope": hierarchy.CN_SCOPE_SUBTREE,
+        
+        res = await self._post_message(
+            mes=item, routing_key=f"{self._config.hierarchy['class']}.model.unlink_tag.{item['dataStorageId']}"
+        )
+        if res is None:
+            self._logger.error(f"{self._config.svc_name} :: Нет обработчика для хранилища '{item['dataStorageId']}'.")
+            return
+
+        res = await self._hierarchy.search(payload={
+            "base": item['dataStorageId'],
             "filter": {
-                "cn": [f"{tag_id}"],
-                "objectClass": [f"prsDatastorageTagData"]
+                "objectClass": ["prsDatastorageTagData"]
             },
             "attributes": ["cn"]
         })
-        if not items:
-            self._logger.info(
-                f"Тег {tag_id} не привязан ни к одному хранилищу."
-            )
+        if not res:
+            self._logger.error(f"{self._config.svc_name} :: Нет данных о привязке тега '{item['tagId']}' к хранилищу '{item['dataStorageId']}'.")
             return
 
-        datastorage_id = await self._hierarchy.get_node_id(
-            dn2str(str2dn(items[0][1])[2:])
-        )
-
-        routing_key = self._config["publish"]["main"]["routing_key"][0]
-
-        await self._post_message(
-            mes={
-                "action": "dataStorages.unlinkTag",
-                "data": {
-                    "id": [tag_id]
-                }
-            },
-            routing_key=routing_key
-        )
-
-        await self._hierarchy.delete(items[0][0])
+        await self._hierarchy.delete(res[0][0])
 
         self._logger.info(
-            f"Послано сообщение об отвязке тега {tag_id} "
-            f"от хранилища {datastorage_id}"
+            f"{self._config.svc_name} :: Тег {item['tagId']} отвязан от хранилища {item['dataStorageId']}."
         )
 
-    async def _unlink_alert(self, alert_id: str) -> None:
+    async def _unlink_alert(self, item: dict) -> None:
         """Метод отвязки тревоги от хранилища.
         Ищем, к какому хранилищу привязана тревога и посылаем этому хранилищу
         сообщение об отвязке, после удаляем ссылку на тревогу.
@@ -164,35 +150,28 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         Args:
             alert_id (str): id отвязываемой тревоги
         """
-        items = await self._hierarchy.search({
-            "base": self._config.hierarchy["node_id"],
-            "scope": hierarchy.CN_SCOPE_SUBTREE,
+        res = await self._post_message(
+            mes=item, routing_key=f"{self._config.hierarchy['class']}.model.unlink_alert.{item['dataStorageId']}"
+        )
+        if res is None:
+            self._logger.error(f"{self._config.svc_name} :: Нет обработчика для хранилища '{item['dataStorageId']}'.")
+            return
+
+        res = await self._hierarchy.search(payload={
+            "base": item['dataStorageId'],
             "filter": {
-                "cn": f"{alert_id}",
-                "objectClass": "prsDatastorageAlertData"
+                "objectClass": ["prsDatastorageAlertData"]
             },
             "attributes": ["cn"]
         })
-        if not items:
-            self._logger.info(
-                f"Тег {alert_id} не привязан ни к одному хранилищу."
-            )
+        if not res:
+            self._logger.error(f"{self._config.svc_name} :: Нет данных о привязке тревоги '{item['alertId']}' к хранилищу '{item['dataStorageId']}'.")
             return
 
-        datastorage_id = await self._hierarchy.get_node_id(
-            dn2str(str2dn(items[0][1])[2:])
-        )
-
-        routing_key = self._config["publish"]["main"]["routing_key"][0]
-
-        await self._post_message(mes={"action": "unlinkTag", "id": [alert_id]},
-            routing_key=routing_key)
-
-        await self._hierarchy.delete(items[0][0])
+        await self._hierarchy.delete(res[0][0])
 
         self._logger.info(
-            f"Послано сообщение об отвязке тревоги {alert_id} "
-            f"от хранилища {datastorage_id}"
+            f"{self._config.svc_name} :: Тревога {item['alertId']} отвязана от хранилища {item['dataStorageId']}."
         )
 
     async def _get_default_datastorage_id(self) -> str:
@@ -228,12 +207,14 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         if not payload.get("dataStorageId"):
             datastorage_id = await self._get_default_datastorage_id()
             if not datastorage_id:
-                self._logger.info(
+                self._logger.error(
                     f"{self._config.svc_name} :: Невозможно привязать тег: "
                     f"нет хранилища данных по умолчанию."
                 )
                 return
             payload["dataStorageId"] = datastorage_id
+
+        datastorage_id = payload["dataStorageId"]
 
         # res = {
         #   "prsStore": {...}
@@ -244,6 +225,15 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             routing_key=f"{self._config.hierarchy['class']}.model.link_tag.{datastorage_id}")
         if not res:
             self._logger.error(f"{self._config.svc_name} :: Нет обработчика для хранилища {datastorage_id}.")
+            return
+        
+        get_tag = {
+            "id": payload['tagId'],
+            "attributes": ["prsValueTypeCode"]
+        }
+        tag_data = await self._hierarchy.search(payload=get_tag)
+        if not tag_data:
+            self._logger.error(f"{self._config.svc_name} :: Нет данных по тегу {payload['id']}.")
             return
 
         prs_store = res.get("prsStore")
@@ -257,14 +247,17 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             attribute_values={
                 "objectClass": ["prsDatastorageTagData"],
                 "cn": payload["tagId"],
-                "prsStore": prs_store
+                "prsStore": prs_store,
+                "prsJsonConfigString": {
+                    "prsValueTypeCode": int(tag_data[0][2]["prsValueTypeCode"][0])
+                }
             }
         )
         await self._hierarchy.add_alias(
             parent_id=new_node_id,
             aliased_object_id=payload["tagId"],
             alias_name=payload["tagId"]
-        )
+        )        
 
         self._logger.info(
             f"{self._config.svc_name} :: Тег {payload['tagId']} привязан к хранилищу {payload['dataStorageId']}"
@@ -315,6 +308,10 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             mes=payload,
             reply=True,
             routing_key=f"{self._config.hierarchy['class']}.model.link_alert.{datastorage_id}")
+        
+        if not res:
+            self._logger.error(f"{self._config.svc_name} :: Нет обработчика для хранилища {datastorage_id}.")
+            return
 
         prs_store = res.get("prsStore")
 

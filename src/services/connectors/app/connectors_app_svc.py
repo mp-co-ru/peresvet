@@ -69,7 +69,7 @@ class ConnectorsApp(svc.Svc):
             }
         )
         if not connector_data:
-            self._logger.info(f"Нет данных по коннектору {connector_id}")
+            self._logger.info(f"{self._config.svc_name} :: Нет данных по коннектору {connector_id}")
             return {}
 
         res = {

@@ -26,8 +26,8 @@ class TagsApp(AppSvc):
         super().__init__(settings, *args, **kwargs)
 
     def _add_app_handlers(self):
-        self._handlers[f"{self._config.hierarchy['class']}.app_api.data_get"] = self.data_get
-        self._handlers[f"{self._config.hierarchy['class']}.app_api.data_set"] = self.data_set
+        self._handlers[f"{self._config.hierarchy['class']}.app_api.data_get.*"] = self.data_get
+        self._handlers[f"{self._config.hierarchy['class']}.app_api.data_set.*"] = self.data_set
 
     async def data_get(self, mes: dict) -> dict:
         
@@ -95,14 +95,7 @@ class TagsApp(AppSvc):
                 self._logger.warning(f"{self._config.svc_name} :: Тег '{tag_id}' неактивен.")
                 continue
             
-            res = await self._post_message({
-                    "data": {
-                        "data": [
-                            tag_item
-                        ]
-                    }
-                },
-                reply=False,
+            res = await self._post_message({"data": [tag_item]}, reply=False,
                 routing_key=f"{self._config.hierarchy['class']}.app.data_set.{tag_item['tagId']}"
             )
             if res is None:
@@ -128,8 +121,7 @@ class TagsApp(AppSvc):
     async def _updated(self, mes):
         # просто удалим кэш тега
         # при попытке чтения/записи данных кэш будет создан
-        #await self._make_tag_cache(mes["id"])
-        self._delete_tag_cache(mes["id"])
+        await self._delete_tag_cache(mes["id"])
     
     async def _deleted(self, mes):
         await self._delete_tag_cache(mes["id"])

@@ -75,13 +75,6 @@ class MethodsAPICRUD(svc.APICRUDSvc):
 
     """
 
-    _outgoing_commands = {
-        "create": "methods.create",
-        "read": "methods.read",
-        "update": "methods.update",
-        "delete": "methods.delete"
-    }
-
     def __init__(self, settings: MethodsAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
@@ -172,7 +165,7 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
 
 @router.delete("/", status_code=202)
 async def delete(payload: svc.NodeDelete, error_handler: svc.ErrorHandler = Depends()):
-    res = await app.delete(payload)
+    res = await app._delete(payload)
     await error_handler.handle_error(res)
     return res
 

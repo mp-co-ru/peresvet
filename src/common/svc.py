@@ -49,11 +49,11 @@ class Svc(BaseSvc):
                 connected = True
                 self._logger.info(f"{self._config.svc_name}: Связь с LDAP сервером установлена.")
             except ValueError:
-                self._logger.error(f"Неверный формат URI ldap: {self._config.ldap_url}")
+                self._logger.error(f"{self._config.svc_name} :: Неверный формат URI ldap: {self._config.ldap_url}")
                 await asyncio.sleep(5)
 
             except ldap.LDAPError as ex:
-                self._logger.error(f"Ошибка связи с сервером ldap: {ex}")
+                self._logger.error(f"{self._config.svc_name} :: Ошибка связи с сервером ldap: {ex}")
                 await asyncio.sleep(5)
 
     async def on_startup(self) -> None:

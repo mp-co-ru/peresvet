@@ -21,8 +21,7 @@ class AlertsApp(AppSvc):
     def _add_app_handlers(self):
         self._handlers[f"{self._config.hierarchy['class']}.app_api.get_alarms"] = self._get_alarms
         self._handlers[f"{self._config.hierarchy['class']}.app_api.ack_alarm"] = self._ack_alarm
-        #self._handlers["prsTag.app.data_set.*"] = self._tag_value_changed
-        #self._handlers["prsTag.model.deleteing.*"] = self._tag_deleting
+        self._handlers["prsTag.app.data_set.*"] = self._tag_value_changed
         
     async def _deleting(self, mes):
         # перед удалением тревоги
@@ -48,7 +47,7 @@ class AlertsApp(AppSvc):
             },
             "attributes": ["prsActive"]
         }
-        res = self._hierarchy.search(payload)
+        res = await self._hierarchy.search(payload)
 
         unbind = len(res) == 0
         for alert in res:
@@ -92,7 +91,7 @@ class AlertsApp(AppSvc):
             "id": alert_id,
             "attributes": ['prsActive', 'cn', 'description', 'prsJsonConfigString']
         }
-        alert_data = await self._hierarchy.search((payload))
+        alert_data = await self._hierarchy.search(payload)
         if not alert_data:
             self._logger.error(f"{self._config.svc_name} :: Нет данных по тревоге {alert_id}")
             return None
@@ -141,16 +140,20 @@ class AlertsApp(AppSvc):
 
         # проведём активацию тревоги ---------------
         payload = {
-            "tagId": tag_id
+            "tagId": tag_id,
+            "actual": True
         }
         res = await self._post_message(
             mes=payload, 
             reply=True, 
-            routing_key=f"prsTag.app_api_client.get_data.{tag_id}"
+            routing_key=f"prsTag.app_api_client.data_get.{tag_id}"
         )
         if not res is None:
             if res.get('data'):
                 await self._tag_value_changed(res)
+            else:
+                self._logger.warning(f"{self._config.svc_name} :: Тег {tag_id} не имеет данных.")
+            return True    
         else:
             self._logger.warning(f"{self._config.svc_name} :: Тег {tag_id} не привязан к хранилищу.")
             return True
@@ -257,19 +260,17 @@ class AlertsApp(AppSvc):
 
         Args:
             mes (dict): {
-                "data": {
-                    "data": [
-                        {
-                            "tagId": "...",
-                            "data": [
-                                (1, 2, 3)
-                            ]
-                        }
-                    ]
-                }
+                "data": [
+                    {
+                        "tagId": "...",
+                        "data": [
+                            (1, 2, 3)
+                        ]
+                    }
+                ]                
             }
         """
-        for tag_item in mes["data"]["data"]:
+        for tag_item in mes["data"]:
             tag_id = tag_item["tagId"]
 
             get_alerts = {
@@ -289,7 +290,7 @@ class AlertsApp(AppSvc):
                 ).exec()
 
                 if not alert_data[0]:
-                    self._logger.error(f"Нет кэша тревоги {alert_id}.")
+                    self._logger.error(f"{self._config.svc_name} :: Нет кэша тревоги {alert_id}.")
                     continue
 
                 for data_item in tag_item["data"]:
@@ -349,17 +350,9 @@ class AlertsApp(AppSvc):
 
                 await self._cache.set(
                     name=f"{alert_id}.{self._config.svc_name}",
-                    obj=alert_data
+                    obj=alert_data[0]
                 ).exec()
 
-    def _cache_key(self, *args):
-        '''
-        return hashlib.sha3_256(
-            f"{'.'.join(args)}".encode()
-        ).hexdigest()   # SHA3-256
-        '''
-        return f"{'.'.join(args)}"
-    
     async def _get_alerts(self) -> None:
         get_alerts = {
             "filter": {
@@ -379,9 +372,7 @@ class AlertsApp(AppSvc):
         # по умолчанию очередь привязывается к изменениям всех тегов
         # нам же нужны только изменения тегов, у которых есть тревоги
         await self._amqp_consume_queue.unbind(self._exchange, "prsTag.app.data_set.*")
-        # будем подписываться на удаление только тех тегов, к которым привязаны алерты
-        await self._amqp_consume_queue.unbind(self._exchange, "prsTag.model.deleting.*")
-
+        
         try:
             await self._get_alerts()
         except Exception as ex:

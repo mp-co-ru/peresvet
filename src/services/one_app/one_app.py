@@ -62,6 +62,7 @@ from src.services.connectors.app.connectors_app_svc \
         router as connectors_app_router
     )
 # -----------------------------------------------------------------------------
+"""
 
 # dataStorages ----------------------------------------------------------------
 from src.services.dataStorages.api_crud.dataStorages_api_crud_svc \
@@ -83,7 +84,7 @@ from src.services.dataStorages.app.postgresql.dataStorages_app_postgresql_svc \
     )
 
 # -----------------------------------------------------------------------------
-
+"""
 # methods ---------------------------------------------------------------------
 from src.services.methods.api_crud.methods_api_crud_svc \
     import (
@@ -121,7 +122,6 @@ from src.services.objects.model_crud.objects_model_crud_svc \
 
 # -----------------------------------------------------------------------------
 
-"""
 # schedules ---------------------------------------------------------------------
 # schedules_api_crud
 from src.services.schedules.api_crud.schedules_api_crud_svc \
@@ -142,7 +142,7 @@ from src.services.schedules.app.schedules_app_svc \
     )
 
 # -----------------------------------------------------------------------------
-"""
+
 # tags ------------------------------------------------------------------------
 # tags_api_crud
 from src.services.tags.api_crud.tags_api_crud_svc \
@@ -206,12 +206,14 @@ api_router.include_router(router=connectors_api_crud_router)
 # connectors_app
 api_router.include_router(router=connectors_app_router)
 # -----------------------------------------------------------------------------
+"""
 
 # dataStorages ----------------------------------------------------------------
 # dataStorages_api_crud
 api_router.include_router(router=dataStorages_api_crud_router)
 # -----------------------------------------------------------------------------
 
+"""
 # methods ---------------------------------------------------------------------
 # methods_api_crud
 api_router.include_router(router=methods_api_crud_router)
@@ -223,12 +225,10 @@ api_router.include_router(router=methods_api_crud_router)
 api_router.include_router(router=objects_api_crud_router)
 # -----------------------------------------------------------------------------
 
-"""
 # schedules ---------------------------------------------------------------------
 # schedules_api_crud
 api_router.include_router(router=schedules_api_crud_router)
 # -----------------------------------------------------------------------------
-"""
 # tags ------------------------------------------------------------------------
 # tags_api_crud
 api_router.include_router(router=tags_api_crud_router)
@@ -256,6 +256,7 @@ app.mount(path="/", app=connectors_app)
 # connectors_model_crud
 app.mount(path="/", app=connectors_model_crud)
 # -----------------------------------------------------------------------------
+"""
 
 # dataStorages ----------------------------------------------------------------
 # dataStorages_api_crud
@@ -266,6 +267,7 @@ app.mount(path="/", app=dataStorages_model_crud)
 app.mount(path="/", app=postgre_app)
 # -----------------------------------------------------------------------------
 
+"""
 # methods ---------------------------------------------------------------------
 # methods_api_crud
 app.mount(path="/", app=methods_api_crud)
@@ -305,7 +307,6 @@ app.mount(path="/", app=alerts_app_api)
 app.mount(path="/", app=alerts_model_crud)
 # -----------------------------------------------------------------------------
 
-"""
 # schedules ---------------------------------------------------------------------
 # schedules_api_crud
 app.mount(path="/", app=schedules_api_crud)
@@ -314,7 +315,6 @@ app.mount(path="/", app=schedules_model_crud)
 # schedules_app
 app.mount(path="/", app=schedules_app)
 # -----------------------------------------------------------------------------
-"""
 """
 # pandas ----------------------------------------------------------------------
 app.mount(path="/", app=pandas_app_api)

@@ -60,7 +60,7 @@ class AppSvc(Svc):
             return
         
         self._amqp_consume_queue = await self._amqp_channel.declare_queue(
-            f"{self._config.svc_name}_consume_{self._config.nodes[0]}", durable=True
+            f"{self._config.svc_name}_consume_{self._config.nodes[0]}", durable=False, auto_delete=True
         )
 
     async def _created(self, mes):

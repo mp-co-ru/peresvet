@@ -179,9 +179,9 @@ class ModelCRUDSvc(Svc):
     def _set_handlers(self):
         self._handlers = {
             f"{self._config.hierarchy['class']}.api_crud.create": self._create,
-            f"{self._config.hierarchy['class']}.api_crud.read": self._read,
-            f"{self._config.hierarchy['class']}.api_crud.update": self._update,
-            f"{self._config.hierarchy['class']}.api_crud.delete": self._delete,
+            f"{self._config.hierarchy['class']}.api_crud.read.*": self._read,
+            f"{self._config.hierarchy['class']}.api_crud.update.*": self._update,
+            f"{self._config.hierarchy['class']}.api_crud.delete.*": self._delete,
         }
     
     async def _update(self, mes: dict) -> dict:
@@ -193,7 +193,7 @@ class ModelCRUDSvc(Svc):
         """
         id = mes['id']
 
-        if not self._hierarchy.does_node_exist((id)):
+        if not await self._hierarchy.does_node_exist((id)):
             err_mes = f"Узел {id} не существует."
             self._logger.error(f"{self._config.svc_name} :: {err_mes}")
             res_response = {
@@ -242,8 +242,7 @@ class ModelCRUDSvc(Svc):
                 }
                 return res_response
             
-        # тут мы делаем проверку не является ли новый родитель потомком текущего узла
-        if new_parent:
+            # проверка того, что новый родитель не является членом подиерархии узла
             res = await self._hierarchy.search({
                 "base": id,
                 "scope": CN_SCOPE_SUBTREE,
@@ -269,44 +268,22 @@ class ModelCRUDSvc(Svc):
             routing_key=f"{self._config.hierarchy['class']}.model.may_update.{id}"
         )
         if res is None:
+            # это ветка, когда нет подписчика на событие may_update
+            # то есть, по большому счёту, всем всё равно
             res = {"response": True}
-
-        if not res["response"]:
-            if not self._hierarchy.does_node_exist((id)):
-                err_mes = f"Узел {id} не существует."
-                self._logger.error(f"{self._config.svc_name} :: {err_mes}")
-                res_response = {
-                    "error": {
-                        "code": 406,
-                        "message": err_mes
-                    }
-                }
-                return res_response
-
-        node_class = await self._hierarchy.get_node_class(id)
-        if node_class != self._config.hierarchy["class"]:
-            err_mes = f"Нельзя обновить узел {id}."
-            self._logger.error(f"{self._config.svc_name} :: {err_mes}")
-            res_response = {
-                "error": {
-                    "code": 409,
-                    "message": err_mes
-                }
-            }
-            return res_response
-
-        await self._post_message(
+            
+        res = await self._post_message(
             mes=mes,
             reply=True,
             routing_key=f"{self._config.hierarchy['class']}.model.updating.{id}"
         )
-
-        await self._further_update(mes)
-
+        
         if mes.get("attributes"):
             await self._hierarchy.modify(id, mes["attributes"])
         if new_parent:
             await self._hierarchy.move(id, new_parent)
+
+        await self._further_update(mes)
 
         await self._post_message(
             mes={"id": id}, 
@@ -314,11 +291,9 @@ class ModelCRUDSvc(Svc):
             routing_key=f"{self._config.hierarchy['class']}.model.updated.{id}"
         )
 
-        self._logger.info(f'Узел {id} обновлён.')
+        self._logger.info(f"{self._config.svc_name} :: Узел {id} обновлён.")
 
-        res_response = {}
-
-        return res_response
+        return {}
 
     async def _further_update(self, mes: dict) -> None:
         """Метод переопределяется в сервисах-наследниках.
@@ -480,7 +455,7 @@ class ModelCRUDSvc(Svc):
                     routing_key=f"{child['objectClass']}.model.deleted.{child['id']}"
                 )
 
-            self._logger.info(f'Узел {id} удалён.')
+            self._logger.info(f"{self._config.svc_name} :: Узел {id} удалён.")
 
             res_response = {}
 
@@ -655,7 +630,7 @@ class ModelCRUDSvc(Svc):
             }
 
             self._logger.error((
-                f"Попытка создания узла {mes} "
+                f"{self._config.svc_name} :: Попытка создания узла {mes} "
                 f"в неопределённом месте иерархии."
             ))
 
@@ -671,7 +646,7 @@ class ModelCRUDSvc(Svc):
             }
 
             self._logger.error((
-                f"Попытка создания узла {mes} "
+                f"{self._config.svc_name} :: Попытка создания узла {mes} "
                 f"в родительском узле неприемлемого класса."
             ))
 
@@ -724,13 +699,13 @@ class ModelCRUDSvc(Svc):
                 }
             }
 
-            self._logger.error(f"Ошибка создания узла {mes}")
+            self._logger.error(f"{self._config.svc_name} :: Ошибка создания узла {mes}")
 
         else:
             res = {
                 "id": new_id
             }
-            self._logger.info(f"Создан новый узел {new_id}")
+            self._logger.info(f"{self._config.svc_name} :: Создан новый узел {new_id}")
 
             # при необходимости создадим узел ``system``
             await self._hierarchy.add(new_id, {"cn": ["system"]})
