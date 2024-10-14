@@ -84,7 +84,7 @@ from src.services.dataStorages.app.postgresql.dataStorages_app_postgresql_svc \
     )
 
 # -----------------------------------------------------------------------------
-"""
+
 # methods ---------------------------------------------------------------------
 from src.services.methods.api_crud.methods_api_crud_svc \
     import (
@@ -104,7 +104,7 @@ from src.services.methods.app.methods_app_svc \
         app as methods_app
     )
 # -----------------------------------------------------------------------------
-"""
+
 
 # objects ---------------------------------------------------------------------
 # objects_api_crud
@@ -213,12 +213,10 @@ api_router.include_router(router=connectors_app_router)
 api_router.include_router(router=dataStorages_api_crud_router)
 # -----------------------------------------------------------------------------
 
-"""
 # methods ---------------------------------------------------------------------
 # methods_api_crud
 api_router.include_router(router=methods_api_crud_router)
 # -----------------------------------------------------------------------------
-"""
 
 # objects ---------------------------------------------------------------------
 # objects_api_crud
@@ -267,7 +265,6 @@ app.mount(path="/", app=dataStorages_model_crud)
 app.mount(path="/", app=postgre_app)
 # -----------------------------------------------------------------------------
 
-"""
 # methods ---------------------------------------------------------------------
 # methods_api_crud
 app.mount(path="/", app=methods_api_crud)
@@ -276,7 +273,6 @@ app.mount(path="/", app=methods_model_crud)
 # methods app
 app.mount(path="/", app=methods_app)
 # -----------------------------------------------------------------------------
-"""
 
 # objects ---------------------------------------------------------------------
 # objects_api_crud

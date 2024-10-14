@@ -23,7 +23,7 @@ class AlertsApp(AppSvc):
         self._handlers[f"{self._config.hierarchy['class']}.app_api.ack_alarm"] = self._ack_alarm
         self._handlers["prsTag.app.data_set.*"] = self._tag_value_changed
         
-    async def _deleting(self, mes):
+    async def _deleting(self, mes: dict, routing_key: str = None):
         # перед удалением тревоги
         await self._delete_alert_cache(mes['id'])
         await self._unbind_alert(mes['id'])
@@ -58,13 +58,13 @@ class AlertsApp(AppSvc):
             await self._amqp_consume_queue.unbind(self._exchange, f"prsTag.app.data_set.{tag_id }")
             self._logger.info(f"{self._config.svc_name} :: Отвязка от изменений тега {tag_id}")
 
-    async def _created(self, mes):
+    async def _created(self, mes: dict, routing_key: str = None):
         # тревога создана
         active = await self._make_alert_cache(mes['id'])
         if active:
             await self._bind_alert(mes['id'])
 
-    async def _updated(self, mes):
+    async def _updated(self, mes: dict, routing_key: str = None):
         # метод, срабатывающий на изменение экземпляра сущности в иерархии
         # сервис <>.app подписан на это событие по умолчанию
 
@@ -93,7 +93,7 @@ class AlertsApp(AppSvc):
         }
         alert_data = await self._hierarchy.search(payload)
         if not alert_data:
-            self._logger.error(f"{self._config.svc_name} :: Нет данных по тревоге {alert_id}")
+            self._logger.error(f"{self._config.svc_name} :: Нет данных по тревоге {alert_id}.")
             return None
         alert = alert_data[0]
 
@@ -101,7 +101,7 @@ class AlertsApp(AppSvc):
 
         active = alert[2]["prsActive"][0] == 'TRUE'
         if not active:
-            self._logger.warning(f"{self._config.svc_name} :: Тревога {alert_id} неактивна.")
+            self._logger.warning(f"{self._config.svc_name} :: Тревога '{alert_id}' неактивна.")
             return False
 
         try:
@@ -163,7 +163,7 @@ class AlertsApp(AppSvc):
         self._logger.debug(f"{self._config.svc_name} :: Тревога {alert_id} прочитана.")
         return True
 
-    async def _get_alarms(self, mes: dict) -> dict:
+    async def _get_alarms(self, mes: dict, routing_key: str = None) -> dict:
         """
         Метод получения алярмов.
         Пока получаем только текущие алярмы - либо активные, либо незаквитированные.
@@ -219,7 +219,7 @@ class AlertsApp(AppSvc):
 
         return result
 
-    async def _ack_alarm(self, mes: dict):
+    async def _ack_alarm(self, mes: dict, routing_key: str = None):
         """_summary_
 
         Args:
@@ -255,7 +255,7 @@ class AlertsApp(AppSvc):
             routing_key=f"{self._config.hierarchy['class']}.app.alarm_acked.{alert_id}"
         )
 
-    async def _tag_value_changed(self, mes: dict) -> None:
+    async def _tag_value_changed(self, mes: dict, routing_key: str = None) -> None:
         """_summary_
 
         Args:
@@ -353,7 +353,7 @@ class AlertsApp(AppSvc):
                     obj=alert_data[0]
                 ).exec()
 
-    async def _get_alerts(self) -> None:
+    async def _get_alerts(self, routing_key: str = None) -> None:
         get_alerts = {
             "filter": {
                 "objectClass": ["prsAlert"],

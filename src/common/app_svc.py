@@ -26,8 +26,7 @@ class AppSvc(Svc):
         self._hierarchy = Hierarchy(settings.ldap_url)
 
     async def on_startup(self) -> None:
-        await super().on_startup()
-        await self._ldap_connect()
+        await super().on_startup()        
 
     def _set_handlers(self):
 
@@ -63,24 +62,24 @@ class AppSvc(Svc):
             f"{self._config.svc_name}_consume_{self._config.nodes[0]}", durable=False, auto_delete=True
         )
 
-    async def _created(self, mes):
+    async def _created(self, mes: dict, routing_key: str = None):
         pass
         
-    async def _may_update(self, mes):
+    async def _may_update(self, mes: dict, routing_key: str = None):
         return {"response": True}
     
-    async def _updating(self, mes):
+    async def _updating(self, mes: dict, routing_key: str = None):
         return {"response": True}
     
-    async def _updated(self, mes):
+    async def _updated(self, mes: dict, routing_key: str = None):
         return {"response": True}
     
-    async def _may_delete(self, mes):
+    async def _may_delete(self, mes: dict, routing_key: str = None):
         return {"response": True}
 
-    async def _deleting(self, mes):
+    async def _deleting(self, mes: dict, routing_key: str = None):
         return {"response": True}
       
-    async def _deleted(self, mes):
+    async def _deleted(self, mes: dict, routing_key: str = None):
         return {"response": True}
     

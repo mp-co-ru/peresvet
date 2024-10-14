@@ -68,7 +68,7 @@ class TagsAppAPIPandas(TagsAppAPI):
         if timeStep:
             payload.timeStep = None
 
-        res = await super().data_get(payload=payload)
+        res = await super().data_get(mes=payload)
 
         final_res = {
             "data": []

@@ -262,7 +262,7 @@ class APICRUDSvc(BaseSvc):
             f"{self._config.hierarchy['class']}.api_crud_client.delete.*": self._delete,
         }
 
-    async def _create(self, payload: NodeCreate | None) -> dict:
+    async def _create(self, payload: NodeCreate | None, routing_key: str = None) -> dict:
         body = {}
 
         if not (payload is None):
@@ -274,7 +274,7 @@ class APICRUDSvc(BaseSvc):
             routing_key=f"{self._config.hierarchy['class']}.api_crud.create"
         )
 
-    async def _read(self, payload: NodeRead) -> dict:
+    async def _read(self, payload: NodeRead, routing_key: str = None) -> dict:
         if payload.id == "":
             attrs = {attr:[None] for attr in payload.attributes}
             return {
@@ -294,7 +294,7 @@ class APICRUDSvc(BaseSvc):
             routing_key=f"{self._config.hierarchy['class']}.api_crud.read.*"
         )
 
-    async def _update(self, payload: dict) -> dict:
+    async def _update(self, payload: dict, routing_key: str = None) -> dict:
         body = {}
         if isinstance(payload, dict):
             body = payload
@@ -309,7 +309,7 @@ class APICRUDSvc(BaseSvc):
 
         return res
 
-    async def _delete(self, payload: NodeDelete) -> dict:
+    async def _delete(self, payload: NodeDelete, routing_key: str = None) -> dict:
         """Удаление узлов в иерархии.
         """
         body = payload.model_dump()

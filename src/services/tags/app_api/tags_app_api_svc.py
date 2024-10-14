@@ -5,6 +5,7 @@
 рассмотрены в разделе :ref:`historical_data`.
 """
 import sys
+import json
 from typing import Any, List, NamedTuple
 from typing_extensions import Annotated
 from pydantic import (
@@ -155,10 +156,10 @@ class TagsAppAPI(BaseSvc):
             f"{self._config.hierarchy['class']}.app_api_client.data_set.*": self.data_set
         }
 
-    async def data_get(self, payload: DataGet) -> dict:
-        new_payload = payload
-        if isinstance(payload, dict):
-            new_payload = DataGet(**payload)
+    async def data_get(self, mes: DataGet, routing_key: str = None) -> dict:
+        new_payload = mes
+        if isinstance(mes, dict):
+            new_payload = DataGet(**mes)
 
         body = new_payload.model_dump()
 
@@ -192,9 +193,21 @@ class TagsAppAPI(BaseSvc):
 
         return res
 
-    async def data_set(self, payload: AllData) -> None:
-        body = payload.model_dump()
+    async def data_set(self, mes: dict | AllData, routing_key: str = None, error_handler: ErrorHandler = Depends()) -> None:
+        try:
+            if isinstance(mes, dict):
+                s = json.dumps(mes)
+                p = AllData.model_validate_json(s)
+            else:
+                p = mes
+                
+        except Exception as ex:
+            res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+            app._logger.exception(res)
+            await error_handler.handle_error(res)
 
+        body = p.model_dump()
+        
         res = await self._post_message(mes=body, reply=False, routing_key = f"{self._config.hierarchy['class']}.app_api.data_set.*")
         # нет подписчика
         if res is None:

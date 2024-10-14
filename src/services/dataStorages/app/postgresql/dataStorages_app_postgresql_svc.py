@@ -199,7 +199,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         except Exception as ex:
             self._logger.error(f"{self._config.svc_name} :: Ошибка создания хранилища тега: {ex}")
 
-    async def _alarm_on(self, mes: dict) -> None:
+    async def _alarm_on(self, mes: dict, routing_key: str = None) -> None:
 
         self._logger.debug(f"Обработка возникновения тревоги: {mes}")
 
@@ -241,7 +241,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             except PostgresError as ex:
                 self._logger.error(f"{self._config.svc_name} :: Ошибка при записи данных тревоги {alert_id}: {ex}")
 
-    async def _alarm_ack(self, mes: dict) -> None:
+    async def _alarm_ack(self, mes: dict, routing_key: str = None) -> None:
 
         self._logger.debug(f"Обработка квитирования тревоги: {mes}")
 
@@ -281,7 +281,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             except PostgresError as ex:
                 self._logger.error(f"{self._config.svc_name} :: Ошибка при записи данных тревоги {alert_id}: {ex}")
 
-    async def _alarm_off(self, mes: dict) -> None:
+    async def _alarm_off(self, mes: dict, routing_key: str = None) -> None:
         """Факт пропадания тревоги.
 
         Args:
@@ -326,7 +326,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             except PostgresError as ex:
                 self._logger.error(f"{self._config.svc_name} :: Ошибка при записи данных тревоги {alert_id}: {ex}")
 
-    async def _tag_updated(self, mes: dict):
+    async def _tag_updated(self, mes: dict, routing_key: str = None):
         tag_id = mes['id']
         
         payload = {
@@ -367,7 +367,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                 )
                 self._logger.info(f"{self._config.svc_name} :: Хранилище тега '{tag_id}' в '{ds_id}' изменено.")        
 
-    async def _alert_deleted(self, mes: dict):
+    async def _alert_deleted(self, mes: dict, routing_key: str = None):
         alert_id = mes['id']
         alert_cache = await self._cache.get(f"{alert_id}.{self._config.svc_name}").exec()
         if alert_cache[0] is None:
@@ -378,7 +378,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
         self._bind_alert(alert_id, False)
 
-    async def _tag_deleted(self, mes: dict):
+    async def _tag_deleted(self, mes: dict, routing_key: str = None):
         tag_id = mes['id']
         tag_cache = await self._cache.get(f"{tag_id}.{self._config.svc_name}").exec()
         if tag_cache[0] is None:
@@ -497,7 +497,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         """
         return await apg.create_pool(dsn=config["dsn"])
 
-    async def _unlink_alert(self, mes: dict) -> None:
+    async def _unlink_alert(self, mes: dict, routing_key: str = None) -> None:
         """_summary_
 
         Args:
@@ -535,7 +535,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
         self._logger.info(f"{self._config.svc_name} :: Тревога {alert_id} отвязана от хранилища {ds_id}.")
 
-    async def _unlink_tag(self, mes: dict) -> None:
+    async def _unlink_tag(self, mes: dict, routing_key: str = None) -> None:
         """_summary_
 
         Args:

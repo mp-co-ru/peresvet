@@ -15,7 +15,7 @@ class SchedulesApp(AppSvc):
 
         self._scheduler = AsyncIOScheduler()
 
-    async def _created(self, mes: dict):
+    async def _created(self, mes: dict, routing_key: str = None):
         """
         Формат prsJsonConfigString расписания:
         {
@@ -51,11 +51,14 @@ class SchedulesApp(AppSvc):
         
         return
 
-    async def _updated(self, mes: dict) -> dict:
-        await self.stop_schedule(mes["id"])
+    async def _updated(self, mes: dict, routing_key: str = None) -> dict:
+        try:
+            await self.stop_schedule(mes["id"])
+        except:
+            pass
         return await self._created(mes)
         
-    async def _deleted(self, mes: dict) -> dict:
+    async def _deleted(self, mes: dict, routing_key: str = None) -> dict:
         await self.stop_schedule(mes["id"])
         self._logger.info(f"{self._config.svc_name} :: Расписание {mes['id']} остановлено.")
         return {}
@@ -122,7 +125,8 @@ class SchedulesApp(AppSvc):
 
         search_schedules = {
             "filter": {
-                "objectClass": [self._config.hierarchy["class"]]
+                "objectClass": [self._config.hierarchy["class"]],
+                "prsActive": ['TRUE']
             },
             "attributes": ["prsJsonConfigString"]
         }

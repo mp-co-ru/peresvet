@@ -80,7 +80,7 @@ class ScheduleReadResult(svc.NodeReadResult):
     pass
 
 class ScheduleUpdate(svc.NodeUpdate):
-    attributes: ScheduleCreateAttributes = Field(ScheduleCreateAttributes(), title="Атрибуты узла")
+    attributes: svc.NodeAttributes = Field({}, title="Атрибуты узла")
 
 class SchedulesAPICRUD(svc.APICRUDSvc):
     """Сервис работы с расписаниями в иерархии.

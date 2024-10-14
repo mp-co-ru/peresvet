@@ -184,7 +184,7 @@ class ModelCRUDSvc(Svc):
             f"{self._config.hierarchy['class']}.api_crud.delete.*": self._delete,
         }
     
-    async def _update(self, mes: dict) -> dict:
+    async def _update(self, mes: dict, routing_key: str = None) -> dict:
         """Метод обновления данных узла. Также метод может перемещать узел
         по иерархии.
 
@@ -306,7 +306,7 @@ class ModelCRUDSvc(Svc):
             data (dict): id и атрибуты вновь создаваемого экземпляра сущности
         """
 
-    async def _delete(self, mes: dict) -> None:
+    async def _delete(self, mes: dict, routing_key: str = None) -> None:
         """Метод удаляет экземпляр сущности из иерархии.
         Удаляем пока по одному узлу.
 
@@ -473,7 +473,7 @@ class ModelCRUDSvc(Svc):
             ids (List[str]): список ``id`` удаляемых узлов.
         """
 
-    async def _read(self, mes: dict) -> dict:
+    async def _read(self, mes: dict, routing_key: str = None) -> dict:
         """Правильность заполнения полей входного сообщения выполняется
         сервисом ``<сущность>_api_crud``\.
 
@@ -584,7 +584,7 @@ class ModelCRUDSvc(Svc):
         """
         return search_result
 
-    async def _create(self, mes: dict) -> dict:
+    async def _create(self, mes: dict, routing_key: str = None) -> dict:
         """Метод создаёт новый экземпляр сущности в иерархии.
 
         Args:

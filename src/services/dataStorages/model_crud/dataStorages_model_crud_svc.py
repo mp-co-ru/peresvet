@@ -109,7 +109,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             }
             await self._unlink_alert(item)
         
-    async def _unlink_tag(self, item: dict) -> None:
+    async def _unlink_tag(self, item: dict, routing_key: str = None) -> None:
         """Метод отвязки тега от хранилища.
         Ищем, к какому хранилищу привязан тег и посылаем этому хранилищу
         сообщение об отвязке, после удаляем ссылку на тег.
@@ -142,7 +142,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             f"{self._config.svc_name} :: Тег {item['tagId']} отвязан от хранилища {item['dataStorageId']}."
         )
 
-    async def _unlink_alert(self, item: dict) -> None:
+    async def _unlink_alert(self, item: dict, routing_key: str = None) -> None:
         """Метод отвязки тревоги от хранилища.
         Ищем, к какому хранилищу привязана тревога и посылаем этому хранилищу
         сообщение об отвязке, после удаляем ссылку на тревогу.
@@ -188,7 +188,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             return items[0][0]
         return None
 
-    async def _link_tag(self, payload: dict) -> None:
+    async def _link_tag(self, payload: dict, routing_key: str = None) -> None:
         """Метод привязки тега к хранилищу.
 
         Метод создаёт новый узел в списке тегов хранилища.
@@ -263,7 +263,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             f"{self._config.svc_name} :: Тег {payload['tagId']} привязан к хранилищу {payload['dataStorageId']}"
         )
 
-    async def _link_alert(self, payload: dict) -> None:
+    async def _link_alert(self, payload: dict, routing_key: str = None) -> None:
         """Метод привязки тревоги к хранилищу.
 
         Логика работы метода: предполагаем, что тревога может быть привязана

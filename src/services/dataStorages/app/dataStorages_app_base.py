@@ -323,16 +323,16 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         except Exception as ex:
             self._logger.error(f"{self._config.svc_name} :: Ошибка инициализации хранилища: {ex}")
 
-    async def _alert_deleted(self, mes: dict):
+    async def _alert_deleted(self, mes: dict, routing_key: str = None):
         pass
 
-    async def _tag_updated(self, mes: dict):
+    async def _tag_updated(self, mes: dict, routing_key: str = None):
         pass
 
-    async def _tag_deleted(self, mes: dict):
+    async def _tag_deleted(self, mes: dict, routing_key: str = None):
         pass
     
-    async def created(self, mes: dict) -> None:
+    async def created(self, mes: dict, routing_key: str = None) -> None:
         # команда добавления новой базы данных
         # если в конфигурации сервиса указаны конкретные id баз для поддержки,
         # то эта ситуация отслеживается в методе _reject_message
@@ -342,7 +342,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         
         await self._add_supported_ds(mes["id"])
 
-    async def updating(self, mes: dict) -> None:
+    async def updating(self, mes: dict, routing_key: str = None) -> None:
         # обновление атрибутов хранилища
         # привязка/отвязка тегов и тревог выполняется
         # методами link/unlink
@@ -371,18 +371,18 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
         return {"response": True}
         
-    async def deleting(self, mes: dict) -> None:
+    async def deleting(self, mes: dict, routing_key: str = None) -> None:
         # удаление хранилища
         # операция, неподдерживаемая Community версией
         pass
 
-    async def _alarm_on(self, mes: dict) -> None:
+    async def _alarm_on(self, mes: dict, routing_key: str = None) -> None:
         pass
 
-    async def _alarm_ack(self, mes: dict) -> None:
+    async def _alarm_ack(self, mes: dict, routing_key: str = None) -> None:
         pass
 
-    async def _alarm_off(self, mes: dict) -> None:
+    async def _alarm_off(self, mes: dict, routing_key: str = None) -> None:
         """Факт пропадания тревоги.
 
         Args:
@@ -497,7 +497,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
     async def _create_store_for_alert(self, alert_id: str, ds_id: str, store: dict) -> None:
         pass
 
-    async def _link_tag(self, mes: dict) -> dict | None:
+    async def _link_tag(self, mes: dict, routing_key: str = None) -> dict | None:
         """Метод привязки тега к хранилищу.
         В сообщении может приходить атрибут prsStore: пользователь знает,
         как организовать хранение данных для тега
@@ -537,7 +537,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
         return {"prsStore": store}
 
-    async def _link_alert(self, mes: dict) -> dict:
+    async def _link_alert(self, mes: dict, routing_key: str = None) -> dict:
         """Метод привязки тревоги к хранилищу.
         Атрибут ``prsStore`` должен быть вида
         ``{"tableName": "<some_table>"}`` либо отсутствовать
@@ -575,10 +575,10 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
         return {"prsStore": store}
 
-    async def _unlink_alert(self, mes: dict) -> None:
+    async def _unlink_alert(self, mes: dict, routing_key: str = None) -> None:
         pass
 
-    async def _unlink_tag(self, mes: dict) -> None:
+    async def _unlink_tag(self, mes: dict, routing_key: str = None) -> None:
         pass
 
     @abstractmethod
@@ -652,7 +652,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         if scheduled:
             loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))
 
-    async def _tag_set(self, mes: dict) -> None:
+    async def _tag_set(self, mes: dict, routing_key: str = None) -> None:
         """
 
         Args:
@@ -686,7 +686,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
                 else:
                     await self._cache.append(
                         f"{tag_id}.{self._config.svc_name}",
-                        f"data", *tag_item["data"]
+                        "data", *tag_item["data"]
                     ).exec()
                     self._logger.info(f"{self._config.svc_name} :: Кэш тега {tag_id} обновлён.")
 
@@ -839,7 +839,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         """
         pass
 
-    async def _tag_get(self, mes: dict) -> dict:
+    async def _tag_get(self, mes: dict, routing_key: str = None) -> dict:
         """_summary_
 
         Args:

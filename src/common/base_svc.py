@@ -157,7 +157,7 @@ class BaseSvc(FastAPI):
             for key in self._handlers.keys():
                 if re.fullmatch(key, message.routing_key):
                     passed = True
-                    res = await self._handlers[key](mes)
+                    res = await self._handlers[key](mes=mes, routing_key=message.routing_key)
 
                     if message.reply_to:
                         # здесь нельзя использовать self._post_message

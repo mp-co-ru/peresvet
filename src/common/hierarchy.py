@@ -212,7 +212,7 @@ class Hierarchy:
 
 
         Returns:
-            Tuple: (id, dn, attributes)
+            List[Tuple]: (id, dn, attributes)
         """
 
         new_payload = deepcopy(payload)

@@ -15,6 +15,45 @@ from src.services.methods.app.methods_app_settings import MethodsAppSettings
 
 class MethodsApp(AppSvc):
     """
+    Логика работы сервиса.
+    Старт:
+    1) Класс-предок подписывается за нас на события изменения экземпляров
+       сущности.
+    2) Создаём для каждого активного(!) метода кэш. 
+       Ключ: "<method_id>.<svc_name>".
+       Значение: {
+            "initiators": ["initiator_id1", "initiator_id2", ...]
+       }
+    3) При построении кэшей методов строим кэш для каждого инициатора:
+       Ключ: "<initiator_id>.<svc_name>".
+       Значение: {
+            "<method_id>": "<calculated_tag_id>",
+            ...
+       }
+    4) Подписываемся также на события удаления инициаторов!
+
+    ** Сервис "prsMethod.model" подписывается на события удаления инициаторов! После удаления
+    инициатора он посылает сообщение updated, при обработке которого этот сервис перестраивает
+    кэш метода.
+
+
+    Работа:
+    1) created:
+       Если метод активный, создаём кэш по вышеописанному сценарию.
+    2) Updated:
+       Если метод становится неактивным, удаляем его кэш.
+       Если активный, кэш перестраиваем.
+       То есть если в процессе обновления тега изменился список инициаторов - 
+       мы всё равно перестраиваем кэш.
+    3) Deleted:
+       Удаляем кэш метода.
+    4) При создании кэша метода подписываемся на события инициаторов (изменение значений тега и 
+       генерация событий расписания)
+    5) При удалении кэша метода удаляем также и соответствующий ключ из
+       кэша инициатора и смотрим: если кэш инициатора остался пустой, то 
+       удаляем кэш инициатора и отписываемся от генерируемых событий.
+
+
     Сервис работы с методами.
     Формат ожидаемых сообщений
 
@@ -36,9 +75,8 @@ class MethodsApp(AppSvc):
         self._rpc_exchange = None
 
     def _add_app_handlers(self):
-        self._handlers["prsTag.app.data_set.*"] = self._start_method_by_sched
-        #self._handlers["prsTag.model.updated.*"] = self._tag_updated
-        self._handlers["prsSchedule.app.fire_event.*"] = self._start_method_by_tag
+        self._handlers["prsTag.app.data_set.*"] = self._start_method_by_tag
+        self._handlers["prsSchedule.app.fire_event.*"] = self._start_method_by_sched
 
     '''
     async def _tag_updated(self, mes: dict):
@@ -79,7 +117,25 @@ class MethodsApp(AppSvc):
                 self.
     '''
 
-    async def _start_method_by_sched(self, mes: dict) -> dict:
+    async def _updated(self, mes: dict, routing_key: str = None):
+        """
+        Нас интересует только смена флага active
+        """
+        payload = {
+            "id": mes['id'],
+            "attributes": ["prsActive"]
+        }
+        method_data = await self._hierarchy.search(payload=payload)
+        active = method_data[0][2]["prsActive"][0] == 'TRUE'
+        if active:
+            await self._make_method_cache(mes['id'])
+            await self._bind_method(mes['id'], True)
+        else:
+            await self._delete_method_cache(mes['id'])
+            await self._bind_method(mes['id'], False)
+
+    
+    async def _start_method_by_sched(self, mes: dict, routing_key: str = None) -> dict:
         self._logger.debug(f"Run methods. Data: {mes}")
 
         """
@@ -93,27 +149,25 @@ class MethodsApp(AppSvc):
         initiator = mes["id"]
         methods_ids = await self._cache.get(f"{initiator}.{self._config.svc_name}").exec()
         if not methods_ids[0]:
-            self._logger.error(f"{self._config.svc_name} :: К тегу '{initiator}' не привязаны методы.")
+            self._logger.error(f"{self._config.svc_name} :: К расписанию '{initiator}' не привязаны методы.")
             return
 
         """
-        methods_ids = [
-            {
-                "methodId": "...",
-                "tagId": "..."
-            }
-        ]
+        methods_ids = {
+            "methodId": "tagId",
+            ...
+        }
         """
         self._logger.debug(f"{self._config.svc_name} :: methods_ids: {methods_ids[0]}")
-        for item in methods_ids[0]:
+        for method_id, tag_id in methods_ids[0].items():
             parameters = await self._hierarchy.search({
-                "base": item["methodId"],
+                "base": method_id,
                 "filter": {"cn": ["*"], "objectClass": ["prsMethodParameter"]},
                 "attributes": ["prsJsonConfigString", "prsIndex", "cn"]
             })
-            await self._calc_tag(item["tagId"], item["methodId"], parameters, [None, mes['time'], None])
+            await self._calc_tag(tag_id, method_id, parameters, [None, mes['time'], None])
 
-    async def _start_method_by_tag(self, mes: dict) -> dict:
+    async def _start_method_by_tag(self, mes: dict, routing_key: str = None) -> dict:
 
         self._logger.debug(f"Run methods. Data: {mes}")
 
@@ -216,12 +270,12 @@ class MethodsApp(AppSvc):
             ]            
         }, reply=False, routing_key=f"prsTag.app_api_client.data_set.{tag_id}")
 
-    async def _deleting(self, mes):
+    async def _deleting(self, mes: dict, routing_key: str = None):
         # перед удалением тревоги
+        await self._bind_method(mes['id'], False)
         await self._delete_method_cache(mes['id'])
-        await self._unbind_method(mes['id'])
-
-    async def _bind_method(self, method_id: str):
+        
+    async def _bind_method(self, method_id: str, bind: bool = True):
         # только логика привязки
         # проверка активности метода производится вызывающим методом
         # привязка к сообщениям prsMethod.model.* выполняется при старте сервиса и здесь не меняется
@@ -229,6 +283,7 @@ class MethodsApp(AppSvc):
         base = f"cn=initiatedBy,cn=system,{base}"
         initiators = await self._hierarchy.search({
             "base": base,
+            "scope": CN_SCOPE_ONELEVEL,
             "filter": {"cn": "*"},
             "attributes": ["cn"]
         })
@@ -237,48 +292,49 @@ class MethodsApp(AppSvc):
             self._logger.warning(f"{self._config.svc_name} :: Метод '{method_id}' не имеет инициаторов.")
             return
         
-        method_parent_tag = await self._hierarchy.get_parent(method_id)
-        
-        for initiator in initiators:
-            
-            # обновляем кэш ---------------------------------------------------------------------------
-            initiator_cache = await self._cache.get(f"{initiator[0]}.{self._config.svc_name}").exec()
-            if initiator_cache[0] is None:
-                await self._cache.set(
-                    name=f"{initiator[0]}.{self._config.svc_name}", 
-                    obj=[{
-                        "methodId": method_id,
-                        "tagId": method_parent_tag
-                    }]
-                ).exec()
-            else:
-                await self._cache.append(
-                    name=f"{initiator[0]}.{self._config.svc_name}", 
-                    obj={
-                        "methodId": method_id,
-                        "tagId": method_parent_tag
-                    }
-                ).exec()
-            # -----------------------------------------------------------------------------------------
-
-            init_class = await self._hierarchy.get_node_class(initiator[0])
+        for initiator in initiators:            
+            initiator_id = initiator[2]["cn"][0]
+            init_class = await self._hierarchy.get_node_class(initiator_id)
             match init_class:
                 case "prsTag": 
-                    await self._amqp_consume_queue.bind(
-                        exchange=self._exchange,
-                        routing_key=f"prsTag.app.data_set.{initiator[0]}"
-                    )
+                    if bind:
+                        await self._amqp_consume_queue.bind(
+                            exchange=self._exchange,
+                            routing_key=f"{init_class}.app.data_set.{initiator_id}"
+                        )
+                    else:
+                        await self._amqp_consume_queue.unbind(
+                            exchange=self._exchange,
+                            routing_key=f"{init_class}.app.data_set.{initiator_id}"
+                        )
                 case "prsSchedule":
-                    await self._amqp_consume_queue.bind(
-                        exchange=self._exchange,
-                        routing_key=f"prsSchedule.app.fire_event.{initiator[0]}"
-                    )
+                    if bind: 
+                        await self._amqp_consume_queue.bind(
+                            exchange=self._exchange,
+                            routing_key=f"prsSchedule.app.fire_event.{initiator_id}"
+                        )
+                    else:
+                        await self._amqp_consume_queue.unbind(
+                            exchange=self._exchange,
+                            routing_key=f"prsSchedule.app.fire_event.{initiator_id}"
+                        )
                 case _:
-                    self._logger.error(f"{self._config.svc_name} :: Неверный класс '{init_class}' инициатора '{initiator[0]}' для метода '{method_id}'")
+                    self._logger.error(f"{self._config.svc_name} :: Неверный класс '{init_class}' инициатора '{initiator_id}' для метода '{method_id}'")
                     continue
 
-    async def _unbind_method(self, method_id: str):
-        pass
+    async def _delete_method_cache(self, method_id: str):
+        method_cache = await self._cache.get(f"{method_id}.{self._config.svc_name}").exec()
+        if method_cache[0] is None:
+            return
+        for initiator_id in method_cache[0]:
+            res = await self._cache.delete(
+                name=f"{initiator_id}.{self._config.svc_name}",
+                key=method_id
+            ).get(name=f"{initiator_id}.{self._config.svc_name}").exec()
+            if not res[1].keys():
+                await self._cache.delete(
+                    name=f"{initiator_id}.{self._config.svc_name}"
+                ).exec()
 
     async def _make_method_cache(self, method_id: str):
         """
@@ -292,21 +348,9 @@ class MethodsApp(AppSvc):
         """
         await self._delete_method_cache(method_id)
 
+        method_dn = await self._hierarchy.get_node_dn(method_id)
         payload = {
-            "id": method_id,
-            "attributes": ["prsActive"]
-        }
-        method_data = await self._hierarchy.search(payload=payload)
-        if not method_data:
-            self._logger.error(f"{self._config.svc_name} :: Нет данных по методу {method_id}.")
-            return None
-        method = method_data[0]
-        if method[2]["prsActive"][0] =='FALSE':
-            self._logger.warning(f"{self._config.svc_name} :: Метод '{method_id}' неактивен.")
-            return False
-        
-        payload = {
-            "base": f"cn=initiatedBy,cn=system,{method[1]}",
+            "base": f"cn=initiatedBy,cn=system,{method_dn}",
             "scope": CN_SCOPE_ONELEVEL,
             "filter": {"cn": ["*"]},
             "attributes": ["cn"]
@@ -316,44 +360,49 @@ class MethodsApp(AppSvc):
             self._logger.warning(f"{self._config.svc_name} :: Метод '{method_id}' не имеет инициаторов.")
             return False
         
-        parent_tag = await self._hierarchy.get_parent(method_id)
+        parent_tag, _ = await self._hierarchy.get_parent(method_id)
 
+        initiators_ids = []
         for initiator in initiators:
-            initiator_cache = await self._cache.get(f"{initiator[0]}.{self._config.svc_name}").exec()
+            initiator_id = initiator[2]["cn"][0]
+            initiators_ids.append(initiator_id)
+            initiator_cache = await self._cache.get(f"{initiator_id}.{self._config.svc_name}").exec()
             if initiator_cache[0] is None:
                 await self._cache.set(
-                    name=f"{initiator[0]}.{self._config.svc_name}",
+                    name=f"{initiator_id}.{self._config.svc_name}",
                     obj={
                         method_id: parent_tag
                     }
                 ).exec()
             else:
                 await self._cache.set(
-                    name=f"{initiator[0]}.{self._config.svc_name}",
+                    name=f"{initiator_id}.{self._config.svc_name}",
                     key=method_id,
                     obj=parent_tag
                 ).exec()
+
+        await self._cache.set(
+            name=f"{method_id}.{self._config.svc_name}",
+            obj=initiators_ids
+        ).exec()
+
         return True
 
-    async def _get_methods(self) -> None:
-        # пока работаем только с вычислительными методами для тегов!
-        # prsEntityTypeCode = 0
-        get_methods = {
-            "filter": {
-                "objectClass": ["prsMethod"],
-                "prsActive": [True],
-                "prsEntityTypeCode": [0]
-            },
+    async def _get_methods(self):
+        payload = {
+            "filter": {"objectClass": ["prsMethod"], "prsActive": ["TRUE"]},
             "attributes": ["cn"]
         }
-        methods = await self._hierarchy.search(get_methods)
-
+        methods = await self._hierarchy.search(payload=payload)
         for method in methods:
             await self._make_method_cache(method[0])
             await self._bind_method(method[0])
 
     async def on_startup(self) -> None:
+        
         await super().on_startup()
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.app.data_set.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsSchedule.app.fire_event.*")
         try:
             await self._get_methods()
         except Exception as ex:
