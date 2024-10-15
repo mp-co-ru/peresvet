@@ -61,7 +61,7 @@ class AlertsAPICRUD(svc.APICRUDSvc):
     async def _read(self, payload: AlertRead) -> dict:
         return await super()._read(payload=payload)
 
-    async def _update(self, payload: AlertUpdate) -> dict:
+    async def _update(self, payload: dict) -> dict:
         return await super()._update(payload=payload)
 
 settings = AlertsAPICRUDSettings()
@@ -192,7 +192,7 @@ async def read(q: str | None = None, payload: AlertRead | None = None, error_han
     return res
 
 @router.put("/", status_code=202)
-async def update(payload: AlertUpdate, error_handler: svc.ErrorHandler = Depends()):
+async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
     """
     Метод обновляет тревогу в модели.
 
@@ -213,6 +213,13 @@ async def update(payload: AlertUpdate, error_handler: svc.ErrorHandler = Depends
         * **detail** (list) - список с пояснениями к ошибке.
 
     """
+    try:
+        AlertUpdate.model_validate(payload)
+    except Exception as ex:
+        res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+        app._logger.exception(res)
+        await error_handler.handle_error(res)
+
     res = await app._update(payload)
     await error_handler.handle_error(res)
     return res

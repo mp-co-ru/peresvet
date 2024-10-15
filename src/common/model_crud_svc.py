@@ -541,6 +541,9 @@ class ModelCRUDSvc(Svc):
         if mes_data["filter"].get("objectClass") is None:
             mes_data["filter"]["objectClass"] = [self._config.hierarchy["class"]]
 
+        if mes_data["base"] == "prs":
+            mes_data["base"] = await self._hierarchy.get_node_id("cn=prs")
+
         if (not mes_data.get("base")) and (not mes_data.get("id")):
             if not self._config.hierarchy["node"]:
                 err_mes = "Должен быть указан родительский узел для поиска."
@@ -554,9 +557,7 @@ class ModelCRUDSvc(Svc):
                 return res_response
 
             mes_data["base"] = self._config.hierarchy["node_id"]
-        if mes_data["base"] == "prs":
-            mes_data["base"] = await self._hierarchy.get_node_id("cn=prs")
-            
+                    
         for key, item in mes_data["filter"].items():
             # если в запросе одно из полей было не списком, то делаем его списком
             if type(item) is not list:
@@ -574,6 +575,12 @@ class ModelCRUDSvc(Svc):
             items = await hierarchy_search(mes_data)
             for item in items:
                 res["data"].append(item)
+
+        if mes.get("getParent"):
+            for item in res["data"]:
+                parent_id, _ = await self._hierarchy.get_parent(item["id"])
+                parent_class = await self._hierarchy.get_node_class(parent_id)
+                item["parentId"] = (None, parent_id)[parent_class != "prsModelNode"]
 
         final_res = await self._further_read(mes, res)
         return final_res

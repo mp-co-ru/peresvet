@@ -3,7 +3,7 @@ services:
     #build:
     #  context: ../..
     #  dockerfile: docker/docker-files/grafana/Dockerfile.grafana
-    image: grafana/grafana-enterprise:10.4.4-ubuntu
+    image: grafana/grafana-enterprise:11.2.2-ubuntu
     container_name: grafana
     hostname: ${HOST_GRAFANA}
     restart: unless-stopped
@@ -11,6 +11,7 @@ services:
       #- GF_RENDERING_SERVER_URL=http://renderer:8081/render
       #- GF_RENDERING_CALLBACK_URL=http://${HOST_GRAFANA}:${PORT_GRAFANA}/
       #- GF_LOG_FILTERS=rendering:debug
+      - GF_INSTALL_PLUGINS grafana-mqtt-datasource,marcusolsson-dynamictext-panel,volkovlabs-form-panel,volkovlabs-echarts-panel,marcusolsson-json-datasource
       - GF_SERVER_DOMAIN=${NGINX_HOST}
       - GF_SERVER_ROOT_URL=http://${NGINX_HOST}:${PORT_GRAFANA}/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true

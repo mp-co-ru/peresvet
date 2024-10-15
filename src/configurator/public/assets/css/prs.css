@@ -1,0 +1,306 @@
+.prsObject{
+    font-weight: bolder;
+}
+
+.prsTag{
+    color: rgb(100,100,100);
+}
+
+.prsMethod{
+    color: rgb(0,0,150);
+}
+
+.prsAlert{
+    color: rgb(100,0,0);
+}
+
+*, body {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+html, body {
+    height: 100%;
+    /* background-color: #152733;*/ 
+    overflow: auto;
+}
+
+.main-container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.element-holder {
+    display: inline-flex;
+    border: 1px solid #cccccc;
+    border-radius: 10px;
+    padding: 10px;
+    margin: 5px;
+    align-items: stretch;
+    flex-direction: column;
+}
+
+.sub-element {
+    border: 1px solid rgba(0,0,0,.125);
+    border-radius: 5px;
+    padding: 0px;
+}
+
+.space-between {
+    justify-content: space-between;     
+}
+
+.prs-input-label {
+    width: 12em;
+}
+
+.red-border {
+    border: 1px solid rgb(255,0,0);    
+}
+
+#indent {
+    width: 3.5rem;
+}
+
+.text-small-size {
+    font-size: 80%;
+}
+
+.gray {
+    color: lightgray;
+}
+
+.form-holder {
+    display: flex;
+    /*flex-direction: column;*/
+    justify-content: top;
+    align-items: stretch;
+    text-align: center;
+    min-height: 100vh;
+}
+
+.form-holder .form-content {
+    position: relative;
+    text-align: left;
+    /*display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    -webkit-justify-content: left;*/
+    justify-content: left;
+    -webkit-align-items: left;
+    align-items: left;
+    border: 1px solid #cccccc;
+    padding: 20px;
+    display: inline-block;
+    width: 100%;
+    /*min-width: 540px;*/
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+    text-align: left;
+    -webkit-transition: all 0.4s ease;
+    transition: all 0.4s ease;
+}
+
+.form-holder .form-nav {
+    position: relative;
+    text-align: left;
+    /*display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    -webkit-justify-content: left;*/
+    justify-content: left;
+    -webkit-align-items: left;
+    align-items: left;
+    border: 1px solid #cfcfcf;
+    padding: 5px;
+    display: inline-block;
+    width: 100%;
+    /*min-width: 540px;*/
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 5px;
+    text-align: left;
+    -webkit-transition: all 0.4s ease;
+    transition: all 0.4s ease;
+}
+
+/*
+.form-content .form-items {
+    border: 1px solid #cccccc;
+    padding: 20px;
+    display: inline-block;
+    width: 100%;
+    min-width: 540px;
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+    text-align: left;
+    -webkit-transition: all 0.4s ease;
+    transition: all 0.4s ease;
+}*/
+
+.form-content h3 {
+    text-align: left;
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.form-content h3.form-title {
+    margin-bottom: 30px;
+}
+
+.form-content p {
+    text-align: left;
+    font-size: 17px;
+    font-weight: 300;
+    line-height: 20px;
+    margin-bottom: 30px;
+}
+
+.form-content label, .was-validated .form-check-input:invalid~.form-check-label, .was-validated .form-check-input:valid~.form-check-label{
+    color: rgb(20,20,20);
+}
+
+.form-content input[type=text], .form-content input[type=number], .form-content input[type=password], .form-content input[type=email], .form-content select, .form-content textarea {
+    width: 100%;
+    padding: 9px 20px;
+    text-align: left;
+    border: 1;
+    outline: 0;
+    border-radius: 6px;
+    background-color: #fff;
+    font-size: 15px;
+    font-weight: 300;
+    color: #000000;
+    -webkit-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+    margin-top: 16px;
+}
+
+.btn-icon {
+    padding-top: 0;
+    padding-bottom: 0;
+    display: inline-block;
+}
+
+.nav-link-icon {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    display: inline-block;
+    align-content: start;
+}
+
+.btn .icon {
+    position: relative;
+    left: -.5rem;
+    display: inline-block;
+    padding: .375rem .75rem;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: .25rem 0 0 .25rem;
+}
+
+.alert-message .alert-icon {
+    width: 3rem;
+}
+.alert-message .close{
+    font-size: 1rem;
+    color: #a6a6a6;
+}
+.alert-primary .alert-icon {
+    background-color: #b8daff;
+}
+.alert-secondary .alert-icon {
+    background-color: #d6d8db;
+}
+.alert-success .alert-icon {
+    background-color: #c3e6cb;
+}
+.alert-danger .alert-icon {
+    background-color: #f5c6cb;
+}
+.alert-warning .alert-icon {
+    background-color: #ffeeba;
+}
+.alert-info .alert-icon {
+    background-color: #bee5eb;
+}
+.alert-light .alert-icon {
+    background-color: #fdfdfe;
+}
+.alert-dark .alert-icon {
+    background-color: #c6c8ca;
+}
+
+/*
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active{
+    background-color: #495056;
+    outline: none !important;
+    border: none !important;
+     box-shadow: none;
+}
+*/
+
+.form-content textarea {
+    position: static !important;
+    width: 100%;
+    padding: 9px 20px;
+    border-radius: 6px;
+    text-align: left;
+    background-color: #fff;
+    border: 1;
+    font-size: 15px;
+    font-weight: 300;
+    color: #000000;
+    outline: none;
+    resize: vertical;
+    height: 120px;
+    -webkit-transition: none;
+    transition: none;
+    margin-bottom: 14px;
+}
+
+.form-content textarea:hover, .form-content textarea:focus {
+    border: 1;
+    background-color: #ffffff;
+}
+
+.mv-up{
+    margin-top: -9px !important;
+    margin-bottom: 8px !important;
+}
+
+.invalid-feedback{
+    color: #ff606e;
+}
+
+.valid-feedback{
+   color: #2acc80;
+}
+
+.value-changed{
+    border-width: 2px;
+    border-color: rgb(0,0,220);
+}
+
+.currentNode{
+    outline : none;  
+    background-color: rgb(200,200,255);
+  }
+
+.edge {
+    image-rendering: -moz-crisp-edges; /* Firefox */
+    -ms-interpolation-mode: nearest-neighbor;  /* IE */
+    image-rendering: crisp-edges; /* Стандартное свойство */
+}
+
+.smaller {
+    font-size: 0.8rem;
+}

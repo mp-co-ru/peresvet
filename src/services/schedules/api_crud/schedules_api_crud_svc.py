@@ -97,7 +97,7 @@ class SchedulesAPICRUD(svc.APICRUDSvc):
     async def _read(self, payload: ScheduleRead) -> dict:
         return await super()._read(payload=payload)
 
-    async def _update(self, payload: ScheduleUpdate) -> dict:
+    async def _update(self, payload: dict) -> dict:
         return await super()._update(payload=payload)
 
 settings = SchedulesAPICRUDSettings()
@@ -152,11 +152,20 @@ async def read(q: str | None = None, payload: ScheduleRead | None = None):
     return await app.api_get_read(ScheduleRead, q, payload)
 
 @router.put("/", status_code=202)
-async def update(payload: ScheduleUpdate):
-    await app._update(payload)
+async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
+    try:
+        ScheduleUpdate.model_validate(payload)
+    except Exception as ex:
+        res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+        app._logger.exception(res)
+        await error_handler.handle_error(res)
+
+    res = await app._update(payload)
+    await error_handler.handle_error(res)
+    return res
 
 @router.delete("/", status_code=202)
-async def delete(payload: ScheduleRead):
+async def delete(payload: ScheduleRead, error_handler: svc.ErrorHandler = Depends()):
     await app.delete(payload)
 
 app.include_router(router, tags=["schedules"])

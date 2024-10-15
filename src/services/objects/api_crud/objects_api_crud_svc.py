@@ -55,7 +55,7 @@ class ObjectsAPICRUD(svc.APICRUDSvc):
     async def _read(self, payload: ObjectRead) -> dict:
         return await super()._read(payload=payload)
 
-    async def _update(self, payload: ObjectUpdate) -> dict:
+    async def _update(self, payload: dict) -> dict:
         return await super()._update(payload=payload)
 
 settings = ObjectsAPICRUDSettings()
@@ -164,7 +164,7 @@ async def read(q: str | None = None, payload: ObjectRead | None = None, error_ha
     return res
 
 @router.put("/", status_code=202)
-async def update(payload: ObjectUpdate, error_handler: svc.ErrorHandler = Depends()):
+async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
     """
     Метод обновления обьекта в иерархии.
 
@@ -201,6 +201,13 @@ async def update(payload: ObjectUpdate, error_handler: svc.ErrorHandler = Depend
         * **detail** (list) - детали ошибки.
 
     """
+    try:
+        ObjectUpdate.model_validate(payload)
+    except Exception as ex:
+        res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+        app._logger.exception(res)
+        await error_handler.handle_error(res)
+
     res = await app._update(payload)
     await error_handler.handle_error(res)
     return res

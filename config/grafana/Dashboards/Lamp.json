@@ -1,0 +1,1243 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PERESVET",
+      "label": "peresvet",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "marcusolsson-json-datasource",
+      "pluginName": "JSON API"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "panel",
+      "id": "canvas",
+      "name": "Canvas",
+      "version": ""
+    },
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.4.4"
+    },
+    {
+      "type": "datasource",
+      "id": "marcusolsson-json-datasource",
+      "name": "JSON API",
+      "version": "1.3.16"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "volkovlabs-form-panel",
+      "name": "Business Forms",
+      "version": "4.4.0"
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "marcusolsson-json-datasource",
+        "uid": "${DS_PERESVET}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 5,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "buttonGroup": {
+          "orientation": "center",
+          "size": "md"
+        },
+        "confirmModal": {
+          "body": "Please confirm to update changed values",
+          "cancel": "Cancel",
+          "columns": {
+            "include": [
+              "name",
+              "oldValue",
+              "newValue"
+            ],
+            "name": "Label",
+            "newValue": "New Value",
+            "oldValue": "Old Value"
+          },
+          "confirm": "Confirm",
+          "elementDisplayMode": "modified",
+          "title": "Confirm update request"
+        },
+        "elementValueChanged": "",
+        "elements": [
+          {
+            "id": "85848de6-07ef-103f-9fd8-dda7cfabd5a9",
+            "labelWidth": 10,
+            "queryField": {
+              "label": "I:Ivalue",
+              "refId": "I",
+              "value": "Ivalue"
+            },
+            "section": "",
+            "title": "I:",
+            "tooltip": "",
+            "type": "number",
+            "uid": "bc3b4026-a3e5-454a-8b3c-5a3fa05ebf70",
+            "unit": "",
+            "value": 0
+          },
+          {
+            "id": "fc67a240-07ef-103f-9fdb-dda7cfabd5a9",
+            "labelWidth": 10,
+            "queryField": {
+              "label": "U:Uvalue",
+              "refId": "U",
+              "value": "Uvalue"
+            },
+            "section": "",
+            "title": "U:",
+            "tooltip": "",
+            "type": "number",
+            "uid": "dfae4044-b98c-4e7a-81ae-3e7bf149cc57",
+            "unit": "",
+            "value": 0
+          }
+        ],
+        "initial": {
+          "code": "",
+          "contentType": "application/json",
+          "getPayload": "return {}",
+          "highlight": true,
+          "highlightColor": "dark-blue",
+          "method": "query",
+          "payload": {}
+        },
+        "layout": {
+          "orientation": "horizontal",
+          "padding": 10,
+          "sectionVariant": "default",
+          "variant": "single"
+        },
+        "reset": {
+          "backgroundColor": "purple",
+          "foregroundColor": "yellow",
+          "icon": "process",
+          "text": "Reset",
+          "variant": "hidden"
+        },
+        "resetAction": {
+          "code": "if (context.panel.response) {\n  context.grafana.notifySuccess(['Update', 'Values updated successfully.']);\n  context.grafana.locationService.reload();\n} else {\n  context.grafana.notifyError(['Update', 'An error occurred updating values.']);\n}",
+          "confirm": false,
+          "getPayload": "return {}",
+          "mode": "initial",
+          "payload": {}
+        },
+        "saveDefault": {
+          "icon": "save",
+          "text": "Save Default",
+          "variant": "hidden"
+        },
+        "submit": {
+          "backgroundColor": "purple",
+          "foregroundColor": "yellow",
+          "icon": "cloud-upload",
+          "text": "Записать",
+          "variant": "primary"
+        },
+        "sync": false,
+        "update": {
+          "code": "let payload = {\n  data: []\n}\ncontext.panel.elements.forEach((element) => {\n  if (element.value !== context.panel.initial[element.id]) {\n    payload.data.push({\n      tagId: element.id,\n      data: [\n        [element.value]\n      ]\n    });\n  }\n});\n\nif (payload.data.length > 0) {\n  url = window.location.protocol + \"//\" + window.location.hostname + \"/v1/data/\";\n  fetch(url, {\n    method: \"POST\",\n    body: JSON.stringify(payload),\n    headers: new Headers({\n      'Content-Type': 'application/json'\n    })\n  }).then((response) => {\n    if (!response.ok) {\n      console.error(`Ошибка записи значений ${payload}`);\n    } else {\n      console.log(\"Данные успешно записаны.\");\n      //context.panel.initialRequest();\n    }\n  });\n}",
+          "confirm": false,
+          "contentType": "application/json",
+          "getPayload": "const payload = {};\n\ncontext.panel.elements.forEach((element) => {\n  if (!element.value) {\n    return;\n  }\n\n  payload[element.id] = element.value;\n})\n\nreturn payload;",
+          "method": "-",
+          "payload": "const payload = {};\n\ncontext.panel.elements.forEach((element) => {\n  if (!element.value) {\n    return;\n  }\n\n  payload[element.id] = element.value;\n})\n\nreturn payload;",
+          "payloadMode": "all"
+        },
+        "updateEnabled": "auto"
+      },
+      "pluginVersion": "4.4.0",
+      "targets": [
+        {
+          "cacheDurationSeconds": 0,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "${DS_PERESVET}"
+          },
+          "fields": [
+            {
+              "jsonPath": "$.data[0].data[0][0]",
+              "name": "Ivalue",
+              "type": "number"
+            },
+            {
+              "jsonPath": "$.data[0].data[0][1]",
+              "language": "jsonpath",
+              "name": "",
+              "type": "time"
+            }
+          ],
+          "method": "GET",
+          "params": [
+            [
+              "q",
+              "{\"tagId\":\"85848de6-07ef-103f-9fd8-dda7cfabd5a9\",\"format\":true}"
+            ]
+          ],
+          "queryParams": "",
+          "refId": "I",
+          "urlPath": "/data/"
+        },
+        {
+          "cacheDurationSeconds": 0,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "${DS_PERESVET}"
+          },
+          "fields": [
+            {
+              "jsonPath": "$.data[0].data[0][0]",
+              "name": "Uvalue",
+              "type": "number"
+            },
+            {
+              "jsonPath": "$.data[0].data[0][1]",
+              "language": "jsonpath",
+              "name": "",
+              "type": "time"
+            }
+          ],
+          "hide": false,
+          "method": "GET",
+          "params": [
+            [
+              "q",
+              "{\"tagId\":\"fc67a240-07ef-103f-9fdb-dda7cfabd5a9\",\"format\":true}"
+            ]
+          ],
+          "queryParams": "",
+          "refId": "U",
+          "urlPath": "/data/"
+        }
+      ],
+      "title": "Параметры тока",
+      "type": "volkovlabs-form-panel"
+    },
+    {
+      "datasource": {
+        "type": "marcusolsson-json-datasource",
+        "uid": "${DS_PERESVET}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "OnOff OnOff"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "text",
+                        "index": 0
+                      },
+                      "1": {
+                        "color": "#ffffff",
+                        "index": 1
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "I"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "transparent",
+                        "index": 0
+                      }
+                    },
+                    "type": "value"
+                  },
+                  {
+                    "options": {
+                      "from": 0,
+                      "result": {
+                        "color": "dark-yellow",
+                        "index": 1
+                      },
+                      "to": 0.3
+                    },
+                    "type": "range"
+                  },
+                  {
+                    "options": {
+                      "from": 0.3,
+                      "result": {
+                        "color": "yellow",
+                        "index": 2
+                      },
+                      "to": 0.6
+                    },
+                    "type": "range"
+                  },
+                  {
+                    "options": {
+                      "from": 0.6,
+                      "result": {
+                        "color": "light-yellow",
+                        "index": 3
+                      },
+                      "to": 0.9
+                    },
+                    "type": "range"
+                  },
+                  {
+                    "options": {
+                      "from": 0.9,
+                      "result": {
+                        "color": "#ffff8c",
+                        "index": 4
+                      },
+                      "to": 1
+                    },
+                    "type": "range"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 3,
+        "x": 5,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "infinitePan": false,
+        "inlineEditing": false,
+        "panZoom": false,
+        "root": {
+          "background": {
+            "color": {
+              "fixed": "transparent"
+            },
+            "image": {
+              "field": "I",
+              "fixed": "",
+              "mode": "fixed"
+            }
+          },
+          "border": {
+            "color": {
+              "fixed": "dark-green"
+            },
+            "width": 0
+          },
+          "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+          },
+          "elements": [
+            {
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                }
+              },
+              "border": {
+                "color": {
+                  "fixed": "dark-green"
+                }
+              },
+              "config": {
+                "align": "center",
+                "backgroundColor": {
+                  "field": "I",
+                  "fixed": "#D9D9D9"
+                },
+                "borderColor": {
+                  "fixed": "#000000"
+                },
+                "color": {
+                  "fixed": "#000000"
+                },
+                "valign": "middle",
+                "width": 1
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "name": "eBack",
+              "placement": {
+                "height": 160,
+                "left": 28,
+                "top": 5,
+                "width": 160
+              },
+              "type": "ellipse"
+            },
+            {
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                },
+                "image": {
+                  "mode": "fixed"
+                }
+              },
+              "border": {
+                "color": {
+                  "fixed": "dark-green"
+                }
+              },
+              "config": {
+                "fill": {
+                  "field": "OnOff",
+                  "fixed": "semi-dark-yellow"
+                },
+                "path": {
+                  "fixed": "img/icons/unicons/lightbulb.svg",
+                  "mode": "fixed"
+                }
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "name": "iLamp",
+              "placement": {
+                "height": 100,
+                "left": 58,
+                "top": 35,
+                "width": 100
+              },
+              "type": "icon"
+            }
+          ],
+          "name": "Element 1724496371991",
+          "placement": {
+            "height": 100,
+            "left": 0,
+            "top": 0,
+            "width": 100
+          },
+          "type": "frame"
+        },
+        "showAdvancedTypes": true
+      },
+      "pluginVersion": "10.4.4",
+      "targets": [
+        {
+          "cacheDurationSeconds": 0,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "${DS_PERESVET}"
+          },
+          "fields": [
+            {
+              "jsonPath": "$.data[0].data[0][0]",
+              "name": "I",
+              "type": "number"
+            },
+            {
+              "jsonPath": "$.data[0].data[0][1]",
+              "language": "jsonpath",
+              "name": "time",
+              "type": "time"
+            }
+          ],
+          "method": "GET",
+          "params": [
+            [
+              "q",
+              "{\"tagId\":\"85848de6-07ef-103f-9fd8-dda7cfabd5a9\",\"format\":true}"
+            ]
+          ],
+          "queryParams": "",
+          "refId": "I",
+          "urlPath": "/data/"
+        },
+        {
+          "cacheDurationSeconds": 0,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "${DS_PERESVET}"
+          },
+          "fields": [
+            {
+              "jsonPath": "$.data[0].data[0][0]",
+              "name": "OnOff",
+              "type": "number"
+            },
+            {
+              "jsonPath": "$.data[0].data[0][1]",
+              "language": "jsonpath",
+              "name": "time",
+              "type": "time"
+            }
+          ],
+          "hide": false,
+          "method": "GET",
+          "params": [
+            [
+              "q",
+              "{\"tagId\":\"8ff45476-0ecc-103f-9c6a-9d920f715c37\",\"format\":true}"
+            ]
+          ],
+          "queryParams": "",
+          "refId": "OnOff",
+          "urlPath": "/data/"
+        }
+      ],
+      "title": "Лампочка",
+      "type": "canvas"
+    },
+    {
+      "datasource": {
+        "type": "marcusolsson-json-datasource",
+        "uid": "${DS_PERESVET}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "locale"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Вкл/выкл :"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "red",
+                        "index": 0,
+                        "text": "Выкл"
+                      },
+                      "1": {
+                        "color": "green",
+                        "index": 1,
+                        "text": "Вкл"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 3,
+        "x": 8,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value_and_name",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.4.4",
+      "targets": [
+        {
+          "cacheDurationSeconds": 0,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "${DS_PERESVET}"
+          },
+          "fields": [
+            {
+              "jsonPath": "$.data[0].data[0][0]",
+              "name": ":",
+              "type": "number"
+            },
+            {
+              "jsonPath": "$.data[0].data[0][1]",
+              "language": "jsonpath",
+              "name": "Itime",
+              "type": "time"
+            }
+          ],
+          "method": "GET",
+          "params": [
+            [
+              "q",
+              "{\"tagId\":\"85848de6-07ef-103f-9fd8-dda7cfabd5a9\",\"format\":true}"
+            ]
+          ],
+          "queryParams": "",
+          "refId": "Ток",
+          "urlPath": "/data/"
+        },
+        {
+          "cacheDurationSeconds": 0,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "${DS_PERESVET}"
+          },
+          "fields": [
+            {
+              "jsonPath": "$.data[0].data[0][0]",
+              "name": ":",
+              "type": "number"
+            },
+            {
+              "jsonPath": "$.data[0].data[0][1]",
+              "language": "jsonpath",
+              "name": "Utime",
+              "type": "time"
+            }
+          ],
+          "hide": false,
+          "method": "GET",
+          "params": [
+            [
+              "q",
+              "{\"tagId\":\"fc67a240-07ef-103f-9fdb-dda7cfabd5a9\",\"format\":true}"
+            ]
+          ],
+          "queryParams": "",
+          "refId": "Напряжение",
+          "urlPath": "/data/"
+        },
+        {
+          "cacheDurationSeconds": 0,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "${DS_PERESVET}"
+          },
+          "fields": [
+            {
+              "jsonPath": "$.data[0].data[0][0]",
+              "name": ":",
+              "type": "number"
+            },
+            {
+              "jsonPath": "$.data[0].data[0][1]",
+              "language": "jsonpath",
+              "name": "Ptime",
+              "type": "time"
+            }
+          ],
+          "hide": false,
+          "method": "GET",
+          "params": [
+            [
+              "q",
+              "{\"tagId\":\"3ebfb410-07f1-103f-9fe4-dda7cfabd5a9\",\"format\":true}"
+            ]
+          ],
+          "queryParams": "",
+          "refId": "Мощность",
+          "urlPath": "/data/"
+        },
+        {
+          "cacheDurationSeconds": 0,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "${DS_PERESVET}"
+          },
+          "fields": [
+            {
+              "jsonPath": "$.data[0].data[0][0]",
+              "name": ":",
+              "type": "number"
+            },
+            {
+              "jsonPath": "$.data[0].data[0][1]",
+              "language": "jsonpath",
+              "name": "Mtime",
+              "type": "time"
+            }
+          ],
+          "hide": false,
+          "method": "GET",
+          "params": [
+            [
+              "q",
+              "{\"tagId\":\"8ff45476-0ecc-103f-9c6a-9d920f715c37\",\"format\":true}"
+            ]
+          ],
+          "queryParams": "",
+          "refId": "Вкл/выкл",
+          "urlPath": "/data/"
+        }
+      ],
+      "title": "Текущие значения",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "marcusolsson-json-datasource",
+        "uid": "${DS_PERESVET}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "locale"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Вкл/выкл :"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "red",
+                        "index": 0,
+                        "text": "Выкл"
+                      },
+                      "1": {
+                        "color": "green",
+                        "index": 1,
+                        "text": "Вкл"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 10,
+        "x": 11,
+        "y": 0
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.4.4",
+      "targets": [
+        {
+          "cacheDurationSeconds": 0,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "${DS_PERESVET}"
+          },
+          "fields": [
+            {
+              "jsonPath": "$.data[0].data[*][0]",
+              "name": ":",
+              "type": "number"
+            },
+            {
+              "jsonPath": "$.data[0].data[*][1]",
+              "language": "jsonpath",
+              "name": "Itime",
+              "type": "time"
+            }
+          ],
+          "method": "GET",
+          "params": [
+            [
+              "q",
+              "{\"tagId\":\"85848de6-07ef-103f-9fd8-dda7cfabd5a9\",\"start\":\"$__isoFrom()\",\"end\":\"$__isoTo()\",\"format\":true}"
+            ]
+          ],
+          "queryParams": "",
+          "refId": "Ток",
+          "urlPath": "/data/"
+        }
+      ],
+      "title": "Ток",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "marcusolsson-json-datasource",
+        "uid": "${DS_PERESVET}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "locale"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Вкл/выкл :"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "red",
+                        "index": 0,
+                        "text": "Выкл"
+                      },
+                      "1": {
+                        "color": "green",
+                        "index": 1,
+                        "text": "Вкл"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 15,
+        "w": 11,
+        "x": 0,
+        "y": 6
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.4.4",
+      "targets": [
+        {
+          "cacheDurationSeconds": 0,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "${DS_PERESVET}"
+          },
+          "fields": [
+            {
+              "jsonPath": "$.data[0].data[*][0]",
+              "name": ":",
+              "type": "number"
+            },
+            {
+              "jsonPath": "$.data[0].data[*][1]",
+              "language": "jsonpath",
+              "name": "Utime",
+              "type": "time"
+            }
+          ],
+          "hide": false,
+          "method": "GET",
+          "params": [
+            [
+              "q",
+              "{\"tagId\":\"fc67a240-07ef-103f-9fdb-dda7cfabd5a9\",\"start\":\"$__isoFrom()\",\"end\":\"$__isoTo()\",\"format\":true}"
+            ]
+          ],
+          "queryParams": "",
+          "refId": "Напряжение",
+          "urlPath": "/data/"
+        },
+        {
+          "cacheDurationSeconds": 0,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "${DS_PERESVET}"
+          },
+          "fields": [
+            {
+              "jsonPath": "$.data[0].data[*][0]",
+              "name": ":",
+              "type": "number"
+            },
+            {
+              "jsonPath": "$.data[0].data[*][1]",
+              "language": "jsonpath",
+              "name": "Ptime",
+              "type": "time"
+            }
+          ],
+          "hide": false,
+          "method": "GET",
+          "params": [
+            [
+              "q",
+              "{\"tagId\":\"3ebfb410-07f1-103f-9fe4-dda7cfabd5a9\",\"start\":\"$__isoFrom()\",\"end\":\"$__isoTo()\",\"format\":true}"
+            ]
+          ],
+          "queryParams": "",
+          "refId": "Мощность",
+          "urlPath": "/data/"
+        }
+      ],
+      "title": "Напряжение, мощность",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "marcusolsson-json-datasource",
+        "uid": "${DS_PERESVET}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "locale"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Вкл/выкл :"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "red",
+                        "index": 0,
+                        "text": "Выкл"
+                      },
+                      "1": {
+                        "color": "green",
+                        "index": 1,
+                        "text": "Вкл"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 15,
+        "w": 10,
+        "x": 11,
+        "y": 6
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.4.4",
+      "targets": [
+        {
+          "cacheDurationSeconds": 0,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "${DS_PERESVET}"
+          },
+          "fields": [
+            {
+              "jsonPath": "$.data[0].data[*][0]",
+              "name": ":",
+              "type": "number"
+            },
+            {
+              "jsonPath": "$.data[0].data[*][1]",
+              "language": "jsonpath",
+              "name": "Mtime",
+              "type": "time"
+            }
+          ],
+          "hide": false,
+          "method": "GET",
+          "params": [
+            [
+              "q",
+              "{\"tagId\":\"8ff45476-0ecc-103f-9c6a-9d920f715c37\",\"start\":\"$__isoFrom()\",\"end\":\"$__isoTo()\",\"format\":true}"
+            ]
+          ],
+          "queryParams": "",
+          "refId": "Вкл/выкл",
+          "urlPath": "/data/"
+        }
+      ],
+      "title": "Вкл/выкл",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Lamp",
+  "uid": "advsrecj59dz4f",
+  "version": 29,
+  "weekStart": ""
+}

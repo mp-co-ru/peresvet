@@ -400,7 +400,9 @@ class Hierarchy:
 
         attrs = {}
         for key, value in attr_vals.items():
-            if value is None:
+            # косяк python-ldap'а:
+            # если передавать для перезаписи просто пустую строку - будет вылетать ошибка
+            if value is None or (isinstance(value, str) and not value):
                 attrs[key] = [None]
             elif isinstance(value, list):
                 attrs[key] = [str(val).encode("utf-8") for val in value]
@@ -415,8 +417,7 @@ class Hierarchy:
             if attrs:
                 res = conn.search_s(real_base, CN_SCOPE_BASE, None, [key for key in attrs.keys()])
                 modlist = ldap.modlist.modifyModlist(res[0][1], attrs)
-
-                conn.modify_s(real_base, modlist)
+                conn.modify_s(real_base, modlist)                
 
             if cn:
                 res = conn.search_s(real_base, CN_SCOPE_BASE, None, ['entryUUID'])

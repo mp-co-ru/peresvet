@@ -197,7 +197,7 @@ class NodeRead(BaseModel):
          )
     )
     attributes: list[str] = Field(
-        ['*'],
+        ['cn'],
         title="Список атрибутов.",
         description=(
             "Список атрибутов, значения которых необходимо вернуть "
@@ -212,6 +212,11 @@ class NodeRead(BaseModel):
             "По умолчанию = ``False``. В случае, если = ``True``, "
             "то результат возвращается в виде иерархии."
         )
+    )
+    getParent: bool = Field(
+        False,
+        title="Возвращать id родительского узла.",
+        description=("По умолчанию = ``False``.")
     )
 
     validate_id = validator('id', allow_reuse=True)(valid_uuid_for_read)
@@ -230,6 +235,7 @@ class OneNodeInReadResult(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
 
     id: str = Field(title="Id узла.")
+    parentId: str | None = Field(None, title="Id родительского узла.")
     attributes: dict = Field(title="Атрибуты узла")
     children: list[dict] | None = Field(
         None,
@@ -275,6 +281,8 @@ class APICRUDSvc(BaseSvc):
         )
 
     async def _read(self, payload: NodeRead, routing_key: str = None) -> dict:
+        # костыль для Grafana
+        # TODO: избавиться
         if payload.id == "":
             attrs = {attr:[None] for attr in payload.attributes}
             return {
@@ -295,16 +303,10 @@ class APICRUDSvc(BaseSvc):
         )
 
     async def _update(self, payload: dict, routing_key: str = None) -> dict:
-        body = {}
-        if isinstance(payload, dict):
-            body = payload
-        else:
-            body = payload.model_dump()
-
         res = await self._post_message(
-            mes=body, 
+            mes=payload, 
             reply=True,
-            routing_key=f"{self._config.hierarchy['class']}.api_crud.update.{body['id']}"
+            routing_key=f"{self._config.hierarchy['class']}.api_crud.update.{payload['id']}"
         )
 
         return res

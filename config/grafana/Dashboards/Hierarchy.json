@@ -1,0 +1,291 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PERESVET",
+      "label": "peresvet",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "marcusolsson-json-datasource",
+      "pluginName": "JSON API"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.4.4"
+    },
+    {
+      "type": "panel",
+      "id": "marcusolsson-dynamictext-panel",
+      "name": "Business Text",
+      "version": "5.4.0"
+    },
+    {
+      "type": "datasource",
+      "id": "marcusolsson-json-datasource",
+      "name": "JSON API",
+      "version": "1.3.16"
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "marcusolsson-json-datasource",
+        "uid": "${DS_PERESVET}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "afterRender": "",
+        "content": "<ul class=\"tree\">\n  <li>\n    <details>\n      <summary nodeId=\" \" objectClass=\"prsObject\" onclick=\"clickObjectsCollapseAndExpandObject(event, this)\">Объекты\n      </summary>\n      <ul></ul>\n    </details>\n  </li>\n  <li>\n    <details>\n      <summary nodeId=\" \" objectClass=\"prsTag\">Теги</summary>\n      <ul></ul>\n    </details>\n  </li>\n  <li>\n    <details>\n      <summary nodeId=\" \" prsClass=\"prsConnector\">Коннекторы</summary>\n      <ul></ul>\n    </details>\n  </li>\n</ul>",
+        "contentPartials": [],
+        "defaultContent": "The query didn't return any results.",
+        "editor": {
+          "format": "auto",
+          "language": "html"
+        },
+        "editors": [
+          "styles",
+          "helpers"
+        ],
+        "externalStyles": [],
+        "helpers": "objectsSetParent = (nodeId, objectClass) => {\n  // функция работает с иерархией \"objects\"\n  if (objectClass == \"prsObject\")\n    context.grafana.locationService.partial({ \"var-objectsParentObjectId\": nodeId }, true);\n  else\n    context.grafana.locationService.partial({ \"var-objectsParentTagId\": nodeId }, true);\n}\n\nclickSetParent = (event, element) => {\n  event.stopPropagation();\n\n  targetElement = event.target;\n  nodeId = targetElement.getAttribute(\"nodeId\");\n  objectClass = targetElement.getAttribute(\"objectClass\");\n\n  objectsSetParent(nodeId, objectClass);\n}\n\nclickObjectsCollapseAndExpandObject = (event, element) => {\n  // функция раскрывает список объектов в иерархии \"objects\"\n\n  event.stopPropagation();\n\n  targetElement = event.target;\n\n  // children of 'details'\n  children = targetElement.parentElement.children;\n  ul = null;\n  for (let i = 0; i < children.length; i++) {\n\n    if (children[i].tagName === \"UL\") {\n      ul = children[i];\n    }\n  }\n\n  objectClass = targetElement.getAttribute(\"objectClass\");\n  nodeId = targetElement.getAttribute(\"nodeId\");\n  objectsSetParent(nodeId, objectClass);\n\n  // если элемент закрывается...\n  if (element.open) {\n    while (ul.firstChild) {\n      ul.removeChild(ul.firstChild);\n    }\n  } else {\n    // здесь элемент открывается\n\n    childNames = [];\n    childIds = [];\n\n    context.panelData.series.map((serie) => {\n      if (((objectClass === \"prsObject\") && (serie.name === \"objects\")) ||\n        ((objectClass === \"prsTag\") && (serie.name === \"tags\"))) {\n        serie.fields.map((field) => {\n          if (field.name === \"names\") {\n            if (field.values[0] != 0)\n              childNames = field.values;\n          } else if (field.name === \"ids\") {\n            if (field.values[0] != 0)\n              childIds = field.values;\n          }\n        })\n      }\n    })\n\n    if (!childNames) {\n      return;\n    }\n\n    new_lis = childIds.map((item, index) => {\n      main_li = document.createElement(\"li\");\n\n      main_details = document.createElement(\"details\");\n\n      main_summary = document.createElement(\"summary\");\n      main_summary.appendChild(document.createTextNode(childNames[index]));\n      main_summary.setAttribute(\"onclick\", \"clickSetParent(event, this)\");\n      main_summary.setAttribute(\"nodeId\", item);\n      main_summary.setAttribute(\"objectClass\", \"prsObject\");\n\n      objs_tags_ul = document.createElement(\"ul\");\n\n      // -------------------------------------------------------------\n      objs_li = document.createElement(\"li\");\n\n      objs_details = document.createElement(\"details\");\n\n      objs_summary = document.createElement(\"summary\");\n      objs_summary.setAttribute(\"nodeId\", childIds[index]);\n      objs_summary.setAttribute(\"objectClass\", \"prsObject\");\n      objs_summary.setAttribute(\"onclick\", \"clickObjectsCollapseAndExpandObject(event, this)\");\n      objs_summary.appendChild(document.createTextNode(\"Объекты\"));\n\n      objs_ul = document.createElement(\"ul\");\n      // -------------------------------------------------------------\n      tags_li = document.createElement(\"li\");\n\n      tags_details = document.createElement(\"details\");\n\n      tags_summary = document.createElement(\"summary\");\n      tags_summary.setAttribute(\"nodeId\", childIds[index]);\n      tags_summary.setAttribute(\"objectClass\", \"prsTag\");\n      tags_summary.setAttribute(\"onclick\", \"clickObjectsCollapseAndExpandTag(event, this)\");\n\n      tags_summary.appendChild(document.createTextNode(\"Теги\"));\n\n      tags_ul = document.createElement(\"ul\");\n      // -------------------------------------------------------------\n\n\n      objs_details.appendChild(objs_summary);\n      objs_details.appendChild(objs_ul);\n\n      objs_li.appendChild(objs_details);\n\n      objs_tags_ul.appendChild(objs_li);\n\n      tags_details.appendChild(tags_summary);\n      tags_details.appendChild(tags_ul);\n\n      tags_li.appendChild(tags_details);\n\n      objs_tags_ul.appendChild(objs_li);\n      objs_tags_ul.appendChild(tags_li);\n\n      main_details.appendChild(main_summary);\n      main_details.appendChild(objs_tags_ul);\n\n      main_li.appendChild(main_details);\n\n      return main_li;\n    });\n\n    ul.replaceChildren(...new_lis);\n  }\n}\n\nclickObjectsCollapseAndExpandTag = (event, element) => {\n  // функция раскрывает список тегов в иерархии \"objects\"\n\n  event.stopPropagation();\n\n  targetElement = event.target;\n\n  // children of 'details'\n  children = targetElement.parentElement.children;\n  ul = null;\n  for (let i = 0; i < children.length; i++) {\n\n    if (children[i].tagName === \"UL\") {\n      ul = children[i];\n    }\n  }\n\n  objectClass = targetElement.getAttribute(\"objectClass\");\n  nodeId = targetElement.getAttribute(\"nodeId\");\n  objectsSetParent(nodeId, objectClass);\n\n  // если элемент закрывается...\n  if (element.open) {\n    while (ul.firstChild) {\n      ul.removeChild(ul.firstChild);\n    }\n  } else {\n    // здесь элемент открывается\n\n    childNames = [];\n    childIds = [];\n\n    context.panelData.series.map((serie) => {\n      if (((objectClass === \"prsObject\") && (serie.name === \"objects\")) ||\n        ((objectClass === \"prsTag\") && (serie.name === \"tags\"))) {\n        serie.fields.map((field) => {\n          if (field.name === \"names\") {\n            if (field.values[0] != 0)\n              childNames = field.values;\n          } else if (field.name === \"ids\") {\n            if (field.values[0] != 0)\n              childIds = field.values;\n          }\n        })\n      }\n    })\n\n    if (!childNames) {\n      return;\n    }\n\n    new_lis = childIds.map((item, index) => {\n      main_li = document.createElement(\"li\");\n\n      main_details = document.createElement(\"details\");\n\n      main_summary = document.createElement(\"summary\");\n      main_summary.appendChild(document.createTextNode(childNames[index]));\n      main_summary.setAttribute(\"onclick\", \"clickSetParent(event, this)\");\n      main_summary.setAttribute(\"nodeId\", item);\n      main_summary.setAttribute(\"objectClass\", \"prsTag\");\n\n      alerts_method_ul = document.createElement(\"ul\");\n\n      // -------------------------------------------------------------\n      alerts_li = document.createElement(\"li\");\n\n      alerts_details = document.createElement(\"details\");\n\n      alerts_summary = document.createElement(\"summary\");\n      alerts_summary.setAttribute(\"nodeId\", childIds[index]);\n      alerts_summary.setAttribute(\"objectClass\", \"prsAlert\");\n      alerts_summary.setAttribute(\"onclick\", \"clickObjectsCollapseAndExpandAlert(event, this)\");\n      alerts_summary.appendChild(document.createTextNode(\"Тревоги\"));\n\n      alerts_ul = document.createElement(\"ul\");\n      // -------------------------------------------------------------\n      method_li = document.createElement(\"li\");\n\n      method_details = document.createElement(\"details\");\n\n      method_summary = document.createElement(\"summary\");\n      method_summary.setAttribute(\"nodeId\", childIds[index]);\n      method_summary.setAttribute(\"objectClass\", \"prsMethod\");\n      method_summary.setAttribute(\"onclick\", \"clickObjectsCollapseAndExpandMethod(event, this)\");\n\n      method_summary.appendChild(document.createTextNode(\"Метод\"));\n\n      method_ul = document.createElement(\"ul\");\n      // -------------------------------------------------------------\n\n\n      alerts_details.appendChild(alerts_summary);\n      alerts_details.appendChild(alerts_ul);\n\n      alerts_li.appendChild(alerts_details);\n\n      alerts_method_ul.appendChild(alerts_li);\n\n      method_details.appendChild(method_summary);\n      method_details.appendChild(method_ul);\n\n      method_li.appendChild(method_details);\n\n      alerts_method_ul.appendChild(alerts_li);\n      alerts_method_ul.appendChild(method_li);\n\n      main_details.appendChild(main_summary);\n      main_details.appendChild(alerts_method_ul);\n\n      main_li.appendChild(main_details);\n\n      return main_li;\n    });\n\n    ul.replaceChildren(...new_lis);\n  }\n}",
+        "renderMode": "data",
+        "styles": ".tree{\n  --spacing : 1.5rem;\n  --radius  : 7px;\n}\n\n.tree li{\n  display      : block;\n  position     : relative;\n  padding-left : calc(2 * var(--spacing) - var(--radius) - 2px);\n}\n\n.tree ul{\n  margin-left  : calc(var(--radius) - var(--spacing));\n  padding-left : 0;\n}\n\n.tree ul li{\n  border-left : 2px solid #ddd;\n  left : -16px;\n}\n\n.tree ul li:last-child{\n  border-color : transparent;\n}\n\n.tree ul li::before{\n  content      : '';\n  display      : block;\n  position     : absolute;\n  top          : calc(var(--spacing) / -2);\n  left         : -2px;\n  width        : calc(var(--spacing) + 2px);\n  height       : calc(var(--spacing) + 1px);\n  border       : solid #ddd;\n  border-width : 0 0 2px 2px;\n}\n\n.tree summary{\n  display : block;\n  cursor  : pointer;\n}\n\n.tree summary::marker,\n.tree summary::-webkit-details-marker{\n  display : none;\n}\n\n.tree summary:focus{\n  outline : none;\n}\n\n.tree summary:focus-visible{\n  outline : 1px dotted #000;\n}\n\n.tree li::after,\n.tree summary::before{\n  content       : '';\n  display       : block;\n  position      : absolute;\n  top           : calc(var(--spacing) / 2 - var(--radius));\n  left          : calc(var(--spacing) - var(--radius) - 1px);\n  width         : calc(2 * var(--radius));\n  height        : calc(2 * var(--radius));\n  border-radius : 50%;\n  background    : #ddd;\n}\n\n.tree summary::before{\n  content     : '+';\n  z-index     : 1;\n  background  : #696;\n  color       : #fff;\n  line-height : calc(2 * var(--radius) - 2px);\n  text-align  : center;\n}\n\n.tree details[open] > summary::before{\n  content : '−';\n}\n\n.tree li a:focus, .tree li a:hover {\n    background-color: #f5f5f5;\n}",
+        "wrap": false
+      },
+      "pluginVersion": "5.4.0",
+      "targets": [
+        {
+          "cacheDurationSeconds": 300,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "${DS_PERESVET}"
+          },
+          "fields": [
+            {
+              "jsonPath": "$count(data) ? [data.id] : [0]",
+              "language": "jsonata",
+              "name": "ids"
+            },
+            {
+              "jsonPath": "$count(data) ? [data.attributes.cn[0]] : [0]",
+              "language": "jsonata",
+              "name": "names"
+            }
+          ],
+          "method": "GET",
+          "params": [
+            [
+              "q",
+              "{\"base\": \"$objectsParentObjectId\",\"attributes\":[\"cn\"]}"
+            ]
+          ],
+          "queryParams": "",
+          "refId": "objects",
+          "urlPath": "/objects/"
+        },
+        {
+          "cacheDurationSeconds": 300,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "${DS_PERESVET}"
+          },
+          "fields": [
+            {
+              "jsonPath": "$count(data) ? [data.id] : [0]",
+              "language": "jsonata",
+              "name": "ids"
+            },
+            {
+              "jsonPath": "$count(data) ? [data.attributes.cn[0]] : [0]",
+              "language": "jsonata",
+              "name": "names"
+            }
+          ],
+          "hide": false,
+          "method": "GET",
+          "params": [
+            [
+              "q",
+              "{\"base\":\"$objectsParentObjectId\", \"attributes\":[\"cn\"]}"
+            ]
+          ],
+          "queryParams": "",
+          "refId": "tags",
+          "urlPath": "/tags/"
+        }
+      ],
+      "title": "Иерархия",
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "binary": {
+              "left": "objects ids"
+            },
+            "mode": "binary",
+            "reduce": {
+              "reducer": "sum"
+            }
+          }
+        }
+      ],
+      "type": "marcusolsson-dynamictext-panel"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "description": "Переменная используется в части иерархии \"objects\"",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "objectsParentObjectId",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": " ",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "description": "Переменная используется в части иерархии \"objects\"",
+        "hide": 2,
+        "includeAll": false,
+        "multi": false,
+        "name": "objectsParentTagId",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": " ",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "{}",
+          "value": "{}"
+        },
+        "hide": 2,
+        "includeAll": false,
+        "multi": false,
+        "name": "objectsHierarchy",
+        "options": [
+          {
+            "selected": true,
+            "text": "{}",
+            "value": "{}"
+          }
+        ],
+        "query": "{}",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "{}",
+          "value": "{}"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "tagsHierarchy",
+        "options": [
+          {
+            "selected": true,
+            "text": "{}",
+            "value": "{}"
+          }
+        ],
+        "query": "{}",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "timepicker": {
+    "hidden": true
+  },
+  "timezone": "browser",
+  "title": "Hierarchy",
+  "uid": "bdvlquitw2680b",
+  "version": 136,
+  "weekStart": ""
+}
