@@ -294,6 +294,8 @@ saveChanges = () => {
   if (objectClass === "prsMethod")
     payload.initiatedBy = initiatedBy;
 
+  console.log(payload);
+
   fetch(url, {
     method: "PUT",
     body: JSON.stringify(payload),
@@ -929,7 +931,7 @@ fillForm = (nodeElement) => {
           if (selected)
             $(selectId).append(`<option selected value="${dataItem.id}"><b>${dataItem.attributes.cn[0]}</b> <span class="smaller">(${dataItem.id})</span></option>`);
           else
-            $(selectId).append(`<option value="${dataItem.id}">${dataItem.attributes.cn[0]} (${dataItem.id})</option>`);
+            $(selectId).append(`<option disabled value="${dataItem.id}">${dataItem.attributes.cn[0]} (${dataItem.id})</option>`);
         });
 
         $("#input-initiatedByTags").attr("init-value", $("#input-initiatedByTags").val());
