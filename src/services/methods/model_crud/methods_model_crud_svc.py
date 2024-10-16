@@ -104,9 +104,10 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             "filter": {"cn": ["initiatedBy"]},
             "attributes": ["cn"]
         }
-        initiatedBy_id = await self._hierarchy.search(payload=payload)[0][0]
+        initiatedBy_id = (await self._hierarchy.search(payload=payload))[0][0]
         payload = {
             "base": initiatedBy_id,
+            "scope": hierarchy.CN_SCOPE_ONELEVEL,
             "filter": {"cn": ["*"]},
             "attributes": ["cn"]
         }
@@ -116,14 +117,16 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             
             initiator_cache = await self._cache.get(f"{initiator_id}.{self._config.svc_name}").exec()
             if not (initiator_cache[0] is None):
-                index = await self._cache.index(
-                    name=f"{initiator_id}.{self._config.svc_name}",
-                    obj=id).exec()
+                index = (await self._cache.index(
+                    name=f"{initiator_id}.{self._config.svc_name}", 
+                    key="$",
+                    obj=id).exec())[0][0]
                 if index > -1:
                     await self._cache.pop(
-                        name=f"{initiator_id}.{self._config.svc_name}",
+                        name=f"{initiator_id}.{self._config.svc_name}", 
+                        key="$",
                         index=index
-                    )
+                    ).exec()
                 initiator_cache = await self._cache.get(f"{initiator_id}.{self._config.svc_name}").exec()
                 if not initiator_cache[0]:
                     payload = {
@@ -254,7 +257,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             await self._delete_method_cache(mes['id'])
             # просто переделаем весь список инициаторов
             initiatedBy_node = await self._hierarchy.search(
-                payload={"base": mes['id'], "filter": {"cn": "initiatedBy"}, "attributes": ["cn"]}
+                payload={"base": mes['id'], "filter": {"cn": ["initiatedBy"]}, "attributes": ["cn"]}
             )
             if not initiatedBy_node:
                 self._logger.error(f"{self._config.svc_name} :: Не найден узел 'initiatedBy' для метода '{mes['id']}'.")

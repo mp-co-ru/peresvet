@@ -177,6 +177,7 @@ $.fn[pluginName] = function (options) {
 
 
 // начало ------------------------------------------------------------------------------------------------------------------------
+
 initiatorsTabClicked = (butName) => {
   if (butName === "schedules") {
     $("#v-pills-Tags-tab").removeClass("active");
@@ -277,22 +278,32 @@ saveChanges = () => {
   }
 
   let cnChanged = false;
-  let initiatedBy = [];
   changedElements.map((element) => {
     attr = element.getAttribute("prsAttribute");
     if (attr === "cn")
       cnChanged = true;
 
-    if (attr === "initiatedBy")
-      initiatedBy = initiatedBy.concat($(element).val());
-    else
+    if (attr !== "initiatedBy")
       if (int_attrs.includes(attr) && (element.value !== null)) {
         payload.attributes[attr] = Number(element.value);
       } else payload.attributes[attr] = element.value;
   });
 
-  if (objectClass === "prsMethod")
+  if (objectClass === "prsMethod") {
+    let initiatedBy = [];
+  
+    // если меняется метод, то надо собрать всех инициаторов, независимо от того, что изменилось
+    $("#input-initiatedByTags > option").each(function() {
+      if(this.selected) {
+        initiatedBy.push(this.value);
+      }
+    });
+    $("#input-initiatedBySchedules > option").each(function() {
+      if(this.selected)
+        initiatedBy.push(this.value);
+    });
     payload.initiatedBy = initiatedBy;
+  }
 
   console.log(payload);
 
@@ -841,7 +852,8 @@ fillForm = (nodeElement) => {
     id: nodeId,
     attributes: ["cn", "objectClass", "description", "prsActive", "prsArchive", "prsCompress",
       "prsDefault", "prsStep", "prsUpdate", "prsValueTypeCode", "prsEntityTypeCode", "prsIndex",
-      "prsJsonConfigString", "prsMeasureUnits", "prsMethodAddress"]
+      "prsJsonConfigString", "prsMeasureUnits", "prsMethodAddress"],
+    getParent: true
   }
 
   let params = new URLSearchParams({ q: JSON.stringify(payload) }).toString();
@@ -928,10 +940,12 @@ fillForm = (nodeElement) => {
           };
 
           let selected = nodeData.initiatedBy.includes(dataItem.id);
+          let disabled = dataItem.id === nodeData.parentId;
           if (selected)
             $(selectId).append(`<option selected value="${dataItem.id}"><b>${dataItem.attributes.cn[0]}</b> <span class="smaller">(${dataItem.id})</span></option>`);
           else
-            $(selectId).append(`<option disabled value="${dataItem.id}">${dataItem.attributes.cn[0]} (${dataItem.id})</option>`);
+            if (!disabled) 
+              $(selectId).append(`<option value="${dataItem.id}">${dataItem.attributes.cn[0]} (${dataItem.id})</option>`);            
         });
 
         $("#input-initiatedByTags").attr("init-value", $("#input-initiatedByTags").val());
