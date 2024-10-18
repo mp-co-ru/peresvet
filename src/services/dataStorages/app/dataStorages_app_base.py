@@ -150,16 +150,14 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         if bind:
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsTag.app.data_get.{tag_id}")
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsTag.app.data_set.{tag_id}")
-            #await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsTag.model.updating.{tag_id}")
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsTag.model.updated.{tag_id}")
-            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsTag.model.deleting.{tag_id}")
+            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsTag.model.deleted.{tag_id}")
             
         else:
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsTag.app.data_get.{tag_id}")
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsTag.app.data_set.{tag_id}")
-            #await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsTag.model.updating.{tag_id}")
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsTag.model.updated.{tag_id}")
-            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsTag.model.deleting.{tag_id}")
+            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsTag.model.deleted.{tag_id}")
 
     async def _bind_alert(self, alert_id: str, bind: bool) -> None:
         """
@@ -175,12 +173,12 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_acked.{alert_id}")
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_on.{alert_id}")
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_off.{alert_id}")
-            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsAlert.model.deleting.{alert_id}")
+            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsAlert.model.deleted.{alert_id}")
         else:
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_acked.{alert_id}")
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_on.{alert_id}")
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_off.{alert_id}")
-            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.model.deleting.{alert_id}")
+            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.model.deleted.{alert_id}")
 
     async def _bind_ds(self, ds_id: str, bind: bool = True):
         if bind: 
@@ -324,13 +322,43 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             self._logger.error(f"{self._config.svc_name} :: Ошибка инициализации хранилища: {ex}")
 
     async def _alert_deleted(self, mes: dict, routing_key: str = None):
-        pass
+        await self._bind_alert(mes['id'], False)
+        await self._delete_alert_cache(mes['id'])
+
+        payload = {
+            "base": None,
+            "filter": {
+                "objectClass": ["prsDatastorageAlertData"],
+                "cn": [mes['id']]
+            },
+            "attributes": ["prsStore"]
+        }
+        for ds_id in self._connection_pools.keys():
+            payload["base"] = ds_id
+            alert_data = await self._hierarchy.search(payload=payload)
+            if alert_data:
+                await self._hierarchy.delete(alert_data[0])
 
     async def _tag_updated(self, mes: dict, routing_key: str = None):
         pass
 
     async def _tag_deleted(self, mes: dict, routing_key: str = None):
-        pass
+        await self._bind_tag(mes['id'], False)
+        await self._delete_tag_cache(mes['id'])
+
+        payload = {
+            "base": None,
+            "filter": {
+                "objectClass": ["prsDatastorageTagData"],
+                "cn": [mes['id']]
+            },
+            "attributes": ["prsStore"]
+        }
+        for ds_id in self._connection_pools.keys():
+            payload["base"] = ds_id
+            tag_data = await self._hierarchy.search(payload=payload)
+            if tag_data:
+                await self._hierarchy.delete(tag_data[0][0])
     
     async def created(self, mes: dict, routing_key: str = None) -> None:
         # команда добавления новой базы данных
@@ -520,7 +548,10 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             self._logger.error(f"{self._config.svc_name} :: Хранилища {ds_id} нет в списке поддерживаемых.")
             return
 
-        store = mes["attributes"].get("prsStore")
+        store = None
+        if mes.get("attributes"):
+            store = mes["attributes"].get("prsStore")
+        
         if store is not None:
             check = await self._check_store_name_for_new_tag(ds_id=ds_id, store=store)
             if not check:
@@ -558,20 +589,22 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             self._logger.error(f"{self._config.svc_name} :: Хранилища {ds_id} нет в списке поддерживаемых.")
             return
 
-        store = mes["attributes"].get("prsStore")
+        store = None
+        if mes.get("attributes"):
+            store = mes["attributes"].get("prsStore")
         if store is not None:
             check = await self._check_store_name_for_new_alert(ds_id=ds_id, store=store)
             if not check:
                 self._logger.error(f"{self._config.svc_name} :: '{store}' не подходит для хранения данных тревоги '{alert_id}'.")
                 return {"prsStore": None}
         else:
-            store = await self._create_store_name_for_new_alert(ds_id=ds_id, tag_id=alert_id)
+            store = await self._create_store_name_for_new_alert(ds_id=ds_id, alert_id=alert_id)
 
         await self._create_store_for_alert(alert_id=alert_id, ds_id=ds_id, store=store)
 
         await self._bind_alert(alert_id, True)
 
-        await self._cache.append(f"{ds_id}.{self._config.svc_name}", "alerts", alert_id)
+        await self._cache.append(f"{ds_id}.{self._config.svc_name}", "alerts", alert_id).exec()
 
         return {"prsStore": store}
 
@@ -773,6 +806,12 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             self._logger.error(f"{self._config.svc_name} :: {ex}")
 
         return tag_cache
+    
+    async def _delete_tag_cache(self, tag_id: str):
+        try:
+            await self._cache.delete(name=f"{tag_id}.{self._config.svc_name}").exec()
+        except Exception as ex:
+            self._logger.error(f"{self._config.svc_name} :: {ex}")
 
     async def _create_alert_cache(self, alert_id: str) -> dict | bool | None:
         """Функция подготовки кэша с данными о тревоге.
@@ -828,6 +867,12 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             self._logger.error(f"{self._config.svc_name} :: {ex}")
 
         return alert_cache
+    
+    async def _delete_alert_cache(self, alert_id: str):
+        try:
+            await self._cache.delete(name=f"{alert_id}.{self._config.svc_name}").exec()
+        except Exception as ex:
+            self._logger.error(f"{self._config.svc_name} :: {ex}")
 
     async def _create_connection_pool(self, config: dict) -> Any:
         """Метод создаёт пул коннектов к базе.

@@ -118,7 +118,8 @@ class SchedulesApp(AppSvc):
         self._logger.info(f"{self._config.svc_name} :: Расписание {schedule_id} инициировано.")
 
     async def stop_schedule(self, schedule_id: str):
-        self._scheduler.remove_job(schedule_id)
+        if self._scheduler.get_job(schedule_id):
+            self._scheduler.remove_job(schedule_id)
 
     async def on_startup(self) -> None:
         await super().on_startup()

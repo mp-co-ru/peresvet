@@ -319,7 +319,7 @@ class APICRUDSvc(BaseSvc):
         return await self._post_message(
             mes=body, 
             reply=True,
-            routing_key=f"{self._config.hierarchy['class']}.api_crud.delete.{payload['id']}"
+            routing_key=f"{self._config.hierarchy['class']}.api_crud.delete.{body['id']}"
         )
 
     async def api_get_read(self, request_model: NodeRead, q: str | None, payload: NodeRead | None):
@@ -327,8 +327,8 @@ class APICRUDSvc(BaseSvc):
             q = "{}"
         if q:
             try:
-                d = json.loads(q)
-            except json.JSONDecodeError as ex:
+                json.loads(q)
+            except Exception as ex:
                 err = {"code": 500, "message": f"Ошибка чтения: {ex}"}
                 self._logger.exception(err)
                 return {"error": err}

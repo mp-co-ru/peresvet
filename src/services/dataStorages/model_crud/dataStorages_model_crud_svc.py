@@ -23,14 +23,14 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     async def _further_read(self, mes: dict, search_result: dict) -> dict:
 
-        if not mes["data"]["getLinkedTags"] and not mes["data"]["getLinkedAlerts"]:
+        if not mes["getLinkedTags"] and not mes["getLinkedAlerts"]:
             return search_result
 
         res = {"data": []}
         for ds in search_result["data"]:
             ds_id = ds["id"]
             new_ds = copy.deepcopy(ds)
-            if mes["data"]["getLinkedTags"]:
+            if mes["getLinkedTags"]:
                 new_ds["linkedTags"] = []
                 items = await self._hierarchy.search(
                     {
@@ -55,7 +55,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                             }
                         )
 
-            if mes["data"]["getLinkedAlerts"]:
+            if mes["getLinkedAlerts"]:
                 new_ds["linkedAlerts"] = []
                 items = await self._hierarchy.search(
                     {
@@ -87,27 +87,38 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
     async def _further_update(self, mes: dict) -> None:
 
         ds_id = mes["id"]
-        for item in mes["linkTags"]:
-            copy_item = copy.deepcopy(item)
-            copy_item["dataStorageId"] = ds_id
-            await self._link_tag(copy_item)
-        for item in mes["linkAlerts"]:
-            copy_item = copy.deepcopy(item)
-            copy_item["dataStorageId"] = ds_id
-            await self._link_alert(copy_item)
+        
+        linked_tags = mes.get('linkTags')
+        if linked_tags:
+            for item in linked_tags:
+                copy_item = copy.deepcopy(item)
+                copy_item["dataStorageId"] = ds_id
+                await self._link_tag(copy_item)
+        
+        linked_alerts = mes.get('linkAlerts')
+        if linked_alerts:
+            for item in linked_alerts:
+                copy_item = copy.deepcopy(item)
+                copy_item["dataStorageId"] = ds_id
+                await self._link_alert(copy_item)
 
-        for tag_id in mes["unlinkTags"]:
-            item = {
-                "tagId": tag_id,
-                "dataStorageId": ds_id
-            }
-            await self._unlink_tag(item)
-        for alert_id in mes["unlinkAlerts"]:
-            item = {
-                "alertId": alert_id,
-                "dataStorageId": ds_id
-            }
-            await self._unlink_alert(item)
+        unlinked_tags = mes.get("unlinkTags")
+        if unlinked_tags:
+            for tag_id in unlinked_tags:
+                item = {
+                    "tagId": tag_id,
+                    "dataStorageId": ds_id
+                }
+                await self._unlink_tag(item)
+
+        unlinked_alerts = mes.get("unlinkAlerts")
+        if unlinked_alerts:
+            for alert_id in unlinked_alerts:
+                item = {
+                    "alertId": alert_id,
+                    "dataStorageId": ds_id
+                }
+                await self._unlink_alert(item)
         
     async def _unlink_tag(self, item: dict, routing_key: str = None) -> None:
         """Метод отвязки тега от хранилища.
@@ -298,6 +309,8 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                 return
             payload["dataStorageId"] = datastorage_id
 
+        datastorage_id = payload["dataStorageId"]
+
         #await self._unlink_alert(payload["alertId"])
 
         # res = {
@@ -351,11 +364,11 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         await self._hierarchy.add(sys_id, {"cn": "tags"})
         await self._hierarchy.add(sys_id, {"cn": "alerts"})
 
-        for item in mes["data"]["linkTags"]:
+        for item in mes["linkTags"]:
             copy_item = copy.deepcopy(item)
             copy_item["dataStorageId"] = new_id
             await self._link_tag(copy_item)
-        for item in mes["data"]["linkAlerts"]:
+        for item in mes["linkAlerts"]:
             copy_item = copy.deepcopy(item)
             copy_item["dataStorageId"] = new_id
             await self._link_alert(copy_item)

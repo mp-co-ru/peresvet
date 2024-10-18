@@ -24,38 +24,6 @@ from src.common.consts import (
 import asyncpg as apg
 from asyncpg.exceptions import PostgresError
 
-def linear_interpolated(start_point: Tuple[int, Any],
-                        end_point: Tuple[int, Any],
-                        x: int):
-    """ Получение линейно интерполированного значения по двум точкам.
-    Если в качестве координат `y` переданы нечисловые значения, возвращается
-    start_point[1]
-
-    :param start_point: Кортеж координат начальной точки
-    :type start_point: Tuple[int, Any]
-    :param end_point: Кортеж координат конечной точки
-    :type end_point: Tuple[int, Any]
-    :param x: координата x точки, для которой надо получить интерполированное значение
-    :type x: int
-    :param return_type: Тип возвращаемого значения
-    :type return_type: int
-
-    :return: Интерполированное значение
-    :rtype: Any
-    """
-    x0, y0 = start_point
-    x1, y1 = end_point
-    if not isinstance(y0, numbers.Number) or not isinstance(y1, numbers.Number):
-        return y0
-
-    if y0 == y1:
-        return y0
-
-    if x0 == x1:
-        return y0
-
-    return (x-x0)/(x1-x0)*(y1-y0)+y0
-
 class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
     def __init__(
@@ -91,12 +59,41 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         """
         return bool(store.get("table"))
 
-    async def _drop_store_for_tag(self, tag_id: str, ds_id: str, store: dict) -> None:
-        async with self._connection_pools[ds_id].acquire() as conn:
-            tbl_name = store["table"]
-            await conn.execute(
-                f'drop table if exists "{tbl_name}"'
-            )
+    async def _drop_store_for_tag(self, tag_id: str, ds_id: str) -> None:
+        payload = {
+            "base": ds_id,
+            "filter": {
+                "objectClass": ["prsDatastorageTagData"],
+                "cn": [tag_id]
+            },
+            "attributes": ["prsStore"]
+        }
+        tag_data = await self._hierarchy.search(payload=payload)
+        if tag_data:
+            async with self._connection_pools[ds_id].acquire() as conn:
+                tbl_name = json.loads(tag_data[0][2]["prsStore"][0])["table"]
+                await conn.execute(
+                    f'drop table if exists "{tbl_name}"'
+                )
+                self._logger.info(f"{self._config.svc_name} :: Хранилище тега '{tag_id}' в '{ds_id}' удалено.")
+
+    async def _drop_store_for_alert(self, alert_id: str, ds_id: str) -> None:
+        payload = {
+            "base": ds_id,
+            "filter": {
+                "objectClass": ["prsDatastorageAlertData"],
+                "cn": [alert_id]
+            },
+            "attributes": ["prsStore"]
+        }
+        alert_data = await self._hierarchy.search(payload=payload)
+        if alert_data:        
+            async with self._connection_pools[ds_id].acquire() as conn:
+                tbl_name = json.loads(alert_data[0][2]["prsStore"][0])["table"]
+                await conn.execute(
+                    f'drop table if exists "{tbl_name}"'
+                )
+                self._logger.info(f"{self._config.svc_name} :: Хранилище тревоги '{alert_id}' в '{ds_id}' удалено.")
     
     async def _create_store_for_tag(self, tag_id: str, ds_id: str, store: dict) -> None:
         try:
@@ -206,12 +203,14 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         alert_id = mes["alertId"]
 
         alert_params = await self._cache.get(f"{alert_id}.{self._config.svc_name}").exec()
-        if not alert_params:
-            alert_params = await self._create_alert_cache(alert_id)
-            if not alert_params:
+        if not alert_params[0]:
+            await self._create_alert_cache(alert_id)
+            alert_params = await self._cache.get(f"{alert_id}.{self._config.svc_name}").exec()
+            if not alert_params[0]:
                 self._logger.error(f"{self._config.svc_name} :: Ошибка построения кэша тревоги {alert_id}")
                 return
 
+        alert_params = alert_params[0]
         for ds_id, prsStore in alert_params["dss"].items():
             connection_pool = self._connection_pools.get(ds_id)
             if connection_pool is None:
@@ -247,12 +246,14 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
         alert_id = mes["alertId"]
         alert_params = await self._cache.get(f"{alert_id}.{self._config.svc_name}").exec()
-        if not alert_params:
-            alert_params = await self._create_alert_cache(alert_id)
-            if not alert_params:
+        if not alert_params[0]:
+            await self._create_alert_cache(alert_id)
+            alert_params = await self._cache.get(f"{alert_id}.{self._config.svc_name}").exec()
+            if not alert_params[0]:
                 self._logger.error(f"{self._config.svc_name} :: Ошибка построения кэша тревоги {alert_id}")
                 return
 
+        alert_params = alert_params[0]
         for ds_id, prsStore in alert_params["dss"].items():
             connection_pool = self._connection_pools.get(ds_id)
             if connection_pool is None:
@@ -343,7 +344,8 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         for ds_id in self._connection_pools.keys():
             payload = {
                 "base": ds_id,
-                "filter": {"cn": [tag_id]},
+                "filter": {"cn": [tag_id], "objectClass": ["prsDatastorageTagData"]},
+                "deref": False,
                 "attributes": ["prsJsonConfigString", "prsStore"]
             }
             tag_link_data = await self._hierarchy.search(payload=payload)
@@ -369,25 +371,19 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
     async def _alert_deleted(self, mes: dict, routing_key: str = None):
         alert_id = mes['id']
-        alert_cache = await self._cache.get(f"{alert_id}.{self._config.svc_name}").exec()
-        if alert_cache[0] is None:
-            alert_cache = await self._create_alert_cache(alert_id)
         
-        for ds_id, store in alert_cache["dss"].items():
-            await self._drop_store_for_tag(alert_id, ds_id, store)
+        for ds_id in self._connection_pools.keys():
+            await self._drop_store_for_alert(alert_id, ds_id)
 
-        self._bind_alert(alert_id, False)
+        await super()._alert_deleted(mes, routing_key)
 
     async def _tag_deleted(self, mes: dict, routing_key: str = None):
         tag_id = mes['id']
-        tag_cache = await self._cache.get(f"{tag_id}.{self._config.svc_name}").exec()
-        if tag_cache[0] is None:
-            tag_cache = await self._create_tag_cache(tag_id)
         
-        for ds_id, store in tag_cache["dss"].items():
-            await self._drop_store_for_tag(tag_id, ds_id, store)
+        for ds_id in self._connection_pools.keys():
+            await self._drop_store_for_tag(tag_id, ds_id)
 
-        self._bind_tag(tag_id, False)
+        await super()._tag_deleted(mes, routing_key)
 
     async def _reject_message(self, mes: dict) -> bool:
         return False

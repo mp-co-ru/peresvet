@@ -316,6 +316,8 @@ class ModelCRUDSvc(Svc):
         """
         
         ids = mes["id"]
+        if not isinstance(ids, list):
+            ids = [ids]
 
         for id in ids:
 

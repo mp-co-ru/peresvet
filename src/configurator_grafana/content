@@ -191,9 +191,9 @@
 					<div class="tab-pane fade show active" id="v-pills-Tags" role="tabpanel" aria-labelledby="v-pills-Tags-tab"
 						tabindex="0">
 						<select prsAttribute="initiatedBy" onchange="onInputChange(event);" id="input-initiatedByTags" class="form-select mt-1" size="5" multiple>
-							<option selected value="true">Текст текст текст</option>
-							<option value="false">Текст текст текст</option>											
-						</select>
+								<option selected value="true">Текст текст текст</option>
+								<option value="false">Текст текст текст</option>											
+							</select>
 					</div>
 					<!--
 						<div class="tab-pane fade" id="v-pills-Alerts" role="tabpanel" aria-labelledby="v-pills-Alerts-tab" tabindex="0">
@@ -202,13 +202,13 @@
 								<option value="false">Текст текст текст</option>											
 							</select>
 						</div>
-					-->
+						-->
 					<div class="tab-pane fade" id="v-pills-Schedules" role="tabpanel" aria-labelledby="v-pills-Schedules-tab"
 						tabindex="0">
 						<select prsAttribute="initiatedBy" onchange="onInputChange(event);" id="input-initiatedBySchedules" class="form-select mt-1" size="5" multiple>
-							<option selected value="true">Текст текст текст</option>
-							<option value="false">Текст текст текст</option>											
-						</select>
+								<option selected value="true">Текст текст текст</option>
+								<option value="false">Текст текст текст</option>											
+							</select>
 					</div>
 				</div>
 			</div>

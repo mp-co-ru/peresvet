@@ -3,7 +3,8 @@
 """
 import sys
 import json
-from pydantic import Field
+from copy import deepcopy
+from pydantic import Field, validator
 from fastapi import APIRouter, Depends
 
 sys.path.append(".")
@@ -11,6 +12,21 @@ sys.path.append(".")
 from src.common import api_crud_svc as svc
 from src.services.alerts.api_crud.alerts_api_crud_settings import AlertsAPICRUDSettings
 
+def valid_alert_config(v: dict) -> dict:
+        new_v = deepcopy(v)
+        if not new_v:
+            return {
+                "high": True,
+                "value": 10,
+                "autoAck": True
+            }
+        
+        new_v.setdefault("high", True)
+        new_v.setdefault("value", 10)
+        new_v.setdefault("autoAck", True)
+
+        return new_v
+        
 class AlertCreateAttributes(svc.NodeAttributes):
     """При создании тревоги атрибут ``prsJsonConfigString`` имеет формат
 
@@ -30,6 +46,14 @@ class AlertCreateAttributes(svc.NodeAttributes):
     Args:
         svc (_type_): _description_
     """
+    prsJsonConfigString: dict  = Field(
+        {
+            "high": True,
+            "value": 10,
+            "autoAck": True
+        }, title="Конфигурация тревоги")
+    
+    validate_config = validator('prsJsonConfigString', allow_reuse=True)(valid_alert_config)
     pass
 
 class AlertCreate(svc.NodeCreate):
@@ -60,10 +84,7 @@ class AlertsAPICRUD(svc.APICRUDSvc):
 
     async def _read(self, payload: AlertRead) -> dict:
         return await super()._read(payload=payload)
-
-    async def _update(self, payload: dict) -> dict:
-        return await super()._update(payload=payload)
-
+    
 settings = AlertsAPICRUDSettings()
 
 app = AlertsAPICRUD(settings=settings, title="`AlertsAPICRUD` service")
@@ -214,7 +235,7 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
 
     """
     try:
-        AlertUpdate.model_validate(payload)
+        AlertUpdate.model_validate(payload)        
     except Exception as ex:
         res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
         app._logger.exception(res)
@@ -243,7 +264,7 @@ async def delete(payload: svc.NodeDelete, error_handler: svc.ErrorHandler = Depe
         * **detail** (list) - список с пояснениями к ошибке
 
     """
-    res = await app.delete(payload)
+    res = await app._delete(payload)
     await error_handler.handle_error(res)
     return res
 

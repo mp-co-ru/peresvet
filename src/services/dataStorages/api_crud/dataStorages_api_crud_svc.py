@@ -194,13 +194,13 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
         app._logger.exception(res)
         await error_handler.handle_error(res)
 
-    res = await app._update(payload)
+    res = await app._update(payload=payload)
     await error_handler.handle_error(res)
     return res
 
 @router.delete("/", status_code=202)
 async def delete(payload: svc.NodeDelete, error_handler: svc.ErrorHandler = Depends()):
-    res = await app.delete(payload)
+    res = await app._delete(payload)
     await error_handler.handle_error(res)
     return res
 

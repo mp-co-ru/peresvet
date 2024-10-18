@@ -266,7 +266,7 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
         app._logger.exception(res)
         await error_handler.handle_error(res)
 
-    res = await app._update(payload)
+    res = await app._update(payload=payload)
     await error_handler.handle_error(res)
     return res
 
@@ -290,7 +290,7 @@ async def delete(payload: ConnectorRead, error_handler: svc.ErrorHandler = Depen
         * **detail** (list) - Детали ошибки.
 
     """
-    res = await app.delete(payload)
+    res = await app._delete(payload)
     await error_handler.handle_error(res)
     return res
 

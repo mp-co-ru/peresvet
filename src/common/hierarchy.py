@@ -295,7 +295,6 @@ class Hierarchy:
             if not ids:
                 conn.deref = old_deref
 
-        #yield (None, None, None)
         return result
 
     async def add(self, base: str = None, attribute_values: dict = None) -> str:
@@ -460,14 +459,18 @@ class Hierarchy:
 
         def recursive_delete(conn, base_dn):
             search = conn.search_s(base_dn, CN_SCOPE_ONELEVEL)
-
             for dn, _ in search:
                 recursive_delete(conn, dn)
 
             conn.delete_s(base_dn)
 
         with self._cm.connection() as conn:
+            old_deref = conn.deref
+            conn.deref = ldap.DEREF_NEVER
+
             recursive_delete(conn, node_dn)
+
+            conn.deref = old_deref
 
     async def get_parent(self, node: str) -> Tuple[str, str]:
         """Метод возвращает для узла ``node`` id(guid) и dn

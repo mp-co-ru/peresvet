@@ -150,18 +150,13 @@ class AlertsApp(AppSvc):
         )
         if not res is None:
             if res.get('data'):
-                await self._tag_value_changed(res)
+                await self._tag_value_changed(res, id_alert=alert_id)
             else:
                 self._logger.warning(f"{self._config.svc_name} :: Тег {tag_id} не имеет данных.")
             return True    
         else:
             self._logger.warning(f"{self._config.svc_name} :: Тег {tag_id} не привязан к хранилищу.")
             return True
-            
-        # -----------------------------------------
-
-        self._logger.debug(f"{self._config.svc_name} :: Тревога {alert_id} прочитана.")
-        return True
 
     async def _get_alarms(self, mes: dict, routing_key: str = None) -> dict:
         """
@@ -255,7 +250,7 @@ class AlertsApp(AppSvc):
             routing_key=f"{self._config.hierarchy['class']}.app.alarm_acked.{alert_id}"
         )
 
-    async def _tag_value_changed(self, mes: dict, routing_key: str = None) -> None:
+    async def _tag_value_changed(self, mes: dict, routing_key: str = None, id_alert: str = None) -> None:
         """_summary_
 
         Args:
@@ -273,16 +268,20 @@ class AlertsApp(AppSvc):
         for tag_item in mes["data"]:
             tag_id = tag_item["tagId"]
 
-            get_alerts = {
-                "base": tag_id,
-                "scope": CN_SCOPE_ONELEVEL,
-                "filter": {
-                    "objectClass": ["prsAlert"],
-                    "prsActive": [True]
-                },
-                "attributes": ["entryUUID"]
-            }
-            alerts = await self._hierarchy.search(get_alerts)
+            if id_alert is None:
+                get_alerts = {
+                    "base": tag_id,
+                    "scope": CN_SCOPE_ONELEVEL,
+                    "filter": {
+                        "objectClass": ["prsAlert"],
+                        "prsActive": [True]
+                    },
+                    "attributes": ["entryUUID"]
+                }
+                alerts = await self._hierarchy.search(get_alerts)
+            else:
+                alerts = [(id_alert, None, None)]
+
             for alert in alerts:
                 alert_id = alert[0]
                 alert_data = await self._cache.get(
