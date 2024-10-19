@@ -416,7 +416,7 @@ class ModelCRUDSvc(Svc):
                         res = {"response": True}
 
                     if not res["response"]:
-                        err_mes = f"Нельзя удалить узел {id}. Запрет от {future.get_name()}: {res.get('message')}"
+                        err_mes = f"Нельзя удалить узел {future.get_name()}: {res.get('message')}"
                         self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                         res_response = {
                             "error": {
@@ -430,9 +430,9 @@ class ModelCRUDSvc(Svc):
                 for child in children:
                     future = asyncio.create_task(
                         self._post_message(
-                            {"id": id},
+                            {"id": child["id"]},
                             reply=True,
-                            routing_key=f"{child['objectClass']}.model.deleting.{id}"
+                            routing_key=f"{child['objectClass']}.model.deleting.{child['id']}"
                         ),
                         name=child['id']
                     )
@@ -452,7 +452,7 @@ class ModelCRUDSvc(Svc):
             
             for child in children:
                 await self._post_message(
-                    {"id": id},
+                    {"id": child["id"]},
                     reply=False,
                     routing_key=f"{child['objectClass']}.model.deleted.{child['id']}"
                 )

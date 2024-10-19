@@ -337,7 +337,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             payload["base"] = ds_id
             alert_data = await self._hierarchy.search(payload=payload)
             if alert_data:
-                await self._hierarchy.delete(alert_data[0])
+                await self._hierarchy.delete(alert_data[0][0])
 
     async def _tag_updated(self, mes: dict, routing_key: str = None):
         pass

@@ -70,6 +70,63 @@ def valid_schedule_config(v: str) -> str:
 
         return new_v
 
+def valid_schedule_config_for_update(v: str) -> str:
+        def raise_exception():
+            raise ValueError(
+                'prsJsonConfigString должен быть вида '
+                '{'
+                '   "start": "<дата ISO8601>", '
+                '   "end": "<дата ISO8601>" | None, '
+                '   "interval_type": "seconds | minutes | hours | days | None", '
+                '   "interval_value": <int> | None'
+                '} '
+            )
+
+        new_v = deepcopy(v)
+        if new_v is None:
+            return
+        
+        if not new_v:
+            return {
+                "start": t.ts_to_local_str(t.now_int()),
+                "interval_type": "hours",
+                "interval_value": 1
+            }
+
+        try:
+            start = new_v.get("start", t.ts_to_local_str(t.now_int()))
+            try:
+                ts = t.ts(start)
+                start = str(t.int_to_local_timestamp(ts))
+            except:
+                raise_exception()
+            new_v["start"] = start
+            
+            interval_type = new_v.get("interval_type", "hours")
+            if interval_type not in ("seconds", "minutes", "hours", "days"):
+                raise_exception()
+            new_v["interval_type"] = interval_type
+
+            interval_value = new_v.setdefault("interval_value", 1)
+            if not isinstance(interval_value, int):
+                raise_exception()
+            if interval_value < 1:
+                raise_exception()
+
+            end = new_v.get("end")
+            if not (end is None):
+                try:
+                    ts = t.ts(end)
+                    end = str(t.int_to_local_timestamp(ts))
+                except:
+                    raise_exception()
+            new_v["end"] = end
+
+        except json.JSONDecodeError as ex:
+            raise_exception()
+
+        return new_v
+
 class ScheduleCreateAttributes(svc.NodeAttributes):
     prsJsonConfigString: dict  = Field(
         {
@@ -95,8 +152,15 @@ class ScheduleReadResult(svc.NodeReadResult):
     data: List[OneScheduleInReadResult] = Field(title="Список расписаний.")
     pass
 
+class ScheduleUpdateAttributes(svc.NodeAttributes):
+    prsJsonConfigString: dict | None  = Field(None, title="Конфигурация расписания")
+    prsActive: bool | None  = Field(None, title="Флаг активности")
+        
+    validate_config = validator('prsJsonConfigString', allow_reuse=True)(valid_schedule_config_for_update)
+
+
 class ScheduleUpdate(svc.NodeUpdate):
-    attributes: ScheduleCreateAttributes = Field(ScheduleCreateAttributes(), title="Атрибуты узла")
+    attributes: ScheduleUpdateAttributes = Field(ScheduleUpdateAttributes(), title="Атрибуты узла")
 
 class SchedulesAPICRUD(svc.APICRUDSvc):
     """Сервис работы с расписаниями в иерархии.
@@ -174,7 +238,7 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
         app._logger.exception(res)
         await error_handler.handle_error(res)
 
-    res = await app._update(payload=new_payload)
+    res = await app._update(payload=payload)
     await error_handler.handle_error(res)
     return res
 
