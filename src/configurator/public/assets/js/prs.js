@@ -181,19 +181,19 @@ $.fn[pluginName] = function (options) {
 initiatorsTabClicked = (butName) => {
   if (butName === "schedules") {
     $("#v-pills-Tags-tab").removeClass("active");
-    $("#v-pills-Tags-tab").attr("area-selected", "false");
+    $("#v-pills-Tags-tab").attr("aria-selected", "false");
 
     $("#v-pills-Schedules-tab").addClass("active");
-    $("#v-pills-Schedules-tab").attr("area-selected", "true");
+    $("#v-pills-Schedules-tab").attr("aria-selected", "true");
 
     $("#v-pills-Tags").removeClass("show active");
     $("#v-pills-Schedules").addClass("show active");
   } else {
     $("#v-pills-Tags-tab").addClass("active");
-    $("#v-pills-Tags-tab").attr("area-selected", "true");
+    $("#v-pills-Tags-tab").attr("aria-selected", "true");
 
     $("#v-pills-Schedules-tab").removeClass("active");
-    $("#v-pills-Schedules-tab").attr("area-selected", "false");
+    $("#v-pills-Schedules-tab").attr("aria-selected", "false");
 
     $("#v-pills-Tags").addClass("show active");
     $("#v-pills-Schedules").removeClass("show active");
@@ -775,7 +775,7 @@ addNodeToHierarchy  = (api) => {
 
   parentId = $("div.currentNode")[0].id;
 
-  if (!($("div.currentNode").attr("area-expanded"))) {
+  if (!($("div.currentNode").attr("aria-expanded"))) {
 
     var clickEvent = new MouseEvent("click", {
       "view": window,
@@ -923,7 +923,7 @@ getTagData  = () => {
     tBody = $("#tbody-tagData").empty();
     tagData.map((dataItem) => {
       tr = $("<tr></tr>").appendTo(tBody);
-      tr.append(`<td>${dataItem[0]}</td><td>${dataItem[1]}</td><td>${dataItem[2]}</td>`);
+      tr.append(`<td>${JSON.stringify(dataItem[0])}</td><td>${dataItem[1]}</td><td>${dataItem[2]}</td>`);
     });
   });  
 }

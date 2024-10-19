@@ -5,7 +5,8 @@
 from copy import deepcopy
 import sys
 import json
-from typing import List
+from typing import List, Optional
+from typing_extensions import Annotated
 from pydantic import Field, validator
 
 from fastapi import APIRouter, Depends
@@ -153,8 +154,8 @@ class ScheduleReadResult(svc.NodeReadResult):
     pass
 
 class ScheduleUpdateAttributes(svc.NodeAttributes):
-    prsJsonConfigString: dict | None  = Field(None, title="Конфигурация расписания")
-    prsActive: bool | None  = Field(None, title="Флаг активности")
+    prsJsonConfigString: Optional[dict] = Field(None, title="Конфигурация расписания")
+    prsActive: Optional[bool] = Field(None, title="Флаг активности")
         
     validate_config = validator('prsJsonConfigString', allow_reuse=True)(valid_schedule_config_for_update)
 
@@ -232,7 +233,6 @@ async def read(q: str | None = None, payload: ScheduleRead | None = None):
 async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
     try:
         m = ScheduleUpdate.model_validate(payload)
-        new_payload = m.model_dump()
     except Exception as ex:
         res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
         app._logger.exception(res)
