@@ -1,0 +1,18 @@
+apiVersion: 1
+
+datasources:
+    -   name: marcusolsson-json-datasource
+        id: prs-datasource
+        orgId: 1
+        type: marcusolsson-json-datasource
+        typeLogoUrl: public/plugins/marcusolsson-json-datasource/img/logo.svg
+        access: proxy
+        allowUiUpdates: true
+        url: http://NGINX_HOST/v1/
+        user: ''
+        database: '' 
+        basicAuth: false
+        basicAuthUser: 
+        withCredentials: false
+        isDefault: true
+    

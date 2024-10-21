@@ -10,11 +10,6 @@ COPY config/nginx/no_ssl/default.conf.no_ssl.template /etc/nginx/templates/defau
 #COPY config/nginx/ssl/default.conf.ssl.template /etc/nginx/templates/
 COPY config/nginx/peresvet /etc/nginx/templates/
 
-WORKDIR /var/www
-ADD https://github.com/mp-co-ru/configurator/releases/download/v0.2/dist.zip .
-RUN unzip dist.zip
-RUN mv dist configurator
-
 #WORKDIR /etc/nginx/conf.d
 #RUN rm default.conf
 #RUN ln -s ./default.conf.no_ssl ./default.conf

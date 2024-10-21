@@ -907,6 +907,7 @@ var tagGetDataPayload = {};
 var tagSetDataURL = '';
 var tagSetDataPayload = {};
 getTagData  = () => {
+  tagGetDataURL = $("#span-tagGetDataURL").text();
   fetch(tagGetDataURL, {
     headers: {
       "Content-type": "application/json",
@@ -929,6 +930,8 @@ getTagData  = () => {
 }
 
 setTagData  = () => {
+  tagSetDataPayload = JSON.parse($("#span-tagSetDataBody").text());
+  tagSetDataURL = `${window.location.protocol}//${window.location.hostname}/v1/data/`;
   fetch(tagSetDataURL, {
     method: "POST",
     body: JSON.stringify(tagSetDataPayload),
