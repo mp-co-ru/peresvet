@@ -69,8 +69,10 @@ instance/
 .scrapy
 
 # Sphinx documentation
-documentation/build/
-documentation/source/_build/
+docs/build/
+docs/source/_build/
+docs/latex/*.pdf
+docs/latex/*.log
 
 # PyBuilder
 target/
@@ -132,3 +134,16 @@ dmypy.json
 vm-data/
 
 src/*.json
+
+tls/
+
+test_*.py
+tests/dev/
+tests/load/tags_in_postgres.json
+tests/load/tags_in_vm.json
+tests/grafana/
+
+.vscode/launch.json
+
+docker/compose/config/nginx/
+docker/images/

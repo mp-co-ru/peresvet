@@ -1,0 +1,15 @@
+FROM nginx:1.25.3-alpine-slim
+
+# this is actual only for minimal version of parent image
+RUN adduser -u 1000 -D -S -G www-data www-data
+
+RUN mkdir /var/www
+RUN chown -R www-data:www-data /var/www
+COPY config/nginx/nginx.conf /etc/nginx/
+COPY config/nginx/no_ssl/default.conf.no_ssl.template /etc/nginx/templates/default.conf.template
+#COPY config/nginx/ssl/default.conf.ssl.template /etc/nginx/templates/
+COPY config/nginx/peresvet /etc/nginx/templates/
+
+#WORKDIR /etc/nginx/conf.d
+#RUN rm default.conf
+#RUN ln -s ./default.conf.no_ssl ./default.conf

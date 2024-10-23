@@ -1,0 +1,197 @@
+location / {
+    root   /var/www;
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
+    index  index.html index.htm;
+}
+
+location = /v1/alerts/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
+    proxy_pass $proto://alerts_api_crud;
+}
+
+location = /v1/alarms/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
+    proxy_pass $proto://alerts_app_api;
+}
+
+location = /v1/connectors/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
+    proxy_pass $proto://connectors_api_crud;
+}
+
+location /v1/connectors/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
+
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $host;
+
+    proxy_pass $proto://connectors_app;
+
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+}
+
+location = /v1/dataStorages/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
+    proxy_pass $proto://datastorages_api_crud;
+}
+
+location = /v1/methods/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
+    proxy_pass $proto://methods_api_crud;
+}
+
+location = /v1/objects/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
+    proxy_pass $proto://objects_api_crud;
+}
+
+location = /v1/schedules/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
+    proxy_pass $proto://schedules_api_crud;
+}
+
+location = /v1/tags/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
+    proxy_pass $proto://tags_api_crud;
+}
+
+location = /v1/data/ {
+    if ($request_method = 'OPTIONS') {
+        add_header 'Access-Control-Allow-Origin' '*';
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+        #
+        # Custom headers and headers various browsers *should* be OK with but aren't
+        #
+        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
+        #
+        # Tell client that this pre-flight info is valid for 20 days
+        #
+        add_header 'Access-Control-Max-Age' 1728000;
+        add_header 'Content-Type' 'text/plain; charset=utf-8';
+        add_header 'Content-Length' 0;
+        return 204;
+    }
+    if ($request_method = 'POST') {
+        add_header 'Access-Control-Allow-Origin' '*' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
+        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;
+        add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range' always;
+    }
+    if ($request_method = 'GET') {
+        add_header 'Access-Control-Allow-Origin' '*' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
+        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;
+        add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range' always;
+    }
+    proxy_set_header Host $http_host;
+    proxy_pass $proto://tags_app_api;
+}
+
+location = /v1/pandas/ {
+    if ($request_method = 'OPTIONS') {
+        add_header 'Access-Control-Allow-Origin' '*';
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+        #
+        # Custom headers and headers various browsers *should* be OK with but aren't
+        #
+        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
+        #
+        # Tell client that this pre-flight info is valid for 20 days
+        #
+        add_header 'Access-Control-Max-Age' 1728000;
+        add_header 'Content-Type' 'text/plain; charset=utf-8';
+        add_header 'Content-Length' 0;
+        return 204;
+    }
+    if ($request_method = 'POST') {
+        add_header 'Access-Control-Allow-Origin' '*' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
+        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;
+        add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range' always;
+    }
+    if ($request_method = 'GET') {
+        add_header 'Access-Control-Allow-Origin' '*' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
+        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;
+        add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range' always;
+    }
+    proxy_set_header Host $http_host;
+    proxy_pass $proto://pandas_app_api;
+}
+
+location /grafana/ {
+    #rewrite  ^/grafana/(.*)  /$1 break;
+    proxy_pass $proto://grafana/;
+}

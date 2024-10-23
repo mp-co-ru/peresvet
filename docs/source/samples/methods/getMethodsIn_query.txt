@@ -1,0 +1,5 @@
+GET /v1/methods/?q={"id":"id_of_a_method_to_find","base":"base_node_for_searching","deref":true,"scope":1,"filter":{}} HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth

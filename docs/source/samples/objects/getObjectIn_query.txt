@@ -1,0 +1,5 @@
+GET /v1/objects/?q={"id":"object_id_to_retrive","cn":"object1","description":"describtion","prsJsonConfigString":"configuration_parameters","prsActive":true,"prsDefault":true,"prsIndex":1} HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth

@@ -1,0 +1,15 @@
+GET /v1/connectors/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
+
+{
+    "getLinkedTags":false,
+    "id":"b61a2360-cc05-103e-9308-555c1a8a1358",
+    "attributes":["cn"],
+    "base":"base node",
+    "deref": true,
+    "scope": 1,
+    "filter": {"cn": "connector1"}
+}

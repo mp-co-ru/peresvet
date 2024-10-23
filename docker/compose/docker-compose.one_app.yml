@@ -1,0 +1,20 @@
+services:
+  one_app:
+    container_name: one_app
+    hostname: ${ALL_SVC_HOST}
+    build:
+      context: ../..
+      dockerfile: docker/docker-files/all/Dockerfile.one_app.uvicorn
+
+    environment:
+      TZ: ${TIME_ZONE}
+    networks:
+      - peresvet
+
+networks:
+  peresvet:
+    driver: bridge
+    ipam:
+      config:
+          - subnet: 10.66.0.0/16
+            gateway: 10.66.0.1

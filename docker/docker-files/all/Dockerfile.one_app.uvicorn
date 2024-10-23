@@ -1,0 +1,35 @@
+FROM python:3.10-slim
+
+ENV LDAP_ORGANISATION mycompany
+ENV LDAP_DOMAIN mycompany.com
+ENV LDAP_ADMIN_PASSWORD 123456
+
+WORKDIR /home
+RUN apt-get update && apt-get install -y --no-install-recommends gcc \
+    build-essential python3-dev \
+    libldap2-dev libsasl2-dev tox lcov valgrind
+
+RUN bash -c "DEBIAN_FRONTEND=noninteractive apt install -q -y slapd ldap-utils"
+
+WORKDIR /usr/src
+RUN mkdir mpc-peresvet
+COPY requirements.txt /usr/src/mpc-peresvet/
+WORKDIR /usr/src/mpc-peresvet
+RUN pip install -r requirements.txt
+RUN apt-get -y purge slapd
+
+RUN mkdir /usr/src/mpc-peresvet/log
+
+COPY src /usr/src/mpc-peresvet/src
+RUN rm -r -f /usr/src/mpc-peresvet/src/__pycache__
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+ENV amqp_url amqp://prs:Peresvet21@rabbitmq/
+ENV ldap_url ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21
+
+WORKDIR /usr/src/mpc-peresvet
+
+CMD ["python", "src/services/one_app/one_app.py"]

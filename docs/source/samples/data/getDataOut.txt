@@ -1,0 +1,24 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Content-type: application/json
+
+{
+    "data": [
+        {
+            "tagId": "<id_of_a_tag>",
+            "data": [
+                [
+                    1.0,
+                    "<timestamp>",
+                    null
+                ],
+                [
+                    7.0,
+                    "<timestamp>",
+                    null
+                ]
+            ]
+        }
+    ]
+}

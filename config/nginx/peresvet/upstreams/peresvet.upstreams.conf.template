@@ -1,0 +1,56 @@
+# alerts
+upstream alerts_api_crud {
+    server ${HOST_ALERTS_API_CRUD}:${PORT_ALERTS_API_CRUD};
+}
+
+upstream alerts_app_api {
+    server ${HOST_ALERTS_APP_API}:${PORT_ALERTS_APP_API};
+}
+
+# connectors
+upstream connectors_api_crud {
+    server ${HOST_CONNECTORS_API_CRUD}:${PORT_CONNECTORS_API_CRUD};
+}
+
+upstream connectors_app {
+    server ${HOST_CONNECTORS_APP}:${PORT_CONNECTORS_APP};
+}
+
+# dataStorages
+upstream dataStorages_api_crud {
+    server ${HOST_DATASTORAGES_API_CRUD}:${PORT_DATASTORAGES_API_CRUD};
+}
+
+# methods
+upstream methods_api_crud {
+    server ${HOST_METHODS_API_CRUD}:${PORT_METHODS_API_CRUD};
+}
+
+# objects
+upstream objects_api_crud {
+    server ${HOST_OBJECTS_API_CRUD}:${PORT_OBJECTS_API_CRUD};
+}
+
+# schedules
+upstream schedules_api_crud {
+    server ${HOST_SCHEDULES_API_CRUD}:${PORT_SCHEDULES_API_CRUD};
+}
+
+# tags
+upstream tags_api_crud {
+    server ${HOST_TAGS_API_CRUD}:${PORT_TAGS_API_CRUD};
+}
+
+upstream tags_app_api {
+    server ${HOST_TAGS_APP_API}:${PORT_TAGS_APP_API};
+}
+
+# pandas
+upstream pandas_app_api {
+    server ${HOST_PANDAS_APP_API}:${PORT_PANDAS_APP_API};
+}
+
+#grafana
+upstream grafana {
+    server ${HOST_GRAFANA}:${PORT_GRAFANA};
+}

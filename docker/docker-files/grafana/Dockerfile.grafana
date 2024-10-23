@@ -1,0 +1,45 @@
+#FROM grafana/grafana-enterprise
+FROM grafana/grafana-enterprise:11.2.2-ubuntu
+
+EXPOSE 3000
+ARG NGINX_HOST
+
+USER root
+
+RUN mkdir /var/lib/grafana/dashboards
+COPY config/grafana/grafana.ini /etc/grafana/
+COPY src/configurator_grafana/Configurator.json /var/lib/grafana/dashboards
+
+COPY src/configurator_grafana/Configurator.json /usr/share/grafana/public/dashboards/home.json
+
+COPY config/grafana/provisioning/dashboards/prs.yaml /etc/grafana/provisioning/dashboards
+COPY config/grafana/provisioning/datasources/prs.yaml /etc/grafana/provisioning/datasources
+RUN sed -i "s/NGINX_HOST/$NGINX_HOST/" /etc/grafana/provisioning/datasources/prs.yaml
+
+COPY config/grafana/logos/ioterra_small.png /usr/share/grafana/public/img/fav32.png
+COPY config/grafana/logos/ioterra_small.png /usr/share/grafana/public/img/apple-touch-icon.png
+COPY config/grafana/logos/peresvet_big_text_dark.svg /usr/share/grafana/public/img/grafana_icon.svg
+
+RUN find /usr/share/grafana/public/build/ -name '*.js' \
+## Update Title
+    -exec sed -i 's|AppTitle="Grafana"|AppTitle="Пересвет"|g' {} \; \
+## Update Login Title
+    -exec sed -i 's|LoginTitle="Welcome to Grafana"|LoginTitle=""|g' {} \; 
+## Remove Documentation, Support, Community in the Footer
+##    -exec sed -i 's|\[{target:"_blank",id:"documentation".*grafana_footer"}\]|\[\]|g' {} \; \
+## Remove Edition in the Footer
+##    -exec sed -i 's|({target:"_blank",id:"license",.*licenseUrl})|()|g' {} \; \
+## Remove Version in the Footer
+##    -exec sed -i 's|({target:"_blank",id:"version",.*CHANGELOG.md":void 0})|()|g' {} \; \
+## Remove News icon
+##    -exec sed -i 's|(.,.....)(....,{className:.,onClick:.,iconOnly:!0,icon:"rss","aria-label":"News"})|null|g' {} \; \
+## Remove Open Source icon
+##    -exec sed -i 's|.push({target:"_blank",id:"version",text:`${..edition}${.}`,url:..licenseUrl,icon:"external-link-alt"})||g' {} \;
+
+RUN mkdir /usr/share/grafana/public/assets
+WORKDIR /usr/share/grafana/public/assets
+ADD src/configurator/public/assets/css/ css
+ADD src/configurator/public/assets/pics/ pics
+ADD src/configurator/public/assets/webfonts/ webfonts
+
+#USER grafana

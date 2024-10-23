@@ -1,0 +1,18 @@
+GET /v1/alerts/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
+
+{
+    "base": "id of a node where to search",
+    "id": "id of an alert to find",
+    "deref": true,
+    "scope":1,
+    "filter": {
+        "cn": ["alert*"],
+        "prsActive": [true],
+        "prsIndex": [1, 2, 3]
+    },
+    "attributes": ["cn"]
+}

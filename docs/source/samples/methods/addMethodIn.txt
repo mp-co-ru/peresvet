@@ -1,0 +1,36 @@
+POST /v1/methods/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
+
+{
+    "initiatedBy": "id of a node which initiates method",
+    "attributes": {
+        "prsMethodAddress":"method_adress",
+        "prsEntityTypeCode":0,
+        "cn":"method1",
+        "description":"method1_description",
+        "prsJsonConfigString":"method1_config_string",
+        "prsActive":true
+    },
+    "parameters":[
+        {
+            "attributes":{
+                "cn":"param1",
+                "description":"param1_description",
+                "prsJsonConfigString":"config_string1",
+                "prsActive":true
+            }
+        },
+        {
+            "attributes":{
+                "cn":"param2",
+                "description":"param2_description",
+                "prsJsonConfigString":"config_string2",
+                "prsActive":true
+            }
+        }
+    ],
+    "parentId":"id of a node to which method adjasted"
+}
