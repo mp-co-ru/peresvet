@@ -1,0 +1,314 @@
+# OpenLDAP schema
+# Peresvet project
+
+# код типа данных:
+# 1 - целый
+# 2 - вещественный
+# 3 - строковый
+# 4 - json
+attributetype ( 1.3.6.1.4.1.58316.2.3.1
+	NAME 'prsValueTypeCode'
+	DESC 'Код типа данных'
+	EQUALITY integerMatch
+	ORDERING integerOrderingMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+	SINGLE-VALUE )
+
+# код типа сущности.
+# для тэга:
+# 1 - обычный
+# 2 - вычисляемый
+attributetype ( 1.3.6.1.4.1.58316.2.3.2
+	NAME 'prsEntityTypeCode'
+	DESC 'Код типа сущности. Для тэга - обычный или вычисляемый, для алерта 0 - обычная тревога'
+	EQUALITY integerMatch
+	ORDERING integerOrderingMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+	SINGLE-VALUE )
+
+# строка коннекта к источнику данных в формате json-объекта
+attributetype ( 1.3.6.1.4.1.58316.2.3.3
+	NAME 'prsSource'
+	DESC 'Источник данных для тэга. Данные для подключения в формате json'
+	EQUALITY caseIgnoreMatch
+	SUBSTR caseIgnoreSubstringsMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+	SINGLE-VALUE )
+
+# строка коннекта к хранилищу данных тэга или тревоги в формате json-объекта
+attributetype ( 1.3.6.1.4.1.58316.2.3.4
+	NAME 'prsStore'
+	DESC 'Хранилище данных. Данные для подключения к хранилищу сущности в формате json. Если сущность имеет хранилище, то у узла сущности есть дочерний узел dataStorage, который является ссылкой на объект хранилища. В атрибуте же prsStore хранится строка коннекта к локальному хранилищу сущности внутри глобального хранилища. Например, для хранилища PostgreSQL dataStorage - это JNDI к базе данных, а в prsStore хранится имя таблицы.'
+	EQUALITY caseIgnoreMatch
+	SUBSTR caseIgnoreSubstringsMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+	SINGLE-VALUE )
+
+# единицы измерения тэга или константы
+attributetype ( 1.3.6.1.4.1.58316.2.3.5
+	NAME 'prsMeasureUnits'
+	DESC 'Единицы измерения тэга'
+	EQUALITY caseExactMatch
+	ORDERING caseExactOrderingMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+	SINGLE-VALUE )
+
+# максимальное отклонение от предыдущего значения, приводящее к записи
+# нового значения тэга
+attributetype ( 1.3.6.1.4.1.58316.2.3.6
+	NAME 'prsMaxDev'
+	DESC 'Максимальное отклонение от предыдущего значения, приводящее к записи нового значения тэга'
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.5
+	SINGLE-VALUE )
+
+# максимальное отклонение кривизны от предыдущего значения, приводящее к записи
+# нового значения тэга
+attributetype ( 1.3.6.1.4.1.58316.2.3.7
+	NAME 'prsMaxLineDev'
+	DESC 'Максимальное отклонение кривизны от предыдущего значения, приводящее к записи нового значения тэга'
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.5
+	SINGLE-VALUE )
+
+# флаг архивирования значений тэга
+# с момента, когда флаг становится = false, в хранилище записывается только текущее значение тэга
+attributetype ( 1.3.6.1.4.1.58316.2.3.8
+	NAME 'prsArchive'
+	DESC 'Флаг архивирования значений тэга'
+	EQUALITY booleanMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.7
+	SINGLE-VALUE )
+
+# флаг сжатия значений тэга
+# с момента, когда флаг становится = false, в хранилище записываются все значения тэга, иначе значения проходят проверку на отсеивание
+attributetype ( 1.3.6.1.4.1.58316.2.3.9
+	NAME 'prsCompress'
+	DESC 'Флаг сжатия значений тэга'
+	EQUALITY booleanMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.7
+	SINGLE-VALUE )
+
+# коэффициент, на который умножается значение тэга. используется поставщиками данных (агентами). В систему данные приходят уже смасштабированные
+attributetype ( 1.3.6.1.4.1.58316.2.3.10
+	NAME 'prsValueScale'
+	DESC 'Коэффициент преобразования значений тэга'
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.5
+	SINGLE-VALUE )
+
+# флаг автоквитирования тревоги
+attributetype ( 1.3.6.1.4.1.58316.2.3.11
+	NAME 'prsAutoConfirmation'
+	DESC 'Флаг автоквитирования тревоги'
+	EQUALITY booleanMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.7
+	SINGLE-VALUE )
+
+# json-объект
+attributetype ( 1.3.6.1.4.1.58316.2.3.12
+	NAME 'prsJsonConfigString'
+	DESC 'JSON-объект'
+	EQUALITY caseIgnoreMatch
+	SUBSTR caseIgnoreSubstringsMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+	SINGLE-VALUE )
+
+# тип внешнего хранилища данных
+attributetype ( 1.3.6.1.4.1.58316.2.3.13
+	NAME 'prsDataStorageType'
+	DESC 'Тип внешнего хранилища данных'
+	EQUALITY integerMatch
+	ORDERING integerOrderingMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+	SINGLE-VALUE )
+
+# флаг системного узла
+# если = true, то узел в иерархии является системным и непредназначен для показа пользователю
+attributetype ( 1.3.6.1.4.1.58316.2.3.14
+	NAME 'prsSystemNode'
+	DESC 'Флаг системного узла'
+	EQUALITY booleanMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.7
+	SINGLE-VALUE )
+
+# флаг "по умолчанию"
+attributetype ( 1.3.6.1.4.1.58316.2.3.15
+	NAME 'prsDefault'
+	DESC 'Флаг по умолчанию'
+	EQUALITY booleanMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.7
+	SINGLE-VALUE )
+
+# флаг "активный"
+attributetype ( 1.3.6.1.4.1.58316.2.3.16
+	NAME 'prsActive'
+	DESC 'Флаг активности'
+	EQUALITY booleanMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.7
+	SINGLE-VALUE )
+
+# строка
+attributetype ( 1.3.6.1.4.1.58316.2.3.17
+	NAME 'prsMethodAddress'
+	DESC 'Адрес метода'
+	EQUALITY caseIgnoreMatch
+	SUBSTR caseIgnoreSubstringsMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+	SINGLE-VALUE )
+
+# флаг тэга "step"
+attributetype ( 1.3.6.1.4.1.58316.2.3.18
+	NAME 'prsStep'
+	DESC 'Флаг шагового изменения значений тэга'
+	EQUALITY booleanMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.7
+	SINGLE-VALUE )
+
+# флаг тэга "update"
+attributetype ( 1.3.6.1.4.1.58316.2.3.19
+	NAME 'prsUpdate'
+	DESC 'Флаг замены значений тэга при попытке записи на ту же метку времени'
+	EQUALITY booleanMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.7
+	SINGLE-VALUE )
+
+# тип внешнего хранилища данных
+attributetype ( 1.3.6.1.4.1.58316.2.3.20
+	NAME 'prsIndex'
+	DESC 'Индекс объекта в списке'
+	EQUALITY integerMatch
+	ORDERING integerOrderingMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+	SINGLE-VALUE )
+
+# вещественное значение
+attributetype ( 1.3.6.1.4.1.58316.2.3.21
+	NAME 'prsValue'
+	DESC 'Вещественное значение'
+  	SYNTAX 1.3.6.1.4.1.1466.115.121.1.5
+	SINGLE-VALUE )
+
+# флаг для тревоги
+attributetype ( 1.3.6.1.4.1.58316.2.3.22
+	NAME 'prsHigh'
+	DESC 'Флаг определения правила сравнения значения тэга для генерации тревоги'
+	EQUALITY booleanMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.7
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.58316.2.3.23
+	NAME 'prsApp'
+	DESC 'Атрибут, указывающий на принадлежность узла какому-либо приложению'
+	EQUALITY caseIgnoreMatch
+	SUBSTR caseIgnoreSubstringsMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+
+attributetype ( 1.3.6.1.4.1.58316.2.3.24
+	NAME 'prsDefaultValue'
+	DESC 'Значение тэга по умолчанию'
+	EQUALITY caseIgnoreMatch
+	SUBSTR caseIgnoreSubstringsMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.58316.2.3.30
+	NAME 'prsConstantValue'
+	DESC 'Значение константы'
+	EQUALITY caseIgnoreMatch
+	SUBSTR caseIgnoreSubstringsMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+	SINGLE-VALUE )
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.1
+	NAME 'prsModelNode'
+	DESC 'класс, на базе которого создаются все узлы в модели'
+	SUP top	STRUCTURAL
+	MUST ( cn )
+	MAY ( description $ prsSystemNode $ prsEntityTypeCode $ prsJsonConfigString $ prsIndex $ prsDefault $ prsActive $ prsApp ))
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.2
+	NAME 'prsTag'
+	DESC 'класс тэга'
+	SUP prsModelNode STRUCTURAL
+	MAY ( prsValueTypeCode $ prsMeasureUnits $ prsMaxLineDev $ prsArchive $ prsCompress $ prsStep $ prsUpdate $ prsDefaultValue ))
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.3
+	NAME 'prsAlertLevel'
+	DESC 'класс уровня тревоги'
+	SUP prsModelNode STRUCTURAL
+	MUST ( prsAutoConfirmation ))
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.4
+	NAME 'prsDataStorage'
+	DESC 'класс "внешнее хранилище"'
+	SUP prsModelNode STRUCTURAL)
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.5
+	NAME 'prsConnector'
+	DESC 'класс "коннектор"'
+	SUP prsModelNode STRUCTURAL)
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.6
+	NAME 'prsAlert'
+	DESC 'класс тревоги'
+	SUP prsModelNode STRUCTURAL)
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.7
+	NAME 'prsMethod'
+	DESC 'класс "метод"'
+	SUP prsModelNode STRUCTURAL
+	MUST ( prsMethodAddress ))
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.8
+	NAME 'prsObject'
+	DESC 'класс объекта'
+	SUP prsModelNode STRUCTURAL)
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.9
+	NAME 'prsTemplate'
+	DESC 'класс шаблона'
+	SUP prsModelNode STRUCTURAL)
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.10
+	NAME 'prsConstant'
+	DESC 'класс `константа`'
+	SUP prsModelNode STRUCTURAL
+	MUST ( prsValueTypeCode $ prsConstantValue )
+	MAY ( description $ prsMeasureUnits ))
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.11
+	NAME 'prsSchedule'
+	DESC 'класс `расписание`'
+	SUP prsModelNode STRUCTURAL)
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.12
+	NAME 'prsView'
+	DESC 'класс `конфигурация`'
+	SUP prsModelNode STRUCTURAL)
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.13
+	NAME 'prsJsonConfig'
+	DESC 'класс `строка конфигурации`'
+	SUP top AUXILIARY
+	MAY ( prsJsonConfigString ))
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.14
+	NAME 'prsConnectorTagData'
+	DESC 'класс `данные тегов коннектора`'
+	SUP prsModelNode STRUCTURAL
+	MAY (prsMaxDev $ prsValueScale))
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.15
+	NAME 'prsMethodParameter'
+	DESC 'параметр метода'
+	SUP prsModelNode STRUCTURAL)
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.16
+	NAME 'prsDatastorageTagData'
+	DESC 'параметры тега, необходимые для хранилищ'
+	SUP prsModelNode STRUCTURAL
+	MAY ( prsStore ))
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.17
+	NAME 'prsDatastorageAlertData'
+	DESC 'параметры тревог, необходимые для хранилищ'
+	SUP prsModelNode STRUCTURAL
+	MAY ( prsStore ))

@@ -1,0 +1,13 @@
+GET /v1/methods/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
+
+{
+    "id":"id of a method to find",
+    "base":"base node for searching",
+    "deref":true,
+    "scope":1,
+    "filter":{}
+}

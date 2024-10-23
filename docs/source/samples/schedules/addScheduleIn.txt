@@ -1,0 +1,14 @@
+GET /v1/schedules/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
+
+{
+    "attributes":{
+        "cn":"schedule3",
+        "prsJsonConfigString":"{\"start\":\"2024-07-07\",\"end\":\"2025-07-07\",\"interval_type\":\"seconds\",\"interval_value\":4}",
+        "description":"schedule description",
+        "prsActive":true
+    }
+}

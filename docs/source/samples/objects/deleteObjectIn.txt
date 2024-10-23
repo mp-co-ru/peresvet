@@ -1,0 +1,9 @@
+DELETE /v1/objects/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
+
+{
+    "id": "id of an object to delete"
+}

@@ -1,0 +1,5 @@
+GET /v1/schedules/?q={"id":"schedule_id_to_find","base":"base_node_id_where_to_search","deref":true,"scope":1,"filter":null,"attributes":["*"]} HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth

@@ -1,0 +1,16 @@
+POST /v1/alerts/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
+
+{
+    "parentId": "id of parent node",
+    "attributes": {
+        "cn": "alert_name",
+        "description": "test_alert",
+        "prsJsonConfigString": "{\"value\": 10, \"high\": true, \"autoAck\": true}",
+        "prsActive": true,
+        "prsIndex": 1
+    }
+}

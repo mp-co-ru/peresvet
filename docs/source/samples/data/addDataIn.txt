@@ -1,0 +1,14 @@
+POST /v1/data/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
+
+{
+	"data":[{
+	    "tagId":"<id_of_a_tag>",
+	    "data": [
+	        ["value", "<time_stamp>", 100]
+	    ]
+	}]
+}

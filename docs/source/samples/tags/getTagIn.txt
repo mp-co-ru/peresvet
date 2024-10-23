@@ -1,0 +1,14 @@
+GET /v1/tags/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
+
+{
+    "id": "tag id which we want to find",
+    "base": "base node for search",
+    "deref": true,
+    "scope": 1,
+    "attributes":["params to select"],
+    "filter": {"key":"value for filtering"}
+}

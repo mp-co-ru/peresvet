@@ -1,0 +1,19 @@
+FROM osixia/openldap
+
+ENV LDAP_TLS=false
+ARG SCHEMA_DIR=prs
+
+WORKDIR /app
+COPY docker/docker-files/ldap/src/ /app/ldap
+
+WORKDIR /app/ldap/schema
+RUN mkdir -p $SCHEMA_DIR
+RUN slaptest -f peresvet.conf -F $SCHEMA_DIR
+
+WORKDIR /app/ldap
+RUN bash ./ldap_docker_install.one_app.sh
+
+WORKDIR /app
+RUN rm -rf ldap
+
+EXPOSE 389 636

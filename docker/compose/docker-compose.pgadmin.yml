@@ -1,0 +1,21 @@
+services:
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PWD}
+      PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: 50
+      TZ: ${TIME_ZONE}
+    ports:
+      - 8010:80
+    networks:
+      - peresvet
+
+networks:
+  peresvet:
+    driver: bridge
+    ipam:
+      config:
+          - subnet: 10.66.0.0/16
+            gateway: 10.66.0.1

@@ -1,0 +1,6 @@
+# add root object of our DIT
+dn: cn=prs
+changetype: add
+objectClass: prsModelNode
+description: This is root node of Peresvet hierarchy
+cn: prs

@@ -1,0 +1,25 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3.11.16-management
+    hostname: ${HOST_RABBIT}
+    volumes:
+      - ../docker-files/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:rw
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASSWORD}
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbit log_levels [{connection,error},{default,error}] disk_free_limit 2147483648
+      TZ: ${TIME_ZONE}
+    ports:
+      - 15672:15672
+      - 5672:5672
+      - 1883:1883
+    networks:
+      - peresvet
+
+networks:
+  peresvet:
+    driver: bridge
+    ipam:
+      config:
+          - subnet: 10.66.0.0/16
+            gateway: 10.66.0.1

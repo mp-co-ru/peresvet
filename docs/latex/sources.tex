@@ -1,0 +1,166 @@
+\documentclass[a4paper,8pt]{article}
+
+\usepackage[left=2cm,right=2cm,
+    top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
+
+\usepackage{color} %% это для отображения цвета в коде
+\usepackage{listings} %% собственно, это и есть пакет listings
+
+\usepackage{caption}
+%\DeclareCaptionFont{white}{\color{white}} %% это сделает текст заголовка белым
+%% код ниже нарисует серую рамочку вокруг заголовка кода.
+%\DeclareCaptionFormat{listing}{\colorbox{gray}{\parbox{\textwidth}{#1#2#3}}}
+%\captionsetup[lstlisting]{format=listing,labelfont=white,textfont=white}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage[T2A]{fontenc}
+
+\title{МПК Пересвет. Исходный код}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\lstset{ %
+language=Python,                 % выбор языка для подсветки (здесь это С)
+basicstyle=\scriptsize\rmfamily, % размер и начертание шрифта для подсветки кода
+numbers=left,               % где поставить нумерацию строк (слева\справа)
+keepspaces=true
+numberstyle=\tiny,           % размер шрифта для номеров строк
+stepnumber=1,                   % размер шага между двумя номерами строк
+numbersep=5pt,                % как далеко отстоят номера строк от подсвечиваемого кода
+backgroundcolor=\color{white}, % цвет фона подсветки - используем \usepackage{color}
+showspaces=false,            % показывать или нет пробелы специальными отступами
+showstringspaces=false,      % показывать или нет пробелы в строках
+showtabs=false,             % показывать или нет табуляцию в строках
+%frame=single,              % рисовать рамку вокруг кода
+tabsize=2,                 % размер табуляции по умолчанию равен 2 пробелам
+captionpos=t,              % позиция заголовка вверху [t] или внизу [b]
+breaklines=true,           % автоматически переносить строки (да\нет)
+inputencoding=utf8,
+breakatwhitespace=false, % переносить строки только если есть пробел
+literate={а}{{\selectfont\char224}}1
+           {б}{{\selectfont\char225}}1
+           {в}{{\selectfont\char226}}1
+           {г}{{\selectfont\char227}}1
+           {д}{{\selectfont\char228}}1
+           {е}{{\selectfont\char229}}1
+           {ё}{{\"e}}1
+           {ж}{{\selectfont\char230}}1
+           {з}{{\selectfont\char231}}1
+           {и}{{\selectfont\char232}}1
+           {й}{{\selectfont\char233}}1
+           {к}{{\selectfont\char234}}1
+           {л}{{\selectfont\char235}}1
+           {м}{{\selectfont\char236}}1
+           {н}{{\selectfont\char237}}1
+           {о}{{\selectfont\char238}}1
+           {п}{{\selectfont\char239}}1
+           {р}{{\selectfont\char240}}1
+           {с}{{\selectfont\char241}}1
+           {т}{{\selectfont\char242}}1
+           {у}{{\selectfont\char243}}1
+           {ф}{{\selectfont\char244}}1
+           {х}{{\selectfont\char245}}1
+           {ц}{{\selectfont\char246}}1
+           {ч}{{\selectfont\char247}}1
+           {ш}{{\selectfont\char248}}1
+           {щ}{{\selectfont\char249}}1
+           {ъ}{{\selectfont\char250}}1
+           {ы}{{\selectfont\char251}}1
+           {ь}{{\selectfont\char252}}1
+           {э}{{\selectfont\char253}}1
+           {ю}{{\selectfont\char254}}1
+           {я}{{\selectfont\char255}}1
+           {А}{{\selectfont\char192}}1
+           {Б}{{\selectfont\char193}}1
+           {В}{{\selectfont\char194}}1
+           {Г}{{\selectfont\char195}}1
+           {Д}{{\selectfont\char196}}1
+           {Е}{{\selectfont\char197}}1
+           {Ё}{{\"E}}1
+           {Ж}{{\selectfont\char198}}1
+           {З}{{\selectfont\char199}}1
+           {И}{{\selectfont\char200}}1
+           {Й}{{\selectfont\char201}}1
+           {К}{{\selectfont\char202}}1
+           {Л}{{\selectfont\char203}}1
+           {М}{{\selectfont\char204}}1
+           {Н}{{\selectfont\char205}}1
+           {О}{{\selectfont\char206}}1
+           {П}{{\selectfont\char207}}1
+           {Р}{{\selectfont\char208}}1
+           {С}{{\selectfont\char209}}1
+           {Т}{{\selectfont\char210}}1
+           {У}{{\selectfont\char211}}1
+           {Ф}{{\selectfont\char212}}1
+           {Х}{{\selectfont\char213}}1
+           {Ц}{{\selectfont\char214}}1
+           {Ч}{{\selectfont\char215}}1
+           {Ш}{{\selectfont\char216}}1
+           {Щ}{{\selectfont\char217}}1
+           {Ъ}{{\selectfont\char218}}1
+           {Ы}{{\selectfont\char219}}1
+           {Ь}{{\selectfont\char220}}1
+           {Э}{{\selectfont\char221}}1
+           {Ю}{{\selectfont\char222}}1
+           {Я}{{\selectfont\char223}}1
+}
+
+\section{hierarchy.py}
+\lstinputlisting[language=Python]{../../src/common/hierarchy.py}
+
+\section{logger.py}
+\lstinputlisting[language=Python]{../../src/common/logger.py}
+
+\section{base\_svc.py}
+\lstinputlisting[language=Python]{../../src/common/base_svc.py}
+
+\section{base\_svc\_settings.py}
+\lstinputlisting[language=Python]{../../src/common/base_svc_settings.py}
+
+\section{svc.py}
+\lstinputlisting[language=Python]{../../src/common/svc.py}
+
+\section{svc\_settings.py}
+\lstinputlisting[language=Python]{../../src/common/svc_settings.py}
+
+\section{api\_crud\_svc.py}
+\lstinputlisting[language=Python]{../../src/common/api_crud_svc.py}
+
+\section{api\_crud\_settings.py}
+\lstinputlisting[language=Python]{../../src/common/api_crud_settings.py}
+
+\section{model\_crud\_svc.py}
+\lstinputlisting[language=Python]{../../src/common/model_crud_svc.py}
+
+\section{model\_crud\_settings.py}
+\lstinputlisting[language=Python]{../../src/common/model_crud_settings.py}
+
+\section{tags\_model\_crud\_svc.py}
+\lstinputlisting[language=Python]{../../src/services/tags/model_crud/tags_model_crud_svc.py}
+
+\section{tags\_model\_crud\_settings.py}
+\lstinputlisting[language=Python]{../../src/services/tags/model_crud/tags_model_crud_settings.py}
+
+\section{tags\_api\_crud\_svc.py}
+\lstinputlisting[language=Python]{../../src/services/tags/api_crud/tags_api_crud_svc.py}
+
+\section{tags\_api\_crud\_settings.py}
+\lstinputlisting[language=Python]{../../src/services/tags/api_crud/tags_api_crud_settings.py}
+
+\section{objects\_model\_crud\_svc.py}
+\lstinputlisting[language=Python]{../../src/services/objects/model_crud/objects_model_crud_svc.py}
+
+\section{objects\_model\_crud\_settings.py}
+\lstinputlisting[language=Python]{../../src/services/objects/model_crud/objects_model_crud_settings.py}
+
+\section{objects\_api\_crud\_svc.py}
+\lstinputlisting[language=Python]{../../src/services/objects/api_crud/objects_api_crud_svc.py}
+
+\section{objects\_api\_crud\_settings.py}
+\lstinputlisting[language=Python]{../../src/services/objects/api_crud/objects_api_crud_settings.py}
+
+
+\end{document}

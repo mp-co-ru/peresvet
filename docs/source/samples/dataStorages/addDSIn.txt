@@ -1,0 +1,27 @@
+POST /v1/dataStorages/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
+
+{
+    "linkTags":[{
+        "tagId":"<link_tag_id>",
+        "attributes":{
+            "cn":"tag1",
+            "objectClass":"prsTag"
+        }
+    }],
+    "linkAlerts":[{
+        "alertId":"<link_alert_id>",
+        "attributes":{
+            "cn":"alert1",
+            "objectClass":"prsAlert"
+        }
+    }],
+    "attributes":{
+        "prsJsonConfigString":"{\"dsn\":\"postgresql://postgres:Peresvet21@psql/peresvet\"}",
+        "cn": "dataStorage_test",
+        "description": "test_DS"
+    }
+}

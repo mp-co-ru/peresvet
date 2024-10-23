@@ -1,0 +1,16 @@
+GET /v1/dataStorages/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
+
+{
+    "id":"<id_of_a_dataStorages>",
+    "getLinkedTags":true,
+    "getLinkedAlerts":true,
+    "attributes": ["*"],
+    "base": null,
+    "deref": true,
+    "scope":1,
+    "filter":null
+}

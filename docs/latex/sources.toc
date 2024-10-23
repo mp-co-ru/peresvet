@@ -1,0 +1,19 @@
+\babel@toc {russian}{}\relax 
+\contentsline {section}{\numberline {1}hierarchy.py}{1}{}%
+\contentsline {section}{\numberline {2}logger.py}{7}{}%
+\contentsline {section}{\numberline {3}base\_svc.py}{8}{}%
+\contentsline {section}{\numberline {4}base\_svc\_settings.py}{10}{}%
+\contentsline {section}{\numberline {5}svc.py}{11}{}%
+\contentsline {section}{\numberline {6}svc\_settings.py}{11}{}%
+\contentsline {section}{\numberline {7}api\_crud\_svc.py}{12}{}%
+\contentsline {section}{\numberline {8}api\_crud\_settings.py}{15}{}%
+\contentsline {section}{\numberline {9}model\_crud\_svc.py}{15}{}%
+\contentsline {section}{\numberline {10}model\_crud\_settings.py}{21}{}%
+\contentsline {section}{\numberline {11}tags\_model\_crud\_svc.py}{21}{}%
+\contentsline {section}{\numberline {12}tags\_model\_crud\_settings.py}{23}{}%
+\contentsline {section}{\numberline {13}tags\_api\_crud\_svc.py}{23}{}%
+\contentsline {section}{\numberline {14}tags\_api\_crud\_settings.py}{25}{}%
+\contentsline {section}{\numberline {15}objects\_model\_crud\_svc.py}{25}{}%
+\contentsline {section}{\numberline {16}objects\_model\_crud\_settings.py}{26}{}%
+\contentsline {section}{\numberline {17}objects\_api\_crud\_svc.py}{26}{}%
+\contentsline {section}{\numberline {18}objects\_api\_crud\_settings.py}{27}{}%

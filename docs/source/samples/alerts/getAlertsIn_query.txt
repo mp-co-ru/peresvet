@@ -1,0 +1,5 @@
+GET /v1/alerts/?q={"base":"id_of_a_node_where_to_search","id":"id_of_an_alert_to_find","deref":true,"scope":1} HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
