@@ -18,6 +18,8 @@ services:
       - GF_SERVER_ROOT_URL=http://${NGINX_HOST}:${PORT_GRAFANA}/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
       - GF_PANELS_DISABLE_SANITIZE_HTML=true
+      #- GF_AUTH_ANONYMOUS_ENABLED=true
+      #- GF_AUTH_BASIC_ENABLED=false
       - TZ=${TIME_ZONE}
     
     volumes:

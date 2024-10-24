@@ -351,6 +351,11 @@
 									title="Имя не влияет на расчёт, используется только для удобного обозначения параметра.">
 								</i>
 						</div>
+						<div class="col-4 text-small-size">Тег
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
+									title="">
+								</i>
+						</div>
 						<div class="col text-small-size">Конфигурация
 							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" data-bs-html="true"
 									title='Тело запроса data/get. Полученное значение будет передано методу в качестве значения параметра.'>
@@ -371,12 +376,21 @@
 								<div class="col-1 me-2">
 									<input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-cn-0"/>
 								</div>
+								<div class="col-4 me-2">
+									<select prsAttribute="parameter" onchange="onInputChange(event);" id="input-parameter-tagId-0" class="form-select" size="1">
+										<option selected value="ttt">&#62;=</option>
+										<option value="ttttt">&#60;</option>											
+									</select>
+								</div>
 								<div class="col me-2">
+									<!--
 									<input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-prsJsonConfigString-0"/>
+									-->
+									<textarea class="form-control form-control-sm" prsAttribute="parameter" autocomplete="off" id="input-parameter-prsJsonConfigString-0">{"data": []}</textarea>
 								</div>
 								<button id="but-deleteParameter-0" class="btn btn-sm m-1 btn-danger" onclick="deleteParameter(event);">
-										<span><i class="fa-solid fa-minus"></i></span>
-									</button>
+									<span><i class="fa-solid fa-minus" id="i-deleteParameter-0"></i></span>
+								</button>
 							</div>
 						</div>
 					</div>
@@ -462,7 +476,7 @@
 											</tr>
 											<tr>
 												<td>
-													json body:
+													body:
 												</td>
 												<td>
 													<textarea class="form-control form-control-sm" readonly autocomplete="off" id="span-tagSetDataBody">{"data": [{"tagId": ".....", }]}</textarea>

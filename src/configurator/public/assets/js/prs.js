@@ -279,8 +279,11 @@ saveChanges = () => {
   }
 
   let cnChanged = false;
+  let error_prepare_data = false;
   changedElements.map((element) => {
     attr = element.getAttribute("prsAttribute");
+    if (attr === "parameter")
+      return
     if (attr === "cn")
       cnChanged = true;
 
@@ -329,7 +332,35 @@ saveChanges = () => {
         initiatedBy.push(this.value);
     });
     payload.initiatedBy = initiatedBy;
+
+    parameters = []
+    //...а также параметры
+    $("#div-list-parameters > div").each(function() {
+      index = this.id.split("-").slice(-1);
+      
+      let parameter_payload = {};
+      try {
+        parameter_payload = JSON.parse($(`#input-parameter-prsJsonConfigString-${index}`).val());
+      } catch(err) {
+        showAlert("div-updateAlert", "div-updateAlertMessage", "i-updateDataAlert", `Ошибка конвертирования данных параметра: '${err}'`);
+        error_prepare_data = true;
+        return
+      }
+
+      parameters.push({
+        attributes: {
+          cn: $(`#input-parameter-cn-${index}`).val(),
+          prsIndex: $(`#input-parameter-prsIndex-${index}`).val(),
+          prsJsonConfigString: parameter_payload
+        }
+      });
+    });
+    if (parameters.length > 0)
+      payload.parameters = parameters;
   }
+
+  if (error_prepare_data)
+    return;
 
   fetch(url, {
     method: "PUT",
@@ -375,30 +406,58 @@ addParameter = (event, parameterData) => {
 					<div class="col-1 me-2">
 						<input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-cn-${newLevel}"/>
 					</div>
+          <div class="col-4 me-2">
+            <select prsAttribute="parameter" onchange="onInputChange(event);" id="input-parameter-tagId-${newLevel}" class="form-select" size="1">
+              <option selected value="ttt">&#62;=</option>
+              <option value="ttttt">&#60;</option>											
+            </select>
+          </div>
 					<div class="col me-2">
-						<input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-prsJsonConfigString-${newLevel}"/>
+						<!--
+            <input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-prsJsonConfigString-${newLevel}"/>
+            -->
+            <textarea class="form-control form-control-sm" prsAttribute="parameter" autocomplete="off" id="input-parameter-prsJsonConfigString-${newLevel}"></textarea>
 					</div>
 					<button id="but-deleteParameter-${newLevel}" class="btn btn-sm m-1 btn-danger" onclick="deleteParameter(event);">
-						<span><i class="fa-solid fa-minus"></i></span>
+						<span><i class="fa-solid fa-minus" id="i-deleteParameter-${newLevel}"></i></span>
 					</button>
 				</div>
 			`);
+  
+  parameter_tags_select = $(`#input-parameter-tagId-${newLevel}`);
+  $(`#input-parameter-tagId-${newLevel} option`).remove();
+  tags.map((el) => {
+    parameter_tags_select.append(`<option value="${el.id}">${el.cn}&nbsp;(${el.id})</option>`);
+  });
+  parameter_tags_select.val("");
 
   if (parameterData) {
     let index = Number(parameterData.attributes.prsIndex[0]);
     let name = parameterData.attributes.cn[0];
-    let config = parameterData.attributes.prsJsonConfigString[0];
+    let config_text = parameterData.attributes.prsJsonConfigString[0];
+
+    let config = JSON.parse(config_text);
+    if (Array.isArray(config.tagId))
+      tagId = config.tagId[0];
+    else
+      tagId = config.tagId;
+
+    parameter_tags_select.val(tagId);
 
     $(`#input-parameter-prsIndex-${newLevel}`).val(index);
     $(`#input-parameter-cn-${newLevel}`).val(name);
-    $(`#input-parameter-prsJsonConfigString-${newLevel}`).val(config);
+    $(`#input-parameter-prsJsonConfigString-${newLevel}`).val(config_text);
   }
 }
 
 deleteParameter = (event) => {
   event.stopPropagation();
-  targetBut = event.target;
-  targetBut.parentElement.remove();
+  targetEl = event.target;
+  deletedId = targetEl.id;
+  if (deletedId.startsWith("i-"))
+    targetEl.parentElement.parentElement.parentElement.remove();
+  else
+    targetEl.parentElement.remove();
 }
 
 deleteNode  = () => {
@@ -430,10 +489,12 @@ onInputChange  = (event) => {
   targetEl = event.target;
   initValue = targetEl.getAttribute("init-value");
   let equal = false;
+  
   if (targetEl.tagName === "SELECT") {
     let curVal = $(targetEl).val()
-	if (Array.isArray(curVal))
-		curVal.join(',');
+	
+    if (Array.isArray(curVal))
+		  curVal.join(',');
     equal = initValue === curVal;
   } else
     equal = (initValue === $(targetEl).val())
@@ -443,6 +504,19 @@ onInputChange  = (event) => {
   else
     targetEl.classList.add("value-changed");
 
+  // если изменился тег из списка тегов в параметре
+  elId = targetEl.id;
+  if (elId.startsWith("input-parameter-tagId")) {
+    let paramIndex = elId.split("-").slice(-1);
+    selectedTag = $(targetEl).val();
+    payload = {
+      tagId: [selectedTag]
+    }
+    $(`#input-parameter-prsJsonConfigString-${paramIndex}`).val(
+      JSON.stringify(payload, null, "\t")
+    ).addClass("value-changed");
+  }
+
   inputs = document.querySelectorAll(".value-changed");
   if (inputs.length > 0) {
     $("#but-save").removeClass("disabled");
@@ -451,6 +525,8 @@ onInputChange  = (event) => {
     $("#but-save").addClass("disabled");
     $("#but-reset").addClass("disabled");
   }
+
+
 };
 
 getFocus  = (event) => {
@@ -763,6 +839,8 @@ showAlert  = (divAlertId, divAlertMessageId, icon, message, norm) => {
   }, 5000);
 }
 
+newNodeId = null;
+
 addNodeToHierarchy  = (api) => {
 
   if (api === 'connectors') {
@@ -774,18 +852,6 @@ addNodeToHierarchy  = (api) => {
   url = window.location.protocol + "//" + window.location.hostname + "/v1/" + api + "/";
 
   parentId = $("div.currentNode")[0].id;
-
-  if (!($("div.currentNode").attr("aria-expanded"))) {
-
-    var clickEvent = new MouseEvent("click", {
-      "view": window,
-      "bubbles": true,
-      "cancelable": false
-    });
-    el = document.getElementById(parentId);
-    el.dispatchEvent(clickEvent);
-    el.focus();
-  }
 
   payload = { attributes: {} };
   if (!((parentId === "objects") || (parentId === "tags") || (parentId === "connectors") || (parentId === "schedules"))) {
@@ -805,6 +871,8 @@ addNodeToHierarchy  = (api) => {
     }
     return response.json();
   }).then((data) => {
+    if (!data)
+      return;
     new_id = data.id;
     url += `?q=${encodeURIComponent(JSON.stringify({
       id: new_id,
@@ -821,6 +889,9 @@ addNodeToHierarchy  = (api) => {
       }
       return response.json();
     }).then((data) => {
+      if (!data)
+        return;
+
       divToExtend = document.getElementById(parentId);
       node = {
         id: new_id,
@@ -848,8 +919,6 @@ addNodeToHierarchy  = (api) => {
           break;
       }
 
-      new_node = addNode(divToExtend, node, true);
-
       // привяжем тег к хранилищу
       if ((api === "tags") || (api === "alerts")) {
         urlDs = window.location.protocol + "//" + window.location.hostname + "/v1/dataStorages/";
@@ -867,6 +936,8 @@ addNodeToHierarchy  = (api) => {
           }
           return response.json();
         }).then((data) => {
+          if (!data)
+            return;
           payload = {
             id: data.data[0].id
           }
@@ -891,13 +962,28 @@ addNodeToHierarchy  = (api) => {
         })
       }
 
-      var clickEvent = new MouseEvent("click", {
-        "view": window,
-        "bubbles": true,
-        "cancelable": false
-      });
-      new_node.dispatchEvent(clickEvent);
-      new_node.focus();
+      if (!($("div.currentNode").attr("aria-expanded"))) {
+
+        var clickEvent = new MouseEvent("click", {
+          "view": window,
+          "bubbles": true,
+          "cancelable": false
+        });
+        newNodeId = new_id;
+        el = document.getElementById(parentId);
+        el.dispatchEvent(clickEvent);
+        $("div.currentNode").removeClass("currentNode");
+      } else 
+        addNode(divToExtend, node, true);
+
+        var clickEvent = new MouseEvent("click", {
+          "view": window,
+          "bubbles": true,
+          "cancelable": false
+        });
+        var new_node = document.getElementById(new_id);
+        new_node.dispatchEvent(clickEvent);
+        new_node.focus();
     })
   });
 };
@@ -1054,6 +1140,9 @@ formTagDataPanels  = () => {
   $("#span-tagSetDataBody").text(JSON.stringify(tagSetDataPayload, null, "\t"));
 }
 
+// используем этот список при заполнении списка тегов в параметрах
+let tags = [];
+  
 fillForm  = (nodeElement) => {
   let nodeId = nodeElement.id;
   let header = document.getElementById("div-nodeName");
@@ -1167,10 +1256,15 @@ fillForm  = (nodeElement) => {
         return response.json();
       }).then((allNodes) => {
         let selectId = "";
+        tags = [];
         allNodes.data.map((dataItem) => {
           switch (dataItem.attributes.objectClass[0]) {
             case "prsTag":
               selectId = "#input-initiatedByTags";
+              tags.push({
+                cn: dataItem.attributes.cn[0],
+                id: dataItem.id
+              });
               break;
             case "prsAlert":
               selectId = "#input-initiatedByAlerts";
@@ -1311,5 +1405,11 @@ clickNode  = (event) => {
 
     groupItems = getNodeGroup(clickedNode);
     if (groupItems) sortList(groupItems);
+
+    if (newNodeId) {
+      $(`#${newNodeId}`).addClass("currentNode");
+      fillForm(document.getElementById(newNodeId));
+      newNodeId = null;      
+    }
   });
 };
