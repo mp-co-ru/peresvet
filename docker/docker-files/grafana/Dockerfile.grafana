@@ -16,15 +16,15 @@ COPY config/grafana/provisioning/dashboards/prs.yaml /etc/grafana/provisioning/d
 COPY config/grafana/provisioning/datasources/prs.yaml /etc/grafana/provisioning/datasources
 RUN sed -i "s/NGINX_HOST/$NGINX_HOST/" /etc/grafana/provisioning/datasources/prs.yaml
 
-COPY config/grafana/logos/mpc.png /usr/share/grafana/public/img/fav32.png
-COPY config/grafana/logos/mpc.png /usr/share/grafana/public/img/apple-touch-icon.png
-COPY config/grafana/logos/peresvet.svg /usr/share/grafana/public/img/grafana_icon.svg
+COPY config/grafana/logos/ioterra_small.png /usr/share/grafana/public/img/fav32.png
+COPY config/grafana/logos/ioterra_small.png /usr/share/grafana/public/img/apple-touch-icon.png
+COPY config/grafana/logos/peresvet_big_text_dark.svg /usr/share/grafana/public/img/grafana_icon.svg
 
 RUN find /usr/share/grafana/public/build/ -name '*.js' \
 ## Update Title
     -exec sed -i 's|AppTitle="Grafana"|AppTitle="Пересвет"|g' {} \; \
 ## Update Login Title
-    -exec sed -i 's|LoginTitle="Welcome to Grafana"|LoginTitle="Пересвет - Grafana"|g' {} \; 
+    -exec sed -i 's|LoginTitle="Welcome to Grafana"|LoginTitle=""|g' {} \; 
 ## Remove Documentation, Support, Community in the Footer
 ##    -exec sed -i 's|\[{target:"_blank",id:"documentation".*grafana_footer"}\]|\[\]|g' {} \; \
 ## Remove Edition in the Footer

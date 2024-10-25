@@ -370,8 +370,7 @@ saveChanges = () => {
     })
   }).then((response) => {
     if (!response.ok) {      
-      showAlert("div-updateAlert", "div-updateAlertMessage", "i-updateDataAlert", `Ошибка обновления по запросу '${body}'`);
-      return ;
+      throw response;
     }
 
     if (cnChanged) {
@@ -384,8 +383,14 @@ saveChanges = () => {
     });
     $("#but-save").addClass("disabled");
     $("#but-reset").addClass("disabled");
-  });
-  changeTagDataPanelOnSave();
+
+    changeTagDataPanelOnSave();
+
+  }).catch((err) => {
+    err.json().then((body) => {
+      showAlert("div-updateAlert", "div-updateAlertMessage", "i-updateDataAlert", `Ошибка обновления узла '${JSON.stringify(body)}'`);    
+    })
+  });  
 };
 
 addParameter = (event, parameterData) => {
@@ -473,8 +478,7 @@ deleteNode  = () => {
     })
   }).then((response) => {
     if (!response.ok) {
-      showAlert("div-updateAlert", "div-updateAlertMessage", "i-updateAlert", `Ошибка удаления узла ${nodeId}`);
-      return;
+      throw response;
     };
 
     let group = getNodeGroup(currentNode);
@@ -482,7 +486,11 @@ deleteNode  = () => {
       group.remove();
     }
     currentNode.remove();
-  });
+  }).catch((err) => {
+    err.json().then((body) => {
+      showAlert("div-updateAlert", "div-updateAlertMessage", "i-updateAlert", `Ошибка удаления узла '${nodeId}': '${JSON.stringify(body)}'`);    
+    })
+  });  ;
 };
 
 onInputChange  = (event) => {
@@ -1026,7 +1034,7 @@ setTagData  = () => {
     })
   }).then((response) => {
     if (!response.ok) {      
-      showAlert("div-setDataAlert", "div-setDataAlertMessage", "i-setDataAlert", `Ошибка обновления по запросу '${body}'`, false);      
+      showAlert("div-setDataAlert", "div-setDataAlertMessage", "i-setDataAlert", `Ошибка обновления данных '${body}'`, false);      
     } else {
       showAlert("div-setDataAlert", "div-setDataAlertMessage", "i-setDataAlert", `Данные успешно записаны.`, true);
     }
@@ -1249,6 +1257,7 @@ fillForm  = (nodeElement) => {
         }
         return response.json();
       }).then((allNodes) => {
+        if (!allNodes) return;
         let selectId = "";
         tags = [];
         allNodes.data.map((dataItem) => {
