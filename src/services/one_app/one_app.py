@@ -65,18 +65,6 @@ from src.services.connectors.app.connectors_app_svc \
 """
 
 # dataStorages ----------------------------------------------------------------
-from src.services.dataStorages.api_crud.dataStorages_api_crud_svc \
-    import (
-        app as dataStorages_api_crud,
-        router as dataStorages_api_crud_router
-    )
-
-# dataStorages_model_crud
-from src.services.dataStorages.model_crud.dataStorages_model_crud_svc \
-    import (
-        app as dataStorages_model_crud
-    )
-
 # postgresql
 from src.services.dataStorages.app.postgresql.dataStorages_app_postgresql_svc \
     import (
@@ -208,11 +196,6 @@ api_router.include_router(router=connectors_app_router)
 # -----------------------------------------------------------------------------
 """
 
-# dataStorages ----------------------------------------------------------------
-# dataStorages_api_crud
-api_router.include_router(router=dataStorages_api_crud_router)
-# -----------------------------------------------------------------------------
-
 # methods ---------------------------------------------------------------------
 # methods_api_crud
 api_router.include_router(router=methods_api_crud_router)
@@ -257,10 +240,6 @@ app.mount(path="/", app=connectors_model_crud)
 """
 
 # dataStorages ----------------------------------------------------------------
-# dataStorages_api_crud
-app.mount(path="/", app=dataStorages_api_crud)
-# dataStorages_model_crud
-app.mount(path="/", app=dataStorages_model_crud)
 # postgresql
 app.mount(path="/", app=postgre_app)
 # -----------------------------------------------------------------------------
