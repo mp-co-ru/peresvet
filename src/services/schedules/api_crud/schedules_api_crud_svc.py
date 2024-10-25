@@ -2,12 +2,14 @@
 Модуль содержит примеры запросов и ответов на них, параметров которые могут входить в
 запрос, в сервисе schedules.
 """
+from copy import deepcopy
 import sys
 import json
-from typing import Any, List
+from typing import List, Optional
+from typing_extensions import Annotated
 from pydantic import Field, validator
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 sys.path.append(".")
 
@@ -15,59 +17,129 @@ from src.common import api_crud_svc as svc
 from src.common import times as t
 from src.services.schedules.api_crud.schedules_api_crud_settings import SchedulesAPICRUDSettings
 
-class ScheduleCreateAttributes(svc.NodeAttributes):
-    '''
-    prsJsonConfigString: str | None = Field(None, title="Конфигурация экземпляра.",
-        description=(
-            "Строка содержит конфигурацию расписания."
-        ))
-    @validator('prsJsonConfigString')
-    @classmethod
-    def config_str(cls, v: str) -> str:
-
+def valid_schedule_config(v: str) -> str:
         def raise_exception():
             raise ValueError(
                 'prsJsonConfigString должен быть вида '
                 '{'
                 '   "start": "<дата ISO8601>", '
-                '   "end": "<дата ISO8601>", '
-                '   "interval_type": "seconds | minutes | hours | days", '
-                '   "interval_value": <int> '
+                '   "end": "<дата ISO8601>" | None, '
+                '   "interval_type": "seconds | minutes | hours | days | None", '
+                '   "interval_value": <int> | None'
                 '} '
-                'Параметр "end" - необязательный.'
             )
 
-        if not v:
-            raise_exception()
+        new_v = deepcopy(v)
+        if not new_v:
+            return {
+                "start": t.ts_to_local_str(t.now_int()),
+                "interval_type": "hours",
+                "interval_value": 1
+            }
 
         try:
-            config = json.loads(v)
-            start = config.get("start")
-            end = config.get("end")
-            interval_type = config.get("interval_type")
-            interval_value = config.get("interval_value")
-
-            if not start or not interval_type or not interval_value:
+            start = new_v.get("start", t.ts_to_local_str(t.now_int()))
+            try:
+                ts = t.ts(start)
+                start = str(t.int_to_local_timestamp(ts))
+            except:
                 raise_exception()
-
-            start = t.ts(start)
-            if end:
-                end = t.ts(end)
+            new_v["start"] = start
+            
+            interval_type = new_v.get("interval_type", "hours")
             if interval_type not in ("seconds", "minutes", "hours", "days"):
                 raise_exception()
+            new_v["interval_type"] = interval_type
+
+            interval_value = new_v.setdefault("interval_value", 1)
             if not isinstance(interval_value, int):
                 raise_exception()
             if interval_value < 1:
                 raise_exception()
 
+            end = new_v.get("end")
+            if not (end is None):
+                try:
+                    ts = t.ts(end)
+                    end = str(t.int_to_local_timestamp(ts))
+                except:
+                    raise_exception()
+            new_v["end"] = end
+
         except json.JSONDecodeError as ex:
             raise_exception()
 
-        return v
-    '''
+        return new_v
 
+def valid_schedule_config_for_update(v: str) -> str:
+        def raise_exception():
+            raise ValueError(
+                'prsJsonConfigString должен быть вида '
+                '{'
+                '   "start": "<дата ISO8601>", '
+                '   "end": "<дата ISO8601>" | None, '
+                '   "interval_type": "seconds | minutes | hours | days | None", '
+                '   "interval_value": <int> | None'
+                '} '
+            )
+
+        new_v = deepcopy(v)
+        if new_v is None:
+            return
+        
+        if not new_v:
+            return {
+                "start": t.ts_to_local_str(t.now_int()),
+                "interval_type": "hours",
+                "interval_value": 1
+            }
+
+        try:
+            start = new_v.get("start", t.ts_to_local_str(t.now_int()))
+            try:
+                ts = t.ts(start)
+                start = str(t.int_to_local_timestamp(ts))
+            except:
+                raise_exception()
+            new_v["start"] = start
+            
+            interval_type = new_v.get("interval_type", "hours")
+            if interval_type not in ("seconds", "minutes", "hours", "days"):
+                raise_exception()
+            new_v["interval_type"] = interval_type
+
+            interval_value = new_v.setdefault("interval_value", 1)
+            if not isinstance(interval_value, int):
+                raise_exception()
+            if interval_value < 1:
+                raise_exception()
+
+            end = new_v.get("end")
+            if not (end is None):
+                try:
+                    ts = t.ts(end)
+                    end = str(t.int_to_local_timestamp(ts))
+                except:
+                    raise_exception()
+            new_v["end"] = end
+
+        except json.JSONDecodeError as ex:
+            raise_exception()
+
+        return new_v
+
+class ScheduleCreateAttributes(svc.NodeAttributes):
+    prsJsonConfigString: dict  = Field(
+        {
+            "start": t.ts_to_local_str(t.now_int()),
+            "interval_type": "hours",
+            "interval_value": 1
+        }, title="Конфигурация расписания")
+    
+    validate_config = validator('prsJsonConfigString', allow_reuse=True)(valid_schedule_config)
+    
 class ScheduleCreate(svc.NodeCreate):
-    attributes: ScheduleCreateAttributes = Field(title="Атрибуты узла")
+    attributes: ScheduleCreateAttributes = Field(ScheduleCreateAttributes(), title="Атрибуты узла")
 
     # validate_id = validator('parentId', 'dataStorageId', 'connectorId', allow_reuse=True)(svc.valid_uuid)
 
@@ -81,27 +153,22 @@ class ScheduleReadResult(svc.NodeReadResult):
     data: List[OneScheduleInReadResult] = Field(title="Список расписаний.")
     pass
 
+class ScheduleUpdateAttributes(svc.NodeAttributes):
+    prsJsonConfigString: Optional[dict] = Field(None, title="Конфигурация расписания")
+    prsActive: Optional[bool] = Field(None, title="Флаг активности")
+        
+    validate_config = validator('prsJsonConfigString', allow_reuse=True)(valid_schedule_config_for_update)
+
+
 class ScheduleUpdate(svc.NodeUpdate):
-    pass
+    attributes: ScheduleUpdateAttributes = Field(ScheduleUpdateAttributes(), title="Атрибуты узла")
 
 class SchedulesAPICRUD(svc.APICRUDSvc):
     """Сервис работы с расписаниями в иерархии.
 
-    Подписывается на очередь ``schedules_api_crud`` обменника ``schedules_api_crud``\,
-    в которую публикует сообщения сервис ``schedules_api_crud`` (все имена
-    указываются в переменных окружения).
-
     Формат ожидаемых сообщений
 
     """
-
-    _outgoing_commands = {
-        "create": "schedules.create",
-        "read": "schedules.read",
-        "update": "schedules.update",
-        "delete": "schedules.delete"
-    }
-
     def __init__(self, settings: SchedulesAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
@@ -111,9 +178,6 @@ class SchedulesAPICRUD(svc.APICRUDSvc):
     async def _read(self, payload: ScheduleRead) -> dict:
         return await super()._read(payload=payload)
 
-    async def _update(self, payload: ScheduleUpdate) -> dict:
-        return await super()._update(payload=payload)
-
 settings = SchedulesAPICRUDSettings()
 
 app = SchedulesAPICRUD(settings=settings, title="`SchedulesAPICRUD` service")
@@ -121,7 +185,7 @@ app = SchedulesAPICRUD(settings=settings, title="`SchedulesAPICRUD` service")
 router = APIRouter(prefix=f"{settings.api_version}/schedules")
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
-async def create(payload: ScheduleCreate):
+async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends()):
     """
     Метод добавляет расписание в иерархию.
 
@@ -138,42 +202,48 @@ async def create(payload: ScheduleCreate):
           * **prsJsonConfigString** (str) - Строка содержит, в случае необходимости,
             конфигурацию узла. Интерпретируется сервисом, управляющим сущностью,
             которой принадлежит экземпляр. Необязательный аттрибут
-          * **prsActive** (bool) - Определяет, активен ли экземпляр. Необязательный атрибут;
-          * **prsDefault** (bool) - Если = ``True``, то данный экземпляр. Необязательный атрибут;
-            считается узлом по умолчанию в списке равноправных узлов данного уровня иерархии.
-            Необязательный атрибут.
-          * **prsIndex** (int) - Если у узлов одного уровня иерархии проставлены индексы, то
-            перед отдачей клиенту списка экземпляров они сортируются
-            в соответствии с их индексами. Необязательный атрибут
-          * **prsArchive** (bool) - Флаг архивирования начений тега. Необязательный аттрибут
-          * **prsCompress** (bool) - Флаг сжатия значений тега. Необязательный атрибут;
-            Если не указан, то поиск ведётся от главного узла иерархии. Необязательный атрибут;
-          * **prsMaxLineDev** (float) - Параметр сжатия значений тега. Необязательный атрибут;
-          * **prsStep** (bool) - Флаг `ступенчатого тега`. Необязательный атрибут;
-          * **prsUpdate** (bool) - Флаг обновления значений тега. Необязательный атрибут;
-          * **prsValueTypeCode** (int) - Тип значений тега. Необязательный атрибут;
-          * **prsDefaultValue** (Any) - Значение тега по умолчанию. Необязательный атрибут;
-          * **prsMeasureUnits** (str) - Единицы измерения тега. Необязательный атрибут;
-
+          * **prsActive** (bool) - Определяет, активен ли экземпляр. Необязательный атрибут;          
 
     **Ответ:**
 
-        * **id** (uuid) - id созданного тега
+        * **id** (uuid) - id созданного расписания
         * **detail** (str) - пояснения к ошибке
 
     """
-    return await app._create(payload)
+    if payload is None:
+        payload = {}
+    
+    try:
+        s = json.dumps(payload)
+        p = ScheduleCreate.model_validate_json(s)
+    except Exception as ex:
+        res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+        app._logger.exception(res)
+        await error_handler.handle_error(res)
+
+    res = await app._create(p)
+    await error_handler.handle_error(res)
+    return res
 
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200, response_model_exclude_none=True)
 async def read(q: str | None = None, payload: ScheduleRead | None = None):
     return await app.api_get_read(ScheduleRead, q, payload)
 
 @router.put("/", status_code=202)
-async def update(payload: ScheduleUpdate):
-    await app._update(payload)
+async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
+    try:
+        m = ScheduleUpdate.model_validate(payload)
+    except Exception as ex:
+        res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+        app._logger.exception(res)
+        await error_handler.handle_error(res)
+
+    res = await app._update(payload=payload)
+    await error_handler.handle_error(res)
+    return res
 
 @router.delete("/", status_code=202)
-async def delete(payload: ScheduleRead):
-    await app.delete(payload)
+async def delete(payload: ScheduleRead, error_handler: svc.ErrorHandler = Depends()):
+    await app._delete(payload)
 
 app.include_router(router, tags=["schedules"])

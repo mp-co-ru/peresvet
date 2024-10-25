@@ -105,7 +105,7 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
         )
 
         self._logger.info(
-            f"Тег {payload['tagId']} привязан к коннектору {payload['connectorId']}"
+            f"{self._config.svc_name} :: Тег {payload['tagId']} привязан к коннектору {payload['connectorId']}"
         )
 
     async def _further_read(self, mes: dict, search_result: dict) -> dict:

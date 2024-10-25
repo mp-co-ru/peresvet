@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: 'prs'
+    orgId: 1
+    folder: 'Admin'
+    folderUid: 'admin-folder'
+    type: file
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

@@ -146,7 +146,7 @@ class DataStoragesAppVictoriametrics(svc.Svc):
 
         self._tags.pop(mes["data"]["tagId"])
 
-        self._logger.info(f"Тег {mes['data']['tagId']} отвязан от хранилища.")
+        self._logger.info(f"{self._config.svc_name} :: Тег {mes['data']['tagId']} отвязан от хранилища.")
 
     # fixed
     async def _tag_set(self, mes: dict) -> None:
@@ -166,12 +166,12 @@ class DataStoragesAppVictoriametrics(svc.Svc):
             }
         """
         async def set_tag_data(payload: dict) -> None:
-            self._logger.info(f"Запись данных тега {payload['tagId']}")
+            self._logger.info(f"{self._config.svc_name} :: Запись данных тега {payload['tagId']}")
 
             tag_params = self._tags.get(payload["tagId"])
             if not tag_params:
                 self._logger.error(
-                    f"Тег {payload['tagId']} не привязан к хранилищу."
+                    f"{self._config.svc_name} :: Тег {payload['tagId']} не привязан к хранилищу."
                 )
                 return
 
@@ -210,7 +210,7 @@ class DataStoragesAppVictoriametrics(svc.Svc):
         tag_data = await self._hierarchy.search(payload=get_tag_data)
 
         if not tag_data:
-            self._logger.info(f"Не найден тег {tag_id}")
+            self._logger.info(f"{self._config.svc_name} :: Не найден тег {tag_id}")
             return None
 
         to_return = {
@@ -269,7 +269,7 @@ class DataStoragesAppVictoriametrics(svc.Svc):
                 routing_key=ds[0]
             )
 
-            self._logger.info(f"Чтение данных о хранилище {ds[0]}...")
+            self._logger.info(f"{self._config.svc_name} :: Чтение данных о хранилище {ds[0]}...")
 
             urls = json.loads(ds[2]["prsJsonConfigString"][0])
 
@@ -279,7 +279,7 @@ class DataStoragesAppVictoriametrics(svc.Svc):
                 "putUrl": urls["putUrl"],
                 "getUrl": urls["getUrl"]
             }
-            self._logger.info(f"Связь с базой данных {ds[0]} установлена.")
+            self._logger.info(f"{self._config.svc_name} :: Связь с базой данных {ds[0]} установлена.")
 
             search_tags = {
                 "base": ds[0],
@@ -289,7 +289,7 @@ class DataStoragesAppVictoriametrics(svc.Svc):
                 "attributes": ["prsStore", "cn"]
             }
 
-            self._logger.info("Чтение тегов, привязанных к хранилищу...")
+            self._logger.info(f"{self._config.svc_name} :: Чтение тегов, привязанных к хранилищу...")
 
             i = 1
             #async for tag in self._hierarchy.search(payload=search_tags):
@@ -325,7 +325,7 @@ class DataStoragesAppVictoriametrics(svc.Svc):
                 self._logger.debug(f"Тег {tag_id} привязан ({i}). Время: {time.time() - t1}")
                 i += 1
 
-            self._logger.info(f"Хранилище {ds[0]}. Теги прочитаны.")
+            self._logger.info(f"{self._config.svc_name} :: Хранилище {ds[0]}. Теги прочитаны.")
 
             """
             search_alerts = {
@@ -336,7 +336,7 @@ class DataStoragesAppVictoriametrics(svc.Svc):
                 "attributes": ["prsStore", "cn"]
             }
 
-            self._logger.info("Чтение тревог, привязанных к хранилищу...")
+            self._logger.info(f"{self._config.svc_name} :: Чтение тревог, привязанных к хранилищу...")
 
             #async for alert in self._hierarchy.search(payload=search_alerts):
             alerts = await self._hierarchy.search(payload=search_alerts)
@@ -356,7 +356,7 @@ class DataStoragesAppVictoriametrics(svc.Svc):
                 alert_data = await self._hierarchy.search(payload=get_alert_data)
 
                 if not alert_data:
-                    self._logger.info(f'Не найдена тревога {alert_id}')
+                    self._logger.info(f"{self._config.svc_name} :: Не найдена тревога {alert_id}')
                     continue
 
                 self._alerts[alert_id] = {
@@ -370,7 +370,7 @@ class DataStoragesAppVictoriametrics(svc.Svc):
                     routing_key=alert_id
                 )
 
-            self._logger.info(f"Хранилище {ds[0]}. Тревоги прочитаны.")
+            self._logger.info(f"{self._config.svc_name} :: Хранилище {ds[0]}. Тревоги прочитаны.")
             """
 
     # fixed
@@ -379,7 +379,7 @@ class DataStoragesAppVictoriametrics(svc.Svc):
         try:
             await self._connect_to_db()
         except Exception as ex:
-            self._logger.error(f"Ошибка связи с базой данных: {ex}")
+            self._logger.error(f"{self._config.svc_name} :: Ошибка связи с базой данных: {ex}")
 
     # fixed
     async def _tag_get(self, mes: dict) -> dict:
@@ -412,7 +412,7 @@ class DataStoragesAppVictoriametrics(svc.Svc):
             tag_params = self._tags.get(tag_id)
             if not tag_params:
                 self._logger.error(
-                    f"Тег {tag_id} не привязан к хранилищу."
+                    f"{self._config.svc_name} :: Тег {tag_id} не привязан к хранилищу."
                 )
                 continue
 
@@ -469,7 +469,7 @@ class DataStoragesAppVictoriametrics(svc.Svc):
 
                         res_data["data"].append(tag_item)
                 else:
-                    self._logger.error(f"Ошибка получения данных: {res_json}")
+                    self._logger.error(f"{self._config.svc_name} :: Ошибка получения данных: {res_json}")
 
         self._logger.debug(f"Data get result: {res_data}")
 

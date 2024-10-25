@@ -90,7 +90,7 @@ class ModelCRUDSvc(Svc):
         {
             "id": null,
             "error": {
-                "code": 406,
+                "code": 422,
                 "message": "Ошибка создания узла."
             }
         }
@@ -179,12 +179,12 @@ class ModelCRUDSvc(Svc):
     def _set_handlers(self):
         self._handlers = {
             f"{self._config.hierarchy['class']}.api_crud.create": self._create,
-            f"{self._config.hierarchy['class']}.api_crud.read": self._read,
-            f"{self._config.hierarchy['class']}.api_crud.update": self._update,
-            f"{self._config.hierarchy['class']}.api_crud.delete": self._delete,
+            f"{self._config.hierarchy['class']}.api_crud.read.*": self._read,
+            f"{self._config.hierarchy['class']}.api_crud.update.*": self._update,
+            f"{self._config.hierarchy['class']}.api_crud.delete.*": self._delete,
         }
     
-    async def _update(self, mes: dict) -> dict:
+    async def _update(self, mes: dict, routing_key: str = None) -> dict:
         """Метод обновления данных узла. Также метод может перемещать узел
         по иерархии.
 
@@ -193,12 +193,12 @@ class ModelCRUDSvc(Svc):
         """
         id = mes['id']
 
-        if not self._hierarchy.does_node_exist((id)):
+        if not await self._hierarchy.does_node_exist((id)):
             err_mes = f"Узел {id} не существует."
             self._logger.error(f"{self._config.svc_name} :: {err_mes}")
             res_response = {
                 "error": {
-                    "code": 406,
+                    "code": 422,
                     "message": err_mes
                 }
             }
@@ -210,7 +210,7 @@ class ModelCRUDSvc(Svc):
             self._logger.error(f"{self._config.svc_name} :: {err_mes}")
             res_response = {
                 "error": {
-                    "code": 406,
+                    "code": 422,
                     "message": err_mes
                 }
             }
@@ -225,7 +225,7 @@ class ModelCRUDSvc(Svc):
                 self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                 res_response = {
                     "error": {
-                        "code": 406,
+                        "code": 422,
                         "message": err_mes
                     }
                 }
@@ -236,14 +236,13 @@ class ModelCRUDSvc(Svc):
                 self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                 res_response = {
                     "error": {
-                        "code": 406,
+                        "code": 422,
                         "message": err_mes
                     }
                 }
                 return res_response
             
-        # тут мы делаем проверку не является ли новый родитель потомком текущего узла
-        if new_parent:
+            # проверка того, что новый родитель не является членом подиерархии узла
             res = await self._hierarchy.search({
                 "base": id,
                 "scope": CN_SCOPE_SUBTREE,
@@ -256,7 +255,7 @@ class ModelCRUDSvc(Svc):
                 self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                 res_response = {
                     "error": {
-                        "code": 406,
+                        "code": 422,
                         "message": err_mes
                     }
                 }
@@ -269,44 +268,34 @@ class ModelCRUDSvc(Svc):
             routing_key=f"{self._config.hierarchy['class']}.model.may_update.{id}"
         )
         if res is None:
+            # это ветка, когда нет подписчика на событие may_update
+            # то есть, по большому счёту, всем всё равно
             res = {"response": True}
-
-        if not res["response"]:
-            if not self._hierarchy.does_node_exist((id)):
-                err_mes = f"Узел {id} не существует."
+            
+        res = await self._post_message(
+            mes=mes,
+            reply=True,
+            routing_key=f"{self._config.hierarchy['class']}.model.updating.{id}"
+        )
+        
+        if mes.get("attributes"):
+            try:
+                await self._hierarchy.modify(id, mes["attributes"])
+            except Exception as ex:
+                err_mes = f"Ошибка обновления узла: {ex}."
                 self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                 res_response = {
                     "error": {
-                        "code": 406,
+                        "code": 422,
                         "message": err_mes
                     }
                 }
                 return res_response
 
-        node_class = await self._hierarchy.get_node_class(id)
-        if node_class != self._config.hierarchy["class"]:
-            err_mes = f"Нельзя обновить узел {id}."
-            self._logger.error(f"{self._config.svc_name} :: {err_mes}")
-            res_response = {
-                "error": {
-                    "code": 409,
-                    "message": err_mes
-                }
-            }
-            return res_response
-
-        await self._post_message(
-            mes=mes,
-            reply=True,
-            routing_key=f"{self._config.hierarchy['class']}.model.updating.{id}"
-        )
-
-        await self._further_update(mes)
-
-        if mes.get("attributes"):
-            await self._hierarchy.modify(id, mes["attributes"])
         if new_parent:
             await self._hierarchy.move(id, new_parent)
+
+        await self._further_update(mes)
 
         await self._post_message(
             mes={"id": id}, 
@@ -314,11 +303,9 @@ class ModelCRUDSvc(Svc):
             routing_key=f"{self._config.hierarchy['class']}.model.updated.{id}"
         )
 
-        self._logger.info(f'Узел {id} обновлён.')
+        self._logger.info(f"{self._config.svc_name} :: Узел {id} обновлён.")
 
-        res_response = {}
-
-        return res_response
+        return {}
 
     async def _further_update(self, mes: dict) -> None:
         """Метод переопределяется в сервисах-наследниках.
@@ -331,7 +318,7 @@ class ModelCRUDSvc(Svc):
             data (dict): id и атрибуты вновь создаваемого экземпляра сущности
         """
 
-    async def _delete(self, mes: dict) -> None:
+    async def _delete(self, mes: dict, routing_key: str = None) -> None:
         """Метод удаляет экземпляр сущности из иерархии.
         Удаляем пока по одному узлу.
 
@@ -341,6 +328,8 @@ class ModelCRUDSvc(Svc):
         """
         
         ids = mes["id"]
+        if not isinstance(ids, list):
+            ids = [ids]
 
         for id in ids:
 
@@ -349,7 +338,7 @@ class ModelCRUDSvc(Svc):
                 self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                 res_response = {
                     "error": {
-                        "code": 406,
+                        "code": 422,
                         "message": err_mes
                     }
                 }
@@ -361,7 +350,7 @@ class ModelCRUDSvc(Svc):
                 self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                 res_response = {
                     "error": {
-                        "code": 406,
+                        "code": 422,
                         "message": err_mes
                     }
                 }
@@ -386,7 +375,7 @@ class ModelCRUDSvc(Svc):
                 self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                 res_response = {
                     "error": {
-                        "code": 409,
+                        "code": 422,
                         "message": err_mes
                     }
                 }
@@ -439,7 +428,7 @@ class ModelCRUDSvc(Svc):
                         res = {"response": True}
 
                     if not res["response"]:
-                        err_mes = f"Нельзя удалить узел {id}. Запрет от {future.get_name()}: {res.get('message')}"
+                        err_mes = f"Нельзя удалить узел {future.get_name()}: {res.get('message')}"
                         self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                         res_response = {
                             "error": {
@@ -453,9 +442,9 @@ class ModelCRUDSvc(Svc):
                 for child in children:
                     future = asyncio.create_task(
                         self._post_message(
-                            {"id": id},
+                            {"id": child["id"]},
                             reply=True,
-                            routing_key=f"{child['objectClass']}.model.deleting.{id}"
+                            routing_key=f"{child['objectClass']}.model.deleting.{child['id']}"
                         ),
                         name=child['id']
                     )
@@ -475,12 +464,12 @@ class ModelCRUDSvc(Svc):
             
             for child in children:
                 await self._post_message(
-                    {"id": id},
+                    {"id": child["id"]},
                     reply=False,
                     routing_key=f"{child['objectClass']}.model.deleted.{child['id']}"
                 )
 
-            self._logger.info(f'Узел {id} удалён.')
+            self._logger.info(f"{self._config.svc_name} :: Узел {id} удалён.")
 
             res_response = {}
 
@@ -498,7 +487,7 @@ class ModelCRUDSvc(Svc):
             ids (List[str]): список ``id`` удаляемых узлов.
         """
 
-    async def _read(self, mes: dict) -> dict:
+    async def _read(self, mes: dict, routing_key: str = None) -> dict:
         """Правильность заполнения полей входного сообщения выполняется
         сервисом ``<сущность>_api_crud``\.
 
@@ -566,22 +555,23 @@ class ModelCRUDSvc(Svc):
         if mes_data["filter"].get("objectClass") is None:
             mes_data["filter"]["objectClass"] = [self._config.hierarchy["class"]]
 
+        if mes_data["base"] == "prs":
+            mes_data["base"] = await self._hierarchy.get_node_id("cn=prs")
+
         if (not mes_data.get("base")) and (not mes_data.get("id")):
             if not self._config.hierarchy["node"]:
                 err_mes = "Должен быть указан родительский узел для поиска."
                 self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                 res_response = {
                     "error": {
-                        "code": 406,
+                        "code": 422,
                         "message": err_mes
                     }
                 }
                 return res_response
 
             mes_data["base"] = self._config.hierarchy["node_id"]
-        if mes_data["base"] == "prs":
-            mes_data["base"] = await self._hierarchy.get_node_id("cn=prs")
-            
+                    
         for key, item in mes_data["filter"].items():
             # если в запросе одно из полей было не списком, то делаем его списком
             if type(item) is not list:
@@ -600,6 +590,12 @@ class ModelCRUDSvc(Svc):
             for item in items:
                 res["data"].append(item)
 
+        if mes.get("getParent"):
+            for item in res["data"]:
+                parent_id, _ = await self._hierarchy.get_parent(item["id"])
+                parent_class = await self._hierarchy.get_node_class(parent_id)
+                item["parentId"] = (None, parent_id)[parent_class != "prsModelNode"]
+
         final_res = await self._further_read(mes, res)
         return final_res
 
@@ -609,7 +605,7 @@ class ModelCRUDSvc(Svc):
         """
         return search_result
 
-    async def _create(self, mes: dict) -> dict:
+    async def _create(self, mes: dict, routing_key: str = None) -> dict:
         """Метод создаёт новый экземпляр сущности в иерархии.
 
         Args:
@@ -649,13 +645,13 @@ class ModelCRUDSvc(Svc):
             res = {
                 "id": None,
                 "error": {
-                    "code": 406,
+                    "code": 422,
                     "message": "Не определён родительский узел."
                 }
             }
 
             self._logger.error((
-                f"Попытка создания узла {mes} "
+                f"{self._config.svc_name} :: Попытка создания узла {mes} "
                 f"в неопределённом месте иерархии."
             ))
 
@@ -665,13 +661,13 @@ class ModelCRUDSvc(Svc):
             res = {
                 "id": None,
                 "error": {
-                    "code": 406,
+                    "code": 422,
                     "message": "Неприемлемый класс родительского узла."
                 }
             }
 
             self._logger.error((
-                f"Попытка создания узла {mes} "
+                f"{self._config.svc_name} :: Попытка создания узла {mes} "
                 f"в родительском узле неприемлемого класса."
             ))
 
@@ -719,18 +715,18 @@ class ModelCRUDSvc(Svc):
             res = {
                 "id": None,
                 "error": {
-                    "code": 406,
+                    "code": 422,
                     "message": "Ошибка создания узла."
                 }
             }
 
-            self._logger.error(f"Ошибка создания узла {mes}")
+            self._logger.error(f"{self._config.svc_name} :: Ошибка создания узла {mes}")
 
         else:
             res = {
                 "id": new_id
             }
-            self._logger.info(f"Создан новый узел {new_id}")
+            self._logger.info(f"{self._config.svc_name} :: Создан новый узел {new_id}")
 
             # при необходимости создадим узел ``system``
             await self._hierarchy.add(new_id, {"cn": ["system"]})

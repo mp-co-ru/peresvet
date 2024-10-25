@@ -212,7 +212,7 @@ class Hierarchy:
 
 
         Returns:
-            Tuple: (id, dn, attributes)
+            List[Tuple]: (id, dn, attributes)
         """
 
         new_payload = deepcopy(payload)
@@ -295,7 +295,6 @@ class Hierarchy:
             if not ids:
                 conn.deref = old_deref
 
-        #yield (None, None, None)
         return result
 
     async def add(self, base: str = None, attribute_values: dict = None) -> str:
@@ -400,12 +399,16 @@ class Hierarchy:
 
         attrs = {}
         for key, value in attr_vals.items():
-            if value is None:
+            # косяк python-ldap'а:
+            # если передавать для перезаписи просто пустую строку - будет вылетать ошибка
+            if value is None or (isinstance(value, str) and not value):
                 attrs[key] = [None]
             elif isinstance(value, list):
                 attrs[key] = [str(val).encode("utf-8") for val in value]
             elif isinstance(value, bool):
                 attrs[key] = [("FALSE".encode("utf-8"), "TRUE".encode("utf-8"))[value]]
+            elif isinstance(value, dict):
+                attrs[key] = [json.dumps(value, ensure_ascii=False).encode("utf-8")]
             else:
                 attrs[key] = [str(value).encode("utf-8")]
 
@@ -413,8 +416,7 @@ class Hierarchy:
             if attrs:
                 res = conn.search_s(real_base, CN_SCOPE_BASE, None, [key for key in attrs.keys()])
                 modlist = ldap.modlist.modifyModlist(res[0][1], attrs)
-
-                conn.modify_s(real_base, modlist)
+                conn.modify_s(real_base, modlist)                
 
             if cn:
                 res = conn.search_s(real_base, CN_SCOPE_BASE, None, ['entryUUID'])
@@ -457,14 +459,18 @@ class Hierarchy:
 
         def recursive_delete(conn, base_dn):
             search = conn.search_s(base_dn, CN_SCOPE_ONELEVEL)
-
             for dn, _ in search:
                 recursive_delete(conn, dn)
 
             conn.delete_s(base_dn)
 
         with self._cm.connection() as conn:
+            old_deref = conn.deref
+            conn.deref = ldap.DEREF_NEVER
+
             recursive_delete(conn, node_dn)
+
+            conn.deref = old_deref
 
     async def get_parent(self, node: str) -> Tuple[str, str]:
         """Метод возвращает для узла ``node`` id(guid) и dn

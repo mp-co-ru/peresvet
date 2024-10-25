@@ -24,38 +24,6 @@ from src.common.consts import (
 import asyncpg as apg
 from asyncpg.exceptions import PostgresError
 
-def linear_interpolated(start_point: Tuple[int, Any],
-                        end_point: Tuple[int, Any],
-                        x: int):
-    """ Получение линейно интерполированного значения по двум точкам.
-    Если в качестве координат `y` переданы нечисловые значения, возвращается
-    start_point[1]
-
-    :param start_point: Кортеж координат начальной точки
-    :type start_point: Tuple[int, Any]
-    :param end_point: Кортеж координат конечной точки
-    :type end_point: Tuple[int, Any]
-    :param x: координата x точки, для которой надо получить интерполированное значение
-    :type x: int
-    :param return_type: Тип возвращаемого значения
-    :type return_type: int
-
-    :return: Интерполированное значение
-    :rtype: Any
-    """
-    x0, y0 = start_point
-    x1, y1 = end_point
-    if not isinstance(y0, numbers.Number) or not isinstance(y1, numbers.Number):
-        return y0
-
-    if y0 == y1:
-        return y0
-
-    if x0 == x1:
-        return y0
-
-    return (x-x0)/(x1-x0)*(y1-y0)+y0
-
 class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
     def __init__(
@@ -63,10 +31,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         ):
 
         super().__init__(settings, *args, **kwargs)
-
-        self._tags = {}
-        self._alerts = {}
-        self._data_cache = {}
 
     async def _create_store_name_for_new_tag(self,
             ds_id: str, tag_id: str) -> dict | None:
@@ -95,6 +59,42 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         """
         return bool(store.get("table"))
 
+    async def _drop_store_for_tag(self, tag_id: str, ds_id: str) -> None:
+        payload = {
+            "base": ds_id,
+            "filter": {
+                "objectClass": ["prsDatastorageTagData"],
+                "cn": [tag_id]
+            },
+            "attributes": ["prsStore"]
+        }
+        tag_data = await self._hierarchy.search(payload=payload)
+        if tag_data:
+            async with self._connection_pools[ds_id].acquire() as conn:
+                tbl_name = json.loads(tag_data[0][2]["prsStore"][0])["table"]
+                await conn.execute(
+                    f'drop table if exists "{tbl_name}"'
+                )
+                self._logger.info(f"{self._config.svc_name} :: Хранилище тега '{tag_id}' в '{ds_id}' удалено.")
+
+    async def _drop_store_for_alert(self, alert_id: str, ds_id: str) -> None:
+        payload = {
+            "base": ds_id,
+            "filter": {
+                "objectClass": ["prsDatastorageAlertData"],
+                "cn": [alert_id]
+            },
+            "attributes": ["prsStore"]
+        }
+        alert_data = await self._hierarchy.search(payload=payload)
+        if alert_data:        
+            async with self._connection_pools[ds_id].acquire() as conn:
+                tbl_name = json.loads(alert_data[0][2]["prsStore"][0])["table"]
+                await conn.execute(
+                    f'drop table if exists "{tbl_name}"'
+                )
+                self._logger.info(f"{self._config.svc_name} :: Хранилище тревоги '{alert_id}' в '{ds_id}' удалено.")
+    
     async def _create_store_for_tag(self, tag_id: str, ds_id: str, store: dict) -> None:
         try:
             async with self._connection_pools[ds_id].acquire() as conn:
@@ -109,7 +109,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                 }
                 res = await self._hierarchy.search(payload=payload)
                 if not res:
-                    self._logger.error(f"Нет данных по тегу {tag_id}")
+                    self._logger.error(f"{self._config.svc_name} :: Нет данных по тегу {tag_id}")
                     return
 
                 value_type = int(res[0][2]["prsValueTypeCode"][0])
@@ -125,7 +125,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                         s_type = "jsonb"
                     case _:
                         er_str = f"Тег: {tag_id}; неизвестный тип данных: {value_type}"
-                        self._logger.error(er_str)
+                        self._logger.error(f"{self._config.svc_name} :: {er_str}")
                         return
 
                 query = (f'CREATE TABLE public."{tbl_name}" ('
@@ -144,244 +144,252 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                 await conn.execute(query)
 
         except Exception as ex:
-            self._logger.error(f"Ошибка создания хранилища тега: {ex}")
+            self._logger.error(f"{self._config.svc_name} :: Ошибка создания хранилища тега: {ex}")
 
-    async def alarm_on(self, mes: dict) -> None:
-
-        self._logger.debug(f"Обработка возникновения тревоги: {mes}")
-
-        alert_id = mes["data"]["alertId"]
-
-        alert_params = self._alerts.get(alert_id)
-        if not alert_params:
-            self._logger.error(
-                f"Тревога {alert_id} не привязана к хранилищу."
-            )
-            return
-
-        connection_pool = alert_params["ds"]
-        alert_tbl = alert_params["table"]
-
-        try:
-            records = []
-            async with connection_pool.acquire() as conn:
-                async with conn.transaction():
-                    q = [f'select * from \"{alert_tbl}\" order by x desc limit 1;']
-                    async for r in conn.cursor(*q):
-                        records.append((r.get('id'), r.get('x'), r.get('cx'), r.get('e')))
-
-                    # если алярмов у тревоги вообще нет или закончились...
-                    if not records or records[0][0] is None or records[0][3]:
-                        await conn.copy_records_to_table(
-                            alert_tbl,
-                            records=[(mes["data"]["x"], None, None)],
-                            columns=('x', 'cx', 'e'))
-
-                        await self._post_message(mes={
-                                "action": "dataStorages.alertOnArchived",
-                                "data": mes["data"]
-                            },
-                            reply=False, routing_key=alert_id
-                        )
-
-                        self._logger.debug(f"Тревога {alert_id} зафиксирована.")
-                    else:
-                        self._logger.debug(f"Тревога {alert_id} уже активна.")
-
-        except PostgresError as ex:
-            self._logger.error(f"Ошибка при записи данных тревоги {alert_id}: {ex}")
-
-    async def alarm_ack(self, mes: dict) -> None:
-
-        self._logger.debug(f"Обработка квитирования тревоги: {mes}")
-
-        alert_id = mes["data"]["alertId"]
-        alert_params = self._alerts.get(alert_id)
-        if not alert_params:
-            self._logger.error(f"Тревога {alert_id} не привязана к хранилищу.")
-            return
-
-        connection_pool = alert_params["ds"]
-        alert_tbl = alert_params["table"]
-
-        try:
-            records = []
-            async with connection_pool.acquire() as conn:
-                async with conn.transaction():
-                    q = [f'select * from \"{alert_tbl}\" order by x desc limit 1;']
-                    async for r in conn.cursor(*q):
-                        records.append((r.get('id'), r.get('x'), r.get('cx'), r.get('e')))
-
-                    # если алярмов у тревоги вообще нет или уже квитирована...
-                    if records[0][0] is None or records[0][2]:
-                        self._logger.debug(f"Тревоги {alert_id} нет, либо уже квитирована.")
-                        return
-
-                    q = f"update \"{alert_tbl}\" set cx = {mes['data']['x']}"
-                    await conn.execute(q)
-                    await self._post_message(mes={
-                            "action": "dataStorages.alertAckArchived",
-                            "data": mes["data"]
-                        },
-                        reply=False, routing_key=alert_id
-                    )
-
-                    self._logger.debug(f"Тревога {alert_id} квитирована.")
-
-        except PostgresError as ex:
-            self._logger.error(f"Ошибка при записи данных тревоги {alert_id}: {ex}")
-
-    async def alarm_off(self, mes: dict) -> None:
-        """Факт пропадания тревоги.
+    async def _create_store_name_for_new_alert(self,
+            ds_id: str, alert_id: str) -> dict | None:
+        """Метод, создающий имя для нового места хранения данных тега.
 
         Args:
-            mes (dict): {"action": "alerts.alrmOff", "data": {"alertId": "alert_id", "x": 123}}
+            ds_id (str): id хранилища
+            alert_id (_type_): id тревоги
 
+        Returns:
+            dict: json с описанием хранилища тега
         """
-        self._logger.debug(f"Обработка пропадания тревоги: {mes}")
-        alert_id = mes["data"]["alertId"]
+        return {
+            "table": f"a_{alert_id}"
+        }
 
-        alert_params = self._alerts.get(alert_id)
-        if not alert_params:
-            self._logger.error(
-                f"Тревога {alert_id} не привязана к хранилищу."
-            )
-            return
+    async def _check_store_name_for_new_tag(self, store: dict) -> bool:
+        """Метод проверяет на корректность имя хранилища для новой тревоги,
+        переданное клиентом.
 
-        connection_pool = alert_params["ds"]
-        alert_tbl = alert_params["table"]
+        Args:
+            store (dict): новое хранилище для тревоги
 
+        Returns:
+            bool: флаг корректности нового имени
+        """
+        return bool(store.get("table"))
+
+    async def _create_store_for_alert(self, alert_id: str, ds_id: str, store: dict) -> None:
+        
         try:
-            records = []
-            async with connection_pool.acquire() as conn:
-                async with conn.transaction():
-                    q = [f'select * from \"{alert_tbl}\" order by x desc limit 1;']
-                    async for r in conn.cursor(*q):
-                        records.append((r.get('id'), r.get('x'), r.get('cx'), r.get('e')))
-
-                    # если алярмов у тревоги вообще нет или закончились...
-                    if records[0][0] is None or records[0][3]:
-                        self._logger.debug(f"Нет активной тревоги {alert_id}.")
-                        return
-
-                    q = f"update \"{alert_tbl}\" set e = {mes['data']['x']}"
-                    await conn.execute(q)
-                    await self._post_message(mes={
-                            "action": "dataStorages.alertOffArchived",
-                            "data": mes["data"]
-                        },
-                        reply=False, routing_key=alert_id
-                    )
-
-                    self._logger.debug(f"Тревога {alert_id} закончена.")
-
-        except PostgresError as ex:
-            self._logger.error(f"Ошибка при записи данных тревоги {alert_id}: {ex}")
-
-    async def _reject_message(self, mes: dict) -> bool:
-        return False
-
-    async def link_alert(self, mes: dict) -> dict:
-
-        async with self._connection_pools[mes["data"]["dataStorageId"]].acquire() as conn:
-
-            if not mes["data"]["attributes"].get("prsStore"):
-                mes["data"]["attributes"]["prsStore"] = \
-                    {"tableName": f'a_{mes["data"]["alertId"]}'}
-
-            alert_params = self._alerts.get(mes["data"]["alertId"])
-            if alert_params:
-                tbl_name = alert_params['table']
-                if mes["data"]["attributes"]["prsStore"]["tableName"] == tbl_name:
-                    self._logger.warning(f"Тревога {mes['data']['alertId']} уже привязана.")
-                    return
-
+            async with self._connection_pools[ds_id].acquire() as conn:
+                tbl_name = store["table"]
                 await conn.execute(
                     f'drop table if exists "{tbl_name}"'
                 )
 
-            tbl_name = mes["data"]["attributes"]["prsStore"]["tableName"]
-
-            alert_cache = await self._prepare_alert_data(
-                mes["data"]["alertId"],
-                mes["data"]["dataStorageId"]
-            )
-            alert_cache["table"] = tbl_name
-            cache_for_store = copy.deepcopy(alert_cache)
-
-            alert_cache["ds"] = self._connection_pools[mes["data"]["dataStorageId"]]
-
-            query = (f'CREATE TABLE public."{alert_cache["table"]}" ('
+                query = (f'CREATE TABLE public."{tbl_name}" ('
                     f'"id" serial primary key,'
                     f'"x" bigint NOT NULL,' # время возникновения тревоги
                     f'"cx" bigint,'         # время квитирования
                     f'"e" bigint);'         # время пропадания тревоги
-                    # Создание индекса на поле "метка времени" ("ts")
-                    f'CREATE INDEX "{alert_cache["table"]}_idx" ON public."{alert_cache["table"]}" '
+                    # Создание индекса на поле "метка времени" ("x")
+                    f'CREATE INDEX "{tbl_name}_idx" ON public."{tbl_name}" '
                     f'USING btree ("x");')
 
-            await conn.execute(query)
+                await conn.execute(query)
 
-            self._alerts[mes["data"]["alertId"]] = alert_cache
+        except Exception as ex:
+            self._logger.error(f"{self._config.svc_name} :: Ошибка создания хранилища тега: {ex}")
 
+    async def _alarm_on(self, mes: dict, routing_key: str = None) -> None:
 
-        return {
-            "prsStore": json.dumps(cache_for_store)
-        }
+        self._logger.debug(f"Обработка возникновения тревоги: {mes}")
 
-    async def unlink_alert(self, mes: dict) -> None:
-        """_summary_
+        alert_id = mes["alertId"]
 
-        Args:
-            mes (dict): {
-                "action": "dataStorages.unlinkAlert",
-                "data": {
-                    "alertId": "alert_id"
-                }
-        """
-        alert_params = self._alerts.get(mes["data"]["alertId"])
-        if not alert_params:
-            self._logger.warning(f"Тревога {mes['data']['alertId']} не привязана к хранилищу.")
-            return
-
-        async with alert_params["ds"].acquire() as conn:
-            await conn.execute(
-                f'drop table if exists "{alert_params["table"]}"'
-            )
-
-        self._alerts.pop(mes["data"]["alertId"])
-
-        self._logger.info(f"Тревога {mes['data']['alertId']} отвязана от хранилища.")
-
-    async def unlink_tag(self, mes: dict) -> None:
-        tag_id = mes["data"]["tagId"]
-        try:
-            res = await self._cache.get(
-                self._config.svc_name,
-                f"tags.{tag_id}"
-            ).exec()
-
-            tag_params = res[0][0]
-
-            if not tag_params:
-                self._logger.warning(f"Тег {mes[tag_id]} не привязан к хранилищу.")
+        alert_params = await self._cache.get(f"{alert_id}.{self._config.svc_name}").exec()
+        if not alert_params[0]:
+            await self._create_alert_cache(alert_id)
+            alert_params = await self._cache.get(f"{alert_id}.{self._config.svc_name}").exec()
+            if not alert_params[0]:
+                self._logger.error(f"{self._config.svc_name} :: Ошибка построения кэша тревоги {alert_id}")
                 return
 
-            async with tag_params["ds"].acquire() as conn:
-                await conn.execute(
-                    f'drop table if exists "{tag_params["table"]}"'
+        alert_params = alert_params[0]
+        for ds_id, prsStore in alert_params["dss"].items():
+            connection_pool = self._connection_pools.get(ds_id)
+            if connection_pool is None:
+                continue
+
+            alert_tbl = prsStore["table"]
+
+            try:
+                records = []
+                async with connection_pool.acquire() as conn:
+                    async with conn.transaction():
+                        q = [f'select * from \"{alert_tbl}\" order by x desc limit 1;']
+                        async for r in conn.cursor(*q):
+                            records.append((r.get('id'), r.get('x'), r.get('cx'), r.get('e')))
+
+                        # если алярмов у тревоги вообще нет или закончились...
+                        if not records or records[0][0] is None or records[0][3]:
+                            await conn.copy_records_to_table(
+                                alert_tbl,
+                                records=[(mes["x"], None, None)],
+                                columns=('x', 'cx', 'e'))
+
+                            self._logger.debug(f"Тревога {alert_id} зафиксирована.")
+                        else:
+                            self._logger.debug(f"Тревога {alert_id} уже активна.")
+
+            except PostgresError as ex:
+                self._logger.error(f"{self._config.svc_name} :: Ошибка при записи данных тревоги {alert_id}: {ex}")
+
+    async def _alarm_ack(self, mes: dict, routing_key: str = None) -> None:
+
+        self._logger.debug(f"Обработка квитирования тревоги: {mes}")
+
+        alert_id = mes["alertId"]
+        alert_params = await self._cache.get(f"{alert_id}.{self._config.svc_name}").exec()
+        if not alert_params[0]:
+            await self._create_alert_cache(alert_id)
+            alert_params = await self._cache.get(f"{alert_id}.{self._config.svc_name}").exec()
+            if not alert_params[0]:
+                self._logger.error(f"{self._config.svc_name} :: Ошибка построения кэша тревоги {alert_id}")
+                return
+
+        alert_params = alert_params[0]
+        for ds_id, prsStore in alert_params["dss"].items():
+            connection_pool = self._connection_pools.get(ds_id)
+            if connection_pool is None:
+                continue
+
+            alert_tbl = prsStore["table"]
+
+            try:
+                records = []
+                async with connection_pool.acquire() as conn:
+                    async with conn.transaction():
+                        q = [f'select * from \"{alert_tbl}\" order by x desc limit 1;']
+                        async for r in conn.cursor(*q):
+                            records.append((r.get('id'), r.get('x'), r.get('cx'), r.get('e')))
+
+                        # если алярмов у тревоги вообще нет или уже квитирована...
+                        if records[0][0] is None or records[0][2]:
+                            self._logger.debug(f"Тревоги {alert_id} нет, либо уже квитирована.")
+                            return
+
+                        q = f"update \"{alert_tbl}\" set cx = {mes['x']}"
+                        await conn.execute(q)
+
+                        self._logger.debug(f"Тревога {alert_id} квитирована.")
+
+            except PostgresError as ex:
+                self._logger.error(f"{self._config.svc_name} :: Ошибка при записи данных тревоги {alert_id}: {ex}")
+
+    async def _alarm_off(self, mes: dict, routing_key: str = None) -> None:
+        """Факт пропадания тревоги.
+
+        Args:
+            mes (dict): {"alertId": "alert_id", "x": 123}
+
+        """
+        self._logger.debug(f"Обработка пропадания тревоги: {mes}")
+        alert_id = mes["alertId"]
+
+        alert_params = await self._cache.get(f"{alert_id}.{self._config.svc_name}")
+        if not alert_params:
+            alert_params = await self._create_alert_cache(alert_id)
+            if not alert_params:
+                self._logger.error(f"{self._config.svc_name} :: Ошибка построения кэша тревоги {alert_id}")
+                return
+
+        for ds_id, prsStore in alert_params["dss"].items():
+            connection_pool = self._connection_pools.get(ds_id)
+            if connection_pool is None:
+                continue
+
+            alert_tbl = prsStore["table"]
+
+            try:
+                records = []
+                async with connection_pool.acquire() as conn:
+                    async with conn.transaction():
+                        q = [f'select * from \"{alert_tbl}\" order by x desc limit 1;']
+                        async for r in conn.cursor(*q):
+                            records.append((r.get('id'), r.get('x'), r.get('cx'), r.get('e')))
+
+                        # если алярмов у тревоги вообще нет или закончились...
+                        if records[0][0] is None or records[0][3]:
+                            self._logger.debug(f"Нет активной тревоги {alert_id}.")
+                            return
+
+                        q = f"update \"{alert_tbl}\" set e = {mes['data']['x']}"
+                        await conn.execute(q)
+
+                        self._logger.debug(f"Тревога {alert_id} закончена.")
+
+            except PostgresError as ex:
+                self._logger.error(f"{self._config.svc_name} :: Ошибка при записи данных тревоги {alert_id}: {ex}")
+
+    async def _tag_updated(self, mes: dict, routing_key: str = None):
+        tag_id = mes['id']
+        
+        payload = {
+            "id": tag_id,
+            "attributes": ["prsValueTypeCode"]
+        }
+        tag_data = await self._hierarchy.search(payload=payload)
+        if not tag_data:
+            self._logger.error(f"{self._config.svc_name} :: В модели нет данных по тегу {tag_id}")
+            return
+        new_type = int(tag_data[0][2]["prsValueTypeCode"][0])
+
+        # тег может быть привязан к нескольким хранилищам
+        for ds_id in self._connection_pools.keys():
+            payload = {
+                "base": ds_id,
+                "filter": {"cn": [tag_id], "objectClass": ["prsDatastorageTagData"]},
+                "deref": False,
+                "attributes": ["prsJsonConfigString", "prsStore"]
+            }
+            tag_link_data = await self._hierarchy.search(payload=payload)
+            if not tag_link_data:
+                self._logger.error(f"{self._config.svc_name} :: Тег '{tag_id}' не привязан к хранилищу '{ds_id}'")
+                continue
+            try:
+                old_type = int(json.loads(tag_link_data[0][2]["prsJsonConfigString"][0])["prsValueTypeCode"])
+            except:
+                self._logger.error(f"{self._config.svc_name} :: Ошибка определения старого типа данных для тега '{tag_id}', хранилище '{ds_id}'.")
+                continue
+
+            if new_type != old_type:
+                store = json.loads(tag_link_data[0][2]["prsStore"][0])
+                await self._create_store_for_tag(tag_id=tag_id, ds_id=ds_id, store=store)
+                await self._hierarchy.modify(
+                    tag_link_data[0][0], 
+                    {
+                        "prsJsonConfigString": {"prsValueTypeCode": new_type}
+                    }
                 )
+                await self._delete_tag_cache(tag_id)
+                await self._create_tag_cache(tag_id)
+                
+                self._logger.info(f"{self._config.svc_name} :: Хранилище тега '{tag_id}' в '{ds_id}' изменено.")        
 
-            await self._cache.delete(
-                self._config.svc_name,
-                f"$.tags.{tag_id}"
-            ).exec()
+    async def _alert_deleted(self, mes: dict, routing_key: str = None):
+        alert_id = mes['id']
+        
+        for ds_id in self._connection_pools.keys():
+            await self._drop_store_for_alert(alert_id, ds_id)
 
-            
-        except Exception as ex:
-            self._logger.error(f"Ошибка отвязки тега: {ex}")
+        await super()._alert_deleted(mes, routing_key)
 
-        self._logger.info(f"Тег {tag_id} отвязан от хранилища.")
+    async def _tag_deleted(self, mes: dict, routing_key: str = None):
+        tag_id = mes['id']
+        
+        for ds_id in self._connection_pools.keys():
+            await self._drop_store_for_tag(tag_id, ds_id)
+
+        await super()._tag_deleted(mes, routing_key)
+
+    async def _reject_message(self, mes: dict) -> bool:
+        return False
 
     async def _write_tag_data_to_db(
             self, tag_id: str) -> None :
@@ -392,9 +400,9 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
         try:
             tag_cache = await self._cache.get(
-                f"{self._config.svc_name}:{tag_id}", "$"
+                f"{tag_id}.{self._config.svc_name}", "$"
             ).set(
-                f"{self._config.svc_name}:{tag_id}", "$.data", []
+                f"{tag_id}.{self._config.svc_name}", "$.data", []
             ).exec()
 
             if not tag_cache[0][0]["data"]:
@@ -403,17 +411,17 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
             for ds_id in tag_cache[0][0]["dss"].keys():
                 active = await self._cache.get(
-                    f"{self._config.svc_name}:{ds_id}", "prsActive"
+                    f"{ds_id}.{self._config.svc_name}", "prsActive"
                 ).exec()
                 if active[0] is None:
                     self._logger.error(
-                        f"Несоответствие кэша тега {tag_id} c кэшем хранилища {ds_id}")
+                        f"{self._config.svc_name} :: Несоответствие кэша тега {tag_id} c кэшем хранилища {ds_id}")
                     continue
 
                 # если хранилище неактивно, данные в него не записываем
                 if not active[0]:
                     self._logger.error(
-                        f"Хранилище {ds_id} неактивно.")
+                        f"{self._config.svc_name} :: Хранилище {ds_id} неактивно.")
                     continue
 
                 async with self._connection_pools[ds_id].acquire() as conn:
@@ -440,7 +448,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                     self._logger.debug(f"В базу {ds_id} для тега {tag_id} записано {len(data)} точек.")
 
         except Exception as ex:
-            self._logger.error(f"Ошибка записи данных в базу {ds_id}: {ex}")
+            self._logger.error(f"{self._config.svc_name} :: Ошибка записи данных в базу {ds_id}: {ex}")
 
     async def _prepare_alert_data(self, alert_id: str, ds_id: str) -> dict | None:
         get_alert_data = {
@@ -453,7 +461,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         alert_data = await self._hierarchy.search(payload=get_alert_data)
 
         if not alert_data:
-            self._logger.info(f"Не найдена тревога {alert_id}")
+            self._logger.info(f"{self._config.svc_name} :: Не найдена тревога {alert_id}")
             return None
 
         to_return = {
@@ -486,26 +494,100 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         Args:
             config (dict): _description_
         """
-        #dsn = config["dsn"]
-        #self._logger.info(f"DSN: {dsn}")
         return await apg.create_pool(dsn=config["dsn"])
-        #return None
+
+    async def _unlink_alert(self, mes: dict, routing_key: str = None) -> None:
+        """_summary_
+
+        Args:
+            mes (dict): {
+                "alertId": "alert_id",
+                "dataStorageId: ds_id"
+            }
+
+        """
+        alert_id = mes["alertId"]
+        ds_id = mes["dataStorageId"]
+        
+        payload = {
+            "base": ds_id,
+            "filter": {
+                "objectClass": ["prsDatastorageAlertData"],
+                "cn": [alert_id]
+            },
+            "attributes": ["prsStore"]
+        }
+        res = await self._hierarchy.search(payload=payload)
+        if not res:
+            self._logger.error(f"{self._config.svc_name} :: Тревога {alert_id} не привязана к хранилищу {ds_id}")
+            return
+
+        table_name = json.loads(res[0][2]["prsStore"][0])["table"]
+        async with self._connection_pools[ds_id].acquire() as conn:
+            await conn.execute(
+                f'drop table if exists "{table_name}"'
+            )
+
+        await self._bind_alert(alert_id, False)
+        index = await self._cache.index(f"{ds_id}.{self._config.svc_name}", "alerts", alert_id).exec()
+        await self._cache.pop(f"{ds_id}.{self._config.svc_name}", "alerts", index).exec()
+
+        self._logger.info(f"{self._config.svc_name} :: Тревога {alert_id} отвязана от хранилища {ds_id}.")
+
+    async def _unlink_tag(self, mes: dict, routing_key: str = None) -> None:
+        """_summary_
+
+        Args:
+            mes (dict): {
+                "action": "datastorages.unlinktag",
+                "data": {
+                    "tagId": "tag_id",
+                    "dataStorageId": "ds_id"
+                }
+        """
+        tag_id = mes["tagId"]
+        ds_id = mes["dataStorageId"]
+        
+        payload = {
+            "base": ds_id,
+            "filter": {
+                "objectClass": ["prsDatastorageAlertData"],
+                "cn": [tag_id]
+            },
+            "attributes": ["prsStore"]
+        }
+        res = await self._hierarchy.search(payload=payload)
+        if not res:
+            self._logger.error(f"{self._config.svc_name} :: Тег {tag_id} не привязан к хранилищу {ds_id}")
+            return
+
+        table_name = json.loads(res[0][2]["prsStore"][0])["table"]
+        async with self._connection_pools[ds_id].acquire() as conn:
+            await conn.execute(
+                f'drop table if exists "{table_name}"'
+            )
+
+        await self._bind_tag(tag_id, False)
+        index = await self._cache.index(f"{ds_id}.{self._config.svc_name}", "tags", tag_id).exec()
+        await self._cache.pop(f"{ds_id}.{self._config.svc_name}", "tags", index).exec()
+
+        self._logger.info(f"{self._config.svc_name} :: Тег {tag_id} отвязан от хранилища {ds_id}.")
 
     async def _read_data(self, tag_id: str, start: int, finish: int,
         order: int, count: int, one_before: bool, one_after: bool, value: Any = None):
 
         actual_ds = None
         tag_data = await self._cache.get(
-            f"{self._config.svc_name}:{tag_id}",
+            f"{tag_id}.{self._config.svc_name}",
             "prsActive", "dss", "prsValueTypeCode"
         ).exec()
 
         if not tag_data[0]:
-            self._logger.error(f"Тег {tag_id} отсутствует в кэше.")
+            self._logger.error(f"{self._config.svc_name} :: Тег {tag_id} отсутствует в кэше.")
             
             return []
         if not tag_data[0]["prsActive"]:
-            self._logger.error(f"Тег {tag_id} неактивен.")
+            self._logger.error(f"{self._config.svc_name} :: Тег {tag_id} неактивен.")
             
             return []
 
@@ -514,12 +596,12 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         # пока будем брать из первого активного
         for ds_id in tag_data[0]["dss"].keys():
             ds_res = await self._cache.get(
-                f"{self._config.svc_name}:{ds_id}",
+                f"{ds_id}.{self._config.svc_name}",
                 "prsActive"
             ).exec()
             if ds_res[0] is None:
                 self._logger.error(
-                    f"Хранилище {ds_id} отсутствует в кэше."
+                    f"{self._config.svc_name} :: Хранилище {ds_id} отсутствует в кэше."
                 )
             if ds_res[0]:
                 actual_ds = ds_id
@@ -527,7 +609,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         
         if not actual_ds:
             self._logger.error(
-                f"Не найдено актуальное хранилище для тега {tag_id}"
+                f"{self._config.svc_name} :: Не найдено актуальное хранилище для тега {tag_id}"
             )
             return []
 

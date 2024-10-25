@@ -75,13 +75,6 @@ class MethodsAPICRUD(svc.APICRUDSvc):
 
     """
 
-    _outgoing_commands = {
-        "create": "methods.create",
-        "read": "methods.read",
-        "update": "methods.update",
-        "delete": "methods.delete"
-    }
-
     def __init__(self, settings: MethodsAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
@@ -91,7 +84,7 @@ class MethodsAPICRUD(svc.APICRUDSvc):
     async def _read(self, payload: MethodRead) -> dict:
         return await super()._read(payload=payload)
 
-    async def _update(self, payload: MethodUpdate) -> dict:
+    async def _update(self, payload: dict) -> dict:
         return await super()._update(payload=payload)
 
 settings = MethodsAPICRUDSettings()
@@ -158,21 +151,20 @@ async def read(q: str | None = None, payload: MethodRead | None = None, error_ha
 
 @router.put("/", status_code=202)
 async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
-    s = json.dumps(payload)
     try:
-        p = MethodUpdate.model_validate_json(s)
+        MethodUpdate.model_validate(payload)
     except Exception as ex:
         res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
         app._logger.exception(res)
         await error_handler.handle_error(res)
 
-    res = await app._update(payload)
+    res = await app._update(payload=payload)
     await error_handler.handle_error(res)
     return res
 
 @router.delete("/", status_code=202)
 async def delete(payload: svc.NodeDelete, error_handler: svc.ErrorHandler = Depends()):
-    res = await app.delete(payload)
+    res = await app._delete(payload)
     await error_handler.handle_error(res)
     return res
 

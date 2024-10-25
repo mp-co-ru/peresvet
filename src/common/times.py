@@ -44,7 +44,18 @@ def ts (time_data: int | str = None) -> int:
     return int ((timestampFrom - start_ts).total_seconds() * microsec)
 
 def int_to_local_timestamp (int_ts: int) -> datetime.datetime:
+    if int_ts is None:
+        return None
+    
     return datetime.datetime.fromtimestamp(int_ts / microsec, tz.tzlocal())
+
+def ts_to_local_str (ts: int | str) -> str:
+    if ts is None:
+        return None
+    if isinstance(ts, str):
+        return ts
+    
+    return str(datetime.datetime.fromtimestamp(ts / microsec, tz.tzlocal()))
 
 def now_int() -> int:
     """ Количество микросекунд, начиная с 1 января 1970 UTC

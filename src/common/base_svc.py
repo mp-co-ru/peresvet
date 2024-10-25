@@ -17,6 +17,7 @@ from pamqp.commands import Basic
 
 from src.common.logger import PrsLogger
 from src.common.base_svc_settings import BaseSvcSettings
+#from src.common.local_cache import LocalCache
 from src.common.redis_cache import RedisCache
 
 class BaseSvc(FastAPI):
@@ -51,7 +52,7 @@ class BaseSvc(FastAPI):
         self._amqp_connection: aio_pika.abc.AbstractRobustConnection = None
         self._amqp_is_connected: bool = False
         self._amqp_channel: aio_pika.abc.AbstractRobustChannel = None
-        self._exchange = None
+        self._exchange = aio_pika.abc.AbstractRobustExchange = None
         self._amqp_consume_queue: aio_pika.abc.AbstractRobustQueue = None
         self._amqp_callback_queue: aio_pika.abc.AbstractRobustQueue = None
         self._callback_futures: MutableMapping[str, asyncio.Future] = {}
@@ -156,7 +157,7 @@ class BaseSvc(FastAPI):
             for key in self._handlers.keys():
                 if re.fullmatch(key, message.routing_key):
                     passed = True
-                    res = await self._handlers[key](mes)
+                    res = await self._handlers[key](mes=mes, routing_key=message.routing_key)
 
                     if message.reply_to:
                         # здесь нельзя использовать self._post_message
@@ -209,7 +210,6 @@ class BaseSvc(FastAPI):
         if isinstance(res, DeliveredMessage):
             if isinstance(res.delivery, Basic.Return):
                 if res.delivery.reply_code == 312:
-                    #self._logger.warning(f"{self._config.svc_name} :: Нет подписчиков на сообщение с ключом {routing_key}.")
                     return
         if not reply:
             return True
@@ -225,14 +225,17 @@ class BaseSvc(FastAPI):
         if message.correlation_id is None:
             self._logger.error(f"{self._config.svc_name} :: У сообщения не выставлен параметр `correlation_id`")
         else:
-            future: asyncio.Future = self._callback_futures.pop(message.correlation_id, None)
-            future.set_result(json.loads(message.body.decode()))
+            try:
+                future: asyncio.Future = self._callback_futures.pop(message.correlation_id, None)
+                future.set_result(json.loads(message.body.decode()))
+            except:
+                self._logger.error(f"{self._config.svc_name} :: Ошибка работы с ответом.")
 
     async def _generate_queue(self):
         """Логика генерации очереди/очередей сообщений
         """
         self._amqp_consume_queue = await self._amqp_channel.declare_queue(
-            f"{self._config.svc_name}_consume", durable=True
+            f"{self._config.svc_name}_consume", durable=False, auto_delete=True
         )
         
     async def _bind_queue(self):
@@ -265,7 +268,7 @@ class BaseSvc(FastAPI):
                 await self._amqp_channel.set_qos(1)
 
                 self._exchange = await self._amqp_channel.declare_exchange(
-                    self._config.broker["name"], "topic", durable=True
+                    self._config.broker["name"], "topic", durable=False, auto_delete=True
                 )
 
                 await self._generate_queue()
@@ -274,7 +277,7 @@ class BaseSvc(FastAPI):
                 await self._amqp_consume_queue.consume(self._process_message)
 
                 self._amqp_callback_queue = await self._amqp_channel.declare_queue(
-                    durable=True, exclusive=True
+                    durable=False, auto_delete=True, exclusive=True
                 )
                 await self._amqp_callback_queue.bind(
                     exchange=self._exchange,
@@ -301,6 +304,7 @@ class BaseSvc(FastAPI):
         await self._cache_connect()        
 
     async def _cache_connect(self):
+        #self._cache = LocalCache()
         self._cache = RedisCache(self._config.cache_url)
 
     async def on_shutdown(self) -> None:

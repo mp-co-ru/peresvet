@@ -2,10 +2,9 @@
 Модуль содержит примеры запросов и ответов на них, параметров которые могут входить в
 запрос, в сервисе tags.
 """
-import json
 import sys
-from uuid import UUID
-from typing import Any, List
+import json
+from typing import Any
 from pydantic import Field, validator
 
 from fastapi import APIRouter, Depends
@@ -74,13 +73,14 @@ class TagCreateAttributes(svc.NodeAttributes):
     )
 
 class TagCreate(svc.NodeCreate):
-    attributes: TagCreateAttributes = Field({}, title="Атрибуты узла")
+    attributes: TagCreateAttributes = Field(TagCreateAttributes(), title="Атрибуты узла")
     validate_id = validator('parentId', allow_reuse=True)(svc.valid_uuid)
 
 class TagRead(svc.NodeRead):
     pass
 
 class TagUpdate(svc.NodeUpdate):
+    attributes: TagCreateAttributes = Field({}, title="Атрибуты узла")
     validate_id = validator('parentId', 'id', allow_reuse=True)(svc.valid_uuid)
 
 class TagsAPICRUD(svc.APICRUDSvc):
@@ -103,7 +103,7 @@ class TagsAPICRUD(svc.APICRUDSvc):
     async def _read(self, payload: TagRead) -> dict:
         return await super()._read(payload=payload)
 
-    async def _update(self, payload: TagUpdate) -> dict:
+    async def _update(self, payload: dict) -> dict:
         return await super()._update(payload=payload)
 
 settings = TagsAPICRUDSettings()
@@ -218,7 +218,7 @@ async def read(q: str | None = None, payload: TagRead | None = None, error_handl
     return res
 
 @router.put("/", status_code=202)
-async def update(payload: TagUpdate, error_handler: svc.ErrorHandler = Depends()):
+async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
     """
     Метод обновления тега в иерархии.
 
@@ -254,6 +254,13 @@ async def update(payload: TagUpdate, error_handler: svc.ErrorHandler = Depends()
         * **detail** (list) - Детали ошибки.
 
     """
+    try:
+        TagUpdate.model_validate(payload)
+    except Exception as ex:
+        res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+        app._logger.exception(res)
+        await error_handler.handle_error(res)
+
     res = await app._update(payload)
     await error_handler.handle_error(res)
     return res
