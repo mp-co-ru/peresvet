@@ -90,7 +90,7 @@ class ModelCRUDSvc(Svc):
         {
             "id": null,
             "error": {
-                "code": 406,
+                "code": 422,
                 "message": "Ошибка создания узла."
             }
         }
@@ -198,7 +198,7 @@ class ModelCRUDSvc(Svc):
             self._logger.error(f"{self._config.svc_name} :: {err_mes}")
             res_response = {
                 "error": {
-                    "code": 406,
+                    "code": 422,
                     "message": err_mes
                 }
             }
@@ -210,7 +210,7 @@ class ModelCRUDSvc(Svc):
             self._logger.error(f"{self._config.svc_name} :: {err_mes}")
             res_response = {
                 "error": {
-                    "code": 406,
+                    "code": 422,
                     "message": err_mes
                 }
             }
@@ -225,7 +225,7 @@ class ModelCRUDSvc(Svc):
                 self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                 res_response = {
                     "error": {
-                        "code": 406,
+                        "code": 422,
                         "message": err_mes
                     }
                 }
@@ -236,7 +236,7 @@ class ModelCRUDSvc(Svc):
                 self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                 res_response = {
                     "error": {
-                        "code": 406,
+                        "code": 422,
                         "message": err_mes
                     }
                 }
@@ -255,7 +255,7 @@ class ModelCRUDSvc(Svc):
                 self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                 res_response = {
                     "error": {
-                        "code": 406,
+                        "code": 422,
                         "message": err_mes
                     }
                 }
@@ -279,7 +279,19 @@ class ModelCRUDSvc(Svc):
         )
         
         if mes.get("attributes"):
-            await self._hierarchy.modify(id, mes["attributes"])
+            try:
+                await self._hierarchy.modify(id, mes["attributes"])
+            except Exception as ex:
+                err_mes = f"Ошибка обновления узла: {ex}."
+                self._logger.error(f"{self._config.svc_name} :: {err_mes}")
+                res_response = {
+                    "error": {
+                        "code": 422,
+                        "message": err_mes
+                    }
+                }
+                return res_response
+
         if new_parent:
             await self._hierarchy.move(id, new_parent)
 
@@ -326,7 +338,7 @@ class ModelCRUDSvc(Svc):
                 self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                 res_response = {
                     "error": {
-                        "code": 406,
+                        "code": 422,
                         "message": err_mes
                     }
                 }
@@ -338,7 +350,7 @@ class ModelCRUDSvc(Svc):
                 self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                 res_response = {
                     "error": {
-                        "code": 406,
+                        "code": 422,
                         "message": err_mes
                     }
                 }
@@ -363,7 +375,7 @@ class ModelCRUDSvc(Svc):
                 self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                 res_response = {
                     "error": {
-                        "code": 409,
+                        "code": 422,
                         "message": err_mes
                     }
                 }
@@ -552,7 +564,7 @@ class ModelCRUDSvc(Svc):
                 self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                 res_response = {
                     "error": {
-                        "code": 406,
+                        "code": 422,
                         "message": err_mes
                     }
                 }
@@ -633,7 +645,7 @@ class ModelCRUDSvc(Svc):
             res = {
                 "id": None,
                 "error": {
-                    "code": 406,
+                    "code": 422,
                     "message": "Не определён родительский узел."
                 }
             }
@@ -649,7 +661,7 @@ class ModelCRUDSvc(Svc):
             res = {
                 "id": None,
                 "error": {
-                    "code": 406,
+                    "code": 422,
                     "message": "Неприемлемый класс родительского узла."
                 }
             }
@@ -703,7 +715,7 @@ class ModelCRUDSvc(Svc):
             res = {
                 "id": None,
                 "error": {
-                    "code": 406,
+                    "code": 422,
                     "message": "Ошибка создания узла."
                 }
             }
