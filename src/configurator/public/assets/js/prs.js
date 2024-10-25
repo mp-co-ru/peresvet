@@ -407,7 +407,7 @@ addParameter = (event, parameterData) => {
 						<input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-cn-${newLevel}"/>
 					</div>
           <div class="col-4 me-2">
-            <select prsAttribute="parameter" onchange="onInputChange(event);" id="input-parameter-tagId-${newLevel}" class="form-select" size="1">
+            <select prsAttribute="parameter" onchange="onInputChange(event);" id="input-parameter-tagId-${newLevel}" class="form-select form-select-sm" size="1">
               <option selected value="ttt">&#62;=</option>
               <option value="ttttt">&#60;</option>											
             </select>
@@ -416,7 +416,7 @@ addParameter = (event, parameterData) => {
 						<!--
             <input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-prsJsonConfigString-${newLevel}"/>
             -->
-            <textarea class="form-control form-control-sm" prsAttribute="parameter" autocomplete="off" id="input-parameter-prsJsonConfigString-${newLevel}"></textarea>
+            <textarea class="form-control form-control-sm" prsAttribute="parameter" autocomplete="off" rows="1" id="input-parameter-prsJsonConfigString-${newLevel}"></textarea>
 					</div>
 					<button id="but-deleteParameter-${newLevel}" class="btn btn-sm m-1 btn-danger" onclick="deleteParameter(event);">
 						<span><i class="fa-solid fa-minus" id="i-deleteParameter-${newLevel}"></i></span>
@@ -839,7 +839,7 @@ showAlert  = (divAlertId, divAlertMessageId, icon, message, norm) => {
   }, 5000);
 }
 
-newNodeId = null;
+var newNodeId = null;
 
 addNodeToHierarchy  = (api) => {
 
@@ -969,19 +969,19 @@ addNodeToHierarchy  = (api) => {
           "bubbles": true,
           "cancelable": false
         });
+        $("div.currentNode").removeClass("currentNode");
         newNodeId = new_id;
         el = document.getElementById(parentId);
         el.dispatchEvent(clickEvent);
-        $("div.currentNode").removeClass("currentNode");
+        
       } else 
-        addNode(divToExtend, node, true);
+        var new_node = addNode(divToExtend, node, true);
 
         var clickEvent = new MouseEvent("click", {
           "view": window,
           "bubbles": true,
           "cancelable": false
         });
-        var new_node = document.getElementById(new_id);
         new_node.dispatchEvent(clickEvent);
         new_node.focus();
     })
@@ -1141,7 +1141,7 @@ formTagDataPanels  = () => {
 }
 
 // используем этот список при заполнении списка тегов в параметрах
-let tags = [];
+var tags = [];
   
 fillForm  = (nodeElement) => {
   let nodeId = nodeElement.id;
@@ -1227,12 +1227,6 @@ fillForm  = (nodeElement) => {
 
 	  // для метода - заполним список initiatedBy и parameters
     if (objClass === "prsMethod") {
-      // параметры
-      $("#div-list-parameters").empty();
-      nodeData.parameters.map((item) => {
-        addParameter(null, item);
-      });
-
       $("#input-initiatedByTags option").remove();
       $("#input-initiatedByAlerts option").remove();
       $("#input-initiatedBySchedules option").remove();
@@ -1285,7 +1279,13 @@ fillForm  = (nodeElement) => {
         $("#input-initiatedByTags").attr("init-value", $("#input-initiatedByTags").val());
         $("#input-initiatedByAlerts").attr("init-value", $("#input-initiatedByAlerts").val());
         $("#input-initiatedBySchedules").attr("init-value", $("#input-initiatedBySchedules").val());
-      })
+
+        // параметры
+        $("#div-list-parameters").empty();
+        nodeData.parameters.map((item) => {
+          addParameter(null, item);
+        });
+      })      
     }
 
     // для тега подготовим панели работы с данными
@@ -1407,9 +1407,20 @@ clickNode  = (event) => {
     if (groupItems) sortList(groupItems);
 
     if (newNodeId) {
+      var new_node = document.getElementById(newNodeId);
+      newNodeId = null;
+      var clickEvent = new MouseEvent("click", {
+        "view": window,
+        "bubbles": true,
+        "cancelable": false
+      });
+      new_node.dispatchEvent(clickEvent);
+      new_node.focus();
+      /*
       $(`#${newNodeId}`).addClass("currentNode");
       fillForm(document.getElementById(newNodeId));
-      newNodeId = null;      
+      newNodeId = null;
+      */   
     }
   });
 };
