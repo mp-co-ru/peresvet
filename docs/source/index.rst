@@ -20,7 +20,8 @@
    Используемые термины<terms>
    Компоненты системы<components>
    Исторические данные<historical_data>
-   Установка<installation>
+   Установка и запуск<installation>
+   Конфигуратор модели<configurator>
    Примеры работы с платформой<examples>
    Создание экранов в Grafana<grafana/grafana_integration>
    API<api>
