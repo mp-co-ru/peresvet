@@ -20,51 +20,50 @@
 				<a href="https://vovaman.github.io/peresvet/"
 					target="_blank"><img src="public/assets/pics/logo_middle.png" class="edge" width="8%"/></a>&nbsp;
 				<button id="but-newObject" class="btn btn-primary btn-icon btn-sm d-none"
-						data-bs-toggle="tooltip" title="Новый объект"
-						onclick="addNodeToHierarchy('objects');">
-						<span class="icon"><i class="fa-solid fa-object-ungroup"></i></span><i class="fa-solid fa-plus"></i>
-					</button>
+							data-bs-toggle="tooltip" title="Новый объект"
+							onclick="addNodeToHierarchy('objects');">
+							<span class="icon"><i class="fa-solid fa-object-ungroup"></i></span><i class="fa-solid fa-plus"></i>
+						</button>
 				<button id="but-newTag" class="btn btn-primary btn-icon btn-sm d-none"
-						data-bs-toggle="tooltip" title="Новый тег"
-						onclick="addNodeToHierarchy('tags');">
-						<span class="icon"><i class="fa-solid fa-tag"></i></span><i class="fa-solid fa-plus"></i>
-					</button>
+							data-bs-toggle="tooltip" title="Новый тег"
+							onclick="addNodeToHierarchy('tags');">
+							<span class="icon"><i class="fa-solid fa-tag"></i></span><i class="fa-solid fa-plus"></i>
+						</button>
 				<button id="but-newAlert" class="btn btn-primary btn-icon btn-sm d-none"
-						data-bs-toggle="tooltip" title="Новая тревога"
-						onclick="addNodeToHierarchy('alerts');">
-						<span class="icon"><i class="fa-solid fa-bell"></i></span><i class="fa-solid fa-plus"></i>
-					</button>
+							data-bs-toggle="tooltip" title="Новая тревога"
+							onclick="addNodeToHierarchy('alerts');">
+							<span class="icon"><i class="fa-solid fa-bell"></i></span><i class="fa-solid fa-plus"></i>
+						</button>
 				<button id="but-newMethod" class="btn btn-primary btn-icon btn-sm d-none"
-						data-bs-toggle="tooltip" title="Новый метод"
-						onclick="addNodeToHierarchy('methods');">
-						<span class="icon"><i class="fa-solid fa-file-code"></i></span><i class="fa-solid fa-plus"></i>
-					</button>
+							data-bs-toggle="tooltip" title="Новый метод"
+							onclick="addNodeToHierarchy('methods');">
+							<span class="icon"><i class="fa-solid fa-file-code"></i></span><i class="fa-solid fa-plus"></i>
+						</button>
 				<button id="but-newConnector" class="btn btn-primary btn-icon btn-sm d-none"
-						data-bs-toggle="tooltip" title="Новый коннектор"
-						onclick="addNodeToHierarchy('connectors');">
-						<span class="icon"><i class="fa-solid fa-link"></i></span><i class="fa-solid fa-plus"></i>
-					</button>
+							data-bs-toggle="tooltip" title="Новый коннектор"
+							onclick="addNodeToHierarchy('connectors');">
+							<span class="icon"><i class="fa-solid fa-link"></i></span><i class="fa-solid fa-plus"></i>
+						</button>
 				<button id="but-newSchedule" class="btn btn-primary btn-icon btn-sm d-none"
-						data-bs-toggle="tooltip" title="Новое расписание"
-						onclick="addNodeToHierarchy('schedules');">
-						<span class="icon"><i class="fa-solid fa-clock"></i></span><i class="fa-solid fa-plus"></i>
-					</button>&nbsp;&nbsp;
+							data-bs-toggle="tooltip" title="Новое расписание"
+							onclick="addNodeToHierarchy('schedules');">
+							<span class="icon"><i class="fa-solid fa-clock"></i></span><i class="fa-solid fa-plus"></i>
+						</button>&nbsp;&nbsp;
 				<button id="but-delNode" class="btn btn-danger btn-icon btn-sm d-none"
-						data-bs-toggle="tooltip" title="Удалить текущий узел"
-						onclick="deleteNode();">
-						<span class="icon"><i class="fa-solid fa-trash-can"></i></span><i class="fa-solid fa-xmark"></i>
-					</button>
+							data-bs-toggle="tooltip" title="Удалить текущий узел"
+							onclick="deleteNode();">
+							<span class="icon"><i class="fa-solid fa-trash-can"></i></span><i class="fa-solid fa-xmark"></i>
+						</button>
 			</div>
-			<div id="div-butAlert" class="alert alert-message alert-dismissible d-flex rounded p-0 mt-3 d-none"
-				role="alert">
+			<div id="div-butAlert" class="alert alert-message alert-dismissible d-flex rounded p-0 mt-3 d-none" role="alert">
 				<div class="alert-icon d-flex justify-content-center align-items-center flex-grow-0 flex-shrink-0 py-3">
 					<i class="fa-solid fa-circle-exclamation fs-4" id="i-butAlert"></i>
 				</div>
 				<div id="div-butAlertMessage" class="d-flex align-items-center py-2 px-3"></div>
 				<button type="button" class="btn-close" aria-label="Close"
-					onclick="$('#div-butAlert').addClass('d-none');"></button>
+						onclick="$('#div-butAlert').addClass('d-none');"></button>
 			</div>
-
+	
 			<div class="p-2 mt-2" id="tree"></div>
 		</div>
 		<div class="element-holder col d-none" id="attributes-form">
@@ -81,111 +80,111 @@
 			<hr class="mt-2" />
 			<div class="input-group" id="div-cn">
 				<span class="input-group-text prs-input-label space-between">Имя
-						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" title="Имя узла. На одном уровне иерархии не может быть узлов с одинаковыми именами."></i>
-					</span>
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" title="Имя узла. На одном уровне иерархии не может быть узлов с одинаковыми именами."></i>
+						</span>
 				<input prsAttribute="cn" onchange="onInputChange(event);" type="text" class="form-control" id="input-cn">
 			</div>
 			<div class="input-group mt-2" id="div-description">
 				<span class="input-group-text prs-input-label space-between">Описание					
-					</span>
+						</span>
 				<input prsAttribute="description" onchange="onInputChange(event);" type="text" class="form-control" id="input-description"/>
 			</div>
 			<div class="input-group mt-2" id="div-prsMethodAddress">
 				<span class="input-group-text prs-input-label space-between">Адрес
-						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
-							title="Название метода, под которым он зарегистрирован в системе">
-						</i>
-					</span>
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+								title="Название метода, под которым он зарегистрирован в системе">
+							</i>
+						</span>
 				<input prsAttribute="prsMethodAddress" onchange="onInputChange(event);"  type="text" class="form-control" id="input-prsMethodAddress" placeholder=""/>
 	
 			</div>
 	
 			<div class="input-group mt-2" id="div-prsValueTypeCode">
 				<span class="input-group-text prs-input-label space-between">Тип значений
-						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
-							title="Тип значений, хранящихся в теге. Поддерживаются типы: целочисленный, вещественный, строковый и json.">
-						</i>
-					</span>
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+								title="Тип значений, хранящихся в теге. Поддерживаются типы: целочисленный, вещественный, строковый и json.">
+							</i>
+						</span>
 				<select prsAttribute="prsValueTypeCode" onchange="onInputChange(event);" id="input-prsValueTypeCode" class="form-select" required>
-						<option selected value="1">Вещественный</option>
-						<option value="0">Целый</option>
-						<option value="2">Строковый</option>
-						<option value="4">json</option>
-					</select>
+							<option selected value="1">Вещественный</option>
+							<option value="0">Целый</option>
+							<option value="2">Строковый</option>
+							<option value="4">json</option>
+						</select>
 			</div>
 	
 			<div class="input-group mt-2" id="div-prsActive">
 				<span class="input-group-text prs-input-label space-between">Активный
-					<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
-					title="Активность узла. Если этот флаг сброшен, узел перестаёт функционировать, как и все его дочерние узлы. Но у дочерних узлов флаг активности не изменяется (не реализовано)."></i>
-				</span>
+						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+						title="Активность узла. Если этот флаг сброшен, узел перестаёт функционировать, как и все его дочерние узлы. Но у дочерних узлов флаг активности не изменяется (не реализовано)."></i>
+					</span>
 				<select prsAttribute="prsActive" onchange="onInputChange(event);" id="input-prsActive" class="form-select" required>
-					<option selected value="true">Да</option>
-					<option value="false">Нет</option>
-				</select>
+						<option selected value="true">Да</option>
+						<option value="false">Нет</option>
+					</select>
 			</div>
 	
 			<div class="input-group mt-2" id="div-prsIndex">
 				<span class="input-group-text prs-input-label space-between">Индекс
-						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
-							title="Индекс узла на текущем уровне иерархии. Если у узлов на одном уровне иерархии выставлены индексы, платформа будет возвращать список этих узлов, отсортированный в порядке возрастания индексов.">
-						</i>					
-					</span>
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+								title="Индекс узла на текущем уровне иерархии. Если у узлов на одном уровне иерархии выставлены индексы, платформа будет возвращать список этих узлов, отсортированный в порядке возрастания индексов.">
+							</i>					
+						</span>
 				<input prsAttribute="prsIndex" onchange="onInputChange(event);" type="number" class="form-control" id="input-prsIndex" placeholder=""/>
 			</div>
 	
 			<div class="input-group mt-2" id="div-prsEntityTypeCode">
 				<span class="input-group-text prs-input-label space-between">Тип
-					<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
-						title="Код типа узла. Для методов: 0 - вычислительный метод тега.">
-					</i>
-				</span>
+						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+							title="Код типа узла. Для методов: 0 - вычислительный метод тега.">
+						</i>
+					</span>
 				<input prsAttribute="prsEntityTypeCode" onchange="onInputChange(event);"  type="number" class="form-control" id="input-prsEntityTypeCode" placeholder=""/>
 			</div>
 	
 			<div class="input-group mt-2" id="div-prsJsonConfigString">
 				<span class="input-group-text prs-input-label space-between">Конфигурация
-						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
-							title="Конфигурация узла. Как и атрибут 'Тип' не интерпретируется платформой и нужен для моделей или других приложений. Предполагается, что конфигурация указывается в виде json.">
-						</i>
-					</span>
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+								title="Конфигурация узла. Как и атрибут 'Тип' не интерпретируется платформой и нужен для моделей или других приложений. Предполагается, что конфигурация указывается в виде json.">
+							</i>
+						</span>
 				<input prsAttribute="prsJsonConfigString" onchange="onInputChange(event);" type="text" class="form-control" id="input-prsJsonConfigString" placeholder=""/>
 			</div>
 	
 			<div class="input-group mt-2" id="div-prsUpdate">
 				<span class="input-group-text prs-input-label space-between">Обновлять
-						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
-							title="Флаг обновления значений тега. Если = ``true``, то на каждую метку времени может быть записано только одно значение тега. Иначе на одну метку времени может быть несколько значений.">
-						</i>						
-					</span>
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+								title="Флаг обновления значений тега. Если = ``true``, то на каждую метку времени может быть записано только одно значение тега. Иначе на одну метку времени может быть несколько значений.">
+							</i>						
+						</span>
 				<select prsAttribute="prsUpdate" onchange="onInputChange(event);" id="input-prsUpdate" class="form-select" required>
-						<option selected value="true">Да</option>
-						<option value="false">Нет</option>
-					</select>
+							<option selected value="true">Да</option>
+							<option value="false">Нет</option>
+						</select>
 			</div>
 	
 			<div class="input-group mt-2" id="div-prsDefault">
 				<span class="input-group-text prs-input-label space-between">По умолчанию
-						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
-							title="Флаг узла по умолчанию. На каждом уровне иерархии может быть только один узел по умолчанию. Если создаётся новый узел с флагом Default = true, то платформа сбросит этот флаг у старого узла на соответствующем уровне иерархии и узлом по умолчанию будет новый.">
-						</i>
-					</span>
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+								title="Флаг узла по умолчанию. На каждом уровне иерархии может быть только один узел по умолчанию. Если создаётся новый узел с флагом Default = true, то платформа сбросит этот флаг у старого узла на соответствующем уровне иерархии и узлом по умолчанию будет новый.">
+							</i>
+						</span>
 				<select prsAttribute="prsDefault" onchange="onInputChange(event);" id="input-prsDefault" class="form-select" required>
-						<option selected value="true">Да</option>
-						<option value="false">Нет</option>
-					</select>
+							<option selected value="true">Да</option>
+							<option value="false">Нет</option>
+						</select>
 			</div>
 	
 			<div class="input-group mt-2" id="div-prsStep">
 				<span class="input-group-text prs-input-label space-between">Шаговый
-						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
-							title="Флаг 'шагового' тега. Если = true, то значение тега между двумя соседними метками не интерполируется.">
-						</i>
-					</span>
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+								title="Флаг 'шагового' тега. Если = true, то значение тега между двумя соседними метками не интерполируется.">
+							</i>
+						</span>
 				<select prsAttribute="prsStep" onchange="onInputChange(event);" id="input-prsStep" class="form-select" required>
-						<option value="true">Да</option>
-						<option selected value="false">Нет</option>
-					</select>
+							<option value="true">Да</option>
+							<option selected value="false">Нет</option>
+						</select>
 			</div>
 	
 			<div class="input-group mt-2" id="div-prsMeasureUnits">
@@ -195,119 +194,119 @@
 	
 			<div class="input-group mt-2" id="div-initiatedBy">
 				<span class="input-group-text prs-input-label space-between">Инициаторы:
-						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
-							title="Список того, что инициирует запуск метода. Теги: изменение значения указанного тега; тревоги: возникновение тревоги; расписание: запланированный момент времени. Все эти события инициируют запуск метода.">
-						</i>
-					</span>
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
+								title="Список того, что инициирует запуск метода. Теги: изменение значения указанного тега; тревоги: возникновение тревоги; расписание: запланированный момент времени. Все эти события инициируют запуск метода.">
+							</i>
+						</span>
 				<div class="form-control d-flex">
 					<div class="nav flex-column nav-pills m-2" id="v-pills-tab" role="tablist" aria-orientation="vertical">
 						<button class="nav-link nav-link-icon active text-start" id="v-pills-Tags-tab" data-bs-toggle="pill" data-bs-target="#v-pills-Tags" type="button" role="tab" aria-controls="v-pills-Tags" aria-selected="true" onClick="initiatorsTabClicked('tags')">
-								<i class="fa-solid fa-tags"></i>&nbsp;&nbsp;Теги
-							</button>
+									<i class="fa-solid fa-tags"></i>&nbsp;&nbsp;Теги
+								</button>
 						<!--
-							<button class="nav-link nav-link-icon text-start" id="v-pills-Alerts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-Alerts" type="button" role="tab" aria-controls="v-pills-Alerts" aria-selected="false">
-								<i class="fa-solid fa-bell"></i>&nbsp;&nbsp;Тревоги
-							</button>
-							-->
+								<button class="nav-link nav-link-icon text-start" id="v-pills-Alerts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-Alerts" type="button" role="tab" aria-controls="v-pills-Alerts" aria-selected="false">
+									<i class="fa-solid fa-bell"></i>&nbsp;&nbsp;Тревоги
+								</button>
+								-->
 						<button class="nav-link nav-link-icon text-start" id="v-pills-Schedules-tab" data-bs-toggle="pill" data-bs-target="#v-pills-Schedules" type="button" role="tab" aria-controls="v-pills-Schedules" aria-selected="false" onClick="initiatorsTabClicked('schedules')">
-								<i class="fa-solid fa-clock"></i>&nbsp;&nbsp;Расписания
-							</button>
+									<i class="fa-solid fa-clock"></i>&nbsp;&nbsp;Расписания
+								</button>
 					</div>
 					<div class="tab-content" id="v-pills-tabContent">
 						<div class="tab-pane fade show active" id="v-pills-Tags" role="tabpanel" aria-labelledby="v-pills-Tags-tab"
 							tabindex="0">
 							<select prsAttribute="initiatedBy" onchange="onInputChange(event);" id="input-initiatedByTags" class="form-select mt-1" size="5" multiple>
-									<option selected value="true">Текст текст текст</option>
-									<option value="false">Текст текст текст</option>											
-								</select>
+										<option selected value="true">Текст текст текст</option>
+										<option value="false">Текст текст текст</option>											
+									</select>
 						</div>
 						<!--
-							<div class="tab-pane fade" id="v-pills-Alerts" role="tabpanel" aria-labelledby="v-pills-Alerts-tab" tabindex="0">
-								<select prsAttribute="initiatedBy" onchange="onInputChange(event);" id="input-initiatedByAlerts" class="form-select mt-1" size="5" multiple>
-									<option selected value="true">Текст текст текст</option>
-									<option value="false">Текст текст текст</option>											
-								</select>
-							</div>
-							-->
+								<div class="tab-pane fade" id="v-pills-Alerts" role="tabpanel" aria-labelledby="v-pills-Alerts-tab" tabindex="0">
+									<select prsAttribute="initiatedBy" onchange="onInputChange(event);" id="input-initiatedByAlerts" class="form-select mt-1" size="5" multiple>
+										<option selected value="true">Текст текст текст</option>
+										<option value="false">Текст текст текст</option>											
+									</select>
+								</div>
+								-->
 						<div class="tab-pane fade" id="v-pills-Schedules" role="tabpanel" aria-labelledby="v-pills-Schedules-tab"
 							tabindex="0">
 							<select prsAttribute="initiatedBy" onchange="onInputChange(event);" id="input-initiatedBySchedules" class="form-select mt-1" size="5" multiple>
-									<option selected value="true">Текст текст текст</option>
-									<option value="false">Текст текст текст</option>											
-								</select>
+										<option selected value="true">Текст текст текст</option>
+										<option value="false">Текст текст текст</option>											
+									</select>
 						</div>
 					</div>
 				</div>
 			</div>
-
+	
 			<div class="input-group mt-2" id="div-alertConfig">
 				<span class="input-group-text prs-input-label space-between">Конфигурация:
-					<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
-						title="Конфигурация тревоги.">
-					</i>
-				</span>
+						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
+							title="Конфигурация тревоги.">
+						</i>
+					</span>
 				<div class="form-control">
 					<div class="d-flex">
 						<div class="col-1 text-small-size mx-1">Сравнение
-							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
-								title="Условие сравнения значения тега с критическим значением.">
-							</i>
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
+									title="Условие сравнения значения тега с критическим значением.">
+								</i>
 						</div>
 						<div class="col-1 text-small-size mx-1">Значение
-							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
-								title="Критическое значение тега.">
-							</i>
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
+									title="Критическое значение тега.">
+								</i>
 						</div>
 						<div class="col text-small-size mx-1">Автоквитирование
 							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" data-bs-html="true"
-								title="Тип квитирования тревоги: вручную или автоматически.">
-							</i>
+									title="Тип квитирования тревоги: вручную или автоматически.">
+								</i>
 						</div>
 					</div>
 					<div class="d-flex align-items-start">
 						<div class="col-1 mx-1">
 							<select prsAttribute="alertConfig" onchange="onInputChange(event);" id="input-alertConfHigh" class="form-select" size="1">
-								<option selected value="true">&#62;=</option>
-								<option value="false">&#60;</option>											
-							</select>
+									<option selected value="true">&#62;=</option>
+									<option value="false">&#60;</option>											
+								</select>
 						</div>
 						<div class="col-1 mx-1">
 							<input prsAttribute="alertConfig" onchange="onInputChange(event);"  type="number" class="form-control" id="input-alertConfValue" placeholder=""/>
 						</div>
 						<div class="col-1 mx-1">
 							<select prsAttribute="alertConfig" onchange="onInputChange(event);" id="input-alertConfAutoack" class="form-select" size="1">
-								<option selected value="true">Да</option>
-								<option value="false">Нет</option>											
-							</select>
+									<option selected value="true">Да</option>
+									<option value="false">Нет</option>											
+								</select>
 						</div>
 					</div>
-				</div>	
+				</div>
 			</div>
-
+	
 			<div class="input-group mt-2" id="div-scheduleConfig">
 				<span class="input-group-text prs-input-label space-between">Конфигурация:
-					<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
-						title="Конфигурация расписания.">
-					</i>
-				</span>
+						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
+							title="Конфигурация расписания.">
+						</i>
+					</span>
 				<div class="form-control">
 					<div class="d-flex">
 						<div class="col-2 text-small-size mx-1 px-1">Начало
-							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
-								title="Дата начала работы расписания.">
-							</i>
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
+									title="Дата начала работы расписания.">
+								</i>
 						</div>
 						<div class="col-2 text-small-size mx-1 px-1">Периодичность
-							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
-								title="Секунды/минуты/часы/дни.">
-							</i>
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
+									title="Секунды/минуты/часы/дни.">
+								</i>
 						</div>
-						<div class="col-2 text-small-size mx-1 px-1">Длина периода							
+						<div class="col-2 text-small-size mx-1 px-1">Длина периода
 						</div>
 						<div class="col-2 text-small-size mx-1 px-1">Окончание
-							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
-								title="Дата окончания работы расписания.">
-							</i>
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
+									title="Дата окончания работы расписания.">
+								</i>
 						</div>
 					</div>
 					<div class="d-flex align-items-start">
@@ -316,11 +315,11 @@
 						</div>
 						<div class="col-2 mx-1">
 							<select prsAttribute="scheduleConfig" onchange="onInputChange(event);" id="input-scheduleConfIntervalType" class="form-select" size="1">
-								<option selected value="seconds">Секунды</option>
-								<option value="minutes">Минуты</option>
-								<option value="hours">Часы</option>
-								<option value="days">Дни</option>
-							</select>
+									<option selected value="seconds">Секунды</option>
+									<option value="minutes">Минуты</option>
+									<option value="hours">Часы</option>
+									<option value="days">Дни</option>
+								</select>
 						</div>
 						<div class="col-2 mx-1">
 							<input prsAttribute="scheduleConfig" onchange="onInputChange(event);"  type="number" class="form-control" id="input-scheduleConfIntervalValue" placeholder=""/>
@@ -329,39 +328,44 @@
 							<input prsAttribute="scheduleConfig" onchange="onInputChange(event);"  type="datetime-local" class="form-control" id="input-scheduleConfEnd" placeholder=""/>
 						</div>
 					</div>
-				</div>	
+				</div>
 			</div>
 	
 			<div class="input-group mt-2" id="div-parameters">
 				<span class="input-group-text prs-input-label space-between">Параметры
-						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
-							title="Параметры, передаваемые для расчёта в метод.">
-						</i>
-					</span>
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+								title="Параметры, передаваемые для расчёта в метод.">
+							</i>
+						</span>
 				<div class="form-control">
 					<div class="d-flex">
 						<div id="indent"></div>
 						<div class="col-1 text-small-size">Индекс
 							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
-									title="Индекс задаёт порядок, в котором параметры передаются в метод.">
-								</i>
+										title="Индекс задаёт порядок, в котором параметры передаются в метод.">
+									</i>
 						</div>
 						<div class="col-1 text-small-size">Имя
 							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
-									title="Имя не влияет на расчёт, используется только для удобного обозначения параметра.">
-								</i>
+										title="Имя не влияет на расчёт, используется только для удобного обозначения параметра.">
+									</i>
+						</div>
+						<div class="col-4 text-small-size">Тег
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
+										title="">
+									</i>
 						</div>
 						<div class="col text-small-size">Конфигурация
 							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" data-bs-html="true"
-									title='Тело запроса data/get. Полученное значение будет передано методу в качестве значения параметра.'>
-								</i>
+										title='Тело запроса data/get. Полученное значение будет передано методу в качестве значения параметра.'>
+									</i>
 						</div>
 					</div>
 					<div class="d-flex align-items-start">
 						<div class="text-left m-1">
 							<button id="but-addParameter-0" class="btn btn-sm btn-primary" onclick="addParameter(event, null);">
-									<span><i class="fa-solid fa-plus"></i></span>
-								</button>
+										<span><i class="fa-solid fa-plus"></i></span>
+									</button>
 						</div>
 						<div id="div-list-parameters" class="align-items-stretch">
 							<div class="d-flex align-items-center" prsIndex="0" id="span-parameter-0">
@@ -371,11 +375,20 @@
 								<div class="col-1 me-2">
 									<input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-cn-0"/>
 								</div>
+								<div class="col-4 me-2">
+									<select prsAttribute="parameter" onchange="onInputChange(event);" id="input-parameter-tagId-0" class="form-select" size="1">
+											<option selected value="ttt">&#62;=</option>
+											<option value="ttttt">&#60;</option>											
+										</select>
+								</div>
 								<div class="col me-2">
-									<input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-prsJsonConfigString-0"/>
+									<!--
+										<input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-prsJsonConfigString-0"/>
+										-->
+									<textarea class="form-control form-control-sm" prsAttribute="parameter" autocomplete="off" id="input-parameter-prsJsonConfigString-0">{"data": []}</textarea>
 								</div>
 								<button id="but-deleteParameter-0" class="btn btn-sm m-1 btn-danger" onclick="deleteParameter(event);">
-										<span><i class="fa-solid fa-minus"></i></span>
+										<span><i class="fa-solid fa-minus" id="i-deleteParameter-0"></i></span>
 									</button>
 							</div>
 						</div>
@@ -383,32 +396,31 @@
 				</div>
 			</div>
 	
-			<div id="div-updateAlert" class="alert alert-message alert-dismissible d-flex rounded p-0 mt-3 d-none"
-				role="alert">
+			<div id="div-updateAlert" class="alert alert-message alert-dismissible d-flex rounded p-0 mt-3 d-none" role="alert">
 				<div class="alert-icon d-flex justify-content-center align-items-center flex-grow-0 flex-shrink-0 py-3">
 					<i class="fa-solid fa-circle-exclamation fs-4" id="i-updateAlert"></i>
 				</div>
 				<div id="div-updateAlertMessage" class="d-flex align-items-center py-2 px-3"></div>
 				<button type="button" class="btn-close" aria-label="Close"
-					onclick="$('#div-updateAlert').addClass('d-none');"></button>
+						onclick="$('#div-updateAlert').addClass('d-none');"></button>
 			</div>
-
+	
 			<div class="text-left mt-sm-2">
 				<button id="but-save" class="btn btn-primary btn-icon btn-sm disabled" onclick="saveChanges();">
-						<span class="icon"><i class="fa-solid fa-download"></i></span>Записать
-					</button>
+							<span class="icon"><i class="fa-solid fa-download"></i></span>Записать
+						</button>
 				<button id="but-reset" class="btn btn-secondary btn-icon btn-sm disabled" onclick="resetChanges();">
-						<span class="icon"><i class="fa-solid fa-trash-can"></i></span>Сбросить
-					</button>
+							<span class="icon"><i class="fa-solid fa-trash-can"></i></span>Сбросить
+						</button>
 			</div>
 			<hr class="mt-2" />
-			
+	
 			<div class="input-group mt-2" id="div-tagData">
 				<span class="input-group-text prs-input-label space-between">Данные тега
-					<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
-						title="Просмотр и запись значений тега.">
-					</i>
-				</span>
+						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+							title="Просмотр и запись значений тега.">
+						</i>
+					</span>
 				<div class="form-control">
 					<details>
 						<summary>
@@ -437,12 +449,12 @@
 									<table class="table table-sm">
 										<thead>
 											<tr>
-											<th scope="col">Значение</th>
-											<th scope="col">Время</th>
-											<th scope="col">Качество</th>
+												<th scope="col">Значение</th>
+												<th scope="col">Время</th>
+												<th scope="col">Качество</th>
 											</tr>
 										</thead>
-										<tbody id="tbody-tagData">											
+										<tbody id="tbody-tagData">
 										</tbody>
 									</table>
 								</div>
@@ -462,7 +474,7 @@
 											</tr>
 											<tr>
 												<td>
-													json body:
+													body:
 												</td>
 												<td>
 													<textarea class="form-control form-control-sm" readonly autocomplete="off" id="span-tagSetDataBody">{"data": [{"tagId": ".....", }]}</textarea>
@@ -486,7 +498,7 @@
 									</div>
 									<div id="div-setDataAlertMessage" class="d-flex align-items-center py-2 px-3"></div>
 									<button type="button" class="btn-close" aria-label="Close"
-										onclick="$('#div-setDataAlert').addClass('d-none');"></button>
+											onclick="$('#div-setDataAlert').addClass('d-none');"></button>
 								</div>
 								<button type="button" class="btn btn-primary btn-sm" id="button-tagSetData" onclick="setTagData();">Записать данные</button>
 							</div>

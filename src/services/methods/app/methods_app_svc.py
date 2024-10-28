@@ -182,8 +182,8 @@ class MethodsApp(AppSvc):
         for tag_item in mes["data"]:
             tag_id = tag_item["tagId"]
             tag_data = tag_item["data"]
-            methods_ids = await self._cache.get(f"{tag_id}.{self._config.svc_name}").exec()
-            if not methods_ids[0]:
+            methods = await self._cache.get(f"{tag_id}.{self._config.svc_name}").exec()
+            if not methods[0]:
                 self._logger.error(f"{self._config.svc_name} :: К тегу '{tag_id}' не привязаны методы.")
                 continue
 
@@ -195,15 +195,15 @@ class MethodsApp(AppSvc):
                 }
             ]
             """
-            self._logger.debug(f"methods_ids: {methods_ids[0]}")
-            for item in methods_ids[0]:
+            self._logger.debug(f"methods_ids: {methods[0]}")
+            for method_id, tag_id in methods[0].items():
                 parameters = await self._hierarchy.search({
-                    "base": item["methodId"],
+                    "base": method_id,
                     "filter": {"cn": ["*"], "objectClass": ["prsMethodParameter"]},
                     "attributes": ["prsJsonConfigString", "prsIndex", "cn"]
                 })
                 for tag_data_item in tag_data:
-                    await self._calc_tag(item["tagId"], item["methodId"], parameters, tag_data_item)
+                    await self._calc_tag(tag_id, method_id, parameters, tag_data_item)
 
     async def _calc_tag(self, tag_id: str, method_id: str, parameters: dict, data: list[int | None]) -> None:
 

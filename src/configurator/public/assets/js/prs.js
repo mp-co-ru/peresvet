@@ -279,8 +279,11 @@ saveChanges = () => {
   }
 
   let cnChanged = false;
+  let error_prepare_data = false;
   changedElements.map((element) => {
     attr = element.getAttribute("prsAttribute");
+    if (attr === "parameter")
+      return
     if (attr === "cn")
       cnChanged = true;
 
@@ -289,47 +292,75 @@ saveChanges = () => {
         payload.attributes[attr] = Number(element.value);
       } else if (bool_attrs.includes(attr) && (element.value !== null)) {
         payload.attributes[attr] = element.value === 'true';
-      } else 
+      } else
         payload.attributes[attr] = element.value;
-	} else if (attr === "alertConfig") {
-		payload.attributes["prsJsonConfigString"] = {
-			high: $("#input-alertConfHigh").val() === 'true',
-			value: Number($("#input-alertConfValue").val()),
-			autoAck: $("#input-alertConfAutoack").val() === 'true'
-		}
-	} else if (attr === "scheduleConfig") {
-    ts = {}
-		if ($("#input-scheduleConfStart").val() !== '') {
-      dt = new Date(Date.parse($("#input-scheduleConfStart").val()));
-    	ts.start = dt.toISOString();
+    } else if (attr === "alertConfig") {
+      payload.attributes["prsJsonConfigString"] = {
+        high: $("#input-alertConfHigh").val() === 'true',
+        value: Number($("#input-alertConfValue").val()),
+        autoAck: $("#input-alertConfAutoack").val() === 'true'
+      }
+    } else if (attr === "scheduleConfig") {
+      ts = {}
+      if ($("#input-scheduleConfStart").val() !== '') {
+        dt = new Date(Date.parse($("#input-scheduleConfStart").val()));
+        ts.start = dt.toISOString();
+      }
+      if ($("#input-scheduleConfIntervalType").val())
+        ts.interval_type = $("#input-scheduleConfIntervalType").val()
+      if ($("#input-scheduleConfIntervalValue").val())
+        ts.interval_value = Number($("#input-scheduleConfIntervalValue").val())
+      if ($("#input-scheduleConfEnd").val() !== '') {
+        dt = new Date(Date.parse($("#input-scheduleConfEnd").val()));
+        ts.end = dt2.toISOString();
+      }
+      payload.attributes["prsJsonConfigString"] = ts
     }
-		if ($("#input-scheduleConfIntervalType").val())
-			ts.interval_type = $("#input-scheduleConfIntervalType").val()
-		if ($("#input-scheduleConfIntervalValue").val())
-			ts.interval_value = Number($("#input-scheduleConfIntervalValue").val())
-		if ($("#input-scheduleConfEnd").val() !== '') {
-      dt = new Date(Date.parse($("#input-scheduleConfEnd").val()));
-      ts.end = dt2.toISOString();
-    }
-		payload.attributes["prsJsonConfigString"] = ts
-	}
   });
 
   if (objectClass === "prsMethod") {
     let initiatedBy = [];
-  
+
     // если меняется метод, то надо собрать всех инициаторов, независимо от того, что изменилось
-    $("#input-initiatedByTags > option").each(function() {
-      if(this.selected) {
+    $("#input-initiatedByTags > option").each(function () {
+      if (this.selected) {
         initiatedBy.push(this.value);
       }
     });
-    $("#input-initiatedBySchedules > option").each(function() {
-      if(this.selected)
+    $("#input-initiatedBySchedules > option").each(function () {
+      if (this.selected)
         initiatedBy.push(this.value);
     });
     payload.initiatedBy = initiatedBy;
+
+    parameters = []
+    //...а также параметры
+    $("#div-list-parameters > div").each(function () {
+      index = this.id.split("-").slice(-1);
+
+      let parameter_payload = {};
+      try {
+        parameter_payload = JSON.parse($(`#input-parameter-prsJsonConfigString-${index}`).val());
+      } catch (err) {
+        showAlert("div-updateAlert", "div-updateAlertMessage", "i-updateDataAlert", `Ошибка конвертирования данных параметра: '${err}'`);
+        error_prepare_data = true;
+        return
+      }
+
+      parameters.push({
+        attributes: {
+          cn: $(`#input-parameter-cn-${index}`).val(),
+          prsIndex: $(`#input-parameter-prsIndex-${index}`).val(),
+          prsJsonConfigString: parameter_payload
+        }
+      });
+    });
+    if (parameters.length > 0)
+      payload.parameters = parameters;
   }
+
+  if (error_prepare_data)
+    return;
 
   fetch(url, {
     method: "PUT",
@@ -338,9 +369,8 @@ saveChanges = () => {
       'Content-Type': 'application/json'
     })
   }).then((response) => {
-    if (!response.ok) {      
-      showAlert("div-updateAlert", "div-updateAlertMessage", "i-updateDataAlert", `Ошибка обновления по запросу '${body}'`);
-      return ;
+    if (!response.ok) {
+      throw response;
     }
 
     if (cnChanged) {
@@ -353,8 +383,14 @@ saveChanges = () => {
     });
     $("#but-save").addClass("disabled");
     $("#but-reset").addClass("disabled");
+
+    changeTagDataPanelOnSave();
+
+  }).catch((err) => {
+    err.json().then((body) => {
+      showAlert("div-updateAlert", "div-updateAlertMessage", "i-updateDataAlert", `Ошибка обновления узла '${JSON.stringify(body)}'`);
+    })
   });
-  changeTagDataPanelOnSave();
 };
 
 addParameter = (event, parameterData) => {
@@ -375,33 +411,89 @@ addParameter = (event, parameterData) => {
 					<div class="col-1 me-2">
 						<input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-cn-${newLevel}"/>
 					</div>
+          <div class="col-4 me-2">
+            <select prsAttribute="parameter" onchange="onInputChange(event);" id="input-parameter-tagId-${newLevel}" class="form-select form-select-sm" size="1">
+              <option selected value="ttt">&#62;=</option>
+              <option value="ttttt">&#60;</option>											
+            </select>
+          </div>
 					<div class="col me-2">
-						<input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-prsJsonConfigString-${newLevel}"/>
+						<!--
+            <input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-prsJsonConfigString-${newLevel}"/>
+            -->
+            <textarea class="form-control form-control-sm" prsAttribute="parameter" autocomplete="off" rows="1" id="input-parameter-prsJsonConfigString-${newLevel}"></textarea>
 					</div>
 					<button id="but-deleteParameter-${newLevel}" class="btn btn-sm m-1 btn-danger" onclick="deleteParameter(event);">
-						<span><i class="fa-solid fa-minus"></i></span>
+						<span><i class="fa-solid fa-minus" id="i-deleteParameter-${newLevel}"></i></span>
 					</button>
 				</div>
 			`);
 
-  if (parameterData) {
-    let index = Number(parameterData.attributes.prsIndex[0]);
-    let name = parameterData.attributes.cn[0];
-    let config = parameterData.attributes.prsJsonConfigString[0];
+  parameter_tags_select = $(`#input-parameter-tagId-${newLevel}`);
+  $(`#input-parameter-tagId-${newLevel} option`).remove();
 
-    $(`#input-parameter-prsIndex-${newLevel}`).val(index);
-    $(`#input-parameter-cn-${newLevel}`).val(name);
-    $(`#input-parameter-prsJsonConfigString-${newLevel}`).val(config);
+  let getTagsPayload = {
+    base: "prs",
+    deref: false,
+    scope: 2,
+    filter: {
+      objectClass: ["prsTag"]
+    },
+    attributes: ["cn", "objectClass"]
   }
+  let params = new URLSearchParams({ q: JSON.stringify(getTagsPayload) }).toString();
+
+  let url = `${window.location.protocol}//${window.location.hostname}/v1/objects/?${params}`;
+  tags = []
+  fetch(url).then((response) => {
+    if (!response.ok) {
+      showAlert("div-updateAlert", "div-updateAlertMessage", "i-updateAlert", "Ошибка получения списка тегов, тревог, расписаний.", false);
+      return;
+    }
+    return response.json();
+  }).then((allTags) => {
+    if (!allTags) return;
+    allTags.data.map((dataItem) => {
+      tags.push({
+        cn: dataItem.attributes.cn[0],
+        id: dataItem.id
+      });
+    });
+    tags.map((el) => {
+      parameter_tags_select.append(`<option value="${el.id}">${el.cn}&nbsp;(${el.id})</option>`);
+    });
+    parameter_tags_select.val("");
+    if (parameterData) {
+      let index = Number(parameterData.attributes.prsIndex[0]);
+      let name = parameterData.attributes.cn[0];
+      let config_text = parameterData.attributes.prsJsonConfigString[0];
+  
+      let config = JSON.parse(config_text);
+      if (Array.isArray(config.tagId))
+        tagId = config.tagId[0];
+      else
+        tagId = config.tagId;
+  
+      parameter_tags_select.val(tagId);
+  
+      $(`#input-parameter-prsIndex-${newLevel}`).val(index);
+      $(`#input-parameter-cn-${newLevel}`).val(name);
+      $(`#input-parameter-prsJsonConfigString-${newLevel}`).val(config_text);
+    }
+  });
 }
 
 deleteParameter = (event) => {
   event.stopPropagation();
-  targetBut = event.target;
-  targetBut.parentElement.remove();
+  targetEl = event.target;
+  deletedId = targetEl.id;
+  if (deletedId.startsWith("i-"))
+    targetEl.parentElement.parentElement.parentElement.remove();
+  else
+    targetEl.parentElement.remove();
 }
 
-deleteNode  = () => {
+deleteNode = () => {
   let currentNode = $(".currentNode")[0];
   let nodeId = currentNode.id;
   let objectClass = currentNode.getAttribute("objectClass");
@@ -414,8 +506,7 @@ deleteNode  = () => {
     })
   }).then((response) => {
     if (!response.ok) {
-      showAlert("div-updateAlert", "div-updateAlertMessage", "i-updateAlert", `Ошибка удаления узла ${nodeId}`);
-      return;
+      throw response;
     };
 
     let group = getNodeGroup(currentNode);
@@ -423,17 +514,23 @@ deleteNode  = () => {
       group.remove();
     }
     currentNode.remove();
-  });
+  }).catch((err) => {
+    err.json().then((body) => {
+      showAlert("div-updateAlert", "div-updateAlertMessage", "i-updateAlert", `Ошибка удаления узла '${nodeId}': '${JSON.stringify(body)}'`);
+    })
+  });;
 };
 
-onInputChange  = (event) => {
+onInputChange = (event) => {
   targetEl = event.target;
   initValue = targetEl.getAttribute("init-value");
   let equal = false;
+
   if (targetEl.tagName === "SELECT") {
     let curVal = $(targetEl).val()
-	if (Array.isArray(curVal))
-		curVal.join(',');
+
+    if (Array.isArray(curVal))
+      curVal.join(',');
     equal = initValue === curVal;
   } else
     equal = (initValue === $(targetEl).val())
@@ -443,6 +540,19 @@ onInputChange  = (event) => {
   else
     targetEl.classList.add("value-changed");
 
+  // если изменился тег из списка тегов в параметре
+  elId = targetEl.id;
+  if (elId.startsWith("input-parameter-tagId")) {
+    let paramIndex = elId.split("-").slice(-1);
+    selectedTag = $(targetEl).val();
+    payload = {
+      tagId: [selectedTag]
+    }
+    $(`#input-parameter-prsJsonConfigString-${paramIndex}`).val(
+      JSON.stringify(payload, null, "\t")
+    ).addClass("value-changed");
+  }
+
   inputs = document.querySelectorAll(".value-changed");
   if (inputs.length > 0) {
     $("#but-save").removeClass("disabled");
@@ -451,9 +561,11 @@ onInputChange  = (event) => {
     $("#but-save").addClass("disabled");
     $("#but-reset").addClass("disabled");
   }
+
+
 };
 
-getFocus  = (event) => {
+getFocus = (event) => {
   event.stopPropagation();
 
   els = document.getElementsByClassName("currentNode");
@@ -465,7 +577,7 @@ getFocus  = (event) => {
   el.classList.toggle("currentNode");
 };
 
-sortList  = (group) => {
+sortList = (group) => {
   var new_group = group.cloneNode(false);
   // Add all lis to an array
   var groupItems = [];
@@ -504,7 +616,7 @@ sortList  = (group) => {
   };
 };
 
-addNode  = (parentElement, node, top = false) => {
+addNode = (parentElement, node, top = false) => {
   // добавление узла в иерархию
   // parentElement - родительский элемент
   // node - {
@@ -575,7 +687,7 @@ addNode  = (parentElement, node, top = false) => {
 }
 
 // возвращает группу узла, в которой находятся его дети
-getNodeGroup  = (nodeElement) => {
+getNodeGroup = (nodeElement) => {
   dataBsTargetId = nodeElement.getAttribute("data-bs-target").substring(1);
   return document.getElementById(dataBsTargetId);
 };
@@ -636,7 +748,7 @@ const apis = {
   "prsSchedule": "/v1/schedules/"
 }
 
-setAttributesVisibility  = (nodeElement) => {
+setAttributesVisibility = (nodeElement) => {
   nodeId = nodeElement.id;
   objClass = nodeElement.getAttribute("objectClass");
 
@@ -655,7 +767,7 @@ setAttributesVisibility  = (nodeElement) => {
   })
 };
 
-setAddButtonsVisibility  = (clickedNode) => {
+setAddButtonsVisibility = (clickedNode) => {
   objClass = clickedNode.getAttribute("objectClass");
   nodeId = clickedNode.id;
   switch (objClass) {
@@ -740,7 +852,7 @@ setAddButtonsVisibility  = (clickedNode) => {
   }
 };
 
-showAlert  = (divAlertId, divAlertMessageId, icon, message, norm) => {
+showAlert = (divAlertId, divAlertMessageId, icon, message, norm) => {
   $(`#${divAlertMessageId}`).text(message);
   $(`#${divAlertId}`).removeClass("d-none");
   if (norm) {
@@ -749,11 +861,11 @@ showAlert  = (divAlertId, divAlertMessageId, icon, message, norm) => {
 
     $(`#${icon}`).removeClass("fa-solid fa-circle-exclamation");
     $(`#${icon}`).addClass("fas fa-check-circle");
-    
+
   } else {
     $(`#${divAlertId}`).addClass("alert-danger");
-    $(`#${divAlertId}`).removeClass("alert-success"); 
-    
+    $(`#${divAlertId}`).removeClass("alert-success");
+
     $(`#${icon}`).addClass("fa-solid fa-circle-exclamation");
     $(`#${icon}`).removeClass("fas fa-check-circle");
   }
@@ -763,10 +875,12 @@ showAlert  = (divAlertId, divAlertMessageId, icon, message, norm) => {
   }, 5000);
 }
 
-addNodeToHierarchy  = (api) => {
+var newNodeId = null;
+
+addNodeToHierarchy = (api) => {
 
   if (api === 'connectors') {
-    showAlert("div-butAlert", "div-butAlertMessage", "i-butAlert", 
+    showAlert("div-butAlert", "div-butAlertMessage", "i-butAlert",
       'Работа с коннекторами - в следующей версии конфигуратора.', true);
     return;
   }
@@ -774,18 +888,6 @@ addNodeToHierarchy  = (api) => {
   url = window.location.protocol + "//" + window.location.hostname + "/v1/" + api + "/";
 
   parentId = $("div.currentNode")[0].id;
-
-  if (!($("div.currentNode").attr("aria-expanded"))) {
-
-    var clickEvent = new MouseEvent("click", {
-      "view": window,
-      "bubbles": true,
-      "cancelable": false
-    });
-    el = document.getElementById(parentId);
-    el.dispatchEvent(clickEvent);
-    el.focus();
-  }
 
   payload = { attributes: {} };
   if (!((parentId === "objects") || (parentId === "tags") || (parentId === "connectors") || (parentId === "schedules"))) {
@@ -805,6 +907,8 @@ addNodeToHierarchy  = (api) => {
     }
     return response.json();
   }).then((data) => {
+    if (!data)
+      return;
     new_id = data.id;
     url += `?q=${encodeURIComponent(JSON.stringify({
       id: new_id,
@@ -821,6 +925,9 @@ addNodeToHierarchy  = (api) => {
       }
       return response.json();
     }).then((data) => {
+      if (!data)
+        return;
+
       divToExtend = document.getElementById(parentId);
       node = {
         id: new_id,
@@ -848,8 +955,6 @@ addNodeToHierarchy  = (api) => {
           break;
       }
 
-      new_node = addNode(divToExtend, node, true);
-
       // привяжем тег к хранилищу
       if ((api === "tags") || (api === "alerts")) {
         urlDs = window.location.protocol + "//" + window.location.hostname + "/v1/dataStorages/";
@@ -867,6 +972,8 @@ addNodeToHierarchy  = (api) => {
           }
           return response.json();
         }).then((data) => {
+          if (!data)
+            return;
           payload = {
             id: data.data[0].id
           }
@@ -891,6 +998,21 @@ addNodeToHierarchy  = (api) => {
         })
       }
 
+      if (!($("div.currentNode").attr("aria-expanded"))) {
+
+        var clickEvent = new MouseEvent("click", {
+          "view": window,
+          "bubbles": true,
+          "cancelable": false
+        });
+        $("div.currentNode").removeClass("currentNode");
+        newNodeId = new_id;
+        el = document.getElementById(parentId);
+        el.dispatchEvent(clickEvent);
+
+      } else
+        var new_node = addNode(divToExtend, node, true);
+
       var clickEvent = new MouseEvent("click", {
         "view": window,
         "bubbles": true,
@@ -906,7 +1028,7 @@ var tagGetDataURL = '';
 var tagGetDataPayload = {};
 var tagSetDataURL = '';
 var tagSetDataPayload = {};
-getTagData  = () => {
+getTagData = () => {
   tagGetDataURL = $("#span-tagGetDataURL").text();
   fetch(tagGetDataURL, {
     headers: {
@@ -926,10 +1048,10 @@ getTagData  = () => {
       tr = $("<tr></tr>").appendTo(tBody);
       tr.append(`<td>${JSON.stringify(dataItem[0])}</td><td>${dataItem[1]}</td><td>${dataItem[2]}</td>`);
     });
-  });  
+  });
 }
 
-setTagData  = () => {
+setTagData = () => {
   tagSetDataPayload = JSON.parse($("#span-tagSetDataBody").text());
   tagSetDataURL = `${window.location.protocol}//${window.location.hostname}/v1/data/`;
   fetch(tagSetDataURL, {
@@ -939,20 +1061,20 @@ setTagData  = () => {
       'Content-Type': 'application/json'
     })
   }).then((response) => {
-    if (!response.ok) {      
-      showAlert("div-setDataAlert", "div-setDataAlertMessage", "i-setDataAlert", `Ошибка обновления по запросу '${body}'`, false);      
+    if (!response.ok) {
+      showAlert("div-setDataAlert", "div-setDataAlertMessage", "i-setDataAlert", `Ошибка обновления данных '${body}'`, false);
     } else {
       showAlert("div-setDataAlert", "div-setDataAlertMessage", "i-setDataAlert", `Данные успешно записаны.`, true);
     }
   })
 }
 
-changeTagDataPanelOnSave  = () => {
+changeTagDataPanelOnSave = () => {
   tBody = $("#tbody-tagData").empty();
   value_type = Number($("#input-prsValueTypeCode").val());
   input_el = $("#input-tagSetDataValue");
   input_el.val(null);
-  switch(value_type) {
+  switch (value_type) {
     case 0:
     case 1:
       input_el.attr("type", "number");
@@ -963,14 +1085,14 @@ changeTagDataPanelOnSave  = () => {
     case 4:
       input_el.attr("type", "textarea");
       break;
-  }  
+  }
 }
 
-tagSetDataValueChanged  = () => {
+tagSetDataValueChanged = () => {
   value_type = Number($("#input-prsValueTypeCode").attr("init-value"));
   value = $("#input-tagSetDataValue").val();
-  switch(value_type) {
-    case 4: 
+  switch (value_type) {
+    case 4:
       try {
         value = JSON.parse(value);
       } catch (err) {
@@ -982,7 +1104,7 @@ tagSetDataValueChanged  = () => {
               tagId: $("#div-nodeId").text(),
               data: [[null]]
             }
-          ]    
+          ]
         }
         $("#span-tagSetDataBody").text(JSON.stringify(tagSetDataPayload, null, "\t"));
         return;
@@ -1002,26 +1124,26 @@ tagSetDataValueChanged  = () => {
               tagId: $("#div-nodeId").text(),
               data: [[null]]
             }
-          ]    
+          ]
         }
         $("#span-tagSetDataBody").text(JSON.stringify(tagSetDataPayload, null, "\t"));
         return;
       }
   }
-  
+
   tagSetDataPayload = {
     data: [
       {
         tagId: $("#div-nodeId").text(),
         data: [[value]]
       }
-    ]    
+    ]
   }
 
   $("#span-tagSetDataBody").text(JSON.stringify(tagSetDataPayload, null, "\t"));
 }
 
-formTagDataPanels  = () => {
+formTagDataPanels = () => {
   let post_url = `${window.location.protocol}//${window.location.hostname}/v1/data/`;
   let get_url = `${post_url}?q=`;
   tagGetDataPayload = {
@@ -1048,13 +1170,16 @@ formTagDataPanels  = () => {
         tagId: $("#div-nodeId").text(),
         data: [[null]]
       }
-    ]    
+    ]
   }
   $("#span-tagSetDataURL").text(tagSetDataURL);
   $("#span-tagSetDataBody").text(JSON.stringify(tagSetDataPayload, null, "\t"));
 }
 
-fillForm  = (nodeElement) => {
+// используем этот список при заполнении списка тегов в параметрах
+var tags = [];
+
+fillForm = (nodeElement) => {
   let nodeId = nodeElement.id;
   let header = document.getElementById("div-nodeName");
   header.innerText = nodeElement.innerText;
@@ -1097,16 +1222,16 @@ fillForm  = (nodeElement) => {
     Object.entries(nodeData.attributes).map((entry) => {
       value = "";
       switch (entry[1][0]) {
-          case "TRUE":
-            value = "true"
-            break;
-          case "FALSE":
-            value = "false";
-            break;
-          default:
-            value = (entry[1][0] === null) ? "" : entry[1][0]
-        }
-      
+        case "TRUE":
+          value = "true"
+          break;
+        case "FALSE":
+          value = "false";
+          break;
+        default:
+          value = (entry[1][0] === null) ? "" : entry[1][0]
+      }
+
       if ((objClass === "prsAlert") && (entry[0] === "prsJsonConfigString")) {
         conf = JSON.parse(value);
         $("#input-alertConfHigh").attr("init-value", conf.high).val(conf.high.toString());
@@ -1118,14 +1243,14 @@ fillForm  = (nodeElement) => {
         dt = new Date(Date.parse(conf.start));
         ms = dt.getTimezoneOffset() * 60000;
         dt2 = new Date(dt.getTime() - ms);
-        $("#input-scheduleConfStart").attr("init-value", dt2.toISOString().substring(0,16)).val(dt2.toISOString().substring(0,16));
+        $("#input-scheduleConfStart").attr("init-value", dt2.toISOString().substring(0, 16)).val(dt2.toISOString().substring(0, 16));
         $("#input-scheduleConfIntervalType").attr("init-value", conf.interval_type).val(conf.interval_type);
         $("#input-scheduleConfIntervalValue").attr("init-value", conf.interval_value).val(conf.interval_value);
         if (("end" in conf) && (conf.end)) {
           dt = new Date(Date.parse(conf.end));
           ms = dt.getTimezoneOffset() * 60000;
           dt2 = new Date(dt.getTime() - ms);
-          $("#input-scheduleConfEnd").attr("init-value", dt2.toISOString().substring(0,16)).val(dt2.toISOString().substring(0,16));
+          $("#input-scheduleConfEnd").attr("init-value", dt2.toISOString().substring(0, 16)).val(dt2.toISOString().substring(0, 16));
         } else $("#input-scheduleConfEnd").attr("init-value", null);
       } else {
         element = document.getElementById(`input-${entry[0]}`);
@@ -1136,14 +1261,8 @@ fillForm  = (nodeElement) => {
       }
     });
 
-	  // для метода - заполним список initiatedBy и parameters
+    // для метода - заполним список initiatedBy и parameters
     if (objClass === "prsMethod") {
-      // параметры
-      $("#div-list-parameters").empty();
-      nodeData.parameters.map((item) => {
-        addParameter(null, item);
-      });
-
       $("#input-initiatedByTags option").remove();
       $("#input-initiatedByAlerts option").remove();
       $("#input-initiatedBySchedules option").remove();
@@ -1166,11 +1285,12 @@ fillForm  = (nodeElement) => {
         }
         return response.json();
       }).then((allNodes) => {
+        if (!allNodes) return;
         let selectId = "";
         allNodes.data.map((dataItem) => {
           switch (dataItem.attributes.objectClass[0]) {
             case "prsTag":
-              selectId = "#input-initiatedByTags";
+              selectId = "#input-initiatedByTags";              
               break;
             case "prsAlert":
               selectId = "#input-initiatedByAlerts";
@@ -1184,24 +1304,30 @@ fillForm  = (nodeElement) => {
           if (selected)
             $(selectId).append(`<option selected value="${dataItem.id}">${dataItem.attributes.cn[0]}&nbsp;(${dataItem.id})</option>`);
           else
-            if (!disabled) 
-              $(selectId).append(`<option value="${dataItem.id}">${dataItem.attributes.cn[0]}&nbsp;(${dataItem.id})</option>`);            
+            if (!disabled)
+              $(selectId).append(`<option value="${dataItem.id}">${dataItem.attributes.cn[0]}&nbsp;(${dataItem.id})</option>`);
         });
 
         $("#input-initiatedByTags").attr("init-value", $("#input-initiatedByTags").val());
         $("#input-initiatedByAlerts").attr("init-value", $("#input-initiatedByAlerts").val());
         $("#input-initiatedBySchedules").attr("init-value", $("#input-initiatedBySchedules").val());
+
+        // параметры
+        $("#div-list-parameters").empty();
+        nodeData.parameters.map((item) => {
+          addParameter(null, item);
+        });
       })
     }
 
     // для тега подготовим панели работы с данными
     if (objClass === "prsTag")
       changeTagDataPanelOnSave();
-      formTagDataPanels();
+    formTagDataPanels();
   });
 };
 
-removeClassOnElements  = (styleClass) => {
+removeClassOnElements = (styleClass) => {
   const elements = document.querySelectorAll(`.${styleClass}`);
 
   elements.forEach((element) => {
@@ -1209,7 +1335,7 @@ removeClassOnElements  = (styleClass) => {
   });
 }
 
-resetChanges  = () => {
+resetChanges = () => {
   const elements = document.querySelectorAll(`.value-changed`);
   els = [...elements];
   els.map((el) => {
@@ -1221,7 +1347,7 @@ resetChanges  = () => {
   $("#but-save").addClass("disabled");
 };
 
-clickNode  = (event) => {
+clickNode = (event) => {
   event.stopPropagation();
 
   let clickedNode = event.target;
@@ -1311,5 +1437,22 @@ clickNode  = (event) => {
 
     groupItems = getNodeGroup(clickedNode);
     if (groupItems) sortList(groupItems);
+
+    if (newNodeId) {
+      var new_node = document.getElementById(newNodeId);
+      newNodeId = null;
+      var clickEvent = new MouseEvent("click", {
+        "view": window,
+        "bubbles": true,
+        "cancelable": false
+      });
+      new_node.dispatchEvent(clickEvent);
+      new_node.focus();
+      /*
+      $(`#${newNodeId}`).addClass("currentNode");
+      fillForm(document.getElementById(newNodeId));
+      newNodeId = null;
+      */
+    }
   });
 };
