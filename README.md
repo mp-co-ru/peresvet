@@ -115,7 +115,7 @@
 # <a name="examples"></a> Примеры использования
 
 Начальный пример работы с платформой описан в документации:
-[пример](https://vovaman.github.io/peresvet/examples.html).
+[пример](https://vovaman.github.io/peresvet/examples/examples.html).
 
 Примеры работы с платформой собраны в отдельном проекте 
 [peresvet_examples](https://github.com/Vovaman/peresvet_examples).
