@@ -110,7 +110,7 @@
 </div>
 
 Инструкции по работе с конфигуратором 
-[здесь](https://vovaman.github.io/peresvet/configurator.html).
+[здесь](https://vovaman.github.io/peresvet/configurator/configurator.html).
 
 # <a name="examples"></a> Примеры использования
 
