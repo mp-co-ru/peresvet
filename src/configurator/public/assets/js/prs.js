@@ -394,45 +394,7 @@ saveChanges = () => {
 };
 
 addParameter = (event, parameterData) => {
-  let divParameters = document.getElementById("div-list-parameters");
-  let lastSpanParameter = divParameters.lastElementChild;
-
-  let lastLevel = -1;
-  if (lastSpanParameter) {
-    lastLevel = Number(lastSpanParameter.getAttribute("prsIndex"));
-  }
-  let newLevel = lastLevel + 1;
-
-  $("#div-list-parameters").append(`
-				<div class="d-flex align-items-center" prsIndex="${newLevel}" id="span-parameter-${newLevel}">
-					<div class="col-1 me-2">
-						<input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="number" id="input-parameter-prsIndex-${newLevel}"/>
-					</div>
-					<div class="col-1 me-2">
-						<input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-cn-${newLevel}"/>
-					</div>
-          <div class="col-4 me-2">
-            <select prsAttribute="parameter" onchange="onInputChange(event);" id="input-parameter-tagId-${newLevel}" class="form-select form-select-sm" size="1">
-              <option selected value="ttt">&#62;=</option>
-              <option value="ttttt">&#60;</option>											
-            </select>
-          </div>
-					<div class="col me-2">
-						<!--
-            <input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-prsJsonConfigString-${newLevel}"/>
-            -->
-            <textarea class="form-control form-control-sm" prsAttribute="parameter" autocomplete="off" rows="1" id="input-parameter-prsJsonConfigString-${newLevel}"></textarea>
-					</div>
-					<button id="but-deleteParameter-${newLevel}" class="btn btn-sm m-1 btn-danger" onclick="deleteParameter(event);">
-						<span><i class="fa-solid fa-minus" id="i-deleteParameter-${newLevel}"></i></span>
-					</button>
-				</div>
-			`);
-
-  parameter_tags_select = $(`#input-parameter-tagId-${newLevel}`);
-  $(`#input-parameter-tagId-${newLevel} option`).remove();
-
-  let getTagsPayload = {
+  getTagsPayload = {
     base: "prs",
     deref: false,
     scope: 2,
@@ -441,19 +403,60 @@ addParameter = (event, parameterData) => {
     },
     attributes: ["cn", "objectClass"]
   }
-  let params = new URLSearchParams({ q: JSON.stringify(getTagsPayload) }).toString();
+  params = new URLSearchParams({ q: JSON.stringify(getTagsPayload) }).toString();
 
-  let url = `${window.location.protocol}//${window.location.hostname}/v1/objects/?${params}`;
-  tags = []
+  url = `${window.location.protocol}//${window.location.hostname}/v1/objects/?${params}`;
   fetch(url).then((response) => {
     if (!response.ok) {
       showAlert("div-updateAlert", "div-updateAlertMessage", "i-updateAlert", "Ошибка получения списка тегов, тревог, расписаний.", false);
       return;
     }
+
     return response.json();
-  }).then((allTags) => {
-    if (!allTags) return;
-    allTags.data.map((dataItem) => {
+  }).then((data) => {
+    if (!data) return;
+    
+    divParameters = document.getElementById("div-list-parameters");
+    lastSpanParameter = divParameters.lastElementChild;
+
+    lastLevel = -1;
+    if (lastSpanParameter) {
+      lastLevel = Number(lastSpanParameter.getAttribute("prsIndex"));
+    }
+    newLevel = lastLevel + 1;
+
+    $("#div-list-parameters").append(`
+      <div class="d-flex align-items-center" prsIndex="${newLevel}" id="span-parameter-${newLevel}">
+        <div class="col-1 me-2">
+          <input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="number" id="input-parameter-prsIndex-${newLevel}"/>
+        </div>
+        <div class="col-1 me-2">
+          <input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-cn-${newLevel}"/>
+        </div>
+        <div class="col-4 me-2">
+          <select prsAttribute="parameter" onchange="onInputChange(event);" id="input-parameter-tagId-${newLevel}" class="form-select form-select-sm" size="1">
+            <option selected value="ttt">&#62;=</option>
+            <option value="ttttt">&#60;</option>											
+          </select>
+        </div>
+        <div class="col me-2">
+          <!--
+          <input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-prsJsonConfigString-${newLevel}"/>
+          -->
+          <textarea class="form-control form-control-sm" prsAttribute="parameter" autocomplete="off" rows="1" id="input-parameter-prsJsonConfigString-${newLevel}"></textarea>
+        </div>
+        <button id="but-deleteParameter-${newLevel}" class="btn btn-sm m-1 btn-danger" onclick="deleteParameter(event);">
+          <span><i class="fa-solid fa-minus" id="i-deleteParameter-${newLevel}"></i></span>
+        </button>
+      </div>
+    `);
+
+    allTags = data.data;
+    level = newLevel;
+    tags = [];
+    parameter_tags_select = $(`#input-parameter-tagId-${level}`);
+    $(`#input-parameter-tagId-${level} option`).remove();
+    allTags.map((dataItem) => {
       tags.push({
         cn: dataItem.attributes.cn[0],
         id: dataItem.id
@@ -476,9 +479,9 @@ addParameter = (event, parameterData) => {
   
       parameter_tags_select.val(tagId);
   
-      $(`#input-parameter-prsIndex-${newLevel}`).val(index);
-      $(`#input-parameter-cn-${newLevel}`).val(name);
-      $(`#input-parameter-prsJsonConfigString-${newLevel}`).val(config_text);
+      $(`#input-parameter-prsIndex-${level}`).val(index);
+      $(`#input-parameter-cn-${level}`).val(name);
+      $(`#input-parameter-prsJsonConfigString-${level}`).val(config_text);
     }
   });
 }

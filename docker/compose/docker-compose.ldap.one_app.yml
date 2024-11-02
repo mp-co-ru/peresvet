@@ -8,8 +8,8 @@ services:
     environment:
       TZ: ${TIME_ZONE}
       LDAP_LOG_LEVEL: ${LDAP_LOG_LEVEL}
-    #ports:
-    #  - ${LDAP_PORT}:${LDAP_PORT}
+    ports:
+      - ${LDAP_PORT}:${LDAP_PORT}
     networks:
       - peresvet
 
