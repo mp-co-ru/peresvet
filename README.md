@@ -110,9 +110,12 @@
 </div>
 
 Инструкции по работе с конфигуратором 
-[здесь](https://vovaman.github.io/peresvet/configurator.html).
+[здесь](https://vovaman.github.io/peresvet/configurator/configurator.html).
 
 # <a name="examples"></a> Примеры использования
+
+Начальный пример работы с платформой описан в документации:
+[пример](https://vovaman.github.io/peresvet/examples/examples.html).
 
 Примеры работы с платформой собраны в отдельном проекте 
 [peresvet_examples](https://github.com/Vovaman/peresvet_examples).
