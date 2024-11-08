@@ -121,64 +121,6 @@ router = APIRouter(prefix=f"{settings.api_version}/dataStorages")
 
 error_handler = svc.ErrorHandler()
 
-@router.post("/", response_model=svc.NodeCreateResult, status_code=201)
-async def create(payload: DataStorageCreate, error_handler: svc.ErrorHandler = Depends()):
-    """
-    Метод добавляет Хранилище данных в иерархию.
-
-    **Запрос:**
-
-        .. http:example::
-            :request: ../../../../docs/source/samples/dataStorages/addDSIn.txt
-            :response: ../../../../docs/source/samples/dataStorages/addDSOut.txt
-
-        * **linkTags** (list[LinkTag]) - Список привязываемых тегов.
-
-          * **LinkTag** - Привязываемый тег. Включает в себя:
-
-            * **tagId** (str) - идентификатор привязываемого тега. Обязательный атрибут.
-            * **attributes** - список параметров привязываемого тега.
-
-              * **cn** (str) - Имя привязки. Обязательный атрибут.
-              * **prsStore** (dict) - Хранилище тега. Необязательный атрибут.
-              * **objectClass** (str) - Класс узла. Обязательный атрибут.
-
-        * **linkAlerts** (list[LinkAlert]) - Список привязываемых тревог
-
-          * **LinkAlert** - Привязываемая тревога. Включает в себя:
-
-            * **alertId** (str) - Идентификатор привязываемой тревоги. Обязательный атрибут.
-            * **attributes** - список параметров привязываемой тревоги. Включает в себя:
-
-              * **cn** (str) - Имя привязки. Обязательный атрибут.
-              * **prsStore** (dict) - Хранилище тревоги. Необязательный атрибут.
-              * **objectClass** (str) - Класс узла. Обязательный атрибут.
-
-        * **attributes** (dict) - Атрибуты хранилища
-
-          * **cn** (str) - имя хранилища. Необязательный атрибут.
-          * **description** (str) - описание хранилища. Необязательный атрибут.
-          * **prsJsonConfigString** (str) - Строка содержит, в случае необходимости,
-            конфигурацию узла. Интерпретируется сервисом, управляющим сущностью,
-            которой принадлежит экземпляр. Необязательный аттрибут
-          * **prsActive** (bool) - Определяет, активно ли хранилище. Необязательный атрибут.
-          * **prsDefault** (bool) - Если = ``True``, то данный экземпляр. Необязательный атрибут.
-            считается узлом по умолчанию в списке равноправных узлов данного уровня иерархии.
-            Необязательный атрибут.
-          * **prsIndex** (int) - Если у узлов одного уровня иерархии проставлены индексы, то
-            перед отдачей клиенту списка экземпляров они сортируются
-            в соответствии с их индексами. Необязательный атрибут.
-
-    **Ответ:**
-
-        * **id** (uuid) - id созданного тега
-        * **detail** (str) - пояснения к ошибке
-
-    """
-    res = await app._create(payload)
-    await error_handler.handle_error(res)
-    return res
-
 @router.get("/", response_model=DataStorageReadResult | None, status_code=200, response_model_exclude_none=True)
 async def read(q: str | None = None, payload: DataStorageRead | None = None, error_handler: svc.ErrorHandler = Depends()):
     res = await app.api_get_read(DataStorageRead, q, payload)
@@ -195,12 +137,6 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
         await error_handler.handle_error(res)
 
     res = await app._update(payload=payload)
-    await error_handler.handle_error(res)
-    return res
-
-@router.delete("/", status_code=202)
-async def delete(payload: svc.NodeDelete, error_handler: svc.ErrorHandler = Depends()):
-    res = await app._delete(payload)
     await error_handler.handle_error(res)
     return res
 

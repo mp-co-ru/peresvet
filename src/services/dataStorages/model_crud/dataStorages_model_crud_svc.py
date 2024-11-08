@@ -349,30 +349,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         self._logger.info(
             f"{self._config.svc_name} :: Тревога {payload['alertId']} привязана к хранилищу {payload['dataStorageId']}"
         )
-
-    async def _further_create(self, mes: dict, new_id: str) -> None:
-        sys_ids = await self._hierarchy.search({
-            "base": new_id,
-            "scope": hierarchy.CN_SCOPE_ONELEVEL,
-            "filter": {
-                "cn": ["system"]
-            }
-        })
-
-        sys_id = sys_ids[0][0]
-
-        await self._hierarchy.add(sys_id, {"cn": "tags"})
-        await self._hierarchy.add(sys_id, {"cn": "alerts"})
-
-        for item in mes["linkTags"]:
-            copy_item = copy.deepcopy(item)
-            copy_item["dataStorageId"] = new_id
-            await self._link_tag(copy_item)
-        for item in mes["linkAlerts"]:
-            copy_item = copy.deepcopy(item)
-            copy_item["dataStorageId"] = new_id
-            await self._link_alert(copy_item)
-
+    
 settings = DataStoragesModelCRUDSettings()
 
 app = DataStoragesModelCRUD(settings=settings, title="DataStoragesModelCRUD")
