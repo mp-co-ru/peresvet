@@ -159,7 +159,7 @@ location = /v1/data/ {
     proxy_pass $proto://tags_app_api;
 }
 
-location = /v1/pandas/ {
+location = /v1/datafunc/ {
     if ($request_method = 'OPTIONS') {
         add_header 'Access-Control-Allow-Origin' '*';
         add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
@@ -188,7 +188,7 @@ location = /v1/pandas/ {
         add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range' always;
     }
     proxy_set_header Host $http_host;
-    proxy_pass $proto://pandas_app_api;
+    proxy_pass $proto://datafunc_app_api;
 }
 
 location /grafana/ {
