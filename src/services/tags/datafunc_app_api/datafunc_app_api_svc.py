@@ -3,19 +3,9 @@
 и класс сервиса ``tags_api_crud_svc``\.
 """
 import sys
-from typing import Any, List, NamedTuple
-from typing_extensions import Annotated
-from pydantic import (
-    BaseModel, Field, field_validator,
-    validator, BeforeValidator, ValidationError, ConfigDict
-)
-import json
-from datetime import datetime
-from dateutil.tz import tzlocal
 import math
 
 import pandas as pd
-from copy import deepcopy
 
 from fastapi import APIRouter
 
@@ -23,11 +13,11 @@ sys.path.append(".")
 
 from src.common import svc
 from src.common.api_crud_svc import valid_uuid
-from src.services.tags.pandas_app_api.pandas_app_api_settings import PandasAppAPISettings
+from src.services.tags.datafunc_app_api.datafunc_app_api_settings import DatafuncAppAPISettings
 import src.common.times as t
 from src.services.tags.app_api.tags_app_api_svc import TagsAppAPI, DataGet
 
-class TagsAppAPIPandas(TagsAppAPI):
+class TagsAppAPIDatafunc(TagsAppAPI):
 
     async def data_get(self, payload: DataGet) -> dict:
         """Метод применяет к обычному результату data/get обработку pandas
@@ -161,11 +151,11 @@ class TagsAppAPIPandas(TagsAppAPI):
 
         return final_res
 
-settings = PandasAppAPISettings()
+settings = DatafuncAppAPISettings()
 
-app = TagsAppAPIPandas(settings=settings, title="`TagsAppAPIPandas` service")
+app = TagsAppAPIDatafunc(settings=settings, title="`TagsAppAPIDatafunc` service")
 
-router = APIRouter(prefix=f"{settings.api_version}/pandas")
+router = APIRouter(prefix=f"{settings.api_version}/datafunc")
 
 @router.get("/", response_model=dict | None, status_code=200)
 async def data_get(q: str | None = None, payload: DataGet | None = None):
@@ -178,4 +168,4 @@ async def data_get(q: str | None = None, payload: DataGet | None = None):
     res = await app.data_get(p)
     return res
 
-app.include_router(router, tags=["pandas"])
+app.include_router(router, tags=["datafunc"])

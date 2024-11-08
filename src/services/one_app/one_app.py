@@ -165,16 +165,15 @@ from src.services.tags.app_api.tags_app_api_svc \
         router as tags_app_api_router
     )
 # -----------------------------------------------------------------------------
-"""
-# pandas ----------------------------------------------------------------------
-# pandas app api
-from src.services.tags.pandas_app_api.pandas_app_api_svc \
+
+# datafunc ----------------------------------------------------------------------
+# datafunc app api
+from src.services.tags.datafunc_app_api.datafunc_app_api_svc \
     import (
-        app as pandas_app_api,
-        router as pandas_app_api_router
+        app as datafunc_app_api,
+        router as datafunc_app_api_router
     )
 # -----------------------------------------------------------------------------
-"""
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -187,7 +186,7 @@ async def lifespan(app: FastAPI):
             await route.app.on_shutdown()
 
 # для привязки подприложений необходимо создать базовое приложение
-app = FastAPI(lifespan=lifespan, title="МПК Пересвет")
+app = FastAPI(lifespan=lifespan, title="Пересвет")
 api_router = APIRouter(prefix="")
 
 # монтирование роутеров =======================================================
@@ -233,13 +232,13 @@ api_router.include_router(router=tags_api_crud_router)
 # tags_app_api
 api_router.include_router(router=tags_app_api_router)
 # -----------------------------------------------------------------------------
-"""
-# pandas ----------------------------------------------------------------------
-# pandas_app_api
-api_router.include_router(router=pandas_app_api_router)
+
+# datafunc ----------------------------------------------------------------------
+# datafunc_app_api
+api_router.include_router(router=datafunc_app_api_router)
 # -----------------------------------------------------------------------------
 # =============================================================================
-"""
+
 
 app.include_router(api_router)
 
@@ -311,11 +310,11 @@ app.mount(path="/", app=schedules_model_crud)
 # schedules_app
 app.mount(path="/", app=schedules_app)
 # -----------------------------------------------------------------------------
-"""
-# pandas ----------------------------------------------------------------------
-app.mount(path="/", app=pandas_app_api)
+
+# datafunc ----------------------------------------------------------------------
+app.mount(path="/", app=datafunc_app_api)
 # -----------------------------------------------------------------------------
 # =============================================================================
-"""
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")

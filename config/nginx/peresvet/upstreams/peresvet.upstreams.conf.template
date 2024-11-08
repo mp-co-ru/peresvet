@@ -45,9 +45,9 @@ upstream tags_app_api {
     server ${HOST_TAGS_APP_API}:${PORT_TAGS_APP_API};
 }
 
-# pandas
-upstream pandas_app_api {
-    server ${HOST_PANDAS_APP_API}:${PORT_PANDAS_APP_API};
+# datafunc
+upstream datafunc_app_api {
+    server ${HOST_DATAFUNC_APP_API}:${PORT_DATAFUNC_APP_API};
 }
 
 #grafana
