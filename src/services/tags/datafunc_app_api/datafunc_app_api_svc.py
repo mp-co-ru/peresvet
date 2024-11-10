@@ -59,6 +59,8 @@ class TagsAppAPIDatafunc(TagsAppAPI):
             payload.timeStep = None
 
         res = await super().data_get(mes=payload)
+        if 'error' in res.keys():
+            return res
 
         final_res = {
             "data": []
