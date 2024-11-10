@@ -6,3 +6,9 @@ class DatafuncAppAPISettings(SvcSettings):
     #: версия API
     api_version: str = "/v1"
     
+    hierarchy: dict = {
+        #: класс экземпляров сущности в
+        #: пример: prsTag
+        "class": "prsTag"
+    }
+    
