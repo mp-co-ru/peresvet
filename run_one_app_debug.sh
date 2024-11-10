@@ -14,7 +14,7 @@ sed -i "s/NGINXHOST=.*/$HOSTNAME/" docker/compose/.cont_one_app.env
 docker compose $back --env-file docker/compose/.cont_one_app.env \
 -f docker/compose/docker-compose.redis.yml \
 -f docker/compose/docker-compose.rabbitmq.yml \
--f docker/compose/docker-compose.ldap.yml \
+-f docker/compose/docker-compose.ldap.one_app.yml \
 -f docker/compose/docker-compose.postgresql.data_in_container.yml \
 -f docker/compose/docker-compose.grafana.yml \
 up

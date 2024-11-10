@@ -1149,7 +1149,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
             # Преобразование получившегося датафрейма и добавление значений к
             # результирующему списку
-            data += list(df.to_dict('index').values())
+            data += df.to_dict('split')['data']
 
         return data
 
