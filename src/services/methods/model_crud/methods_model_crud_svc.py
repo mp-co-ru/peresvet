@@ -75,20 +75,15 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             # если нет, создаём
             initiator_cache = await self._cache.get(f"{initiator_id}.{self._config.svc_name}").exec()
             if initiator_cache[0] is None:
-                await self._cache.set(
-                    name=f"{initiator_id}.{self._config.svc_name}",
-                    obj=[id]
-                ).exec()
+                await self._cache.set(name=f"{initiator_id}.{self._config.svc_name}", obj=[id]).exec()
             else:
-                await self._cache.append(
-                    f"{initiator_id}.{self._config.svc_name}", "$",
-                    id
-                ).exec()
+                index = (await self._cache.index(
+                    name=f"{initiator_id}.{self._config.svc_name}", 
+                    key="$", obj=id).exec())[0][0]
+                if index == -1:
+                    await self._cache.append(f"{initiator_id}.{self._config.svc_name}", "$", id).exec()
 
-            payload = {
-                "id": initiator_id,
-                "attributes": ["objectClass"]
-            }
+            payload = {"id": initiator_id, "attributes": ["objectClass"]}
 
             initiator_data = await self._hierarchy.search(payload=payload)
             obj_class = initiator_data[0][2]["objectClass"][0]
@@ -179,11 +174,10 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
                 return res
 
-
             for initiator_id in mes["initiatedBy"]:
                 await self._hierarchy.add(
                     initiatedBy_node_id,
-                    {"cn": [initiator_id]}
+                    {"cn": [initiator_id], "objectClass": ["prsMethodInitiator"]}
                 )               
 
         # создадим узлы-параметры
