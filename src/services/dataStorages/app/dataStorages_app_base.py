@@ -358,6 +358,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             payload["base"] = ds_id
             tag_data = await self._hierarchy.search(payload=payload)
             if tag_data:
+                # TODO: перенести в dataStorages_model!!!
                 await self._hierarchy.delete(tag_data[0][0])
     
     async def created(self, mes: dict, routing_key: str = None) -> None:
@@ -800,7 +801,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
         try:
             await self._cache.set(
-                name=f"{tag_id}.{self._config.svc_name}", obj=tag_cache, nx=True
+                name=f"{tag_id}.{self._config.svc_name}", obj=tag_cache
             ).exec()
         except Exception as ex:
             self._logger.error(f"{self._config.svc_name} :: {ex}")

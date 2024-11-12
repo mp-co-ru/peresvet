@@ -367,10 +367,11 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                         "prsJsonConfigString": {"prsValueTypeCode": new_type}
                     }
                 )
-                await self._delete_tag_cache(tag_id)
-                await self._create_tag_cache(tag_id)
                 
                 self._logger.info(f"{self._config.svc_name} :: Хранилище тега '{tag_id}' в '{ds_id}' изменено.")        
+
+        await self._delete_tag_cache(tag_id)
+        await self._create_tag_cache(tag_id)
 
     async def _alert_deleted(self, mes: dict, routing_key: str = None):
         alert_id = mes['id']
