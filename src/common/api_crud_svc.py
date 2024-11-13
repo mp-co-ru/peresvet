@@ -48,6 +48,8 @@ def valid_uuid_for_read(id: str | list[str]) -> str | list[str]:
 
 # base может быть пустой строкой
 def valid_base(base: str | None) -> str | None:
+    if base is None:
+        return base
     if base.strip() == "":
         return None
     if base == "prs":
