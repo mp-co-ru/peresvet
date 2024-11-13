@@ -19,7 +19,11 @@ from src.services.tags.app_api.tags_app_api_svc import TagsAppAPI, DataGet
 
 class TagsAppAPIDatafunc(TagsAppAPI):
 
-    async def data_get(self, payload: DataGet) -> dict:
+    def _set_handlers(self):
+        self._handlers = {
+        }
+
+    async def data_get(self, mes: DataGet, routing_key: str = None) -> dict:
         """Метод применяет к обычному результату data/get обработку pandas
         с целью высчитать накопительное значение времени по кодам.
         Возвращаемые родительским data/get'ом данные по одному тегу должны быть
@@ -45,20 +49,20 @@ class TagsAppAPIDatafunc(TagsAppAPI):
                 ]
             }
         """
-        final_ts = payload.finish
-        format_ts = payload.format
+        final_ts = mes.finish
+        format_ts = mes.format
         current_ts = t.int_to_local_timestamp(t.now_int())
         if format_ts:
             # если изначальный запрос с флагом format = true,
             # то удалим его и отформатируем время уже в конце
             final_ts = t.int_to_local_timestamp(final_ts)
-            payload.format = False
+            mes.format = False
 
-        timeStep = payload.timeStep
+        timeStep = mes.timeStep
         if timeStep:
-            payload.timeStep = None
+            mes.timeStep = None
 
-        res = await super().data_get(mes=payload)
+        res = await super().data_get(mes=mes)
         if 'error' in res.keys():
             return res
 
