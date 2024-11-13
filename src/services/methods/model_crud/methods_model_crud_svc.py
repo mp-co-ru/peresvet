@@ -177,7 +177,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             for initiator_id in mes["initiatedBy"]:
                 await self._hierarchy.add(
                     initiatedBy_node_id,
-                    {"cn": [initiator_id], "objectClass": ["prsMethodInitiator"]}
+                    {"cn": [initiator_id]}
                 )               
 
         # создадим узлы-параметры
