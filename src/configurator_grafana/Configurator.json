@@ -48,8 +48,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 21,
-        "w": 21,
+        "h": 26,
+        "w": 18,
         "x": 0,
         "y": 0
       },
@@ -130,6 +130,6 @@
   "timezone": "browser",
   "title": "Конфигуратор",
   "uid": "ddy59kw4v5ssgb",
-  "version": 2,
+  "version": 3,
   "weekStart": ""
 }
