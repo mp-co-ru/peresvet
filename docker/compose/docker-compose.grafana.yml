@@ -10,16 +10,16 @@ services:
     hostname: ${HOST_GRAFANA}
     restart: unless-stopped
     environment:
-      #- GF_RENDERING_SERVER_URL=http://renderer:8081/render
-      #- GF_RENDERING_CALLBACK_URL=http://${HOST_GRAFANA}:${PORT_GRAFANA}/
-      #- GF_LOG_FILTERS=rendering:debug
+      - GF_RENDERING_SERVER_URL=http://renderer:8081/render
+      - GF_RENDERING_CALLBACK_URL=http://${HOST_GRAFANA}:${PORT_GRAFANA}/
+      - GF_LOG_FILTERS=rendering:debug
       - GF_INSTALL_PLUGINS=marcusolsson-json-datasource,marcusolsson-dynamictext-panel,volkovlabs-form-panel,volkovlabs-echarts-panel
       - GF_SERVER_DOMAIN=${NGINX_HOST}
       - GF_SERVER_ROOT_URL=http://${NGINX_HOST}:${PORT_GRAFANA}/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
       - GF_PANELS_DISABLE_SANITIZE_HTML=true
-      #- GF_AUTH_ANONYMOUS_ENABLED=true
-      #- GF_AUTH_BASIC_ENABLED=false
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_BASIC_ENABLED=false
       - TZ=${TIME_ZONE}
     
     volumes:
@@ -29,13 +29,18 @@ services:
     networks:
       - peresvet
     
-  #renderer:
-  #  image: grafana/grafana-image-renderer:latest
-  #  hostname: renderer
-  #  ports:
-  #    - 8081
-  #  networks:
-  #    - peresvet
+  renderer:
+    image: grafana/grafana-image-renderer:latest
+    hostname: renderer
+    environment:
+      - ENABLE_METRICS=true
+      - RENDERING_MODE=clustered # для возможности одновременной обработки большого количества изображений
+      - RENDERING_CLUSTERING_MODE=context
+      - RENDERING_CLUSTERING_MAX_CONCURRENCY=6
+    ports:
+      - 8081
+    networks:
+      - peresvet
 
 networks:
   peresvet:
