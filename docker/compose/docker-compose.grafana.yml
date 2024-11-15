@@ -10,6 +10,7 @@ services:
     hostname: ${HOST_GRAFANA}
     restart: unless-stopped
     environment:
+      - GF_INSTALL_PLUGINS=marcusolsson-json-datasource,marcusolsson-dynamictext-panel,volkovlabs-form-panel,volkovlabs-echarts-panel
       - TZ=${TIME_ZONE}
       - GF_SERVER_DOMAIN=${NGINX_HOST}
       - GF_SERVER_ROOT_URL=http://${NGINX_HOST}:${PORT_GRAFANA}/grafana/
@@ -20,7 +21,7 @@ services:
       - GF_LOG_FILTERS=rendering:debug   
     
     volumes:
-      - 'grafana_storage:/var/lib/grafana'
+      - grafana_storage:/var/lib/grafana
     ports:
       - ${PORT_GRAFANA}:${PORT_GRAFANA}
     networks:
