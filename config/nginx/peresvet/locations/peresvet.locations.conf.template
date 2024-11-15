@@ -193,5 +193,25 @@ location = /v1/datafunc/ {
 
 location /grafana/ {
     #rewrite  ^/grafana/(.*)  /$1 break;
+    proxy_set_header Host $http_host;
     proxy_pass $proto://grafana/;
+}
+
+# Proxy Grafana Live WebSocket connections.
+location /grafana/api/live/ {
+    #rewrite  ^/grafana/(.*)  /$1 break;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    proxy_set_header Host $http_host;
+    proxy_pass $proto://grafana;
+}
+
+# fix broken links
+location /render/ {
+    return 301 $proto://$server_name/grafana$request_uri;
+}
+
+location /d/ {
+    return 301 $proto://$server_name/grafana$request_uri;
 }

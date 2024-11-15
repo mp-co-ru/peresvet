@@ -17,9 +17,9 @@ services:
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
       - GF_RENDERING_SERVER_URL=http://${HOST_GRAFANA_RENDERER}:${PORT_GRAFANA_RENDERER}/render
       - GF_RENDERING_CALLBACK_URL=http://${HOST_GRAFANA}:${PORT_GRAFANA}/grafana/
-      - GF_RENDERING_RENDERER_TOKEN=-
       - GF_LOG_FILTERS=rendering:debug
       - GF_PANELS_DISABLE_SANITIZE_HTML=true
+      - GF_AUTH_ANONYMOUS_ENABLED=false
     
     volumes:
       - grafana_storage:/var/lib/grafana
