@@ -41,7 +41,6 @@ from src.services.alerts.model_crud.alerts_model_crud_svc \
         app as alerts_model_crud
     )
 # -----------------------------------------------------------------------------
-"""
 # connectors ------------------------------------------------------------------
 from src.services.connectors.api_crud.connectors_api_crud_svc \
     import (
@@ -62,7 +61,6 @@ from src.services.connectors.app.connectors_app_svc \
         router as connectors_app_router
     )
 # -----------------------------------------------------------------------------
-"""
 
 # dataStorages ----------------------------------------------------------------
 from src.services.dataStorages.api_crud.dataStorages_api_crud_svc \
@@ -198,14 +196,12 @@ api_router.include_router(router=alerts_api_crud_router)
 api_router.include_router(router=alerts_app_api_router)
 # -----------------------------------------------------------------------------
 
-"""
 # connectors ------------------------------------------------------------------
 # connectors_api_crud
 api_router.include_router(router=connectors_api_crud_router)
 # connectors_app
 api_router.include_router(router=connectors_app_router)
 # -----------------------------------------------------------------------------
-"""
 
 # dataStorages ----------------------------------------------------------------
 # dataStorages_api_crud
@@ -239,12 +235,10 @@ api_router.include_router(router=datafunc_app_api_router)
 # -----------------------------------------------------------------------------
 # =============================================================================
 
-
 app.include_router(api_router)
 
 # монтирование приложений =====================================================
 
-"""
 # connectors ------------------------------------------------------------------
 # connectors_api_crud
 app.mount(path="/", app=connectors_api_crud)
@@ -253,7 +247,6 @@ app.mount(path="/", app=connectors_app)
 # connectors_model_crud
 app.mount(path="/", app=connectors_model_crud)
 # -----------------------------------------------------------------------------
-"""
 
 # dataStorages ----------------------------------------------------------------
 # dataStorages_api_crud
