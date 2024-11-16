@@ -1,6 +1,7 @@
 from src.common.svc_settings import SvcSettings
 
 class ConnectorsAppSettings(SvcSettings):
+    api_version: str = "/v1"
     #: имя сервиса
     svc_name: str = "connectors_app"
         #: параметры, связанные с работой с иерархией
