@@ -135,7 +135,7 @@ vm-data/
 
 src/*.json
 
-tls/
+certificates/tls/
 
 test_*.py
 tests/dev/
