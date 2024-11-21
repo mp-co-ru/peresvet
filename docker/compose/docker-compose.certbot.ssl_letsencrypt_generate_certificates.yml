@@ -8,9 +8,7 @@ services:
       - ../../certificates/certbot/conf/:/etc/letsencrypt/:rw
     networks:
       - peresvet
-    depends_on:
-      - nginx_one_app
-  
+    
 networks:
   peresvet:
     driver: bridge
