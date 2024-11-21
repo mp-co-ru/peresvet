@@ -10,21 +10,22 @@ services:
     hostname: ${HOST_GRAFANA}
     restart: unless-stopped
     environment:
-      - GF_INSTALL_PLUGINS=marcusolsson-json-datasource,marcusolsson-dynamictext-panel,volkovlabs-form-panel,volkovlabs-echarts-panel
       - TZ=${TIME_ZONE}
+      - GF_INSTALL_PLUGINS=marcusolsson-json-datasource,marcusolsson-dynamictext-panel,volkovlabs-form-panel,volkovlabs-echarts-panel
       - GF_SERVER_DOMAIN=${NGINX_HOST}
-      - GF_SERVER_ROOT_URL=http://${NGINX_HOST}:${PORT_GRAFANA}/grafana/
+      - GF_SERVER_ROOT_URL=http://${HOST_GRAFANA}:${PORT_GRAFANA}/grafana
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
       - GF_RENDERING_SERVER_URL=http://${HOST_GRAFANA_RENDERER}:${PORT_GRAFANA_RENDERER}/render
       - GF_RENDERING_CALLBACK_URL=http://${HOST_GRAFANA}:${PORT_GRAFANA}/grafana/
       - GF_LOG_FILTERS=rendering:debug
       - GF_PANELS_DISABLE_SANITIZE_HTML=true
       - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_USERS_DEFAULT_THEME=light
     
     volumes:
       - grafana_storage:/var/lib/grafana
-    ports:
-      - ${PORT_GRAFANA}:${PORT_GRAFANA}
+    #ports:
+      #- ${PORT_GRAFANA}:${PORT_GRAFANA}
     networks:
       - peresvet
     
