@@ -1,11 +1,5 @@
 include conf.d/upstreams/*.conf;
 
-# this is required to proxy Grafana Live WebSocket connections.
-map $http_upgrade $connection_upgrade {
-  default upgrade;
-  '' close;
-}
-
 server {
     listen ${NGINX_HTTP_PORT};
     server_name 0.0.0.0 localhost ${NGINX_HOST};
