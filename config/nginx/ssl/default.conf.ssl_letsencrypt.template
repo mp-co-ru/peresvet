@@ -2,7 +2,7 @@ include conf.d/upstreams/*.conf;
 
 server {
     # HTTP->HTTPS Redirection
-    listen         ${HTTP_PORT};
+    listen         ${NGINX_HTTP_PORT};
     server_name    0.0.0.0 localhost ${NGINX_HOST};
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -14,8 +14,8 @@ server {
 }
 
 server {
-    listen ${HTTPS_PORT} default_server ssl;
-    listen [::]:${HTTPS_PORT} ssl;
+    listen ${NGINX_HTTPS_PORT} default_server ssl;
+    listen [::]:${NGINX_HTTPS_PORT} ssl;
     server_name 0.0.0.0 localhost ${NGINX_HOST};
 
     ssl_certificate /etc/nginx/ssl/live/${NGINX_HOST}/fullchain.pem;
