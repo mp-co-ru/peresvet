@@ -18,7 +18,20 @@ services:
         - peresvet
       volumes:
         - ../../certificates/certbot/www/:/var/www/certbot/:ro
-        - ../../certificates/certbot/conf/:/etc/nginx/ssl/:ro    
+        - ../../certificates/certbot/conf/:/etc/nginx/ssl/:ro
+
+  certbot:
+    container_name: certbot
+    hostname: certbot
+    image: certbot/certbot
+    volumes:
+      - ../../certificates/certbot/www/:/var/www/certbot/:rw
+      - ../../certificates/certbot/conf/:/etc/letsencrypt/:rw
+    command: certbot certonly --webroot --webroot-path /var/www/certbot/ -d ${NGINX_HOST}
+    networks:
+      - peresvet
+    depends_on:
+      - nginx_one_app
   
 networks:
   peresvet:
