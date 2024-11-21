@@ -23,3 +23,4 @@ docker compose --env-file docker/compose/.cont_one_app.env \
     --rm  certbot certonly --webroot --webroot-path /var/www/certbot/ -d $srv
 
 docker stop nginx_one_app
+docker rm nginx_one_app

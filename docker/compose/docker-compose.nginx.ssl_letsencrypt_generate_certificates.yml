@@ -1,5 +1,5 @@
 services:
-  nginx_one_app:
+  nginx_one_app_certbot:
       container_name: nginx_one_app
       hostname: ${NGINX_HOST}
       build:
