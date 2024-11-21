@@ -1,0 +1,37 @@
+services:
+  nginx_one_app:
+      container_name: nginx_one_app
+      hostname: ${NGINX_HOST}
+      build:
+        context: ../..
+        dockerfile: docker/docker-files/nginx/Dockerfile.nginx.ssl_letsencrypt_first_run
+      ports:
+        - ${NGINX_HTTP_PORT}:${NGINX_HTTP_PORT}
+        - ${NGINX_HTTPS_PORT}:${NGINX_HTTPS_PORT}
+      environment:
+        NGINX_HOST: ${NGINX_HOST}
+        NGINX_HTTP_PORT: ${NGINX_HTTP_PORT}
+        NGINX_HTTPS_PORT: ${NGINX_HTTPS_PORT}
+        
+        TZ: ${TIME_ZONE}
+      networks:
+        - peresvet
+      volumes:
+        - ../../certificates/certbot/www/:/var/www/certbot/:ro
+        - ../../certificates/certbot/conf/:/etc/nginx/ssl/:ro
+
+  certbot:
+    container_name: certbot
+    hostname: certbot
+    image: certbot/certbot
+    volumes:
+      - ../../certificates/certbot/www/:/var/www/certbot/:rw
+      - ../../certificates/certbot/conf/:/etc/letsencrypt/:rw
+
+networks:
+  peresvet:
+    driver: bridge
+    ipam:
+      config:
+          - subnet: 10.66.0.0/16
+            gateway: 10.66.0.1
