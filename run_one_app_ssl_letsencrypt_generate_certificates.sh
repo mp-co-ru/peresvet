@@ -30,6 +30,7 @@ echo "[Unit]
 Description=Certbot Renewal
 
 [Service]
+Type=simple
 WorkingDirectory=$dir
 ExecStart=$dir/renew_certificates.sh" > /etc/systemd/system/certbot-renewal.service
 
