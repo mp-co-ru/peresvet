@@ -31,7 +31,7 @@ Description=Certbot Renewal
 
 [Service]
 WorkingDirectory=$dir
-ExecStart=docker compose --env-file docker/compose/.cont_one_app.env -f docker/compose/docker-compose.nginx.one_app_ssl_letsencrypt.yml run certbot renew --force-renewal && docker exec nginx_one_app nginx -s reload" > /etc/systemd/system/certbot-renewal.service
+ExecStart=$dir/renew_certificates.sh" > /etc/systemd/system/certbot-renewal.service
 
 echo "[Unit]
 Description=Timer for Certbot Renewal
