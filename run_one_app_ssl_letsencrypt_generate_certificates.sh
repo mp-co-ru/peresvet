@@ -43,6 +43,6 @@ OnUnitActiveSec=11w
 [Install]
 WantedBy=multi-user.target" > /etc/systemd/system/certbot-renewal.timer
 
-systemctl reload
+systemctl daemon-reload
 systemctl start certbot-renewal.timer
 systemctl enable certbot-renewal.timer
