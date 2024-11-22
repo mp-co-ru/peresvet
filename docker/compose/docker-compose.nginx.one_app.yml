@@ -62,7 +62,6 @@ services:
         HOST_GRAFANA: ${HOST_GRAFANA}
 
         TZ: ${TIME_ZONE}
-      restart: "no"
       networks:
         - peresvet
 

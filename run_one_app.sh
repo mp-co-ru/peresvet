@@ -20,4 +20,5 @@ docker compose --env-file docker/compose/.cont_one_app.env \
 -f docker/compose/docker-compose.one_app.yml \
 -f docker/compose/docker-compose.grafana.yml \
 -f docker/compose/docker-compose.nginx.one_app.yml \
+-f docker/compose/docker-compose.ports.yml \
 up
