@@ -65,6 +65,7 @@ services:
         TZ: ${TIME_ZONE}
       networks:
         - peresvet
+      restart: "no"
       volumes:
         - ../../certificates/certbot/www/:/var/www/certbot/:ro
         - ../../certificates/certbot/conf/:/etc/nginx/ssl/:ro

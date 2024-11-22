@@ -1,0 +1,23 @@
+services:
+  redis:
+    ports:
+      - ${PORT_REDIS}:${PORT_REDIS}
+      - ${PORT_REDIS_INSIGHT}:${PORT_REDIS_INSIGHT}
+
+  rabbitmq:
+    ports:
+      - ${RABBIT_UI_PORT}:${RABBIT_UI_PORT}
+      - ${RABBIT_PORT}:${RABBIT_PORT}
+      - ${RABBIT_MQTT_PORT}:${RABBIT_MQTT_PORT}
+
+  ldap:
+    ports:
+      - ${LDAP_PORT}:${LDAP_PORT}
+
+  psql:
+    ports:
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
+
+  grafana:
+    ports:
+      - ${PORT_GRAFANA}:${PORT_GRAFANA}

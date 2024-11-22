@@ -8,13 +8,14 @@
 
 #-f docker/compose/docker-compose.grafana.yml \
 
-srv=$HOSTNAME
-if [ -n "$1" ]
-then
-    srv=$1
-fi
+sed -i 's/restart: "no"/restart: always/' docker/compose/docker-compose.redis.yml
+sed -i 's/restart: "no"/restart: always/' docker/compose/docker-compose.rabbitmq.yml
+sed -i 's/restart: "no"/restart: always/' docker/compose/docker-compose.ldap.one_app.yml
+sed -i 's/restart: "no"/restart: always/' docker/compose/docker-compose.postgresql.data_in_container.yml
+sed -i 's/restart: "no"/restart: always/' docker/compose/docker-compose.one_app.yml
+sed -i 's/restart: "no"/restart: always/' docker/compose/docker-compose.grafana.yml
+sed -i 's/restart: "no"/restart: always/' docker/compose/docker-compose.nginx.one_app_ssl_letsencrypt.yml
 
-sed -i "s/NGINX_HOST=.*/NGINX_HOST=$srv/" docker/compose/.cont_one_app.env
 docker compose --env-file docker/compose/.cont_one_app.env \
 -f docker/compose/docker-compose.redis.yml \
 -f docker/compose/docker-compose.rabbitmq.yml \
@@ -23,4 +24,4 @@ docker compose --env-file docker/compose/.cont_one_app.env \
 -f docker/compose/docker-compose.one_app.yml \
 -f docker/compose/docker-compose.grafana.yml \
 -f docker/compose/docker-compose.nginx.one_app_ssl_letsencrypt.yml \
-up
+up -d

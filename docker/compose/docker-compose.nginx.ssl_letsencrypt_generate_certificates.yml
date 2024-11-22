@@ -1,5 +1,5 @@
 services:
-  nginx_one_app_certbot:
+  nginx_one_app_for_certbot:
       container_name: nginx_one_app
       hostname: ${NGINX_HOST}
       build:
@@ -11,8 +11,7 @@ services:
       environment:
         NGINX_HOST: ${NGINX_HOST}
         NGINX_HTTP_PORT: ${NGINX_HTTP_PORT}
-        NGINX_HTTPS_PORT: ${NGINX_HTTPS_PORT}
-        
+        NGINX_HTTPS_PORT: ${NGINX_HTTPS_PORT}        
         TZ: ${TIME_ZONE}
       networks:
         - peresvet

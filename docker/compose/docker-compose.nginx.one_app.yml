@@ -62,8 +62,7 @@ services:
         HOST_GRAFANA: ${HOST_GRAFANA}
 
         TZ: ${TIME_ZONE}
-      #depends_on:
-      #  - all_svc
+      restart: "no"
       networks:
         - peresvet
 
