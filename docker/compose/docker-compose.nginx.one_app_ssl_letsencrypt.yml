@@ -4,7 +4,7 @@ services:
       hostname: ${NGINX_HOST}
       build:
         context: ../..
-        dockerfile: docker/docker-files/nginx/Dockerfile.nginx
+        dockerfile: docker/docker-files/nginx/Dockerfile.nginx.ssl_letsencrypt
       ports:
         - ${NGINX_HTTP_PORT}:${NGINX_HTTP_PORT}
         - ${NGINX_HTTPS_PORT}:${NGINX_HTTPS_PORT}
@@ -12,6 +12,7 @@ services:
         NGINX_HOST: ${NGINX_HOST}
         NGINX_HTTP_PORT: ${NGINX_HTTP_PORT}
         NGINX_HTTPS_PORT: ${NGINX_HTTPS_PORT}
+        NGINX_CERT_REQUIRED: ${NGINX_CERT_REQUIRED}
 
         PORT_ALERTS_API_CRUD: ${PORT_ALERTS_API_CRUD}
         HOST_ALERTS_API_CRUD: ${HOST_ALERTS_API_CRUD}
@@ -62,9 +63,20 @@ services:
         HOST_GRAFANA: ${HOST_GRAFANA}
 
         TZ: ${TIME_ZONE}
-      restart: "no"
       networks:
         - peresvet
+      restart: "no"
+      volumes:
+        - ../../certificates/certbot/www/:/var/www/certbot/:ro
+        - ../../certificates/certbot/conf/:/etc/nginx/ssl/:ro
+
+  certbot:
+    container_name: certbot
+    hostname: certbot
+    image: certbot/certbot
+    volumes:
+      - ../../certificates/certbot/www/:/var/www/certbot/:rw
+      - ../../certificates/certbot/conf/:/etc/letsencrypt/:rw
 
 networks:
   peresvet:

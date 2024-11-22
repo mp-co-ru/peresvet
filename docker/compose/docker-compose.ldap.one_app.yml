@@ -4,12 +4,10 @@ services:
     build:
       context: ../..
       dockerfile: docker/docker-files/ldap/Dockerfile.ldap.one_app
-
     environment:
       TZ: ${TIME_ZONE}
       LDAP_LOG_LEVEL: ${LDAP_LOG_LEVEL}
-    ports:
-      - ${LDAP_PORT}:${LDAP_PORT}
+    restart: "no"
     networks:
       - peresvet
 

@@ -8,7 +8,7 @@ services:
     #image: grafana/grafana-enterprise:11.2.2-ubuntu
     container_name: grafana
     hostname: ${HOST_GRAFANA}
-    restart: unless-stopped
+    restart: "no"
     environment:
       - TZ=${TIME_ZONE}
       - GF_INSTALL_PLUGINS=marcusolsson-json-datasource,marcusolsson-dynamictext-panel,volkovlabs-form-panel,volkovlabs-echarts-panel
@@ -20,12 +20,9 @@ services:
       - GF_LOG_FILTERS=rendering:debug
       - GF_PANELS_DISABLE_SANITIZE_HTML=true
       - GF_AUTH_ANONYMOUS_ENABLED=false
-      - GF_USERS_DEFAULT_THEME=light
-    
+      - GF_USERS_DEFAULT_THEME=light    
     volumes:
       - grafana_storage:/var/lib/grafana
-    #ports:
-      #- ${PORT_GRAFANA}:${PORT_GRAFANA}
     networks:
       - peresvet
     
@@ -34,6 +31,7 @@ services:
     hostname: ${HOST_GRAFANA_RENDERER}
     ports:
       - ${PORT_GRAFANA_RENDERER}:${PORT_GRAFANA_RENDERER}
+    restart: "no"
     environment:
       - RENDERING_MODE=clustered # для возможности одновременной обработки большого количества изображений
       - RENDERING_CLUSTERING_MODE=context
