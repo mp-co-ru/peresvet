@@ -1,8 +1,7 @@
 #!/bin/bash
 # Скрипт запускает контейнеры с компонентами, необходимыми для работы платформы,
-# кроме сервисов самой платформы.
-
-#-f docker/compose/docker-compose.grafana.yml \
+# кроме сервисов самой платформы, и открывает порты всех компонентов.
+# Применяется для отладки приложения.
 
 docker compose --env-file docker/compose/.cont_one_app.env \
 -f docker/compose/docker-compose.redis.yml \
