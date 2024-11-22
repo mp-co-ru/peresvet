@@ -21,7 +21,7 @@ server {
     ssl_certificate /etc/nginx/ssl/live/${NGINX_HOST}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/live/${NGINX_HOST}/privkey.pem;
 
-    ssl_verify_client ${NGINX_CERT_REQUIRED};
+    #ssl_verify_client ${NGINX_CERT_REQUIRED};
     proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
     proxy_ssl_ciphers HIGH:!aNULL:!MD5;
     set $proto https;
