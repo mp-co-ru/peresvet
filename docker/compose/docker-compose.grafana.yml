@@ -36,6 +36,8 @@ services:
       - RENDERING_MODE=clustered # для возможности одновременной обработки большого количества изображений
       - RENDERING_CLUSTERING_MODE=context
       - RENDERING_CLUSTERING_MAX_CONCURRENCY=6
+      - GF_RENDERING_IGNORE_HTTPS_ERRORS= true
+      - IGNORE_HTTPS_ERRORS=true
     networks:
       - peresvet
 
