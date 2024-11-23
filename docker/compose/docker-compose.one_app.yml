@@ -5,7 +5,6 @@ services:
     build:
       context: ../..
       dockerfile: docker/docker-files/all/Dockerfile.one_app.uvicorn
-    restart: "no"
     environment:
       TZ: ${TIME_ZONE}
     networks:
