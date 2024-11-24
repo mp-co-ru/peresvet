@@ -52,7 +52,11 @@ class Svc(BaseSvc):
                 self._logger.error(f"{self._config.svc_name} :: Неверный формат URI ldap: {self._config.ldap_url}")
                 await asyncio.sleep(5)
 
-            except ldap.LDAPError as ex:
+            except ldap.SERVER_DOWN as ex:
+                self._logger.error(f"{self._config.svc_name} :: Ошибка связи с сервером ldap: {ex}")
+                await asyncio.sleep(5)
+
+            except Exception as ex:
                 self._logger.error(f"{self._config.svc_name} :: Ошибка связи с сервером ldap: {ex}")
                 await asyncio.sleep(5)
 
