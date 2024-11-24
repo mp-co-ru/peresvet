@@ -236,7 +236,6 @@ class Hierarchy:
                 else:
                     if self._is_node_id_uuid(id_):
                         node = await self.get_node_dn(new_payload.get("base"))
-                        # node = await self.get_node_dn(payload["filter"]["cn"])
                     else:
                         node = id_
 
