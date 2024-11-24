@@ -4,12 +4,21 @@ services:
     build:
       context: ../..
       dockerfile: docker/docker-files/ldap/Dockerfile.ldap.one_app
+      args:
+        - LDAP_OPENLDAP_GID=1234
+        - LDAP_OPENLDAP_UID=2345
     environment:
       TZ: ${TIME_ZONE}
       LDAP_LOG_LEVEL: ${LDAP_LOG_LEVEL}
-    restart: "no"
+    volumes:
+      - ldap_db:/var/lib/ldap
+      - ldap_config:/etc/ldap/slapd.d
     networks:
       - peresvet
+
+volumes:
+  ldap_db: {}
+  ldap_config: {}
 
 networks:
   peresvet:

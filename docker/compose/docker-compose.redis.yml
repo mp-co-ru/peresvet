@@ -5,8 +5,7 @@ services:
     networks:
       - peresvet
     environment:
-      TZ: ${TIME_ZONE}
-    restart: "no"
+      TZ: ${TIME_ZONE}    
 
 networks:
   peresvet:
