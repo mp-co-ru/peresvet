@@ -578,7 +578,11 @@ class ModelCRUDSvc(Svc):
                 mes_data["filter"][key] = [mes_data["filter"][key]]
 
         if not mes_data["hierarchy"] or mes_data["scope"] < 2:
-            items = await self._hierarchy.search(mes_data)
+            try:
+                items = await self._hierarchy.search(mes_data)
+            except Exception as ex:
+                return {"error": {"code": 422, "message": f"{ex}"}}
+            
             for item in items:
                 res["data"].append({
                     "id": item[0],
