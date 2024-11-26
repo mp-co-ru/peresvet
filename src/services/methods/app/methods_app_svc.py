@@ -117,6 +117,10 @@ class MethodsApp(AppSvc):
                 self.
     '''
 
+    async def _created(self, mes: dict, routing_key: str = None):
+        await self._make_method_cache(mes["id"])
+        await self._bind_method(mes["id"])
+
     async def _updated(self, mes: dict, routing_key: str = None):
         """
         Нас интересует только смена флага active
@@ -133,7 +137,6 @@ class MethodsApp(AppSvc):
         else:
             await self._delete_method_cache(mes['id'])
             await self._bind_method(mes['id'], False)
-
     
     async def _start_method_by_sched(self, mes: dict, routing_key: str = None) -> dict:
         self._logger.debug(f"Run methods. Data: {mes}")
