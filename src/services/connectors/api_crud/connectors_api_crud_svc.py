@@ -3,6 +3,7 @@
 запрос, в сервисе connectors.
 """
 import sys
+import json
 from pydantic import BaseModel, Field, validator, ConfigDict
 
 from fastapi import APIRouter, Depends
@@ -40,14 +41,12 @@ class LinkTagAttributes(BaseModel):
     )
 
     objectClass: str = Field("prsConnectorTagData", title="Класс объекта")
-
 class LinkTag(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
 
     tagId: str = Field(title="Идентификатор привязываемого тега")
     attributes: LinkTagAttributes = Field(title="Атрибуты тега")
-
 class ConnectorAttributes(svc.NodeAttributes):
     prsJsonConfigString: dict = Field({},
         title="Способ подключения к источнику данных",
@@ -70,7 +69,6 @@ class ConnectorRead(svc.NodeRead):
         False,
         title="Флаг возврата присоединённых тегов"
     )
-
 class OneConnectorInReadResult(svc.OneNodeInReadResult):
     linkedTags: list[LinkTag] = Field(
         None,
@@ -174,7 +172,18 @@ async def create(payload: ConnectorCreate, error_handler: svc.ErrorHandler = Dep
         * **detail** (str) - пояснения к ошибке.
 
     """
-    res = await app._create(payload)
+    if payload is None:
+        payload = {}
+    
+    try:
+        s = json.dumps(payload)
+        p = ConnectorCreate.model_validate_json(s)
+    except Exception as ex:
+        res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+        app._logger.exception(res)
+        await error_handler.handle_error(res)
+
+    res = await app._create(p)
     await error_handler.handle_error(res)
     return res
 

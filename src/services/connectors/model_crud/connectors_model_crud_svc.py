@@ -21,15 +21,7 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     def __init__(self, settings: ConnectorsModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
-
-    def _set_handlers(self) -> dict:
-        return {
-            "connectors.create": self._create,
-            "connectors.read": self._read,
-            "connectors.update": self._update,
-            "connectors.delete": self._delete,
-        }
-
+    
     '''
     async def _further_read(self, mes: dict) -> dict:
         pass
@@ -110,7 +102,7 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     async def _further_read(self, mes: dict, search_result: dict) -> dict:
 
-        if not mes["data"]["getLinkedTags"]:
+        if not mes["getLinkedTags"]:
             return search_result
 
         res = {"data": []}
