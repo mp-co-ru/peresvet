@@ -39,7 +39,7 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         await self._hierarchy.add(sys_id, {"cn": "tags"})
 
-        for item in mes["data"]["linkTags"]:
+        for item in mes["linkTags"]:
             copy_item = copy.deepcopy(item)
             copy_item["connectorId"] = new_id
             await self._link_tag(copy_item)
