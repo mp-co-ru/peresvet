@@ -212,7 +212,7 @@ class TagsAppAPI(BaseSvc):
         # нет подписчика
         if res is None:
             res = {"error": {"code": 424, "message": f"Нет обработчика для команды записи данных."}}
-            #app._logger.error(res)
+            app._logger.error(res["error"]["message"])
         return {}
 
 settings = TagsAppAPISettings()
