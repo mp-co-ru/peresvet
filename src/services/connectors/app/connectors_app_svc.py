@@ -35,7 +35,7 @@ class ConnectorsApp(AppSvc):
     async def get_connector_tag_data(self, connector_id: str) -> dict:
 
         connector_data = await self._hierarchy.search(
-            new_payload={
+            payload={
                 "id": connector_id,
                 "attributes": [
                     "prsActive", "prsJsonConfigString"
@@ -97,6 +97,19 @@ router = APIRouter(prefix=f"{settings.api_version}/connectors")
 @router.websocket("/{connector_id}")
 async def get_req(websocket: WebSocket, connector_id: str):
 
+    # если нет коннектора с указанным id или он неактивен, то выходим
+    payload = {
+        "id": connector_id,
+        "attributes": ["prsActive"]
+    }
+    res = await app._hierarchy.search(payload=payload)
+    if not res:
+        app._logger.error(f"Запрос связи от коннектора '{connector_id}', но он не найден в модели.")
+        return
+    if res[0][2]["prsActive"][0] != 'TRUE':
+        app._logger.error(f"Запрос связи от коннектора '{connector_id}'. Коннектор неактивен.")
+        return
+
     await websocket.accept()
 
     app.linked_connectors[connector_id] = websocket
@@ -111,36 +124,25 @@ async def get_req(websocket: WebSocket, connector_id: str):
         while True:
             tags_data_json = await websocket.receive_json()
             app._logger.info(f'{app._config.svc_name}: данные от коннектора {connector_id}: {tags_data_json}')
-            '''
-            for tag_data in tags_data_json.get('data'):
-
-                body = {
-                        "action": "tags.setData",
-                        "data": {"data": [tag_data]}
-                        }
-                await app._post_message(body, routing_key="tags_app_consume", reply=False)
-            '''
-            body = {
-                tags_data_json
-            }
-            res = await app._post_message(mes=body, reply=False, routing_key="prsTag.app_api.data_set.*")
+            res = await app._post_message(mes=tags_data_json, reply=False, routing_key="prsTag.app_api.data_set.*")
             if res is None:
                 app._logger.error("Нет обработчика для команды записи данных.")
-        
-            await app._post_message(body, routing_key="tags_app_consume", reply=False)
 
     except WebSocketDisconnect as e:
-        # manager.disconnect(websocket)
-        app.linked_connectors.pop(connector_id)
+        
+        try:
+            app.linked_connectors.pop(connector_id)
 
-        app._logger.error(f"Разрыв связи с коннектором {connector_id}. Ошибка: {e}")
-        now_ts = t.now_int()
-        data = {"data": []}
-        for tag in connector_tag_data["tags"]:
-            tag_data = {"tagId": tag["tagId"], "data": [[None, now_ts, None]]}
-            data["data"].append(tag_data)
-        res = await app._post_message(mes = data, routing_key="prsTag.app_api.data_set.*", reply=False)
-        if res is None:
-            app._logger.error("Нет обработчика для команды записи данных.")
+            app._logger.error(f"Разрыв связи с коннектором {connector_id}. Ошибка: {e}")
+            now_ts = t.now_int()
+            data = {"data": []}
+            for tag in connector_tag_data["tags"]:
+                tag_data = {"tagId": tag["tagId"], "data": [[None, now_ts, None]]}
+                data["data"].append(tag_data)
+            res = await app._post_message(mes = data, routing_key="prsTag.app_api.data_set.*", reply=False)
+            if res is None:
+                app._logger.error("Нет обработчика для команды записи данных.")
+        except:
+            pass
 
 app.include_router(router, tags=["connectors_app"])
