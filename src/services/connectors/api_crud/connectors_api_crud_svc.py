@@ -124,7 +124,7 @@ router = APIRouter(prefix=f"{settings.api_version}/connectors")
 error_handler = svc.ErrorHandler()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
-async def create(payload: ConnectorCreate, error_handler: svc.ErrorHandler = Depends()):
+async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends()):
     """
     Метод добавления коннектора в иерархию.
 
