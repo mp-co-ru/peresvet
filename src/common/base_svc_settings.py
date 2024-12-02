@@ -78,7 +78,7 @@ class BaseSvcSettings(BaseSettings, BaseModel):
 
     log: dict = {
         "level": "INFO",
-        "file_name": "peresvet.log",
+        "file_name": "log/peresvet.log",
         "retention": "1 months",
         "rotation": "20 days"
     }
