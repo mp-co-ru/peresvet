@@ -272,7 +272,7 @@ class ModelCRUDSvc(Svc):
             # то есть, по большому счёту, всем всё равно
             res = {"response": True}
             
-        res = await self._post_message(
+        await self._post_message(
             mes=mes,
             reply=True,
             routing_key=f"{self._config.hierarchy['class']}.model.updating.{id}"
