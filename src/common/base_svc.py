@@ -129,7 +129,7 @@ class BaseSvc(FastAPI):
 
         while not self._initialized:
             await asyncio.sleep(0.5)
-
+        
         async with message.process(ignore_processed=True):
             mes = message.body.decode()
 
@@ -210,14 +210,19 @@ class BaseSvc(FastAPI):
         if isinstance(res, DeliveredMessage):
             if isinstance(res.delivery, Basic.Return):
                 if res.delivery.reply_code == 312:
-                    return
+                    return None
         if not reply:
             return True
         
         future = asyncio.get_running_loop().create_future()
         self._callback_futures[correlation_id] = future
 
-        return await future
+        try:
+            return await future
+        except Exception as ex:
+            self._logger.error(f"{self._config.svc_name} :: Ошибка получения результата: {ex}.")
+            self._callback_futures.pop(correlation_id)
+            return None       
 
     async def _on_rpc_response(
             self, message: aio_pika.abc.AbstractIncomingMessage
@@ -263,7 +268,9 @@ class BaseSvc(FastAPI):
         while not self._initialized:
             try:
                 self._logger.debug(f"{self._config.svc_name} :: Установление связи с брокером сообщений...")
-                self._amqp_connection = await aio_pika.connect_robust(self._config.broker["amqp_url"])
+
+                loop = asyncio.get_event_loop()
+                self._amqp_connection = await aio_pika.connect_robust(self._config.broker["amqp_url"], loop=loop)
                 self._amqp_channel = await self._amqp_connection.channel()
                 await self._amqp_channel.set_qos(1)
 
@@ -286,11 +293,12 @@ class BaseSvc(FastAPI):
 
                 await self._amqp_callback_queue.consume(self._on_rpc_response, no_ack=True)
 
-                self._logger.info(f"{self._config.svc_name}: Связь с AMQP сервером установлена.")
+                self._logger.info(f"{self._config.svc_name} :: Связь с AMQP сервером установлена.")
 
                 self._initialized = True
 
             except aio_pika.AMQPException as ex:
+                self._initialized = False
                 self._logger.error(f"{self._config.svc_name} :: Ошибка связи с брокером: {ex}")
                 await asyncio.sleep(5)
 
