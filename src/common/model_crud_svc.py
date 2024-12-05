@@ -418,11 +418,13 @@ class ModelCRUDSvc(Svc):
                     )
                     tasks.append(future)
 
-                done, _ = await asyncio.wait(
-                    tasks, return_when=asyncio.ALL_COMPLETED
-                )
+                # нельзя параллельно выполнять задачи - возникает ошибка при одновременном доступе к кэшу
+                #done, _ = await asyncio.wait(
+                #    tasks, return_when=asyncio.ALL_COMPLETED
+                #)
 
-                for future in done:
+                for future in tasks:
+                    await future
                     res = future.result()
                     if res is None:
                         res = {"response": True}
@@ -438,21 +440,16 @@ class ModelCRUDSvc(Svc):
                         }
                         return res_response
 
-                tasks = []
                 for child in children:
-                    future = asyncio.create_task(
-                        self._post_message(
-                            {"id": child["id"]},
-                            reply=True,
-                            routing_key=f"{child['objectClass']}.model.deleting.{child['id']}"
-                        ),
-                        name=child['id']
+                    await self._post_message(
+                        {"id": child["id"]},
+                        reply=True,
+                        routing_key=f"{child['objectClass']}.model.deleting.{child['id']}"
                     )
-                    tasks.append(future)
-
-                done, _ = await asyncio.wait(
-                    tasks, return_when=asyncio.ALL_COMPLETED
-                )
+                    
+                #done, _ = await asyncio.wait(
+                #    tasks, return_when=asyncio.ALL_COMPLETED
+                #)
 
             await self._further_delete(mes)
 
