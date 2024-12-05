@@ -152,28 +152,31 @@ class BaseSvc(FastAPI):
                 await message.reject(True)
                 return
 
-            # обработка сообщения
-            passed = False
-            for key in self._handlers.keys():
-                if re.fullmatch(key, message.routing_key):
-                    passed = True
-                    res = await self._handlers[key](mes=mes, routing_key=message.routing_key)
-
-                    if message.reply_to:
-                        # здесь нельзя использовать self._post_message
-                        await self._exchange.publish(
-                            aio_pika.Message(
-                                body=json.dumps(res,ensure_ascii=False).encode(),
-                                correlation_id=message.correlation_id,
-                            ),
-                            routing_key=message.reply_to,
-                        )
-                    break
-
-            if not passed:
-                self._logger.warning(f"{self._config.svc_name} :: Сообщение с ключом {message.routing_key} не обработано.")
-            
             await message.ack()
+            # обработка сообщения
+            try:
+                passed = False
+                for key in self._handlers.keys():
+                    if re.fullmatch(key, message.routing_key):
+                        passed = True
+                        res = await self._handlers[key](mes=mes, routing_key=message.routing_key)
+
+                        if message.reply_to:
+                            # здесь нельзя использовать self._post_message
+                            await self._exchange.publish(
+                                aio_pika.Message(
+                                    body=json.dumps(res,ensure_ascii=False).encode(),
+                                    correlation_id=message.correlation_id,
+                                ),
+                                routing_key=message.reply_to,
+                            )
+                        break
+
+                if not passed:
+                    self._logger.warning(f"{self._config.svc_name} :: Сообщение с ключом {message.routing_key} не обработано.")
+            except Exception as ex:
+                self._logger.warning(f"{self._config.svc_name} :: Ошибка обработки сообщения {mes} с ключом {message.routing_key}: {ex}")            
+                
 
     async def _post_message(
             self, mes: dict, reply: bool = False, routing_key: str = None
