@@ -962,13 +962,14 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
             result = {"data": []}
 
-            if tasks:
-                await asyncio.wait(list(tasks.values()))
-            else:
+            if not tasks:
                 self._logger.debug(f"Нет возвращаемых данных.")
                 return result
 
             for tag_id, task in tasks.items():
+                # задачи нельзя выполнять параллельно - возникает ошибка при одновременном обращении к кэшу
+                await task
+
                 tag_data = task.result()
 
                 if not mes["actual"] and \

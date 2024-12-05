@@ -1,5 +1,5 @@
 from src.common.base_cache import ABCCache, JsonType
-from typing import Union, Dict, Any, List
+from typing import Any, List
 import redis.asyncio as redis
 
 class RedisCache(ABCCache):
