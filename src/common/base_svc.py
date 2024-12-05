@@ -175,7 +175,7 @@ class BaseSvc(FastAPI):
                 if not passed:
                     self._logger.warning(f"{self._config.svc_name} :: Сообщение с ключом {message.routing_key} не обработано.")
             except Exception as ex:
-                self._logger.warning(f"{self._config.svc_name} :: Ошибка обработки сообщения {mes} с ключом {message.routing_key}: {ex}")            
+                self._logger.error(f"{self._config.svc_name} :: Ошибка обработки сообщения {mes} с ключом {message.routing_key}: {ex}")            
                 
 
     async def _post_message(
