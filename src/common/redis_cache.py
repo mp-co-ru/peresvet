@@ -5,12 +5,15 @@ import redis.asyncio as redis
 class RedisCache(ABCCache):
     
     def __init__(self, dsn: str):
-        self._client : redis.Redis = redis.from_url(dsn)
-        self._pipe = None
+        self._pool : redis.ConnectionPool = redis.ConnectionPool.from_url(url=dsn, max_connections=50, max_retries=10, timeout=1)
+        self._client : redis.Redis = None 
+        self._pipe : redis.Pipeline = None
         
     def set(self, name: str, key: str = "$", obj: JsonType = {}, nx: bool = False, xx: bool = False):
-        if self._pipe is None:
+        if self._client is None:
+            self._client = redis.Redis.from_pool(self._pool)
             self._pipe = self._client.pipeline(transaction=True)
+
         self._pipe.json().set(name, key, obj, nx=nx, xx=xx)
         return self
 
@@ -26,16 +29,20 @@ class RedisCache(ABCCache):
         Если key запрашивается один и его значение в кэше = None, то возвращается ['null'].
         Если запрашиваются несколько ключей и значение каких-то = None, то они так и возвращаются, как None.        
         """
-        if self._pipe is None:
+        if self._client is None:
+            self._client = redis.Redis.from_pool(self._pool)
             self._pipe = self._client.pipeline(transaction=True)
+
         self._pipe.json().get(name, *keys)
         return self
     
     def delete(self, name: str, key: str = None):
         """Метод должен возвращать self
         """
-        if self._pipe is None:
+        if self._client is None:
+            self._client = redis.Redis.from_pool(self._pool)
             self._pipe = self._client.pipeline(transaction=True)
+
         self._pipe.json().delete(name, key)
         return self
 
@@ -43,8 +50,10 @@ class RedisCache(ABCCache):
         """Метод добавляет в массив список объектов.
         Должен возвращать self.
         """
-        if self._pipe is None:
+        if self._client is None:
+            self._client = redis.Redis.from_pool(self._pool)
             self._pipe = self._client.pipeline(transaction=True)
+
         self._pipe.json().arrappend(name, key, *objs)
         return self
 
@@ -52,8 +61,10 @@ class RedisCache(ABCCache):
         """Метод определяет индекс объекта в массиве.
         Должен возвращать self.
         """
-        if self._pipe is None:
+        if self._client is None:
+            self._client = redis.Redis.from_pool(self._pool)
             self._pipe = self._client.pipeline(transaction=True)
+
         self._pipe.json().arrindex(name, key, obj)
         return self
 
@@ -61,8 +72,10 @@ class RedisCache(ABCCache):
         """Метод удаляет из массива объект с индексом index.
         Должен возвращать self.
         """
-        if self._pipe is None:
+        if self._client is None:
+            self._client = redis.Redis.from_pool(self._pool)
             self._pipe = self._client.pipeline(transaction=True)
+
         self._pipe.json().arrpop(name, key, index)
         return self
 
@@ -71,7 +84,8 @@ class RedisCache(ABCCache):
         """
         res = await self._pipe.execute()
         await self._pipe.reset()
-        self._pipe = None
+        await self._client.aclose()
+        self._client = None
         return res
     
     async def reset(self):
