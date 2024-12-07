@@ -32,12 +32,15 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
         )
 
         # сообщим методам, что инициатор удалился, чтобы они могли отписаться от событий...
-        initiator_cache = await self._cache.get(f"{deleted_id}.{self._config.svc_name}").exec()
-        if initiator_cache[0] is None:
-            self._logger.error(f"{self._config.svc_name} :: Нет кэша для удалённого инициатора {deleted_id}.")
-            return
-        # удалим кэш
-        await self._cache.delete(f"{deleted_id}.{self._config.svc_name}").exec()
+        with self._cache.get_redis() as r:
+            initiator_cache = await r.json().get(f"{deleted_id}.{self._config.svc_name}")
+
+            if initiator_cache is None:
+                self._logger.error(f"{self._config.svc_name} :: Нет кэша для удалённого инициатора {deleted_id}.")
+                return
+            # удалим кэш
+            await r.json().delete(f"{deleted_id}.{self._config.svc_name}")
+
         for method_id in initiator_cache:
             payload = {
                 "base": method_id,
@@ -68,30 +71,32 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             "attributes": ["cn"]
         }
         initiators = await self._hierarchy.search(payload=payload)
-        for initiator in initiators:
-            initiator_id = initiator[2]["cn"][0]
-            
-            # если есть кэш для этого инициатора, добавляем метод
-            # если нет, создаём
-            initiator_cache = await self._cache.get(f"{initiator_id}.{self._config.svc_name}").exec()
-            if initiator_cache[0] is None:
-                await self._cache.set(name=f"{initiator_id}.{self._config.svc_name}", obj=[id]).exec()
-            else:
-                index = (await self._cache.index(
-                    name=f"{initiator_id}.{self._config.svc_name}", 
-                    key="$", obj=id).exec())[0][0]
-                if index == -1:
-                    await self._cache.append(f"{initiator_id}.{self._config.svc_name}", "$", id).exec()
 
-            payload = {"id": initiator_id, "attributes": ["objectClass"]}
+        async with self._cache.get_redis() as r:
+            for initiator in initiators:
+                initiator_id = initiator[2]["cn"][0]
+                
+                # если есть кэш для этого инициатора, добавляем метод
+                # если нет, создаём
+                initiator_cache = await r.json().get(f"{initiator_id}.{self._config.svc_name}")
+                if initiator_cache is None:
+                    await r.json().set(name=f"{initiator_id}.{self._config.svc_name}", path="$", obj=[id])
+                else:
+                    index = await r.json().arrindex(
+                        f"{initiator_id}.{self._config.svc_name}", "$", id)
+                    
+                    if index == -1:
+                        await r.json().append(f"{initiator_id}.{self._config.svc_name}", "$", id)
 
-            initiator_data = await self._hierarchy.search(payload=payload)
-            obj_class = initiator_data[0][2]["objectClass"][0]
-            # подписываемся на событие удаления инициатора
-            await self._amqp_consume_queue.bind(
-                exchange=self._exchange,
-                routing_key=f"{obj_class}.model.deleted.{initiator_id}"
-            )
+                payload = {"id": initiator_id, "attributes": ["objectClass"]}
+
+                initiator_data = await self._hierarchy.search(payload=payload)
+                obj_class = initiator_data[0][2]["objectClass"][0]
+                # подписываемся на событие удаления инициатора
+                await self._amqp_consume_queue.bind(
+                    exchange=self._exchange,
+                    routing_key=f"{obj_class}.model.deleted.{initiator_id}"
+                )
 
     async def _delete_method_cache(self, id: str):
         payload = {
@@ -107,37 +112,39 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             "attributes": ["cn"]
         }
         initiators = await self._hierarchy.search(payload=payload)
-        for initiator in initiators:
-            initiator_id = initiator[2]["cn"][0]
-            
-            initiator_cache = await self._cache.get(f"{initiator_id}.{self._config.svc_name}").exec()
-            if not (initiator_cache[0] is None):
-                index = (await self._cache.index(
-                    name=f"{initiator_id}.{self._config.svc_name}", 
-                    key="$",
-                    obj=id).exec())[0][0]
-                if index > -1:
-                    await self._cache.pop(
+
+        with self._cache.get_redis() as r:
+            for initiator in initiators:
+                initiator_id = initiator[2]["cn"][0]
+                
+                initiator_cache = await r.json().get(f"{initiator_id}.{self._config.svc_name}")
+                if not (initiator_cache[0] is None):
+                    index = await r.json().index(
                         name=f"{initiator_id}.{self._config.svc_name}", 
-                        key="$",
-                        index=index
-                    ).exec()
-                initiator_cache = await self._cache.get(f"{initiator_id}.{self._config.svc_name}").exec()
-                if not initiator_cache[0]:
-                    payload = {
-                        "id": initiator_id,
-                        "attributes": ["objectClass"]
-                    }
+                        path="$",
+                        obj=id)
+                    if index > -1:
+                        await r.json().arrpop(
+                            name=f"{initiator_id}.{self._config.svc_name}", 
+                            path="$",
+                            index=index
+                        )
+                    initiator_cache = await r.json().get(f"{initiator_id}.{self._config.svc_name}")
+                    if not initiator_cache:
+                        payload = {
+                            "id": initiator_id,
+                            "attributes": ["objectClass"]
+                        }
 
-                    initiator_data = await self._hierarchy.search(payload=payload)
-                    obj_class = initiator_data[0][2]["objectClass"][0]
+                        initiator_data = await self._hierarchy.search(payload=payload)
+                        obj_class = initiator_data[0][2]["objectClass"][0]
 
-                    await self._amqp_consume_queue.unbind(
-                        exchange=self._exchange,
-                        routing_key=f"{obj_class}.model.deleted.{initiator_id}"
-                    )
+                        await self._amqp_consume_queue.unbind(
+                            exchange=self._exchange,
+                            routing_key=f"{obj_class}.model.deleted.{initiator_id}"
+                        )
 
-                    await self._cache.delete(f"{initiator_id}.{self._config.svc_name}").exec()
+                        await r.json().delete(f"{initiator_id}.{self._config.svc_name}")
 
     async def _further_create(self, mes: dict, new_id: str) -> None:
         system_node = await self._hierarchy.search(payload={
