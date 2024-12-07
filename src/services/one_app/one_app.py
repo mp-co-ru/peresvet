@@ -310,4 +310,4 @@ app.mount(path="/", app=datafunc_app_api)
 # =============================================================================
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info", ws_ping_interval=3, ws_ping_timeout=2)
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="debug", ws_ping_interval=3, ws_ping_timeout=2)

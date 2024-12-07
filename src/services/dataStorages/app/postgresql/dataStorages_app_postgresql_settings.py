@@ -25,3 +25,10 @@ class DataStoragesAppPostgreSQLSettings(DataStoragesAppBaseSettings):
     # периодичность накопления кэша данных, секунды
     cache_data_period: int = 100
 
+    log: dict = {
+        "level": "DEBUG",
+        "file_name": "log/peresvet.log",
+        "retention": "1 months",
+        "rotation": "20 days"
+    }
+
