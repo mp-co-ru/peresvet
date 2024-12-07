@@ -41,10 +41,10 @@ class TagsApp(AppSvc):
         for tag_id in tag_ids:
 
             res = await self._get_tag_cache_key_value(tag_id, "prsActive")
-            if not res:
+            if res is None:
                 self._logger.error(f"{self._config.svc_name} :: Нет тега c id = '{tag_id}'.")
                 continue
-            if not res[0]:
+            if not res:
                 self._logger.warning(f"{self._config.svc_name} :: Тег '{tag_id}' неактивен.")
                 continue
 
@@ -59,26 +59,29 @@ class TagsApp(AppSvc):
         return final_res
 
     async def _get_tag_cache_key_value(self, tag_id: str, key: str):
-        # результат возврщаем в виде массива
         # если возвращаем False, это означает, что такого тега нет
-        try:
-            res = await self._cache.get(f"{tag_id}.{self._config.svc_name}", key).exec()
-        except:
-            # сам кэш есть, но нет такого ключа
-            res = [None]
         
-        if res[0] is None:
-            res = await self._make_tag_cache(tag_id)
-            # если метод перестроения кэша возвращает False - значит, нет такого узла
-            if not res:
-                return False
+        # TODO: неправильно! если тега нет, надо возвращать None
+        # т.к. False может быть значением тега
+        async with self._cache.get_redis() as r:
+            try:                
+                res = await r.json().get(f"{tag_id}.{self._config.svc_name}", key)
+            except:
+                # сам кэш есть, но нет такого ключа
+                res = None
             
-            res = await self._cache.get(f"{tag_id}.{self._config.svc_name}", key).exec()
+            if res is None:
+                res = await self._make_tag_cache(tag_id)
+                # если метод перестроения кэша возвращает False - значит, нет такого узла
+                if not res:
+                    return None
+                
+                res = await r.json().get(f"{tag_id}.{self._config.svc_name}", key)
 
-        if res[0] == 'null':
-            res = [None]
-        
-        return res
+            if res == 'null':
+                res = None
+            
+            return res
 
     async def data_set(self, mes: dict, routing_key: str = None) -> None:
 
@@ -88,10 +91,10 @@ class TagsApp(AppSvc):
             self._logger.debug(f"{self._config.svc_name} :: Запись данных тега '{tag_id}'")
 
             res = await self._get_tag_cache_key_value(tag_id, "prsActive")
-            if not res:
+            if res is None:
                 self._logger.error(f"{self._config.svc_name} :: Нет тега c id = '{tag_id}'.")
                 continue
-            if not res[0]:
+            if not res:
                 self._logger.warning(f"{self._config.svc_name} :: Тег '{tag_id}' неактивен.")
                 continue
             
@@ -102,7 +105,8 @@ class TagsApp(AppSvc):
                 self._logger.error(f"{self._config.svc_name} :: Нет обработчика для записи данных тега '{tag_item['tagId']}'.")
 
     async def _delete_tag_cache(self, tag_id: str):
-        await self._cache.delete(f"{tag_id}.{self._config.svc_name}").exec()
+        async with self._cache.get_redis() as r:
+            await r.json().delete(f"{tag_id}.{self._config.svc_name}")
 
     async def _make_tag_cache(self, tag_id: str):
         await self._delete_tag_cache(tag_id=tag_id)
@@ -115,8 +119,9 @@ class TagsApp(AppSvc):
             return False
         
         active = res[0][2]["prsActive"][0] == 'TRUE'
-        res = await self._cache.set(name=f"{tag_id}.{self._config.svc_name}", obj={"prsActive": active}).exec()
-        return res[0]
+        async with self._cache.get_redis() as r:
+            res = await r.json().set(name=f"{tag_id}.{self._config.svc_name}", path="$", obj={"prsActive": active})
+        return res
 
     async def _updated(self, mes: dict, routing_key: str = None):
         # просто удалим кэш тега

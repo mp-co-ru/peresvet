@@ -150,19 +150,15 @@ class MethodsApp(AppSvc):
         # TODO: практически повторение следующего метода. объединить
 
         initiator = mes["id"]
-        methods_ids = await self._cache.get(f"{initiator}.{self._config.svc_name}").exec()
-        if not methods_ids[0]:
+
+        async with self._cache.get_redis() as r:
+            methods_ids = await r.json().get(f"{initiator}.{self._config.svc_name}")
+        if not methods_ids:
             self._logger.error(f"{self._config.svc_name} :: К расписанию '{initiator}' не привязаны методы.")
             return
 
-        """
-        methods_ids = {
-            "methodId": "tagId",
-            ...
-        }
-        """
-        self._logger.debug(f"{self._config.svc_name} :: methods_ids: {methods_ids[0]}")
-        for method_id, tag_id in methods_ids[0].items():
+        self._logger.debug(f"{self._config.svc_name} :: methods_ids: {methods_ids}")
+        for method_id, tag_id in methods_ids.items():
             parameters = await self._hierarchy.search({
                 "base": method_id,
                 "filter": {"cn": ["*"], "objectClass": ["prsMethodParameter"]},
@@ -174,39 +170,24 @@ class MethodsApp(AppSvc):
 
         self._logger.debug(f"Run methods. Data: {mes}")
 
-        """
-        {
-            "data": [
-                tag_item
-            ]            
-        }
-        """
+        async with self._cache.get_redis() as r:
+            for tag_item in mes["data"]:
+                tag_id = tag_item["tagId"]
+                tag_data = tag_item["data"]
+                methods = await r.json().get(f"{tag_id}.{self._config.svc_name}")
+                if not methods:
+                    self._logger.error(f"{self._config.svc_name} :: К тегу '{tag_id}' не привязаны методы.")
+                    continue
 
-        for tag_item in mes["data"]:
-            tag_id = tag_item["tagId"]
-            tag_data = tag_item["data"]
-            methods = await self._cache.get(f"{tag_id}.{self._config.svc_name}").exec()
-            if not methods[0]:
-                self._logger.error(f"{self._config.svc_name} :: К тегу '{tag_id}' не привязаны методы.")
-                continue
-
-            """
-            methods_ids = [
-                {
-                    "methodId": "...",
-                    "tagId": "..."
-                }
-            ]
-            """
-            self._logger.debug(f"methods_ids: {methods[0]}")
-            for method_id, tag_id in methods[0].items():
-                parameters = await self._hierarchy.search({
-                    "base": method_id,
-                    "filter": {"cn": ["*"], "objectClass": ["prsMethodParameter"]},
-                    "attributes": ["prsJsonConfigString", "prsIndex", "cn"]
-                })
-                for tag_data_item in tag_data:
-                    await self._calc_tag(tag_id, method_id, parameters, tag_data_item)
+                self._logger.debug(f"methods_ids: {methods}")
+                for method_id, tag_id in methods.items():
+                    parameters = await self._hierarchy.search({
+                        "base": method_id,
+                        "filter": {"cn": ["*"], "objectClass": ["prsMethodParameter"]},
+                        "attributes": ["prsJsonConfigString", "prsIndex", "cn"]
+                    })
+                    for tag_data_item in tag_data:
+                        await self._calc_tag(tag_id, method_id, parameters, tag_data_item)
 
     async def _calc_tag(self, tag_id: str, method_id: str, parameters: dict, data: list[int | None]) -> None:
 
@@ -326,18 +307,22 @@ class MethodsApp(AppSvc):
                     continue
 
     async def _delete_method_cache(self, method_id: str):
-        method_cache = await self._cache.get(f"{method_id}.{self._config.svc_name}").exec()
-        if method_cache[0] is None:
-            return
-        for initiator_id in method_cache[0]:
-            res = await self._cache.delete(
-                name=f"{initiator_id}.{self._config.svc_name}",
-                key=method_id
-            ).get(name=f"{initiator_id}.{self._config.svc_name}").exec()
-            if not res[1].keys():
-                await self._cache.delete(
-                    name=f"{initiator_id}.{self._config.svc_name}"
-                ).exec()
+        async with self._cache.get_redis() as r:
+            method_cache = await r.json().get(f"{method_id}.{self._config.svc_name}")
+            if method_cache is None:
+                return
+        
+            async with r.pipeline() as p:
+                for initiator_id in method_cache:
+                    res = await (p.json().delete(
+                        key=f"{initiator_id}.{self._config.svc_name}",
+                        path=method_id
+                    ).json().get(f"{initiator_id}.{self._config.svc_name}")).execute()
+
+                    if not res[1].keys():
+                        await r.json().delete(
+                            key=f"{initiator_id}.{self._config.svc_name}"
+                        )
 
     async def _make_method_cache(self, method_id: str):
         """
@@ -366,28 +351,29 @@ class MethodsApp(AppSvc):
         parent_tag, _ = await self._hierarchy.get_parent(method_id)
 
         initiators_ids = []
-        for initiator in initiators:
-            initiator_id = initiator[2]["cn"][0]
-            initiators_ids.append(initiator_id)
-            initiator_cache = await self._cache.get(f"{initiator_id}.{self._config.svc_name}").exec()
-            if initiator_cache[0] is None:
-                await self._cache.set(
-                    name=f"{initiator_id}.{self._config.svc_name}",
-                    obj={
-                        method_id: parent_tag
-                    }
-                ).exec()
-            else:
-                await self._cache.set(
-                    name=f"{initiator_id}.{self._config.svc_name}",
-                    key=method_id,
-                    obj=parent_tag
-                ).exec()
+        async with self._cache.get_redis() as r:
+            for initiator in initiators:
+                initiator_id = initiator[2]["cn"][0]
+                initiators_ids.append(initiator_id)
+                initiator_cache = await r.json().get(f"{initiator_id}.{self._config.svc_name}")
+                if initiator_cache is None:
+                    await r.json().set(
+                        name=f"{initiator_id}.{self._config.svc_name}",
+                        path="$",
+                        obj={
+                            method_id: parent_tag
+                        }
+                    )
+                else:
+                    await r.json().set(
+                        name=f"{initiator_id}.{self._config.svc_name}",
+                        path=method_id,
+                        obj=parent_tag
+                    )
 
-        await self._cache.set(
-            name=f"{method_id}.{self._config.svc_name}",
-            obj=initiators_ids
-        ).exec()
+            await r.json().set(
+                name=f"{method_id}.{self._config.svc_name}", path="$", obj=initiators_ids
+            )
 
         return True
 
