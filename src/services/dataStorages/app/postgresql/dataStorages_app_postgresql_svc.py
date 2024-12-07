@@ -202,15 +202,15 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
         alert_id = mes["alertId"]
 
-        alert_params = await self._cache.get(f"{alert_id}.{self._config.svc_name}").exec()
-        if not alert_params[0]:
-            await self._create_alert_cache(alert_id)
-            alert_params = await self._cache.get(f"{alert_id}.{self._config.svc_name}").exec()
-            if not alert_params[0]:
-                self._logger.error(f"{self._config.svc_name} :: Ошибка построения кэша тревоги {alert_id}")
-                return
+        async with self._cache.get_redis() as r:
+            alert_params = await r.json().get(f"{alert_id}.{self._config.svc_name}")
+            if alert_params is None:
+                await self._create_alert_cache(alert_id)
+                alert_params = await r.json().get(f"{alert_id}.{self._config.svc_name}")
+                if alert_params is None:
+                    self._logger.error(f"{self._config.svc_name} :: Ошибка построения кэша тревоги {alert_id}")
+                    return
 
-        alert_params = alert_params[0]
         for ds_id, prsStore in alert_params["dss"].items():
             connection_pool = self._connection_pools.get(ds_id)
             if connection_pool is None:
@@ -245,15 +245,16 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         self._logger.debug(f"Обработка квитирования тревоги: {mes}")
 
         alert_id = mes["alertId"]
-        alert_params = await self._cache.get(f"{alert_id}.{self._config.svc_name}").exec()
-        if not alert_params[0]:
-            await self._create_alert_cache(alert_id)
-            alert_params = await self._cache.get(f"{alert_id}.{self._config.svc_name}").exec()
-            if not alert_params[0]:
-                self._logger.error(f"{self._config.svc_name} :: Ошибка построения кэша тревоги {alert_id}")
-                return
 
-        alert_params = alert_params[0]
+        async with self._cache.get_redis() as r:
+            alert_params = await r.json().get(f"{alert_id}.{self._config.svc_name}")
+            if alert_params is None:
+                await self._create_alert_cache(alert_id)
+                alert_params = await r.json().get(f"{alert_id}.{self._config.svc_name}")
+                if alert_params is None:
+                    self._logger.error(f"{self._config.svc_name} :: Ошибка построения кэша тревоги {alert_id}")
+                    return
+
         for ds_id, prsStore in alert_params["dss"].items():
             connection_pool = self._connection_pools.get(ds_id)
             if connection_pool is None:
@@ -292,12 +293,13 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         self._logger.debug(f"Обработка пропадания тревоги: {mes}")
         alert_id = mes["alertId"]
 
-        alert_params = await self._cache.get(f"{alert_id}.{self._config.svc_name}")
-        if not alert_params:
-            alert_params = await self._create_alert_cache(alert_id)
-            if not alert_params:
-                self._logger.error(f"{self._config.svc_name} :: Ошибка построения кэша тревоги {alert_id}")
-                return
+        async with self._cache.get_redis() as r:
+            alert_params = await r.json().get(f"{alert_id}.{self._config.svc_name}")
+            if alert_params is None:
+                alert_params = await self._create_alert_cache(alert_id)
+                if not alert_params:
+                    self._logger.error(f"{self._config.svc_name} :: Ошибка построения кэша тревоги {alert_id}")
+                    return
 
         for ds_id, prsStore in alert_params["dss"].items():
             connection_pool = self._connection_pools.get(ds_id)
@@ -400,27 +402,30 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         self._logger.debug(f"Запись данных тега '{tag_id}' из кэша в хранилища...")
 
         try:
-            tag_cache = await self._cache.get(
-                f"{tag_id}.{self._config.svc_name}", "$"
-            ).set(
-                f"{tag_id}.{self._config.svc_name}", "$.data", []
-            ).exec()
+            async with self._cache.get_redis() as r:
+                async with r.pipeline() as pipe:
+                    tag_cache = await pipe.json().get(
+                        f"{tag_id}.{self._config.svc_name}", "$"
+                    ).json().set(
+                        f"{tag_id}.{self._config.svc_name}", "$.data", []
+                    ).execute()
 
             if not tag_cache[0][0]["data"]:
                 self._logger.debug(f"Кэш данных тега {tag_id} пустой.")
                 return
 
             for ds_id in tag_cache[0][0]["dss"].keys():
-                active = await self._cache.get(
-                    f"{ds_id}.{self._config.svc_name}", "prsActive"
-                ).exec()
-                if active[0] is None:
+                async with self._cache.get_redis() as r:
+                    active = await r.json().get(
+                        f"{ds_id}.{self._config.svc_name}", "prsActive"
+                    )
+                if active is None:
                     self._logger.error(
                         f"{self._config.svc_name} :: Несоответствие кэша тега {tag_id} c кэшем хранилища {ds_id}")
                     continue
 
                 # если хранилище неактивно, данные в него не записываем
-                if not active[0]:
+                if not active:
                     self._logger.error(
                         f"{self._config.svc_name} :: Хранилище {ds_id} неактивно.")
                     continue
@@ -530,8 +535,9 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             )
 
         await self._bind_alert(alert_id, False)
-        index = await self._cache.index(f"{ds_id}.{self._config.svc_name}", "alerts", alert_id).exec()
-        await self._cache.pop(f"{ds_id}.{self._config.svc_name}", "alerts", index).exec()
+        async with self._cache.get_redis() as r:
+            index = await r.json().index(f"{ds_id}.{self._config.svc_name}", "alerts", alert_id)
+            await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "alerts", index)
 
         self._logger.info(f"{self._config.svc_name} :: Тревога {alert_id} отвязана от хранилища {ds_id}.")
 
@@ -569,8 +575,9 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             )
 
         await self._bind_tag(tag_id, False)
-        index = await self._cache.index(f"{ds_id}.{self._config.svc_name}", "tags", tag_id).exec()
-        await self._cache.pop(f"{ds_id}.{self._config.svc_name}", "tags", index).exec()
+        async with self._cache.get_redis() as r:
+            index = await r.json().arrindex(f"{ds_id}.{self._config.svc_name}", "tags", tag_id)
+            await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "tags", index)
 
         self._logger.info(f"{self._config.svc_name} :: Тег {tag_id} отвязан от хранилища {ds_id}.")
 
@@ -578,16 +585,16 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         order: int, count: int, one_before: bool, one_after: bool, value: Any = None):
 
         actual_ds = None
-        tag_data = await self._cache.get(
-            f"{tag_id}.{self._config.svc_name}",
-            "prsActive", "dss", "prsValueTypeCode"
-        ).exec()
+        async with self._cache.get_redis() as r:
+            tag_data = await r.json().get(
+                f"{tag_id}.{self._config.svc_name}", "prsActive", "dss", "prsValueTypeCode"
+            )
 
-        if not tag_data[0]:
+        if not tag_data:
             self._logger.error(f"{self._config.svc_name} :: Тег {tag_id} отсутствует в кэше.")
             
             return []
-        if not tag_data[0]["prsActive"]:
+        if not tag_data["prsActive"]:
             self._logger.error(f"{self._config.svc_name} :: Тег {tag_id} неактивен.")
             
             return []
@@ -595,19 +602,19 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         # если тег привязан к нескольким хранилищам, пока непонятна логика
         # из какого хранилища брать данные.
         # пока будем брать из первого активного
-        for ds_id in tag_data[0]["dss"].keys():
-            ds_res = await self._cache.get(
-                f"{ds_id}.{self._config.svc_name}",
-                "prsActive"
-            ).exec()
-            if ds_res[0] is None:
-                self._logger.error(
-                    f"{self._config.svc_name} :: Хранилище {ds_id} отсутствует в кэше."
+        async with self._cache.get_redis() as r:
+            for ds_id in tag_data["dss"].keys():
+                ds_res = await r.json().get(
+                    f"{ds_id}.{self._config.svc_name}", "prsActive"
                 )
-            if ds_res[0]:
-                actual_ds = ds_id
-                break
-        
+                if ds_res is None:
+                    self._logger.error(
+                        f"{self._config.svc_name} :: Хранилище {ds_id} отсутствует в кэше."
+                    )
+                if ds_res:
+                    actual_ds = ds_id
+                    break
+            
         if not actual_ds:
             self._logger.error(
                 f"{self._config.svc_name} :: Не найдено актуальное хранилище для тега {tag_id}"
@@ -615,7 +622,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             return []
 
         conditions = ['TRUE']
-        sql_select = f"SELECT id, x, y, q FROM \"{tag_data[0]['dss'][actual_ds]['table']}\""
+        sql_select = f"SELECT id, x, y, q FROM \"{tag_data['dss'][actual_ds]['table']}\""
 
         if start is not None:
             conditions.append(f'x >= {start}')
@@ -647,7 +654,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             async with conn.transaction():
                 async for r in conn.cursor(*query_args):
                     val = r.get('y')
-                    if tag_data[0]["prsValueTypeCode"] == 4:
+                    if tag_data["prsValueTypeCode"] == 4:
                         val = json.loads(val)
                     records.append((val, r.get('x'), r.get('q')))
         return records
