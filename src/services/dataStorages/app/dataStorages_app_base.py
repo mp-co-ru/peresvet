@@ -344,6 +344,8 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         pass
 
     async def _tag_deleted(self, mes: dict, routing_key: str = None):
+        self._logger.debug(f"{self._config.svc_name} :: Удаление тега. routing key: {routing_key}; mes: {mes}.")
+
         await self._bind_tag(mes['id'], False)
         await self._delete_tag_cache(mes['id'])
 
@@ -676,7 +678,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
                             )
 
                             if index > -1:
-                                await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "tags", index[0])
+                                await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "tags", index)
                     elif res:
                         await self._write_tag_data_to_db(tag_id)
 
