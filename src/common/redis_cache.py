@@ -5,13 +5,16 @@ import redis.asyncio as redis
 class RedisCache(ABCCache):
     
     def __init__(self, dsn: str):
-        self._pool : redis.ConnectionPool = redis.ConnectionPool.from_url(url=dsn, max_connections=50, max_retries=10, timeout=1)
+        self._pool : redis.ConnectionPool = redis.ConnectionPool.from_url(url=dsn, max_connections=50)
         self._client : redis.Redis = None 
         self._pipe : redis.Pipeline = None
+
+    def get_redis(self) -> redis.Redis:
+        return redis.Redis(connection_pool=self._pool)
         
     def set(self, name: str, key: str = "$", obj: JsonType = {}, nx: bool = False, xx: bool = False):
         if self._client is None:
-            self._client = redis.Redis.from_pool(self._pool)
+            self._client = redis.Redis(connection_pool=self._pool)
             self._pipe = self._client.pipeline(transaction=True)
 
         self._pipe.json().set(name, key, obj, nx=nx, xx=xx)
