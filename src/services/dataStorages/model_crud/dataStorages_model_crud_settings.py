@@ -11,5 +11,6 @@ class DataStoragesModelCRUDSettings(ModelCRUDSettings):
         #: класс экзмепляров сущности в иерархии
         "class": "prsDataStorage",
         #: список через запятую родительских классов
-        "parent_classes": ""
+        "parent_classes": "",
+        "child_classes": ["prsDatastorageTagData", "prsDatastorageAlertData"]
     }
