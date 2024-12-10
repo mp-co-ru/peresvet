@@ -12,5 +12,6 @@ class ConnectorsModelCRUDSettings(ModelCRUDSettings):
         #: список через запятую родительских классов
         "parent_classes": "",
         #: флаг создания узла ``cn=system`` внутри узла экземпляра сущности
-        "create_sys_node": True
+        "create_sys_node": True,
+        "child_classes": ["prsConnectorTagData"]
     }

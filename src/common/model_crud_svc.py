@@ -390,16 +390,19 @@ class ModelCRUDSvc(Svc):
                     "filter": {
                         "cn": ["*"]
                     },
-                    "attributes": ["objectClass"]
+                    "attributes": ["objectClass"],
+                    "deref": False
                 }
             )
+            child_classes = self._config.hierarchy.get("child_classes", [])
+            unnotified_classes = ["prsModelNode", "alias", "extensibleObject"] + child_classes
             for item in items:
                 if item[0] == id:
                     # пропустим самого себя
                     continue
 
                 objectClass = item[2]["objectClass"][0]
-                if objectClass != "prsModelNode":
+                if not (objectClass in unnotified_classes):
                     children.append({
                         "id": item[0],
                         "objectClass": objectClass
