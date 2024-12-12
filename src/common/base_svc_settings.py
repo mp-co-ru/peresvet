@@ -62,12 +62,12 @@ class BaseSvcSettings(BaseSettings, BaseModel):
 
     #: имя сервиса
     svc_name: str = ""
-    
+
     broker: dict = {
         #: строка коннекта к RabbitMQ
         "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
         #: имя обменника
-        "name": "peresvet"        
+        "name": "peresvet"
     }
 
     hierarchy: dict = {
@@ -79,8 +79,8 @@ class BaseSvcSettings(BaseSettings, BaseModel):
     log: dict = {
         "level": "INFO",
         "file_name": "log/peresvet.log",
-        "retention": "1 months",
-        "rotation": "20 days"
+        "retention": 10,
+        "rotation": "5 MB"
     }
 
     @classmethod
@@ -99,5 +99,5 @@ class BaseSvcSettings(BaseSettings, BaseModel):
             dotenv_settings,
             file_secret_settings,
         )
-    
+
     cache_url: str = "redis://redis:6379?decode_responses=True&protocol=3"
