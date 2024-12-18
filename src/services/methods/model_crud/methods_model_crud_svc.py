@@ -98,53 +98,58 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
                     routing_key=f"{obj_class}.model.deleted.{initiator_id}"
                 )
 
-    async def _delete_method_cache(self, id: str):
-        payload = {
-            "base": id,
-            "filter": {"cn": ["initiatedBy"]},
-            "attributes": ["cn"]
-        }
-        initiatedBy_id = (await self._hierarchy.search(payload=payload))[0][0]
-        payload = {
-            "base": initiatedBy_id,
-            "scope": hierarchy.CN_SCOPE_ONELEVEL,
-            "filter": {"cn": ["*"]},
-            "attributes": ["cn"]
-        }
-        initiators = await self._hierarchy.search(payload=payload)
-
+    async def _delete_method_cache(self, ids: list[str]):
+        if not isinstance(ids, list):
+            idents = [ids]
+        else:
+            idents = ids
         async with self._cache.get_redis() as r:
-            for initiator in initiators:
-                initiator_id = initiator[2]["cn"][0]
+            for id in idents:
+                payload = {
+                    "base": id,
+                    "filter": {"cn": ["initiatedBy"]},
+                    "attributes": ["cn"]
+                }
+                initiatedBy_id = (await self._hierarchy.search(payload=payload))[0][0]
+                payload = {
+                    "base": initiatedBy_id,
+                    "scope": hierarchy.CN_SCOPE_ONELEVEL,
+                    "filter": {"cn": ["*"]},
+                    "attributes": ["cn"]
+                }
+                initiators = await self._hierarchy.search(payload=payload)
 
-                initiator_cache = await r.json().get(f"{initiator_id}.{self._config.svc_name}")
-                if not (initiator_cache[0] is None):
-                    index = await r.json().index(
-                        name=f"{initiator_id}.{self._config.svc_name}",
-                        path="$",
-                        obj=id)
-                    if index > -1:
-                        await r.json().arrpop(
+                for initiator in initiators:
+                    initiator_id = initiator[2]["cn"][0]
+
+                    initiator_cache = await r.json().get(f"{initiator_id}.{self._config.svc_name}")
+                    if not (initiator_cache[0] is None):
+                        index = await r.json().index(
                             name=f"{initiator_id}.{self._config.svc_name}",
                             path="$",
-                            index=index
-                        )
-                    initiator_cache = await r.json().get(f"{initiator_id}.{self._config.svc_name}")
-                    if not initiator_cache:
-                        payload = {
-                            "id": initiator_id,
-                            "attributes": ["objectClass"]
-                        }
+                            obj=ids)
+                        if index > -1:
+                            await r.json().arrpop(
+                                name=f"{initiator_id}.{self._config.svc_name}",
+                                path="$",
+                                index=index
+                            )
+                        initiator_cache = await r.json().get(f"{initiator_id}.{self._config.svc_name}")
+                        if not initiator_cache:
+                            payload = {
+                                "id": initiator_id,
+                                "attributes": ["objectClass"]
+                            }
 
-                        initiator_data = await self._hierarchy.search(payload=payload)
-                        obj_class = initiator_data[0][2]["objectClass"][0]
+                            initiator_data = await self._hierarchy.search(payload=payload)
+                            obj_class = initiator_data[0][2]["objectClass"][0]
 
-                        await self._amqp_consume_queue.unbind(
-                            exchange=self._exchange,
-                            routing_key=f"{obj_class}.model.deleted.{initiator_id}"
-                        )
+                            await self._amqp_consume_queue.unbind(
+                                exchange=self._exchange,
+                                routing_key=f"{obj_class}.model.deleted.{initiator_id}"
+                            )
 
-                        await r.json().delete(f"{initiator_id}.{self._config.svc_name}")
+                            await r.json().delete(f"{initiator_id}.{self._config.svc_name}")
 
     async def _further_create(self, mes: dict, new_id: str) -> None:
         system_node = await self._hierarchy.search(payload={
@@ -289,9 +294,9 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
         for method in methods:
             await self._make_method_cache(method[0])
 
-    async def _delete(self, mes: dict) -> None:
+    async def _delete(self, mes: dict, routing_key: str = None) -> None:
         await self._delete_method_cache(mes['id'])
-        super()._delete(mes)
+        await super()._delete(mes)
 
     async def on_startup(self) -> None:
         await super().on_startup()

@@ -2,42 +2,39 @@ import asyncio
 from patio import Registry, AsyncExecutor
 from patio_rabbitmq import RabbitMQBroker
 import aiormq
-import json
 from time import sleep
+from times import ts, int_to_local_timestamp
 
 rpc = Registry(project="methods_app", auto_naming=False)
-
-i = 0
-
-@rpc("heat")
-async def calc_temp(T: dict) -> int:
-    cur_T = I["data"][0]["data"][0][0]
-    if cur_T >= 60:
-        return 1
-    else:
-        return 0
 
 @rpc("power")
 async def calc_power(I: dict, U: dict) -> float:
     """Метод возвращает произведение двух параметров.
 
     """
-    #print(f"I: {json.dumps(I, indent=4)}")
-    #print(f"U: {json.dumps(U, indent=4)}")
 
-    global i
-
-    i += 1
-
-    print(i)
+    print(f"{int_to_local_timestamp(ts())} :: power")
 
     cur_I = I["data"][0]["data"][0][0]
     cur_U = U["data"][0]["data"][0][0]
 
     if cur_I == None or cur_U == None:
         return 0
-    
+
     return cur_I * cur_U
+
+@rpc("current")
+async def current(I: dict) -> float:
+    """Метод увеличивает значение тока.
+
+    """
+    print(f"{int_to_local_timestamp(ts())} :: current")
+    cur_I = I["data"][0]["data"][0][0]
+
+    if cur_I == None:
+        return 0
+
+    return cur_I + 0.05
 
 async def main():
     """Главная функция - запуск программы
