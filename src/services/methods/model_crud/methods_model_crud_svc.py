@@ -32,7 +32,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
         )
 
         # сообщим методам, что инициатор удалился, чтобы они могли отписаться от событий...
-        with self._cache.get_redis() as r:
+        async with self._cache.get_redis() as r:
             initiator_cache = await r.json().get(f"{deleted_id}.{self._config.svc_name}")
 
             if initiator_cache is None:
@@ -55,7 +55,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
                     routing_key=f"{self._config.hierarchy['class']}.model.updated.{method_id}"
                 )
             else:
-                self._logger.error(f"{self._config.svc_name} :: Нет данных по инициатору '{deleted_id}' для метода '{method_id}'.")                
+                self._logger.error(f"{self._config.svc_name} :: Нет данных по инициатору '{deleted_id}' для метода '{method_id}'.")
 
     async def _make_method_cache(self, id: str):
         payload = {
@@ -75,7 +75,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
         async with self._cache.get_redis() as r:
             for initiator in initiators:
                 initiator_id = initiator[2]["cn"][0]
-                
+
                 # если есть кэш для этого инициатора, добавляем метод
                 # если нет, создаём
                 initiator_cache = await r.json().get(f"{initiator_id}.{self._config.svc_name}")
@@ -84,7 +84,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
                 else:
                     index = await r.json().arrindex(
                         f"{initiator_id}.{self._config.svc_name}", "$", id)
-                    
+
                     if index == -1:
                         await r.json().append(f"{initiator_id}.{self._config.svc_name}", "$", id)
 
@@ -113,19 +113,19 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
         }
         initiators = await self._hierarchy.search(payload=payload)
 
-        with self._cache.get_redis() as r:
+        async with self._cache.get_redis() as r:
             for initiator in initiators:
                 initiator_id = initiator[2]["cn"][0]
-                
+
                 initiator_cache = await r.json().get(f"{initiator_id}.{self._config.svc_name}")
                 if not (initiator_cache[0] is None):
                     index = await r.json().index(
-                        name=f"{initiator_id}.{self._config.svc_name}", 
+                        name=f"{initiator_id}.{self._config.svc_name}",
                         path="$",
                         obj=id)
                     if index > -1:
                         await r.json().arrpop(
-                            name=f"{initiator_id}.{self._config.svc_name}", 
+                            name=f"{initiator_id}.{self._config.svc_name}",
                             path="$",
                             index=index
                         )
@@ -185,7 +185,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
                 await self._hierarchy.add(
                     initiatedBy_node_id,
                     {"cn": [initiator_id]}
-                )               
+                )
 
         # создадим узлы-параметры
         parameters_node_id = await self._hierarchy.add(
@@ -210,7 +210,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     async def _further_read(self, mes: dict, search_result: dict) -> dict:
         # добавим в результат параметры и initiatedBy
-        
+
         new_result = {
             "data": []
         }
@@ -250,7 +250,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
                 })
 
             new_result["data"].append(new_method_item)
-            
+
         return new_result
 
     async def _further_update(self, mes: dict) -> None:
@@ -263,7 +263,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             if not initiatedBy_node:
                 self._logger.error(f"{self._config.svc_name} :: Не найден узел 'initiatedBy' для метода '{mes['id']}'.")
                 return
-            await self._hierarchy.delete(initiatedBy_node[0][0])                     
+            await self._hierarchy.delete(initiatedBy_node[0][0])
 
         if "parameters" in mes.keys():
             parameters_node = await self._hierarchy.search(payload={
@@ -298,7 +298,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         await self._amqp_consume_queue.unbind(self._exchange, "prsTag.model.deleted.*")
         await self._amqp_consume_queue.unbind(self._exchange, "prsSchedule.model.deleted.*")
-        
+
         try:
             await self._get_methods()
         except Exception as ex:
