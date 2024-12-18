@@ -19,7 +19,7 @@ class MethodsApp(AppSvc):
     Старт:
     1) Класс-предок подписывается за нас на события изменения экземпляров
        сущности.
-    2) Создаём для каждого активного(!) метода кэш. 
+    2) Создаём для каждого активного(!) метода кэш.
        Ключ: "<method_id>.<svc_name>".
        Значение: {
             "initiators": ["initiator_id1", "initiator_id2", ...]
@@ -43,14 +43,14 @@ class MethodsApp(AppSvc):
     2) Updated:
        Если метод становится неактивным, удаляем его кэш.
        Если активный, кэш перестраиваем.
-       То есть если в процессе обновления тега изменился список инициаторов - 
+       То есть если в процессе обновления тега изменился список инициаторов -
        мы всё равно перестраиваем кэш.
     3) Deleted:
        Удаляем кэш метода.
-    4) При создании кэша метода подписываемся на события инициаторов (изменение значений тега и 
+    4) При создании кэша метода подписываемся на события инициаторов (изменение значений тега и
        генерация событий расписания)
     5) При удалении кэша метода удаляем также и соответствующий ключ из
-       кэша инициатора и смотрим: если кэш инициатора остался пустой, то 
+       кэша инициатора и смотрим: если кэш инициатора остался пустой, то
        удаляем кэш инициатора и отписываемся от генерируемых событий.
 
 
@@ -58,7 +58,7 @@ class MethodsApp(AppSvc):
     Формат ожидаемых сообщений
 
     Приложение формирует два типа кэша:
-    1) <initiator_id>.methods_app = 
+    1) <initiator_id>.methods_app =
         {
             "<method_id>": "<tag_id>"
         }
@@ -80,7 +80,7 @@ class MethodsApp(AppSvc):
 
     '''
     async def _tag_updated(self, mes: dict):
-        # если тег становится неактивным, отписываемся от событий 
+        # если тег становится неактивным, отписываемся от событий
         # инициаторов
 
         # получим флаг активности тега
@@ -94,14 +94,14 @@ class MethodsApp(AppSvc):
             return
         tag_active = tag_active[0][2]["prsActive"][0] == 'TRUE'
 
-        # получим список всех методов под тегом 
+        # получим список всех методов под тегом
         payload = {
             "base": mes['id'],
             # пока работаем только с методами тега, но, в общем случае,
             # под тегом есть алерты и у них тоже методы
             # по идее, при деактивации тега нужно отписывать и их
             # TODO: реализовать вышеописанное
-            "scope": CN_SCOPE_ONELEVEL, 
+            "scope": CN_SCOPE_ONELEVEL,
             "filter": {
                 "objectClass": ["prsMethod"]
             },
@@ -137,7 +137,7 @@ class MethodsApp(AppSvc):
         else:
             await self._delete_method_cache(mes['id'])
             await self._bind_method(mes['id'], False)
-    
+
     async def _start_method_by_sched(self, mes: dict, routing_key: str = None) -> dict:
         self._logger.debug(f"Run methods. Data: {mes}")
 
@@ -198,7 +198,7 @@ class MethodsApp(AppSvc):
             request = json.loads(parameter[2]["prsJsonConfigString"][0])
 
             request["finish"] = data[1]
-            
+
             self._logger.debug(f"mes: {request}")
 
             param_data = await self._post_message(
@@ -216,8 +216,6 @@ class MethodsApp(AppSvc):
                     "data": param_data
                 }
             )
-
-        self._logger.debug(f"Parameters data: {parameters_data}")
 
         parameters_data.sort(key=lambda item: (item["index"], 1000)[item["index"] is None])
         params_data = [item["data"] for item in parameters_data]
@@ -251,14 +249,14 @@ class MethodsApp(AppSvc):
                         (res, data[1], None)
                     ]
                 }
-            ]            
+            ]
         }, reply=False, routing_key=f"prsTag.app_api_client.data_set.{tag_id}")
 
     async def _deleting(self, mes: dict, routing_key: str = None):
         # перед удалением тревоги
         await self._bind_method(mes['id'], False)
         await self._delete_method_cache(mes['id'])
-        
+
     async def _bind_method(self, method_id: str, bind: bool = True):
         # только логика привязки
         # проверка активности метода производится вызывающим методом
@@ -271,16 +269,16 @@ class MethodsApp(AppSvc):
             "filter": {"cn": "*"},
             "attributes": ["cn"]
         })
-        
+
         if not initiators:
             self._logger.warning(f"{self._config.svc_name} :: Метод '{method_id}' не имеет инициаторов.")
             return
-        
-        for initiator in initiators:            
+
+        for initiator in initiators:
             initiator_id = initiator[2]["cn"][0]
             init_class = await self._hierarchy.get_node_class(initiator_id)
             match init_class:
-                case "prsTag": 
+                case "prsTag":
                     if bind:
                         await self._amqp_consume_queue.bind(
                             exchange=self._exchange,
@@ -292,7 +290,7 @@ class MethodsApp(AppSvc):
                             routing_key=f"{init_class}.app.data_set.{initiator_id}"
                         )
                 case "prsSchedule":
-                    if bind: 
+                    if bind:
                         await self._amqp_consume_queue.bind(
                             exchange=self._exchange,
                             routing_key=f"prsSchedule.app.fire_event.{initiator_id}"
@@ -311,7 +309,7 @@ class MethodsApp(AppSvc):
             method_cache = await r.json().get(f"{method_id}.{self._config.svc_name}")
             if method_cache is None:
                 return
-        
+
             async with r.pipeline() as p:
                 for initiator_id in method_cache:
                     res = await (p.json().delete(
@@ -326,7 +324,7 @@ class MethodsApp(AppSvc):
 
     async def _make_method_cache(self, method_id: str):
         """
-        1) <initiator_id>.methods_app = 
+        1) <initiator_id>.methods_app =
             {
                 "<method_id>": "<tag_id>"
             }
@@ -347,7 +345,7 @@ class MethodsApp(AppSvc):
         if not initiators:
             self._logger.warning(f"{self._config.svc_name} :: Метод '{method_id}' не имеет инициаторов.")
             return False
-        
+
         parent_tag, _ = await self._hierarchy.get_parent(method_id)
 
         initiators_ids = []
@@ -388,7 +386,7 @@ class MethodsApp(AppSvc):
             await self._bind_method(method[0])
 
     async def on_startup(self) -> None:
-        
+
         await super().on_startup()
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.app.data_set.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsSchedule.app.fire_event.*")
