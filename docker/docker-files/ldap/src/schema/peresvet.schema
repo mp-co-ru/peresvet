@@ -221,7 +221,7 @@ objectClass ( 1.3.6.1.4.1.58316.2.4.1
 	NAME 'prsModelNode'
 	DESC 'класс, на базе которого создаются все узлы в модели'
 	SUP top	STRUCTURAL
-	MUST ( cn )
+	MUST ( cn $ uniqueIdentifier )
 	MAY ( description $ prsSystemNode $ prsEntityTypeCode $ prsJsonConfigString $ prsIndex $ prsDefault $ prsActive $ prsApp ))
 
 objectClass ( 1.3.6.1.4.1.58316.2.4.2

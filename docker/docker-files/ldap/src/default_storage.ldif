@@ -2,10 +2,12 @@ version: 1
 dn: cn=dataStorages,cn=prs
 objectClass: prsModelNode
 cn: dataStorages
+uniqueIdentifier: 65d1d2a7-8646-4eae-bd81-8935e08f16f0
 
 dn: cn=psql,cn=dataStorages,cn=prs
 objectClass: prsDataStorage
 cn: psql
+uniqueIdentifier: 52dac285-b529-45ba-af3d-5db86ce222d4
 prsActive: TRUE
 prsDefault: TRUE
 prsJsonConfigString: {"dsn": "postgres://postgres:Peresvet21@psql:5432/peresvet"}
@@ -14,11 +16,14 @@ prsEntityTypeCode: 0
 dn: cn=system,cn=psql,cn=dataStorages,cn=prs
 objectClass: prsModelNode
 cn: system
+uniqueIdentifier: ab7f2bda-e0f3-41d1-a849-4997ed0bb3ce
 
 dn: cn=tags,cn=system,cn=psql,cn=dataStorages,cn=prs
 objectClass: prsModelNode
 cn: tags
+uniqueIdentifier: 5a644cf5-b1fa-4a0e-9fdc-d7daf001240e
 
 dn: cn=alerts,cn=system,cn=psql,cn=dataStorages,cn=prs
 objectClass: prsModelNode
 cn: alerts
+uniqueIdentifier: ba37cd3c-7318-44c0-97d2-9f335e147e72

@@ -2,5 +2,6 @@
 dn: cn=prs
 changetype: add
 objectClass: prsModelNode
-description: This is root node of Peresvet hierarchy
+description: This is the root node of Peresvet hierarchy
 cn: prs
+uniqueIdentifier: 4d3d62e4-a5df-4c47-8cf1-0476cc3730c3
