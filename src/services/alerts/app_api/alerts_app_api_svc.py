@@ -1,6 +1,6 @@
 """
 Модуль содержит классы, описывающие входные данные для команд тревог
-и класс сервиса ``alerts_app_api_svc``\.
+и класс сервиса ``alerts_app_api_svc``.
 """
 import sys
 from typing import Any
@@ -82,7 +82,7 @@ class AckAlarm(BaseModel):
 class AlertsAppAPI(svc.Svc):
     """Сервис работы с тегами в иерархии.
 
-    Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``\,
+    Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``,
     в которую публикует сообщения сервис ``tags_api_crud`` (все имена
     указываются в переменных окружения).
 
@@ -98,8 +98,8 @@ class AlertsAppAPI(svc.Svc):
         body = payload.model_dump()
 
         res = await self._post_message(
-            mes=body, 
-            reply=True, 
+            mes=body,
+            reply=True,
             routing_key=f"{self._config.hierarchy['class']}.app_api.get_alarms")
 
         if payload.format:
@@ -114,7 +114,7 @@ class AlertsAppAPI(svc.Svc):
         body = payload.model_dump()
 
         return await self._post_message(
-            mes=body, 
+            mes=body,
             reply=False,
             routing_key=f"{self._config.hierarchy['class']}.app_api.ack_alarm"
         )

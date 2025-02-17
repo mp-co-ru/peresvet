@@ -9,7 +9,7 @@ from src.services.objects.model_crud.objects_model_crud_settings import ObjectsM
 class ObjectsModelCRUD(model_crud_svc.ModelCRUDSvc):
     """Сервис работы с объектами в иерархии.
 
-    Подписывается на очередь ``objects_api_crud`` обменника ``objects_api_crud``\,
+    Подписывается на очередь ``objects_api_crud`` обменника ``objects_api_crud``,
     в которую публикует сообщения сервис ``objects_api_crud`` (все имена
     указываются в переменных окружения).
 
