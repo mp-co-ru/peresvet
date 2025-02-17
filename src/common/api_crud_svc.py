@@ -88,7 +88,7 @@ class NodeAttributes(BaseModel):
 
     prsDefault: bool | None = Field(None, title="Сущность по умолчанию.",
         description=(
-            "Если = ``true``\, то данный экземпляр считается узлом по умолчанию "
+            "Если = ``true``, то данный экземпляр считается узлом по умолчанию "
             "в списке равноправных узлов данного уровня иерархии."
         )
     )
@@ -194,8 +194,8 @@ class NodeRead(BaseModel):
             "которых формируется фильтр для поиска."
          ),
          description=(
-            "Значения одного атрибута объединяются логической операцией ``ИЛИ``\, "
-            "затем значения для разных атрибутов объединяются операцией ``И``\."
+            "Значения одного атрибута объединяются логической операцией ``ИЛИ``, "
+            "затем значения для разных атрибутов объединяются операцией ``И``."
          )
     )
     attributes: list[str] = Field(
@@ -203,7 +203,7 @@ class NodeRead(BaseModel):
         title="Список атрибутов.",
         description=(
             "Список атрибутов, значения которых необходимо вернуть "
-            "в ответе. По умолчанию - ['\*'], то есть все атрибуты "
+            "в ответе. По умолчанию - ['.'], то есть все атрибуты "
             "(кроме системных)."
         )
     )
@@ -256,7 +256,7 @@ class APICRUDSvc(BaseSvc):
     1) все сообщения этого сервиса нужны только сервису model_crud
     2) команды чтения/обновления/удаления могут применяться к группам экземпляров
     """
-    
+
     def __init__(self, settings: APICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
@@ -275,10 +275,10 @@ class APICRUDSvc(BaseSvc):
 
         if not (payload is None):
             body = payload.model_dump()
-        
+
         return await self._post_message(
-            mes=body, 
-            reply=True, 
+            mes=body,
+            reply=True,
             routing_key=f"{self._config.hierarchy['class']}.api_crud.create"
         )
 
@@ -299,14 +299,14 @@ class APICRUDSvc(BaseSvc):
         body = payload.model_dump()
 
         return await self._post_message(
-            mes=body, 
-            reply=True, 
+            mes=body,
+            reply=True,
             routing_key=f"{self._config.hierarchy['class']}.api_crud.read.*"
         )
 
     async def _update(self, payload: dict, routing_key: str = None) -> dict:
         res = await self._post_message(
-            mes=payload, 
+            mes=payload,
             reply=True,
             routing_key=f"{self._config.hierarchy['class']}.api_crud.update.{payload['id']}"
         )
@@ -319,7 +319,7 @@ class APICRUDSvc(BaseSvc):
         body = payload.model_dump()
 
         return await self._post_message(
-            mes=body, 
+            mes=body,
             reply=True,
             routing_key=f"{self._config.hierarchy['class']}.api_crud.delete.{body['id']}"
         )
@@ -334,7 +334,7 @@ class APICRUDSvc(BaseSvc):
                 err = {"code": 500, "message": f"Ошибка чтения: {ex}"}
                 self._logger.exception(err)
                 return {"error": err}
-            
+
             try:
                 p = request_model.model_validate_json(q)
             except Exception as ex:

@@ -21,7 +21,7 @@ from src.common.base_svc_settings import BaseSvcSettings
 from src.common.redis_cache import RedisCache
 
 class BaseSvc(FastAPI):
-    
+
     def __init__(self, settings: BaseSvcSettings, *args, **kwargs):
 
         self._conf = settings
@@ -129,7 +129,7 @@ class BaseSvc(FastAPI):
 
         while not self._initialized:
             await asyncio.sleep(0.5)
-        
+
         async with message.process(ignore_processed=True):
             mes = message.body.decode()
 
@@ -145,7 +145,7 @@ class BaseSvc(FastAPI):
                 self._logger.error(f"{self._config.svc_name} :: Сообщение {mes} не в формате json.")
                 await message.ack()
                 return
-            
+
             reject = await self._reject_message(mes)
             if reject:
                 self._logger.debug(f"{self._config.svc_name} :: Сообщение {mes} отклонено.")
@@ -175,8 +175,8 @@ class BaseSvc(FastAPI):
                 if not passed:
                     self._logger.warning(f"{self._config.svc_name} :: Сообщение с ключом {message.routing_key} не обработано.")
             except Exception as ex:
-                self._logger.error(f"{self._config.svc_name} :: Ошибка обработки сообщения {mes} с ключом {message.routing_key}: {ex}")            
-                
+                self._logger.error(f"{self._config.svc_name} :: Ошибка обработки сообщения {mes} с ключом {message.routing_key}: {ex}")
+
 
     async def _post_message(
             self, mes: dict, reply: bool = False, routing_key: str = None
@@ -189,7 +189,7 @@ class BaseSvc(FastAPI):
             routing_key (str, optional): Ключ маршрутизации. Defaults to None.
 
         Returns:
-            dict | bool | None: Возвращает ответ в виде словаря, если флаг reply = True, 
+            dict | bool | None: Возвращает ответ в виде словаря, если флаг reply = True,
               None - если нет подписчика на посланное сообщение
               True - если reply = False и сообщение успешно отправлено.
         """
@@ -200,7 +200,7 @@ class BaseSvc(FastAPI):
         if reply:
             correlation_id = str(uuid4())
             reply_to = self._amqp_callback_queue.name
-            
+
         if not routing_key:
             self._logger.error(f"{self._config.svc_name} :: Не указан routing_key для публикации сообщения.")
             return
@@ -216,7 +216,7 @@ class BaseSvc(FastAPI):
                     return None
         if not reply:
             return True
-        
+
         future = asyncio.get_running_loop().create_future()
         self._callback_futures[correlation_id] = future
 
@@ -225,7 +225,7 @@ class BaseSvc(FastAPI):
         except Exception as ex:
             self._logger.error(f"{self._config.svc_name} :: Ошибка получения результата: {ex}.")
             self._callback_futures.pop(correlation_id)
-            return None       
+            return None
 
     async def _on_rpc_response(
             self, message: aio_pika.abc.AbstractIncomingMessage
@@ -245,7 +245,7 @@ class BaseSvc(FastAPI):
         self._amqp_consume_queue = await self._amqp_channel.declare_queue(
             f"{self._config.svc_name}_consume", durable=False, auto_delete=True
         )
-        
+
     async def _bind_queue(self):
         for key in self._handlers.keys():
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=key)
@@ -256,10 +256,10 @@ class BaseSvc(FastAPI):
         и попытки связи будут продолжены с периодичностью в 5 секунд.
 
         DSN для связи с amqp-сервером указывается в переменной окружения
-        ``amqp-url``\.
+        ``amqp-url``.
 
         После установки соединения создаётся exchange с именем, указанным
-        в переменной ``svc_name`` и типом, указанным в ``pub_exchange_type``\.
+        в переменной ``svc_name`` и типом, указанным в ``pub_exchange_type``.
         Именно этот exchange будет использоваться для публикации сообщений,
         генерируемых сервисом.
 
@@ -283,7 +283,7 @@ class BaseSvc(FastAPI):
 
                 await self._generate_queue()
                 await self._bind_queue()
-                                
+
                 await self._amqp_consume_queue.consume(self._process_message)
 
                 self._amqp_callback_queue = await self._amqp_channel.declare_queue(
@@ -312,7 +312,7 @@ class BaseSvc(FastAPI):
         """
         self._logger.info(f"{self._config.svc_name} :: on_startup.")
         await self._amqp_connect()
-        await self._cache_connect()        
+        await self._cache_connect()
 
     async def _cache_connect(self):
         #self._cache = LocalCache()
