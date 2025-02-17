@@ -36,7 +36,7 @@ class Svc(BaseSvc):
         связь.
 
         DSN для связи с ldap-сервером указывается в переменной окружения
-        ``ldap_url``\.
+        ``ldap_url``.
 
         Returns:
             None

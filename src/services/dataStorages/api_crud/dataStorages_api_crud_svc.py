@@ -94,7 +94,7 @@ class DataStorageUpdate(DataStorageCreate):
 class DataStoragesAPICRUD(svc.APICRUDSvc):
     """Сервис работы с хранилищами данных в иерархии.
 
-    Подписывается на очередь ``dataStorages_api_crud`` обменника ``dataStorages_api_crud``\,
+    Подписывается на очередь ``dataStorages_api_crud`` обменника ``dataStorages_api_crud``,
     в которую публикует сообщения сервис ``dataStorages_api_crud`` (все имена
     указываются в переменных окружения).
 

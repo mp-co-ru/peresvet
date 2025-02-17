@@ -1,6 +1,6 @@
 """
 Модуль содержит классы, описывающие входные данные для команд CRUD для тегов
-и класс сервиса ``tags_api_crud_svc``\.
+и класс сервиса ``tags_api_crud_svc``.
 """
 import sys
 import json
@@ -22,7 +22,7 @@ class AlertsApp(AppSvc):
         self._handlers[f"{self._config.hierarchy['class']}.app_api.get_alarms"] = self._get_alarms
         self._handlers[f"{self._config.hierarchy['class']}.app_api.ack_alarm"] = self._ack_alarm
         self._handlers["prsTag.app.data_set.*"] = self._tag_value_changed
-        
+
     async def _deleting(self, mes: dict, routing_key: str = None):
         # перед удалением тревоги
         await self._delete_alert_cache(mes['id'])
@@ -34,9 +34,9 @@ class AlertsApp(AppSvc):
         # привязка к сообщениям prsAlert.model.* выполняется при старте сервиса и здесь не меняется
         tag_id, _ = await self._hierarchy.get_parent(alert_id)
         await self._amqp_consume_queue.bind(self._exchange, f"prsTag.app.data_set.{tag_id }")
-    
+
     async def _unbind_alert(self, alert_id: str):
-        # если это последняя активная привязанная к тегу тревога, 
+        # если это последняя активная привязанная к тегу тревога,
         # то отписываемся от изменений значений тега
         tag_id, _ = await self._hierarchy.get_parent(alert_id)
         payload = {
@@ -78,7 +78,7 @@ class AlertsApp(AppSvc):
             await self._bind_alert(mes['id'])
         else:
             await self._unbind_alert(mes['id'])
-    
+
     async def _delete_alert_cache(self, alert_id: str):
         async with self._cache.get_redis() as r:
             await r.json().delete(f"{alert_id}.{self._config.svc_name}")
@@ -115,7 +115,7 @@ class AlertsApp(AppSvc):
         if not isinstance(alert_config, dict):
             self._logger.error(f"{self._config.svc_name} :: У тревоги '{alert_id}' неверная конфигурация.")
             return None
-        
+
         if (alert_config.get("value") is None) or \
            (alert_config.get("high") is None) or \
            (alert_config.get("autoAck") is None):
@@ -145,8 +145,8 @@ class AlertsApp(AppSvc):
             "actual": True
         }
         res = await self._post_message(
-            mes=payload, 
-            reply=True, 
+            mes=payload,
+            reply=True,
             routing_key=f"prsTag.app_api_client.data_get.{tag_id}"
         )
         if not res is None:
@@ -154,7 +154,7 @@ class AlertsApp(AppSvc):
                 await self._tag_value_changed(res, id_alert=alert_id)
             else:
                 self._logger.warning(f"{self._config.svc_name} :: Тег {tag_id} не имеет данных.")
-            return True    
+            return True
         else:
             self._logger.warning(f"{self._config.svc_name} :: Тег {tag_id} не привязан к хранилищу.")
             return True
@@ -164,9 +164,9 @@ class AlertsApp(AppSvc):
         Метод получения алярмов.
         Пока получаем только текущие алярмы - либо активные, либо незаквитированные.
         #TODO: Работа с историей алармов
-        
+
         Args:
-            mes (dict): 
+            mes (dict):
                 parentId: str | list[str] - Объект, тревоги которого запрашиваем.
                 getChildren: bool = False - Учитывать тревоги дочерних объектов.
                 format: bool = False - форматировать метки времени.
@@ -175,7 +175,7 @@ class AlertsApp(AppSvc):
         Returns:
             dict: _description_
         """
-        
+
         scope = (CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE)[bool(mes.get('getChildren'))]
 
         get_alerts = {
@@ -222,7 +222,7 @@ class AlertsApp(AppSvc):
         Args:
             mes (dict): {
                 "id": "alert_id",
-                "x": 123                
+                "x": 123
             }
         """
         alert_id = mes["id"]
@@ -248,7 +248,7 @@ class AlertsApp(AppSvc):
         await self._post_message(
             {
                 "alertId": alert_id,
-                "x": mes["data"]["x"]                
+                "x": mes["data"]["x"]
             },
             reply=False,
             routing_key=f"{self._config.hierarchy['class']}.app.alarm_acked.{alert_id}"
@@ -266,7 +266,7 @@ class AlertsApp(AppSvc):
                             (1, 2, 3)
                         ]
                     }
-                ]                
+                ]
             }
         """
         for tag_item in mes["data"]:
@@ -319,7 +319,7 @@ class AlertsApp(AppSvc):
 
                         if not alert_data["fired"] and alert_on:
                             await self._post_message(
-                                {                                
+                                {
                                     "alertId": alert_id,
                                     "x": data_item[1]
                                 },
@@ -330,9 +330,9 @@ class AlertsApp(AppSvc):
 
                             if alert_data["autoAck"]:
                                 await self._post_message(
-                                    {                                    
+                                    {
                                         "alertId": alert_id,
-                                        "x": data_item[1]                                    
+                                        "x": data_item[1]
                                     },
                                     reply=False,
                                     routing_key=f"{self._config.hierarchy['class']}.app.alarm_acked.{alert_id}"
@@ -344,7 +344,7 @@ class AlertsApp(AppSvc):
                             await self._post_message(
                                 {
                                     "alertId": alert_id,
-                                    "x": data_item[1]                             
+                                    "x": data_item[1]
                                 },
                                 reply=False,
                                 routing_key=f"{self._config.hierarchy['class']}.app.alarm_off.{alert_id}"
@@ -375,7 +375,7 @@ class AlertsApp(AppSvc):
         # по умолчанию очередь привязывается к изменениям всех тегов
         # нам же нужны только изменения тегов, у которых есть тревоги
         await self._amqp_consume_queue.unbind(self._exchange, "prsTag.app.data_set.*")
-        
+
         try:
             await self._get_alerts()
         except Exception as ex:

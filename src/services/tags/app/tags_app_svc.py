@@ -1,6 +1,6 @@
 """
 Модуль содержит классы, описывающие входные данные для команд CRUD для тегов
-и класс сервиса ``tags_api_crud_svc``\.
+и класс сервиса ``tags_api_crud_svc``.
 """
 import sys
 import copy
@@ -17,7 +17,7 @@ from src.services.tags.app.tags_app_settings import TagsAppSettings
 
 class TagsApp(AppSvc):
     """Сервис работы с тегами.
-    
+
     Формат ожидаемых сообщений
 
     """
@@ -30,7 +30,7 @@ class TagsApp(AppSvc):
         self._handlers[f"{self._config.hierarchy['class']}.app_api.data_set.*"] = self.data_set
 
     async def data_get(self, mes: dict, routing_key: str = None) -> dict:
-        
+
         self._logger.debug(f"{self._config.svc_name} :: Data get mes: {mes}")
 
         new_payload = copy.deepcopy(mes)
@@ -60,27 +60,27 @@ class TagsApp(AppSvc):
 
     async def _get_tag_cache_key_value(self, tag_id: str, key: str):
         # если возвращаем False, это означает, что такого тега нет
-        
+
         # TODO: неправильно! если тега нет, надо возвращать None
         # т.к. False может быть значением тега
         async with self._cache.get_redis() as r:
-            try:                
+            try:
                 res = await r.json().get(f"{tag_id}.{self._config.svc_name}", key)
             except:
                 # сам кэш есть, но нет такого ключа
                 res = None
-            
+
             if res is None:
                 res = await self._make_tag_cache(tag_id)
                 # если метод перестроения кэша возвращает False - значит, нет такого узла
                 if not res:
                     return None
-                
+
                 res = await r.json().get(f"{tag_id}.{self._config.svc_name}", key)
 
             if res == 'null':
                 res = None
-            
+
             return res
 
     async def data_set(self, mes: dict, routing_key: str = None) -> None:
@@ -97,7 +97,7 @@ class TagsApp(AppSvc):
             if not res:
                 self._logger.warning(f"{self._config.svc_name} :: Тег '{tag_id}' неактивен.")
                 continue
-            
+
             res = await self._post_message({"data": [tag_item]}, reply=False,
                 routing_key=f"{self._config.hierarchy['class']}.app.data_set.{tag_item['tagId']}"
             )
@@ -117,7 +117,7 @@ class TagsApp(AppSvc):
         })
         if not res:
             return False
-        
+
         active = res[0][2]["prsActive"][0] == 'TRUE'
         async with self._cache.get_redis() as r:
             res = await r.json().set(name=f"{tag_id}.{self._config.svc_name}", path="$", obj={"prsActive": active})
@@ -127,7 +127,7 @@ class TagsApp(AppSvc):
         # просто удалим кэш тега
         # при попытке чтения/записи данных кэш будет создан
         await self._delete_tag_cache(mes["id"])
-    
+
     async def _deleted(self, mes: dict, routing_key: str = None):
         await self._delete_tag_cache(mes["id"])
 
