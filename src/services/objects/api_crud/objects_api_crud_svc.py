@@ -38,7 +38,7 @@ class ObjectUpdate(svc.NodeUpdate):
 class ObjectsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с объектами в иерархии.
 
-    Подписывается на очередь ``objects_api_crud`` обменника ``objects_api_crud``\,
+    Подписывается на очередь ``objects_api_crud`` обменника ``objects_api_crud``,
     в которую публикует сообщения сервис ``objects_api_crud`` (все имена
     указываются в переменных окружения).
 
@@ -101,7 +101,7 @@ async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends
     """
     if payload is None:
         payload = {}
-    
+
     try:
         s = json.dumps(payload)
         p = ObjectCreate.model_validate_json(s)
@@ -138,7 +138,7 @@ async def read(q: str | None = None, payload: ObjectRead | None = None, error_ha
         * **cn** (str) - имя объекта, который мы хотим прочитать
           Необязательный аттрибут.
         * **attributes** (list[str]) - Список атрибутов, значения которых необходимо
-          вернуть в ответе. По умолчанию - ['\*'], то есть все атрибуты (кроме системных).
+          вернуть в ответе. По умолчанию - ['.'], то есть все атрибуты (кроме системных).
           Необязательный аттрибут.
         * **base** (str) - Базовый узел для поиска. Необязательный аттрибут.
           Если не указан, то поиск ведётся от главного узла иерархии.
@@ -185,7 +185,7 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
           * **prsActive** (bool) - Определяет, активен ли экземпляр. Применяется,
             к примеру, для временного 'выключения' экземпляра на время, пока он ещё
             не настроен окончательно. Необязательный аттрибут.
-          * **prsDefault** (bool) - "Если = ``True``\, то данный экземпляр считается
+          * **prsDefault** (bool) - "Если = ``True``, то данный экземпляр считается
             узлом по умолчанию в списке равноправных узлов данного уровня иерархии.
             Необязательный аттрибут.
           * **prsEntityTypeCode** (int) - Атрибут используется для определения типа.

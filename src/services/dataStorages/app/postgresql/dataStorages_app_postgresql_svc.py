@@ -87,14 +87,14 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             "attributes": ["prsStore"]
         }
         alert_data = await self._hierarchy.search(payload=payload)
-        if alert_data:        
+        if alert_data:
             async with self._connection_pools[ds_id].acquire() as conn:
                 tbl_name = json.loads(alert_data[0][2]["prsStore"][0])["table"]
                 await conn.execute(
                     f'drop table if exists "{tbl_name}"'
                 )
                 self._logger.info(f"{self._config.svc_name} :: Хранилище тревоги '{alert_id}' в '{ds_id}' удалено.")
-    
+
     async def _create_store_for_tag(self, tag_id: str, ds_id: str, store: dict) -> None:
         try:
             async with self._connection_pools[ds_id].acquire() as conn:
@@ -174,7 +174,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         return bool(store.get("table"))
 
     async def _create_store_for_alert(self, alert_id: str, ds_id: str, store: dict) -> None:
-        
+
         try:
             async with self._connection_pools[ds_id].acquire() as conn:
                 tbl_name = store["table"]
@@ -331,7 +331,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
     async def _tag_updated(self, mes: dict, routing_key: str = None):
         tag_id = mes['id']
-        
+
         payload = {
             "id": tag_id,
             "attributes": ["prsValueTypeCode"]
@@ -364,20 +364,20 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                 store = json.loads(tag_link_data[0][2]["prsStore"][0])
                 await self._create_store_for_tag(tag_id=tag_id, ds_id=ds_id, store=store)
                 await self._hierarchy.modify(
-                    tag_link_data[0][0], 
+                    tag_link_data[0][0],
                     {
                         "prsJsonConfigString": {"prsValueTypeCode": new_type}
                     }
                 )
-                
-                self._logger.info(f"{self._config.svc_name} :: Хранилище тега '{tag_id}' в '{ds_id}' изменено.")        
+
+                self._logger.info(f"{self._config.svc_name} :: Хранилище тега '{tag_id}' в '{ds_id}' изменено.")
 
         await self._delete_tag_cache(tag_id)
         await self._create_tag_cache(tag_id)
 
     async def _alert_deleted(self, mes: dict, routing_key: str = None):
         alert_id = mes['id']
-        
+
         for ds_id in self._connection_pools.keys():
             await self._drop_store_for_alert(alert_id, ds_id)
 
@@ -385,7 +385,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
     async def _tag_deleted(self, mes: dict, routing_key: str = None):
         tag_id = mes['id']
-        
+
         for ds_id in self._connection_pools.keys():
             await self._drop_store_for_tag(tag_id, ds_id)
 
@@ -514,7 +514,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         """
         alert_id = mes["alertId"]
         ds_id = mes["dataStorageId"]
-        
+
         payload = {
             "base": ds_id,
             "filter": {
@@ -554,7 +554,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         """
         tag_id = mes["tagId"]
         ds_id = mes["dataStorageId"]
-        
+
         payload = {
             "base": ds_id,
             "filter": {
@@ -592,11 +592,11 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
         if not tag_data:
             self._logger.error(f"{self._config.svc_name} :: Тег {tag_id} отсутствует в кэше.")
-            
+
             return []
         if not tag_data["prsActive"]:
             self._logger.error(f"{self._config.svc_name} :: Тег {tag_id} неактивен.")
-            
+
             return []
 
         # если тег привязан к нескольким хранилищам, пока непонятна логика
@@ -614,7 +614,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                 if ds_res:
                     actual_ds = ds_id
                     break
-            
+
         if not actual_ds:
             self._logger.error(
                 f"{self._config.svc_name} :: Не найдено актуальное хранилище для тега {tag_id}"
@@ -703,8 +703,8 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                     start: int,
                     finish: int):
         """ Ограничение количества записей в выборке.
-        Если задан параметр ``since``\, возвращается ``limit`` первых записей списка.
-        Если ``since`` не задан (None), но задан ``till``\, возвращается
+        Если задан параметр ``since``, возвращается ``limit`` первых записей списка.
+        Если ``since`` не задан (None), но задан ``till``, возвращается
         ``limit`` последних записей списка
 
         :param tag_data: исходная выборка, массив словарей {'x': int, 'y': Any, 'q': int}
