@@ -410,48 +410,47 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                         f"{tag_id}.{self._config.svc_name}", "$.data", []
                     ).execute()
 
-            if not tag_cache[0][0]["data"]:
-                self._logger.debug(f"Кэш данных тега {tag_id} пустой.")
-                return
+                if not tag_cache[0][0]["data"]:
+                    self._logger.debug(f"Кэш данных тега {tag_id} пустой.")
+                    return
 
-            for ds_id in tag_cache[0][0]["dss"].keys():
-                async with self._cache.get_redis() as r:
+                for ds_id in tag_cache[0][0]["dss"].keys():
                     active = await r.json().get(
                         f"{ds_id}.{self._config.svc_name}", "prsActive"
                     )
-                if active is None:
-                    self._logger.error(
-                        f"{self._config.svc_name} :: Несоответствие кэша тега {tag_id} c кэшем хранилища {ds_id}")
-                    continue
+                    if active is None:
+                        self._logger.error(
+                            f"{self._config.svc_name} :: Несоответствие кэша тега {tag_id} c кэшем хранилища {ds_id}")
+                        continue
 
-                # если хранилище неактивно, данные в него не записываем
-                if not active:
-                    self._logger.error(
-                        f"{self._config.svc_name} :: Хранилище {ds_id} неактивно.")
-                    continue
+                    # если хранилище неактивно, данные в него не записываем
+                    if not active:
+                        self._logger.error(
+                            f"{self._config.svc_name} :: Хранилище {ds_id} неактивно.")
+                        continue
 
-                async with self._connection_pools[ds_id].acquire() as conn:
-                    tag_tbl = tag_cache[0][0]["dss"][ds_id]["table"]
+                    async with self._connection_pools[ds_id].acquire() as conn:
+                        tag_tbl = tag_cache[0][0]["dss"][ds_id]["table"]
 
-                    data = tag_cache[0][0]["data"]
-                    async with conn.transaction(isolation='read_committed'):
-                        if tag_cache[0][0]["prsUpdate"]:
-                            xs = [str(x) for _, x, _ in data]
-                            q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
-                            await conn.execute(q)
-                        if tag_cache[0][0]["prsValueTypeCode"] == 4:
-                            new_data = []
-                            for item in data:
-                                new_data.append(
-                                    (json.dumps(item[0], ensure_ascii=False), item[1], item[2])
-                                )
-                            data = new_data
+                        data = tag_cache[0][0]["data"]
+                        async with conn.transaction(isolation='read_committed'):
+                            if tag_cache[0][0]["prsUpdate"]:
+                                xs = [str(x) for _, x, _ in data]
+                                q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
+                                await conn.execute(q)
+                            if tag_cache[0][0]["prsValueTypeCode"] == 4:
+                                new_data = []
+                                for item in data:
+                                    new_data.append(
+                                        (json.dumps(item[0], ensure_ascii=False), item[1], item[2])
+                                    )
+                                data = new_data
 
-                        await conn.copy_records_to_table(
-                            tag_tbl,
-                            records=data,
-                            columns=('y', 'x', 'q'))
-                    self._logger.debug(f"В базу {ds_id} для тега {tag_id} записано {len(data)} точек.")
+                            await conn.copy_records_to_table(
+                                tag_tbl,
+                                records=data,
+                                columns=('y', 'x', 'q'))
+                        self._logger.debug(f"В базу {ds_id} для тега {tag_id} записано {len(data)} точек.")
 
         except Exception as ex:
             self._logger.error(f"{self._config.svc_name} :: Ошибка записи данных в базу {ds_id}: {ex}")

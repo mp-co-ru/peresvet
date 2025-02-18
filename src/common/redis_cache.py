@@ -3,15 +3,15 @@ from typing import Any, List
 import redis.asyncio as redis
 
 class RedisCache(ABCCache):
-    
+
     def __init__(self, dsn: str):
-        self._pool : redis.ConnectionPool = redis.ConnectionPool.from_url(url=dsn, max_connections=50)
-        self._client : redis.Redis = None 
+        self._pool : redis.BlockingConnectionPool = redis.BlockingConnectionPool.from_url(url=dsn, max_connections=100)
+        self._client : redis.Redis = None
         self._pipe : redis.Pipeline = None
 
     def get_redis(self) -> redis.Redis:
         return redis.Redis(connection_pool=self._pool)
-        
+
     def set(self, name: str, key: str = "$", obj: JsonType = {}, nx: bool = False, xx: bool = False):
         if self._client is None:
             self._client = redis.Redis(connection_pool=self._pool)
@@ -30,7 +30,7 @@ class RedisCache(ABCCache):
         Если name нет в кэше, то возвращается [None].
         Если name есть в кэше, но нет одного из указанных keys - генерируется исключение.
         Если key запрашивается один и его значение в кэше = None, то возвращается ['null'].
-        Если запрашиваются несколько ключей и значение каких-то = None, то они так и возвращаются, как None.        
+        Если запрашиваются несколько ключей и значение каких-то = None, то они так и возвращаются, как None.
         """
         if self._client is None:
             self._client = redis.Redis.from_pool(self._pool)
@@ -38,7 +38,7 @@ class RedisCache(ABCCache):
 
         self._pipe.json().get(name, *keys)
         return self
-    
+
     def delete(self, name: str, key: str = None):
         """Метод должен возвращать self
         """
@@ -90,7 +90,7 @@ class RedisCache(ABCCache):
         await self._client.aclose()
         self._client = None
         return res
-    
+
     async def reset(self):
         await self._pipe.reset()
 
