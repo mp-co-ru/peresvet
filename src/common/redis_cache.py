@@ -5,7 +5,7 @@ import redis.asyncio as redis
 class RedisCache(ABCCache):
 
     def __init__(self, dsn: str):
-        self._pool : redis.BlockingConnectionPool = redis.BlockingConnectionPool.from_url(url=dsn, max_connections=100)
+        self._pool : redis.BlockingConnectionPool = redis.BlockingConnectionPool.from_url(url=dsn)
         self._client : redis.Redis = None
         self._pipe : redis.Pipeline = None
 
