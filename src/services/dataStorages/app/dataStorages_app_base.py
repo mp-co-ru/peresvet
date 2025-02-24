@@ -671,7 +671,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
                         res = await pipe.json().get(
                             f"{tag_id}.{self._config.svc_name}", "prsActive"
                         ).json().arrlen(
-                            f"{tag_id}.{self._config.svc_name}", "$.data"
+                            f"{tag_id}.{self._config.svc_name}", "data"
                         ).execute()
                         if res[0] is None:
                             # если нет кэша у тега
