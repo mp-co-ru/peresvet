@@ -644,43 +644,48 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         self._logger.debug(f"Запись кэша данных в хранилища для тегов {tag_ids}...")
         scheduled = False
         try:
-            if not tag_ids:
-                # если пустой список тегов, это значит, что сбрасывается весь кэш,
-                # то есть происходит запуск процедуры по расписанию
-                scheduled = True
-            tag_ids = set()
             async with self._cache.get_redis() as r:
-                for ds_id in self._connection_pools.keys():
-                    # определим, активна ли база
-                    res = await r.json().get(
-                        f"{ds_id}.{self._config.svc_name}", "prsActive", "tags"
-                    )
-                    if res is None:
-                        self._logger.error(f"{self._config.svc_name} :: Нет кэша для хранилища {ds_id}")
-                        continue
-                    if not res["prsActive"]:
-                        self._logger.info(
-                            f"{self._config.svc_name} :: Хранилище {ds_id} неактивно."
+                if not tag_ids:
+                    # если пустой список тегов, это значит, что сбрасывается весь кэш,
+                    # то есть происходит запуск процедуры по расписанию
+                    scheduled = True
+                    tag_ids = set()
+
+                    for ds_id in self._connection_pools.keys():
+                        # определим, активна ли база
+                        res = await r.json().get(
+                            f"{ds_id}.{self._config.svc_name}", "prsActive", "tags"
                         )
-                        continue
-                    tag_ids = tag_ids.union(set(res["tags"]))
-
-                for tag_id in tag_ids:
-                    res = await r.json().get(
-                        f"{tag_id}.{self._config.svc_name}",
-                        f"prsActive"
-                    )
-                    if res is None:
-                        # если нет кэша у тега
-                        if not await self._create_tag_cache(tag_id):
-                            index = await r.json().arrindex(
-                                f"{ds_id}.{self._config.svc_name}", "tags", tag_id
+                        if res is None:
+                            self._logger.error(f"{self._config.svc_name} :: Нет кэша для хранилища {ds_id}")
+                            continue
+                        if not res["prsActive"]:
+                            self._logger.info(
+                                f"{self._config.svc_name} :: Хранилище {ds_id} неактивно."
                             )
+                            continue
+                        tag_ids = tag_ids.union(set(res["tags"]))
 
-                            if index > -1:
-                                await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "tags", index)
-                    elif res:
-                        await self._write_tag_data_to_db(tag_id)
+                async with r.pipeline() as pipe:
+                    for tag_id in tag_ids:
+                        res = await pipe.json().get(
+                            f"{tag_id}.{self._config.svc_name}", "prsActive"
+                        ).json().arrlen(
+                            f"{tag_id}.{self._config.svc_name}", "$.data"
+                        ).execute()
+                        if res[0] is None:
+                            # если нет кэша у тега
+                            if not await self._create_tag_cache(tag_id):
+                                index = await r.json().arrindex(
+                                    f"{ds_id}.{self._config.svc_name}", "tags", tag_id
+                                )
+
+                                if index > -1:
+                                    await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "tags", index)
+
+                        # если тег активен и у него есть данные в кэше
+                        if res[0] and res[1] > 0:
+                            await self._write_tag_data_to_db(tag_id)
 
         except Exception as ex:
             self._logger.error(f"{self._config.svc_name} :: Ошибка записи данных в базу: {ex}")
