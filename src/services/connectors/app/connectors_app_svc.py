@@ -30,8 +30,8 @@ class ConnectorsApp(AppSvc):
         # если есть активное соединение с коннектором, разрываем его
         conn_id = mes["id"]
         if conn_id in self.linked_connectors.keys():
-            await self.linked_connectors[conn_id].close()        
-        
+            await self.linked_connectors[conn_id].close()
+
     async def get_connector_tag_data(self, connector_id: str) -> dict:
 
         connector_data = await self._hierarchy.search(
@@ -63,7 +63,7 @@ class ConnectorsApp(AppSvc):
                 "objectClass": ["prsConnectorTagData"]
             },
             "attributes": [
-                "cn", "prsJsonConfigString", "prsMaxDev", "prsValueScale"
+                "cn", "prsJsonConfigString"
             ]
         })
 
@@ -80,9 +80,7 @@ class ConnectorsApp(AppSvc):
                     "tagId": attributes['cn'][0],
                     "attributes": {
                         "prsJsonConfigString": json.loads(attributes["prsJsonConfigString"][0]),
-                        "prsValueTypeCode": prs_value_type_code,
-                        "prsMaxDev": float(attributes["prsMaxDev"][0]),
-                        "prsValueScale": float(attributes["prsValueScale"][0])
+                        "prsValueTypeCode": prs_value_type_code
                     }
                 })
 
@@ -129,7 +127,7 @@ async def get_req(websocket: WebSocket, connector_id: str):
                 app._logger.error("Нет обработчика для команды записи данных.")
 
     except WebSocketDisconnect as e:
-        
+
         try:
             app.linked_connectors.pop(connector_id)
 
