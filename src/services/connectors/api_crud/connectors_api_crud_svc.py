@@ -13,12 +13,27 @@ sys.path.append(".")
 from src.common import api_crud_svc as svc
 from src.services.connectors.api_crud.connectors_api_crud_settings import ConnectorsAPICRUDSettings
 
+class ConfigStringForLinkedTag(BaseModel):
+    source: dict = Field({},
+        title="Способ получения данных тега от источника",
+        description="Каждый тип коннектора определяет формат этого словаря."
+    )
+    maxDev: float = Field(0, title="Отклонение значения от предыдущей величины.",
+        description=(
+            "Коннектор отсылает данные в платформу для тега, если разница между вновь полученным "
+            "значением и последним отосланным в платформу превышает указанное значение."
+        )
+    )
+    JSONata: str = Field(None,
+        title="Выражение на языке JSONata",
+        description="Это выражение будет применено к прочитанным из источника данным."
+    )
 class LinkTagAttributes(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
 
     cn: str | None = Field(None, title="Имя привязки")
-    prsJsonConfigString: dict = Field(
+    prsJsonConfigString: ConfigStringForLinkedTag = Field(
         title="Параметры подключение к источнику данных.",
         description=(
             "Json, хранящий ключи, которые указывают коннектору, как "
@@ -27,20 +42,10 @@ class LinkTagAttributes(BaseModel):
         )
     )
     description: str | None = Field(None, title="Пояснение")
-    prsValueScale: int = Field(
-        1,
-        title=(
-            "Коэффициент, на который умножается значение тега коннектором "
-            "перед отправкой в платформу."
-        )
-    )
-    prsMaxDev: int = Field(
-        0,
-        title="Величина значащего отклонения.",
-        description="Используется коннекторами для снятия `дребезга` значений."
-    )
-
     objectClass: str = Field("prsConnectorTagData", title="Класс объекта")
+    prsValueScale: float = 1,
+    prsMaxDev: float = 0
+
 class LinkTag(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
