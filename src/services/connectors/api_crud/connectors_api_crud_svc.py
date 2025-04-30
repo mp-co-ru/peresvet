@@ -26,7 +26,7 @@ class ConfigStringForLinkedTag(BaseModel):
     )
     JSONata: str = Field(None,
         title="Выражение на языке JSONata",
-        description="Это выражение будет применено к прочитанным из источника данным/"
+        description="Это выражение будет применено к прочитанным из источника данным."
     )
 class LinkTagAttributes(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
