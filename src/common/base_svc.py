@@ -52,7 +52,7 @@ class BaseSvc(FastAPI):
         self._amqp_connection: aio_pika.abc.AbstractRobustConnection = None
         self._amqp_is_connected: bool = False
         self._amqp_channel: aio_pika.abc.AbstractRobustChannel = None
-        self._exchange = aio_pika.abc.AbstractRobustExchange = None
+        self._exchange: aio_pika.abc.AbstractRobustExchange = None
         self._amqp_consume_queue: aio_pika.abc.AbstractRobustQueue = None
         self._amqp_callback_queue: aio_pika.abc.AbstractRobustQueue = None
         self._callback_futures: MutableMapping[str, asyncio.Future] = {}
@@ -278,7 +278,8 @@ class BaseSvc(FastAPI):
                 await self._amqp_channel.set_qos(1)
 
                 self._exchange = await self._amqp_channel.declare_exchange(
-                    self._config.broker["name"], "topic", durable=False, auto_delete=True
+                    self._config.broker["name"], "topic", durable=self._config.broker["durable"],
+                    auto_delete=self._config.broker["auto_delete"]
                 )
 
                 await self._generate_queue()
