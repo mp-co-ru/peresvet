@@ -30,7 +30,7 @@ class AppSvc(Svc):
 
     def _set_handlers(self):
 
-        if not self._config.nodes:
+        if not self._config.nodes: # type: ignore
             self._handlers[f"{self._config.hierarchy['class']}.model.created"] = self._created
             self._handlers[f"{self._config.hierarchy['class']}.model.may_update.*"] = self._may_update
             self._handlers[f"{self._config.hierarchy['class']}.model.updating.*"] = self._updating
@@ -39,7 +39,7 @@ class AppSvc(Svc):
             self._handlers[f"{self._config.hierarchy['class']}.model.deleting.*"] = self._deleting
             self._handlers[f"{self._config.hierarchy['class']}.model.deleted.*"] = self._deleted
         else:
-            for node in self._config.nodes:
+            for node in self._config.nodes: # type: ignore
                 self._handlers[f"{self._config.hierarchy['class']}.model.may_update.{node}"] = self._may_update
                 self._handlers[f"{self._config.hierarchy['class']}.model.updating.{node}"] = self._updating
                 self._handlers[f"{self._config.hierarchy['class']}.model.updated.{node}"] = self._updated

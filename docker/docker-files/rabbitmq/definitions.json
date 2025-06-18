@@ -41,11 +41,19 @@
       "arguments": {}
     },
     {
+      "source": "amq.topic",
+      "vhost": "/",
+      "destination": "peresvet",
+      "destination_type": "exchange",
+      "routing_key": "conn2prs.*",
+      "arguments": {}
+    },
+    {
       "source": "peresvet",
       "vhost": "/",
       "destination": "amq.topic",
       "destination_type": "exchange",
-      "routing_key": "connector.*",
+      "routing_key": "prs2conn.*",
       "arguments": {}
     }
   ]

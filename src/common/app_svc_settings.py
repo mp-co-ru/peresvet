@@ -11,5 +11,5 @@ from src.common.svc_settings import SvcSettings
 
 class AppSvcSettings(SvcSettings):
    # список обслуживаемых узлов
-   # если None, то обслуживаются все узлы данной сущности
+   # если None или [], то обслуживаются все узлы данной сущности
    nodes: list[str] = []

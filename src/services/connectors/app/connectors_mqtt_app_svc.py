@@ -25,25 +25,142 @@ class ConnectorsMQTTApp(AppSvc):
     def __init__(self, settings: ConnectorsMQTTAppSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-        self._mqtt_exchange: aio_pika.abc.AbstractRobustExchange | None = None
-        self._mqtt_consume_queue: aio_pika.abc.AbstractRobustQueue | None = None
+    def _add_app_handlers(self):
+        self._handlers["conn2prs.*"] = self._send_config_to_connector
+        self._handlers["prsTag.model.updated.*"] = self._tag_updated
+        self._handlers["prsTag.model.deleted.*"] = self._tag_deleted
 
-    async def _amqp_connect(self) -> None:
-        await super()._amqp_connect()
+    async def _tag_updated(self, mes: dict, routing_key: str | None = None):
+        tag_id = mes["id"]
 
-        self._mqtt_exchange = await self._amqp_channel.declare_exchange(
-            "amq.topic", "topic", durable=False, auto_delete=True
-        )
-        self._mqtt_consume_queue = await self._amqp_channel.declare_queue(
-            f"{self._config.svc_name}_consume", durable=False, auto_delete=True
-        )
+        # прочитаем данные самого тега
+        payload = {
+            "base": tag_id,
+            "attributes" : ["prsActive", "prsValueTypeCode"]
+        }
+        res = await self._hierarchy.search(payload)
+        if not res:
+            self._logger.error(f"Обновление тега {tag_id}. Тег не найден.")
+            return
 
-    async def _deleted(self, mes: dict, routing_key: str | None = None):
+        mes = {
+            "action": "prsConnector.tags_configuration",
+            "data": {
+                "tags": {
+                    tag_id: {
+                        "prsActive": res[0][2]["prsActive"],
+                        "prsValueTypeCode": res[0][2]["prsValueTypeCode"]
+                    }
+                }
+            }
+        }
+
+        payload = {
+            "base": tag_id,
+            "attributes" : ["prsActive", "prsValueTypeCode"]
+        }
+
+        # TODO: проблема. как искать, к какому коннектору привязан тег.
+        # по идее, тег можно привязать к нескольким коннекторам. это означает, что:
+        # необходимо искать узел c классом "prsConnectorTagData" и рассылать сообщения в цикле всем коннекторам,
+        # к которым привязан тег.
+
+    async def _tag_deleted(self, mes: dict, routing_key: str | None = None):
+        pass
+
+    async def _send_config_to_connector(self, mes: dict, routing_key: str | None = None) -> dict:
+        pass
+
+    async def on_startup(self) -> None:
+
+        await super().on_startup()
+
+        # сделаем перепривязку очереди, так как слушать будем только нужные сообщения
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.model.updated.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.model.deleted.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsConnector.model.link_tag.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsConnector.model.unlink_tag.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsConnector.model.updated.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsConnector.model.deleted.*")
+        # ----------------------------------------------------------------------------------------
+
+        try:
+            payload = {}
+            if self._config.nodes: # type: ignore
+                payload["id"] = self._config.nodes # type: ignore
+            else:
+                conn_node_id = await self._hierarchy.get_node_id("cn=connectors,cn=prs")
+                payload = {
+                    "base": conn_node_id,
+                    "filter": {
+                        "objectClass": ["prsConnector"]
+                    }
+                }
+
+            conns = await self._hierarchy.search(payload=payload)
+            for conn in conns:
+                await self._add_supported_conn(conn[0])
+
+        except Exception as ex:
+            self._logger.error(f"{self._config.svc_name} :: Ошибка инициализации сервиса коннекторов: {ex}")
+
+    async def _bind_conn(self, conn_id: str, bind: bool = True):
+        func = (self._amqp_consume_queue.unbind, self._amqp_consume_queue.bind)[bind]
+        await func(exchange=self._exchange, routing_key=f"prsConnector.model.link_tag.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"prsConnector.model.unlink_tag.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"prsConnector.model.updated.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"prsConnector.model.deleted.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"conn2prs.{conn_id}")
+        self._logger.info(f"Коннектор {conn_id} {('от', 'при')[bind]}вязан.")
+
+    async def _add_supported_conn(self, conn_id: str) -> None:
+
+        """Метод добавляет в список поддерживаемых коннекторов новый коннектор.
+
+        Args:
+            conn_id (str): идентификатор коннектора
+        """
+        payload = {
+            "id": [conn_id],
+            "attributes": ["prsJsonConfigString", "prsActive", "prsEntityTypeCode"]
+        }
+        conn = await self._hierarchy.search(payload=payload)
+
+        # привяжемся к сообщениям, касающихся изменений коннектора ---------------------------------
+        await self._bind_conn(conn_id, True)
+        # ----------------------------------------------------------------------------------------
+        if conn[0][2]["prsActive"][0] == "TRUE":
+            await self._bind_all_tags(conn_id)
+
+    async def _bind_all_tags(self, conn_id: str, bind: bool = True):
+        payload = {
+            "base": conn_id,
+            "filter": {
+                "objectClass": ["prsDatastorageTagData"]
+            },
+            "attributes": ["cn"]
+        }
+
+        tags = await self._hierarchy.search(payload)
+        for tag in tags:
+            await self._bind_tag(tag[2]["cn"][0], bind)
+
+    async def _bind_tag(self, tag_id: str, bind: bool = True) -> None:
+        """
+        Привязка тега для прослушивания.
+        """
+        func = (self._amqp_consume_queue.unbind, self._amqp_consume_queue.bind)[bind]
+        await func(exchange=self._exchange, routing_key=f"prsTag.model.updated.{tag_id}")
+        await func(exchange=self._exchange, routing_key=f"prsTag.model.deleted.{tag_id}")
+
+    async def _deleting(self, mes: dict, routing_key: str | None = None):
         # удаление коннектора из модели:
-        # если есть активное соединение с коннектором, разрываем его
+        # делаем полную отвязку по этому коннектору
         conn_id = mes["id"]
-        if conn_id in self.linked_connectors.keys():
-            await self.linked_connectors[conn_id].close()
+        await self._bind_conn(conn_id, False)
+        await self._bind_all_tags(conn_id, False)
+        return {"response": True}
+
 
     async def get_connector_tag_data(self, connector_id: str) -> dict:
 
