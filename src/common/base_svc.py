@@ -17,7 +17,6 @@ from pamqp.commands import Basic
 
 from src.common.logger import PrsLogger
 from src.common.base_svc_settings import BaseSvcSettings
-#from src.common.local_cache import LocalCache
 from src.common.redis_cache import RedisCache
 
 class BaseSvc(FastAPI):
@@ -52,7 +51,7 @@ class BaseSvc(FastAPI):
         self._amqp_connection: aio_pika.abc.AbstractRobustConnection = None
         self._amqp_is_connected: bool = False
         self._amqp_channel: aio_pika.abc.AbstractRobustChannel = None
-        self._exchange = aio_pika.abc.AbstractRobustExchange = None
+        self._exchange: aio_pika.abc.AbstractRobustExchange = None
         self._amqp_consume_queue: aio_pika.abc.AbstractRobustQueue = None
         self._amqp_callback_queue: aio_pika.abc.AbstractRobustQueue = None
         self._callback_futures: MutableMapping[str, asyncio.Future] = {}
@@ -177,9 +176,8 @@ class BaseSvc(FastAPI):
             except Exception as ex:
                 self._logger.error(f"{self._config.svc_name} :: Ошибка обработки сообщения {mes} с ключом {message.routing_key}: {ex}")
 
-
     async def _post_message(
-            self, mes: dict, reply: bool = False, routing_key: str = None
+            self, mes: dict, reply: bool = False, routing_key: str | None = None
     ) -> dict | bool | None:
         """Метод отсылает сообщение в брокер.
 
@@ -195,7 +193,7 @@ class BaseSvc(FastAPI):
         """
 
         body = json.dumps(mes, ensure_ascii=False).encode()
-        correlation_id = None
+        correlation_id = ""
         reply_to = None
         if reply:
             correlation_id = str(uuid4())
@@ -278,7 +276,8 @@ class BaseSvc(FastAPI):
                 await self._amqp_channel.set_qos(1)
 
                 self._exchange = await self._amqp_channel.declare_exchange(
-                    self._config.broker["name"], "topic", durable=False, auto_delete=True
+                    self._config.broker["name"], "topic", durable=self._config.broker["durable"],
+                    auto_delete=self._config.broker["auto_delete"]
                 )
 
                 await self._generate_queue()
