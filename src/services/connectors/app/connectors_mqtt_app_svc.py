@@ -30,10 +30,33 @@ class ConnectorsMQTTApp(AppSvc):
         self._handlers["prsTag.model.updated.*"] = self._tag_updated
         self._handlers["prsTag.model.deleted.*"] = self._tag_deleted
 
+    async def _find_connector_by_tag(self, tag_id: str) -> list[str]:
+        if not self._config.nodes: # type: ignore
+            payload = {"base": "cn=connectors,cn=prs", "scope": hierarchy.CN_SCOPE_ONELEVEL}
+            res = await self._hierarchy.search(payload)
+            connectors = [res_item[0] for res_item in res]
+        else:
+            connectors = self._config.nodes # type: ignore
+
+        if not connectors:
+            return []
+
+        result = []
+        for conn_id in connectors:
+            payload = {"base": conn_id, "filter": {"cn": [tag_id]}}
+            res = await self._hierarchy.search(payload)
+            if res:
+                result.append(conn_id)
+        return result
+
     async def _tag_updated(self, mes: dict, routing_key: str | None = None):
+        # TODO: по правильному, чтобы получить данные по какой-либо сущности,
+        # необходимо делать запрос соответствующему сервису,
+        # но, так как система сообщений ещё не устоялась,
+        # будем искать данные сразу в иерархии
         tag_id = mes["id"]
 
-        # прочитаем данные самого тега
+        # прочитаем данные самого тега ------------------------------------------
         payload = {
             "base": tag_id,
             "attributes" : ["prsActive", "prsValueTypeCode"]
@@ -43,7 +66,7 @@ class ConnectorsMQTTApp(AppSvc):
             self._logger.error(f"Обновление тега {tag_id}. Тег не найден.")
             return
 
-        mes = {
+        mes2conn = {
             "action": "prsConnector.tags_configuration",
             "data": {
                 "tags": {
@@ -54,19 +77,50 @@ class ConnectorsMQTTApp(AppSvc):
                 }
             }
         }
+        # ---------------------------------------------------------------------
+
+        # получаем список коннекторов, к которым привязан тег -----------------
+        connectors = await self._find_connector_by_tag(tag_id)
+        if not connectors:
+            self._logger.error(f"Тег {tag_id} не привязан к коннектору.")
+            return
+        # --------------------------------------------------------------------
 
         payload = {
-            "base": tag_id,
-            "attributes" : ["prsActive", "prsValueTypeCode"]
+            "base": None,
+            "filter": {"cn": [tag_id]},
+            "attributes": ["prsJsonConfigString"]
         }
+        for conn_id in connectors:
+            # получим данные по привязке тега
+            payload["base"] = conn_id
+            res = await self._hierarchy.search(payload)
+            if not res:
+                self._logger.error(f"Ошибка поиска привязки тега {tag_id} к коннектору {conn_id}.")
+                continue
 
-        # TODO: проблема. как искать, к какому коннектору привязан тег.
-        # по идее, тег можно привязать к нескольким коннекторам. это означает, что:
-        # необходимо искать узел c классом "prsConnectorTagData" и рассылать сообщения в цикле всем коннекторам,
-        # к которым привязан тег.
+            mes2conn["data"]["tags"][tag_id]["prsJsonConfigString"] = json.loads(res[2]["prsJsonConfigString"])
+            await self._post_message(mes=mes2conn, routing_key=f"prs2conn.{conn_id}")
+
+            self._logger.info(f"Сообщение об обновлении тега {tag_id} отправлено коннектору {conn_id}.")
 
     async def _tag_deleted(self, mes: dict, routing_key: str | None = None):
-        pass
+        tag_id = mes["id"]
+        # получаем список коннекторов, к которым привязан тег -----------------
+        connectors = await self._find_connector_by_tag(tag_id)
+        if not connectors:
+            self._logger.error(f"Тег {tag_id} не привязан к коннектору.")
+            return
+        # --------------------------------------------------------------------
+
+        mes2conn = {
+            "action": "prsConnector.tags_deleted",
+            "data": {"tags": [tag_id]}
+        }
+
+        for conn_id in connectors:
+            await self._post_message(mes=mes2conn, routing_key=f"prs2conn.{conn_id}")
+            self._logger.info(f"Сообщение об удалении тега {tag_id} отправлено коннектору {conn_id}.")
 
     async def _send_config_to_connector(self, mes: dict, routing_key: str | None = None) -> dict:
         pass
