@@ -1,0 +1,60 @@
+{
+  "users": [
+    {
+      "name": "prs",
+      "password": "Peresvet21",
+      "tags": ["administrator"]
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "prs",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "peresvet",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "amq.topic",
+      "vhost": "/",
+      "destination": "peresvet",
+      "destination_type": "exchange",
+      "routing_key": "prsTag.app_api.data_set.*",
+      "arguments": {}
+    },
+    {
+      "source": "amq.topic",
+      "vhost": "/",
+      "destination": "peresvet",
+      "destination_type": "exchange",
+      "routing_key": "conn2prs.*",
+      "arguments": {}
+    },
+    {
+      "source": "peresvet",
+      "vhost": "/",
+      "destination": "amq.topic",
+      "destination_type": "exchange",
+      "routing_key": "prs2conn.*",
+      "arguments": {}
+    }
+  ]
+}

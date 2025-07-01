@@ -159,7 +159,7 @@ class NodeRead(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
 
-    id: str | list[str] = Field(
+    id: str | list[str] | None = Field(
         None,
         title="Идентификатор(ы) узлов.",
         description=(
@@ -270,7 +270,7 @@ class APICRUDSvc(BaseSvc):
             f"{self._config.hierarchy['class']}.api_crud_client.delete.*": self._delete,
         }
 
-    async def _create(self, payload: NodeCreate | None, routing_key: str = None) -> dict:
+    async def _create(self, payload: NodeCreate | None, routing_key: str | None = None) -> dict:
         body = {}
 
         if not (payload is None):

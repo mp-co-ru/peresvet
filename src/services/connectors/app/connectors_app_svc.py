@@ -25,7 +25,7 @@ class ConnectorsApp(AppSvc):
 
         self.linked_connectors = {}
 
-    async def _deleted(self, mes: dict, routing_key: str = None):
+    async def _deleted(self, mes: dict, routing_key: str | None = None):
         # удаление коннектора из модели:
         # если есть активное соединение с коннектором, разрываем его
         conn_id = mes["id"]

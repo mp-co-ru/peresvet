@@ -181,24 +181,15 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.model.deleted.{alert_id}")
 
     async def _bind_ds(self, ds_id: str, bind: bool = True):
-        if bind:
-            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.link_tag.{ds_id}")
-            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.unlink_tag.{ds_id}")
-            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.link_alert.{ds_id}")
-            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.unlink_alert.{ds_id}")
-            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.updating.{ds_id}")
-            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.may_update.{ds_id}")
-            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.may_delete.{ds_id}")
-            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsDataStorage.model.deleting.{ds_id}")
-        else:
-            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsDataStorage.model.link_tag.{ds_id}")
-            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsDataStorage.model.unlink_tag.{ds_id}")
-            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsDataStorage.model.link_alert.{ds_id}")
-            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsDataStorage.model.unlink_alert.{ds_id}")
-            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsDataStorage.model.updating.{ds_id}")
-            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsDataStorage.model.may_update.{ds_id}")
-            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsDataStorage.model.may_delete.{ds_id}")
-            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsDataStorage.model.deleting.{ds_id}")
+        func = (self._amqp_consume_queue.unbind, self._amqp_consume_queue.bind)[bind]
+        await func(exchange=self._exchange, routing_key=f"prsDataStorage.model.link_tag.{ds_id}")
+        await func(exchange=self._exchange, routing_key=f"prsDataStorage.model.unlink_tag.{ds_id}")
+        await func(exchange=self._exchange, routing_key=f"prsDataStorage.model.link_alert.{ds_id}")
+        await func(exchange=self._exchange, routing_key=f"prsDataStorage.model.unlink_alert.{ds_id}")
+        await func(exchange=self._exchange, routing_key=f"prsDataStorage.model.updating.{ds_id}")
+        await func(exchange=self._exchange, routing_key=f"prsDataStorage.model.may_update.{ds_id}")
+        await func(exchange=self._exchange, routing_key=f"prsDataStorage.model.may_delete.{ds_id}")
+        await func(exchange=self._exchange, routing_key=f"prsDataStorage.model.deleting.{ds_id}")
 
     async def _add_supported_ds(self, ds_id: str) -> None:
 
