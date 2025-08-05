@@ -24,7 +24,7 @@ class ConfigStringForLinkedTag(BaseModel):
             "значением и последним отосланным в платформу превышает указанное значение."
         )
     )
-    JSONata: str = Field(None,
+    JSONata: str | None = Field(None,
         title="Выражение на языке JSONata",
         description="Это выражение будет применено к прочитанным из источника данным."
     )
