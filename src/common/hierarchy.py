@@ -29,8 +29,8 @@ class Hierarchy:
     def __init__(self, url: str, pool_size: int = 10):
         self.url : str = url
         self.pool_size : int = pool_size
-        self._cm : ConnectionManager = None
-        self._base_dn : str = None
+        self._cm : ConnectionManager | None = None
+        self._base_dn : str | None = None
 
     async def does_node_exist(self, node: str) -> bool:
         """Проверка существования узла с указанным id.
@@ -50,7 +50,7 @@ class Hierarchy:
 
         return True
 
-    async def get_node_dn(self, node: str = None) -> str:
+    async def get_node_dn(self, node: str | None = None) -> str | None:
         """Метод определяет DN узла в иерархии по переданному id и
         возвращает его.
         В случае, если base = None, то возвращается DN базового узла
@@ -263,6 +263,8 @@ class Hierarchy:
 
             res = conn.search_s(base=node, scope=scope,
                 filterstr=filterstr, attrlist=return_attributes)
+            if res is None:
+                res = []
 
             result = []
             for item in res:
@@ -296,12 +298,12 @@ class Hierarchy:
 
         return result
 
-    async def add(self, base: str = None, attribute_values: dict = None) -> str:
+    async def add(self, base: str | None = None, attribute_values: dict | None = None) -> str:
         """Добавление узла в иерархию.
 
         Args:
             base (str): None | id | dn узла-родителя
-            attr_vals (dict): словарь со значениями атрибутов
+            attribute_values (dict): словарь со значениями атрибутов
 
         Returns:
             str: id нового узла

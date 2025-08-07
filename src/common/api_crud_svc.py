@@ -47,7 +47,7 @@ def valid_uuid_for_read(id: str | list[str]) -> str | list[str]:
 
 
 # base может быть пустой строкой
-def valid_base(base: str | None) -> str | None:
+def valid_base(base: str | None) -> str | list[str] | None:
     if base is None:
         return base
     if base.strip() == "":
@@ -270,7 +270,7 @@ class APICRUDSvc(BaseSvc):
             f"{self._config.hierarchy['class']}.api_crud_client.delete.*": self._delete,
         }
 
-    async def _create(self, payload: NodeCreate | None, routing_key: str | None = None) -> dict:
+    async def _create(self, payload: NodeCreate | None, routing_key: str | None = None) -> dict | bool | None:
         body = {}
 
         if not (payload is None):
@@ -282,7 +282,7 @@ class APICRUDSvc(BaseSvc):
             routing_key=f"{self._config.hierarchy['class']}.api_crud.create"
         )
 
-    async def _read(self, payload: NodeRead, routing_key: str = None) -> dict:
+    async def _read(self, payload: NodeRead, routing_key: str | None = None) -> dict | bool | None:
         # костыль для Grafana
         # TODO: избавиться
         if payload.id == "":
@@ -304,7 +304,7 @@ class APICRUDSvc(BaseSvc):
             routing_key=f"{self._config.hierarchy['class']}.api_crud.read.*"
         )
 
-    async def _update(self, payload: dict, routing_key: str = None) -> dict:
+    async def _update(self, payload: dict, routing_key: str | None = None) -> dict | bool | None:
         res = await self._post_message(
             mes=payload,
             reply=True,
@@ -313,7 +313,7 @@ class APICRUDSvc(BaseSvc):
 
         return res
 
-    async def _delete(self, payload: NodeDelete, routing_key: str = None) -> dict:
+    async def _delete(self, payload: NodeDelete, routing_key: str | None = None) -> dict | bool | None:
         """Удаление узлов в иерархии.
         """
         body = payload.model_dump()

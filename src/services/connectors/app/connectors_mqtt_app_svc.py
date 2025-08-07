@@ -71,8 +71,8 @@ class ConnectorsMQTTApp(AppSvc):
             "data": {
                 "tags": {
                     tag_id: {
-                        "prsActive": res[0][2]["prsActive"],
-                        "prsValueTypeCode": res[0][2]["prsValueTypeCode"]
+                        "prsActive": res[0][2]["prsActive"] == 'TRUE',
+                        "prsValueTypeCode": int(res[0][2]["prsValueTypeCode"][0])
                     }
                 }
             }
@@ -99,7 +99,7 @@ class ConnectorsMQTTApp(AppSvc):
                 self._logger.error(f"Ошибка поиска привязки тега {tag_id} к коннектору {conn_id}.")
                 continue
 
-            mes2conn["data"]["tags"][tag_id]["prsJsonConfigString"] = json.loads(res[2]["prsJsonConfigString"])
+            mes2conn["data"]["tags"][tag_id]["prsJsonConfigString"] = json.loads(res[0][2]["prsJsonConfigString"])
             await self._post_message(mes=mes2conn, routing_key=f"prs2conn.{conn_id}")
 
             self._logger.info(f"Сообщение об обновлении тега {tag_id} отправлено коннектору {conn_id}.")
@@ -122,8 +122,77 @@ class ConnectorsMQTTApp(AppSvc):
             await self._post_message(mes=mes2conn, routing_key=f"prs2conn.{conn_id}")
             self._logger.info(f"Сообщение об удалении тега {tag_id} отправлено коннектору {conn_id}.")
 
+    async def _get_tag_data(self, conn_id: str, tag_id: str) -> dict | None:
+        # метод возвращает данные по тегу, привязанному к коннектору
+        payload = {
+            "base": conn_id,
+            "filter": {
+                "cn": [tag_id]
+            },
+            "attributes": ["prsJsonConfigString"]
+        }
+        link_res = await self._hierarchy.search(payload=payload)
+        if not link_res:
+            self._logger.error(f"В списке привязанных к коннектору {conn_id} не найден тег {tag_id}.")
+            return None
+
+        payload = {
+            "id": tag_id,
+            "attributes": ["prsValueTypeCode", "prsActive"]
+        }
+        tag_res = await self._hierarchy.search(payload=payload)
+        if not tag_res:
+            self._logger.error(f"К коннектору {conn_id} привязан несуществующий тег {tag_id}.")
+            return None
+
+        return {
+            "prsActive": tag_res[0][2]["prsActive"][0] == 'TRUE',
+            "prsValueTypeCode": int(tag_res[0][2]["prsValueTypeCode"][0]),
+            "prsJsonConfigString": json.loads(link_res[0][2]["prsJsonConfigString"][0])
+        }
+
     async def _send_config_to_connector(self, mes: dict, routing_key: str | None = None) -> dict:
-        pass
+
+        conn_id = mes["data"]["id"]
+        payload = {
+            "id": conn_id,
+            "attributes": ["prsActive", "prsEntityTypeCode", "prsJsonConfigString"]
+        }
+        res = await self._hierarchy.search(payload=payload)
+        if not res:
+            self._logger.error(f"Отсутствует коннектор с id = {conn_id}.")
+            return {}
+
+        mes_for_connector = {
+            "action": "prsConnector.full_configuration",
+            "data": {
+                "prsActive": res[0][2]["prsActive"][0] == 'TRUE',
+                "prsEntityTypeCode": res[0][2]["prsEntityTypeCode"][0],
+                "prsJsonConfigString": json.loads(
+                    res[0][2]["prsJsonConfigString"][0]
+                ),
+                "tags": {}
+            }
+        }
+
+        tags = await self._hierarchy.search(payload={
+            "base": conn_id,
+            "scope": hierarchy.CN_SCOPE_SUBTREE,
+            "filter": {
+                "objectClass": ["prsConnectorTagData"]
+            },
+            "attributes": [
+                "cn", "prsJsonConfigString"
+            ]
+        })
+
+        for tag_id, _, _ in tags:
+            mes_for_connector["tags"]["tag_id"] = self._get_tag_data(conn_id=conn_id, tag_id=tag_id)
+
+        await self._post_message(mes=mes_for_connector, routing_key=f"prs2conn.{conn_id}")
+
+        self._logger.info(f"Отправлена полная конфигурация коннектору {conn_id}.")
+        return {}
 
     async def on_startup(self) -> None:
 
@@ -190,7 +259,7 @@ class ConnectorsMQTTApp(AppSvc):
         payload = {
             "base": conn_id,
             "filter": {
-                "objectClass": ["prsDatastorageTagData"]
+                "objectClass": ["prsConnectorTagData"]
             },
             "attributes": ["cn"]
         }
@@ -215,116 +284,23 @@ class ConnectorsMQTTApp(AppSvc):
         await self._bind_all_tags(conn_id, False)
         return {"response": True}
 
-
-    async def get_connector_tag_data(self, connector_id: str) -> dict:
-
-        connector_data = await self._hierarchy.search(
-            payload={
-                "id": connector_id,
-                "attributes": [
-                    "prsActive", "prsJsonConfigString"
-                ]
+    async def _deleted(self, mes: dict, routing_key: str | None = None):
+        deleted_conn_id = mes["id"]
+        payload = {
+            "action": "prsConnector.deleted",
+            "data": {
+                "id": deleted_conn_id
             }
-        )
-        if not connector_data:
-            self._logger.info(f"{self._config.svc_name} :: Нет данных по коннектору {connector_id}")
-            return {}
-
-        res = {
-            "connector": {
-                "prsActive": connector_data[0][2]["prsActive"][0] == 'TRUE',
-                "prsJsonConfigString": json.loads(
-                    connector_data[0][2]["prsJsonConfigString"][0]
-                )
-            },
-            "tags": []
         }
+        await self._post_message(mes=payload, routing_key=f"prs2conn.{deleted_conn_id}")
 
-        tags = await self._hierarchy.search(payload={
-            "base": connector_id,
-            "scope": hierarchy.CN_SCOPE_SUBTREE,
-            "filter": {
-                "objectClass": ["prsConnectorTagData"]
-            },
-            "attributes": [
-                "cn", "prsJsonConfigString"
-            ]
-        })
+        return {"response": True}
 
-        for _, _, attributes in tags:
-            tag = await self._hierarchy.search(payload={
-                "id": attributes['cn'][0],
-                "attributes": ["prsActive", "prsValueTypeCode"]
-            })
-            _, _, tag_attr = tag[0]
-            if tag_attr["prsActive"][0] == 'TRUE':
-                prs_value_type_code = int(tag_attr.get('prsValueTypeCode')[0])
+    async def _updated(self, mes: dict, routing_key: str | None = None):
+        payload = {"data": {"id": mes["id"]}}
+        await self._send_config_to_connector(mes=payload, routing_key=routing_key)
+        return {"response": True}
 
-                res["tags"].append({
-                    "tagId": attributes['cn'][0],
-                    "attributes": {
-                        "prsJsonConfigString": json.loads(attributes["prsJsonConfigString"][0]),
-                        "prsValueTypeCode": prs_value_type_code
-                    }
-                })
+settings = ConnectorsMQTTAppSettings()
 
-        return res
-
-settings = ConnectorsAppSettings()
-
-app = ConnectorsApp(settings=settings, title="ConnectorsApp")
-
-router = APIRouter(prefix=f"{settings.api_version}/connectors")
-
-@router.websocket("/{connector_id}")
-async def get_req(websocket: WebSocket, connector_id: str):
-
-    # если нет коннектора с указанным id или он неактивен, то выходим
-    payload = {
-        "id": connector_id,
-        "attributes": ["prsActive"]
-    }
-    res = await app._hierarchy.search(payload=payload)
-    if not res:
-        app._logger.error(f"Запрос связи от коннектора '{connector_id}', но он не найден в модели.")
-        return
-    if res[0][2]["prsActive"][0] != 'TRUE':
-        app._logger.error(f"Запрос связи от коннектора '{connector_id}'. Коннектор неактивен.")
-        return
-
-    await websocket.accept()
-
-    app.linked_connectors[connector_id] = websocket
-
-    try:
-        app._logger.info(f"Установлена ws-связь с коннектором: {connector_id}")
-
-        await websocket.receive_text()
-        connector_tag_data = await app.get_connector_tag_data(connector_id=connector_id)
-        await websocket.send_json(connector_tag_data)
-
-        while True:
-            tags_data_json = await websocket.receive_json()
-            app._logger.info(f'{app._config.svc_name}: данные от коннектора {connector_id}: {tags_data_json}')
-            res = await app._post_message(mes=tags_data_json, reply=False, routing_key="prsTag.app_api.data_set.*")
-            if res is None:
-                app._logger.error("Нет обработчика для команды записи данных.")
-
-    except WebSocketDisconnect as e:
-
-        try:
-            app.linked_connectors.pop(connector_id)
-
-            app._logger.error(f"Разрыв связи с коннектором {connector_id}. Ошибка: {e}")
-            now_ts = t.now_int()
-            data = {"data": []}
-            for tag in connector_tag_data["tags"]:
-                tag_data = {"tagId": tag["tagId"], "data": [[None, now_ts, None]]}
-                data["data"].append(tag_data)
-            res = await app._post_message(mes = data, routing_key="prsTag.app_api.data_set.*", reply=False)
-            if res is None:
-                app._logger.error("Нет обработчика для команды записи данных.")
-        except:
-            pass
-
-app.include_router(router, tags=["connectors_app"])
+app = ConnectorsMQTTApp(settings=settings, title="ConnectorsApp")

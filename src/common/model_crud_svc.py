@@ -618,12 +618,9 @@ class ModelCRUDSvc(Svc):
                 .. code-block:: json
 
                     {
-                        "action": "...",
-                        "data": {
-                            "parentId": "id родителя",
-                            "attributes": {
-                                "<ldap-attribute>": "<value>"
-                            }
+                        "parentId": "id родителя",
+                        "attributes": {
+                            "<ldap-attribute>": "<value>"
                         }
                     }
 
@@ -701,7 +698,7 @@ class ModelCRUDSvc(Svc):
         # поэтому если по поиску выше не найдено узлов, то узлов в данном
         # уровне нет вообще
         if not items:
-            mes["attributes"]["prsDefault"] = True
+            mes["attributes"]["prsDefault"] = [True]
         else:
             # если есть уже дефолтный узел и делается попытка создать тоже
             # дефолтный, то существующий дефолтный должен стать обычным
