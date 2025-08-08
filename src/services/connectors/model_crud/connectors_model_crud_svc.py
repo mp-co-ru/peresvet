@@ -22,11 +22,6 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
     def __init__(self, settings: ConnectorsModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    '''
-    async def _further_read(self, mes: dict) -> dict:
-        pass
-    '''
-
     async def _further_create(self, mes: dict, new_id: str) -> None:
         sys_ids = await self._hierarchy.search(payload={
             "base": new_id,
@@ -39,18 +34,37 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         await self._hierarchy.add(sys_id, {"cn": "tags"})
 
-        for item in mes["linkTags"]:
+        tags = mes.get("linkTags", [])
+        for item in tags:
             copy_item = copy.deepcopy(item)
             copy_item["connectorId"] = new_id
             await self._link_tag(copy_item)
 
     async def _further_update(self, mes: dict) -> None:
 
-        cs_id = mes["data"]["id"]
-        for item in mes["data"]["linkTags"]:
+        conn_id = mes["id"]
+
+        tags = mes.get("linkTags", [])
+
+        for item in tags:
             copy_item = copy.deepcopy(item)
-            copy_item["connectorId"] = cs_id
+            copy_item["connectorId"] = conn_id
             await self._link_tag(copy_item)
+
+        tags = mes.get("unlinkTags", [])
+        for tag_id in tags:
+            await self._unlink_tag(conn_id, tag_id)
+
+    async def _unlink_tag(self, conn_id: str, tag_id: str) -> None:
+        payload = {
+            "base": conn_id,
+            "filter": {
+                "cn": [tag_id]
+            }
+        }
+        res = await self._hierarchy.search(payload=payload)
+        if res:
+            await self._hierarchy.delete(res[0][0])
 
     async def _link_tag(self, payload: dict) -> None:
         """Метод привязки тега к коннектору.

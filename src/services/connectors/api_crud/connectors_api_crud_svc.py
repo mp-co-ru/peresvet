@@ -24,7 +24,7 @@ class ConfigStringForLinkedTag(BaseModel):
             "значением и последним отосланным в платформу превышает указанное значение."
         )
     )
-    JSONata: str = Field(None,
+    JSONata: str | None = Field(None,
         title="Выражение на языке JSONata",
         description="Это выражение будет применено к прочитанным из источника данным."
     )
@@ -43,7 +43,7 @@ class LinkTagAttributes(BaseModel):
     )
     description: str | None = Field(None, title="Пояснение")
     objectClass: str = Field("prsConnectorTagData", title="Класс объекта")
-    prsValueScale: float = 1,
+    prsValueScale: float = 1
     prsMaxDev: float = 0
 
 class LinkTag(BaseModel):
@@ -53,7 +53,7 @@ class LinkTag(BaseModel):
     tagId: str = Field(title="Идентификатор привязываемого тега")
     attributes: LinkTagAttributes = Field(title="Атрибуты тега")
 class ConnectorAttributes(svc.NodeAttributes):
-    prsJsonConfigString: dict = Field({},
+    prsJsonConfigString: dict | None = Field({},
         title="Способ подключения к источнику данных",
         description=(
             "Json, содержащий информацию о том, как коннектор должен "
@@ -89,7 +89,7 @@ class ConnectorUpdate(ConnectorCreate):
     id: str = Field(title="Идентификатор изменяемого коннектора.",
                     description="Должен быть в формате GUID.")
 
-    attributes: ConnectorAttributes = Field(None, title="Атрибуты коннектора")
+    attributes: ConnectorAttributes | None = Field(None, title="Атрибуты коннектора")
 
     unlinkTags: list[str] = Field(
         [],
@@ -111,13 +111,13 @@ class ConnectorsAPICRUD(svc.APICRUDSvc):
     def __init__(self, settings: ConnectorsAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    async def _create(self, payload: ConnectorCreate) -> dict:
+    async def _create(self, payload: ConnectorCreate, routing_key: str | None = None) -> dict | bool | None:
         return await super()._create(payload=payload)
 
-    async def _read(self, payload: ConnectorRead) -> dict:
+    async def _read(self, payload: ConnectorRead, routing_key: str | None = None) -> dict | bool | None:
         return await super()._read(payload=payload)
 
-    async def _update(self, payload: dict) -> dict:
+    async def _update(self, payload: dict, routing_key: str | None = None) -> dict | bool | None:
         return await super()._update(payload=payload)
 
 settings = ConnectorsAPICRUDSettings()
@@ -129,7 +129,7 @@ router = APIRouter(prefix=f"{settings.api_version}/connectors")
 error_handler = svc.ErrorHandler()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
-async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends()):
+async def create(payload: dict | None = None, error_handler: svc.ErrorHandler = Depends()):
     """
     Метод добавления коннектора в иерархию.
 
@@ -255,7 +255,8 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
 
         * **id** (bool) - Идентификатор изменяемого коннектора.
           Обязательный аттрибут.
-        * **unlinkTags** (list[str]) - Список тегов для отсоединения от коннектора
+        * **linkTags** (list[LinkTag]) - список тегов, привязанных к указанному коннектору. Необязательный атрибут.
+        * **unlinkTags** (list[str]) - Список тегов для отсоединения от коннектора.
           Необязательный аттрибут.
         * **attributes** (dict) - Атрибуты коннектора
 

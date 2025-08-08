@@ -31,6 +31,8 @@ class ConnectorsApp(AppSvc):
         conn_id = mes["id"]
         if conn_id in self.linked_connectors.keys():
             await self.linked_connectors[conn_id].close()
+        return {"response": True}
+
 
     async def get_connector_tag_data(self, connector_id: str) -> dict:
 
