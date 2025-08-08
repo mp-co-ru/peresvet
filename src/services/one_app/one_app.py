@@ -55,10 +55,9 @@ from src.services.connectors.model_crud.connectors_model_crud_svc \
     )
 
 # connectors_app
-from src.services.connectors.app.connectors_app_svc \
+from src.services.connectors.app.connectors_mqtt_app_svc \
     import (
-        app as connectors_app,
-        router as connectors_app_router
+        app as connectors_app
     )
 # -----------------------------------------------------------------------------
 
@@ -199,8 +198,6 @@ api_router.include_router(router=alerts_app_api_router)
 # connectors ------------------------------------------------------------------
 # connectors_api_crud
 api_router.include_router(router=connectors_api_crud_router)
-# connectors_app
-api_router.include_router(router=connectors_app_router)
 # -----------------------------------------------------------------------------
 
 # dataStorages ----------------------------------------------------------------
