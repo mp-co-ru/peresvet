@@ -47,7 +47,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             "table": f"t_{tag_id}"
         }
 
-    async def _check_store_name_for_new_tag(self, store: dict) -> bool:
+    async def _check_store_name_for_new_tag(self, ds_id: str, store: dict) -> bool:
         """Метод проверяет на корректность имя хранилища для нового тега,
         переданное клиентом.
 
@@ -161,18 +161,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             "table": f"a_{alert_id}"
         }
 
-    async def _check_store_name_for_new_tag(self, store: dict) -> bool:
-        """Метод проверяет на корректность имя хранилища для новой тревоги,
-        переданное клиентом.
-
-        Args:
-            store (dict): новое хранилище для тревоги
-
-        Returns:
-            bool: флаг корректности нового имени
-        """
-        return bool(store.get("table"))
-
     async def _create_store_for_alert(self, alert_id: str, ds_id: str, store: dict) -> None:
 
         try:
@@ -196,7 +184,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         except Exception as ex:
             self._logger.error(f"{self._config.svc_name} :: Ошибка создания хранилища тега: {ex}")
 
-    async def _alarm_on(self, mes: dict, routing_key: str = None) -> None:
+    async def _alarm_on(self, mes: dict, routing_key: str | None = None) -> None:
 
         self._logger.debug(f"Обработка возникновения тревоги: {mes}")
 
@@ -240,7 +228,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             except PostgresError as ex:
                 self._logger.error(f"{self._config.svc_name} :: Ошибка при записи данных тревоги {alert_id}: {ex}")
 
-    async def _alarm_ack(self, mes: dict, routing_key: str = None) -> None:
+    async def _alarm_ack(self, mes: dict, routing_key: str | None = None) -> None:
 
         self._logger.debug(f"Обработка квитирования тревоги: {mes}")
 
@@ -283,7 +271,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             except PostgresError as ex:
                 self._logger.error(f"{self._config.svc_name} :: Ошибка при записи данных тревоги {alert_id}: {ex}")
 
-    async def _alarm_off(self, mes: dict, routing_key: str = None) -> None:
+    async def _alarm_off(self, mes: dict, routing_key: str | None = None) -> None:
         """Факт пропадания тревоги.
 
         Args:
@@ -329,7 +317,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             except PostgresError as ex:
                 self._logger.error(f"{self._config.svc_name} :: Ошибка при записи данных тревоги {alert_id}: {ex}")
 
-    async def _tag_updated(self, mes: dict, routing_key: str = None):
+    async def _tag_updated(self, mes: dict, routing_key: str | None = None):
         tag_id = mes['id']
 
         payload = {
@@ -375,7 +363,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         await self._delete_tag_cache(tag_id)
         await self._create_tag_cache(tag_id)
 
-    async def _alert_deleted(self, mes: dict, routing_key: str = None):
+    async def _alert_deleted(self, mes: dict, routing_key: str | None = None):
         alert_id = mes['id']
 
         for ds_id in self._connection_pools.keys():
@@ -383,7 +371,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
         await super()._alert_deleted(mes, routing_key)
 
-    async def _tag_deleted(self, mes: dict, routing_key: str = None):
+    async def _tag_deleted(self, mes: dict, routing_key: str | None = None):
         tag_id = mes['id']
 
         for ds_id in self._connection_pools.keys():
