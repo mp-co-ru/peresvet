@@ -37,7 +37,7 @@
       "vhost": "/",
       "destination": "peresvet",
       "destination_type": "exchange",
-      "routing_key": "prsTag.app_api.data_set.*",
+      "routing_key": "prsTag.app_api_client.data_set.*",
       "arguments": {}
     },
     {

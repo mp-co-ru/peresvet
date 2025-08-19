@@ -64,7 +64,7 @@ class DataGet(BaseModel):
     tagId: str | list[str] = Field(
         title="Id или список id тегов"
     )
-    start: int | str = Field(
+    start: int | str | None = Field(
         None,
         title="Метка времени начала периода."
     )
@@ -72,7 +72,7 @@ class DataGet(BaseModel):
         default_factory=t.now_int,
         title="Метка времени окончания периода."
     )
-    maxCount: int = Field(
+    maxCount: int | None = Field(
         None,
         title="Максимальное количество точек в ответе."
     )
@@ -88,11 +88,11 @@ class DataGet(BaseModel):
         None,
         title="Фильтр по значению"
     )
-    count: int = Field(
+    count: int | None = Field(
         None,
         title="Количество запрашиваемых точек."
     )
-    timeStep: int = Field(
+    timeStep: int | None = Field(
         None,
         title="Шаг между соседними значениями."
     )
@@ -156,7 +156,7 @@ class TagsAppAPI(BaseSvc):
             f"{self._config.hierarchy['class']}.app_api_client.data_set.*": self.data_set
         }
 
-    async def data_get(self, mes: DataGet, routing_key: str = None) -> dict:
+    async def data_get(self, mes: DataGet, routing_key: str | None = None) -> dict:
         new_payload = mes
         if isinstance(mes, dict):
             new_payload = DataGet(**mes)
@@ -193,7 +193,8 @@ class TagsAppAPI(BaseSvc):
 
         return res
 
-    async def data_set(self, mes: dict | AllData, routing_key: str = None, error_handler: ErrorHandler = Depends()) -> None:
+    async def data_set(self, mes: dict | AllData, routing_key: str | None = None, error_handler: ErrorHandler = Depends()) -> dict:
+
         try:
             if isinstance(mes, dict):
                 s = json.dumps(mes)
