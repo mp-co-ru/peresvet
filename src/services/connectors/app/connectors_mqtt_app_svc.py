@@ -186,8 +186,9 @@ class ConnectorsMQTTApp(AppSvc):
             ]
         })
 
-        for tag_id, _, _ in tags:
-            mes_for_connector["tags"]["tag_id"] = self._get_tag_data(conn_id=conn_id, tag_id=tag_id)
+        for _, _, attrs in tags:
+            tag_id = attrs["cn"][0]
+            mes_for_connector["data"]["tags"][tag_id] = await self._get_tag_data(conn_id=conn_id, tag_id=tag_id)
 
         await self._post_message(mes=mes_for_connector, routing_key=f"prs2conn.{conn_id}")
 
