@@ -14,6 +14,7 @@ sys.path.append(".")
 
 from src.common.app_svc import AppSvc
 from src.services.tags.app.tags_app_settings import TagsAppSettings
+from src.common.times import ts
 
 class TagsApp(AppSvc):
     """Сервис работы с тегами.
@@ -29,7 +30,7 @@ class TagsApp(AppSvc):
         self._handlers[f"{self._config.hierarchy['class']}.app_api.data_get.*"] = self.data_get
         self._handlers[f"{self._config.hierarchy['class']}.app_api.data_set.*"] = self.data_set
 
-    async def data_get(self, mes: dict, routing_key: str = None) -> dict:
+    async def data_get(self, mes: dict, routing_key: str | None = None) -> dict:
 
         self._logger.debug(f"{self._config.svc_name} :: Data get mes: {mes}")
 
@@ -83,8 +84,9 @@ class TagsApp(AppSvc):
 
             return res
 
-    async def data_set(self, mes: dict, routing_key: str = None) -> None:
+    async def data_set(self, mes: dict, routing_key: str | None = None) -> None:
 
+        now_ts = ts()
         for tag_item in mes["data"]:
             tag_id = tag_item['tagId']
 
@@ -97,6 +99,14 @@ class TagsApp(AppSvc):
             if not res:
                 self._logger.warning(f"{self._config.svc_name} :: Тег '{tag_id}' неактивен.")
                 continue
+
+            # проверим количество элементов в каждом массиве
+            new_tag_item = {
+                "tagId": tag_id,
+                "data": []
+            }
+            for data_item in tag_item["data"]:
+                data_item_len = len(data_item)
 
             res = await self._post_message({"data": [tag_item]}, reply=False,
                 routing_key=f"{self._config.hierarchy['class']}.app.data_set.{tag_item['tagId']}"
