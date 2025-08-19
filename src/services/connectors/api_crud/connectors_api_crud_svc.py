@@ -43,8 +43,6 @@ class LinkTagAttributes(BaseModel):
     )
     description: str | None = Field(None, title="Пояснение")
     objectClass: str = Field("prsConnectorTagData", title="Класс объекта")
-    prsValueScale: float = 1
-    prsMaxDev: float = 0
 
 class LinkTag(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
@@ -166,9 +164,6 @@ async def create(payload: dict | None = None, error_handler: svc.ErrorHandler = 
             * **prsJsonConfigString** (dict) - Параметры подключение к источнику данных.
               Обязательный атрибут.
             * **description** (str) - Пояснение. Необязательный атрибут.
-            * **prsValueScale** (int) - Коэффициент, на который умножается значение
-              тега коннектором перед отправкой в платформу. Необязательный атрибут.
-            * **prsMaxDev** (int) - Величина значащего отклонения. Необязательный атрибут.
             * **objectClass** (str) - Класс объекта. Необязательный атрибут.
 
     **Ответ:**

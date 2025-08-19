@@ -93,15 +93,23 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
         tags_node_id = await self._hierarchy.get_node_id(
             f"cn=tags,cn=system,{node_dn}"
         )
+
+        # может, данный тег уже привязан
+        tag_src = {
+            "base": tags_node_id,
+            "filter": {
+                "cn": [payload["tagId"]]
+            },
+            "attributes": ["cn"]
+        }
+
         new_node_id = await self._hierarchy.add(
             base=tags_node_id,
             attribute_values={
                 "objectClass": ["prsConnectorTagData"],
                 "cn": payload["tagId"],
                 "prsJsonConfigString": payload["attributes"]["prsJsonConfigString"],
-                "prsValueScale": payload["attributes"]["prsValueScale"],
-                "prsMaxDev": payload["attributes"]["prsMaxDev"],
-                "description": payload["attributes"]["description"]
+                "description": payload["attributes"].get("description")
             }
         )
         await self._hierarchy.add_alias(
@@ -130,7 +138,7 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
                     "filter": {
                         "objectClass": ["prsConnectorTagData"]
                     },
-                    "attributes": ["cn", "prsJsonConfigString", "prsMaxDev", "prsValueScale"],
+                    "attributes": ["cn", "prsJsonConfigString"],
                     "scope": 2
                 }
             )
@@ -142,8 +150,6 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
                             "attributes": {
                                 "cn": item[2]["cn"][0],
                                 "prsJsonConfigString": json.loads(item[2]["prsJsonConfigString"][0]),
-                                "prsMaxDev": item[2]["prsMaxDev"][0],
-                                "prsValueScale": item[2]["prsValueScale"][0],
                                 "objectClass": "prsConnectorTagData"
                             }
                         }

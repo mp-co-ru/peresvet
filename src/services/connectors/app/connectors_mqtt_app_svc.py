@@ -63,7 +63,7 @@ class ConnectorsMQTTApp(AppSvc):
         }
         res = await self._hierarchy.search(payload)
         if not res:
-            self._logger.error(f"Обновление тега {tag_id}. Тег не найден.")
+            self._logger.error(f"{self._config.svc_name} :: Обновление тега {tag_id}. Тег не найден.")
             return
 
         mes2conn = {
@@ -82,7 +82,7 @@ class ConnectorsMQTTApp(AppSvc):
         # получаем список коннекторов, к которым привязан тег -----------------
         connectors = await self._find_connector_by_tag(tag_id)
         if not connectors:
-            self._logger.error(f"Тег {tag_id} не привязан к коннектору.")
+            self._logger.error(f"{self._config.svc_name} :: Тег {tag_id} не привязан к коннектору.")
             return
         # --------------------------------------------------------------------
 
@@ -96,20 +96,20 @@ class ConnectorsMQTTApp(AppSvc):
             payload["base"] = conn_id
             res = await self._hierarchy.search(payload)
             if not res:
-                self._logger.error(f"Ошибка поиска привязки тега {tag_id} к коннектору {conn_id}.")
+                self._logger.error(f"{self._config.svc_name} :: Ошибка поиска привязки тега {tag_id} к коннектору {conn_id}.")
                 continue
 
             mes2conn["data"]["tags"][tag_id]["prsJsonConfigString"] = json.loads(res[0][2]["prsJsonConfigString"])
             await self._post_message(mes=mes2conn, routing_key=f"prs2conn.{conn_id}")
 
-            self._logger.info(f"Сообщение об обновлении тега {tag_id} отправлено коннектору {conn_id}.")
+            self._logger.info(f"{self._config.svc_name} :: Сообщение об обновлении тега {tag_id} отправлено коннектору {conn_id}.")
 
     async def _tag_deleted(self, mes: dict, routing_key: str | None = None):
         tag_id = mes["id"]
         # получаем список коннекторов, к которым привязан тег -----------------
         connectors = await self._find_connector_by_tag(tag_id)
         if not connectors:
-            self._logger.error(f"Тег {tag_id} не привязан к коннектору.")
+            self._logger.error(f"{self._config.svc_name} :: Тег {tag_id} не привязан к коннектору.")
             return
         # --------------------------------------------------------------------
 
@@ -120,7 +120,7 @@ class ConnectorsMQTTApp(AppSvc):
 
         for conn_id in connectors:
             await self._post_message(mes=mes2conn, routing_key=f"prs2conn.{conn_id}")
-            self._logger.info(f"Сообщение об удалении тега {tag_id} отправлено коннектору {conn_id}.")
+            self._logger.info(f"{self._config.svc_name} :: Сообщение об удалении тега {tag_id} отправлено коннектору {conn_id}.")
 
     async def _get_tag_data(self, conn_id: str, tag_id: str) -> dict | None:
         # метод возвращает данные по тегу, привязанному к коннектору
@@ -133,7 +133,7 @@ class ConnectorsMQTTApp(AppSvc):
         }
         link_res = await self._hierarchy.search(payload=payload)
         if not link_res:
-            self._logger.error(f"В списке привязанных к коннектору {conn_id} не найден тег {tag_id}.")
+            self._logger.error(f"{self._config.svc_name} :: В списке привязанных к коннектору {conn_id} не найден тег {tag_id}.")
             return None
 
         payload = {
@@ -142,7 +142,7 @@ class ConnectorsMQTTApp(AppSvc):
         }
         tag_res = await self._hierarchy.search(payload=payload)
         if not tag_res:
-            self._logger.error(f"К коннектору {conn_id} привязан несуществующий тег {tag_id}.")
+            self._logger.error(f"{self._config.svc_name} :: К коннектору {conn_id} привязан несуществующий тег {tag_id}.")
             return None
 
         return {
@@ -160,7 +160,7 @@ class ConnectorsMQTTApp(AppSvc):
         }
         res = await self._hierarchy.search(payload=payload)
         if not res:
-            self._logger.error(f"Отсутствует коннектор с id = {conn_id}.")
+            self._logger.error(f"{self._config.svc_name} :: Отсутствует коннектор с id = {conn_id}.")
             return {}
 
         mes_for_connector = {
@@ -192,7 +192,7 @@ class ConnectorsMQTTApp(AppSvc):
 
         await self._post_message(mes=mes_for_connector, routing_key=f"prs2conn.{conn_id}")
 
-        self._logger.info(f"Отправлена полная конфигурация коннектору {conn_id}.")
+        self._logger.info(f"{self._config.svc_name} :: Отправлена полная конфигурация коннектору {conn_id}.")
         return {}
 
     async def on_startup(self) -> None:
@@ -235,7 +235,7 @@ class ConnectorsMQTTApp(AppSvc):
         await func(exchange=self._exchange, routing_key=f"prsConnector.model.updated.{conn_id}")
         await func(exchange=self._exchange, routing_key=f"prsConnector.model.deleted.{conn_id}")
         await func(exchange=self._exchange, routing_key=f"conn2prs.{conn_id}")
-        self._logger.info(f"Коннектор {conn_id} {('от', 'при')[bind]}вязан.")
+        self._logger.info(f"{self._config.svc_name} :: Коннектор {conn_id} {('от', 'при')[bind]}вязан.")
 
     async def _add_supported_conn(self, conn_id: str) -> None:
 
