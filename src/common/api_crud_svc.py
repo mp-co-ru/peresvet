@@ -69,7 +69,7 @@ class NodeAttributes(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
 
-    cn: str = Field(None, title="Имя узла")
+    cn: str | None = Field(None, title="Имя узла")
     description: str | None = Field(None, title="Описание",
         description="Описание экземпляра.")
     prsJsonConfigString: dict | None = Field(None, title="Конфигурация экземпляра.",
@@ -120,7 +120,18 @@ class NodeCreate(BaseModel):
             "При использовании в команде изменения узла трактуется как новый "
             "родительский узел."
         ))
-    attributes: NodeAttributes = Field({}, title="Атрибуты узла")
+    attributes: NodeAttributes = Field(
+        NodeAttributes(
+            cn=None,
+            description=None,
+            prsJsonConfigString=None,
+            prsActive=True,
+            prsDefault=None,
+            prsEntityTypeCode=None,
+            prsIndex=None
+        ),
+        title="Атрибуты узла"
+    )
 
     validate_id = validator('parentId', allow_reuse=True)(valid_uuid)
 class NodeDelete(BaseModel):

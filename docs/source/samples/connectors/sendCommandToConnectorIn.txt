@@ -1,0 +1,12 @@
+POST /v1/connectors_app/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
+
+{
+    "id": "b61a2360-cc05-103e-9308-555c1a8a1358",
+    "command": {
+        "lines": ["reboot"]
+    }
+}

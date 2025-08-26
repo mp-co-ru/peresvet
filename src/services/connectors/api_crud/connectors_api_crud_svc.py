@@ -28,6 +28,10 @@ class ConfigStringForLinkedTag(BaseModel):
         title="Выражение на языке JSONata",
         description="Это выражение будет применено к прочитанным из источника данным."
     )
+    frequency: float | None = Field(None,
+        title="Частота сбора",
+        description="Частота, с которой будут читаться данные тега из источника коннектором в случае."
+    )
 class LinkTagAttributes(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
