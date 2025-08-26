@@ -47,7 +47,7 @@ location = /v1/connectors/ {
     proxy_pass http://connectors_api_crud;
 }
 
-location /v1/connectors/ {
+location /v1/connectors_app/ {
     # add proxy cors
     add_header Access-Control-Allow-Headers '*' always;
     add_header Access-Control-Allow-Methods '*' always;
@@ -63,8 +63,8 @@ location /v1/connectors/ {
     proxy_pass http://connectors_app;
 
     proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
+    #proxy_set_header Upgrade $http_upgrade;
+    #proxy_set_header Connection "upgrade";
 }
 
 location = /v1/dataStorages/ {
@@ -228,7 +228,7 @@ location /grafana/ {
     proxy_buffer_size          4k;
     proxy_buffers              4 32k;
     proxy_busy_buffers_size    64k;
-    proxy_temp_file_write_size 64k; 
+    proxy_temp_file_write_size 64k;
 }
 
 # Proxy Grafana Live WebSocket connections.
@@ -238,7 +238,7 @@ location /grafana/api/live/ {
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection $connection_upgrade;
     proxy_set_header Host $http_host;
-    
+
     add_header Access-Control-Allow-Headers '*' always;
     add_header Access-Control-Allow-Methods '*' always;
     add_header Access-Control-Allow-Origin  '*' always;
