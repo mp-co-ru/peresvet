@@ -66,6 +66,12 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
         if res:
             await self._hierarchy.delete(res[0][0])
 
+            await self._post_message(
+                mes={"tagId": tag_id},
+                routing_key=f"{self._config.hierarchy['class']}.model.unlink_tag.{conn_id}"
+            )
+            self._logger.info(f"{self._config.svc_name} :: Коннектор {conn_id}. Тег {tag_id} отвязан.")
+
     async def _link_tag(self, payload: dict) -> None:
         """Метод привязки тега к коннектору.
 
@@ -79,8 +85,6 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
                     "prsJsonConfigString":
                 }
             }
-        """
-        """
         res = await self._post_message(
             mes={"action": "connectors.linkTag", "data": payload},
             reply=True,
@@ -102,6 +106,21 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
             },
             "attributes": ["cn"]
         }
+        res = await self._hierarchy.search(payload=tag_src)
+        if res:
+            await self._hierarchy.modify(
+                res[0][0],
+                {
+                    "prsJsonConfigString": payload["attributes"]["prsJsonConfigString"],
+                    "description": payload["attributes"].get("description")
+                })
+
+            await self._post_message(
+                mes={"tagId": payload["tagId"]},
+                routing_key=f"{self._config.hierarchy['class']}.model.linked_tag_updated.{payload['connectorId']}"
+            )
+            self._logger.info(f"{self._config.svc_name} :: Коннектор {payload['connectorId']}. Изменена привязка тега {payload['tagId']}.")
+            return
 
         new_node_id = await self._hierarchy.add(
             base=tags_node_id,
@@ -117,6 +136,11 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
             aliased_object_id=payload["tagId"],
             alias_name=payload["tagId"]
         )
+
+        await self._post_message(
+                mes={"tagId": payload["tagId"]},
+                routing_key=f"{self._config.hierarchy['class']}.model.link_tag.{payload['connectorId']}"
+            )
 
         self._logger.info(
             f"{self._config.svc_name} :: Тег {payload['tagId']} привязан к коннектору {payload['connectorId']}"
