@@ -317,10 +317,11 @@ class MethodsApp(AppSvc):
                         path=method_id
                     ).json().get(f"{initiator_id}.{self._config.svc_name}")).execute()
 
-                    if not res[1].keys():
-                        await r.json().delete(
-                            key=f"{initiator_id}.{self._config.svc_name}"
-                        )
+                    if res is not None:
+                        if not res[1].keys():
+                            await r.json().delete(
+                                key=f"{initiator_id}.{self._config.svc_name}"
+                            )
 
     async def _make_method_cache(self, method_id: str):
         """
