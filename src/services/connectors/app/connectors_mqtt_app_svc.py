@@ -27,11 +27,31 @@ class ConnectorsMQTTApp(AppSvc):
 
     def _add_app_handlers(self):
         self._handlers["conn2prs.*"] = self._send_config_to_connector
-        self._handlers["prsTag.model.updated.*"] = self._tag_updated
-        self._handlers["prsTag.model.deleted.*"] = self._tag_deleted
-        self._handlers[f"{self._config.hierarchy['class']}.model.linked_tag_updated.*"] = self._tag_updated
-        self._handlers[f"{self._config.hierarchy['class']}.model.unlink_tag.*"] = self._tag_deleted
+        self._handlers[f"{self._config.hierarchy['class']}.model.tag_updated.*"] = self._tags_updated
+        self._handlers[f"{self._config.hierarchy['class']}.model.tag_deleted.*"] = self._tag_deleted
+        self._handlers[f"{self._config.hierarchy['class']}.model.tag_link_updated.*"] = self._tags_updated
+        self._handlers[f"{self._config.hierarchy['class']}.model.unlink_tag.*"] = self._tags_unlinked
+        self._handlers[f"{self._config.hierarchy['class']}.model.link_tag.*"] = self._tag_linked
         self._handlers[f"{self._config.hierarchy['class']}.app_api.command.*"] = self._send_command
+
+    async def _tag_linked(self, mes: dict, routing_key: str | None = None):
+        conn_id = mes["connectorId"]
+        tags = mes["tagId"]
+        if isinstance(tags, str):
+            tags = [tags]
+
+        tags_data = {}
+        for tag_id in tags:
+            tags_data[tag_id] = await self._get_tag_data(conn_id=conn_id, tag_id=tag_id)
+
+        mes2conn = {
+            "action": "prsConnector.tags_configuration",
+            "data": {
+                "tags": tags_data
+            }
+        }
+        await self._post_message(mes=mes2conn, routing_key=f"prs2conn.{conn_id}")
+        self._logger.info(f"{self._config.svc_name} :: Коннектору {conn_id} послано сообщение о привязке тега {tags}.")
 
     async def _send_command(self, mes: dict, routing_key: str | None = None):
         mes2conn = {
@@ -40,6 +60,7 @@ class ConnectorsMQTTApp(AppSvc):
         }
         conn_id = mes["id"]
         await self._post_message(mes=mes2conn, routing_key=f"prs2conn.{conn_id}")
+        self._logger.info(f"{self._config.svc_name} :: Коннектору {conn_id} посланы команды: {mes['command']['lines']}.")
 
     async def _find_connector_by_tag(self, tag_id: str) -> list[str]:
         if not self._config.nodes: # type: ignore
@@ -64,78 +85,61 @@ class ConnectorsMQTTApp(AppSvc):
                 result.append(conn_id)
         return result
 
-    async def _tag_updated(self, mes: dict, routing_key: str | None = None):
+    async def _tags_updated(self, mes: dict, routing_key: str | None = None):
         # TODO: по правильному, чтобы получить данные по какой-либо сущности,
         # необходимо делать запрос соответствующему сервису,
         # но, так как система сообщений ещё не устоялась,
         # будем искать данные сразу в иерархии
-        tag_id = mes["tagId"]
 
-        # прочитаем данные самого тега ------------------------------------------
-        payload = {
-            "id": tag_id,
-            "attributes" : ["prsActive", "prsValueTypeCode"]
-        }
-        res = await self._hierarchy.search(payload)
-        if not res:
-            self._logger.error(f"{self._config.svc_name} :: Обновление тега {tag_id}. Тег не найден.")
-            return
+        # сервис prsConnector.model сам ищет привязки тега к коннекторам
+        # и для каждого посылает сообщение, поэтому здесь не ищем список привязки тега
+
+        tags = mes["tagId"]
+        if isinstance(tags, str):
+            tags = [tags]
+        conn_id = mes["connectorId"]
+
+        tags_data = {}
+        for tag_id in tags:
+            tags_data[tag_id] = await self._get_tag_data(conn_id=conn_id, tag_id=tag_id)
 
         mes2conn = {
             "action": "prsConnector.tags_configuration",
             "data": {
-                "tags": {
-                    tag_id: {
-                        "prsActive": res[0][2]["prsActive"][0] == 'TRUE',
-                        "prsValueTypeCode": int(res[0][2]["prsValueTypeCode"][0])
-                    }
-                }
+                "tags": tags_data
             }
         }
-        # ---------------------------------------------------------------------
 
-        # получаем список коннекторов, к которым привязан тег -----------------
-        connectors = await self._find_connector_by_tag(tag_id)
-        if not connectors:
-            self._logger.error(f"{self._config.svc_name} :: Тег {tag_id} не привязан к коннектору.")
-            return
-        # --------------------------------------------------------------------
+        await self._post_message(mes=mes2conn, routing_key=f"prs2conn.{conn_id}")
 
-        payload = {
-            "base": None,
-            "filter": {"cn": [tag_id]},
-            "attributes": ["prsJsonConfigString"]
+        self._logger.info(f"{self._config.svc_name} :: Сообщение об обновлении тега {tags} отправлено коннектору {conn_id}.")
+
+    async def _tags_unlinked(self, mes: dict, routing_key: str | None = None):
+        tags = mes["tagId"]
+        if isinstance(tags, str):
+            tags = [tags]
+        conn_id = mes["connectorId"]
+        mes2conn = {
+            "action": "prsConnector.tags_deleted",
+            "data": {"tags": tags}
         }
-        for conn_id in connectors:
-            # получим данные по привязке тега
-            payload["base"] = conn_id
-            res = await self._hierarchy.search(payload)
-            if not res:
-                self._logger.error(f"{self._config.svc_name} :: Ошибка поиска привязки тега {tag_id} к коннектору {conn_id}.")
-                continue
 
-            mes2conn["data"]["tags"][tag_id]["prsJsonConfigString"] = json.loads(res[0][2]["prsJsonConfigString"][0])
-            await self._post_message(mes=mes2conn, routing_key=f"prs2conn.{conn_id}")
-
-            self._logger.info(f"{self._config.svc_name} :: Сообщение об обновлении тега {tag_id} отправлено коннектору {conn_id}.")
+        await self._post_message(mes=mes2conn, routing_key=f"prs2conn.{conn_id}")
+        self._logger.info(f"{self._config.svc_name} :: Сообщение об отвязке тега {tags} отправлено коннектору {conn_id}.")
 
     async def _tag_deleted(self, mes: dict, routing_key: str | None = None):
-        tag_id = mes["id"]
-        # получаем список коннекторов, к которым привязан тег -----------------
-        connectors = await self._find_connector_by_tag(tag_id)
-        if not connectors:
-            self._logger.error(f"{self._config.svc_name} :: Тег {tag_id} не привязан к коннектору.")
-            return
-        # --------------------------------------------------------------------
+        # сервис prsConnector.model сам ищет привязки тега к коннекторам
+        # и для каждого посылает сообщение, поэтому здесь не ищем список привязки тега
 
+        tag_id = mes["tagId"]
+        conn_id = mes["connectorId"]
         mes2conn = {
             "action": "prsConnector.tags_deleted",
             "data": {"tags": [tag_id]}
         }
 
-        for conn_id in connectors:
-            await self._post_message(mes=mes2conn, routing_key=f"prs2conn.{conn_id}")
-            self._logger.info(f"{self._config.svc_name} :: Сообщение об удалении тега {tag_id} отправлено коннектору {conn_id}.")
+        await self._post_message(mes=mes2conn, routing_key=f"prs2conn.{conn_id}")
+        self._logger.info(f"{self._config.svc_name} :: Сообщение об удалении тега {tag_id} отправлено коннектору {conn_id}.")
 
     async def _get_tag_data(self, conn_id: str, tag_id: str) -> dict | None:
         # метод возвращает данные по тегу, привязанному к коннектору
@@ -187,7 +191,7 @@ class ConnectorsMQTTApp(AppSvc):
         conn_id = mes["data"]["id"]
         res = await self._get_connector_data(conn_id=conn_id)
         if not res:
-            self._logger.error(f"Отсутствует коннектор {conn_id}.")
+            self._logger.error(f"{self._config.svc_name} :: Отсутствует коннектор {conn_id}.")
             return {}
 
         res["tags"] = {}
@@ -220,92 +224,33 @@ class ConnectorsMQTTApp(AppSvc):
 
         await super().on_startup()
 
-        # сделаем перепривязку очереди, так как слушать будем только нужные сообщения
-        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.model.updated.*")
-        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.model.deleted.*")
-        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsConnector.model.link_tag.*")
-        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsConnector.model.linked_tag_updated.*")
-        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsConnector.model.unlink_tag.*")
-        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsConnector.model.updated.*")
-        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsConnector.model.deleted.*")
-        # ----------------------------------------------------------------------------------------
-
         try:
             payload = {}
             if self._config.nodes: # type: ignore
                 payload["id"] = self._config.nodes # type: ignore
+                for conn_id in self._config.nodes:
+                    await self._bind_conn(conn_id=conn_id, bind=True)
             else:
-                conn_node_id = await self._hierarchy.get_node_id("cn=connectors,cn=prs")
-                payload = {
-                    "base": conn_node_id,
-                    "filter": {
-                        "objectClass": ["prsConnector"]
-                    }
-                }
-
-            conns = await self._hierarchy.search(payload=payload)
-            for conn in conns:
-                await self._add_supported_conn(conn[0])
-
+                await self._bind_conn(conn_id="*", bind=True)
         except Exception as ex:
             self._logger.error(f"{self._config.svc_name} :: Ошибка инициализации сервиса коннекторов: {ex}")
 
     async def _bind_conn(self, conn_id: str, bind: bool = True):
         func = (self._amqp_consume_queue.unbind, self._amqp_consume_queue.bind)[bind]
-        await func(exchange=self._exchange, routing_key=f"prsConnector.model.link_tag.{conn_id}")
-        await func(exchange=self._exchange, routing_key=f"prsConnector.model.linked_tag_updated.{conn_id}")
-        await func(exchange=self._exchange, routing_key=f"prsConnector.model.unlink_tag.{conn_id}")
-        await func(exchange=self._exchange, routing_key=f"prsConnector.model.updated.{conn_id}")
-        await func(exchange=self._exchange, routing_key=f"prsConnector.model.deleted.{conn_id}")
-        await func(exchange=self._exchange, routing_key=f"conn2prs.{conn_id}")
+        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.link_tag.{conn_id}")
+        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.tag_link_updated.{conn_id}")
+        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.unlink_tag.{conn_id}")
+        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.tag_updated.{conn_id}")
+        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.tag_deleted.{conn_id}")
+        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.updated.{conn_id}")
+        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.deleted.{conn_id}")
         self._logger.info(f"{self._config.svc_name} :: Коннектор {conn_id} {('от', 'при')[bind]}вязан.")
-
-    async def _add_supported_conn(self, conn_id: str) -> None:
-
-        """Метод добавляет в список поддерживаемых коннекторов новый коннектор.
-
-        Args:
-            conn_id (str): идентификатор коннектора
-        """
-        payload = {
-            "id": [conn_id],
-            "attributes": ["prsJsonConfigString", "prsActive", "prsEntityTypeCode"]
-        }
-        conn = await self._hierarchy.search(payload=payload)
-
-        # привяжемся к сообщениям, касающихся изменений коннектора ---------------------------------
-        await self._bind_conn(conn_id, True)
-        # ----------------------------------------------------------------------------------------
-        if conn[0][2]["prsActive"][0] == "TRUE":
-            await self._bind_all_tags(conn_id)
-
-    async def _bind_all_tags(self, conn_id: str, bind: bool = True):
-        payload = {
-            "base": conn_id,
-            "filter": {
-                "objectClass": ["prsConnectorTagData"]
-            },
-            "attributes": ["cn"]
-        }
-
-        tags = await self._hierarchy.search(payload)
-        for tag in tags:
-            await self._bind_tag(tag[2]["cn"][0], bind)
-
-    async def _bind_tag(self, tag_id: str, bind: bool = True) -> None:
-        """
-        Привязка тега для прослушивания.
-        """
-        func = (self._amqp_consume_queue.unbind, self._amqp_consume_queue.bind)[bind]
-        await func(exchange=self._exchange, routing_key=f"prsTag.model.updated.{tag_id}")
-        await func(exchange=self._exchange, routing_key=f"prsTag.model.deleted.{tag_id}")
 
     async def _deleting(self, mes: dict, routing_key: str | None = None):
         # удаление коннектора из модели:
         # делаем полную отвязку по этому коннектору
         conn_id = mes["id"]
         await self._bind_conn(conn_id, False)
-        await self._bind_all_tags(conn_id, False)
         return {"response": True}
 
     async def _deleted(self, mes: dict, routing_key: str | None = None):
@@ -324,7 +269,7 @@ class ConnectorsMQTTApp(AppSvc):
         conn_id = mes["id"]
         res = await self._get_connector_data(conn_id=conn_id)
         if not res:
-            self._logger.error(f"Отсутствует коннектор {conn_id}.")
+            self._logger.error(f"{self._config.svc_name} :: Отсутствует коннектор {conn_id}.")
             return {}
 
         mes_for_connector = {
