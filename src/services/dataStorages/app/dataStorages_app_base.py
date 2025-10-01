@@ -1276,7 +1276,6 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         if not tag_data:
             return []
 
-        now_ms = t.ts()
         x0 = tag_data[0][1]
         y0 = tag_data[0][0]
 
@@ -1288,7 +1287,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             if len(tag_data) == 1:
                 if x0 < start:
                     tag_data[0] = (tag_data[0][0], start, tag_data[0][2])
-                    tag_data.append((y0, now_ms, tag_data[0][2]))
+                    tag_data.append((y0, finish, tag_data[0][2]))
                 return tag_data
 
             x1, y1 = self._last_point(tag_data[1][1], tag_data)
@@ -1339,8 +1338,9 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             if finish > xn:
                 tag_data.append((yn, finish, tag_data[-1][2]))
 
-        if all((finish is None, now_ms > tag_data[-1][1])):
-            tag_data.append((tag_data[-1][0], now_ms, tag_data[-1][2]))
+        #if all((finish is None, now_ms > tag_data[-1][1])):
+        if finish > tag_data[-1][1]:
+            tag_data.append((tag_data[-1][0], finish, tag_data[-1][2]))
 
         tag_data = self._limit_data(tag_data, count, start, finish)
         return tag_data
