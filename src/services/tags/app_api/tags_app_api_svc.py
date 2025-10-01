@@ -121,9 +121,9 @@ class DataGet(BaseModel):
 
     @validator('start')
     @classmethod
-    def start_in_iso_format(cls, v: Any) -> int:
+    def start_in_iso_format(cls, v: Any) -> int | None:
         if v is None:
-            return
+            return None
         # если finish в виде строки, то строка должна быть в формате ISO8601
         try:
             return t.ts(v)
