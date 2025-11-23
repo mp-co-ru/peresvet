@@ -56,6 +56,7 @@ while [[ $# -gt 0 ]]; do
   case $1 in
     -h)
       SRV_NAME=$2
+      SUBJ="/CN=${SRV_NAME}"
       shift # past argument
       shift # past value
       ;;
