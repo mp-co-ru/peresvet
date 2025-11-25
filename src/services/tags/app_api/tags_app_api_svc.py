@@ -1,7 +1,7 @@
 """
 Запись и получение исторических данных.
 
-Подробно работа с историческими данными и примеры использования ключей в запросе 
+Подробно работа с историческими данными и примеры использования ключей в запросе
 рассмотрены в разделе :ref:`historical_data`.
 """
 import sys
@@ -64,7 +64,7 @@ class DataGet(BaseModel):
     tagId: str | list[str] = Field(
         title="Id или список id тегов"
     )
-    start: int | str = Field(
+    start: int | str | None = Field(
         None,
         title="Метка времени начала периода."
     )
@@ -72,7 +72,7 @@ class DataGet(BaseModel):
         default_factory=t.now_int,
         title="Метка времени окончания периода."
     )
-    maxCount: int = Field(
+    maxCount: int | None = Field(
         None,
         title="Максимальное количество точек в ответе."
     )
@@ -88,11 +88,11 @@ class DataGet(BaseModel):
         None,
         title="Фильтр по значению"
     )
-    count: int = Field(
+    count: int | None = Field(
         None,
         title="Количество запрашиваемых точек."
     )
-    timeStep: int = Field(
+    timeStep: int | None = Field(
         None,
         title="Шаг между соседними значениями."
     )
@@ -121,9 +121,9 @@ class DataGet(BaseModel):
 
     @validator('start')
     @classmethod
-    def start_in_iso_format(cls, v: Any) -> int:
+    def start_in_iso_format(cls, v: Any) -> int | None:
         if v is None:
-            return
+            return None
         # если finish в виде строки, то строка должна быть в формате ISO8601
         try:
             return t.ts(v)
@@ -139,7 +139,7 @@ class DataGet(BaseModel):
 class TagsAppAPI(BaseSvc):
     """Сервис работы с тегами в иерархии.
 
-    Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``\,
+    Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``,
     в которую публикует сообщения сервис ``tags_api_crud`` (все имена
     указываются в переменных окружения).
 
@@ -156,7 +156,7 @@ class TagsAppAPI(BaseSvc):
             f"{self._config.hierarchy['class']}.app_api_client.data_set.*": self.data_set
         }
 
-    async def data_get(self, mes: DataGet, routing_key: str = None) -> dict:
+    async def data_get(self, mes: DataGet, routing_key: str | None = None) -> dict:
         new_payload = mes
         if isinstance(mes, dict):
             new_payload = DataGet(**mes)
@@ -193,26 +193,25 @@ class TagsAppAPI(BaseSvc):
 
         return res
 
-    async def data_set(self, mes: dict | AllData, routing_key: str = None, error_handler: ErrorHandler = Depends()) -> None:
+    async def data_set(self, mes: dict | AllData, routing_key: str | None = None, error_handler: ErrorHandler = Depends()) -> dict:
+
         try:
             if isinstance(mes, dict):
                 s = json.dumps(mes)
                 p = AllData.model_validate_json(s)
             else:
                 p = mes
-                
         except Exception as ex:
             res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
             app._logger.exception(res)
             await error_handler.handle_error(res)
 
         body = p.model_dump()
-        
         res = await self._post_message(mes=body, reply=False, routing_key = f"{self._config.hierarchy['class']}.app_api.data_set.*")
         # нет подписчика
         if res is None:
             res = {"error": {"code": 424, "message": f"Нет обработчика для команды записи данных."}}
-            #app._logger.error(res)
+            app._logger.error(res["error"]["message"])
         return {}
 
 settings = TagsAppAPISettings()
@@ -281,11 +280,11 @@ async def data_set(payload: AllData, error_handler: ErrorHandler = Depends()):
 
     **Параметры запроса:**
 
-      * **data** ([json]) - массив данных тегов; каждый элемент этого массива - 
+      * **data** ([json]) - массив данных тегов; каждый элемент этого массива -
         json с данными одного тега. Json имеет формат:
 
         * **tagId** (str) - id тега;
-        * **data** ([[value, timestamp, quality_code]]) - массив значений тега; каждое значение - 
+        * **data** ([[value, timestamp, quality_code]]) - массив значений тега; каждое значение -
           массив из трёх элементов: значение тега, метка времени (целое число микросекунд или
           строка в формате ISO8601). В случае отсутствия метки времени берётся текущий момент времени.
           В случае отсутствия кода качества берётся значение ``null``, означающее нормальное качество.

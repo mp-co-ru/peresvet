@@ -20,13 +20,11 @@ def valid_alert_config(v: dict) -> dict:
                 "value": 10,
                 "autoAck": True
             }
-        
         new_v.setdefault("high", True)
         new_v.setdefault("value", 10)
         new_v.setdefault("autoAck", True)
 
         return new_v
-        
 class AlertCreateAttributes(svc.NodeAttributes):
     """При создании тревоги атрибут ``prsJsonConfigString`` имеет формат
 
@@ -52,7 +50,6 @@ class AlertCreateAttributes(svc.NodeAttributes):
             "value": 10,
             "autoAck": True
         }, title="Конфигурация тревоги")
-    
     validate_config = validator('prsJsonConfigString', allow_reuse=True)(valid_alert_config)
     pass
 
@@ -84,7 +81,6 @@ class AlertsAPICRUD(svc.APICRUDSvc):
 
     async def _read(self, payload: AlertRead) -> dict:
         return await super()._read(payload=payload)
-    
 settings = AlertsAPICRUDSettings()
 
 app = AlertsAPICRUD(settings=settings, title="`AlertsAPICRUD` service")
@@ -110,7 +106,7 @@ async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
           * **cn** (str) - имя тревоги. Необязательный атрибут.
           * **description** (str) - описание тревоги. Необязательный атрибут.
           * **prsJsonConfigString** (str) - Строка содержит, в случае необходимости,
-            конфигурацию тревоги. 
+            конфигурацию тревоги.
             При создании тревоги атрибут ``prsJsonConfigString`` имеет формат:
 
             .. code:: python
@@ -125,7 +121,6 @@ async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
                     # флаг автоквитирования
                     "autoAck": True
                 }
-            
             Обязательный аттрибут.
           * **prsActive** (bool) - Определяет, активна ли тревога. По умолчанию = ``true``.
             Необязательный атрибут.
@@ -150,7 +145,6 @@ async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
     res = await app._create(p)
     await error_handler.handle_error(res)
     return res
-    
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200, response_model_exclude_none=True)
 async def read(q: str | None = None, payload: AlertRead | None = None, error_handler: svc.ErrorHandler = Depends()):
     """
@@ -170,7 +164,7 @@ async def read(q: str | None = None, payload: AlertRead | None = None, error_han
 
     **Параметры запроса:**
 
-       * **id** (str | list(str)) - идентификатор тревоги (тревог), данные о которой(-ых) хотим прочитать. 
+       * **id** (str | list(str)) - идентификатор тревоги (тревог), данные о которой(-ых) хотим прочитать.
          Необязательный атрибут.
        * **base** (str) - Базовый узел для поиска. В случае отсутствия поиск проводится по всей модели.
          Необязательный атрибут.
@@ -181,8 +175,8 @@ async def read(q: str | None = None, payload: AlertRead | None = None, error_han
          2 - поиск по всему дереву, начиная с указанного в ``base`` узла.\n
          Необязательный атрибут.
        * **filter** (dict) - Словарь из атрибутов и их значений, из которых
-         формируется фильтр для поиска. В случае отсутствия возвращаются все тревоги, 
-         найденные под узлом, указанным в атрибуте ``base``. 
+         формируется фильтр для поиска. В случае отсутствия возвращаются все тревоги,
+         найденные под узлом, указанным в атрибуте ``base``.
          При формировании фильтра значения ключей объединяются логической операцией ``ИЛИ``, а сами
          ключи - операцией ``И``.
          При указании значения строкового атрибута можно использовать символ маски ``*``.
@@ -194,12 +188,12 @@ async def read(q: str | None = None, payload: AlertRead | None = None, error_han
                 "cn": ["alert*"],
                 "prsActive": [true],
                 "prsIndex": [1, 2, 3]
-            } 
+            }
 
          Данный фильтр вернёт тревоги, у которых:\n
          (Имя начинается с ``alert``) И (флаг активности = ``true``) И (индекс равен 1 ИЛИ 2 ИЛИ 3).
 
-       * **attributes** (list[str]) - Список атрибутов, значения которых необходимо вернуть в ответе. По умолчанию - ['\*'], то есть все атрибуты (кроме системных).
+       * **attributes** (list[str]) - Список атрибутов, значения которых необходимо вернуть в ответе. По умолчанию - ['.'], то есть все атрибуты (кроме системных).
 
     **Ответ:**
 
@@ -226,7 +220,6 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
         * **id** (str) - id тревоги для обновления. Обязательное поле.
         * **attributes** (dict) - словарь с параметрами для обновления.
           Соответствует атрибутам из команды ``create``.
-          
 
     **Ответ:**
 
@@ -235,7 +228,7 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
 
     """
     try:
-        AlertUpdate.model_validate(payload)        
+        AlertUpdate.model_validate(payload)
     except Exception as ex:
         res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
         app._logger.exception(res)

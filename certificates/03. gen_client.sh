@@ -19,7 +19,7 @@
 DAYS=3654
 
 # common folder
-TLS_DIR="../tls"
+TLS_DIR="tls"
 
 # Store for center authority (CA) root certificate
 ROOT_DIR="${TLS_DIR}/rootCA"

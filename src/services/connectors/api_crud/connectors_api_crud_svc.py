@@ -3,6 +3,7 @@
 запрос, в сервисе connectors.
 """
 import sys
+import json
 from pydantic import BaseModel, Field, validator, ConfigDict
 
 from fastapi import APIRouter, Depends
@@ -12,12 +13,31 @@ sys.path.append(".")
 from src.common import api_crud_svc as svc
 from src.services.connectors.api_crud.connectors_api_crud_settings import ConnectorsAPICRUDSettings
 
+class ConfigStringForLinkedTag(BaseModel):
+    source: dict = Field({},
+        title="Способ получения данных тега от источника",
+        description="Каждый тип коннектора определяет формат этого словаря."
+    )
+    maxDev: float = Field(0, title="Отклонение значения от предыдущей величины.",
+        description=(
+            "Коннектор отсылает данные в платформу для тега, если разница между вновь полученным "
+            "значением и последним отосланным в платформу превышает указанное значение."
+        )
+    )
+    JSONata: str | None = Field(None,
+        title="Выражение на языке JSONata",
+        description="Это выражение будет применено к прочитанным из источника данным."
+    )
+    frequency: float | None = Field(None,
+        title="Частота сбора",
+        description="Частота, с которой будут читаться данные тега из источника коннектором в случае."
+    )
 class LinkTagAttributes(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
 
     cn: str | None = Field(None, title="Имя привязки")
-    prsJsonConfigString: dict = Field(
+    prsJsonConfigString: ConfigStringForLinkedTag = Field(
         title="Параметры подключение к источнику данных.",
         description=(
             "Json, хранящий ключи, которые указывают коннектору, как "
@@ -26,19 +46,6 @@ class LinkTagAttributes(BaseModel):
         )
     )
     description: str | None = Field(None, title="Пояснение")
-    prsValueScale: int = Field(
-        1,
-        title=(
-            "Коэффициент, на который умножается значение тега коннектором "
-            "перед отправкой в платформу."
-        )
-    )
-    prsMaxDev: int = Field(
-        0,
-        title="Величина значащего отклонения.",
-        description="Используется коннекторами для снятия `дребезга` значений."
-    )
-
     objectClass: str = Field("prsConnectorTagData", title="Класс объекта")
 
 class LinkTag(BaseModel):
@@ -47,9 +54,8 @@ class LinkTag(BaseModel):
 
     tagId: str = Field(title="Идентификатор привязываемого тега")
     attributes: LinkTagAttributes = Field(title="Атрибуты тега")
-
 class ConnectorAttributes(svc.NodeAttributes):
-    prsJsonConfigString: dict = Field({},
+    prsJsonConfigString: dict | None = Field({},
         title="Способ подключения к источнику данных",
         description=(
             "Json, содержащий информацию о том, как коннектор должен "
@@ -70,7 +76,6 @@ class ConnectorRead(svc.NodeRead):
         False,
         title="Флаг возврата присоединённых тегов"
     )
-
 class OneConnectorInReadResult(svc.OneNodeInReadResult):
     linkedTags: list[LinkTag] = Field(
         None,
@@ -86,7 +91,7 @@ class ConnectorUpdate(ConnectorCreate):
     id: str = Field(title="Идентификатор изменяемого коннектора.",
                     description="Должен быть в формате GUID.")
 
-    attributes: ConnectorAttributes = Field(None, title="Атрибуты коннектора")
+    attributes: ConnectorAttributes | None = Field(None, title="Атрибуты коннектора")
 
     unlinkTags: list[str] = Field(
         [],
@@ -98,7 +103,7 @@ class ConnectorUpdate(ConnectorCreate):
 class ConnectorsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с коннекторами в иерархии.
 
-    Подписывается на очередь ``connectors_api_crud`` обменника ``connectors_api_crud``\,
+    Подписывается на очередь ``connectors_api_crud`` обменника ``connectors_api_crud``,
     в которую публикует сообщения сервис ``connectors_api_crud`` (все имена
     указываются в переменных окружения).
 
@@ -108,13 +113,13 @@ class ConnectorsAPICRUD(svc.APICRUDSvc):
     def __init__(self, settings: ConnectorsAPICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-    async def _create(self, payload: ConnectorCreate) -> dict:
+    async def _create(self, payload: ConnectorCreate, routing_key: str | None = None) -> dict | bool | None:
         return await super()._create(payload=payload)
 
-    async def _read(self, payload: ConnectorRead) -> dict:
+    async def _read(self, payload: ConnectorRead, routing_key: str | None = None) -> dict | bool | None:
         return await super()._read(payload=payload)
 
-    async def _update(self, payload: dict) -> dict:
+    async def _update(self, payload: dict, routing_key: str | None = None) -> dict | bool | None:
         return await super()._update(payload=payload)
 
 settings = ConnectorsAPICRUDSettings()
@@ -126,7 +131,7 @@ router = APIRouter(prefix=f"{settings.api_version}/connectors")
 error_handler = svc.ErrorHandler()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
-async def create(payload: ConnectorCreate, error_handler: svc.ErrorHandler = Depends()):
+async def create(payload: dict | None = None, error_handler: svc.ErrorHandler = Depends()):
     """
     Метод добавления коннектора в иерархию.
 
@@ -163,9 +168,6 @@ async def create(payload: ConnectorCreate, error_handler: svc.ErrorHandler = Dep
             * **prsJsonConfigString** (dict) - Параметры подключение к источнику данных.
               Обязательный атрибут.
             * **description** (str) - Пояснение. Необязательный атрибут.
-            * **prsValueScale** (int) - Коэффициент, на который умножается значение
-              тега коннектором перед отправкой в платформу. Необязательный атрибут.
-            * **prsMaxDev** (int) - Величина значащего отклонения. Необязательный атрибут.
             * **objectClass** (str) - Класс объекта. Необязательный атрибут.
 
     **Ответ:**
@@ -174,7 +176,18 @@ async def create(payload: ConnectorCreate, error_handler: svc.ErrorHandler = Dep
         * **detail** (str) - пояснения к ошибке.
 
     """
-    res = await app._create(payload)
+    if payload is None:
+        payload = {}
+
+    try:
+        s = json.dumps(payload)
+        p = ConnectorCreate.model_validate_json(s)
+    except Exception as ex:
+        res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+        app._logger.exception(res)
+        await error_handler.handle_error(res)
+
+    res = await app._create(p)
     await error_handler.handle_error(res)
     return res
 
@@ -203,7 +216,7 @@ async def read(q: str | None = None, payload: ConnectorRead | None = None, error
          который мы хотим прочитать. В случае отсутствия будут выведены все
          коннекторы или те, которые соответствуют фильтру. Необязательный аттрибут.
        * **attributes** (list[str]) - Список атрибутов, значения которых необходимо
-         вернуть в ответе. По умолчанию - ['\*'], то есть все атрибуты (кроме системных).
+         вернуть в ответе. По умолчанию - ['.'], то есть все атрибуты (кроме системных).
          Необязательный аттрибут.
        * **base** (str) - Базовый узел для поиска. Если не указан, то поиск
          ведётся от главного узла иерархии. Необязательный аттрибут.
@@ -241,7 +254,8 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
 
         * **id** (bool) - Идентификатор изменяемого коннектора.
           Обязательный аттрибут.
-        * **unlinkTags** (list[str]) - Список тегов для отсоединения от коннектора
+        * **linkTags** (list[LinkTag]) - список тегов, привязанных к указанному коннектору. Необязательный атрибут.
+        * **unlinkTags** (list[str]) - Список тегов для отсоединения от коннектора.
           Необязательный аттрибут.
         * **attributes** (dict) - Атрибуты коннектора
 
@@ -249,7 +263,7 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
             * **cn** (str) - имя коннектора. Необязательный атрибут
             * **description** (str) - описание коннектора. Необязательный атрибут.
             * **prsActive** (bool) - Параметр активности коннектора. Необязательный атрибут.
-            * **prsDefault** (bool) - Если = ``True``\, то данный коннектор считается узлом по умолчанию в списке равноправных узлов данного уровня иерархии.
+            * **prsDefault** (bool) - Если = ``True``, то данный коннектор считается узлом по умолчанию в списке равноправных узлов данного уровня иерархии.
             * **prsEntityTypeCode** (int) - Атрибут используется для определения типа. К примеру, хранилища данных могут быть разных типов.
             * **prsIndex** (int) - Если у узлов одного уровня иерархии проставлены индексы, то перед отдачей клиенту списка экземпляров они сортируются в соответствии с их индексами.
 

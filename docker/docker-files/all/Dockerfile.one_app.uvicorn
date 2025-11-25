@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM python:3.12-slim
 
 ENV LDAP_ORGANISATION mycompany
 ENV LDAP_DOMAIN mycompany.com
@@ -27,8 +27,8 @@ RUN rm -r -f /usr/src/mpc-peresvet/src/__pycache__
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-ENV amqp_url amqp://prs:Peresvet21@rabbitmq/
-ENV ldap_url ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21
+#ENV amqp_url amqp://prs:Peresvet21@rabbitmq/
+#ENV ldap_url ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21
 
 WORKDIR /usr/src/mpc-peresvet
 

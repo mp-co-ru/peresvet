@@ -1,0 +1,32 @@
+include conf.d/upstreams/*.conf;
+
+server {
+    # HTTP->HTTPS Redirection
+    listen         ${NGINX_HTTP_PORT};
+    server_name    ${NGINX_HOST};
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$server_name$request_uri;
+    }    
+}
+
+server {
+    listen ${NGINX_HTTPS_PORT} default_server ssl;
+    listen [::]:${NGINX_HTTPS_PORT} ssl;
+    server_name 0.0.0.0 localhost ${NGINX_HOST};
+
+    ssl_certificate /etc/nginx/ssl/${NGINX_HOST}.crt;
+    ssl_certificate_key /etc/nginx/ssl/${NGINX_HOST}.key;
+    
+    #ssl_verify_client ${NGINX_CERT_REQUIRED};
+    proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+    proxy_ssl_ciphers HIGH:!aNULL:!MD5;
+    set $proto https;
+
+    resolver 127.0.0.11 valid=5s;
+    
+    include conf.d/locations/*.conf;    
+}

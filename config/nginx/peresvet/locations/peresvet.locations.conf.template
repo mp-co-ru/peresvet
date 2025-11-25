@@ -166,10 +166,11 @@ location = /v1/pandas/ {
         #
         # Custom headers and headers various browsers *should* be OK with but aren't
         #
-        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
+        #add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
         #
         # Tell client that this pre-flight info is valid for 20 days
         #
+        add_header 'Access-Control-Allow-Headers' '*' always;
         add_header 'Access-Control-Max-Age' 1728000;
         add_header 'Content-Type' 'text/plain; charset=utf-8';
         add_header 'Content-Length' 0;
@@ -178,20 +179,78 @@ location = /v1/pandas/ {
     if ($request_method = 'POST') {
         add_header 'Access-Control-Allow-Origin' '*' always;
         add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
-        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;
+        #add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;
+        add_header 'Access-Control-Allow-Headers' '*' always;
         add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range' always;
     }
     if ($request_method = 'GET') {
         add_header 'Access-Control-Allow-Origin' '*' always;
         add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
-        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;
+        #add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;
+        add_header 'Access-Control-Allow-Headers' '*' always;
         add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range' always;
     }
     proxy_set_header Host $http_host;
-    proxy_pass $proto://pandas_app_api;
+    proxy_pass http://datafunc_app_api;
 }
 
 location /grafana/ {
-    #rewrite  ^/grafana/(.*)  /$1 break;
-    proxy_pass $proto://grafana/;
+    #rewrite  ^/grafana/?(.*)  /$1 break;
+    proxy_pass http://grafana;
+    proxy_set_header    Host                $host:$server_port;
+    proxy_set_header    X-Real-IP           $remote_addr;
+    proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
+    proxy_set_header    X-Forwarded-Host    $host;
+    proxy_set_header    X-Forwarded-Port    $server_port;
+    proxy_set_header    X-Forwarded-Server  $host:$server_port;
+    proxy_set_header    X-Forwarded-Proto   $scheme;
+
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
+
+    proxy_max_temp_file_size 0;
+
+    client_max_body_size       100m;
+    client_body_buffer_size    128k;
+
+    proxy_connect_timeout      90;
+    proxy_send_timeout         90;
+    proxy_read_timeout         90;
+
+    proxy_buffer_size          4k;
+    proxy_buffers              4 32k;
+    proxy_busy_buffers_size    64k;
+    proxy_temp_file_write_size 64k;
+}
+
+# Proxy Grafana Live WebSocket connections.
+location /grafana/api/live/ {
+    #rewrite  ^/grafana/?(.*)  /$1 break;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    proxy_set_header Host $http_host;
+
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
+    proxy_pass http://grafana;
+}
+
+# fix broken links
+location /render/ {
+    return 301 http://$server_name/grafana$request_uri;
+}
+
+location /d/ {
+    return 301 http://$server_name/grafana$request_uri;
 }
