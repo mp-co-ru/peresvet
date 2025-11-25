@@ -4,4 +4,12 @@ class ConnectorsAPICRUDSettings(APICRUDSettings):
 
     #: имя сервиса
     svc_name: str = "connectors_api_crud"
+<<<<<<< HEAD
+=======
+
+    hierarchy: dict = {
+        #: класс экземпляров сущности в иерархии
+        "class": "prsConnector"
+    }
+>>>>>>> peresvet/dev
     

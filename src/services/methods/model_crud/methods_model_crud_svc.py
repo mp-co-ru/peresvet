@@ -32,12 +32,24 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
         )
 
         # сообщим методам, что инициатор удалился, чтобы они могли отписаться от событий...
+<<<<<<< HEAD
         initiator_cache = await self._cache.get(f"{deleted_id}.{self._config.svc_name}").exec()
         if initiator_cache[0] is None:
             self._logger.error(f"{self._config.svc_name} :: Нет кэша для удалённого инициатора {deleted_id}.")
             return
         # удалим кэш
         await self._cache.delete(f"{deleted_id}.{self._config.svc_name}").exec()
+=======
+        async with self._cache.get_redis() as r:
+            initiator_cache = await r.json().get(f"{deleted_id}.{self._config.svc_name}")
+
+            if initiator_cache is None:
+                self._logger.error(f"{self._config.svc_name} :: Нет кэша для удалённого инициатора {deleted_id}.")
+                return
+            # удалим кэш
+            await r.json().delete(f"{deleted_id}.{self._config.svc_name}")
+
+>>>>>>> peresvet/dev
         for method_id in initiator_cache:
             payload = {
                 "base": method_id,
@@ -52,7 +64,11 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
                     routing_key=f"{self._config.hierarchy['class']}.model.updated.{method_id}"
                 )
             else:
+<<<<<<< HEAD
                 self._logger.error(f"{self._config.svc_name} :: Нет данных по инициатору '{deleted_id}' для метода '{method_id}'.")                
+=======
+                self._logger.error(f"{self._config.svc_name} :: Нет данных по инициатору '{deleted_id}' для метода '{method_id}'.")
+>>>>>>> peresvet/dev
 
     async def _make_method_cache(self, id: str):
         payload = {
@@ -68,6 +84,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             "attributes": ["cn"]
         }
         initiators = await self._hierarchy.search(payload=payload)
+<<<<<<< HEAD
         for initiator in initiators:
             initiator_id = initiator[2]["cn"][0]
             
@@ -143,6 +160,87 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
                     )
 
                     await self._cache.delete(f"{initiator_id}.{self._config.svc_name}").exec()
+=======
+
+        async with self._cache.get_redis() as r:
+            for initiator in initiators:
+                initiator_id = initiator[2]["cn"][0]
+
+                # если есть кэш для этого инициатора, добавляем метод
+                # если нет, создаём
+                initiator_cache = await r.json().get(f"{initiator_id}.{self._config.svc_name}")
+                if initiator_cache is None:
+                    await r.json().set(name=f"{initiator_id}.{self._config.svc_name}", path="$", obj=[id])
+                else:
+                    index = await r.json().arrindex(
+                        f"{initiator_id}.{self._config.svc_name}", "$", id)
+
+                    if index == -1:
+                        await r.json().append(f"{initiator_id}.{self._config.svc_name}", "$", id)
+
+                payload = {"id": initiator_id, "attributes": ["objectClass"]}
+
+                initiator_data = await self._hierarchy.search(payload=payload)
+                obj_class = initiator_data[0][2]["objectClass"][0]
+                # подписываемся на событие удаления инициатора
+                await self._amqp_consume_queue.bind(
+                    exchange=self._exchange,
+                    routing_key=f"{obj_class}.model.deleted.{initiator_id}"
+                )
+
+    async def _delete_method_cache(self, ids: list[str]):
+        if not isinstance(ids, list):
+            idents = [ids]
+        else:
+            idents = ids
+        async with self._cache.get_redis() as r:
+            for id in idents:
+                payload = {
+                    "base": id,
+                    "filter": {"cn": ["initiatedBy"]},
+                    "attributes": ["cn"]
+                }
+                initiatedBy_id = (await self._hierarchy.search(payload=payload))[0][0]
+                payload = {
+                    "base": initiatedBy_id,
+                    "scope": hierarchy.CN_SCOPE_ONELEVEL,
+                    "filter": {"cn": ["*"]},
+                    "attributes": ["cn"]
+                }
+                initiators = await self._hierarchy.search(payload=payload)
+
+                for initiator in initiators:
+                    initiator_id = initiator[2]["cn"][0]
+
+                    initiator_cache = await r.json().get(f"{initiator_id}.{self._config.svc_name}")
+                    if not (initiator_cache[0] is None):
+                        index = await r.json().index(
+                            name=f"{initiator_id}.{self._config.svc_name}",
+                            path="$",
+                            obj=ids)
+                        if index > -1:
+                            await r.json().arrpop(
+                                name=f"{initiator_id}.{self._config.svc_name}",
+                                path="$",
+                                index=index
+                            )
+                        initiator_cache = await r.json().get(f"{initiator_id}.{self._config.svc_name}")
+                        if not initiator_cache:
+                            payload = {
+                                "id": initiator_id,
+                                "attributes": ["objectClass"]
+                            }
+
+                            initiator_data = await self._hierarchy.search(payload=payload)
+                            obj_class = initiator_data[0][2]["objectClass"][0]
+
+                            await self._amqp_consume_queue.unbind(
+                                exchange=self._exchange,
+                                routing_key=f"{obj_class}.model.deleted.{initiator_id}"
+                            )
+
+                            await r.json().delete(f"{initiator_id}.{self._config.svc_name}")
+>>>>>>> peresvet/dev
 
     async def _further_create(self, mes: dict, new_id: str) -> None:
         system_node = await self._hierarchy.search(payload={
@@ -179,12 +277,19 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
                 return res
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> peresvet/dev
             for initiator_id in mes["initiatedBy"]:
                 await self._hierarchy.add(
                     initiatedBy_node_id,
                     {"cn": [initiator_id]}
+<<<<<<< HEAD
                 )               
+=======
+                )
+>>>>>>> peresvet/dev
 
         # создадим узлы-параметры
         parameters_node_id = await self._hierarchy.add(
@@ -209,7 +314,11 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     async def _further_read(self, mes: dict, search_result: dict) -> dict:
         # добавим в результат параметры и initiatedBy
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> peresvet/dev
         new_result = {
             "data": []
         }
@@ -249,7 +358,11 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
                 })
 
             new_result["data"].append(new_method_item)
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> peresvet/dev
         return new_result
 
     async def _further_update(self, mes: dict) -> None:
@@ -262,7 +375,11 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             if not initiatedBy_node:
                 self._logger.error(f"{self._config.svc_name} :: Не найден узел 'initiatedBy' для метода '{mes['id']}'.")
                 return
+<<<<<<< HEAD
             await self._hierarchy.delete(initiatedBy_node[0][0])                     
+=======
+            await self._hierarchy.delete(initiatedBy_node[0][0])
+>>>>>>> peresvet/dev
 
         if "parameters" in mes.keys():
             parameters_node = await self._hierarchy.search(payload={
@@ -288,16 +405,26 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
         for method in methods:
             await self._make_method_cache(method[0])
 
+<<<<<<< HEAD
     async def _delete(self, mes: dict) -> None:
         await self._delete_method_cache(mes['id'])
         super()._delete(mes)
+=======
+    async def _delete(self, mes: dict, routing_key: str = None) -> None:
+        await self._delete_method_cache(mes['id'])
+        await super()._delete(mes)
+>>>>>>> peresvet/dev
 
     async def on_startup(self) -> None:
         await super().on_startup()
 
         await self._amqp_consume_queue.unbind(self._exchange, "prsTag.model.deleted.*")
         await self._amqp_consume_queue.unbind(self._exchange, "prsSchedule.model.deleted.*")
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> peresvet/dev
         try:
             await self._get_methods()
         except Exception as ex:

@@ -1,5 +1,6 @@
 services:
   rabbitmq:
+<<<<<<< HEAD
     image: rabbitmq:3.11.16-management
     hostname: ${HOST_RABBIT}
     volumes:
@@ -13,6 +14,17 @@ services:
       - 15672:15672
       - 5672:5672
       - 1883:1883
+=======
+    image: rabbitmq:4.1.1-management
+    hostname: ${HOST_RABBIT}
+    environment:
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbit log_levels [{connection,error},{default,error}] disk_free_limit 2147483648 -rabbitmq_management
+      TZ: ${TIME_ZONE}
+    volumes:
+      - ../docker-files/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
+      - ../docker-files/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+      - ../docker-files/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+>>>>>>> peresvet/dev
     networks:
       - peresvet
 

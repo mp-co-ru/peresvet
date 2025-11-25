@@ -41,7 +41,10 @@ from src.services.alerts.model_crud.alerts_model_crud_svc \
         app as alerts_model_crud
     )
 # -----------------------------------------------------------------------------
+<<<<<<< HEAD
 """
+=======
+>>>>>>> peresvet/dev
 # connectors ------------------------------------------------------------------
 from src.services.connectors.api_crud.connectors_api_crud_svc \
     import (
@@ -55,6 +58,7 @@ from src.services.connectors.model_crud.connectors_model_crud_svc \
         app as connectors_model_crud
     )
 
+<<<<<<< HEAD
 # connectors_app
 from src.services.connectors.app.connectors_app_svc \
     import (
@@ -63,6 +67,19 @@ from src.services.connectors.app.connectors_app_svc \
     )
 # -----------------------------------------------------------------------------
 """
+=======
+from src.services.connectors.app_api.connectors_app_api_svc import (
+    app as connectors_app_api,
+    router as connectors_app_api_router
+)
+
+# connectors_app
+from src.services.connectors.app.connectors_mqtt_app_svc \
+    import (
+        app as connectors_app
+    )
+# -----------------------------------------------------------------------------
+>>>>>>> peresvet/dev
 
 # dataStorages ----------------------------------------------------------------
 from src.services.dataStorages.api_crud.dataStorages_api_crud_svc \
@@ -165,6 +182,7 @@ from src.services.tags.app_api.tags_app_api_svc \
         router as tags_app_api_router
     )
 # -----------------------------------------------------------------------------
+<<<<<<< HEAD
 """
 # pandas ----------------------------------------------------------------------
 # pandas app api
@@ -175,6 +193,17 @@ from src.services.tags.pandas_app_api.pandas_app_api_svc \
     )
 # -----------------------------------------------------------------------------
 """
+=======
+
+# datafunc ----------------------------------------------------------------------
+# datafunc app api
+from src.services.tags.datafunc_app_api.datafunc_app_api_svc \
+    import (
+        app as datafunc_app_api,
+        router as datafunc_app_api_router
+    )
+# -----------------------------------------------------------------------------
+>>>>>>> peresvet/dev
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -187,7 +216,11 @@ async def lifespan(app: FastAPI):
             await route.app.on_shutdown()
 
 # для привязки подприложений необходимо создать базовое приложение
+<<<<<<< HEAD
 app = FastAPI(lifespan=lifespan, title="МПК Пересвет")
+=======
+app = FastAPI(lifespan=lifespan, title="Пересвет")
+>>>>>>> peresvet/dev
 api_router = APIRouter(prefix="")
 
 # монтирование роутеров =======================================================
@@ -199,6 +232,7 @@ api_router.include_router(router=alerts_api_crud_router)
 api_router.include_router(router=alerts_app_api_router)
 # -----------------------------------------------------------------------------
 
+<<<<<<< HEAD
 """
 # connectors ------------------------------------------------------------------
 # connectors_api_crud
@@ -207,6 +241,14 @@ api_router.include_router(router=connectors_api_crud_router)
 api_router.include_router(router=connectors_app_router)
 # -----------------------------------------------------------------------------
 """
+=======
+# connectors ------------------------------------------------------------------
+# connectors_api_crud
+api_router.include_router(router=connectors_api_crud_router)
+# connectors_app_api
+api_router.include_router(router=connectors_app_api_router)
+# -----------------------------------------------------------------------------
+>>>>>>> peresvet/dev
 
 # dataStorages ----------------------------------------------------------------
 # dataStorages_api_crud
@@ -233,6 +275,7 @@ api_router.include_router(router=tags_api_crud_router)
 # tags_app_api
 api_router.include_router(router=tags_app_api_router)
 # -----------------------------------------------------------------------------
+<<<<<<< HEAD
 """
 # pandas ----------------------------------------------------------------------
 # pandas_app_api
@@ -240,12 +283,23 @@ api_router.include_router(router=pandas_app_api_router)
 # -----------------------------------------------------------------------------
 # =============================================================================
 """
+=======
+
+# datafunc ----------------------------------------------------------------------
+# datafunc_app_api
+api_router.include_router(router=datafunc_app_api_router)
+# -----------------------------------------------------------------------------
+# =============================================================================
+>>>>>>> peresvet/dev
 
 app.include_router(api_router)
 
 # монтирование приложений =====================================================
 
+<<<<<<< HEAD
 """
+=======
+>>>>>>> peresvet/dev
 # connectors ------------------------------------------------------------------
 # connectors_api_crud
 app.mount(path="/", app=connectors_api_crud)
@@ -253,8 +307,14 @@ app.mount(path="/", app=connectors_api_crud)
 app.mount(path="/", app=connectors_app)
 # connectors_model_crud
 app.mount(path="/", app=connectors_model_crud)
+<<<<<<< HEAD
 # -----------------------------------------------------------------------------
 """
+=======
+# connectors_app_api
+app.mount(path="/", app=connectors_app_api)
+# -----------------------------------------------------------------------------
+>>>>>>> peresvet/dev
 
 # dataStorages ----------------------------------------------------------------
 # dataStorages_api_crud
@@ -311,6 +371,7 @@ app.mount(path="/", app=schedules_model_crud)
 # schedules_app
 app.mount(path="/", app=schedules_app)
 # -----------------------------------------------------------------------------
+<<<<<<< HEAD
 """
 # pandas ----------------------------------------------------------------------
 app.mount(path="/", app=pandas_app_api)
@@ -319,3 +380,13 @@ app.mount(path="/", app=pandas_app_api)
 """
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+=======
+
+# datafunc ----------------------------------------------------------------------
+app.mount(path="/", app=datafunc_app_api)
+# -----------------------------------------------------------------------------
+# =============================================================================
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="debug", ws_ping_interval=3, ws_ping_timeout=2)
+>>>>>>> peresvet/dev

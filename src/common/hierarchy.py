@@ -29,8 +29,13 @@ class Hierarchy:
     def __init__(self, url: str, pool_size: int = 10):
         self.url : str = url
         self.pool_size : int = pool_size
+<<<<<<< HEAD
         self._cm : ConnectionManager = None
         self._base_dn : str = None
+=======
+        self._cm : ConnectionManager | None = None
+        self._base_dn : str | None = None
+>>>>>>> peresvet/dev
 
     async def does_node_exist(self, node: str) -> bool:
         """Проверка существования узла с указанным id.
@@ -50,7 +55,11 @@ class Hierarchy:
 
         return True
 
+<<<<<<< HEAD
     async def get_node_dn(self, node: str = None) -> str:
+=======
+    async def get_node_dn(self, node: str | None = None) -> str | None:
+>>>>>>> peresvet/dev
         """Метод определяет DN узла в иерархии по переданному id и
         возвращает его.
         В случае, если base = None, то возвращается DN базового узла
@@ -97,7 +106,11 @@ class Hierarchy:
 
     async def connect(self) -> None:
         """Создание пула коннектов к ldap-серверу.
+<<<<<<< HEAD
         URL передаётся при создании нового экземпляра класса ``Hierarchy``\.
+=======
+        URL передаётся при создании нового экземпляра класса ``Hierarchy``.
+>>>>>>> peresvet/dev
 
         Количество попыток восстановления связи при разрыве - 10. Время
         между попытками - 0.3с.
@@ -173,7 +186,11 @@ class Hierarchy:
                 * id
                     список идентификаторов узлов, данные по которым
                     необходимо получить; если присутствует, то не учитываются ключи
+<<<<<<< HEAD
                     ``base``\, ``scope``\, ``filter``\; по умолчанию - None;
+=======
+                    ``base``, ``scope``, ``filter``; по умолчанию - None;
+>>>>>>> peresvet/dev
                 * base
                     id (uuid) или dn базового узла, от которого
                     вести поиск;
@@ -181,7 +198,11 @@ class Hierarchy:
                     умолчанию - None;
                 * deref
                     флаг разъименования ссылок; по умолчанию - False;
+<<<<<<< HEAD
                     .. todo:: Реализовать поведение флага ``deref``\.
+=======
+                    .. todo:: Реализовать поведение флага ``deref``.
+>>>>>>> peresvet/dev
                 * scope
                     масштаб поиска; возможные значения:
 
@@ -194,7 +215,11 @@ class Hierarchy:
                     представляет собой словарь, ключами в котором являются имена
                     атрибутов, а значениями - массивы значений; фильтр формируется
                     так: значения атрибутов из массивов объединяются операцией
+<<<<<<< HEAD
                     ``или``\, а сами ключи - операцией ``и``\;
+=======
+                    ``или``, а сами ключи - операцией ``и``;
+>>>>>>> peresvet/dev
                     например, если ключ ``filter`` =
 
                     .. code:: json
@@ -208,7 +233,11 @@ class Hierarchy:
                     ``(&(|(cn=first)(cn=second))(|(prsEntityType=1)(prsEntityType=2)))``
                 * attributes
                     список атрибутов, значения которых необходимо
+<<<<<<< HEAD
                     вернуть; по умолчанию - ``['\*']``
+=======
+                    вернуть; по умолчанию - ``['.']``
+>>>>>>> peresvet/dev
 
 
         Returns:
@@ -236,7 +265,10 @@ class Hierarchy:
                 else:
                     if self._is_node_id_uuid(id_):
                         node = await self.get_node_dn(new_payload.get("base"))
+<<<<<<< HEAD
                         # node = await self.get_node_dn(payload["filter"]["cn"])
+=======
+>>>>>>> peresvet/dev
                     else:
                         node = id_
 
@@ -255,7 +287,11 @@ class Hierarchy:
                 id_in_attrs = True
             else:
                 return_attributes.append('entryUUID')
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> peresvet/dev
             index_in_attrs = False
             if 'prsIndex' in return_attributes:
                 index_in_attrs = True
@@ -264,6 +300,11 @@ class Hierarchy:
 
             res = conn.search_s(base=node, scope=scope,
                 filterstr=filterstr, attrlist=return_attributes)
+<<<<<<< HEAD
+=======
+            if res is None:
+                res = []
+>>>>>>> peresvet/dev
 
             result = []
             for item in res:
@@ -297,12 +338,20 @@ class Hierarchy:
 
         return result
 
+<<<<<<< HEAD
     async def add(self, base: str = None, attribute_values: dict = None) -> str:
+=======
+    async def add(self, base: str | None = None, attribute_values: dict | None = None) -> str:
+>>>>>>> peresvet/dev
         """Добавление узла в иерархию.
 
         Args:
             base (str): None | id | dn узла-родителя
+<<<<<<< HEAD
             attr_vals (dict): словарь со значениями атрибутов
+=======
+            attribute_values (dict): словарь со значениями атрибутов
+>>>>>>> peresvet/dev
 
         Returns:
             str: id нового узла
@@ -385,7 +434,11 @@ class Hierarchy:
             attr_vals (dict): словарь с новыми значениями атрибутов.
 
         Returns:
+<<<<<<< HEAD
             str: новый DN узла в случае изменения атрибута ``cn``\, иначе - None.
+=======
+            str: новый DN узла в случае изменения атрибута ``cn``, иначе - None.
+>>>>>>> peresvet/dev
         """
 
         if not node:
@@ -416,7 +469,11 @@ class Hierarchy:
             if attrs:
                 res = conn.search_s(real_base, CN_SCOPE_BASE, None, [key for key in attrs.keys()])
                 modlist = ldap.modlist.modifyModlist(res[0][1], attrs)
+<<<<<<< HEAD
                 conn.modify_s(real_base, modlist)                
+=======
+                conn.modify_s(real_base, modlist)
+>>>>>>> peresvet/dev
 
             if cn:
                 res = conn.search_s(real_base, CN_SCOPE_BASE, None, ['entryUUID'])
@@ -523,7 +580,11 @@ class Hierarchy:
             ValueError: в случае отсутствия узла генерирует исключение
 
         Returns:
+<<<<<<< HEAD
             str: значение атрибута objectClass (одно значение, исключая ``top``\)
+=======
+            str: значение атрибута objectClass (одно значение, исключая ``top``)
+>>>>>>> peresvet/dev
         """
         with self._cm.connection() as conn:
             res = conn.search_s(base=self._base_dn, scope=CN_SCOPE_SUBTREE,

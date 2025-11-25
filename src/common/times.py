@@ -10,7 +10,11 @@ import ciso8601
 microsec = 1000000
 start_ts = datetime.datetime.fromtimestamp(0, datetime.timezone.utc)
 
+<<<<<<< HEAD
 def ts (time_data: int | str = None) -> int:
+=======
+def ts (time_data: int | str | None = None) -> int:
+>>>>>>> peresvet/dev
     """Функция возвращает метку времени как целое число микросекунд,
     прошедших с 1 января 1970 г. UTC
 
@@ -46,7 +50,11 @@ def ts (time_data: int | str = None) -> int:
 def int_to_local_timestamp (int_ts: int) -> datetime.datetime:
     if int_ts is None:
         return None
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> peresvet/dev
     return datetime.datetime.fromtimestamp(int_ts / microsec, tz.tzlocal())
 
 def ts_to_local_str (ts: int | str) -> str:
@@ -54,7 +62,11 @@ def ts_to_local_str (ts: int | str) -> str:
         return None
     if isinstance(ts, str):
         return ts
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> peresvet/dev
     return str(datetime.datetime.fromtimestamp(ts / microsec, tz.tzlocal()))
 
 def now_int() -> int:

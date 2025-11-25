@@ -94,7 +94,11 @@ class DataStorageUpdate(DataStorageCreate):
 class DataStoragesAPICRUD(svc.APICRUDSvc):
     """Сервис работы с хранилищами данных в иерархии.
 
+<<<<<<< HEAD
     Подписывается на очередь ``dataStorages_api_crud`` обменника ``dataStorages_api_crud``\,
+=======
+    Подписывается на очередь ``dataStorages_api_crud`` обменника ``dataStorages_api_crud``,
+>>>>>>> peresvet/dev
     в которую публикует сообщения сервис ``dataStorages_api_crud`` (все имена
     указываются в переменных окружения).
 
@@ -121,6 +125,7 @@ router = APIRouter(prefix=f"{settings.api_version}/dataStorages")
 
 error_handler = svc.ErrorHandler()
 
+<<<<<<< HEAD
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create(payload: DataStorageCreate, error_handler: svc.ErrorHandler = Depends()):
     """
@@ -179,6 +184,8 @@ async def create(payload: DataStorageCreate, error_handler: svc.ErrorHandler = D
     await error_handler.handle_error(res)
     return res
 
+=======
+>>>>>>> peresvet/dev
 @router.get("/", response_model=DataStorageReadResult | None, status_code=200, response_model_exclude_none=True)
 async def read(q: str | None = None, payload: DataStorageRead | None = None, error_handler: svc.ErrorHandler = Depends()):
     res = await app.api_get_read(DataStorageRead, q, payload)
@@ -198,10 +205,13 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
     await error_handler.handle_error(res)
     return res
 
+<<<<<<< HEAD
 @router.delete("/", status_code=202)
 async def delete(payload: svc.NodeDelete, error_handler: svc.ErrorHandler = Depends()):
     res = await app._delete(payload)
     await error_handler.handle_error(res)
     return res
 
+=======
+>>>>>>> peresvet/dev
 app.include_router(router, tags=["dataStorages"])
