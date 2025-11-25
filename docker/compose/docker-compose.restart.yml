@@ -1,0 +1,21 @@
+services:
+  redis:
+    restart: always
+
+  rabbitmq:
+    restart: always
+
+  ldap:
+    restart: always
+
+  psql:
+    restart: always
+
+  grafana:
+    restart: always
+
+  one_app:
+    restart: always
+
+  nginx_one_app:
+    restart: always

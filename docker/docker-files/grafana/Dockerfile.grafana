@@ -1,13 +1,21 @@
 #FROM grafana/grafana-enterprise
 FROM grafana/grafana-enterprise:11.2.2-ubuntu
 
+<<<<<<< HEAD
 EXPOSE 3000
+=======
+#EXPOSE 3000
+>>>>>>> peresvet/dev
 ARG NGINX_HOST
 
 USER root
 
 RUN mkdir /var/lib/grafana/dashboards
+<<<<<<< HEAD
 COPY config/grafana/grafana.ini /etc/grafana/
+=======
+#COPY config/grafana/grafana.ini /etc/grafana/
+>>>>>>> peresvet/dev
 COPY src/configurator_grafana/Configurator.json /var/lib/grafana/dashboards
 
 COPY src/configurator_grafana/Configurator.json /usr/share/grafana/public/dashboards/home.json
@@ -20,11 +28,23 @@ COPY config/grafana/logos/ioterra_small.png /usr/share/grafana/public/img/fav32.
 COPY config/grafana/logos/ioterra_small.png /usr/share/grafana/public/img/apple-touch-icon.png
 COPY config/grafana/logos/peresvet_big_text_dark.svg /usr/share/grafana/public/img/grafana_icon.svg
 
+<<<<<<< HEAD
+=======
+COPY config/grafana/plugins/marcusolsson-json-datasource /var/lib/grafana/plugins/marcusolsson-json-datasource
+COPY config/grafana/plugins/marcusolsson-dynamictext-panel /var/lib/grafana/plugins/marcusolsson-dynamictext-panel
+COPY config/grafana/plugins/volkovlabs-echarts-panel /var/lib/grafana/plugins/volkovlabs-echarts-panel
+COPY config/grafana/plugins/volkovlabs-form-panel /var/lib/grafana/plugins/volkovlabs-form-panel
+
+>>>>>>> peresvet/dev
 RUN find /usr/share/grafana/public/build/ -name '*.js' \
 ## Update Title
     -exec sed -i 's|AppTitle="Grafana"|AppTitle="Пересвет"|g' {} \; \
 ## Update Login Title
+<<<<<<< HEAD
     -exec sed -i 's|LoginTitle="Welcome to Grafana"|LoginTitle=""|g' {} \; 
+=======
+    -exec sed -i 's|LoginTitle="Welcome to Grafana"|LoginTitle=""|g' {} \;
+>>>>>>> peresvet/dev
 ## Remove Documentation, Support, Community in the Footer
 ##    -exec sed -i 's|\[{target:"_blank",id:"documentation".*grafana_footer"}\]|\[\]|g' {} \; \
 ## Remove Edition in the Footer

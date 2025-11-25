@@ -1,0 +1,7 @@
+FROM rabbitmq:4.1.1-management
+
+COPY docker/docker-files/rabbitmq/enabled_plugins /etc/rabbitmq/
+COPY docker/docker-files/rabbitmq/definitions.json /etc/rabbitmq/
+#COPY docker/docker-files/rabbitmq/init.sh /docker-entrypoint-init.d/
+
+#RUN chmod +x /docker-entrypoint-init.d/init.sh

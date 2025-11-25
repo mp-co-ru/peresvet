@@ -1,4 +1,5 @@
 from src.common.base_cache import ABCCache, JsonType
+<<<<<<< HEAD
 from typing import Union, Dict, Any, List
 import redis.asyncio as redis
 
@@ -10,6 +11,26 @@ class RedisCache(ABCCache):
         self._pipe = self._client.pipeline(transaction=True)
 
     def set(self, name: str, key: str = "$", obj: JsonType = {}, nx: bool = False, xx: bool = False):
+=======
+from typing import Any, List
+import redis.asyncio as redis
+
+class RedisCache(ABCCache):
+
+    def __init__(self, dsn: str):
+        self._pool : redis.BlockingConnectionPool = redis.BlockingConnectionPool.from_url(url=dsn)
+        self._client : redis.Redis = None
+        self._pipe : redis.Pipeline = None
+
+    def get_redis(self) -> redis.Redis:
+        return redis.Redis(connection_pool=self._pool)
+
+    def set(self, name: str, key: str = "$", obj: JsonType = {}, nx: bool = False, xx: bool = False):
+        if self._client is None:
+            self._client = redis.Redis(connection_pool=self._pool)
+            self._pipe = self._client.pipeline(transaction=True)
+
+>>>>>>> peresvet/dev
         self._pipe.json().set(name, key, obj, nx=nx, xx=xx)
         return self
 
@@ -23,6 +44,7 @@ class RedisCache(ABCCache):
         Если name нет в кэше, то возвращается [None].
         Если name есть в кэше, но нет одного из указанных keys - генерируется исключение.
         Если key запрашивается один и его значение в кэше = None, то возвращается ['null'].
+<<<<<<< HEAD
         Если запрашиваются несколько ключей и значение каких-то = None, то они так и возвращаются, как None.        
         """
         self._pipe.json().get(name, *keys)
@@ -31,6 +53,24 @@ class RedisCache(ABCCache):
     def delete(self, name: str, key: str = None):
         """Метод должен возвращать self
         """
+=======
+        Если запрашиваются несколько ключей и значение каких-то = None, то они так и возвращаются, как None.
+        """
+        if self._client is None:
+            self._client = redis.Redis.from_pool(self._pool)
+            self._pipe = self._client.pipeline(transaction=True)
+
+        self._pipe.json().get(name, *keys)
+        return self
+
+    def delete(self, name: str, key: str = None):
+        """Метод должен возвращать self
+        """
+        if self._client is None:
+            self._client = redis.Redis.from_pool(self._pool)
+            self._pipe = self._client.pipeline(transaction=True)
+
+>>>>>>> peresvet/dev
         self._pipe.json().delete(name, key)
         return self
 
@@ -38,6 +78,13 @@ class RedisCache(ABCCache):
         """Метод добавляет в массив список объектов.
         Должен возвращать self.
         """
+<<<<<<< HEAD
+=======
+        if self._client is None:
+            self._client = redis.Redis.from_pool(self._pool)
+            self._pipe = self._client.pipeline(transaction=True)
+
+>>>>>>> peresvet/dev
         self._pipe.json().arrappend(name, key, *objs)
         return self
 
@@ -45,6 +92,13 @@ class RedisCache(ABCCache):
         """Метод определяет индекс объекта в массиве.
         Должен возвращать self.
         """
+<<<<<<< HEAD
+=======
+        if self._client is None:
+            self._client = redis.Redis.from_pool(self._pool)
+            self._pipe = self._client.pipeline(transaction=True)
+
+>>>>>>> peresvet/dev
         self._pipe.json().arrindex(name, key, obj)
         return self
 
@@ -52,14 +106,30 @@ class RedisCache(ABCCache):
         """Метод удаляет из массива объект с индексом index.
         Должен возвращать self.
         """
+<<<<<<< HEAD
+=======
+        if self._client is None:
+            self._client = redis.Redis.from_pool(self._pool)
+            self._pipe = self._client.pipeline(transaction=True)
+
+>>>>>>> peresvet/dev
         self._pipe.json().arrpop(name, key, index)
         return self
 
     async def exec(self):
         """Метод выполняет цепочку команд. Должен возвращать результат выполнения этой цепочки.
         """
+<<<<<<< HEAD
         return await self._pipe.execute()
     
+=======
+        res = await self._pipe.execute()
+        await self._pipe.reset()
+        await self._client.aclose()
+        self._client = None
+        return res
+
+>>>>>>> peresvet/dev
     async def reset(self):
         await self._pipe.reset()
 

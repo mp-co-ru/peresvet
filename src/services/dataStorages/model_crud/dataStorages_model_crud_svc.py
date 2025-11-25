@@ -11,7 +11,11 @@ from src.services.dataStorages.model_crud.dataStorages_model_crud_settings impor
 class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
     """Сервис работы с хранилищами данных в иерархии.
 
+<<<<<<< HEAD
     Подписывается на очередь ``dataStorages_api_crud`` обменника ``dataStorages_api_crud``\,
+=======
+    Подписывается на очередь ``dataStorages_api_crud`` обменника ``dataStorages_api_crud``,
+>>>>>>> peresvet/dev
     в которую публикует сообщения сервис ``dataStorages_api_crud`` (все имена
     указываются в переменных окружения).
 
@@ -87,14 +91,22 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
     async def _further_update(self, mes: dict) -> None:
 
         ds_id = mes["id"]
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> peresvet/dev
         linked_tags = mes.get('linkTags')
         if linked_tags:
             for item in linked_tags:
                 copy_item = copy.deepcopy(item)
                 copy_item["dataStorageId"] = ds_id
                 await self._link_tag(copy_item)
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> peresvet/dev
         linked_alerts = mes.get('linkAlerts')
         if linked_alerts:
             for item in linked_alerts:
@@ -119,7 +131,11 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                     "dataStorageId": ds_id
                 }
                 await self._unlink_alert(item)
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> peresvet/dev
     async def _unlink_tag(self, item: dict, routing_key: str = None) -> None:
         """Метод отвязки тега от хранилища.
         Ищем, к какому хранилищу привязан тег и посылаем этому хранилищу
@@ -128,7 +144,11 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         Args:
             tag_id (str): id отвязываемого тега
         """
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> peresvet/dev
         res = await self._post_message(
             mes=item, routing_key=f"{self._config.hierarchy['class']}.model.unlink_tag.{item['dataStorageId']}"
         )
@@ -237,7 +257,11 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         if not res:
             self._logger.error(f"{self._config.svc_name} :: Нет обработчика для хранилища {datastorage_id}.")
             return
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> peresvet/dev
         get_tag = {
             "id": payload['tagId'],
             "attributes": ["prsValueTypeCode"]
@@ -268,7 +292,11 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             parent_id=new_node_id,
             aliased_object_id=payload["tagId"],
             alias_name=payload["tagId"]
+<<<<<<< HEAD
         )        
+=======
+        )
+>>>>>>> peresvet/dev
 
         self._logger.info(
             f"{self._config.svc_name} :: Тег {payload['tagId']} привязан к хранилищу {payload['dataStorageId']}"
@@ -286,7 +314,11 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         Если тревога уже привязана к какому-либо хранилищу (ищем ссылку на
         эту тревогу
+<<<<<<< HEAD
         в иерархии ``cn=dataStorages,cn=prs``\), то сначала отвязываем тревогу
+=======
+        в иерархии ``cn=dataStorages,cn=prs``), то сначала отвязываем тревогу
+>>>>>>> peresvet/dev
         от предыдущего хранилища, затем привязываем к новому.
 
         Args:
@@ -321,7 +353,11 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             mes=payload,
             reply=True,
             routing_key=f"{self._config.hierarchy['class']}.model.link_alert.{datastorage_id}")
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> peresvet/dev
         if not res:
             self._logger.error(f"{self._config.svc_name} :: Нет обработчика для хранилища {datastorage_id}.")
             return
@@ -350,6 +386,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             f"{self._config.svc_name} :: Тревога {payload['alertId']} привязана к хранилищу {payload['dataStorageId']}"
         )
 
+<<<<<<< HEAD
     async def _further_create(self, mes: dict, new_id: str) -> None:
         sys_ids = await self._hierarchy.search({
             "base": new_id,
@@ -373,6 +410,8 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             copy_item["dataStorageId"] = new_id
             await self._link_alert(copy_item)
 
+=======
+>>>>>>> peresvet/dev
 settings = DataStoragesModelCRUDSettings()
 
 app = DataStoragesModelCRUD(settings=settings, title="DataStoragesModelCRUD")

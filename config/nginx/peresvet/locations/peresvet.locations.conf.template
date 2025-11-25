@@ -20,7 +20,11 @@ location = /v1/alerts/ {
     if ($request_method = "OPTIONS") {
       return 204;
     }
+<<<<<<< HEAD
     proxy_pass $proto://alerts_api_crud;
+=======
+    proxy_pass http://alerts_api_crud;
+>>>>>>> peresvet/dev
 }
 
 location = /v1/alarms/ {
@@ -32,7 +36,11 @@ location = /v1/alarms/ {
     if ($request_method = "OPTIONS") {
       return 204;
     }
+<<<<<<< HEAD
     proxy_pass $proto://alerts_app_api;
+=======
+    proxy_pass http://alerts_app_api;
+>>>>>>> peresvet/dev
 }
 
 location = /v1/connectors/ {
@@ -44,10 +52,17 @@ location = /v1/connectors/ {
     if ($request_method = "OPTIONS") {
       return 204;
     }
+<<<<<<< HEAD
     proxy_pass $proto://connectors_api_crud;
 }
 
 location /v1/connectors/ {
+=======
+    proxy_pass http://connectors_api_crud;
+}
+
+location /v1/connectors_app/ {
+>>>>>>> peresvet/dev
     # add proxy cors
     add_header Access-Control-Allow-Headers '*' always;
     add_header Access-Control-Allow-Methods '*' always;
@@ -60,11 +75,19 @@ location /v1/connectors/ {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header Host $host;
 
+<<<<<<< HEAD
     proxy_pass $proto://connectors_app;
 
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
+=======
+    proxy_pass http://connectors_app;
+
+    proxy_http_version 1.1;
+    #proxy_set_header Upgrade $http_upgrade;
+    #proxy_set_header Connection "upgrade";
+>>>>>>> peresvet/dev
 }
 
 location = /v1/dataStorages/ {
@@ -76,7 +99,11 @@ location = /v1/dataStorages/ {
     if ($request_method = "OPTIONS") {
       return 204;
     }
+<<<<<<< HEAD
     proxy_pass $proto://datastorages_api_crud;
+=======
+    proxy_pass http://datastorages_api_crud;
+>>>>>>> peresvet/dev
 }
 
 location = /v1/methods/ {
@@ -88,7 +115,11 @@ location = /v1/methods/ {
     if ($request_method = "OPTIONS") {
       return 204;
     }
+<<<<<<< HEAD
     proxy_pass $proto://methods_api_crud;
+=======
+    proxy_pass http://methods_api_crud;
+>>>>>>> peresvet/dev
 }
 
 location = /v1/objects/ {
@@ -100,7 +131,11 @@ location = /v1/objects/ {
     if ($request_method = "OPTIONS") {
       return 204;
     }
+<<<<<<< HEAD
     proxy_pass $proto://objects_api_crud;
+=======
+    proxy_pass http://objects_api_crud;
+>>>>>>> peresvet/dev
 }
 
 location = /v1/schedules/ {
@@ -112,7 +147,11 @@ location = /v1/schedules/ {
     if ($request_method = "OPTIONS") {
       return 204;
     }
+<<<<<<< HEAD
     proxy_pass $proto://schedules_api_crud;
+=======
+    proxy_pass http://schedules_api_crud;
+>>>>>>> peresvet/dev
 }
 
 location = /v1/tags/ {
@@ -124,7 +163,11 @@ location = /v1/tags/ {
     if ($request_method = "OPTIONS") {
       return 204;
     }
+<<<<<<< HEAD
     proxy_pass $proto://tags_api_crud;
+=======
+    proxy_pass http://tags_api_crud;
+>>>>>>> peresvet/dev
 }
 
 location = /v1/data/ {
@@ -134,10 +177,18 @@ location = /v1/data/ {
         #
         # Custom headers and headers various browsers *should* be OK with but aren't
         #
+<<<<<<< HEAD
         add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
         #
         # Tell client that this pre-flight info is valid for 20 days
         #
+=======
+        #add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
+        #
+        # Tell client that this pre-flight info is valid for 20 days
+        #
+        add_header 'Access-Control-Allow-Headers' '*' always;
+>>>>>>> peresvet/dev
         add_header 'Access-Control-Max-Age' 1728000;
         add_header 'Content-Type' 'text/plain; charset=utf-8';
         add_header 'Content-Length' 0;
@@ -146,12 +197,18 @@ location = /v1/data/ {
     if ($request_method = 'POST') {
         add_header 'Access-Control-Allow-Origin' '*' always;
         add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
+<<<<<<< HEAD
         add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;
+=======
+        #add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;
+        add_header 'Access-Control-Allow-Headers' '*' always;
+>>>>>>> peresvet/dev
         add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range' always;
     }
     if ($request_method = 'GET') {
         add_header 'Access-Control-Allow-Origin' '*' always;
         add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
+<<<<<<< HEAD
         add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;
         add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range' always;
     }
@@ -160,16 +217,35 @@ location = /v1/data/ {
 }
 
 location = /v1/pandas/ {
+=======
+        #add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;
+        add_header 'Access-Control-Allow-Headers' '*' always;
+        add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range' always;
+    }
+    proxy_set_header Host $http_host;
+    proxy_pass http://tags_app_api;
+}
+
+location = /v1/datafunc/ {
+>>>>>>> peresvet/dev
     if ($request_method = 'OPTIONS') {
         add_header 'Access-Control-Allow-Origin' '*';
         add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
         #
         # Custom headers and headers various browsers *should* be OK with but aren't
         #
+<<<<<<< HEAD
         add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
         #
         # Tell client that this pre-flight info is valid for 20 days
         #
+=======
+        #add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
+        #
+        # Tell client that this pre-flight info is valid for 20 days
+        #
+        add_header 'Access-Control-Allow-Headers' '*' always;
+>>>>>>> peresvet/dev
         add_header 'Access-Control-Max-Age' 1728000;
         add_header 'Content-Type' 'text/plain; charset=utf-8';
         add_header 'Content-Length' 0;
@@ -178,12 +254,18 @@ location = /v1/pandas/ {
     if ($request_method = 'POST') {
         add_header 'Access-Control-Allow-Origin' '*' always;
         add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
+<<<<<<< HEAD
         add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;
+=======
+        #add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;
+        add_header 'Access-Control-Allow-Headers' '*' always;
+>>>>>>> peresvet/dev
         add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range' always;
     }
     if ($request_method = 'GET') {
         add_header 'Access-Control-Allow-Origin' '*' always;
         add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
+<<<<<<< HEAD
         add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;
         add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range' always;
     }
@@ -194,4 +276,73 @@ location = /v1/pandas/ {
 location /grafana/ {
     #rewrite  ^/grafana/(.*)  /$1 break;
     proxy_pass $proto://grafana/;
+=======
+        #add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;
+        add_header 'Access-Control-Allow-Headers' '*' always;
+        add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range' always;
+    }
+    proxy_set_header Host $http_host;
+    proxy_pass http://datafunc_app_api;
+}
+
+location /grafana/ {
+    #rewrite  ^/grafana/?(.*)  /$1 break;
+    proxy_pass http://grafana;
+    proxy_set_header    Host                $host:$server_port;
+    proxy_set_header    X-Real-IP           $remote_addr;
+    proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
+    proxy_set_header    X-Forwarded-Host    $host;
+    proxy_set_header    X-Forwarded-Port    $server_port;
+    proxy_set_header    X-Forwarded-Server  $host:$server_port;
+    proxy_set_header    X-Forwarded-Proto   $scheme;
+
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
+
+    proxy_max_temp_file_size 0;
+
+    client_max_body_size       100m;
+    client_body_buffer_size    128k;
+
+    proxy_connect_timeout      90;
+    proxy_send_timeout         90;
+    proxy_read_timeout         90;
+
+    proxy_buffer_size          4k;
+    proxy_buffers              4 32k;
+    proxy_busy_buffers_size    64k;
+    proxy_temp_file_write_size 64k;
+}
+
+# Proxy Grafana Live WebSocket connections.
+location /grafana/api/live/ {
+    #rewrite  ^/grafana/?(.*)  /$1 break;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    proxy_set_header Host $http_host;
+
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
+    proxy_pass http://grafana;
+}
+
+# fix broken links
+location /render/ {
+    return 301 http://$server_name/grafana$request_uri;
+}
+
+location /d/ {
+    return 301 http://$server_name/grafana$request_uri;
+>>>>>>> peresvet/dev
 }

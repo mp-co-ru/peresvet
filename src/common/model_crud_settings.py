@@ -17,5 +17,12 @@ class ModelCRUDSettings(SvcSettings):
         #: пример: prsTag
         "class": "",
         #: список через запятую родительских классов
+<<<<<<< HEAD
         "parent_classes": ""
+=======
+        "parent_classes": "",
+        # список классов служебных дочерних узлов, то есть тех узлов, которые создает сам экземпляр сущности
+        # этим классам не будут посылаться сообщения типа may_update - updating и т.д.
+        "child_classes": []
+>>>>>>> peresvet/dev
     }

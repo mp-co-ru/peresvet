@@ -19,7 +19,11 @@
 DAYS=3654
 
 # common folder
+<<<<<<< HEAD
 TLS_DIR="../tls"
+=======
+TLS_DIR="tls"
+>>>>>>> peresvet/dev
 
 # Store for center authority (CA) root certificate
 ROOT_DIR="${TLS_DIR}/rootCA"

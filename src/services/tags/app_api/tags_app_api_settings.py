@@ -9,4 +9,7 @@ class TagsAppAPISettings(APICRUDSettings):
         #: пример: prsTag
         "class": "prsTag"
     }
+<<<<<<< HEAD
     
+=======
+>>>>>>> peresvet/dev

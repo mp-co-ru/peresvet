@@ -4,14 +4,22 @@ from src.services.dataStorages.app.dataStorages_app_base_settings import DataSto
 class DataStoragesAppPostgreSQLSettings(DataStoragesAppBaseSettings):
     #: имя сервиса
     svc_name: str = "dataStorages_app_postgresql"
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> peresvet/dev
     # код типа хранилища: 0 - Postgresql, 1 - victoriametrics
     datastorage_type: int = 0
     # в этом параметре указываются коды хранилищ, которые будет обслуживать
     # данный сервис
     # если коды не указаны, то будут обслуживаться все хранилища заданного типа
     datastorages_id: List[str] = []
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> peresvet/dev
     hierarchy: dict = {
         #: имя узла для хранения сущностей в иерархии
         #: если узел не требуется, то пустая строка
@@ -23,5 +31,16 @@ class DataStoragesAppPostgreSQLSettings(DataStoragesAppBaseSettings):
     }
 
     # периодичность накопления кэша данных, секунды
+<<<<<<< HEAD
     cache_data_period: int = 100
 
+=======
+    cache_data_period: int = 300
+
+    log: dict = {
+        "level": "DEBUG",
+        "file_name": "log/peresvet.log",
+        "retention": 10,
+        "rotation": "5 MB"
+    }
+>>>>>>> peresvet/dev

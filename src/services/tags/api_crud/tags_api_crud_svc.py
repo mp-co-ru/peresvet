@@ -28,7 +28,11 @@ class TagCreateAttributes(svc.NodeAttributes):
         title="Флаг сжатия значений тега.",
         description=(
             "Если = True, значения тега будут проходить через алгоритм "
+<<<<<<< HEAD
             "сжатия данных (в соответствии с параметром ``prsMaxLineDev``\). "
+=======
+            "сжатия данных (в соответствии с параметром ``prsMaxLineDev``). "
+>>>>>>> peresvet/dev
             "**Не используется**."
         )
     )
@@ -86,7 +90,11 @@ class TagUpdate(svc.NodeUpdate):
 class TagsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с тегами в иерархии.
 
+<<<<<<< HEAD
     Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``\,
+=======
+    Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``,
+>>>>>>> peresvet/dev
     в которую публикует сообщения сервис ``tags_api_crud`` (все имена
     указываются в переменных окружения).
 
@@ -157,7 +165,11 @@ async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends
     """
     if payload is None:
         payload = {}
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> peresvet/dev
     try:
         s = json.dumps(payload)
         p = TagCreate.model_validate_json(s)
@@ -192,7 +204,11 @@ async def read(q: str | None = None, payload: TagRead | None = None, error_handl
         * **id** (str | list(str)) - идентификатор тега, который мы хотим прочитать.
           Необязательный аттрибут.
         * **attributes** (list[str]) - Список атрибутов, значения которых необходимо
+<<<<<<< HEAD
           вернуть в ответе. По умолчанию - ['\*'], то есть все атрибуты (кроме системных).
+=======
+          вернуть в ответе. По умолчанию - ['.'], то есть все атрибуты (кроме системных).
+>>>>>>> peresvet/dev
           Необязательный аттрибут.
         * **base** (str) - Базовый узел для поиска. Необязательный аттрибут.
           Если не указан, то поиск ведётся от главного узла иерархии.
@@ -239,7 +255,11 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
           * **prsActive** (bool) - Определяет, активен ли экземпляр. Применяется,
             к примеру, для временного 'выключения' экземпляра на время, пока он ещё
             "недонастроен.
+<<<<<<< HEAD
           * **prsDefault** (bool) - "Если = ``True``\, то данный экземпляр считается
+=======
+          * **prsDefault** (bool) - "Если = ``True``, то данный экземпляр считается
+>>>>>>> peresvet/dev
             узлом по умолчанию в списке равноправных узлов данного уровня иерархии.
           * **prsEntityTypeCode** (int) - Атрибут используется для определения типа.
             К примеру, хранилища данных могут быть разных типов.

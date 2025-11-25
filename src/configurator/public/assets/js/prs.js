@@ -292,6 +292,7 @@ saveChanges = () => {
         payload.attributes[attr] = Number(element.value);
       } else if (bool_attrs.includes(attr) && (element.value !== null)) {
         payload.attributes[attr] = element.value === 'true';
+<<<<<<< HEAD
       } else 
         payload.attributes[attr] = element.value;
 	} else if (attr === "alertConfig") {
@@ -316,10 +317,37 @@ saveChanges = () => {
     }
 		payload.attributes["prsJsonConfigString"] = ts
 	}
+=======
+      } else
+        payload.attributes[attr] = element.value;
+    } else if (attr === "alertConfig") {
+      payload.attributes["prsJsonConfigString"] = {
+        high: $("#input-alertConfHigh").val() === 'true',
+        value: Number($("#input-alertConfValue").val()),
+        autoAck: $("#input-alertConfAutoack").val() === 'true'
+      }
+    } else if (attr === "scheduleConfig") {
+      ts = {}
+      if ($("#input-scheduleConfStart").val() !== '') {
+        dt = new Date(Date.parse($("#input-scheduleConfStart").val()));
+        ts.start = dt.toISOString();
+      }
+      if ($("#input-scheduleConfIntervalType").val())
+        ts.interval_type = $("#input-scheduleConfIntervalType").val()
+      if ($("#input-scheduleConfIntervalValue").val())
+        ts.interval_value = Number($("#input-scheduleConfIntervalValue").val())
+      if ($("#input-scheduleConfEnd").val() !== '') {
+        dt = new Date(Date.parse($("#input-scheduleConfEnd").val()));
+        ts.end = dt2.toISOString();
+      }
+      payload.attributes["prsJsonConfigString"] = ts
+    }
+>>>>>>> peresvet/dev
   });
 
   if (objectClass === "prsMethod") {
     let initiatedBy = [];
+<<<<<<< HEAD
   
     // если меняется метод, то надо собрать всех инициаторов, независимо от того, что изменилось
     $("#input-initiatedByTags > option").each(function() {
@@ -329,12 +357,24 @@ saveChanges = () => {
     });
     $("#input-initiatedBySchedules > option").each(function() {
       if(this.selected)
+=======
+
+    // если меняется метод, то надо собрать всех инициаторов, независимо от того, что изменилось
+    $("#input-initiatedByTags > option").each(function () {
+      if (this.selected) {
+        initiatedBy.push(this.value);
+      }
+    });
+    $("#input-initiatedBySchedules > option").each(function () {
+      if (this.selected)
+>>>>>>> peresvet/dev
         initiatedBy.push(this.value);
     });
     payload.initiatedBy = initiatedBy;
 
     parameters = []
     //...а также параметры
+<<<<<<< HEAD
     $("#div-list-parameters > div").each(function() {
       index = this.id.split("-").slice(-1);
       
@@ -342,6 +382,15 @@ saveChanges = () => {
       try {
         parameter_payload = JSON.parse($(`#input-parameter-prsJsonConfigString-${index}`).val());
       } catch(err) {
+=======
+    $("#div-list-parameters > div").each(function () {
+      index = this.id.split("-").slice(-1);
+
+      let parameter_payload = {};
+      try {
+        parameter_payload = JSON.parse($(`#input-parameter-prsJsonConfigString-${index}`).val());
+      } catch (err) {
+>>>>>>> peresvet/dev
         showAlert("div-updateAlert", "div-updateAlertMessage", "i-updateDataAlert", `Ошибка конвертирования данных параметра: '${err}'`);
         error_prepare_data = true;
         return
@@ -369,7 +418,11 @@ saveChanges = () => {
       'Content-Type': 'application/json'
     })
   }).then((response) => {
+<<<<<<< HEAD
     if (!response.ok) {      
+=======
+    if (!response.ok) {
+>>>>>>> peresvet/dev
       throw response;
     }
 
@@ -388,6 +441,7 @@ saveChanges = () => {
 
   }).catch((err) => {
     err.json().then((body) => {
+<<<<<<< HEAD
       showAlert("div-updateAlert", "div-updateAlertMessage", "i-updateDataAlert", `Ошибка обновления узла '${JSON.stringify(body)}'`);    
     })
   });  
@@ -453,6 +507,104 @@ addParameter = (event, parameterData) => {
     $(`#input-parameter-cn-${newLevel}`).val(name);
     $(`#input-parameter-prsJsonConfigString-${newLevel}`).val(config_text);
   }
+=======
+      showAlert("div-updateAlert", "div-updateAlertMessage", "i-updateDataAlert", `Ошибка обновления узла '${JSON.stringify(body)}'`);
+    })
+  });
+};
+
+addParameter = (event, parameterData) => {
+  getTagsPayload = {
+    base: "prs",
+    deref: false,
+    scope: 2,
+    filter: {
+      objectClass: ["prsTag"]
+    },
+    attributes: ["cn", "objectClass"]
+  }
+  params = new URLSearchParams({ q: JSON.stringify(getTagsPayload) }).toString();
+
+  url = `${window.location.protocol}//${window.location.hostname}/v1/objects/?${params}`;
+  fetch(url).then((response) => {
+    if (!response.ok) {
+      showAlert("div-updateAlert", "div-updateAlertMessage", "i-updateAlert", "Ошибка получения списка тегов, тревог, расписаний.", false);
+      return;
+    }
+
+    return response.json();
+  }).then((data) => {
+    if (!data) return;
+    
+    divParameters = document.getElementById("div-list-parameters");
+    lastSpanParameter = divParameters.lastElementChild;
+
+    lastLevel = -1;
+    if (lastSpanParameter) {
+      lastLevel = Number(lastSpanParameter.getAttribute("prsIndex"));
+    }
+    newLevel = lastLevel + 1;
+
+    $("#div-list-parameters").append(`
+      <div class="d-flex align-items-center" prsIndex="${newLevel}" id="span-parameter-${newLevel}">
+        <div class="col-1 me-2">
+          <input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="number" id="input-parameter-prsIndex-${newLevel}"/>
+        </div>
+        <div class="col-1 me-2">
+          <input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-cn-${newLevel}"/>
+        </div>
+        <div class="col-4 me-2">
+          <select prsAttribute="parameter" onchange="onInputChange(event);" id="input-parameter-tagId-${newLevel}" class="form-select form-select-sm" size="1">
+            <option selected value="ttt">&#62;=</option>
+            <option value="ttttt">&#60;</option>											
+          </select>
+        </div>
+        <div class="col me-2">
+          <!--
+          <input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-prsJsonConfigString-${newLevel}"/>
+          -->
+          <textarea class="form-control form-control-sm" prsAttribute="parameter" autocomplete="off" rows="1" id="input-parameter-prsJsonConfigString-${newLevel}"></textarea>
+        </div>
+        <button id="but-deleteParameter-${newLevel}" class="btn btn-sm m-1 btn-danger" onclick="deleteParameter(event);">
+          <span><i class="fa-solid fa-minus" id="i-deleteParameter-${newLevel}"></i></span>
+        </button>
+      </div>
+    `);
+
+    allTags = data.data;
+    level = newLevel;
+    tags = [];
+    parameter_tags_select = $(`#input-parameter-tagId-${level}`);
+    $(`#input-parameter-tagId-${level} option`).remove();
+    allTags.map((dataItem) => {
+      tags.push({
+        cn: dataItem.attributes.cn[0],
+        id: dataItem.id
+      });
+    });
+    tags.map((el) => {
+      parameter_tags_select.append(`<option value="${el.id}">${el.cn}&nbsp;(${el.id})</option>`);
+    });
+    parameter_tags_select.val("");
+    if (parameterData) {
+      let index = Number(parameterData.attributes.prsIndex[0]);
+      let name = parameterData.attributes.cn[0];
+      let config_text = parameterData.attributes.prsJsonConfigString[0];
+  
+      let config = JSON.parse(config_text);
+      if (Array.isArray(config.tagId))
+        tagId = config.tagId[0];
+      else
+        tagId = config.tagId;
+  
+      parameter_tags_select.val(tagId);
+  
+      $(`#input-parameter-prsIndex-${level}`).val(index);
+      $(`#input-parameter-cn-${level}`).val(name);
+      $(`#input-parameter-prsJsonConfigString-${level}`).val(config_text);
+    }
+  });
+>>>>>>> peresvet/dev
 }
 
 deleteParameter = (event) => {
@@ -465,7 +617,11 @@ deleteParameter = (event) => {
     targetEl.parentElement.remove();
 }
 
+<<<<<<< HEAD
 deleteNode  = () => {
+=======
+deleteNode = () => {
+>>>>>>> peresvet/dev
   let currentNode = $(".currentNode")[0];
   let nodeId = currentNode.id;
   let objectClass = currentNode.getAttribute("objectClass");
@@ -488,6 +644,7 @@ deleteNode  = () => {
     currentNode.remove();
   }).catch((err) => {
     err.json().then((body) => {
+<<<<<<< HEAD
       showAlert("div-updateAlert", "div-updateAlertMessage", "i-updateAlert", `Ошибка удаления узла '${nodeId}': '${JSON.stringify(body)}'`);    
     })
   });  ;
@@ -503,6 +660,23 @@ onInputChange  = (event) => {
 	
     if (Array.isArray(curVal))
 		  curVal.join(',');
+=======
+      showAlert("div-updateAlert", "div-updateAlertMessage", "i-updateAlert", `Ошибка удаления узла '${nodeId}': '${JSON.stringify(body)}'`);
+    })
+  });;
+};
+
+onInputChange = (event) => {
+  targetEl = event.target;
+  initValue = targetEl.getAttribute("init-value");
+  let equal = false;
+
+  if (targetEl.tagName === "SELECT") {
+    let curVal = $(targetEl).val()
+
+    if (Array.isArray(curVal))
+      curVal.join(',');
+>>>>>>> peresvet/dev
     equal = initValue === curVal;
   } else
     equal = (initValue === $(targetEl).val())
@@ -537,7 +711,11 @@ onInputChange  = (event) => {
 
 };
 
+<<<<<<< HEAD
 getFocus  = (event) => {
+=======
+getFocus = (event) => {
+>>>>>>> peresvet/dev
   event.stopPropagation();
 
   els = document.getElementsByClassName("currentNode");
@@ -549,7 +727,11 @@ getFocus  = (event) => {
   el.classList.toggle("currentNode");
 };
 
+<<<<<<< HEAD
 sortList  = (group) => {
+=======
+sortList = (group) => {
+>>>>>>> peresvet/dev
   var new_group = group.cloneNode(false);
   // Add all lis to an array
   var groupItems = [];
@@ -588,7 +770,11 @@ sortList  = (group) => {
   };
 };
 
+<<<<<<< HEAD
 addNode  = (parentElement, node, top = false) => {
+=======
+addNode = (parentElement, node, top = false) => {
+>>>>>>> peresvet/dev
   // добавление узла в иерархию
   // parentElement - родительский элемент
   // node - {
@@ -659,7 +845,11 @@ addNode  = (parentElement, node, top = false) => {
 }
 
 // возвращает группу узла, в которой находятся его дети
+<<<<<<< HEAD
 getNodeGroup  = (nodeElement) => {
+=======
+getNodeGroup = (nodeElement) => {
+>>>>>>> peresvet/dev
   dataBsTargetId = nodeElement.getAttribute("data-bs-target").substring(1);
   return document.getElementById(dataBsTargetId);
 };
@@ -720,7 +910,11 @@ const apis = {
   "prsSchedule": "/v1/schedules/"
 }
 
+<<<<<<< HEAD
 setAttributesVisibility  = (nodeElement) => {
+=======
+setAttributesVisibility = (nodeElement) => {
+>>>>>>> peresvet/dev
   nodeId = nodeElement.id;
   objClass = nodeElement.getAttribute("objectClass");
 
@@ -739,7 +933,11 @@ setAttributesVisibility  = (nodeElement) => {
   })
 };
 
+<<<<<<< HEAD
 setAddButtonsVisibility  = (clickedNode) => {
+=======
+setAddButtonsVisibility = (clickedNode) => {
+>>>>>>> peresvet/dev
   objClass = clickedNode.getAttribute("objectClass");
   nodeId = clickedNode.id;
   switch (objClass) {
@@ -824,7 +1022,11 @@ setAddButtonsVisibility  = (clickedNode) => {
   }
 };
 
+<<<<<<< HEAD
 showAlert  = (divAlertId, divAlertMessageId, icon, message, norm) => {
+=======
+showAlert = (divAlertId, divAlertMessageId, icon, message, norm) => {
+>>>>>>> peresvet/dev
   $(`#${divAlertMessageId}`).text(message);
   $(`#${divAlertId}`).removeClass("d-none");
   if (norm) {
@@ -833,11 +1035,19 @@ showAlert  = (divAlertId, divAlertMessageId, icon, message, norm) => {
 
     $(`#${icon}`).removeClass("fa-solid fa-circle-exclamation");
     $(`#${icon}`).addClass("fas fa-check-circle");
+<<<<<<< HEAD
     
   } else {
     $(`#${divAlertId}`).addClass("alert-danger");
     $(`#${divAlertId}`).removeClass("alert-success"); 
     
+=======
+
+  } else {
+    $(`#${divAlertId}`).addClass("alert-danger");
+    $(`#${divAlertId}`).removeClass("alert-success");
+
+>>>>>>> peresvet/dev
     $(`#${icon}`).addClass("fa-solid fa-circle-exclamation");
     $(`#${icon}`).removeClass("fas fa-check-circle");
   }
@@ -849,10 +1059,17 @@ showAlert  = (divAlertId, divAlertMessageId, icon, message, norm) => {
 
 var newNodeId = null;
 
+<<<<<<< HEAD
 addNodeToHierarchy  = (api) => {
 
   if (api === 'connectors') {
     showAlert("div-butAlert", "div-butAlertMessage", "i-butAlert", 
+=======
+addNodeToHierarchy = (api) => {
+
+  if (api === 'connectors') {
+    showAlert("div-butAlert", "div-butAlertMessage", "i-butAlert",
+>>>>>>> peresvet/dev
       'Работа с коннекторами - в следующей версии конфигуратора.', true);
     return;
   }
@@ -981,6 +1198,7 @@ addNodeToHierarchy  = (api) => {
         newNodeId = new_id;
         el = document.getElementById(parentId);
         el.dispatchEvent(clickEvent);
+<<<<<<< HEAD
         
       } else 
         var new_node = addNode(divToExtend, node, true);
@@ -992,6 +1210,19 @@ addNodeToHierarchy  = (api) => {
         });
         new_node.dispatchEvent(clickEvent);
         new_node.focus();
+=======
+
+      } else
+        var new_node = addNode(divToExtend, node, true);
+
+      var clickEvent = new MouseEvent("click", {
+        "view": window,
+        "bubbles": true,
+        "cancelable": false
+      });
+      new_node.dispatchEvent(clickEvent);
+      new_node.focus();
+>>>>>>> peresvet/dev
     })
   });
 };
@@ -1000,7 +1231,11 @@ var tagGetDataURL = '';
 var tagGetDataPayload = {};
 var tagSetDataURL = '';
 var tagSetDataPayload = {};
+<<<<<<< HEAD
 getTagData  = () => {
+=======
+getTagData = () => {
+>>>>>>> peresvet/dev
   tagGetDataURL = $("#span-tagGetDataURL").text();
   fetch(tagGetDataURL, {
     headers: {
@@ -1020,10 +1255,17 @@ getTagData  = () => {
       tr = $("<tr></tr>").appendTo(tBody);
       tr.append(`<td>${JSON.stringify(dataItem[0])}</td><td>${dataItem[1]}</td><td>${dataItem[2]}</td>`);
     });
+<<<<<<< HEAD
   });  
 }
 
 setTagData  = () => {
+=======
+  });
+}
+
+setTagData = () => {
+>>>>>>> peresvet/dev
   tagSetDataPayload = JSON.parse($("#span-tagSetDataBody").text());
   tagSetDataURL = `${window.location.protocol}//${window.location.hostname}/v1/data/`;
   fetch(tagSetDataURL, {
@@ -1033,20 +1275,33 @@ setTagData  = () => {
       'Content-Type': 'application/json'
     })
   }).then((response) => {
+<<<<<<< HEAD
     if (!response.ok) {      
       showAlert("div-setDataAlert", "div-setDataAlertMessage", "i-setDataAlert", `Ошибка обновления данных '${body}'`, false);      
+=======
+    if (!response.ok) {
+      showAlert("div-setDataAlert", "div-setDataAlertMessage", "i-setDataAlert", `Ошибка обновления данных '${body}'`, false);
+>>>>>>> peresvet/dev
     } else {
       showAlert("div-setDataAlert", "div-setDataAlertMessage", "i-setDataAlert", `Данные успешно записаны.`, true);
     }
   })
 }
 
+<<<<<<< HEAD
 changeTagDataPanelOnSave  = () => {
+=======
+changeTagDataPanelOnSave = () => {
+>>>>>>> peresvet/dev
   tBody = $("#tbody-tagData").empty();
   value_type = Number($("#input-prsValueTypeCode").val());
   input_el = $("#input-tagSetDataValue");
   input_el.val(null);
+<<<<<<< HEAD
   switch(value_type) {
+=======
+  switch (value_type) {
+>>>>>>> peresvet/dev
     case 0:
     case 1:
       input_el.attr("type", "number");
@@ -1057,6 +1312,7 @@ changeTagDataPanelOnSave  = () => {
     case 4:
       input_el.attr("type", "textarea");
       break;
+<<<<<<< HEAD
   }  
 }
 
@@ -1065,6 +1321,16 @@ tagSetDataValueChanged  = () => {
   value = $("#input-tagSetDataValue").val();
   switch(value_type) {
     case 4: 
+=======
+  }
+}
+
+tagSetDataValueChanged = () => {
+  value_type = Number($("#input-prsValueTypeCode").attr("init-value"));
+  value = $("#input-tagSetDataValue").val();
+  switch (value_type) {
+    case 4:
+>>>>>>> peresvet/dev
       try {
         value = JSON.parse(value);
       } catch (err) {
@@ -1076,7 +1342,11 @@ tagSetDataValueChanged  = () => {
               tagId: $("#div-nodeId").text(),
               data: [[null]]
             }
+<<<<<<< HEAD
           ]    
+=======
+          ]
+>>>>>>> peresvet/dev
         }
         $("#span-tagSetDataBody").text(JSON.stringify(tagSetDataPayload, null, "\t"));
         return;
@@ -1096,26 +1366,42 @@ tagSetDataValueChanged  = () => {
               tagId: $("#div-nodeId").text(),
               data: [[null]]
             }
+<<<<<<< HEAD
           ]    
+=======
+          ]
+>>>>>>> peresvet/dev
         }
         $("#span-tagSetDataBody").text(JSON.stringify(tagSetDataPayload, null, "\t"));
         return;
       }
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> peresvet/dev
   tagSetDataPayload = {
     data: [
       {
         tagId: $("#div-nodeId").text(),
         data: [[value]]
       }
+<<<<<<< HEAD
     ]    
+=======
+    ]
+>>>>>>> peresvet/dev
   }
 
   $("#span-tagSetDataBody").text(JSON.stringify(tagSetDataPayload, null, "\t"));
 }
 
+<<<<<<< HEAD
 formTagDataPanels  = () => {
+=======
+formTagDataPanels = () => {
+>>>>>>> peresvet/dev
   let post_url = `${window.location.protocol}//${window.location.hostname}/v1/data/`;
   let get_url = `${post_url}?q=`;
   tagGetDataPayload = {
@@ -1142,7 +1428,11 @@ formTagDataPanels  = () => {
         tagId: $("#div-nodeId").text(),
         data: [[null]]
       }
+<<<<<<< HEAD
     ]    
+=======
+    ]
+>>>>>>> peresvet/dev
   }
   $("#span-tagSetDataURL").text(tagSetDataURL);
   $("#span-tagSetDataBody").text(JSON.stringify(tagSetDataPayload, null, "\t"));
@@ -1150,8 +1440,13 @@ formTagDataPanels  = () => {
 
 // используем этот список при заполнении списка тегов в параметрах
 var tags = [];
+<<<<<<< HEAD
   
 fillForm  = (nodeElement) => {
+=======
+
+fillForm = (nodeElement) => {
+>>>>>>> peresvet/dev
   let nodeId = nodeElement.id;
   let header = document.getElementById("div-nodeName");
   header.innerText = nodeElement.innerText;
@@ -1194,6 +1489,7 @@ fillForm  = (nodeElement) => {
     Object.entries(nodeData.attributes).map((entry) => {
       value = "";
       switch (entry[1][0]) {
+<<<<<<< HEAD
           case "TRUE":
             value = "true"
             break;
@@ -1204,6 +1500,18 @@ fillForm  = (nodeElement) => {
             value = (entry[1][0] === null) ? "" : entry[1][0]
         }
       
+=======
+        case "TRUE":
+          value = "true"
+          break;
+        case "FALSE":
+          value = "false";
+          break;
+        default:
+          value = (entry[1][0] === null) ? "" : entry[1][0]
+      }
+
+>>>>>>> peresvet/dev
       if ((objClass === "prsAlert") && (entry[0] === "prsJsonConfigString")) {
         conf = JSON.parse(value);
         $("#input-alertConfHigh").attr("init-value", conf.high).val(conf.high.toString());
@@ -1215,14 +1523,22 @@ fillForm  = (nodeElement) => {
         dt = new Date(Date.parse(conf.start));
         ms = dt.getTimezoneOffset() * 60000;
         dt2 = new Date(dt.getTime() - ms);
+<<<<<<< HEAD
         $("#input-scheduleConfStart").attr("init-value", dt2.toISOString().substring(0,16)).val(dt2.toISOString().substring(0,16));
+=======
+        $("#input-scheduleConfStart").attr("init-value", dt2.toISOString().substring(0, 16)).val(dt2.toISOString().substring(0, 16));
+>>>>>>> peresvet/dev
         $("#input-scheduleConfIntervalType").attr("init-value", conf.interval_type).val(conf.interval_type);
         $("#input-scheduleConfIntervalValue").attr("init-value", conf.interval_value).val(conf.interval_value);
         if (("end" in conf) && (conf.end)) {
           dt = new Date(Date.parse(conf.end));
           ms = dt.getTimezoneOffset() * 60000;
           dt2 = new Date(dt.getTime() - ms);
+<<<<<<< HEAD
           $("#input-scheduleConfEnd").attr("init-value", dt2.toISOString().substring(0,16)).val(dt2.toISOString().substring(0,16));
+=======
+          $("#input-scheduleConfEnd").attr("init-value", dt2.toISOString().substring(0, 16)).val(dt2.toISOString().substring(0, 16));
+>>>>>>> peresvet/dev
         } else $("#input-scheduleConfEnd").attr("init-value", null);
       } else {
         element = document.getElementById(`input-${entry[0]}`);
@@ -1233,7 +1549,11 @@ fillForm  = (nodeElement) => {
       }
     });
 
+<<<<<<< HEAD
 	  // для метода - заполним список initiatedBy и parameters
+=======
+    // для метода - заполним список initiatedBy и parameters
+>>>>>>> peresvet/dev
     if (objClass === "prsMethod") {
       $("#input-initiatedByTags option").remove();
       $("#input-initiatedByAlerts option").remove();
@@ -1259,6 +1579,7 @@ fillForm  = (nodeElement) => {
       }).then((allNodes) => {
         if (!allNodes) return;
         let selectId = "";
+<<<<<<< HEAD
         tags = [];
         allNodes.data.map((dataItem) => {
           switch (dataItem.attributes.objectClass[0]) {
@@ -1268,6 +1589,12 @@ fillForm  = (nodeElement) => {
                 cn: dataItem.attributes.cn[0],
                 id: dataItem.id
               });
+=======
+        allNodes.data.map((dataItem) => {
+          switch (dataItem.attributes.objectClass[0]) {
+            case "prsTag":
+              selectId = "#input-initiatedByTags";              
+>>>>>>> peresvet/dev
               break;
             case "prsAlert":
               selectId = "#input-initiatedByAlerts";
@@ -1281,8 +1608,13 @@ fillForm  = (nodeElement) => {
           if (selected)
             $(selectId).append(`<option selected value="${dataItem.id}">${dataItem.attributes.cn[0]}&nbsp;(${dataItem.id})</option>`);
           else
+<<<<<<< HEAD
             if (!disabled) 
               $(selectId).append(`<option value="${dataItem.id}">${dataItem.attributes.cn[0]}&nbsp;(${dataItem.id})</option>`);            
+=======
+            if (!disabled)
+              $(selectId).append(`<option value="${dataItem.id}">${dataItem.attributes.cn[0]}&nbsp;(${dataItem.id})</option>`);
+>>>>>>> peresvet/dev
         });
 
         $("#input-initiatedByTags").attr("init-value", $("#input-initiatedByTags").val());
@@ -1294,17 +1626,29 @@ fillForm  = (nodeElement) => {
         nodeData.parameters.map((item) => {
           addParameter(null, item);
         });
+<<<<<<< HEAD
       })      
+=======
+      })
+>>>>>>> peresvet/dev
     }
 
     // для тега подготовим панели работы с данными
     if (objClass === "prsTag")
       changeTagDataPanelOnSave();
+<<<<<<< HEAD
       formTagDataPanels();
   });
 };
 
 removeClassOnElements  = (styleClass) => {
+=======
+    formTagDataPanels();
+  });
+};
+
+removeClassOnElements = (styleClass) => {
+>>>>>>> peresvet/dev
   const elements = document.querySelectorAll(`.${styleClass}`);
 
   elements.forEach((element) => {
@@ -1312,7 +1656,11 @@ removeClassOnElements  = (styleClass) => {
   });
 }
 
+<<<<<<< HEAD
 resetChanges  = () => {
+=======
+resetChanges = () => {
+>>>>>>> peresvet/dev
   const elements = document.querySelectorAll(`.value-changed`);
   els = [...elements];
   els.map((el) => {
@@ -1324,7 +1672,11 @@ resetChanges  = () => {
   $("#but-save").addClass("disabled");
 };
 
+<<<<<<< HEAD
 clickNode  = (event) => {
+=======
+clickNode = (event) => {
+>>>>>>> peresvet/dev
   event.stopPropagation();
 
   let clickedNode = event.target;
@@ -1429,7 +1781,11 @@ clickNode  = (event) => {
       $(`#${newNodeId}`).addClass("currentNode");
       fillForm(document.getElementById(newNodeId));
       newNodeId = null;
+<<<<<<< HEAD
       */   
+=======
+      */
+>>>>>>> peresvet/dev
     }
   });
 };
