@@ -7,15 +7,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       TZ: ${TIME_ZONE}
-<<<<<<< HEAD
-    ports:
-      - 5432:5432
     networks:
       - peresvet
-=======
-    networks:
-      - peresvet      
->>>>>>> peresvet/dev
 
 networks:
   peresvet:
@@ -24,4 +17,3 @@ networks:
       config:
           - subnet: 10.66.0.0/16
             gateway: 10.66.0.1
-

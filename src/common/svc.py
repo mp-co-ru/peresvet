@@ -36,11 +36,7 @@ class Svc(BaseSvc):
         связь.
 
         DSN для связи с ldap-сервером указывается в переменной окружения
-<<<<<<< HEAD
-        ``ldap_url``\.
-=======
         ``ldap_url``.
->>>>>>> peresvet/dev
 
         Returns:
             None
@@ -51,24 +47,16 @@ class Svc(BaseSvc):
                 self._logger.debug("Установление связи с LDAP сервером.")
                 await self._hierarchy.connect()
                 connected = True
-<<<<<<< HEAD
-                self._logger.info(f"{self._config.svc_name}: Связь с LDAP сервером установлена.")
-=======
                 self._logger.info(f"{self._config.svc_name} :: Связь с LDAP сервером установлена.")
->>>>>>> peresvet/dev
             except ValueError:
                 self._logger.error(f"{self._config.svc_name} :: Неверный формат URI ldap: {self._config.ldap_url}")
                 await asyncio.sleep(5)
 
-<<<<<<< HEAD
-            except ldap.LDAPError as ex:
-=======
             except ldap.SERVER_DOWN as ex:
                 self._logger.error(f"{self._config.svc_name} :: Ошибка связи с сервером ldap: {ex}")
                 await asyncio.sleep(5)
 
             except Exception as ex:
->>>>>>> peresvet/dev
                 self._logger.error(f"{self._config.svc_name} :: Ошибка связи с сервером ldap: {ex}")
                 await asyncio.sleep(5)
 

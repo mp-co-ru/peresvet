@@ -47,11 +47,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             "table": f"t_{tag_id}"
         }
 
-<<<<<<< HEAD
-    async def _check_store_name_for_new_tag(self, store: dict) -> bool:
-=======
     async def _check_store_name_for_new_tag(self, ds_id: str, store: dict) -> bool:
->>>>>>> peresvet/dev
         """Метод проверяет на корректность имя хранилища для нового тега,
         переданное клиентом.
 
@@ -91,22 +87,14 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             "attributes": ["prsStore"]
         }
         alert_data = await self._hierarchy.search(payload=payload)
-<<<<<<< HEAD
-        if alert_data:        
-=======
         if alert_data:
->>>>>>> peresvet/dev
             async with self._connection_pools[ds_id].acquire() as conn:
                 tbl_name = json.loads(alert_data[0][2]["prsStore"][0])["table"]
                 await conn.execute(
                     f'drop table if exists "{tbl_name}"'
                 )
                 self._logger.info(f"{self._config.svc_name} :: Хранилище тревоги '{alert_id}' в '{ds_id}' удалено.")
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> peresvet/dev
     async def _create_store_for_tag(self, tag_id: str, ds_id: str, store: dict) -> None:
         try:
             async with self._connection_pools[ds_id].acquire() as conn:
@@ -173,25 +161,8 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             "table": f"a_{alert_id}"
         }
 
-<<<<<<< HEAD
-    async def _check_store_name_for_new_tag(self, store: dict) -> bool:
-        """Метод проверяет на корректность имя хранилища для новой тревоги,
-        переданное клиентом.
-
-        Args:
-            store (dict): новое хранилище для тревоги
-
-        Returns:
-            bool: флаг корректности нового имени
-        """
-        return bool(store.get("table"))
-
-    async def _create_store_for_alert(self, alert_id: str, ds_id: str, store: dict) -> None:
-        
-=======
     async def _create_store_for_alert(self, alert_id: str, ds_id: str, store: dict) -> None:
 
->>>>>>> peresvet/dev
         try:
             async with self._connection_pools[ds_id].acquire() as conn:
                 tbl_name = store["table"]
@@ -213,27 +184,12 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         except Exception as ex:
             self._logger.error(f"{self._config.svc_name} :: Ошибка создания хранилища тега: {ex}")
 
-<<<<<<< HEAD
-    async def _alarm_on(self, mes: dict, routing_key: str = None) -> None:
-=======
     async def _alarm_on(self, mes: dict, routing_key: str | None = None) -> None:
->>>>>>> peresvet/dev
 
         self._logger.debug(f"Обработка возникновения тревоги: {mes}")
 
         alert_id = mes["alertId"]
 
-<<<<<<< HEAD
-        alert_params = await self._cache.get(f"{alert_id}.{self._config.svc_name}").exec()
-        if not alert_params[0]:
-            await self._create_alert_cache(alert_id)
-            alert_params = await self._cache.get(f"{alert_id}.{self._config.svc_name}").exec()
-            if not alert_params[0]:
-                self._logger.error(f"{self._config.svc_name} :: Ошибка построения кэша тревоги {alert_id}")
-                return
-
-        alert_params = alert_params[0]
-=======
         async with self._cache.get_redis() as r:
             alert_params = await r.json().get(f"{alert_id}.{self._config.svc_name}")
             if alert_params is None:
@@ -243,7 +199,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                     self._logger.error(f"{self._config.svc_name} :: Ошибка построения кэша тревоги {alert_id}")
                     return
 
->>>>>>> peresvet/dev
         for ds_id, prsStore in alert_params["dss"].items():
             connection_pool = self._connection_pools.get(ds_id)
             if connection_pool is None:
@@ -273,26 +228,11 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             except PostgresError as ex:
                 self._logger.error(f"{self._config.svc_name} :: Ошибка при записи данных тревоги {alert_id}: {ex}")
 
-<<<<<<< HEAD
-    async def _alarm_ack(self, mes: dict, routing_key: str = None) -> None:
-=======
     async def _alarm_ack(self, mes: dict, routing_key: str | None = None) -> None:
->>>>>>> peresvet/dev
 
         self._logger.debug(f"Обработка квитирования тревоги: {mes}")
 
         alert_id = mes["alertId"]
-<<<<<<< HEAD
-        alert_params = await self._cache.get(f"{alert_id}.{self._config.svc_name}").exec()
-        if not alert_params[0]:
-            await self._create_alert_cache(alert_id)
-            alert_params = await self._cache.get(f"{alert_id}.{self._config.svc_name}").exec()
-            if not alert_params[0]:
-                self._logger.error(f"{self._config.svc_name} :: Ошибка построения кэша тревоги {alert_id}")
-                return
-
-        alert_params = alert_params[0]
-=======
 
         async with self._cache.get_redis() as r:
             alert_params = await r.json().get(f"{alert_id}.{self._config.svc_name}")
@@ -303,7 +243,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                     self._logger.error(f"{self._config.svc_name} :: Ошибка построения кэша тревоги {alert_id}")
                     return
 
->>>>>>> peresvet/dev
         for ds_id, prsStore in alert_params["dss"].items():
             connection_pool = self._connection_pools.get(ds_id)
             if connection_pool is None:
@@ -332,11 +271,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             except PostgresError as ex:
                 self._logger.error(f"{self._config.svc_name} :: Ошибка при записи данных тревоги {alert_id}: {ex}")
 
-<<<<<<< HEAD
-    async def _alarm_off(self, mes: dict, routing_key: str = None) -> None:
-=======
     async def _alarm_off(self, mes: dict, routing_key: str | None = None) -> None:
->>>>>>> peresvet/dev
         """Факт пропадания тревоги.
 
         Args:
@@ -346,14 +281,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         self._logger.debug(f"Обработка пропадания тревоги: {mes}")
         alert_id = mes["alertId"]
 
-<<<<<<< HEAD
-        alert_params = await self._cache.get(f"{alert_id}.{self._config.svc_name}")
-        if not alert_params:
-            alert_params = await self._create_alert_cache(alert_id)
-            if not alert_params:
-                self._logger.error(f"{self._config.svc_name} :: Ошибка построения кэша тревоги {alert_id}")
-                return
-=======
         async with self._cache.get_redis() as r:
             alert_params = await r.json().get(f"{alert_id}.{self._config.svc_name}")
             if alert_params is None:
@@ -361,7 +288,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                 if not alert_params:
                     self._logger.error(f"{self._config.svc_name} :: Ошибка построения кэша тревоги {alert_id}")
                     return
->>>>>>> peresvet/dev
 
         for ds_id, prsStore in alert_params["dss"].items():
             connection_pool = self._connection_pools.get(ds_id)
@@ -391,15 +317,9 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             except PostgresError as ex:
                 self._logger.error(f"{self._config.svc_name} :: Ошибка при записи данных тревоги {alert_id}: {ex}")
 
-<<<<<<< HEAD
-    async def _tag_updated(self, mes: dict, routing_key: str = None):
-        tag_id = mes['id']
-        
-=======
     async def _tag_updated(self, mes: dict, routing_key: str | None = None):
         tag_id = mes['id']
 
->>>>>>> peresvet/dev
         payload = {
             "id": tag_id,
             "attributes": ["prsValueTypeCode"]
@@ -432,25 +352,11 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                 store = json.loads(tag_link_data[0][2]["prsStore"][0])
                 await self._create_store_for_tag(tag_id=tag_id, ds_id=ds_id, store=store)
                 await self._hierarchy.modify(
-<<<<<<< HEAD
-                    tag_link_data[0][0], 
-=======
                     tag_link_data[0][0],
->>>>>>> peresvet/dev
                     {
                         "prsJsonConfigString": {"prsValueTypeCode": new_type}
                     }
                 )
-<<<<<<< HEAD
-                await self._delete_tag_cache(tag_id)
-                await self._create_tag_cache(tag_id)
-                
-                self._logger.info(f"{self._config.svc_name} :: Хранилище тега '{tag_id}' в '{ds_id}' изменено.")        
-
-    async def _alert_deleted(self, mes: dict, routing_key: str = None):
-        alert_id = mes['id']
-        
-=======
 
                 self._logger.info(f"{self._config.svc_name} :: Хранилище тега '{tag_id}' в '{ds_id}' изменено.")
 
@@ -460,21 +366,14 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
     async def _alert_deleted(self, mes: dict, routing_key: str | None = None):
         alert_id = mes['id']
 
->>>>>>> peresvet/dev
         for ds_id in self._connection_pools.keys():
             await self._drop_store_for_alert(alert_id, ds_id)
 
         await super()._alert_deleted(mes, routing_key)
 
-<<<<<<< HEAD
-    async def _tag_deleted(self, mes: dict, routing_key: str = None):
-        tag_id = mes['id']
-        
-=======
     async def _tag_deleted(self, mes: dict, routing_key: str | None = None):
         tag_id = mes['id']
 
->>>>>>> peresvet/dev
         for ds_id in self._connection_pools.keys():
             await self._drop_store_for_tag(tag_id, ds_id)
 
@@ -491,55 +390,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         self._logger.debug(f"Запись данных тега '{tag_id}' из кэша в хранилища...")
 
         try:
-<<<<<<< HEAD
-            tag_cache = await self._cache.get(
-                f"{tag_id}.{self._config.svc_name}", "$"
-            ).set(
-                f"{tag_id}.{self._config.svc_name}", "$.data", []
-            ).exec()
-
-            if not tag_cache[0][0]["data"]:
-                self._logger.debug(f"Кэш данных тега {tag_id} пустой.")
-                return
-
-            for ds_id in tag_cache[0][0]["dss"].keys():
-                active = await self._cache.get(
-                    f"{ds_id}.{self._config.svc_name}", "prsActive"
-                ).exec()
-                if active[0] is None:
-                    self._logger.error(
-                        f"{self._config.svc_name} :: Несоответствие кэша тега {tag_id} c кэшем хранилища {ds_id}")
-                    continue
-
-                # если хранилище неактивно, данные в него не записываем
-                if not active[0]:
-                    self._logger.error(
-                        f"{self._config.svc_name} :: Хранилище {ds_id} неактивно.")
-                    continue
-
-                async with self._connection_pools[ds_id].acquire() as conn:
-                    tag_tbl = tag_cache[0][0]["dss"][ds_id]["table"]
-
-                    data = tag_cache[0][0]["data"]
-                    async with conn.transaction(isolation='read_committed'):
-                        if tag_cache[0][0]["prsUpdate"]:
-                            xs = [str(x) for _, x, _ in data]
-                            q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
-                            await conn.execute(q)
-                        if tag_cache[0][0]["prsValueTypeCode"] == 4:
-                            new_data = []
-                            for item in data:
-                                new_data.append(
-                                    (json.dumps(item[0], ensure_ascii=False), item[1], item[2])
-                                )
-                            data = new_data
-
-                        await conn.copy_records_to_table(
-                            tag_tbl,
-                            records=data,
-                            columns=('y', 'x', 'q'))
-                    self._logger.debug(f"В базу {ds_id} для тега {tag_id} записано {len(data)} точек.")
-=======
             async with self._cache.get_redis() as r:
                 async with r.pipeline() as pipe:
                     tag_cache = await pipe.json().get(
@@ -589,7 +439,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                                 records=data,
                                 columns=('y', 'x', 'q'))
                         self._logger.debug(f"В базу {ds_id} для тега {tag_id} записано {len(data)} точек.")
->>>>>>> peresvet/dev
 
         except Exception as ex:
             self._logger.error(f"{self._config.svc_name} :: Ошибка записи данных в базу {ds_id}: {ex}")
@@ -652,11 +501,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         """
         alert_id = mes["alertId"]
         ds_id = mes["dataStorageId"]
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> peresvet/dev
         payload = {
             "base": ds_id,
             "filter": {
@@ -677,14 +521,9 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             )
 
         await self._bind_alert(alert_id, False)
-<<<<<<< HEAD
-        index = await self._cache.index(f"{ds_id}.{self._config.svc_name}", "alerts", alert_id).exec()
-        await self._cache.pop(f"{ds_id}.{self._config.svc_name}", "alerts", index).exec()
-=======
         async with self._cache.get_redis() as r:
             index = await r.json().index(f"{ds_id}.{self._config.svc_name}", "alerts", alert_id)
             await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "alerts", index)
->>>>>>> peresvet/dev
 
         self._logger.info(f"{self._config.svc_name} :: Тревога {alert_id} отвязана от хранилища {ds_id}.")
 
@@ -701,11 +540,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         """
         tag_id = mes["tagId"]
         ds_id = mes["dataStorageId"]
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> peresvet/dev
         payload = {
             "base": ds_id,
             "filter": {
@@ -726,14 +560,9 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             )
 
         await self._bind_tag(tag_id, False)
-<<<<<<< HEAD
-        index = await self._cache.index(f"{ds_id}.{self._config.svc_name}", "tags", tag_id).exec()
-        await self._cache.pop(f"{ds_id}.{self._config.svc_name}", "tags", index).exec()
-=======
         async with self._cache.get_redis() as r:
             index = await r.json().arrindex(f"{ds_id}.{self._config.svc_name}", "tags", tag_id)
             await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "tags", index)
->>>>>>> peresvet/dev
 
         self._logger.info(f"{self._config.svc_name} :: Тег {tag_id} отвязан от хранилища {ds_id}.")
 
@@ -741,20 +570,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         order: int, count: int, one_before: bool, one_after: bool, value: Any = None):
 
         actual_ds = None
-<<<<<<< HEAD
-        tag_data = await self._cache.get(
-            f"{tag_id}.{self._config.svc_name}",
-            "prsActive", "dss", "prsValueTypeCode"
-        ).exec()
-
-        if not tag_data[0]:
-            self._logger.error(f"{self._config.svc_name} :: Тег {tag_id} отсутствует в кэше.")
-            
-            return []
-        if not tag_data[0]["prsActive"]:
-            self._logger.error(f"{self._config.svc_name} :: Тег {tag_id} неактивен.")
-            
-=======
         async with self._cache.get_redis() as r:
             tag_data = await r.json().get(
                 f"{tag_id}.{self._config.svc_name}", "prsActive", "dss", "prsValueTypeCode"
@@ -767,27 +582,11 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         if not tag_data["prsActive"]:
             self._logger.error(f"{self._config.svc_name} :: Тег {tag_id} неактивен.")
 
->>>>>>> peresvet/dev
             return []
 
         # если тег привязан к нескольким хранилищам, пока непонятна логика
         # из какого хранилища брать данные.
         # пока будем брать из первого активного
-<<<<<<< HEAD
-        for ds_id in tag_data[0]["dss"].keys():
-            ds_res = await self._cache.get(
-                f"{ds_id}.{self._config.svc_name}",
-                "prsActive"
-            ).exec()
-            if ds_res[0] is None:
-                self._logger.error(
-                    f"{self._config.svc_name} :: Хранилище {ds_id} отсутствует в кэше."
-                )
-            if ds_res[0]:
-                actual_ds = ds_id
-                break
-        
-=======
         async with self._cache.get_redis() as r:
             for ds_id in tag_data["dss"].keys():
                 ds_res = await r.json().get(
@@ -801,7 +600,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                     actual_ds = ds_id
                     break
 
->>>>>>> peresvet/dev
         if not actual_ds:
             self._logger.error(
                 f"{self._config.svc_name} :: Не найдено актуальное хранилище для тега {tag_id}"
@@ -809,11 +607,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             return []
 
         conditions = ['TRUE']
-<<<<<<< HEAD
-        sql_select = f"SELECT id, x, y, q FROM \"{tag_data[0]['dss'][actual_ds]['table']}\""
-=======
         sql_select = f"SELECT id, x, y, q FROM \"{tag_data['dss'][actual_ds]['table']}\""
->>>>>>> peresvet/dev
 
         if start is not None:
             conditions.append(f'x >= {start}')
@@ -845,11 +639,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             async with conn.transaction():
                 async for r in conn.cursor(*query_args):
                     val = r.get('y')
-<<<<<<< HEAD
-                    if tag_data[0]["prsValueTypeCode"] == 4:
-=======
                     if tag_data["prsValueTypeCode"] == 4:
->>>>>>> peresvet/dev
                         val = json.loads(val)
                     records.append((val, r.get('x'), r.get('q')))
         return records
@@ -898,13 +688,8 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                     start: int,
                     finish: int):
         """ Ограничение количества записей в выборке.
-<<<<<<< HEAD
-        Если задан параметр ``since``\, возвращается ``limit`` первых записей списка.
-        Если ``since`` не задан (None), но задан ``till``\, возвращается
-=======
         Если задан параметр ``since``, возвращается ``limit`` первых записей списка.
         Если ``since`` не задан (None), но задан ``till``, возвращается
->>>>>>> peresvet/dev
         ``limit`` последних записей списка
 
         :param tag_data: исходная выборка, массив словарей {'x': int, 'y': Any, 'q': int}
