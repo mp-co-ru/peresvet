@@ -1,11 +1,7 @@
 apiVersion: 1
 
 datasources:
-<<<<<<< HEAD
-    -   name: marcusolsson-json-datasource
-=======
     -   name: peresvet
->>>>>>> peresvet/dev
         id: prs-datasource
         orgId: 1
         type: marcusolsson-json-datasource
@@ -14,9 +10,8 @@ datasources:
         allowUiUpdates: true
         url: http://NGINX_HOST/v1/
         user: ''
-        database: '' 
+        database: ''
         basicAuth: false
-        basicAuthUser: 
+        basicAuthUser:
         withCredentials: false
         isDefault: true
-    

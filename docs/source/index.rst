@@ -20,14 +20,9 @@
    Используемые термины<terms>
    Компоненты системы<components>
    Исторические данные<historical_data>
-<<<<<<< HEAD
-   Установка<installation>
-   Примеры работы с платформой<examples>
-=======
    Установка и запуск<installation>
    Конфигуратор модели<configurator/configurator>
    Примеры работы с платформой<examples/examples>
->>>>>>> peresvet/dev
    Создание экранов в Grafana<grafana/grafana_integration>
    API<api>
 

@@ -2,13 +2,8 @@
 Модуль, содержащий базовый класс для управления экземплярами сущностей
 в иерархии. По умолчанию, каждая сущность может иметь свой узел в иерархрии
 для создания в нём своей иерархии, но это необязательно.
-<<<<<<< HEAD
-К примеру, наиболее используемая иерархия создаётся в узле ``objects``\,
-которым управляет сервис ``objects_model_crud_svc``\.
-=======
 К примеру, наиболее используемая иерархия создаётся в узле ``objects``,
 которым управляет сервис ``objects_model_crud_svc``.
->>>>>>> peresvet/dev
 """
 import sys
 import copy
@@ -27,21 +22,12 @@ class ModelCRUDSvc(Svc):
 
     При запуске подписывается на сообщения
     обменника с именем, задаваемым в переменной окружения
-<<<<<<< HEAD
-    ``api_crud_exchange_name``\,
-    создавая очередь с именем из переменной ``api_crud_queue_name``\.
-
-    Сообщения, приходящие в эту очередь, создаются сервисом
-    ``<сущность>_api_crud``\.
-    
-=======
     ``api_crud_exchange_name``,
     создавая очередь с именем из переменной ``api_crud_queue_name``.
 
     Сообщения, приходящие в эту очередь, создаются сервисом
     ``<сущность>_api_crud``.
 
->>>>>>> peresvet/dev
     Общий формат сообщений, обрабатываемых сервисом:
 
     .. code:: json
@@ -78,15 +64,9 @@ class ModelCRUDSvc(Svc):
 
     В случае отсутствия ключа ``parentId`` в качестве родительского узла
     принимается базовый ключ сущности в иерархии. Например, для тегов -
-<<<<<<< HEAD
-    ``cn=tags,cn=prs``\.
-
-    В случае отсутствия в словаре атрибута ``cn``\, в качестве значения
-=======
     ``cn=tags,cn=prs``.
 
     В случае отсутствия в словаре атрибута ``cn``, в качестве значения
->>>>>>> peresvet/dev
     этого атрибута принимается ``id`` (uuid) вновь созданного узла.
 
     Если в качестве значения атрибута ``cn`` передан массив значений, то
@@ -175,13 +155,8 @@ class ModelCRUDSvc(Svc):
     Методы update и delete реализуют логику (разберем на примере update):
     1) Для узла ищутся все дети первого уровня.
     2) Определяется их класс
-<<<<<<< HEAD
-    3) Запускается сообщение <класс>.model.may_update. 
-       Это сообщение - вопрос всем "детям", можно ли удалить их родителя. 
-=======
     3) Запускается сообщение <класс>.model.may_update.
        Это сообщение - вопрос всем "детям", можно ли удалить их родителя.
->>>>>>> peresvet/dev
        Получаем на каждое сообщение ответ - можно или нет. Если хотя бы один ребёнок ответит "нет", то процедура
        прекращается.
     4) В случае положительных ответов от всех детей всем детям запускается сообщение <класс>.model.updating.
@@ -208,13 +183,8 @@ class ModelCRUDSvc(Svc):
             f"{self._config.hierarchy['class']}.api_crud.update.*": self._update,
             f"{self._config.hierarchy['class']}.api_crud.delete.*": self._delete,
         }
-<<<<<<< HEAD
-    
-    async def _update(self, mes: dict, routing_key: str = None) -> dict:
-=======
 
     async def _update(self, mes: dict, routing_key: str | None = None) -> dict:
->>>>>>> peresvet/dev
         """Метод обновления данных узла. Также метод может перемещать узел
         по иерархии.
 
@@ -271,11 +241,6 @@ class ModelCRUDSvc(Svc):
                     }
                 }
                 return res_response
-<<<<<<< HEAD
-            
-=======
-
->>>>>>> peresvet/dev
             # проверка того, что новый родитель не является членом подиерархии узла
             res = await self._hierarchy.search({
                 "base": id,
@@ -293,11 +258,7 @@ class ModelCRUDSvc(Svc):
                         "message": err_mes
                     }
                 }
-<<<<<<< HEAD
-                return res_response                
-=======
                 return res_response
->>>>>>> peresvet/dev
 
         # уведомим свой собственный сервис app об обновлении узла
         res = await self._post_message(
@@ -309,22 +270,12 @@ class ModelCRUDSvc(Svc):
             # это ветка, когда нет подписчика на событие may_update
             # то есть, по большому счёту, всем всё равно
             res = {"response": True}
-<<<<<<< HEAD
-            
-        res = await self._post_message(
-=======
 
         await self._post_message(
->>>>>>> peresvet/dev
             mes=mes,
             reply=True,
             routing_key=f"{self._config.hierarchy['class']}.model.updating.{id}"
         )
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> peresvet/dev
         if mes.get("attributes"):
             try:
                 await self._hierarchy.modify(id, mes["attributes"])
@@ -345,13 +296,8 @@ class ModelCRUDSvc(Svc):
         await self._further_update(mes)
 
         await self._post_message(
-<<<<<<< HEAD
-            mes={"id": id}, 
-            reply=False, 
-=======
             mes={"id": id},
             reply=False,
->>>>>>> peresvet/dev
             routing_key=f"{self._config.hierarchy['class']}.model.updated.{id}"
         )
 
@@ -370,11 +316,7 @@ class ModelCRUDSvc(Svc):
             data (dict): id и атрибуты вновь создаваемого экземпляра сущности
         """
 
-<<<<<<< HEAD
-    async def _delete(self, mes: dict, routing_key: str = None) -> None:
-=======
     async def _delete(self, mes: dict, routing_key: str | None = None) -> dict:
->>>>>>> peresvet/dev
         """Метод удаляет экземпляр сущности из иерархии.
         Удаляем пока по одному узлу.
 
@@ -382,11 +324,6 @@ class ModelCRUDSvc(Svc):
             mes (dict): {"id": ["..."]}
 
         """
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> peresvet/dev
         ids = mes["id"]
         if not isinstance(ids, list):
             ids = [ids]
@@ -415,19 +352,11 @@ class ModelCRUDSvc(Svc):
                     }
                 }
                 return res_response
-<<<<<<< HEAD
-            
-            self._logger.debug(f"Удаление узла {id}...")
-            
-            # логика уведомлений при удалении узла
-            # уведомим свой собственный сервис app 
-=======
 
             self._logger.debug(f"Удаление узла {id}...")
 
             # логика уведомлений при удалении узла
             # уведомим свой собственный сервис app
->>>>>>> peresvet/dev
             res = await self._post_message(
                 mes=mes,
                 reply=True,
@@ -458,38 +387,23 @@ class ModelCRUDSvc(Svc):
                     "filter": {
                         "cn": ["*"]
                     },
-<<<<<<< HEAD
-                    "attributes": ["objectClass"]
-                }
-            )
-=======
                     "attributes": ["objectClass"],
                     "deref": False
                 }
             )
             child_classes = self._config.hierarchy.get("child_classes", [])
             unnotified_classes = ["prsModelNode", "alias", "extensibleObject"] + child_classes
->>>>>>> peresvet/dev
             for item in items:
                 if item[0] == id:
                     # пропустим самого себя
                     continue
 
                 objectClass = item[2]["objectClass"][0]
-<<<<<<< HEAD
-                if objectClass != "prsModelNode":
-=======
                 if not (objectClass in unnotified_classes):
->>>>>>> peresvet/dev
                     children.append({
                         "id": item[0],
                         "objectClass": objectClass
                     })
-<<<<<<< HEAD
-            
-=======
-
->>>>>>> peresvet/dev
             if children:
                 tasks = []
                 for child in children:
@@ -503,13 +417,6 @@ class ModelCRUDSvc(Svc):
                     )
                     tasks.append(future)
 
-<<<<<<< HEAD
-                done, _ = await asyncio.wait(
-                    tasks, return_when=asyncio.ALL_COMPLETED
-                )
-
-                for future in done:
-=======
                 # нельзя параллельно выполнять задачи - возникает ошибка при одновременном доступе к кэшу
                 #done, _ = await asyncio.wait(
                 #    tasks, return_when=asyncio.ALL_COMPLETED
@@ -517,7 +424,6 @@ class ModelCRUDSvc(Svc):
 
                 for future in tasks:
                     await future
->>>>>>> peresvet/dev
                     res = future.result()
                     if res is None:
                         res = {"response": True}
@@ -533,23 +439,6 @@ class ModelCRUDSvc(Svc):
                         }
                         return res_response
 
-<<<<<<< HEAD
-                tasks = []
-                for child in children:
-                    future = asyncio.create_task(
-                        self._post_message(
-                            {"id": child["id"]},
-                            reply=True,
-                            routing_key=f"{child['objectClass']}.model.deleting.{child['id']}"
-                        ),
-                        name=child['id']
-                    )
-                    tasks.append(future)
-
-                done, _ = await asyncio.wait(
-                    tasks, return_when=asyncio.ALL_COMPLETED
-                )
-=======
                 for child in children:
                     await self._post_message(
                         {"id": child["id"]},
@@ -560,22 +449,15 @@ class ModelCRUDSvc(Svc):
                 #done, _ = await asyncio.wait(
                 #    tasks, return_when=asyncio.ALL_COMPLETED
                 #)
->>>>>>> peresvet/dev
 
             await self._further_delete(mes)
 
             await self._hierarchy.delete(id)
 
             await self._post_message(
-<<<<<<< HEAD
-                mes={"id": id}, reply=False, 
-                routing_key=f"{self._config.hierarchy['class']}.model.deleted.{id}")
-            
-=======
                 mes={"id": id}, reply=False,
                 routing_key=f"{self._config.hierarchy['class']}.model.deleted.{id}")
 
->>>>>>> peresvet/dev
             for child in children:
                 await self._post_message(
                     {"id": child["id"]},
@@ -601,15 +483,9 @@ class ModelCRUDSvc(Svc):
             ids (List[str]): список ``id`` удаляемых узлов.
         """
 
-<<<<<<< HEAD
-    async def _read(self, mes: dict, routing_key: str = None) -> dict:
-        """Правильность заполнения полей входного сообщения выполняется
-        сервисом ``<сущность>_api_crud``\.
-=======
     async def _read(self, mes: dict, routing_key: str | None = None) -> dict:
         """Правильность заполнения полей входного сообщения выполняется
         сервисом ``<сущность>_api_crud``.
->>>>>>> peresvet/dev
 
         Args:
             mes(dict):
@@ -691,26 +567,17 @@ class ModelCRUDSvc(Svc):
                 return res_response
 
             mes_data["base"] = self._config.hierarchy["node_id"]
-<<<<<<< HEAD
-                    
-=======
-
->>>>>>> peresvet/dev
         for key, item in mes_data["filter"].items():
             # если в запросе одно из полей было не списком, то делаем его списком
             if type(item) is not list:
                 mes_data["filter"][key] = [mes_data["filter"][key]]
 
         if not mes_data["hierarchy"] or mes_data["scope"] < 2:
-<<<<<<< HEAD
-            items = await self._hierarchy.search(mes_data)
-=======
             try:
                 items = await self._hierarchy.search(mes_data)
             except Exception as ex:
                 return {"error": {"code": 422, "message": f"{ex}"}}
 
->>>>>>> peresvet/dev
             for item in items:
                 res["data"].append({
                     "id": item[0],
@@ -737,11 +604,7 @@ class ModelCRUDSvc(Svc):
         """
         return search_result
 
-<<<<<<< HEAD
-    async def _create(self, mes: dict, routing_key: str = None) -> dict:
-=======
     async def _create(self, mes: dict, routing_key: str | None = None) -> dict:
->>>>>>> peresvet/dev
         """Метод создаёт новый экземпляр сущности в иерархии.
 
         Args:
@@ -750,18 +613,9 @@ class ModelCRUDSvc(Svc):
                 .. code-block:: json
 
                     {
-<<<<<<< HEAD
-                        "action": "...",
-                        "data": {
-                            "parentId": "id родителя",
-                            "attributes": {
-                                "<ldap-attribute>": "<value>"
-                            }
-=======
                         "parentId": "id родителя",
                         "attributes": {
                             "<ldap-attribute>": "<value>"
->>>>>>> peresvet/dev
                         }
                     }
 
@@ -772,11 +626,7 @@ class ModelCRUDSvc(Svc):
 
                 Среди атрибутов узла нет атрибута ``objectClass`` - метод
                 добавляет его сам, вставляя значение из переменной окружения
-<<<<<<< HEAD
-                ``hierarchy_class``\.
-=======
                 ``hierarchy_class``.
->>>>>>> peresvet/dev
 
         Returns:
             dict: {"id": "new_id"}
@@ -843,11 +693,7 @@ class ModelCRUDSvc(Svc):
         # поэтому если по поиску выше не найдено узлов, то узлов в данном
         # уровне нет вообще
         if not items:
-<<<<<<< HEAD
-            mes["attributes"]["prsDefault"] = True
-=======
             mes["attributes"]["prsDefault"] = [True]
->>>>>>> peresvet/dev
         else:
             # если есть уже дефолтный узел и делается попытка создать тоже
             # дефолтный, то существующий дефолтный должен стать обычным
@@ -880,16 +726,6 @@ class ModelCRUDSvc(Svc):
 
             # при необходимости создадим узел ``system``
             await self._hierarchy.add(new_id, {"cn": ["system"]})
-<<<<<<< HEAD
-            
-            await self._further_create(mes, new_id)
-
-            await self._post_message(
-                mes={"id": new_id}, 
-                reply=False,
-                routing_key=f"{self._config.hierarchy['class']}.model.created"
-            )           
-=======
 
             await self._further_create(mes, new_id)
 
@@ -898,7 +734,6 @@ class ModelCRUDSvc(Svc):
                 reply=False,
                 routing_key=f"{self._config.hierarchy['class']}.model.created"
             )
->>>>>>> peresvet/dev
 
         return res
 
@@ -920,15 +755,6 @@ class ModelCRUDSvc(Svc):
         """Метод проверки того, что класс родительского узла
         соответствует необходимому. К примеру, тревоги могут создаваться только
         внутри тегов. То есть при создании новой тревоги мы должны убедиться,
-<<<<<<< HEAD
-        что класс родительского узла - ``prsTag``\.
-
-        Список всех возможных классов узлов-родителей указывается
-        в конфигурации в переменной ``hierarchy_parent_classes``\.
-
-        Если у сущности нет собственного узла в иерархии и
-        ``parent_id == None``\, то вернётся ``False``\.
-=======
         что класс родительского узла - ``prsTag``.
 
         Список всех возможных классов узлов-родителей указывается
@@ -936,7 +762,6 @@ class ModelCRUDSvc(Svc):
 
         Если у сущности нет собственного узла в иерархии и
         ``parent_id == None``, то вернётся ``False``.
->>>>>>> peresvet/dev
 
         Args:
             parent_id (str): идентификатор родительского узла

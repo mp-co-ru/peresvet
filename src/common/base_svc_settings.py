@@ -1,18 +1,10 @@
 """
 Класс, от которого наследуются все классы-настройки для сервисов.
-<<<<<<< HEAD
-Наследуется от класса ``pydantic.BaseSettings``\, все настройки передаются
-в json-файлах либо в переменных окружения.
-По умолчанию имя файла с настройками - ``config.json``\.
-Имя конфигурационного файла передаётся сервису в переменной окружения
-``config_file``\.
-=======
 Наследуется от класса ``pydantic.BaseSettings``, все настройки передаются
 в json-файлах либо в переменных окружения.
 По умолчанию имя файла с настройками - ``config.json``.
 Имя конфигурационного файла передаётся сервису в переменной окружения
 ``config_file``.
->>>>>>> peresvet/dev
 """
 
 import os
@@ -70,22 +62,13 @@ class BaseSvcSettings(BaseSettings, BaseModel):
 
     #: имя сервиса
     svc_name: str = ""
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> peresvet/dev
     broker: dict = {
         #: строка коннекта к RabbitMQ
         "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
         #: имя обменника
-<<<<<<< HEAD
-        "name": "peresvet"        
-=======
         "name": "peresvet",
         "durable": True,
         "auto_delete": False
->>>>>>> peresvet/dev
     }
 
     hierarchy: dict = {
@@ -96,15 +79,9 @@ class BaseSvcSettings(BaseSettings, BaseModel):
 
     log: dict = {
         "level": "INFO",
-<<<<<<< HEAD
-        "file_name": "peresvet.log",
-        "retention": "1 months",
-        "rotation": "20 days"
-=======
         "file_name": "log/peresvet.log",
         "retention": 10,
         "rotation": "5 MB"
->>>>>>> peresvet/dev
     }
 
     @classmethod
@@ -123,9 +100,4 @@ class BaseSvcSettings(BaseSettings, BaseModel):
             dotenv_settings,
             file_secret_settings,
         )
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> peresvet/dev
     cache_url: str = "redis://redis:6379?decode_responses=True&protocol=3"

@@ -20,21 +20,11 @@ def valid_alert_config(v: dict) -> dict:
                 "value": 10,
                 "autoAck": True
             }
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> peresvet/dev
         new_v.setdefault("high", True)
         new_v.setdefault("value", 10)
         new_v.setdefault("autoAck", True)
 
         return new_v
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> peresvet/dev
 class AlertCreateAttributes(svc.NodeAttributes):
     """При создании тревоги атрибут ``prsJsonConfigString`` имеет формат
 
@@ -60,11 +50,6 @@ class AlertCreateAttributes(svc.NodeAttributes):
             "value": 10,
             "autoAck": True
         }, title="Конфигурация тревоги")
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> peresvet/dev
     validate_config = validator('prsJsonConfigString', allow_reuse=True)(valid_alert_config)
     pass
 
@@ -96,11 +81,6 @@ class AlertsAPICRUD(svc.APICRUDSvc):
 
     async def _read(self, payload: AlertRead) -> dict:
         return await super()._read(payload=payload)
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> peresvet/dev
 settings = AlertsAPICRUDSettings()
 
 app = AlertsAPICRUD(settings=settings, title="`AlertsAPICRUD` service")
@@ -126,11 +106,7 @@ async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
           * **cn** (str) - имя тревоги. Необязательный атрибут.
           * **description** (str) - описание тревоги. Необязательный атрибут.
           * **prsJsonConfigString** (str) - Строка содержит, в случае необходимости,
-<<<<<<< HEAD
-            конфигурацию тревоги. 
-=======
             конфигурацию тревоги.
->>>>>>> peresvet/dev
             При создании тревоги атрибут ``prsJsonConfigString`` имеет формат:
 
             .. code:: python
@@ -145,11 +121,6 @@ async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
                     # флаг автоквитирования
                     "autoAck": True
                 }
-<<<<<<< HEAD
-            
-=======
-
->>>>>>> peresvet/dev
             Обязательный аттрибут.
           * **prsActive** (bool) - Определяет, активна ли тревога. По умолчанию = ``true``.
             Необязательный атрибут.
@@ -174,11 +145,6 @@ async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
     res = await app._create(p)
     await error_handler.handle_error(res)
     return res
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> peresvet/dev
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200, response_model_exclude_none=True)
 async def read(q: str | None = None, payload: AlertRead | None = None, error_handler: svc.ErrorHandler = Depends()):
     """
@@ -198,11 +164,7 @@ async def read(q: str | None = None, payload: AlertRead | None = None, error_han
 
     **Параметры запроса:**
 
-<<<<<<< HEAD
-       * **id** (str | list(str)) - идентификатор тревоги (тревог), данные о которой(-ых) хотим прочитать. 
-=======
        * **id** (str | list(str)) - идентификатор тревоги (тревог), данные о которой(-ых) хотим прочитать.
->>>>>>> peresvet/dev
          Необязательный атрибут.
        * **base** (str) - Базовый узел для поиска. В случае отсутствия поиск проводится по всей модели.
          Необязательный атрибут.
@@ -213,13 +175,8 @@ async def read(q: str | None = None, payload: AlertRead | None = None, error_han
          2 - поиск по всему дереву, начиная с указанного в ``base`` узла.\n
          Необязательный атрибут.
        * **filter** (dict) - Словарь из атрибутов и их значений, из которых
-<<<<<<< HEAD
-         формируется фильтр для поиска. В случае отсутствия возвращаются все тревоги, 
-         найденные под узлом, указанным в атрибуте ``base``. 
-=======
          формируется фильтр для поиска. В случае отсутствия возвращаются все тревоги,
          найденные под узлом, указанным в атрибуте ``base``.
->>>>>>> peresvet/dev
          При формировании фильтра значения ключей объединяются логической операцией ``ИЛИ``, а сами
          ключи - операцией ``И``.
          При указании значения строкового атрибута можно использовать символ маски ``*``.
@@ -231,20 +188,12 @@ async def read(q: str | None = None, payload: AlertRead | None = None, error_han
                 "cn": ["alert*"],
                 "prsActive": [true],
                 "prsIndex": [1, 2, 3]
-<<<<<<< HEAD
-            } 
-=======
             }
->>>>>>> peresvet/dev
 
          Данный фильтр вернёт тревоги, у которых:\n
          (Имя начинается с ``alert``) И (флаг активности = ``true``) И (индекс равен 1 ИЛИ 2 ИЛИ 3).
 
-<<<<<<< HEAD
-       * **attributes** (list[str]) - Список атрибутов, значения которых необходимо вернуть в ответе. По умолчанию - ['\*'], то есть все атрибуты (кроме системных).
-=======
        * **attributes** (list[str]) - Список атрибутов, значения которых необходимо вернуть в ответе. По умолчанию - ['.'], то есть все атрибуты (кроме системных).
->>>>>>> peresvet/dev
 
     **Ответ:**
 
@@ -271,11 +220,6 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
         * **id** (str) - id тревоги для обновления. Обязательное поле.
         * **attributes** (dict) - словарь с параметрами для обновления.
           Соответствует атрибутам из команды ``create``.
-<<<<<<< HEAD
-          
-=======
-
->>>>>>> peresvet/dev
 
     **Ответ:**
 
@@ -284,11 +228,7 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
 
     """
     try:
-<<<<<<< HEAD
-        AlertUpdate.model_validate(payload)        
-=======
         AlertUpdate.model_validate(payload)
->>>>>>> peresvet/dev
     except Exception as ex:
         res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
         app._logger.exception(res)

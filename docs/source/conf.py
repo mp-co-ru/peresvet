@@ -88,10 +88,7 @@ language = 'ru'
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
-<<<<<<< HEAD
-=======
 html_favicon = "_static/peresvet_middle.png"
->>>>>>> peresvet/dev
 
 source_suffix = '.rst'
 
@@ -159,11 +156,7 @@ texinfo_documents = [
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
-<<<<<<< HEAD
-html_logo = "pics/logo_middle_text.png"
-=======
 html_logo = "pics/logo.png"
->>>>>>> peresvet/dev
 html_theme_options = {
     'logo_only': True,
     'display_version': True,

@@ -11,11 +11,7 @@ from src.services.connectors.model_crud.connectors_model_crud_settings import Co
 class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
     """Сервис работы с коннекторами в иерархии.
 
-<<<<<<< HEAD
-    Подписывается на очередь ``connectors_api_crud`` обменника ``connectors_api_crud``\,
-=======
     Подписывается на очередь ``connectors_api_crud`` обменника ``connectors_api_crud``,
->>>>>>> peresvet/dev
     в которую публикует сообщения сервис ``connectors_api_crud`` (все имена
     указываются в переменных окружения).
 
@@ -26,20 +22,6 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
     def __init__(self, settings: ConnectorsModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-<<<<<<< HEAD
-    def _set_handlers(self) -> dict:
-        return {
-            "connectors.create": self._create,
-            "connectors.read": self._read,
-            "connectors.update": self._update,
-            "connectors.delete": self._delete,
-        }
-
-    '''
-    async def _further_read(self, mes: dict) -> dict:
-        pass
-    '''
-=======
     def _set_handlers(self):
         super()._set_handlers()
         self._handlers["prsTag.model.updated.*"] = self._tag_updated
@@ -136,7 +118,6 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
                 self._logger.info(f"Удалённый тег {mes_to_app['tagId']} отвязан от коннектора {conn_id}.")
 
         return {}
->>>>>>> peresvet/dev
 
     async def _further_create(self, mes: dict, new_id: str) -> None:
         sys_ids = await self._hierarchy.search(payload={
@@ -150,27 +131,14 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         await self._hierarchy.add(sys_id, {"cn": "tags"})
 
-<<<<<<< HEAD
-        for item in mes["data"]["linkTags"]:
-=======
         tags = mes.get("linkTags", [])
         for item in tags:
->>>>>>> peresvet/dev
             copy_item = copy.deepcopy(item)
             copy_item["connectorId"] = new_id
             await self._link_tag(copy_item)
 
     async def _further_update(self, mes: dict) -> None:
 
-<<<<<<< HEAD
-        cs_id = mes["data"]["id"]
-        for item in mes["data"]["linkTags"]:
-            copy_item = copy.deepcopy(item)
-            copy_item["connectorId"] = cs_id
-            await self._link_tag(copy_item)
-
-    async def _link_tag(self, payload: dict) -> None:
-=======
         conn_id = mes["id"]
 
         tags = mes.get("linkTags", [])
@@ -232,7 +200,6 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
     _TAG_LINK_UPDATED = 2
 
     async def _link_tag(self, payload: dict) -> int:
->>>>>>> peresvet/dev
         """Метод привязки тега к коннектору.
 
         Метод создаёт новый узел в списке тегов коннектора.
@@ -245,33 +212,23 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
                     "prsJsonConfigString":
                 }
             }
-<<<<<<< HEAD
-        """
-        """
-=======
->>>>>>> peresvet/dev
         res = await self._post_message(
             mes={"action": "connectors.linkTag", "data": payload},
             reply=True,
             routing_key=payload["connectorId"])
 
         prs_store = res.get("prsJsonConfigString")
-<<<<<<< HEAD
-=======
 
         Возвращает:
         0 - нет указанного тега в иерархии
         1 - тег привязан
         2 - тег уже был привязан, обновлена привязка
->>>>>>> peresvet/dev
         """
 
         node_dn = await self._hierarchy.get_node_dn(payload['connectorId'])
         tags_node_id = await self._hierarchy.get_node_id(
             f"cn=tags,cn=system,{node_dn}"
         )
-<<<<<<< HEAD
-=======
 
         search = {
             "id": payload["tagId"],
@@ -303,20 +260,13 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
             self._logger.info(f"{self._config.svc_name} :: Коннектор {payload['connectorId']}. Изменена привязка тега {payload['tagId']}.")
             return self._TAG_LINK_UPDATED
 
->>>>>>> peresvet/dev
         new_node_id = await self._hierarchy.add(
             base=tags_node_id,
             attribute_values={
                 "objectClass": ["prsConnectorTagData"],
                 "cn": payload["tagId"],
                 "prsJsonConfigString": payload["attributes"]["prsJsonConfigString"],
-<<<<<<< HEAD
-                "prsValueScale": payload["attributes"]["prsValueScale"],
-                "prsMaxDev": payload["attributes"]["prsMaxDev"],
-                "description": payload["attributes"]["description"]
-=======
                 "description": payload["attributes"].get("description")
->>>>>>> peresvet/dev
             }
         )
         await self._hierarchy.add_alias(
@@ -325,8 +275,6 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
             alias_name=payload["tagId"]
         )
 
-<<<<<<< HEAD
-=======
         await self._amqp_consume_queue.bind(
             self._exchange,
             routing_key=f"prsTag.model.updated.{payload['tagId']}")
@@ -334,22 +282,15 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
             self._exchange,
             routing_key=f"prsTag.model.deleted.{payload['tagId']}")
 
->>>>>>> peresvet/dev
         self._logger.info(
             f"{self._config.svc_name} :: Тег {payload['tagId']} привязан к коннектору {payload['connectorId']}"
         )
 
-<<<<<<< HEAD
-    async def _further_read(self, mes: dict, search_result: dict) -> dict:
-
-        if not mes["data"]["getLinkedTags"]:
-=======
         return self._TAG_LINKED
 
     async def _further_read(self, mes: dict, search_result: dict) -> dict:
 
         if not mes["getLinkedTags"]:
->>>>>>> peresvet/dev
             return search_result
 
         res = {"data": []}
@@ -363,11 +304,7 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
                     "filter": {
                         "objectClass": ["prsConnectorTagData"]
                     },
-<<<<<<< HEAD
-                    "attributes": ["cn", "prsJsonConfigString", "prsMaxDev", "prsValueScale"],
-=======
                     "attributes": ["cn", "prsJsonConfigString"],
->>>>>>> peresvet/dev
                     "scope": 2
                 }
             )
@@ -379,11 +316,6 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
                             "attributes": {
                                 "cn": item[2]["cn"][0],
                                 "prsJsonConfigString": json.loads(item[2]["prsJsonConfigString"][0]),
-<<<<<<< HEAD
-                                "prsMaxDev": item[2]["prsMaxDev"][0],
-                                "prsValueScale": item[2]["prsValueScale"][0],
-=======
->>>>>>> peresvet/dev
                                 "objectClass": "prsConnectorTagData"
                             }
                         }

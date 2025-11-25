@@ -26,11 +26,7 @@ SUBJ="/CN=${SRV_NAME}"
 DAYS=3654
 
 # common folder
-<<<<<<< HEAD
-TLS_DIR="../tls"
-=======
 TLS_DIR="tls"
->>>>>>> peresvet/dev
 
 # Store for center authority (CA) root certificate
 ROOT_DIR="${TLS_DIR}/rootCA"
@@ -60,10 +56,7 @@ while [[ $# -gt 0 ]]; do
   case $1 in
     -h)
       SRV_NAME=$2
-<<<<<<< HEAD
-=======
       SUBJ="/CN=${SRV_NAME}"
->>>>>>> peresvet/dev
       shift # past argument
       shift # past value
       ;;

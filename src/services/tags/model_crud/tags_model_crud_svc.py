@@ -8,11 +8,7 @@ from src.services.tags.model_crud.tags_model_crud_settings import TagsModelCRUDS
 class TagsModelCRUD(model_crud_svc.ModelCRUDSvc):
     """Сервис работы с тегами в иерархии.
 
-<<<<<<< HEAD
-    Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``\,
-=======
     Подписывается на очередь ``tags_api_crud`` обменника ``tags_api_crud``,
->>>>>>> peresvet/dev
     в которую публикует сообщения сервис ``tags_api_crud`` (все имена
     указываются в переменных окружения).
 
