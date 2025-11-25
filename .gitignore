@@ -73,6 +73,10 @@ docs/build/
 docs/source/_build/
 docs/latex/*.pdf
 docs/latex/*.log
+docs/build/
+docs/source/_build/
+docs/latex/*.pdf
+docs/latex/*.log
 
 # PyBuilder
 target/
@@ -135,7 +139,7 @@ vm-data/
 
 src/*.json
 
-tls/
+certificates/tls/
 
 test_*.py
 tests/dev/
@@ -147,3 +151,6 @@ tests/grafana/
 
 docker/compose/config/nginx/
 docker/images/
+
+
+!methods/test_method.py

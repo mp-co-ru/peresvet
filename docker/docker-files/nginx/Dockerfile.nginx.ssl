@@ -1,0 +1,14 @@
+FROM nginx:1.25.3-alpine-slim
+
+ARG NGINX_HOST
+
+# this is actual only for minimal version of parent image
+RUN adduser -u 1000 -D -S -G www-data www-data
+
+RUN mkdir /var/www
+RUN chown -R www-data:www-data /var/www
+COPY config/nginx/nginx.conf /etc/nginx/
+COPY certificates/tls/servers/$NGINX_HOST/$NGINX_HOST.crt /etc/nginx/ssl/
+COPY certificates/tls/servers/$NGINX_HOST/$NGINX_HOST.key /etc/nginx/ssl/
+COPY config/nginx/ssl/default.conf.ssl /etc/nginx/templates/default.conf.template
+COPY config/nginx/peresvet /etc/nginx/templates/

@@ -1,0 +1,77 @@
+services:
+  nginx_one_app:
+      container_name: nginx_one_app
+      hostname: ${NGINX_HOST}
+      build:
+        context: ../..
+        dockerfile: docker/docker-files/nginx/Dockerfile.nginx.ssl
+        args:
+        - NGINX_HOST=${NGINX_HOST}
+      ports:
+        - ${NGINX_HTTP_PORT}:${NGINX_HTTP_PORT}
+        - ${NGINX_HTTPS_PORT}:${NGINX_HTTPS_PORT}
+      environment:
+        NGINX_HOST: ${NGINX_HOST}
+        NGINX_HTTP_PORT: ${NGINX_HTTP_PORT}
+        NGINX_HTTPS_PORT: ${NGINX_HTTPS_PORT}
+        NGINX_CERT_REQUIRED: ${NGINX_CERT_REQUIRED}
+
+        PORT_ALERTS_API_CRUD: ${PORT_ALERTS_API_CRUD}
+        HOST_ALERTS_API_CRUD: ${HOST_ALERTS_API_CRUD}
+        PORT_ALERTS_APP_API: ${PORT_ALERTS_APP_API}
+        HOST_ALERTS_APP_API: ${HOST_ALERTS_APP_API}
+        HOST_ALERTS_ALL: ${HOST_ALERTS_ALL}
+
+        # connectors
+        PORT_CONNECTORS_API_CRUD: ${PORT_CONNECTORS_API_CRUD}
+        HOST_CONNECTORS_API_CRUD: ${HOST_CONNECTORS_API_CRUD}
+        PORT_CONNECTORS_APP: ${PORT_CONNECTORS_APP}
+        HOST_CONNECTORS_APP: ${HOST_CONNECTORS_APP}
+        HOST_CONNECTORS_ALL: ${HOST_CONNECTORS_ALL}
+
+        # dataStorages
+        PORT_DATASTORAGES_API_CRUD: ${PORT_DATASTORAGES_API_CRUD}
+        HOST_DATASTORAGES_API_CRUD: ${HOST_DATASTORAGES_API_CRUD}
+        HOST_DATASTORAGES_ALL: ${HOST_DATASTORAGES_ALL}
+
+        # methods
+        PORT_METHODS_API_CRUD: ${PORT_METHODS_API_CRUD}
+        HOST_METHODS_API_CRUD: ${HOST_METHODS_API_CRUD}
+        HOST_METHODS_ALL: ${HOST_METHODS_ALL}
+
+        # objects
+        PORT_OBJECTS_API_CRUD: ${PORT_OBJECTS_API_CRUD}
+        HOST_OBJECTS_API_CRUD: ${HOST_OBJECTS_API_CRUD}
+        HOST_OBJECTS_ALL: ${HOST_OBJECTS_ALL}
+
+        # tags
+        PORT_TAGS_API_CRUD: ${PORT_TAGS_API_CRUD}
+        HOST_TAGS_API_CRUD: ${HOST_TAGS_API_CRUD}
+        PORT_TAGS_APP_API: ${PORT_TAGS_APP_API}
+        HOST_TAGS_APP_API: ${HOST_TAGS_APP_API}
+        HOST_TAGS_ALL: ${HOST_TAGS_ALL}
+
+        # datafunc
+        PORT_DATAFUNC_APP_API: ${PORT_DATAFUNC_APP_API}
+        HOST_DATAFUNC_APP_API: ${HOST_DATAFUNC_APP_API}
+
+        # schedules
+        PORT_SCHEDULES_API_CRUD: ${PORT_SCHEDULES_API_CRUD}
+        HOST_SCHEDULES_API_CRUD: ${HOST_SCHEDULES_API_CRUD}
+        HOST_SCHEDULES_ALL: ${HOST_SCHEDULES_ALL}
+
+        #grafana
+        PORT_GRAFANA: ${PORT_GRAFANA}
+        HOST_GRAFANA: ${HOST_GRAFANA}
+
+        TZ: ${TIME_ZONE}
+      networks:
+        - peresvet      
+
+networks:
+  peresvet:
+    driver: bridge
+    ipam:
+      config:
+          - subnet: 10.66.0.0/16
+            gateway: 10.66.0.1

@@ -21,7 +21,7 @@
 DAYS=3654
 
 # common folder
-TLS_DIR="../tls"
+TLS_DIR="tls"
 
 # Store for center authority (CA) root certificate
 ROOT_DIR="${TLS_DIR}/rootCA"
@@ -89,5 +89,9 @@ echo "Create root certificate and key..."
 openssl req -new -newkey rsa:${KEY_LENGTH} -nodes -keyout ${ROOT_CA_KEY} \
      -x509 -days ${DAYS} -out ${ROOT_CA_CRT} \
      -subj ${SUBJ}
+
+SRV_BUNDLE=${ROOT_DIR}/rootCA.pem
+
+cat ${ROOT_CA_CRT} ${ROOT_CA_KEY} > ${SRV_BUNDLE}
 
 echo "Root certificate and key are generated."

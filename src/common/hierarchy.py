@@ -29,8 +29,8 @@ class Hierarchy:
     def __init__(self, url: str, pool_size: int = 10):
         self.url : str = url
         self.pool_size : int = pool_size
-        self._cm : ConnectionManager = None
-        self._base_dn : str = None
+        self._cm : ConnectionManager | None = None
+        self._base_dn : str | None = None
 
     async def does_node_exist(self, node: str) -> bool:
         """Проверка существования узла с указанным id.
@@ -50,7 +50,7 @@ class Hierarchy:
 
         return True
 
-    async def get_node_dn(self, node: str = None) -> str:
+    async def get_node_dn(self, node: str | None = None) -> str | None:
         """Метод определяет DN узла в иерархии по переданному id и
         возвращает его.
         В случае, если base = None, то возвращается DN базового узла
@@ -97,7 +97,7 @@ class Hierarchy:
 
     async def connect(self) -> None:
         """Создание пула коннектов к ldap-серверу.
-        URL передаётся при создании нового экземпляра класса ``Hierarchy``\.
+        URL передаётся при создании нового экземпляра класса ``Hierarchy``.
 
         Количество попыток восстановления связи при разрыве - 10. Время
         между попытками - 0.3с.
@@ -173,7 +173,7 @@ class Hierarchy:
                 * id
                     список идентификаторов узлов, данные по которым
                     необходимо получить; если присутствует, то не учитываются ключи
-                    ``base``\, ``scope``\, ``filter``\; по умолчанию - None;
+                    ``base``, ``scope``, ``filter``; по умолчанию - None;
                 * base
                     id (uuid) или dn базового узла, от которого
                     вести поиск;
@@ -181,7 +181,7 @@ class Hierarchy:
                     умолчанию - None;
                 * deref
                     флаг разъименования ссылок; по умолчанию - False;
-                    .. todo:: Реализовать поведение флага ``deref``\.
+                    .. todo:: Реализовать поведение флага ``deref``.
                 * scope
                     масштаб поиска; возможные значения:
 
@@ -194,7 +194,7 @@ class Hierarchy:
                     представляет собой словарь, ключами в котором являются имена
                     атрибутов, а значениями - массивы значений; фильтр формируется
                     так: значения атрибутов из массивов объединяются операцией
-                    ``или``\, а сами ключи - операцией ``и``\;
+                    ``или``, а сами ключи - операцией ``и``;
                     например, если ключ ``filter`` =
 
                     .. code:: json
@@ -208,7 +208,7 @@ class Hierarchy:
                     ``(&(|(cn=first)(cn=second))(|(prsEntityType=1)(prsEntityType=2)))``
                 * attributes
                     список атрибутов, значения которых необходимо
-                    вернуть; по умолчанию - ``['\*']``
+                    вернуть; по умолчанию - ``['.']``
 
 
         Returns:
@@ -236,7 +236,6 @@ class Hierarchy:
                 else:
                     if self._is_node_id_uuid(id_):
                         node = await self.get_node_dn(new_payload.get("base"))
-                        # node = await self.get_node_dn(payload["filter"]["cn"])
                     else:
                         node = id_
 
@@ -255,7 +254,6 @@ class Hierarchy:
                 id_in_attrs = True
             else:
                 return_attributes.append('entryUUID')
-            
             index_in_attrs = False
             if 'prsIndex' in return_attributes:
                 index_in_attrs = True
@@ -264,6 +262,8 @@ class Hierarchy:
 
             res = conn.search_s(base=node, scope=scope,
                 filterstr=filterstr, attrlist=return_attributes)
+            if res is None:
+                res = []
 
             result = []
             for item in res:
@@ -297,12 +297,12 @@ class Hierarchy:
 
         return result
 
-    async def add(self, base: str = None, attribute_values: dict = None) -> str:
+    async def add(self, base: str | None = None, attribute_values: dict | None = None) -> str:
         """Добавление узла в иерархию.
 
         Args:
             base (str): None | id | dn узла-родителя
-            attr_vals (dict): словарь со значениями атрибутов
+            attribute_values (dict): словарь со значениями атрибутов
 
         Returns:
             str: id нового узла
@@ -385,7 +385,7 @@ class Hierarchy:
             attr_vals (dict): словарь с новыми значениями атрибутов.
 
         Returns:
-            str: новый DN узла в случае изменения атрибута ``cn``\, иначе - None.
+            str: новый DN узла в случае изменения атрибута ``cn``, иначе - None.
         """
 
         if not node:
@@ -416,7 +416,7 @@ class Hierarchy:
             if attrs:
                 res = conn.search_s(real_base, CN_SCOPE_BASE, None, [key for key in attrs.keys()])
                 modlist = ldap.modlist.modifyModlist(res[0][1], attrs)
-                conn.modify_s(real_base, modlist)                
+                conn.modify_s(real_base, modlist)
 
             if cn:
                 res = conn.search_s(real_base, CN_SCOPE_BASE, None, ['entryUUID'])
@@ -523,7 +523,7 @@ class Hierarchy:
             ValueError: в случае отсутствия узла генерирует исключение
 
         Returns:
-            str: значение атрибута objectClass (одно значение, исключая ``top``\)
+            str: значение атрибута objectClass (одно значение, исключая ``top``)
         """
         with self._cm.connection() as conn:
             res = conn.search_s(base=self._base_dn, scope=CN_SCOPE_SUBTREE,

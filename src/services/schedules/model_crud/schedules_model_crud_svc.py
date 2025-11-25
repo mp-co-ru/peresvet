@@ -9,7 +9,7 @@ from src.services.schedules.model_crud.schedules_model_crud_settings import Sche
 class SchedulesModelCRUD(model_crud_svc.ModelCRUDSvc):
     """Сервис работы с расписаниями в иерархии.
 
-    Подписывается на очередь ``schedules_api_crud`` обменника ``schedules_api_crud``\,
+    Подписывается на очередь ``schedules_api_crud`` обменника ``schedules_api_crud``,
     в которую публикует сообщения сервис ``schedules_api_crud`` (все имена
     указываются в переменных окружения).
 
@@ -19,7 +19,6 @@ class SchedulesModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     def __init__(self, settings: SchedulesModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
- 
 
 settings = SchedulesModelCRUDSettings()
 

@@ -47,7 +47,9 @@ def valid_uuid_for_read(id: str | list[str]) -> str | list[str]:
 
 
 # base может быть пустой строкой
-def valid_base(base: str | None) -> str | None:
+def valid_base(base: str | None) -> str | list[str] | None:
+    if base is None:
+        return base
     if base.strip() == "":
         return None
     if base == "prs":
@@ -67,7 +69,7 @@ class NodeAttributes(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
 
-    cn: str = Field(None, title="Имя узла")
+    cn: str | None = Field(None, title="Имя узла")
     description: str | None = Field(None, title="Описание",
         description="Описание экземпляра.")
     prsJsonConfigString: dict | None = Field(None, title="Конфигурация экземпляра.",
@@ -86,7 +88,7 @@ class NodeAttributes(BaseModel):
 
     prsDefault: bool | None = Field(None, title="Сущность по умолчанию.",
         description=(
-            "Если = ``true``\, то данный экземпляр считается узлом по умолчанию "
+            "Если = ``true``, то данный экземпляр считается узлом по умолчанию "
             "в списке равноправных узлов данного уровня иерархии."
         )
     )
@@ -118,7 +120,18 @@ class NodeCreate(BaseModel):
             "При использовании в команде изменения узла трактуется как новый "
             "родительский узел."
         ))
-    attributes: NodeAttributes = Field({}, title="Атрибуты узла")
+    attributes: NodeAttributes = Field(
+        NodeAttributes(
+            cn=None,
+            description=None,
+            prsJsonConfigString=None,
+            prsActive=True,
+            prsDefault=None,
+            prsEntityTypeCode=None,
+            prsIndex=None
+        ),
+        title="Атрибуты узла"
+    )
 
     validate_id = validator('parentId', allow_reuse=True)(valid_uuid)
 class NodeDelete(BaseModel):
@@ -157,7 +170,7 @@ class NodeRead(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
 
-    id: str | list[str] = Field(
+    id: str | list[str] | None = Field(
         None,
         title="Идентификатор(ы) узлов.",
         description=(
@@ -192,8 +205,8 @@ class NodeRead(BaseModel):
             "которых формируется фильтр для поиска."
          ),
          description=(
-            "Значения одного атрибута объединяются логической операцией ``ИЛИ``\, "
-            "затем значения для разных атрибутов объединяются операцией ``И``\."
+            "Значения одного атрибута объединяются логической операцией ``ИЛИ``, "
+            "затем значения для разных атрибутов объединяются операцией ``И``."
          )
     )
     attributes: list[str] = Field(
@@ -201,7 +214,7 @@ class NodeRead(BaseModel):
         title="Список атрибутов.",
         description=(
             "Список атрибутов, значения которых необходимо вернуть "
-            "в ответе. По умолчанию - ['\*'], то есть все атрибуты "
+            "в ответе. По умолчанию - ['.'], то есть все атрибуты "
             "(кроме системных)."
         )
     )
@@ -254,7 +267,6 @@ class APICRUDSvc(BaseSvc):
     1) все сообщения этого сервиса нужны только сервису model_crud
     2) команды чтения/обновления/удаления могут применяться к группам экземпляров
     """
-    
     def __init__(self, settings: APICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
@@ -268,19 +280,19 @@ class APICRUDSvc(BaseSvc):
             f"{self._config.hierarchy['class']}.api_crud_client.delete.*": self._delete,
         }
 
-    async def _create(self, payload: NodeCreate | None, routing_key: str = None) -> dict:
+    async def _create(self, payload: NodeCreate | None, routing_key: str | None = None) -> dict | bool | None:
         body = {}
 
         if not (payload is None):
             body = payload.model_dump()
-        
+
         return await self._post_message(
-            mes=body, 
-            reply=True, 
+            mes=body,
+            reply=True,
             routing_key=f"{self._config.hierarchy['class']}.api_crud.create"
         )
 
-    async def _read(self, payload: NodeRead, routing_key: str = None) -> dict:
+    async def _read(self, payload: NodeRead, routing_key: str | None = None) -> dict | bool | None:
         # костыль для Grafana
         # TODO: избавиться
         if payload.id == "":
@@ -297,27 +309,27 @@ class APICRUDSvc(BaseSvc):
         body = payload.model_dump()
 
         return await self._post_message(
-            mes=body, 
-            reply=True, 
+            mes=body,
+            reply=True,
             routing_key=f"{self._config.hierarchy['class']}.api_crud.read.*"
         )
 
-    async def _update(self, payload: dict, routing_key: str = None) -> dict:
+    async def _update(self, payload: dict, routing_key: str | None = None) -> dict | bool | None:
         res = await self._post_message(
-            mes=payload, 
+            mes=payload,
             reply=True,
             routing_key=f"{self._config.hierarchy['class']}.api_crud.update.{payload['id']}"
         )
 
         return res
 
-    async def _delete(self, payload: NodeDelete, routing_key: str = None) -> dict:
+    async def _delete(self, payload: NodeDelete, routing_key: str | None = None) -> dict | bool | None:
         """Удаление узлов в иерархии.
         """
         body = payload.model_dump()
 
         return await self._post_message(
-            mes=body, 
+            mes=body,
             reply=True,
             routing_key=f"{self._config.hierarchy['class']}.api_crud.delete.{body['id']}"
         )
@@ -332,7 +344,6 @@ class APICRUDSvc(BaseSvc):
                 err = {"code": 500, "message": f"Ошибка чтения: {ex}"}
                 self._logger.exception(err)
                 return {"error": err}
-            
             try:
                 p = request_model.model_validate_json(q)
             except Exception as ex:

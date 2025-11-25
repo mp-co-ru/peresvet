@@ -51,14 +51,14 @@ class PrsLogger:
 
     **LOG_ROTATION**
 
-    Журнал создаётся функцией ``make_logger``\.
+    Журнал создаётся функцией ``make_logger``.
     """
 
     @classmethod
     def make_logger(
         cls,
         level: str = "CRITICAL",
-        file_name: str = "peresvet.log",
+        file_name: str = "log/peresvet.log",
         retention: str = "1 months",
         rotation: str = "20 days"
     ):

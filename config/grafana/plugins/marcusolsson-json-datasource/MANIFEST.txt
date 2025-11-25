@@ -1,0 +1,36 @@
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+{
+  "manifestVersion": "2.0.0",
+  "signatureType": "grafana",
+  "signedByOrg": "grafana",
+  "signedByOrgName": "Grafana Labs",
+  "plugin": "marcusolsson-json-datasource",
+  "version": "1.3.24",
+  "time": 1742580725356,
+  "keyId": "7e4d0c6a708866e7",
+  "files": {
+    "LICENSE": "1fc73e522961e161c9379bf3933e639068753fee8330b0f4e9b3c57ced59cc64",
+    "CHANGELOG.md": "c152f1a87b6030b861bf823f9186f06dae9f05ca24218b62696d68e085b887bc",
+    "img/light.png": "caa7b8fa6179e4e388de0380e122b8531eb16ff6b8f3eaa23faa1f362363b0da",
+    "img/dark.png": "52a33e32b68f611273ef247dce0e60c3553fa2e54bf47b44ff93a7336bd3dbb9",
+    "img/logo.svg": "970745c7099fd3fe4f8c8cac1de5e38410fbee44e02bac0534cefa9f6c21d984",
+    "README.md": "7c05116813031e28528960538bb13fdc01f1ee6d935774a5f0acc791eff75403",
+    "module.js.map": "7c06ae37df0685a39c87f6be697aa198aa1b31db7fd41263d973c92b3515e184",
+    "plugin.json": "f0f595f3dd037c6621994d1418cb0066139debd1c3c8f9870c158b58963e2970",
+    "module.js": "ffa4726e7d698982c2792eef101298d16cc35fb062e48db27930907bbeb554c8"
+  }
+}
+-----BEGIN PGP SIGNATURE-----
+Version: OpenPGP.js v4.10.11
+Comment: https://openpgpjs.org
+
+wrkEARMKAAYFAmfdq/UAIQkQfk0ManCIZucWIQTzOyW2kQdOhGNlcPN+TQxq
+cIhm5xY3AgkBqfAiFfJMEvo93v5V5bbWgPlOy1BzbB87MOvUO3Sj8T3Rdc7Q
+qDvrheL6P/yboZdsH//u7iuTyQP2vIvfkmPfEuECCQAQrEIVV0eiXZKZSfg9
+U1VIZ77reE+2lt0SkUgVDhKGzX3hKqOgbiDfJNYQZgvCi4OJKegQBj8J6vTw
+5JjXCcNjsQ==
+=9CWL
+-----END PGP SIGNATURE-----

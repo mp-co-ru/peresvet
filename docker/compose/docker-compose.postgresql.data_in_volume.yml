@@ -1,0 +1,25 @@
+services:
+  psql:
+    hostname: ${HOST_POSTGRES}
+    image: postgres:16.1
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      TZ: ${TIME_ZONE}
+    networks:
+      - peresvet
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    
+volumes:
+  pgdata: {}
+
+networks:
+  peresvet:
+    driver: bridge
+    ipam:
+      config:
+          - subnet: 10.66.0.0/16
+            gateway: 10.66.0.1
+

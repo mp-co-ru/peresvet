@@ -1,10 +1,10 @@
 """
 Класс, от которого наследуются все классы-настройки для сервисов.
-Наследуется от класса ``pydantic.BaseSettings``\, все настройки передаются
+Наследуется от класса ``pydantic.BaseSettings``, все настройки передаются
 в json-файлах либо в переменных окружения.
-По умолчанию имя файла с настройками - ``config.json``\.
+По умолчанию имя файла с настройками - ``config.json``.
 Имя конфигурационного файла передаётся сервису в переменной окружения
-``config_file``\.
+``config_file``.
 """
 
 import os
@@ -62,12 +62,13 @@ class BaseSvcSettings(BaseSettings, BaseModel):
 
     #: имя сервиса
     svc_name: str = ""
-    
     broker: dict = {
         #: строка коннекта к RabbitMQ
         "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
         #: имя обменника
-        "name": "peresvet"        
+        "name": "peresvet",
+        "durable": True,
+        "auto_delete": False
     }
 
     hierarchy: dict = {
@@ -78,9 +79,9 @@ class BaseSvcSettings(BaseSettings, BaseModel):
 
     log: dict = {
         "level": "INFO",
-        "file_name": "peresvet.log",
-        "retention": "1 months",
-        "rotation": "20 days"
+        "file_name": "log/peresvet.log",
+        "retention": 10,
+        "rotation": "5 MB"
     }
 
     @classmethod
@@ -99,5 +100,4 @@ class BaseSvcSettings(BaseSettings, BaseModel):
             dotenv_settings,
             file_secret_settings,
         )
-    
     cache_url: str = "redis://redis:6379?decode_responses=True&protocol=3"
