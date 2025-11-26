@@ -48,15 +48,9 @@ services:
         HOST_TAGS_APP_API: ${HOST_TAGS_APP_API}
         HOST_TAGS_ALL: ${HOST_TAGS_ALL}
 
-<<<<<<< HEAD
-        # pandas
-        PORT_PANDAS_APP_API: ${PORT_PANDAS_APP_API}
-        HOST_PANDAS_APP_API: ${HOST_PANDAS_APP_API}
-=======
         # datafunc
         PORT_DATAFUNC_APP_API: ${PORT_DATAFUNC_APP_API}
         HOST_DATAFUNC_APP_API: ${HOST_DATAFUNC_APP_API}
->>>>>>> peresvet/dev
 
         # schedules
         PORT_SCHEDULES_API_CRUD: ${PORT_SCHEDULES_API_CRUD}
@@ -68,11 +62,6 @@ services:
         HOST_GRAFANA: ${HOST_GRAFANA}
 
         TZ: ${TIME_ZONE}
-<<<<<<< HEAD
-      #depends_on:
-      #  - all_svc
-=======
->>>>>>> peresvet/dev
       networks:
         - peresvet
 
