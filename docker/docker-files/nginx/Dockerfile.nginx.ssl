@@ -5,7 +5,8 @@ ARG NGINX_HOST
 # this is actual only for minimal version of parent image
 RUN adduser -u 1000 -D -S -G www-data www-data
 
-RUN mkdir /var/www
+RUN mkdir -p /var/www/docs/pdf
+COPY docs/pdf/*.pdf /var/www/docs/pdf/
 RUN chown -R www-data:www-data /var/www
 COPY config/nginx/nginx.conf /etc/nginx/
 COPY certificates/tls/servers/$NGINX_HOST/$NGINX_HOST.crt /etc/nginx/ssl/

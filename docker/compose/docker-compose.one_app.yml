@@ -5,21 +5,14 @@ services:
     build:
       context: ../..
       dockerfile: docker/docker-files/all/Dockerfile.one_app.uvicorn
-<<<<<<< HEAD
-
-=======
       args:
         - name=value
->>>>>>> peresvet/dev
     environment:
       TZ: ${TIME_ZONE}
     networks:
       - peresvet
-<<<<<<< HEAD
-=======
     volumes:
       - ../../log:/usr/src/mpc-peresvet/log
->>>>>>> peresvet/dev
 
 networks:
   peresvet:
