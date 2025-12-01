@@ -188,7 +188,7 @@ async def lifespan(app: FastAPI):
             await route.app.on_shutdown()
 
 # для привязки подприложений необходимо создать базовое приложение
-app = FastAPI(lifespan=lifespan, title="МПК Пересвет")
+app = FastAPI(lifespan=lifespan, title="МПК-Пересвет")
 api_router = APIRouter(prefix="")
 
 # монтирование роутеров =======================================================
