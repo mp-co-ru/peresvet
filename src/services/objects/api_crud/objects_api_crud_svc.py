@@ -101,7 +101,6 @@ async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends
     """
     if payload is None:
         payload = {}
-
     try:
         s = json.dumps(payload)
         p = ObjectCreate.model_validate_json(s)

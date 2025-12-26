@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<title>bstreeview</title>
-	
+
 	<link rel="stylesheet" href="./public/assets/css/bootstrap.min.css">
 	<link rel="stylesheet" href="./public/assets/css/fonts.css">
 	<link rel="stylesheet" href="./public/assets/css/bstreeview.css">
@@ -63,7 +63,7 @@
 				<button type="button" class="btn-close" aria-label="Close"
 						onclick="$('#div-butAlert').addClass('d-none');"></button>
 			</div>
-	
+
 			<div class="p-2 mt-2" id="tree"></div>
 		</div>
 		<div class="element-holder col d-none" id="attributes-form">
@@ -85,23 +85,23 @@
 				<input prsAttribute="cn" onchange="onInputChange(event);" type="text" class="form-control" id="input-cn">
 			</div>
 			<div class="input-group mt-2" id="div-description">
-				<span class="input-group-text prs-input-label space-between">Описание					
+				<span class="input-group-text prs-input-label space-between">Описание
 						</span>
 				<input prsAttribute="description" onchange="onInputChange(event);" type="text" class="form-control" id="input-description"/>
 			</div>
 			<div class="input-group mt-2" id="div-prsMethodAddress">
 				<span class="input-group-text prs-input-label space-between">Адрес
-							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
 								title="Название метода, под которым он зарегистрирован в системе">
 							</i>
 						</span>
 				<input prsAttribute="prsMethodAddress" onchange="onInputChange(event);"  type="text" class="form-control" id="input-prsMethodAddress" placeholder=""/>
-	
+
 			</div>
-	
+
 			<div class="input-group mt-2" id="div-prsValueTypeCode">
 				<span class="input-group-text prs-input-label space-between">Тип значений
-							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
 								title="Тип значений, хранящихся в теге. Поддерживаются типы: целочисленный, вещественный, строковый и json.">
 							</i>
 						</span>
@@ -112,10 +112,10 @@
 							<option value="4">json</option>
 						</select>
 			</div>
-	
+
 			<div class="input-group mt-2" id="div-prsActive">
 				<span class="input-group-text prs-input-label space-between">Активный
-						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
 						title="Активность узла. Если этот флаг сброшен, узел перестаёт функционировать, как и все его дочерние узлы. Но у дочерних узлов флаг активности не изменяется (не реализовано)."></i>
 					</span>
 				<select prsAttribute="prsActive" onchange="onInputChange(event);" id="input-prsActive" class="form-select" required>
@@ -123,49 +123,49 @@
 						<option value="false">Нет</option>
 					</select>
 			</div>
-	
+
 			<div class="input-group mt-2" id="div-prsIndex">
 				<span class="input-group-text prs-input-label space-between">Индекс
-							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
 								title="Индекс узла на текущем уровне иерархии. Если у узлов на одном уровне иерархии выставлены индексы, платформа будет возвращать список этих узлов, отсортированный в порядке возрастания индексов.">
-							</i>					
+							</i>
 						</span>
 				<input prsAttribute="prsIndex" onchange="onInputChange(event);" type="number" class="form-control" id="input-prsIndex" placeholder=""/>
 			</div>
-	
+
 			<div class="input-group mt-2" id="div-prsEntityTypeCode">
 				<span class="input-group-text prs-input-label space-between">Тип
-						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
 							title="Код типа узла. Для методов: 0 - вычислительный метод тега.">
 						</i>
 					</span>
 				<input prsAttribute="prsEntityTypeCode" onchange="onInputChange(event);"  type="number" class="form-control" id="input-prsEntityTypeCode" placeholder=""/>
 			</div>
-	
+
 			<div class="input-group mt-2" id="div-prsJsonConfigString">
 				<span class="input-group-text prs-input-label space-between">Конфигурация
-							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
 								title="Конфигурация узла. Как и атрибут 'Тип' не интерпретируется платформой и нужен для моделей или других приложений. Предполагается, что конфигурация указывается в виде json.">
 							</i>
 						</span>
 				<input prsAttribute="prsJsonConfigString" onchange="onInputChange(event);" type="text" class="form-control" id="input-prsJsonConfigString" placeholder=""/>
 			</div>
-	
+
 			<div class="input-group mt-2" id="div-prsUpdate">
 				<span class="input-group-text prs-input-label space-between">Обновлять
-							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
 								title="Флаг обновления значений тега. Если = ``true``, то на каждую метку времени может быть записано только одно значение тега. Иначе на одну метку времени может быть несколько значений.">
-							</i>						
+							</i>
 						</span>
 				<select prsAttribute="prsUpdate" onchange="onInputChange(event);" id="input-prsUpdate" class="form-select" required>
 							<option selected value="true">Да</option>
 							<option value="false">Нет</option>
 						</select>
 			</div>
-	
+
 			<div class="input-group mt-2" id="div-prsDefault">
 				<span class="input-group-text prs-input-label space-between">По умолчанию
-							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
 								title="Флаг узла по умолчанию. На каждом уровне иерархии может быть только один узел по умолчанию. Если создаётся новый узел с флагом Default = true, то платформа сбросит этот флаг у старого узла на соответствующем уровне иерархии и узлом по умолчанию будет новый.">
 							</i>
 						</span>
@@ -174,10 +174,10 @@
 							<option value="false">Нет</option>
 						</select>
 			</div>
-	
+
 			<div class="input-group mt-2" id="div-prsStep">
 				<span class="input-group-text prs-input-label space-between">Шаговый
-							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
 								title="Флаг 'шагового' тега. Если = true, то значение тега между двумя соседними метками не интерполируется.">
 							</i>
 						</span>
@@ -186,12 +186,12 @@
 							<option selected value="false">Нет</option>
 						</select>
 			</div>
-	
+
 			<div class="input-group mt-2" id="div-prsMeasureUnits">
 				<span class="input-group-text prs-input-label space-between">Единицы измерения</span>
 				<input prsAttribute="prsMeasureUnits" onchange="onInputChange(event);" type="text" class="form-control" id="input-prsMeasureUnits" />
 			</div>
-	
+
 			<div class="input-group mt-2" id="div-initiatedBy">
 				<span class="input-group-text prs-input-label space-between">Инициаторы:
 							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
@@ -217,14 +217,14 @@
 							tabindex="0">
 							<select prsAttribute="initiatedBy" onchange="onInputChange(event);" id="input-initiatedByTags" class="form-select mt-1" size="5" multiple>
 										<option selected value="true">Текст текст текст</option>
-										<option value="false">Текст текст текст</option>											
+										<option value="false">Текст текст текст</option>
 									</select>
 						</div>
 						<!--
 								<div class="tab-pane fade" id="v-pills-Alerts" role="tabpanel" aria-labelledby="v-pills-Alerts-tab" tabindex="0">
 									<select prsAttribute="initiatedBy" onchange="onInputChange(event);" id="input-initiatedByAlerts" class="form-select mt-1" size="5" multiple>
 										<option selected value="true">Текст текст текст</option>
-										<option value="false">Текст текст текст</option>											
+										<option value="false">Текст текст текст</option>
 									</select>
 								</div>
 								-->
@@ -232,13 +232,13 @@
 							tabindex="0">
 							<select prsAttribute="initiatedBy" onchange="onInputChange(event);" id="input-initiatedBySchedules" class="form-select mt-1" size="5" multiple>
 										<option selected value="true">Текст текст текст</option>
-										<option value="false">Текст текст текст</option>											
+										<option value="false">Текст текст текст</option>
 									</select>
 						</div>
 					</div>
 				</div>
 			</div>
-	
+
 			<div class="input-group mt-2" id="div-alertConfig">
 				<span class="input-group-text prs-input-label space-between">Конфигурация:
 						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
@@ -267,7 +267,7 @@
 						<div class="col-1 mx-1">
 							<select prsAttribute="alertConfig" onchange="onInputChange(event);" id="input-alertConfHigh" class="form-select" size="1">
 									<option selected value="true">&#62;=</option>
-									<option value="false">&#60;</option>											
+									<option value="false">&#60;</option>
 								</select>
 						</div>
 						<div class="col-1 mx-1">
@@ -276,13 +276,13 @@
 						<div class="col-1 mx-1">
 							<select prsAttribute="alertConfig" onchange="onInputChange(event);" id="input-alertConfAutoack" class="form-select" size="1">
 									<option selected value="true">Да</option>
-									<option value="false">Нет</option>											
+									<option value="false">Нет</option>
 								</select>
 						</div>
 					</div>
 				</div>
 			</div>
-	
+
 			<div class="input-group mt-2" id="div-scheduleConfig">
 				<span class="input-group-text prs-input-label space-between">Конфигурация:
 						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
@@ -330,10 +330,10 @@
 					</div>
 				</div>
 			</div>
-	
+
 			<div class="input-group mt-2" id="div-parameters">
 				<span class="input-group-text prs-input-label space-between">Параметры
-							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
 								title="Параметры, передаваемые для расчёта в метод.">
 							</i>
 						</span>
@@ -378,7 +378,7 @@
 								<div class="col-4 me-2">
 									<select prsAttribute="parameter" onchange="onInputChange(event);" id="input-parameter-tagId-0" class="form-select" size="1">
 											<option selected value="ttt">&#62;=</option>
-											<option value="ttttt">&#60;</option>											
+											<option value="ttttt">&#60;</option>
 										</select>
 								</div>
 								<div class="col me-2">
@@ -395,7 +395,7 @@
 					</div>
 				</div>
 			</div>
-	
+
 			<div id="div-updateAlert" class="alert alert-message alert-dismissible d-flex rounded p-0 mt-3 d-none" role="alert">
 				<div class="alert-icon d-flex justify-content-center align-items-center flex-grow-0 flex-shrink-0 py-3">
 					<i class="fa-solid fa-circle-exclamation fs-4" id="i-updateAlert"></i>
@@ -404,7 +404,7 @@
 				<button type="button" class="btn-close" aria-label="Close"
 						onclick="$('#div-updateAlert').addClass('d-none');"></button>
 			</div>
-	
+
 			<div class="text-left mt-sm-2">
 				<button id="but-save" class="btn btn-primary btn-icon btn-sm disabled" onclick="saveChanges();">
 							<span class="icon"><i class="fa-solid fa-download"></i></span>Записать
@@ -414,10 +414,10 @@
 						</button>
 			</div>
 			<hr class="mt-2" />
-	
+
 			<div class="input-group mt-2" id="div-tagData">
 				<span class="input-group-text prs-input-label space-between">Данные тега
-						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip" 
+						<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
 							title="Просмотр и запись значений тега.">
 						</i>
 					</span>

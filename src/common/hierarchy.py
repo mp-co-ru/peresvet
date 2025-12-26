@@ -254,7 +254,6 @@ class Hierarchy:
                 id_in_attrs = True
             else:
                 return_attributes.append('entryUUID')
-
             index_in_attrs = False
             if 'prsIndex' in return_attributes:
                 index_in_attrs = True

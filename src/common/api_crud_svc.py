@@ -267,7 +267,6 @@ class APICRUDSvc(BaseSvc):
     1) все сообщения этого сервиса нужны только сервису model_crud
     2) команды чтения/обновления/удаления могут применяться к группам экземпляров
     """
-
     def __init__(self, settings: APICRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
@@ -345,7 +344,6 @@ class APICRUDSvc(BaseSvc):
                 err = {"code": 500, "message": f"Ошибка чтения: {ex}"}
                 self._logger.exception(err)
                 return {"error": err}
-
             try:
                 p = request_model.model_validate_json(q)
             except Exception as ex:

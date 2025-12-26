@@ -87,14 +87,12 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
     async def _further_update(self, mes: dict) -> None:
 
         ds_id = mes["id"]
-
         linked_tags = mes.get('linkTags')
         if linked_tags:
             for item in linked_tags:
                 copy_item = copy.deepcopy(item)
                 copy_item["dataStorageId"] = ds_id
                 await self._link_tag(copy_item)
-
         linked_alerts = mes.get('linkAlerts')
         if linked_alerts:
             for item in linked_alerts:
@@ -119,7 +117,6 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                     "dataStorageId": ds_id
                 }
                 await self._unlink_alert(item)
-
     async def _unlink_tag(self, item: dict, routing_key: str = None) -> None:
         """Метод отвязки тега от хранилища.
         Ищем, к какому хранилищу привязан тег и посылаем этому хранилищу
@@ -128,7 +125,6 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         Args:
             tag_id (str): id отвязываемого тега
         """
-
         res = await self._post_message(
             mes=item, routing_key=f"{self._config.hierarchy['class']}.model.unlink_tag.{item['dataStorageId']}"
         )
@@ -237,7 +233,6 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         if not res:
             self._logger.error(f"{self._config.svc_name} :: Нет обработчика для хранилища {datastorage_id}.")
             return
-
         get_tag = {
             "id": payload['tagId'],
             "attributes": ["prsValueTypeCode"]
@@ -321,7 +316,6 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             mes=payload,
             reply=True,
             routing_key=f"{self._config.hierarchy['class']}.model.link_alert.{datastorage_id}")
-
         if not res:
             self._logger.error(f"{self._config.svc_name} :: Нет обработчика для хранилища {datastorage_id}.")
             return

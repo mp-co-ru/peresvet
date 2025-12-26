@@ -62,7 +62,6 @@ class BaseSvcSettings(BaseSettings, BaseModel):
 
     #: имя сервиса
     svc_name: str = ""
-
     broker: dict = {
         #: строка коннекта к RabbitMQ
         "amqp_url": "amqp://prs:Peresvet21@rabbitmq/",
@@ -101,5 +100,4 @@ class BaseSvcSettings(BaseSettings, BaseModel):
             dotenv_settings,
             file_secret_settings,
         )
-
     cache_url: str = "redis://redis:6379?decode_responses=True&protocol=3"

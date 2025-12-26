@@ -126,7 +126,6 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         #    "<ds_id>": <connection_pool>
         # }
         self._connection_pools = {}
-
     def _add_app_handlers(self):
         self._handlers["prsTag.app.data_get.*"] = self._tag_get
         self._handlers["prsTag.app.data_set.*"] = self._tag_set
@@ -152,7 +151,6 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsTag.app.data_set.{tag_id}")
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsTag.model.updated.{tag_id}")
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsTag.model.deleted.{tag_id}")
-
         else:
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsTag.app.data_get.{tag_id}")
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsTag.app.data_set.{tag_id}")
@@ -203,7 +201,6 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             "attributes": ["prsJsonConfigString", "prsActive"]
         }
         ds = await self._hierarchy.search(payload=payload)
-
         # привяжемся к сообщениям, касающимся изменениям хранилища ---------------------------------
         await self._bind_ds(ds_id, True)
         # ----------------------------------------------------------------------------------------
@@ -218,7 +215,6 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
                 except Exception as ex:
                     self._logger.error(f"{self._config.svc_name} :: Ошибка связи с базой данных '{ds_id}': {ex}")
                     await asyncio.sleep(5)
-
 
 
         payload = {
@@ -268,7 +264,6 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.model.updated.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.model.deleting.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.model.deleted.*")
-
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.app.alarm_acked.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.app.alarm_on.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.app.alarm_off.*")
@@ -362,7 +357,6 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
         if self._config.datastorages_id:
             return
-
         await self._add_supported_ds(mes["id"])
 
     async def updating(self, mes: dict, routing_key: str = None) -> None:
@@ -458,7 +452,6 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         ]:
             return not mes["id"] in self._connection_pools.keys()
         """
-
         return False
 
     @abstractmethod
@@ -546,7 +539,6 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         store = None
         if mes.get("attributes"):
             store = mes["attributes"].get("prsStore")
-
         if store is not None:
             check = await self._check_store_name_for_new_tag(ds_id=ds_id, store=store)
             if not check:
@@ -750,7 +742,6 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
         Args:
             tag_id (str): id тега, для которого формируем кэш
-
         Returns:
             dict | None: сформированный кэш тега
         """

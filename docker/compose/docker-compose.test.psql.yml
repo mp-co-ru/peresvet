@@ -1,0 +1,11 @@
+version: '3.9'
+
+services:
+  test_psql:
+    hostname: test_psql
+    build:
+      context: ../..
+      dockerfile: docker/docker-files/all/Dockerfile.test.psql
+
+    ports:
+      - 5432:5432

@@ -5,7 +5,7 @@ services:
     networks:
       - peresvet
     environment:
-      TZ: ${TIME_ZONE}    
+      TZ: ${TIME_ZONE}
 
 networks:
   peresvet:

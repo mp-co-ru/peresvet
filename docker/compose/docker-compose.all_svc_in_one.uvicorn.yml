@@ -1,0 +1,22 @@
+version: '3.9'
+
+services:
+  all_svc:
+    hostname: ${ALL_SVC_HOST}
+    build:
+      context: ../..
+      dockerfile: docker/docker-files/all/Dockerfile.all_svc.uvicorn
+    #image: mpc/peresvet_all-svc:0.4-arm64
+
+    environment:
+      TZ: ${TIME_ZONE}
+    #ports:
+    #  - 85:85
+    #  - 86:86
+
+    #volumes:
+    #  - ./src/:/usr/src/mpc-peresvet/src/:r
+    #  - ./logs/alerts.all/api_crud/:/usr/src/alerts_api_crud/log/:rw
+    #  - ./logs/alerts.all/model_crud/:/usr/src/alerts_model_crud/log/:rw
+    #  - ./logs/alerts.all/app/:/usr/src/alerts_app/log/:rw
+    #  - ./logs/alerts.all/app_api/:/usr/src/alerts_app_api/log/:rw

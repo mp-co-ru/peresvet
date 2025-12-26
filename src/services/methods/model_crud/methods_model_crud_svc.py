@@ -215,7 +215,6 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     async def _further_read(self, mes: dict, search_result: dict) -> dict:
         # добавим в результат параметры и initiatedBy
-
         new_result = {
             "data": []
         }
@@ -255,7 +254,6 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
                 })
 
             new_result["data"].append(new_method_item)
-
         return new_result
 
     async def _further_update(self, mes: dict) -> None:
@@ -303,7 +301,6 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         await self._amqp_consume_queue.unbind(self._exchange, "prsTag.model.deleted.*")
         await self._amqp_consume_queue.unbind(self._exchange, "prsSchedule.model.deleted.*")
-
         try:
             await self._get_methods()
         except Exception as ex:

@@ -137,7 +137,6 @@ class TagsApp(AppSvc):
         # просто удалим кэш тега
         # при попытке чтения/записи данных кэш будет создан
         await self._delete_tag_cache(mes["id"])
-
     async def _deleted(self, mes: dict, routing_key: str = None):
         await self._delete_tag_cache(mes["id"])
 

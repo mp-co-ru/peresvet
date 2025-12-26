@@ -57,7 +57,6 @@ class AppSvc(Svc):
         if not self._config.nodes:
             await super()._generate_queue()
             return
-
         self._amqp_consume_queue = await self._amqp_channel.declare_queue(
             f"{self._config.svc_name}_consume_{self._config.nodes[0]}", durable=False, auto_delete=True
         )

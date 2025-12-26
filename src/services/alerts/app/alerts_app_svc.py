@@ -22,7 +22,6 @@ class AlertsApp(AppSvc):
         self._handlers[f"{self._config.hierarchy['class']}.app_api.get_alarms"] = self._get_alarms
         self._handlers[f"{self._config.hierarchy['class']}.app_api.ack_alarm"] = self._ack_alarm
         self._handlers["prsTag.app.data_set.*"] = self._tag_value_changed
-
     async def _deleting(self, mes: dict, routing_key: str = None):
         # перед удалением тревоги
         await self._delete_alert_cache(mes['id'])
@@ -115,7 +114,6 @@ class AlertsApp(AppSvc):
         if not isinstance(alert_config, dict):
             self._logger.error(f"{self._config.svc_name} :: У тревоги '{alert_id}' неверная конфигурация.")
             return None
-
         if (alert_config.get("value") is None) or \
            (alert_config.get("high") is None) or \
            (alert_config.get("autoAck") is None):
@@ -175,7 +173,6 @@ class AlertsApp(AppSvc):
         Returns:
             dict: _description_
         """
-
         scope = (CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE)[bool(mes.get('getChildren'))]
 
         get_alerts = {
@@ -375,7 +372,6 @@ class AlertsApp(AppSvc):
         # по умолчанию очередь привязывается к изменениям всех тегов
         # нам же нужны только изменения тегов, у которых есть тревоги
         await self._amqp_consume_queue.unbind(self._exchange, "prsTag.app.data_set.*")
-
         try:
             await self._get_alerts()
         except Exception as ex:

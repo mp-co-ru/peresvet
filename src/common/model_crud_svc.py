@@ -241,7 +241,6 @@ class ModelCRUDSvc(Svc):
                     }
                 }
                 return res_response
-
             # проверка того, что новый родитель не является членом подиерархии узла
             res = await self._hierarchy.search({
                 "base": id,
@@ -277,7 +276,6 @@ class ModelCRUDSvc(Svc):
             reply=True,
             routing_key=f"{self._config.hierarchy['class']}.model.updating.{id}"
         )
-
         if mes.get("attributes"):
             try:
                 await self._hierarchy.modify(id, mes["attributes"])
@@ -326,7 +324,6 @@ class ModelCRUDSvc(Svc):
             mes (dict): {"id": ["..."]}
 
         """
-
         ids = mes["id"]
         if not isinstance(ids, list):
             ids = [ids]
@@ -407,7 +404,6 @@ class ModelCRUDSvc(Svc):
                         "id": item[0],
                         "objectClass": objectClass
                     })
-
             if children:
                 tasks = []
                 for child in children:
@@ -571,7 +567,6 @@ class ModelCRUDSvc(Svc):
                 return res_response
 
             mes_data["base"] = self._config.hierarchy["node_id"]
-
         for key, item in mes_data["filter"].items():
             # если в запросе одно из полей было не списком, то делаем его списком
             if type(item) is not list:

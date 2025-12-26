@@ -73,6 +73,10 @@ docs/build/
 docs/source/_build/
 docs/latex/*.pdf
 docs/latex/*.log
+docs/build/
+docs/source/_build/
+docs/latex/*.pdf
+docs/latex/*.log
 
 # PyBuilder
 target/

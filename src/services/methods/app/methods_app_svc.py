@@ -198,7 +198,6 @@ class MethodsApp(AppSvc):
             request = json.loads(parameter[2]["prsJsonConfigString"][0])
 
             request["finish"] = data[1]
-
             self._logger.debug(f"mes: {request}")
 
             param_data = await self._post_message(
@@ -387,7 +386,6 @@ class MethodsApp(AppSvc):
             await self._bind_method(method[0])
 
     async def on_startup(self) -> None:
-
         await super().on_startup()
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.app.data_set.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsSchedule.app.fire_event.*")

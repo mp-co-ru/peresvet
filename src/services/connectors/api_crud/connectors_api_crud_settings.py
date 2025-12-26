@@ -9,4 +9,3 @@ class ConnectorsAPICRUDSettings(APICRUDSettings):
         #: класс экземпляров сущности в иерархии
         "class": "prsConnector"
     }
-    

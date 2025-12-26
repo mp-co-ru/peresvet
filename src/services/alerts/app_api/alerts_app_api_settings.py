@@ -6,5 +6,3 @@ class AlertsAppAPISettings(SvcSettings):
     svc_name: str = "alerts_app_api"
     #: версия API
     api_version: str = "/v1"
-
-    

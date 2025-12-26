@@ -1,0 +1,50 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+{
+  "manifestVersion": "2.0.0",
+  "signatureType": "community",
+  "signedByOrg": "gapit",
+  "signedByOrgName": "gapit",
+  "plugin": "gapit-htmlgraphics-panel",
+  "version": "2.2.3",
+  "time": 1762932769026,
+  "keyId": "7e4d0c6a708866e7",
+  "files": {
+    "CHANGELOG.md": "e99f446d678bde7362f82af4ebfdcfbcbbc53a3c03687964b016da71a94b02b3",
+    "LICENSE": "e67fa6fe471b9a3309cd463847190389590b6ebb9d1ec702cb5badb4b4b919c0",
+    "module.js": "3014a62575234a17b5d094ddc2431eef7d8e01c86fe3ec745aabfc1406a90c08",
+    "img/screenshot-overflow.png": "d9da7d81b892b3f5493677dd71ec7bea07d99da18f2b02dd02dcfee7751e8fa8",
+    "img/screenshot-react-radar-example.png": "937742d16b16604c6590f091ab08a087c49cfc573d49bc09384b56fc61f9e949",
+    "img/logo.svg": "fd1b6ac34f5179027ae0ea7eb7fe58d5c91187db2adf5c43bc49ef1e68c48858",
+    "img/screenshot-simple-example.png": "8cf7bb666a7a58d44b80bc9e16dad07ce190d6605a624ea7d62b2c17863f082e",
+    "img/screenshot-building-overview.png": "7da0b48c50f9c13d8ef7d6603ab712ad7fd1ebf0269b9a324ff2417e78f3269f",
+    "img/screenshot-open-sans-font-weights.png": "813f98873400c767b8f46142a17ce0f26c4aa2c757f8268f604ea15241956ced",
+    "img/screenshot-edit-mode.png": "adfc7cf13d9291d2d932f3f0025895d38e7350fce192c64e2d2e16c8dec94eb1",
+    "img/screenshot-building-overview-edit.png": "f03eff7b9e8a6a80113cb8098422bb78ed7dcaa46458e42733093006c7ce49ac",
+    "img/screenshot-code-editor.png": "26efc5d7e2529185e3db812a174f13e967665c33959ef93c52084036e05e1c0e",
+    "static/fonts/OpenSans-Regular.woff2": "408fe165dff48eb2f8cb3a2fcbc1dd92b94d56b4ab11813be55c776871c691cf",
+    "static/fonts/OpenSans-Light.woff2": "c42014995e3763f5fd8d42a07ddc4f2d12486017484f2324f3e6afb46029df82",
+    "static/fonts/OpenSans-SemiBold.woff2": "7a32484e166e1337fbb0cf4f4262bb385ed9081f1ac20f9efe39e8e50490367a",
+    "static/fonts/OpenSans-Bold.woff2": "46b518780343f2262e168bea5146d1ff30a6253191cc61b486657c76a58fb2bb",
+    "static/fonts/OFL.txt": "7e635dc350ac421aefdd82f33b366fb5c4c4984ab612ae1da0fea4cdc9b9eafc",
+    "declarations/bfc39fd5ef1360b2eb4e.d.ts": "0c33520d478763b934f072404fe7c6322a6cdbf32d6187232160ecd8f2f0faf4",
+    "declarations/c84c03169c83582b8d39.d.ts": "290966606e467acd0e00c87f2be1f5016a495ceb261b040e1a41f9522fbf8abf",
+    "declarations/ae19312715612fa7e7af.d.ts": "fb0ab2a8a7ecf92ed45232ec44ad741b894494f2e4fe677e7e9f8c5dc3ac9c3d",
+    "declarations/491660ed342945607e68.d.ts": "753657aec25c9ddf4ad6297dad697c27417cd36478354356e1a2d0797ee2269f",
+    "declarations/29839932e05441b287b6.d.ts": "a51cb858b64c3c556c2ee0141de88c6b54b1925ce61e58715840b28d0835b905",
+    "README.md": "7cb3a5f01c1230248e3d859e3c542dc90d9b666d3ad4ecf3218f63078a7c4c9f",
+    "module.js.map": "2989c479ece8d2a51f2bb36da79618f9ee0580feca83bbe4a16c4ac3c2656ec5",
+    "plugin.json": "ecb84545d5f200bdf3742a94304bf1ac02af12566da75f3695f78d22a720f047"
+  }
+}
+-----BEGIN PGP SIGNATURE-----
+
+wsA+BAETCgBtBYJpFDghCZB+TQxqcIhm50UUAAAAAAAcACBzYWx0QG5vdGF0
+aW9ucy5vcGVucGdwanMub3Jn5BaYASwYpci09XtVELKQNl7BdFXT/RS6H01u
+TI8qqMEWIQTzOyW2kQdOhGNlcPN+TQxqcIhm5wAAy9MCCMKsX2kuFZ0cy8k7
+pe+gg4YR0Xizi/kWt02204WN91sAATvcevBAWwRy03nnbS4mbVouijpJQYhh
+5QNwYd/V6DGPAgkB0dfXV91lMNj7YDKJ2iMXu3FIQ7PTC9yENJEZiP6Wi8Fs
+E3s2kXS6ppCgE0Rm7JgPg1v231RSmhstF6RKMsq3ApE=
+=eLX+
+-----END PGP SIGNATURE-----
