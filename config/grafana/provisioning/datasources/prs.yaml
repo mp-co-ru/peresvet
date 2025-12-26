@@ -10,9 +10,8 @@ datasources:
         allowUiUpdates: true
         url: http://NGINX_HOST/v1/
         user: ''
-        database: '' 
+        database: ''
         basicAuth: false
-        basicAuthUser: 
+        basicAuthUser:
         withCredentials: false
         isDefault: true
-    

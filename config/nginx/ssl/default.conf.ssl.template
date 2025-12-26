@@ -1,0 +1,43 @@
+server {
+    # HTTP->HTTPS Redirection
+    listen         ${HTTP_PORT};
+    server_name    ${SRV_NAME};
+    return         301 https://$server_name$request_uri;
+}
+
+server {
+    listen ${HTTPS_PORT} default_server ssl;
+    listen [::]:${HTTPS_PORT} ssl;
+    server_name ${SRV_NAME};
+
+    ssl_certificate /etc/nginx/ssl/server/${SRV_NAME}.crt;
+    ssl_certificate_key /etc/nginx/ssl/server/${SRV_NAME}.key;
+    ssl_client_certificate /etc/nginx/ssl/rootCA/rootCA.crt;
+    ssl_verify_client ${NGINX_CERT_REQUIRED};
+    proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+    proxy_ssl_ciphers HIGH:!aNULL:!MD5;
+    set $proto https;
+
+    resolver 127.0.0.11 valid=5s;
+    set $upstream Peresvet;
+
+    location = / {
+        root   /var/www;
+        index  index.html index.htm;
+    }
+
+    location ~ /data/ {
+        proxy_pass $proto://tags_load_tests:${TAGS_APP_API_HTTPS_PORT};
+    }
+
+    location /ws/ {
+        proxy_pass $proto://tags_load_tests:${TAGS_APP_API_HTTPS_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header X-SSL-Client $ssl_client_s_dn;
+    }
+}

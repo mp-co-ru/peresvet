@@ -144,7 +144,6 @@ class BaseSvc(FastAPI):
                 self._logger.error(f"{self._config.svc_name} :: Сообщение {mes} не в формате json.")
                 await message.ack()
                 return
-
             reject = await self._reject_message(mes)
             if reject:
                 self._logger.debug(f"{self._config.svc_name} :: Сообщение {mes} отклонено.")
@@ -198,7 +197,6 @@ class BaseSvc(FastAPI):
         if reply:
             correlation_id = str(uuid4())
             reply_to = self._amqp_callback_queue.name
-
         if not routing_key:
             self._logger.error(f"{self._config.svc_name} :: Не указан routing_key для публикации сообщения.")
             return
@@ -243,7 +241,6 @@ class BaseSvc(FastAPI):
         self._amqp_consume_queue = await self._amqp_channel.declare_queue(
             f"{self._config.svc_name}_consume", durable=False, auto_delete=True
         )
-
     async def _bind_queue(self):
         for key in self._handlers.keys():
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=key)
@@ -282,7 +279,6 @@ class BaseSvc(FastAPI):
 
                 await self._generate_queue()
                 await self._bind_queue()
-
                 await self._amqp_consume_queue.consume(self._process_message)
 
                 self._amqp_callback_queue = await self._amqp_channel.declare_queue(

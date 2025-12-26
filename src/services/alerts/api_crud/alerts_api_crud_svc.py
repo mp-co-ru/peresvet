@@ -20,13 +20,11 @@ def valid_alert_config(v: dict) -> dict:
                 "value": 10,
                 "autoAck": True
             }
-
         new_v.setdefault("high", True)
         new_v.setdefault("value", 10)
         new_v.setdefault("autoAck", True)
 
         return new_v
-
 class AlertCreateAttributes(svc.NodeAttributes):
     """При создании тревоги атрибут ``prsJsonConfigString`` имеет формат
 
@@ -52,7 +50,6 @@ class AlertCreateAttributes(svc.NodeAttributes):
             "value": 10,
             "autoAck": True
         }, title="Конфигурация тревоги")
-
     validate_config = validator('prsJsonConfigString', allow_reuse=True)(valid_alert_config)
     pass
 
@@ -84,7 +81,6 @@ class AlertsAPICRUD(svc.APICRUDSvc):
 
     async def _read(self, payload: AlertRead) -> dict:
         return await super()._read(payload=payload)
-
 settings = AlertsAPICRUDSettings()
 
 app = AlertsAPICRUD(settings=settings, title="`AlertsAPICRUD` service")
@@ -125,7 +121,6 @@ async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
                     # флаг автоквитирования
                     "autoAck": True
                 }
-
             Обязательный аттрибут.
           * **prsActive** (bool) - Определяет, активна ли тревога. По умолчанию = ``true``.
             Необязательный атрибут.
@@ -150,7 +145,6 @@ async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
     res = await app._create(p)
     await error_handler.handle_error(res)
     return res
-
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200, response_model_exclude_none=True)
 async def read(q: str | None = None, payload: AlertRead | None = None, error_handler: svc.ErrorHandler = Depends()):
     """
@@ -226,7 +220,6 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
         * **id** (str) - id тревоги для обновления. Обязательное поле.
         * **attributes** (dict) - словарь с параметрами для обновления.
           Соответствует атрибутам из команды ``create``.
-
 
     **Ответ:**
 

@@ -1,0 +1,41 @@
+{
+    "listeners": {
+        "*:443": {
+            "pass": "applications/app_api",
+            "tls": {
+                "certificate": "bdhome"
+            }
+        }
+    },
+
+    "applications": {
+        "app": {
+            "type": "python 3.10",
+            "processes": 2,
+            "working_directory": "/usr/src/tags_app",
+            "path": "/usr/src/tags_app/src/services/tags/app/",
+            "home": "/usr/src/tags_app/.venv/",
+            "module": "tags_app_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"CRITICAL\", \"file_name\": \"log/tags_app.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@rabbitmq_load_tests/",
+                "ldap_url": "ldap://ldap_load_tests:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        },
+        "app_api": {
+            "type": "python 3.10",
+            "processes": 4,
+            "working_directory": "/usr/src/tags_app_api",
+            "path": "/usr/src/tags_app_api/src/services/tags/app_api/",
+            "home": "/usr/src/tags_app_api/.venv/",
+            "module": "tags_app_api_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"CRITICAL\", \"file_name\": \"log/tags_app_api.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@rabbitmq_load_tests/",
+                "ldap_url": "ldap://ldap_load_tests:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        }
+    }
+}

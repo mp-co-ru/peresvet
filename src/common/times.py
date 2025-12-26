@@ -46,7 +46,6 @@ def ts (time_data: int | str | None = None) -> int:
 def int_to_local_timestamp (int_ts: int) -> datetime.datetime:
     if int_ts is None:
         return None
-
     return datetime.datetime.fromtimestamp(int_ts / microsec, tz.tzlocal())
 
 def ts_to_local_str (ts: int | str) -> str:
@@ -54,7 +53,6 @@ def ts_to_local_str (ts: int | str) -> str:
         return None
     if isinstance(ts, str):
         return ts
-
     return str(datetime.datetime.fromtimestamp(ts / microsec, tz.tzlocal()))
 
 def now_int() -> int:

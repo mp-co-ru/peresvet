@@ -18,12 +18,12 @@
 
    .. code:: sh
 
-      $ git clone git@github.com:Vovaman/peresvet.git 
+      $ git clone git@github.com:mp-co-ru/mpc-peresvet.git
 #. Заходим в каталог проекта:
 
    .. code:: sh
 
-      $ cd peresvet
+      $ cd mpc-peresvet
 
 #. Запускаем платформу:
 
@@ -38,5 +38,3 @@
 #. База данных PostgreSQL (данные будут храниться внутри контейнера)
 #. Ядро платформы
 #. Клиент для отображения данных Grafana
-
-

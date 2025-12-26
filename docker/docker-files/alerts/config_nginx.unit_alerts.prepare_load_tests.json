@@ -1,0 +1,65 @@
+{
+    "listeners": {
+        "*:85": {
+            "pass": "applications/api_crud"
+        },
+        "*:86": {
+            "pass": "applications/app_api"
+        }
+    },
+
+    "applications": {
+        "api_crud": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/alerts_api_crud",
+            "path": "/usr/src/alerts_api_crud/src/services/alerts/api_crud/",
+            "home": "/usr/src/alerts_api_crud/.venv/",
+            "module": "alerts_api_crud_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/alerts_api_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@rabbitmq_load_tests/",
+                "ldap_url": "ldap://ldap_load_tests:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        },
+        "model_crud": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/alerts_model_crud",
+            "path": "/usr/src/alerts_model_crud/src/services/alerts/model_crud/",
+            "home": "/usr/src/alerts_model_crud/.venv/",
+            "module": "alerts_model_crud_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/alerts_model_crud.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@rabbitmq_load_tests/",
+                "ldap_url": "ldap://ldap_load_tests:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        },
+        "app": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/alerts_app",
+            "path": "/usr/src/alerts_app/src/services/alerts/app/",
+            "home": "/usr/src/alerts_app/.venv/",
+            "module": "alerts_app_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/alerts_app.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@rabbitmq_load_tests/",
+                "ldap_url": "ldap://ldap_load_tests:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        },
+        "app_api": {
+            "type": "python 3.10",
+            "working_directory": "/usr/src/alerts_app_api",
+            "path": "/usr/src/alerts_app_api/src/services/alerts/app_api/",
+            "home": "/usr/src/alerts_app_api/.venv/",
+            "module": "alerts_app_api_svc",
+            "callable": "app",
+            "environment": {
+                "log": "{\"level\": \"INFO\", \"file_name\": \"log/alerts_app_api.log\", \"retention\": \"1 months\", \"rotation\": \"20 days\"}",
+                "amqp_url": "amqp://prs:Peresvet21@rabbitmq_load_tests/",
+                "ldap_url": "ldap://ldap_load_tests:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21"
+            }
+        }
+    }
+}

@@ -1,0 +1,8 @@
+version: '3.9'
+services:
+  redis:
+    image: mpc/peresvet_redis:0.4-arm64
+    hostname: ${HOST_REDIS}
+    ports:
+      - ${PORT_REDIS}:${PORT_REDIS}
+      - ${PORT_REDIS_INSIGHT}:${PORT_REDIS_INSIGHT}

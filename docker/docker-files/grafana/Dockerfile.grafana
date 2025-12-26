@@ -1,5 +1,5 @@
 #FROM grafana/grafana-enterprise
-FROM grafana/grafana-enterprise:11.2.2-ubuntu
+FROM grafana/grafana-enterprise:12.4.0-20474692041-ubuntu
 
 #EXPOSE 3000
 ARG NGINX_HOST
@@ -7,7 +7,6 @@ ARG NGINX_HOST
 USER root
 
 RUN mkdir /var/lib/grafana/dashboards
-#COPY config/grafana/grafana.ini /etc/grafana/
 COPY src/configurator_grafana/Configurator.json /var/lib/grafana/dashboards
 
 COPY src/configurator_grafana/Configurator.json /usr/share/grafana/public/dashboards/home.json
@@ -16,18 +15,25 @@ COPY config/grafana/provisioning/dashboards/prs.yaml /etc/grafana/provisioning/d
 COPY config/grafana/provisioning/datasources/prs.yaml /etc/grafana/provisioning/datasources
 RUN sed -i "s/NGINX_HOST/$NGINX_HOST/" /etc/grafana/provisioning/datasources/prs.yaml
 
-COPY config/grafana/logos/ioterra_small.png /usr/share/grafana/public/img/fav32.png
-COPY config/grafana/logos/ioterra_small.png /usr/share/grafana/public/img/apple-touch-icon.png
-COPY config/grafana/logos/peresvet_big_text_dark.svg /usr/share/grafana/public/img/grafana_icon.svg
+COPY config/grafana/logos/mpcperesvet32.png /usr/share/grafana/public/img/fav32.png
+COPY config/grafana/logos/mpcperesvet32.png /usr/share/grafana/public/build/img/fav32.png
+COPY config/grafana/logos/mpcperesvet32.png /usr/share/grafana/public/img/apple-touch-icon.png
+COPY config/grafana/logos/mpcperesvet32.png /usr/share/grafana/public/build/img/apple-touch-icon.png
+COPY config/grafana/logos/logo.svg /usr/share/grafana/public/img/grafana_com_auth_icon.svg
+COPY config/grafana/logos/logo.svg /usr/share/grafana/public/build/img/grafana_com_auth_icon.svg
+COPY config/grafana/logos/logo.svg /usr/share/grafana/public/img/grafana_icon.svg
+COPY config/grafana/logos/logo.svg /usr/share/grafana/public/build/img/grafana_icon.svg
+COPY config/grafana/logos/logo.svg /usr/share/grafana/public/build/static/img/grafana_icon.1e0deb6b.svg
 
 COPY config/grafana/plugins/marcusolsson-json-datasource /var/lib/grafana/plugins/marcusolsson-json-datasource
 COPY config/grafana/plugins/marcusolsson-dynamictext-panel /var/lib/grafana/plugins/marcusolsson-dynamictext-panel
 COPY config/grafana/plugins/volkovlabs-echarts-panel /var/lib/grafana/plugins/volkovlabs-echarts-panel
 COPY config/grafana/plugins/volkovlabs-form-panel /var/lib/grafana/plugins/volkovlabs-form-panel
+COPY config/grafana/plugins/gapit-htmlgraphics-panel /var/lib/grafana/plugins/gapit-htmlgraphics-panel
 
 RUN find /usr/share/grafana/public/build/ -name '*.js' \
 ## Update Title
-    -exec sed -i 's|AppTitle="Grafana"|AppTitle="Пересвет"|g' {} \; \
+    -exec sed -i 's|AppTitle="Grafana"|AppTitle="МПК-Пересвет"|g' {} \; \
 ## Update Login Title
     -exec sed -i 's|LoginTitle="Welcome to Grafana"|LoginTitle=""|g' {} \;
 ## Remove Documentation, Support, Community in the Footer

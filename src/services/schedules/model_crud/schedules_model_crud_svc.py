@@ -20,7 +20,6 @@ class SchedulesModelCRUD(model_crud_svc.ModelCRUDSvc):
     def __init__(self, settings: SchedulesModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
-
 settings = SchedulesModelCRUDSettings()
 
 app = SchedulesModelCRUD(settings=settings, title="SchedulesModelCRUD")

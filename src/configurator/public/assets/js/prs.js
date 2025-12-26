@@ -415,7 +415,7 @@ addParameter = (event, parameterData) => {
     return response.json();
   }).then((data) => {
     if (!data) return;
-    
+
     divParameters = document.getElementById("div-list-parameters");
     lastSpanParameter = divParameters.lastElementChild;
 
@@ -436,7 +436,7 @@ addParameter = (event, parameterData) => {
         <div class="col-4 me-2">
           <select prsAttribute="parameter" onchange="onInputChange(event);" id="input-parameter-tagId-${newLevel}" class="form-select form-select-sm" size="1">
             <option selected value="ttt">&#62;=</option>
-            <option value="ttttt">&#60;</option>											
+            <option value="ttttt">&#60;</option>
           </select>
         </div>
         <div class="col me-2">
@@ -470,15 +470,15 @@ addParameter = (event, parameterData) => {
       let index = Number(parameterData.attributes.prsIndex[0]);
       let name = parameterData.attributes.cn[0];
       let config_text = parameterData.attributes.prsJsonConfigString[0];
-  
+
       let config = JSON.parse(config_text);
       if (Array.isArray(config.tagId))
         tagId = config.tagId[0];
       else
         tagId = config.tagId;
-  
+
       parameter_tags_select.val(tagId);
-  
+
       $(`#input-parameter-prsIndex-${level}`).val(index);
       $(`#input-parameter-cn-${level}`).val(name);
       $(`#input-parameter-prsJsonConfigString-${level}`).val(config_text);
@@ -630,7 +630,7 @@ addNode = (parentElement, node, top = false) => {
   // }
   // top - добавлять в начало списка
 
-  // атрибут data-bs-target у узла всегда создаётся, но вот 
+  // атрибут data-bs-target у узла всегда создаётся, но вот
   // элемента, на который он указывает, может и не быть
   parentGroupId = parentElement.getAttribute("data-bs-target").substring(1);
   parentGroup = document.getElementById(parentGroupId);
@@ -1133,7 +1133,6 @@ tagSetDataValueChanged = () => {
         return;
       }
   }
-
   tagSetDataPayload = {
     data: [
       {
@@ -1293,7 +1292,7 @@ fillForm = (nodeElement) => {
         allNodes.data.map((dataItem) => {
           switch (dataItem.attributes.objectClass[0]) {
             case "prsTag":
-              selectId = "#input-initiatedByTags";              
+              selectId = "#input-initiatedByTags";
               break;
             case "prsAlert":
               selectId = "#input-initiatedByAlerts";

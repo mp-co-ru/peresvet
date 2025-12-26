@@ -501,7 +501,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         """
         alert_id = mes["alertId"]
         ds_id = mes["dataStorageId"]
-
         payload = {
             "base": ds_id,
             "filter": {
@@ -541,7 +540,6 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         """
         tag_id = mes["tagId"]
         ds_id = mes["dataStorageId"]
-
         payload = {
             "base": ds_id,
             "filter": {

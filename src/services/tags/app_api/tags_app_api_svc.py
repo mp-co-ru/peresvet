@@ -201,14 +201,12 @@ class TagsAppAPI(BaseSvc):
                 p = AllData.model_validate_json(s)
             else:
                 p = mes
-
         except Exception as ex:
             res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
             app._logger.exception(res)
             await error_handler.handle_error(res)
 
         body = p.model_dump()
-
         res = await self._post_message(mes=body, reply=False, routing_key = f"{self._config.hierarchy['class']}.app_api.data_set.*")
         # нет подписчика
         if res is None:
