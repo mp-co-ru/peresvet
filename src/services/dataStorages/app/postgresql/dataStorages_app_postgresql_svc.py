@@ -522,8 +522,11 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
         await self._bind_alert(alert_id, False)
         async with self._cache.get_redis() as r:
-            index = await r.json().index(f"{ds_id}.{self._config.svc_name}", "alerts", alert_id)
-            await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "alerts", index)
+            # если path != $, то возвращается одно значение
+            # если элемент не найден, то это значение = -1
+            index = await r.json().arrindex(f"{ds_id}.{self._config.svc_name}", "alerts", alert_id)
+            if index > -1:
+                await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "alerts", index[0])
 
         self._logger.info(f"{self._config.svc_name} :: Тревога {alert_id} отвязана от хранилища {ds_id}.")
 
@@ -561,8 +564,11 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
         await self._bind_tag(tag_id, False)
         async with self._cache.get_redis() as r:
+            # если path != $, то возвращается одно значение
+            # если элемент не найден, то это значение = -1
             index = await r.json().arrindex(f"{ds_id}.{self._config.svc_name}", "tags", tag_id)
-            await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "tags", index)
+            if index > -1:
+                await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "tags", index[0])
 
         self._logger.info(f"{self._config.svc_name} :: Тег {tag_id} отвязан от хранилища {ds_id}.")
 
