@@ -15,7 +15,7 @@ from src.services.methods.api_crud.methods_api_crud_settings import MethodsAPICR
 
 class MethodCreateAttributes(svc.NodeAttributes):
     prsMethodAddress: str = Field(" ", title="Адрес метода")
-    prsEntityTypeCode: int = Field(0, title="Тип метода")
+    prsEntityTypeCode: int = Field(0, title="Тип метода") # type: ignore
 
 class MethodUpdateAttributes(svc.NodeAttributes):
     prsMethodAddress: Optional[str] = None
@@ -24,7 +24,7 @@ class MethodParameter(svc.NodeCreate):
     pass
 
 class MethodCreate(svc.NodeCreate):
-    attributes: MethodCreateAttributes = Field(title="Атрибуты метода", required=True)
+    attributes: MethodCreateAttributes = Field(title="Атрибуты метода", required=True)  # type: ignore[assignment]
     initiatedBy: str | list[str] | None = Field(None, title="Список id экземпляров сущностей, инициирующих вычисление тега.")
     parameters: List[MethodParameter] | None = Field(
         None,
@@ -60,13 +60,13 @@ class OneMethodInReadResult(svc.OneNodeInReadResult):
     )
 
 class MethodReadResult(svc.NodeReadResult):
-    data: list[OneMethodInReadResult] = Field(title="Список узлов")
+    data: list[OneMethodInReadResult] = Field(title="Список узлов") # type: ignore
 
 
 class MethodUpdate(MethodCreate):
     # не было поля для id, для обновляемого метода
     id: str = Field(title="id обновляемого метода")
-    attributes: MethodUpdateAttributes | None = None
+    attributes: MethodUpdateAttributes | None = None # type: ignore
 
 class MethodsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с методами в иерархии.
