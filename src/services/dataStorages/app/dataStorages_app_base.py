@@ -659,12 +659,14 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
                         if res[0] is None:
                             # если нет кэша у тега
                             if not await self._create_tag_cache(tag_id):
+                                # если path != $, то возвращается одно значение
+                                # если элемент не найден, то это значение = -1
                                 index = await r.json().arrindex(
                                     f"{ds_id}.{self._config.svc_name}", "tags", tag_id
                                 )
 
                                 if index > -1:
-                                    await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "tags", index)
+                                    await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "tags", index[0])
 
                         # если тег активен и у него есть данные в кэше
                         if res[0] and res[1] > 0:
