@@ -8,6 +8,7 @@
 import sys
 import copy
 import asyncio
+from uuid import UUID
 
 sys.path.append(".")
 
@@ -553,6 +554,24 @@ class ModelCRUDSvc(Svc):
 
         if mes_data["base"] == "prs":
             mes_data["base"] = await self._hierarchy.get_node_id("cn=prs")
+
+        try:
+            UUID(mes_data["base"])
+        except ValueError as ex:
+            node_id = await self._hierarchy.get_node_id(mes_data["base"])
+            if node_id:
+                mes_data["base"] = node_id
+            else:
+                if not self._config.hierarchy["node"]:
+                    err_mes = "Должен быть указан родительский узел для поиска."
+                    self._logger.error(f"{self._config.svc_name} :: {err_mes}")
+                    res_response = {
+                        "error": {
+                            "code": 422,
+                            "message": err_mes
+                        }
+                    }
+                    return res_response
 
         if (not mes_data.get("base")) and (not mes_data.get("id")):
             if not self._config.hierarchy["node"]:
