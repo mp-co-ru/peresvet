@@ -233,7 +233,7 @@ class NodeRead(BaseModel):
     )
 
     validate_id = validator('id', allow_reuse=True)(valid_uuid_for_read)
-    validate_base = validator('base', allow_reuse=True)(valid_base)
+    #validate_base = validator('base', allow_reuse=True)(valid_base)
 
 class NodeCreateResult(BaseModel):
     """Результат выполнения команды создания узла.
