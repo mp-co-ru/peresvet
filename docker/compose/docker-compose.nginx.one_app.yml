@@ -5,6 +5,9 @@ services:
       build:
         context: ../..
         dockerfile: docker/docker-files/nginx/Dockerfile.nginx
+      depends_on:
+        - one_app
+        - grafana
       ports:
         - ${NGINX_HTTP_PORT}:${NGINX_HTTP_PORT}
         - ${NGINX_HTTPS_PORT}:${NGINX_HTTPS_PORT}
