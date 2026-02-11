@@ -1,6 +1,5 @@
 #FROM grafana/grafana-enterprise
 FROM grafana/grafana-enterprise:12.4.0-20836657505-ubuntu
-
 #EXPOSE 3000
 ARG NGINX_HOST
 
