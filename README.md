@@ -270,17 +270,21 @@ docker buildx build --platform linux/arm64 -f docker/docker-files/all/Dockerfile
 В dev-конфигурации MCP-серверы поднимаются отдельными контейнерами, но **доступ к ним предусмотрен через nginx** (единая точка входа).
 
 - **MCP Peresvet**:
-  - **SSE transport** (по умолчанию): `http://<nginx-host>/mcp/peresvet/sse`
-  - **HTTP transport**: `http://<nginx-host>/mcp/peresvet/mcp`
+  - **HTTP transport (recommended)**: `http://<nginx-host>/mcp/peresvet/mcp`
+  - **SSE transport (legacy)**: `http://<nginx-host>/mcp/peresvet/sse`
   - **Проверка**: `http://<nginx-host>/mcp/peresvet/health`, `http://<nginx-host>/mcp/peresvet/config`
 
 - **MCP Grafana**:
-  - **SSE transport** (по умолчанию): `http://<nginx-host>/mcp/grafana/sse`
-  - **Проверка**: `http://<nginx-host>/mcp/grafana/sse` (должен отвечать `text/event-stream`)
+  - **HTTP transport** (если `MCP_GRAFANA_TRANSPORT=streamable-http`): `http://<nginx-host>/mcp/grafana/mcp`
+  - **SSE transport (legacy)** (если `MCP_GRAFANA_TRANSPORT=sse`): `http://<nginx-host>/mcp/grafana/sse`
 
 Транспорты задаются переменными в `docker/compose/.cont_one_app.env`:
 - `MCP_PERESVET_TRANSPORT` (значения: `sse`, `http`, `stdio`)
-- `MCP_GRAFANA_TRANSPORT` (обычно: `sse`)
+- `MCP_GRAFANA_TRANSPORT` (значения: `sse`, `streamable-http`)
+
+Если в логах `mcp_peresvet` видно `POST /sse ... 405 Method Not Allowed`, это почти всегда означает,
+что клиент пытается говорить по HTTP (Streamable HTTP), но подключён к SSE URL. В этом случае укажи
+URL `.../mcp/peresvet/mcp` вместо `.../mcp/peresvet/sse`.
 
 Для хранения **секретов** (например `MCP_GRAFANA_API_KEY`) рекомендуется использовать
 локальный файл `docker/compose/.cont_one_app.secrets.env` (он добавлен в `.gitignore`).

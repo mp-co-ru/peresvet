@@ -13,7 +13,7 @@ services:
       GRAFANA_ORG_ID: ${MCP_GRAFANA_ORG_ID:-1}
     command:
       - "-transport"
-      - "${MCP_GRAFANA_TRANSPORT:-sse}"
+      - "${MCP_GRAFANA_TRANSPORT:-streamable-http}"
       - "-address"
       - "0.0.0.0:8000"
     ports:
@@ -28,4 +28,3 @@ networks:
       config:
           - subnet: 10.66.0.0/16
             gateway: 10.66.0.1
-

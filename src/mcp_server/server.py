@@ -27,7 +27,27 @@ def _env(name: str, default: str) -> str:
 PERESVET_BASE_URL = _env("PERESVET_BASE_URL", "http://one_app:8000").rstrip("/")
 PERESVET_TIMEOUT_SECONDS = float(_env("PERESVET_TIMEOUT_SECONDS", "15"))
 
-MCP_TRANSPORT = _env("MCP_PERESVET_TRANSPORT", "sse")  # sse (legacy) | http | stdio
+def _normalize_transport(v: str) -> str:
+    """
+    Normalize MCP transport names across client/server ecosystems.
+
+    Notes:
+    - Many modern MCP clients expect Streamable HTTP (POST to `/mcp`).
+    - Some configs use `streamable_http` / `streamable-http` naming.
+    """
+    x = (v or "").strip().lower()
+    if x in {"", "default"}:
+        return "http"
+    if x in {"stdio"}:
+        return "stdio"
+    if x in {"sse"}:
+        return "sse"
+    if x in {"http", "streamable_http", "streamable-http", "streamablehttp"}:
+        return "http"
+    return x
+
+
+MCP_TRANSPORT = _normalize_transport(_env("MCP_PERESVET_TRANSPORT", "http"))
 MCP_HOST = _env("MCP_PERESVET_HOST", "0.0.0.0")
 MCP_PORT = int(_env("MCP_PERESVET_PORT", "8000"))
 
