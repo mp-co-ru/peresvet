@@ -1,0 +1,14 @@
+FROM python:3.12-slim
+
+WORKDIR /usr/src/peresvet-mcp
+
+# Minimal deps for MCP server + HTTP client
+RUN pip install --no-cache-dir fastmcp aiohttp
+
+COPY src/mcp_server /usr/src/peresvet-mcp/mcp_server
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+CMD ["python", "-m", "mcp_server.server"]
+

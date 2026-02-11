@@ -54,3 +54,13 @@ upstream datafunc_app_api {
 upstream grafana {
     server ${HOST_GRAFANA}:${PORT_GRAFANA};
 }
+
+# mcp peresvet
+upstream mcp_peresvet {
+    server ${HOST_MCP_PERESVET}:${PORT_MCP_PERESVET_INNER};
+}
+
+# mcp grafana
+upstream mcp_grafana {
+    server ${HOST_MCP_GRAFANA}:${PORT_MCP_GRAFANA_INNER};
+}

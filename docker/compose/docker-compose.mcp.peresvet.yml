@@ -1,0 +1,29 @@
+services:
+  mcp_peresvet:
+    container_name: mcp_peresvet
+    depends_on:
+      - one_app
+    build:
+      context: ../..
+      dockerfile: docker/docker-files/mcp/Dockerfile.mcp.peresvet
+    environment:
+      TZ: ${TIME_ZONE}
+      PERESVET_BASE_URL: ${PERESVET_BASE_URL:-http://${ALL_SVC_HOST}:8000}
+      PERESVET_TIMEOUT_SECONDS: ${PERESVET_TIMEOUT_SECONDS:-15}
+
+      MCP_PERESVET_TRANSPORT: ${MCP_PERESVET_TRANSPORT:-sse}
+      MCP_PERESVET_HOST: 0.0.0.0
+      MCP_PERESVET_PORT: 8000
+    ports:
+      - ${PORT_MCP_PERESVET:-8009}:8000
+    networks:
+      - peresvet
+
+networks:
+  peresvet:
+    driver: bridge
+    ipam:
+      config:
+          - subnet: 10.66.0.0/16
+            gateway: 10.66.0.1
+
