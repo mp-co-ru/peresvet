@@ -152,5 +152,8 @@ tests/grafana/
 docker/compose/config/nginx/
 docker/images/
 
+# local secrets for docker compose
+docker/compose/.cont_one_app.secrets.env
+
 
 !methods/test_method.py

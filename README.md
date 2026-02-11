@@ -282,6 +282,10 @@ docker buildx build --platform linux/arm64 -f docker/docker-files/all/Dockerfile
 - `MCP_PERESVET_TRANSPORT` (значения: `sse`, `http`, `stdio`)
 - `MCP_GRAFANA_TRANSPORT` (обычно: `sse`)
 
+Для хранения **секретов** (например `MCP_GRAFANA_API_KEY`) рекомендуется использовать
+локальный файл `docker/compose/.cont_one_app.secrets.env` (он добавлен в `.gitignore`).
+Шаблон: `docker/compose/.cont_one_app.secrets.env.example`.
+
 # <a name="examples"></a> Примеры использования
 
 Начальный пример работы с платформой описан в документации:

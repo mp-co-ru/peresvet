@@ -12,7 +12,12 @@ then
 fi
 
 sed -i "s/NGINX_HOST=.*/NGINX_HOST=$srv/" docker/compose/.cont_one_app.env
-docker compose --env-file docker/compose/.cont_one_app.env \
+extra_env=""
+if [ -f docker/compose/.cont_one_app.secrets.env ]; then
+    extra_env="--env-file docker/compose/.cont_one_app.secrets.env"
+fi
+
+docker compose --env-file docker/compose/.cont_one_app.env $extra_env \
 -f docker/compose/docker-compose.redis.yml \
 -f docker/compose/docker-compose.rabbitmq.yml \
 -f docker/compose/docker-compose.ldap.one_app.yml \
