@@ -105,9 +105,13 @@ async def peresvet_openapi() -> dict[str, Any]:
 
 
 @mcp.tool
-async def peresvet_crud_read(entity: CrudEntity, query: dict[str, Any]) -> dict[str, Any]:
-    """Read entities via `/v1/<entity>/?q=<json>`."""
-    return await _request("GET", f"/v1/{entity}/", params={"q": json.dumps(query, ensure_ascii=False)})
+async def peresvet_crud_read(entity: CrudEntity, query: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Read entities via `/v1/<entity>/?q=<json>`.
+
+    If `query` is omitted, an empty filter `{}` is used.
+    """
+    q = query or {}
+    return await _request("GET", f"/v1/{entity}/", params={"q": json.dumps(q, ensure_ascii=False)})
 
 
 @mcp.tool
@@ -129,9 +133,13 @@ async def peresvet_crud_delete(entity: CrudEntity, payload: dict[str, Any]) -> d
 
 
 @mcp.tool
-async def peresvet_data_get(query: dict[str, Any]) -> dict[str, Any]:
-    """Read historical tag data via GET `/v1/data/?q=<json>`."""
-    return await _request("GET", "/v1/data/", params={"q": json.dumps(query, ensure_ascii=False)})
+async def peresvet_data_get(query: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Read historical tag data via GET `/v1/data/?q=<json>`.
+
+    If `query` is omitted, an empty filter `{}` is used.
+    """
+    q = query or {}
+    return await _request("GET", "/v1/data/", params={"q": json.dumps(q, ensure_ascii=False)})
 
 
 @mcp.tool
