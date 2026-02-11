@@ -265,6 +265,27 @@ docker buildx build --platform linux/arm64 -f docker/docker-files/all/Dockerfile
 Инструкции по работе с конфигуратором
 [здесь](https://vovaman.github.io/peresvet/configurator/configurator.html).
 
+### MCP-серверы (доступ через nginx)
+
+В dev-конфигурации MCP-серверы поднимаются отдельными контейнерами, но **доступ к ним предусмотрен через nginx** (единая точка входа).
+
+- **MCP Peresvet**:
+  - **SSE transport** (по умолчанию): `http://<nginx-host>/mcp/peresvet/sse`
+  - **HTTP transport**: `http://<nginx-host>/mcp/peresvet/mcp`
+  - **Проверка**: `http://<nginx-host>/mcp/peresvet/health`, `http://<nginx-host>/mcp/peresvet/config`
+
+- **MCP Grafana**:
+  - **SSE transport** (по умолчанию): `http://<nginx-host>/mcp/grafana/sse`
+  - **Проверка**: `http://<nginx-host>/mcp/grafana/sse` (должен отвечать `text/event-stream`)
+
+Транспорты задаются переменными в `docker/compose/.cont_one_app.env`:
+- `MCP_PERESVET_TRANSPORT` (значения: `sse`, `http`, `stdio`)
+- `MCP_GRAFANA_TRANSPORT` (обычно: `sse`)
+
+Для хранения **секретов** (например `MCP_GRAFANA_API_KEY`) рекомендуется использовать
+локальный файл `docker/compose/.cont_one_app.secrets.env` (он добавлен в `.gitignore`).
+Шаблон: `docker/compose/.cont_one_app.secrets.env.example`.
+
 # <a name="examples"></a> Примеры использования
 
 Начальный пример работы с платформой описан в документации:

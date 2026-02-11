@@ -8,6 +8,8 @@ services:
       depends_on:
         - one_app
         - grafana
+        - mcp_peresvet
+        - mcp_grafana
       ports:
         - ${NGINX_HTTP_PORT}:${NGINX_HTTP_PORT}
         - ${NGINX_HTTPS_PORT}:${NGINX_HTTPS_PORT}
@@ -63,6 +65,14 @@ services:
         #grafana
         PORT_GRAFANA: ${PORT_GRAFANA}
         HOST_GRAFANA: ${HOST_GRAFANA}
+
+        # mcp peresvet
+        HOST_MCP_PERESVET: ${HOST_MCP_PERESVET}
+        PORT_MCP_PERESVET_INNER: ${PORT_MCP_PERESVET_INNER}
+
+        # mcp grafana
+        HOST_MCP_GRAFANA: ${HOST_MCP_GRAFANA}
+        PORT_MCP_GRAFANA_INNER: ${PORT_MCP_GRAFANA_INNER}
 
         TZ: ${TIME_ZONE}
       networks:

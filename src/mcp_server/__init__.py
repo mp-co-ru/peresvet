@@ -1,0 +1,2 @@
+"""Peresvet MCP server package."""
+

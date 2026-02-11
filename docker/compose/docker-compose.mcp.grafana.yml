@@ -1,0 +1,31 @@
+services:
+  mcp_grafana:
+    image: mcp/grafana:latest
+    container_name: mcp_grafana
+    depends_on:
+      - grafana
+    environment:
+      TZ: ${TIME_ZONE}
+      # URL Grafana внутри docker-сети; в проекте Grafana работает с sub-path /grafana
+      GRAFANA_URL: ${MCP_GRAFANA_URL:-http://${HOST_GRAFANA}:${PORT_GRAFANA}/grafana}
+      # Service account token / API key (обязательно для большинства операций)
+      GRAFANA_API_KEY: ${MCP_GRAFANA_API_KEY}
+      GRAFANA_ORG_ID: ${MCP_GRAFANA_ORG_ID:-1}
+    command:
+      - "-transport"
+      - "${MCP_GRAFANA_TRANSPORT:-sse}"
+      - "-address"
+      - "0.0.0.0:8000"
+    ports:
+      - ${PORT_MCP_GRAFANA:-8008}:8000
+    networks:
+      - peresvet
+
+networks:
+  peresvet:
+    driver: bridge
+    ipam:
+      config:
+          - subnet: 10.66.0.0/16
+            gateway: 10.66.0.1
+
