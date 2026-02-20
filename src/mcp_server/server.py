@@ -100,8 +100,336 @@ async def config(_: Request) -> JSONResponse:
 
 @mcp.tool
 async def peresvet_openapi() -> dict[str, Any]:
-    """Fetch Peresvet OpenAPI schema (`/openapi.json`)."""
+    """Fetch Peresvet OpenAPI schema (`/openapi.json`).
+
+    Note: this endpoint may return 500 in some deployments; it is not required for CRUD tools.
+    """
     return await _request("GET", "/openapi.json")
+
+
+def _extract_created_id(resp: dict[str, Any]) -> str | None:
+    if not resp.get("ok"):
+        return None
+    data = resp.get("data")
+    if isinstance(data, dict):
+        v = data.get("id")
+        if isinstance(v, str) and v.strip():
+            return v
+    return None
+
+
+def _as_str_list(v: Any) -> list[str]:
+    if v is None:
+        return []
+    if isinstance(v, list):
+        return [str(x) for x in v]
+    return [str(v)]
+
+
+async def _find_child_by_cn(entity: Literal["objects", "tags"], *, parent_id: str, cn: str) -> str | None:
+    """Find a direct child by `cn` under a given parent id. Returns node id or None."""
+    q = {
+        "base": parent_id,
+        "scope": 1,
+        "filter": {"cn": [cn]},
+        "attributes": ["cn"],
+    }
+    resp = await _request("GET", f"/v1/{entity}/", params={"q": json.dumps(q, ensure_ascii=False)})
+    if not resp.get("ok"):
+        return None
+    data = resp.get("data")
+    if not isinstance(data, dict):
+        return None
+    items = data.get("data")
+    if not isinstance(items, list) or not items:
+        return None
+    first = items[0]
+    if isinstance(first, dict) and isinstance(first.get("id"), str):
+        return first["id"]
+    return None
+
+
+@mcp.tool
+async def peresvet_objects_list(
+    *,
+    base: str | None = None,
+    scope: int = 1,
+    attributes: list[str] | None = None,
+    filter: dict[str, list[Any]] | None = None,
+    hierarchy: bool = False,
+    get_parent: bool = False,
+) -> dict[str, Any]:
+    """List objects from Peresvet hierarchy.
+
+    This wraps `GET /v1/objects/?q=<json>`.
+
+    Key hierarchy concepts in Peresvet:
+    - `base`: id (UUID) or DN of the *base node* where search starts. If omitted, search starts from root.
+    - `scope`:
+      - 0: only the `base` node
+      - 1: direct children of `base` (default)
+      - 2: whole subtree from `base`
+    - `hierarchy=true`: return nodes with nested `children` in response (when supported by backend).
+    - `get_parent=true`: include `parentId` in each node.
+    """
+    q: dict[str, Any] = {
+        "base": base,
+        "scope": scope,
+        "filter": filter,
+        "hierarchy": hierarchy,
+        "getParent": get_parent,
+    }
+    if attributes is not None:
+        q["attributes"] = attributes
+    return await _request("GET", "/v1/objects/", params={"q": json.dumps(q, ensure_ascii=False)})
+
+@mcp.tool
+async def peresvet_objects_tree(*, base: str | None = None) -> dict[str, Any]:
+    """Get objects as a tree (nested `children`).
+
+    Equivalent to `peresvet_objects_list(scope=2, hierarchy=True, get_parent=True)`.
+    """
+    return await peresvet_objects_list(base=base, scope=2, hierarchy=True, get_parent=True)
+
+
+@mcp.tool
+async def peresvet_object_create(
+    *,
+    cn: str,
+    parent_id: str | None = None,
+    description: str | None = None,
+    attrs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Create an object node, optionally under a parent.
+
+    This wraps `POST /v1/objects/`.
+
+    - `cn`: object name (required).
+    - `parent_id`: UUID of parent node. If omitted, object is created under the entity's base node.
+      This is the crucial field for building a tree (otherwise you'll get a "flat" list at root).
+    - `attrs`: extra node attributes (e.g. `prsActive`, `prsDefault`, `prsIndex`, `prsJsonConfigString`, ...).
+    """
+    attributes: dict[str, Any] = {"cn": cn}
+    if description is not None:
+        attributes["description"] = description
+    if attrs:
+        attributes.update(attrs)
+    payload: dict[str, Any] = {"attributes": attributes}
+    if parent_id is not None:
+        payload["parentId"] = parent_id
+    return await _request("POST", "/v1/objects/", json_body=payload)
+
+@mcp.tool
+async def peresvet_object_get_child_id(*, parent_id: str, cn: str) -> dict[str, Any]:
+    """Get child object id by name under `parent_id` (scope=1).
+
+    Useful for building hierarchies: find parent's children by `cn` before creating.
+    """
+    found = await _find_child_by_cn("objects", parent_id=parent_id, cn=cn)
+    return {"ok": True, "status": 200, "url": "", "data": {"id": found}}
+
+
+@mcp.tool
+async def peresvet_tag_get_child_id(*, parent_id: str, cn: str) -> dict[str, Any]:
+    """Get child tag id by name under `parent_id` (scope=1)."""
+    found = await _find_child_by_cn("tags", parent_id=parent_id, cn=cn)
+    return {"ok": True, "status": 200, "url": "", "data": {"id": found}}
+
+
+@mcp.tool
+async def peresvet_tags_list(
+    *,
+    base: str | None = None,
+    scope: int = 1,
+    attributes: list[str] | None = None,
+    filter: dict[str, list[Any]] | None = None,
+    hierarchy: bool = False,
+    get_parent: bool = False,
+) -> dict[str, Any]:
+    """List tags from Peresvet hierarchy.
+
+    Same query semantics as `peresvet_objects_list`, but for tags.
+    Wraps `GET /v1/tags/?q=<json>`.
+    """
+    q: dict[str, Any] = {
+        "base": base,
+        "scope": scope,
+        "filter": filter,
+        "hierarchy": hierarchy,
+        "getParent": get_parent,
+    }
+    if attributes is not None:
+        q["attributes"] = attributes
+    return await _request("GET", "/v1/tags/", params={"q": json.dumps(q, ensure_ascii=False)})
+
+@mcp.tool
+async def peresvet_tags_tree(*, base: str | None = None) -> dict[str, Any]:
+    """Get tags as a tree (nested `children`)."""
+    return await peresvet_tags_list(base=base, scope=2, hierarchy=True, get_parent=True)
+
+
+@mcp.tool
+async def peresvet_tag_create(
+    *,
+    cn: str,
+    parent_id: str,
+    description: str | None = None,
+    value_type_code: int = 1,
+    default_value: Any | None = None,
+    measure_units: str | None = None,
+    attrs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Create a tag under an object node.
+
+    Wraps `POST /v1/tags/`.
+
+    - `parent_id`: UUID of parent node (required for correct hierarchy).
+    - `value_type_code`: 0 int | 1 float | 2 string | 3 discrete | 4 json.
+    """
+    attributes: dict[str, Any] = {"cn": cn, "prsValueTypeCode": value_type_code}
+    if description is not None:
+        attributes["description"] = description
+    if default_value is not None:
+        attributes["prsDefaultValue"] = default_value
+    if measure_units is not None:
+        attributes["prsMeasureUnits"] = measure_units
+    if attrs:
+        attributes.update(attrs)
+    payload: dict[str, Any] = {"parentId": parent_id, "attributes": attributes}
+    return await _request("POST", "/v1/tags/", json_body=payload)
+
+
+@mcp.tool
+async def peresvet_apply_hierarchy(
+    *,
+    root_parent_id: str,
+    tree: list[dict[str, Any]],
+    idempotent: bool = True,
+    continue_on_error: bool = True,
+) -> dict[str, Any]:
+    """Create objects (and optional tags) from a nested tree definition.
+
+    This tool is designed for LLMs to avoid hierarchy mistakes with `parentId` / `base`.
+
+    Input format (`tree`) is a list of nodes:
+
+    - **Object node**
+      - `cn` (str, required)
+      - `description` (str, optional)
+      - `attrs` (dict, optional) extra object attributes
+      - `tags` (list, optional): each tag is `{cn, description?, value_type_code?, default_value?, measure_units?, attrs?}`
+      - `children` (list, optional): nested object nodes
+
+    Behavior:
+    - Objects are created under `root_parent_id` (and then under created parents).
+    - Tags are created under the object they belong to (using tag `parentId`).
+    - If `idempotent=true`, the tool tries to re-use existing children with the same `cn`
+      under the same parent (scope=1) instead of creating duplicates.
+    """
+
+    created_objects: list[dict[str, Any]] = []
+    created_tags: list[dict[str, Any]] = []
+    reused: list[dict[str, Any]] = []
+    errors: list[dict[str, Any]] = []
+
+    async def _apply_object_node(node: dict[str, Any], parent_id: str, path: str) -> str | None:
+        cn = node.get("cn")
+        if not isinstance(cn, str) or not cn.strip():
+            errors.append({"path": path, "error": "object.cn is required"})
+            return None
+
+        obj_id: str | None = None
+        if idempotent:
+            obj_id = await _find_child_by_cn("objects", parent_id=parent_id, cn=cn)
+            if obj_id:
+                reused.append({"kind": "object", "path": path, "id": obj_id, "cn": cn, "parent_id": parent_id})
+
+        if not obj_id:
+            resp = await peresvet_object_create(
+                cn=cn,
+                parent_id=parent_id,
+                description=node.get("description"),
+                attrs=node.get("attrs") if isinstance(node.get("attrs"), dict) else None,
+            )
+            obj_id = _extract_created_id(resp)
+            if not obj_id:
+                errors.append({"kind": "object", "path": path, "cn": cn, "parent_id": parent_id, "resp": resp})
+                return None
+            created_objects.append({"path": path, "id": obj_id, "cn": cn, "parent_id": parent_id})
+
+        # tags under this object
+        for i, tag in enumerate(node.get("tags") or []):
+            if not isinstance(tag, dict):
+                errors.append({"kind": "tag", "path": f"{path}.tags[{i}]", "error": "tag must be an object"})
+                if not continue_on_error:
+                    return obj_id
+                continue
+            tcn = tag.get("cn")
+            if not isinstance(tcn, str) or not tcn.strip():
+                errors.append({"kind": "tag", "path": f"{path}.tags[{i}]", "error": "tag.cn is required"})
+                if not continue_on_error:
+                    return obj_id
+                continue
+
+            tag_id: str | None = None
+            if idempotent:
+                tag_id = await _find_child_by_cn("tags", parent_id=obj_id, cn=tcn)
+                if tag_id:
+                    reused.append({"kind": "tag", "path": f"{path}.tags[{i}]", "id": tag_id, "cn": tcn, "parent_id": obj_id})
+
+            if not tag_id:
+                resp = await peresvet_tag_create(
+                    cn=tcn,
+                    parent_id=obj_id,
+                    description=tag.get("description"),
+                    value_type_code=int(tag.get("value_type_code", 1)),
+                    default_value=tag.get("default_value"),
+                    measure_units=tag.get("measure_units"),
+                    attrs=tag.get("attrs") if isinstance(tag.get("attrs"), dict) else None,
+                )
+                tag_id = _extract_created_id(resp)
+                if not tag_id:
+                    errors.append({"kind": "tag", "path": f"{path}.tags[{i}]", "cn": tcn, "parent_id": obj_id, "resp": resp})
+                    if not continue_on_error:
+                        return obj_id
+                    continue
+                created_tags.append({"path": f"{path}.tags[{i}]", "id": tag_id, "cn": tcn, "parent_id": obj_id})
+
+        # children
+        for i, child in enumerate(node.get("children") or []):
+            if not isinstance(child, dict):
+                errors.append({"kind": "object", "path": f"{path}.children[{i}]", "error": "child must be an object"})
+                if not continue_on_error:
+                    return obj_id
+                continue
+            child_id = await _apply_object_node(child, obj_id, f"{path}.children[{i}]")
+            if child_id is None and not continue_on_error:
+                return obj_id
+
+        return obj_id
+
+    for i, node in enumerate(tree):
+        if not isinstance(node, dict):
+            errors.append({"kind": "object", "path": f"tree[{i}]", "error": "node must be an object"})
+            if not continue_on_error:
+                break
+            continue
+        await _apply_object_node(node, root_parent_id, f"tree[{i}]")
+        if errors and not continue_on_error:
+            break
+
+    ok = len(errors) == 0
+    return {
+        "ok": ok,
+        "status": 200 if ok else 207,
+        "url": "",
+        "data": {
+            "created_objects": created_objects,
+            "created_tags": created_tags,
+            "reused": reused,
+            "errors": errors,
+        },
+    }
 
 
 @mcp.tool
@@ -116,19 +444,24 @@ async def peresvet_crud_read(entity: CrudEntity, query: dict[str, Any] | None = 
 
 @mcp.tool
 async def peresvet_crud_create(entity: CrudEntity, payload: dict[str, Any]) -> dict[str, Any]:
-    """Create an entity via POST `/v1/<entity>/`."""
+    """Low-level create via POST `/v1/<entity>/`.
+
+    Prefer the typed helpers for hierarchy entities:
+    - `peresvet_object_create` / `peresvet_tag_create`
+    - or `peresvet_apply_hierarchy` to create whole trees safely.
+    """
     return await _request("POST", f"/v1/{entity}/", json_body=payload)
 
 
 @mcp.tool
 async def peresvet_crud_update(entity: CrudEntity, payload: dict[str, Any]) -> dict[str, Any]:
-    """Update an entity via PUT `/v1/<entity>/`."""
+    """Low-level update via PUT `/v1/<entity>/`."""
     return await _request("PUT", f"/v1/{entity}/", json_body=payload)
 
 
 @mcp.tool
 async def peresvet_crud_delete(entity: CrudEntity, payload: dict[str, Any]) -> dict[str, Any]:
-    """Delete an entity via DELETE `/v1/<entity>/`."""
+    """Low-level delete via DELETE `/v1/<entity>/`."""
     return await _request("DELETE", f"/v1/{entity}/", json_body=payload)
 
 
