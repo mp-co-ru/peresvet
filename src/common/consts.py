@@ -3,10 +3,16 @@ from enum import IntEnum
 class CNDataStorageTypes(IntEnum):
     CN_DS_VICTORIAMETRICS : int = 1
     CN_DS_POSTGRESQL : int = 0
+    # Интеграционное хранилище (операции GET/SET в LDAP) поверх PostgreSQL
+    CN_DS_INTEGRATIONAL_POSTGRESQL : int = 2
 
     @classmethod
     def get_supported(cls) -> list[int]:
-        return [cls.CN_DS_VICTORIAMETRICS, cls.CN_DS_POSTGRESQL]
+        return [
+            cls.CN_DS_VICTORIAMETRICS,
+            cls.CN_DS_POSTGRESQL,
+            cls.CN_DS_INTEGRATIONAL_POSTGRESQL,
+        ]
 
 class CNHTTPExceptionCodes(IntEnum):
     CN_422: int = 422 # Unprocessable Entity

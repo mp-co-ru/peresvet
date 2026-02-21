@@ -6,7 +6,7 @@ import sys
 from typing import List, Optional
 import json
 from pydantic import Field, validator, ConfigDict
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 sys.path.append(".")
 
@@ -144,8 +144,38 @@ async def create(payload: MethodCreate, error_handler: svc.ErrorHandler = Depend
     return res
 
 @router.get("/", response_model=MethodReadResult | None, status_code=200, response_model_exclude_none=True)
-async def read(q: str | None = None, payload: MethodRead | None = None, error_handler: svc.ErrorHandler = Depends()):
-    res = await app.api_get_read(MethodRead, q, payload)
+async def read(
+    id: list[str] | None = Query(None),
+    base: str | None = None,
+    deref: bool = True,
+    scope: int = 1,
+    hierarchy: bool = False,
+    getParent: bool = False,
+    attributes: list[str] | None = Query(None),
+    filter: str | None = None,
+    q: str | None = None,
+    payload: MethodRead | None = None,
+    error_handler: svc.ErrorHandler = Depends(),
+):
+    if q is not None or payload is not None:
+        res = await app.api_get_read(MethodRead, q, payload)
+    else:
+        body: dict = {
+            "deref": deref,
+            "scope": scope,
+            "hierarchy": hierarchy,
+            "getParent": getParent,
+        }
+        if id is not None:
+            body["id"] = id
+        if base is not None:
+            body["base"] = base
+        if attributes is not None:
+            body["attributes"] = attributes
+        if filter is not None:
+            body["filter"] = json.loads(filter)
+        p = MethodRead.model_validate(body)
+        res = await app._read(p)
     await error_handler.handle_error(res)
     return res
 

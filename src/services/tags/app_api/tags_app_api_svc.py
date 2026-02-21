@@ -13,7 +13,7 @@ from pydantic import (
     validator, BeforeValidator, ConfigDict
 )
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 sys.path.append(".")
 
@@ -205,6 +205,7 @@ class TagsAppAPI(BaseSvc):
             res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
             app._logger.exception(res)
             await error_handler.handle_error(res)
+            return {}
 
         body = p.model_dump()
         res = await self._post_message(mes=body, reply=False, routing_key = f"{self._config.hierarchy['class']}.app_api.data_set.*")
@@ -221,7 +222,22 @@ app = TagsAppAPI(settings=settings, title="`TagsAppAPI` service")
 router = APIRouter(prefix=f"{settings.api_version}/data")
 
 @router.get("/", response_model=dict | None, status_code=200)
-async def data_get(q: str | None = None, payload: DataGet | None = None, error_handler: ErrorHandler = Depends()):
+async def data_get(
+    # основной (правильный) способ для GET: отдельные query-параметры
+    tagId: list[str] | None = Query(None),
+    start: str | None = None,
+    finish: str | None = None,
+    maxCount: int | None = None,
+    format: bool = False,
+    actual: bool = False,
+    value: str | None = None,
+    count: int | None = None,
+    timeStep: int | None = None,
+    # fallback для обратной совместимости
+    q: str | None = None,
+    payload: DataGet | None = None,
+    error_handler: ErrorHandler = Depends(),
+):
     """
     Запрос исторических данных.
 
@@ -262,10 +278,43 @@ async def data_get(q: str | None = None, payload: DataGet | None = None, error_h
         except ValueError as ex:
             res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
             await error_handler.handle_error(res)
+            return {}
     elif payload:
         p = payload
     else:
-        return None
+        if not tagId:
+            return None
+        try:
+            parsed_value = None
+            if value is not None:
+                try:
+                    parsed_value = json.loads(value)
+                except Exception:
+                    parsed_value = value
+
+            body = {
+                "tagId": tagId,
+                "format": format,
+                "actual": actual,
+            }
+            if start is not None:
+                body["start"] = start
+            if finish is not None:
+                body["finish"] = finish
+            if maxCount is not None:
+                body["maxCount"] = maxCount
+            if parsed_value is not None:
+                body["value"] = parsed_value
+            if count is not None:
+                body["count"] = count
+            if timeStep is not None:
+                body["timeStep"] = timeStep
+
+            p = DataGet.model_validate(body)
+        except Exception as ex:
+            res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+            await error_handler.handle_error(res)
+            return {}
     res = await app.data_get(p)
     await error_handler.handle_error(res)
     return res

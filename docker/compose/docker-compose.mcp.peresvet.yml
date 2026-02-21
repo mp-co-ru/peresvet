@@ -8,15 +8,17 @@ services:
       dockerfile: docker/docker-files/mcp/Dockerfile.mcp.peresvet
     environment:
       TZ: ${TIME_ZONE}
-      PERESVET_BASE_URL: ${PERESVET_BASE_URL:-http://${ALL_SVC_HOST}:8000}
+      PERESVET_BASE_URL: http://${ALL_SVC_HOST}:${PORT_ONE_APP}
       PERESVET_TIMEOUT_SECONDS: ${PERESVET_TIMEOUT_SECONDS:-15}
+      # Enable MCP v2 tools (defaults to PRS_ENABLE_V2 if unset)
+      MCP_PERESVET_ENABLE_V2: ${MCP_PERESVET_ENABLE_V2:-${PRS_ENABLE_V2:-0}}
 
       # Recommended for modern MCP clients: Streamable HTTP (`/mcp`)
       MCP_PERESVET_TRANSPORT: ${MCP_PERESVET_TRANSPORT:-http}
       MCP_PERESVET_HOST: 0.0.0.0
-      MCP_PERESVET_PORT: 8000
+      MCP_PERESVET_PORT: ${PORT_MCP_PERESVET_INNER}
     ports:
-      - ${PORT_MCP_PERESVET:-8009}:8000
+      - ${PORT_MCP_PERESVET}:${PORT_MCP_PERESVET_INNER}
     networks:
       - peresvet
 

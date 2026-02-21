@@ -30,4 +30,3 @@ docker compose --env-file docker/compose/.cont_one_app.env $extra_env \
 -f docker/compose/docker-compose.nginx.one_app.yml \
 -f docker/compose/docker-compose.ports.yml \
 up --build
-

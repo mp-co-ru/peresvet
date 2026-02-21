@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any, Literal
+from typing import Any, Literal, Mapping, Sequence, Tuple
 
 import aiohttp
 from fastmcp import FastMCP
@@ -26,6 +26,24 @@ def _env(name: str, default: str) -> str:
 
 PERESVET_BASE_URL = _env("PERESVET_BASE_URL", "http://one_app:8000").rstrip("/")
 PERESVET_TIMEOUT_SECONDS = float(_env("PERESVET_TIMEOUT_SECONDS", "15"))
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    v = os.getenv(name)
+    if v is None or v == "":
+        return default
+    x = v.strip().lower()
+    if x in {"1", "true", "yes", "on"}:
+        return True
+    if x in {"0", "false", "no", "off"}:
+        return False
+    return default
+
+# v2 MCP tools are optional
+_mcp_enable_v2_raw = os.getenv("MCP_PERESVET_ENABLE_V2")
+if _mcp_enable_v2_raw is None or _mcp_enable_v2_raw.strip() == "":
+    ENABLE_V2 = _env_bool("PRS_ENABLE_V2", False)
+else:
+    ENABLE_V2 = _env_bool("MCP_PERESVET_ENABLE_V2", False)
 
 def _normalize_transport(v: str) -> str:
     """
@@ -59,7 +77,7 @@ async def _request(
     method: str,
     path: str,
     *,
-    params: dict[str, str] | None = None,
+    params: Mapping[str, str] | Sequence[Tuple[str, str]] | None = None,
     json_body: Any | None = None,
 ) -> dict[str, Any]:
     url = f"{PERESVET_BASE_URL}{path}"
@@ -94,6 +112,7 @@ async def config(_: Request) -> JSONResponse:
             "transport": MCP_TRANSPORT,
             "host": MCP_HOST,
             "port": MCP_PORT,
+            "enable_v2": ENABLE_V2,
         }
     )
 
@@ -125,16 +144,74 @@ def _as_str_list(v: Any) -> list[str]:
         return [str(x) for x in v]
     return [str(v)]
 
+def _bool_str(v: Any) -> str:
+    return "true" if bool(v) else "false"
+
+def _add_list(params: list[tuple[str, str]], key: str, values: Any) -> None:
+    for x in _as_str_list(values):
+        if x is None:
+            continue
+        s = str(x)
+        if s.strip() == "":
+            continue
+        params.append((key, s))
+
+def _crud_query_to_params(query: dict[str, Any]) -> list[tuple[str, str]]:
+    """Convert legacy `q` dict into normal query params (no `q=`)."""
+    params: list[tuple[str, str]] = []
+    if "id" in query and query["id"] is not None:
+        _add_list(params, "id", query["id"])
+    if "base" in query and query["base"] is not None:
+        params.append(("base", str(query["base"])))
+    if "deref" in query and query["deref"] is not None:
+        params.append(("deref", _bool_str(query["deref"])))
+    if "scope" in query and query["scope"] is not None:
+        params.append(("scope", str(query["scope"])))
+    if "hierarchy" in query and query["hierarchy"] is not None:
+        params.append(("hierarchy", _bool_str(query["hierarchy"])))
+    if "getParent" in query and query["getParent"] is not None:
+        params.append(("getParent", _bool_str(query["getParent"])))
+    if "attributes" in query and query["attributes"] is not None:
+        _add_list(params, "attributes", query["attributes"])
+    if "filter" in query and query["filter"] is not None:
+        params.append(("filter", json.dumps(query["filter"], ensure_ascii=False)))
+
+    # entity-specific flags used by some endpoints
+    for k in ("getLinkedTags", "getLinkedAlerts", "getLinkedOperations"):
+        if k in query and query[k] is not None:
+            params.append((k, _bool_str(query[k])))
+
+    return params
+
+def _data_query_to_params(query: dict[str, Any]) -> list[tuple[str, str]]:
+    params: list[tuple[str, str]] = []
+    if "tagId" in query and query["tagId"] is not None:
+        _add_list(params, "tagId", query["tagId"])
+    for k in ("start", "finish", "maxCount", "count", "timeStep", "format", "actual"):
+        if k in query and query[k] is not None:
+            v = query[k]
+            if isinstance(v, bool):
+                params.append((k, _bool_str(v)))
+            else:
+                params.append((k, str(v)))
+    if "value" in query and query["value"] is not None:
+        v = query["value"]
+        if isinstance(v, (dict, list)):
+            params.append(("value", json.dumps(v, ensure_ascii=False)))
+        else:
+            params.append(("value", str(v)))
+    return params
+
 
 async def _find_child_by_cn(entity: Literal["objects", "tags"], *, parent_id: str, cn: str) -> str | None:
     """Find a direct child by `cn` under a given parent id. Returns node id or None."""
-    q = {
-        "base": parent_id,
-        "scope": 1,
-        "filter": {"cn": [cn]},
-        "attributes": ["cn"],
-    }
-    resp = await _request("GET", f"/v1/{entity}/", params={"q": json.dumps(q, ensure_ascii=False)})
+    params = [
+        ("base", parent_id),
+        ("scope", "1"),
+        ("filter", json.dumps({"cn": [cn]}, ensure_ascii=False)),
+        ("attributes", "cn"),
+    ]
+    resp = await _request("GET", f"/v1/{entity}/", params=params)
     if not resp.get("ok"):
         return None
     data = resp.get("data")
@@ -172,16 +249,18 @@ async def peresvet_objects_list(
     - `hierarchy=true`: return nodes with nested `children` in response (when supported by backend).
     - `get_parent=true`: include `parentId` in each node.
     """
-    q: dict[str, Any] = {
-        "base": base,
-        "scope": scope,
-        "filter": filter,
-        "hierarchy": hierarchy,
-        "getParent": get_parent,
-    }
+    params: list[tuple[str, str]] = [
+        ("scope", str(scope)),
+        ("hierarchy", _bool_str(hierarchy)),
+        ("getParent", _bool_str(get_parent)),
+    ]
+    if base is not None:
+        params.append(("base", base))
+    if filter is not None:
+        params.append(("filter", json.dumps(filter, ensure_ascii=False)))
     if attributes is not None:
-        q["attributes"] = attributes
-    return await _request("GET", "/v1/objects/", params={"q": json.dumps(q, ensure_ascii=False)})
+        _add_list(params, "attributes", attributes)
+    return await _request("GET", "/v1/objects/", params=params)
 
 @mcp.tool
 async def peresvet_objects_tree(*, base: str | None = None) -> dict[str, Any]:
@@ -251,16 +330,18 @@ async def peresvet_tags_list(
     Same query semantics as `peresvet_objects_list`, but for tags.
     Wraps `GET /v1/tags/?q=<json>`.
     """
-    q: dict[str, Any] = {
-        "base": base,
-        "scope": scope,
-        "filter": filter,
-        "hierarchy": hierarchy,
-        "getParent": get_parent,
-    }
+    params: list[tuple[str, str]] = [
+        ("scope", str(scope)),
+        ("hierarchy", _bool_str(hierarchy)),
+        ("getParent", _bool_str(get_parent)),
+    ]
+    if base is not None:
+        params.append(("base", base))
+    if filter is not None:
+        params.append(("filter", json.dumps(filter, ensure_ascii=False)))
     if attributes is not None:
-        q["attributes"] = attributes
-    return await _request("GET", "/v1/tags/", params={"q": json.dumps(q, ensure_ascii=False)})
+        _add_list(params, "attributes", attributes)
+    return await _request("GET", "/v1/tags/", params=params)
 
 @mcp.tool
 async def peresvet_tags_tree(*, base: str | None = None) -> dict[str, Any]:
@@ -434,12 +515,13 @@ async def peresvet_apply_hierarchy(
 
 @mcp.tool
 async def peresvet_crud_read(entity: CrudEntity, query: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Read entities via `/v1/<entity>/?q=<json>`.
+    """Read entities via `/v1/<entity>/` using normal query params.
 
     If `query` is omitted, an empty filter `{}` is used.
     """
     q = query or {}
-    return await _request("GET", f"/v1/{entity}/", params={"q": json.dumps(q, ensure_ascii=False)})
+    params = _crud_query_to_params(q)
+    return await _request("GET", f"/v1/{entity}/", params=params)
 
 
 @mcp.tool
@@ -467,12 +549,35 @@ async def peresvet_crud_delete(entity: CrudEntity, payload: dict[str, Any]) -> d
 
 @mcp.tool
 async def peresvet_data_get(query: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Read historical tag data via GET `/v1/data/?q=<json>`.
+    """Read historical tag data via GET `/v1/data/` using normal query params.
 
     If `query` is omitted, an empty filter `{}` is used.
     """
     q = query or {}
-    return await _request("GET", "/v1/data/", params={"q": json.dumps(q, ensure_ascii=False)})
+    params = _data_query_to_params(q)
+    return await _request("GET", "/v1/data/", params=params)
+
+
+if ENABLE_V2:
+    @mcp.tool
+    async def peresvet_datastorages_v2_read(query: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Read dataStorages via `/v2/dataStorages/` (operations support).
+
+        Use `getLinkedOperations=true` to include operations list.
+        """
+        q = query or {}
+        params = _crud_query_to_params(q)
+        return await _request("GET", "/v2/dataStorages/", params=params)
+
+    @mcp.tool
+    async def peresvet_datastorages_v2_create(payload: dict[str, Any]) -> dict[str, Any]:
+        """Create dataStorage via POST `/v2/dataStorages/` (supports `operations`)."""
+        return await _request("POST", "/v2/dataStorages/", json_body=payload)
+
+    @mcp.tool
+    async def peresvet_datastorages_v2_update(payload: dict[str, Any]) -> dict[str, Any]:
+        """Update dataStorage via PUT `/v2/dataStorages/` (supports `operations`/`unlinkOperations`)."""
+        return await _request("PUT", "/v2/dataStorages/", json_body=payload)
 
 
 @mcp.tool

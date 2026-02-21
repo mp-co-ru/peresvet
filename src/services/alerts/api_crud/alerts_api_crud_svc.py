@@ -5,7 +5,7 @@ import sys
 import json
 from copy import deepcopy
 from pydantic import Field, validator
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 sys.path.append(".")
 
@@ -146,7 +146,19 @@ async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
     await error_handler.handle_error(res)
     return res
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200, response_model_exclude_none=True)
-async def read(q: str | None = None, payload: AlertRead | None = None, error_handler: svc.ErrorHandler = Depends()):
+async def read(
+    id: list[str] | None = Query(None),
+    base: str | None = None,
+    deref: bool = True,
+    scope: int = 1,
+    hierarchy: bool = False,
+    getParent: bool = False,
+    attributes: list[str] | None = Query(None),
+    filter: str | None = None,
+    q: str | None = None,
+    payload: AlertRead | None = None,
+    error_handler: svc.ErrorHandler = Depends(),
+):
     """
     Метод ищет тревоги в модели и возвращает запрошенные по ним данные.
 
@@ -202,7 +214,25 @@ async def read(q: str | None = None, payload: AlertRead | None = None, error_han
 
     """
 
-    res = await app.api_get_read(AlertRead, q, payload)
+    if q is not None or payload is not None:
+        res = await app.api_get_read(AlertRead, q, payload)
+    else:
+        body: dict = {
+            "deref": deref,
+            "scope": scope,
+            "hierarchy": hierarchy,
+            "getParent": getParent,
+        }
+        if id is not None:
+            body["id"] = id
+        if base is not None:
+            body["base"] = base
+        if attributes is not None:
+            body["attributes"] = attributes
+        if filter is not None:
+            body["filter"] = json.loads(filter)
+        p = AlertRead.model_validate(body)
+        res = await app._read(p)
     await error_handler.handle_error(res)
     return res
 

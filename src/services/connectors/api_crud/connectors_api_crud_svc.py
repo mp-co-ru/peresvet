@@ -6,7 +6,7 @@ import sys
 import json
 from pydantic import BaseModel, Field, validator, ConfigDict
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 sys.path.append(".")
 
@@ -192,7 +192,22 @@ async def create(payload: dict | None = None, error_handler: svc.ErrorHandler = 
     return res
 
 @router.get("/", response_model=ConnectorReadResult | None, status_code=200, response_model_exclude_none=True)
-async def read(q: str | None = None, payload: ConnectorRead | None = None, error_handler: svc.ErrorHandler = Depends()):
+async def read(
+    # отдельные query-параметры (основной путь)
+    id: list[str] | None = Query(None),
+    base: str | None = None,
+    deref: bool = True,
+    scope: int = 1,
+    hierarchy: bool = False,
+    getParent: bool = False,
+    attributes: list[str] | None = Query(None),
+    filter: str | None = None,
+    getLinkedTags: bool = False,
+    # fallback
+    q: str | None = None,
+    payload: ConnectorRead | None = None,
+    error_handler: svc.ErrorHandler = Depends(),
+):
     """
     Метод чтения коннектора из иерархии.
 
@@ -237,7 +252,26 @@ async def read(q: str | None = None, payload: ConnectorRead | None = None, error
         * **detail** (list) - Детали ошибки.
 
     """
-    res = await app.api_get_read(ConnectorRead, q, payload)
+    if q is not None or payload is not None:
+        res = await app.api_get_read(ConnectorRead, q, payload)
+    else:
+        body: dict = {
+            "deref": deref,
+            "scope": scope,
+            "hierarchy": hierarchy,
+            "getParent": getParent,
+            "getLinkedTags": getLinkedTags,
+        }
+        if id is not None:
+            body["id"] = id
+        if base is not None:
+            body["base"] = base
+        if attributes is not None:
+            body["attributes"] = attributes
+        if filter is not None:
+            body["filter"] = json.loads(filter)
+        p = ConnectorRead.model_validate(body)
+        res = await app._read(p)
     await error_handler.handle_error(res)
     return res
 

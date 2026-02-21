@@ -79,6 +79,7 @@ API Платформы Пересвет
    Обьекты<objects>
    Коннекторы<connectors>
    Хранилища данных<dataStorages_api_doc>
+   Интеграционные хранилища (v2)<integrational_v2>
    Расписания<schedules>
    Методы<methods_api_doc>
    Запись/получение данных<data_api>
