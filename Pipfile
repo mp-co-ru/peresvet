@@ -25,6 +25,7 @@ asyncpg = "0.29.0"
 aiohttp = "3.9.0"
 redis = {extras = ["hiredis"], version = "==5.2.1"}
 uvicorn = {extras = ["standard"], version = "==0.30.6"}
+jsonatapy = "2.1.0"
 
 [dev-packages]
 pylint = "3.0.2"

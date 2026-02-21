@@ -312,3 +312,20 @@ objectClass ( 1.3.6.1.4.1.58316.2.4.17
 	DESC 'параметры тревог, необходимые для хранилищ'
 	SUP prsModelNode STRUCTURAL
 	MAY ( prsStore ))
+
+# Операции интеграционных хранилищ (GET/SET) и их параметры
+#
+# prsEntityTypeCode для prsDatastorageOperation:
+# 0 - GET
+# 1 - SET
+#
+# Текст запроса, таймауты, лимиты, версия и т.п. хранятся в prsJsonConfigString.
+objectClass ( 1.3.6.1.4.1.58316.2.4.18
+	NAME 'prsDatastorageOperation'
+	DESC 'операция интеграционного хранилища (GET/SET)'
+	SUP prsModelNode STRUCTURAL)
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.19
+	NAME 'prsDatastorageOperationParameter'
+	DESC 'параметр операции интеграционного хранилища'
+	SUP prsModelNode STRUCTURAL)

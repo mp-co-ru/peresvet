@@ -24,6 +24,7 @@
    Конфигуратор модели<configurator/configurator>
    Примеры работы с платформой<examples/examples>
    Создание экранов в Grafana<grafana/grafana_integration>
+   Интеграционные хранилища (v2)<integrational_v2>
    API<api>
 
 Indices and tables

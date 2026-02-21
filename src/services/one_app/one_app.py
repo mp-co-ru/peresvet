@@ -6,6 +6,7 @@
 Нет функций CRUD ни для каких сущностей.
 """
 import sys
+import os
 from fastapi import FastAPI, APIRouter
 from starlette.routing import Mount
 from contextlib import asynccontextmanager
@@ -16,6 +17,9 @@ except ModuleNotFoundError as _:
     pass
 
 sys.path.append(".")
+
+# v2 services are optional (feature flag)
+ENABLE_V2 = os.environ.get("PRS_ENABLE_V2", "").strip().lower() in ("1", "true", "yes", "on")
 
 # alerts ----------------------------------------------------------------------
 # alerts api crud
@@ -73,10 +77,20 @@ from src.services.dataStorages.api_crud.dataStorages_api_crud_svc \
         router as dataStorages_api_crud_router
     )
 
-# dataStorages_model_crud
-from src.services.dataStorages.model_crud.dataStorages_model_crud_svc \
-    import (
-        app as dataStorages_model_crud
+# dataStorages_api_crud v2 router (operations/integrational extensions)
+if ENABLE_V2:
+    from src.services.dataStorages.api_crud.dataStorages_api_crud_v2_router import (
+        router_v2 as dataStorages_api_crud_router_v2,
+    )
+
+# dataStorages_model_crud (v1 by default; v2 optional)
+if ENABLE_V2:
+    from src.services.dataStorages.model_crud.dataStorages_model_crud_v2_svc import (
+        app as dataStorages_model_crud,
+    )
+else:
+    from src.services.dataStorages.model_crud.dataStorages_model_crud_svc import (
+        app as dataStorages_model_crud,
     )
 
 # postgresql
@@ -210,6 +224,8 @@ api_router.include_router(router=connectors_app_api_router)
 # dataStorages ----------------------------------------------------------------
 # dataStorages_api_crud
 api_router.include_router(router=dataStorages_api_crud_router)
+if ENABLE_V2:
+    api_router.include_router(router=dataStorages_api_crud_router_v2)
 # -----------------------------------------------------------------------------
 
 # methods ---------------------------------------------------------------------

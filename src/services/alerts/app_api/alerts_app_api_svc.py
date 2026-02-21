@@ -8,7 +8,7 @@ from pydantic import (
     BaseModel, Field, validator, ConfigDict
 )
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 sys.path.append(".")
 
@@ -126,7 +126,25 @@ app = AlertsAppAPI(settings=settings, title="`AlertsAppAPI` service")
 router = APIRouter(prefix=f"{settings.api_version}/alarms")
 
 @router.get("/", response_model=dict, status_code=200, response_model_exclude_none=True)
-async def alarms_get(payload: AlarmsGet):
+async def alarms_get(
+    parentId: list[str] | None = Query(None),
+    getChildren: bool = False,
+    format: bool = False,
+    fired: bool = True,
+    q: str | None = None,
+):
+    if q:
+        payload = AlarmsGet.model_validate_json(q)
+    else:
+        body = {
+            "getChildren": getChildren,
+            "format": format,
+            "fired": fired,
+        }
+        if parentId is not None:
+            body["parentId"] = parentId
+        payload = AlarmsGet.model_validate(body)
+
     res = await app.alarms_get(payload)
     return res
 

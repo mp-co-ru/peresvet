@@ -9,7 +9,7 @@ from typing import List, Optional
 from typing_extensions import Annotated
 from pydantic import Field, validator
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 sys.path.append(".")
 
@@ -45,7 +45,7 @@ def valid_schedule_config(v: str) -> str:
             except:
                 raise_exception()
             new_v["start"] = start
-            
+
             interval_type = new_v.get("interval_type", "hours")
             if interval_type not in ("seconds", "minutes", "hours", "days"):
                 raise_exception()
@@ -86,7 +86,7 @@ def valid_schedule_config_for_update(v: str) -> str:
         new_v = deepcopy(v)
         if new_v is None:
             return
-        
+
         if not new_v:
             return {
                 "start": t.ts_to_local_str(t.now_int()),
@@ -102,7 +102,7 @@ def valid_schedule_config_for_update(v: str) -> str:
             except:
                 raise_exception()
             new_v["start"] = start
-            
+
             interval_type = new_v.get("interval_type", "hours")
             if interval_type not in ("seconds", "minutes", "hours", "days"):
                 raise_exception()
@@ -135,9 +135,9 @@ class ScheduleCreateAttributes(svc.NodeAttributes):
             "interval_type": "hours",
             "interval_value": 1
         }, title="Конфигурация расписания")
-    
+
     validate_config = validator('prsJsonConfigString', allow_reuse=True)(valid_schedule_config)
-    
+
 class ScheduleCreate(svc.NodeCreate):
     attributes: ScheduleCreateAttributes = Field(ScheduleCreateAttributes(), title="Атрибуты узла")
 
@@ -156,7 +156,7 @@ class ScheduleReadResult(svc.NodeReadResult):
 class ScheduleUpdateAttributes(svc.NodeAttributes):
     prsJsonConfigString: Optional[dict] = Field(None, title="Конфигурация расписания")
     prsActive: Optional[bool] = Field(None, title="Флаг активности")
-        
+
     validate_config = validator('prsJsonConfigString', allow_reuse=True)(valid_schedule_config_for_update)
 
 
@@ -202,7 +202,7 @@ async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends
           * **prsJsonConfigString** (str) - Строка содержит, в случае необходимости,
             конфигурацию узла. Интерпретируется сервисом, управляющим сущностью,
             которой принадлежит экземпляр. Необязательный аттрибут
-          * **prsActive** (bool) - Определяет, активен ли экземпляр. Необязательный атрибут;          
+          * **prsActive** (bool) - Определяет, активен ли экземпляр. Необязательный атрибут;
 
     **Ответ:**
 
@@ -212,7 +212,7 @@ async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends
     """
     if payload is None:
         payload = {}
-    
+
     try:
         s = json.dumps(payload)
         p = ScheduleCreate.model_validate_json(s)
@@ -226,8 +226,38 @@ async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends
     return res
 
 @router.get("/", response_model=svc.NodeReadResult | None, status_code=200, response_model_exclude_none=True)
-async def read(q: str | None = None, payload: ScheduleRead | None = None):
-    return await app.api_get_read(ScheduleRead, q, payload)
+async def read(
+    id: list[str] | None = Query(None),
+    base: str | None = None,
+    deref: bool = True,
+    scope: int = 1,
+    hierarchy: bool = False,
+    getParent: bool = False,
+    attributes: list[str] | None = Query(None),
+    filter: str | None = None,
+    q: str | None = None,
+    payload: ScheduleRead | None = None,
+):
+    if q is not None or payload is not None:
+        return await app.api_get_read(ScheduleRead, q, payload)
+
+    body: dict = {
+        "deref": deref,
+        "scope": scope,
+        "hierarchy": hierarchy,
+        "getParent": getParent,
+    }
+    if id is not None:
+        body["id"] = id
+    if base is not None:
+        body["base"] = base
+    if attributes is not None:
+        body["attributes"] = attributes
+    if filter is not None:
+        body["filter"] = json.loads(filter)
+
+    p = ScheduleRead.model_validate(body)
+    return await app._read(p)
 
 @router.put("/", status_code=202)
 async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
