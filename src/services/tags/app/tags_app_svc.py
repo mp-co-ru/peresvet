@@ -15,6 +15,7 @@ sys.path.append(".")
 from src.common.app_svc import AppSvc
 from src.services.tags.app.tags_app_settings import TagsAppSettings
 from src.common.times import ts
+from src.common.tag_data_points import normalize_point_xyq
 
 class TagsApp(AppSvc):
     """Сервис работы с тегами.
@@ -85,8 +86,6 @@ class TagsApp(AppSvc):
             return res
 
     async def data_set(self, mes: dict, routing_key: str | None = None) -> None:
-
-        now_ts = ts()
         for tag_item in mes["data"]:
             tag_id = tag_item['tagId']
 
@@ -106,9 +105,15 @@ class TagsApp(AppSvc):
                 "data": []
             }
             for data_item in tag_item["data"]:
-                data_item_len = len(data_item)
+                p = normalize_point_xyq(data_item)
+                if isinstance(p, tuple) and len(p) == 3:
+                    x, y, q = p
+                    new_tag_item["data"].append((x, y, q))
+                else:
+                    # оставим как есть, чтобы downstream сервисы могли вернуть ошибку/лог
+                    new_tag_item["data"].append(data_item)
 
-            res = await self._post_message({"data": [tag_item]}, reply=False,
+            res = await self._post_message({"data": [new_tag_item]}, reply=False,
                 routing_key=f"{self._config.hierarchy['class']}.app.data_set.{tag_item['tagId']}"
             )
             if res is None:

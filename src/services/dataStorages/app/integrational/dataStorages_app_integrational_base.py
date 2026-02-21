@@ -11,7 +11,7 @@ from src.common.hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
 from src.services.dataStorages.app.dataStorages_app_base import DataStoragesAppBase
 from src.services.dataStorages.app.integrational.dataStorages_app_integrational_utils import (
     OperationKind,
-    ensure_columns_yxq,
+    ensure_columns_xyq,
     rewrite_named_params,
     validate_sql,
 )
@@ -328,14 +328,14 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
 
         query = sql
         if op.max_rows is not None:
-            query = f"select y, x, q from ({sql}) as sub limit {int(op.max_rows)}"
+            query = f"select x, y, q from ({sql}) as sub limit {int(op.max_rows)}"
 
         rows = await self._db_fetch(ds_id=ds_id, query=query, args=args, timeout_ms=op.timeout_ms)
         if not rows:
             return []
 
-        ensure_columns_yxq(rows[0].keys())
-        return [(r.get("y"), r.get("x"), r.get("q")) for r in rows]
+        ensure_columns_xyq(rows[0].keys())
+        return [(r.get("x"), r.get("y"), r.get("q")) for r in rows]
 
     async def _execute_set(self, ds_id: str, op: OperationDef, param_values: dict[str, Any]) -> None:
         sql, param_names = rewrite_named_params(op.query)

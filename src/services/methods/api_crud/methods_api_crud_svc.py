@@ -5,7 +5,7 @@
 import sys
 from typing import List, Optional
 import json
-from pydantic import Field, validator, ConfigDict
+from pydantic import Field, field_validator, ConfigDict
 from fastapi import APIRouter, Depends, Query
 
 sys.path.append(".")
@@ -36,7 +36,7 @@ class MethodCreate(svc.NodeCreate):
         )
     )
 
-    @validator('initiatedBy')
+    @field_validator("initiatedBy")
     @classmethod
     def make_initiatedBy_as_array(cls, v: str | list[str]) -> list[str]:
         if isinstance(v, str):

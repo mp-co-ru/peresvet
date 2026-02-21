@@ -298,14 +298,14 @@ class AlertsApp(AppSvc):
 
                         # если данные более ранние, чем уже обработанные...
                         if alert_data["fired"]:
-                            if data_item[1] <= alert_data["fired"]:
+                            if data_item[0] <= alert_data["fired"]:
                                 continue
-                            if alert_data["acked"] and (data_item[1] <= alert_data["acked"]):
+                            if alert_data["acked"] and (data_item[0] <= alert_data["acked"]):
                                 continue
 
                         alert_on = (
-                            data_item[0] < alert_data["value"],
-                            data_item[0] >= alert_data["value"],
+                            data_item[1] < alert_data["value"],
+                            data_item[1] >= alert_data["value"],
                         )[alert_data["high"]]
 
                         self._logger.debug(f"Alarm on: {alert_on}")
@@ -318,30 +318,30 @@ class AlertsApp(AppSvc):
                             await self._post_message(
                                 {
                                     "alertId": alert_id,
-                                    "x": data_item[1]
+                                    "x": data_item[0]
                                 },
                                 reply=False,
                                 routing_key=f"{self._config.hierarchy['class']}.app.alarm_on.{alert_id}"
                             )
-                            alert_data["fired"] = data_item[1]
+                            alert_data["fired"] = data_item[0]
 
                             if alert_data["autoAck"]:
                                 await self._post_message(
                                     {
                                         "alertId": alert_id,
-                                        "x": data_item[1]
+                                        "x": data_item[0]
                                     },
                                     reply=False,
                                     routing_key=f"{self._config.hierarchy['class']}.app.alarm_acked.{alert_id}"
                                 )
-                                alert_data["acked"] = data_item[1]
+                                alert_data["acked"] = data_item[0]
 
 
                         if alert_data["fired"] and not alert_on:
                             await self._post_message(
                                 {
                                     "alertId": alert_id,
-                                    "x": data_item[1]
+                                    "x": data_item[0]
                                 },
                                 reply=False,
                                 routing_key=f"{self._config.hierarchy['class']}.app.alarm_off.{alert_id}"

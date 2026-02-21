@@ -15,8 +15,11 @@ async def calc_power(I: dict, U: dict) -> float:
 
     print(f"{int_to_local_timestamp(ts())} :: power")
 
-    cur_I = I["data"][0]["data"][0][0]
-    cur_U = U["data"][0]["data"][0][0]
+    # data point format: [x, y, q] (or [y] / [x, y] in some cases)
+    pI = I["data"][0]["data"][0]
+    pU = U["data"][0]["data"][0]
+    cur_I = (pI[0], pI[1])[len(pI) >= 2]
+    cur_U = (pU[0], pU[1])[len(pU) >= 2]
 
     if cur_I == None or cur_U == None:
         return 0
@@ -29,7 +32,8 @@ async def current(I: dict) -> float:
 
     """
     print(f"{int_to_local_timestamp(ts())} :: current")
-    cur_I = I["data"][0]["data"][0][0]
+    pI = I["data"][0]["data"][0]
+    cur_I = (pI[0], pI[1])[len(pI) >= 2]
 
     if cur_I == None:
         return 0

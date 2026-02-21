@@ -43,7 +43,7 @@ async def main():
             for id in ids:
                 print(f"Подготовка данных для тега {id}...", end=" ")
                 t1 = time.time()
-                data = [(func(), x*1000000) for x in range(int(start/1000000), int(finish/1000000) + 1)]
+                data = [(x * 1000000, func()) for x in range(int(start/1000000), int(finish/1000000) + 1)]
                 print(time.time() - t1)
 
                 t1 = time.time()
@@ -51,7 +51,7 @@ async def main():
                 await conn.copy_records_to_table(
                                 f"t_{id}",
                                 records=data,
-                                columns=('y', 'x'))
+                                columns=('x', 'y'))
                 print(f"{time.time() - t1}\n")
 
     print("Всё.")

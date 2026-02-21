@@ -1049,7 +1049,8 @@ getTagData = () => {
     tBody = $("#tbody-tagData").empty();
     tagData.map((dataItem) => {
       tr = $("<tr></tr>").appendTo(tBody);
-      tr.append(`<td>${JSON.stringify(dataItem[0])}</td><td>${dataItem[1]}</td><td>${dataItem[2]}</td>`);
+      // data point format: [x, y, q]
+      tr.append(`<td>${JSON.stringify(dataItem[1])}</td><td>${dataItem[0]}</td><td>${dataItem[2]}</td>`);
     });
   });
 }

@@ -4,7 +4,7 @@
 """
 import sys
 import json
-from pydantic import BaseModel, Field, validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from fastapi import APIRouter, Depends, Query
 
 sys.path.append(".")
@@ -45,7 +45,7 @@ class DataStorageCreate(svc.NodeCreate):
     linkAlerts: list[LinkAlert] = Field(default_factory=list, title="Список привязываемых тревог")
     # unlinkTags: list[LinkTag] | None = Field([], title="Список id тегов.")
 
-    @validator('attributes')
+    @field_validator("attributes")
     @classmethod
     def ds_type_is_necessary(cls, v: DataStorageAttributes) -> DataStorageAttributes:
         # если не указан тип базы данных, то по умолчанию используется
@@ -93,7 +93,10 @@ class DataStorageUpdate(DataStorageCreate):
         title="Список id тревог."
     )
 
-    validate_id = validator('id', allow_reuse=True)(svc.valid_uuid)
+    @field_validator("id")
+    @classmethod
+    def validate_id(cls, v):
+        return svc.valid_uuid(v)
 
 class DataStoragesAPICRUD(svc.APICRUDSvc):
     """Сервис работы с хранилищами данных в иерархии.

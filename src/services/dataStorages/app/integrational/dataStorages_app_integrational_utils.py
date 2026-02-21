@@ -55,9 +55,9 @@ def rewrite_named_params(sql: str) -> tuple[str, list[str]]:
     return rewritten, params
 
 
-def ensure_columns_yxq(columns: Iterable[str]) -> None:
+def ensure_columns_xyq(columns: Iterable[str]) -> None:
     cols = {c.lower() for c in columns}
-    missing = [c for c in ("y", "x", "q") if c not in cols]
+    missing = [c for c in ("x", "y", "q") if c not in cols]
     if missing:
-        raise ValueError(f"Результат запроса должен содержать колонки y, x, q. Нет: {missing}")
+        raise ValueError(f"Результат запроса должен содержать колонки x, y, q. Нет: {missing}")
 

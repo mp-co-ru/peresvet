@@ -10,7 +10,7 @@ from typing import Any, List, NamedTuple
 from typing_extensions import Annotated
 from pydantic import (
     BaseModel, Field,
-    validator, BeforeValidator, ConfigDict
+    field_validator, BeforeValidator, ConfigDict
 )
 
 from fastapi import APIRouter, Depends
@@ -28,7 +28,10 @@ class Command(BaseModel):
     id: str = Field(title="Идентификатор коннектора")
     command: dict = Field({}, title="Команда коннектору")
 
-    validate_id = validator('id', allow_reuse=True)(valid_uuid)
+    @field_validator("id")
+    @classmethod
+    def validate_id(cls, v: Any) -> Any:
+        return valid_uuid(v)
 
 class ConnectorsAppAPI(BaseSvc):
     """Сервис работы с коннекторами в иерархии.

@@ -150,8 +150,8 @@
         print(f"I: {json.dumps(I, indent=4)}")
         print(f"U: {json.dumps(U, indent=4)}")
 
-        cur_I = I["data"][0]["data"][0][0]
-        cur_U = U["data"][0]["data"][0][0]
+        cur_I = I["data"][0]["data"][0][1]
+        cur_U = U["data"][0]["data"][0][1]
 
         if cur_I == None or cur_U == None:
             return 0

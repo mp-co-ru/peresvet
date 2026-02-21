@@ -7,7 +7,7 @@ import sys
 import json
 from typing import List, Optional
 from typing_extensions import Annotated
-from pydantic import Field, validator
+from pydantic import Field, field_validator
 
 from fastapi import APIRouter, Depends, Query
 
@@ -136,7 +136,10 @@ class ScheduleCreateAttributes(svc.NodeAttributes):
             "interval_value": 1
         }, title="Конфигурация расписания")
 
-    validate_config = validator('prsJsonConfigString', allow_reuse=True)(valid_schedule_config)
+    @field_validator("prsJsonConfigString")
+    @classmethod
+    def validate_config(cls, v):
+        return valid_schedule_config(v)
 
 class ScheduleCreate(svc.NodeCreate):
     attributes: ScheduleCreateAttributes = Field(ScheduleCreateAttributes(), title="Атрибуты узла")
@@ -157,7 +160,10 @@ class ScheduleUpdateAttributes(svc.NodeAttributes):
     prsJsonConfigString: Optional[dict] = Field(None, title="Конфигурация расписания")
     prsActive: Optional[bool] = Field(None, title="Флаг активности")
 
-    validate_config = validator('prsJsonConfigString', allow_reuse=True)(valid_schedule_config_for_update)
+    @field_validator("prsJsonConfigString")
+    @classmethod
+    def validate_config(cls, v):
+        return valid_schedule_config_for_update(v)
 
 
 class ScheduleUpdate(svc.NodeUpdate):
