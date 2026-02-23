@@ -159,7 +159,7 @@ class DataStoragesAppVictoriametrics(svc.Svc):
                     "data": [
                         {
                             "tagId": "<some_id>",
-                            "data": [(y, x, q)]
+                            "data": [(x, y, q)]
                         }
                     ]
                 }
@@ -183,7 +183,7 @@ class DataStoragesAppVictoriametrics(svc.Svc):
 
             formatted_data = []
             for item in data_items:
-                y, x, _ = item
+                x, y, _ = item
                 vm_data_item = {
                     'metric': metric,
                     'value': (y, json.dumps(y, ensure_ascii=False))[tag_value_type == 4],
@@ -461,8 +461,8 @@ class DataStoragesAppVictoriametrics(svc.Svc):
                                     value = json.loads(val[1])
 
                             data_item = [
-                                value,
                                 val[0] * 1000000,
+                                value,
                                 None
                             ]
                             tag_item["data"].append(data_item)
