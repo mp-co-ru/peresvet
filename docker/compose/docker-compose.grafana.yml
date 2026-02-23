@@ -13,33 +13,49 @@ services:
       - GF_SERVER_DOMAIN=${NGINX_HOST}
       - GF_SERVER_ROOT_URL=http://${HOST_GRAFANA}:${PORT_GRAFANA}/grafana
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
-      - GF_RENDERING_SERVER_URL=http://${HOST_GRAFANA_RENDERER}:${PORT_GRAFANA_RENDERER}/render
-      - GF_RENDERING_CALLBACK_URL=http://${HOST_GRAFANA}:${PORT_GRAFANA}/grafana/
-      - GF_LOG_FILTERS=rendering:debug
+  #    - GF_RENDERING_SERVER_URL=http://${HOST_GRAFANA_RENDERER}:${PORT_GRAFANA_RENDERER}/render
+  #    - GF_RENDERING_CALLBACK_URL=http://${HOST_GRAFANA}:${PORT_GRAFANA}/grafana/
+  #    - GF_LOG_FILTERS=rendering:debug
       - GF_PANELS_DISABLE_SANITIZE_HTML=true
       - GF_AUTH_ANONYMOUS_ENABLED=false
       - GF_USERS_DEFAULT_THEME=light
       - GF_PLUGINS_UPDATE_CHECK_ENABLED=false
       - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=marcusolsson-dynamictext-panel,marcusolsson-json-datasource,volkovlabs-echarts-panel,volkovlabs-form-panel
+  #  depends_on:
+  #    renderer:
+  #      condition: service_healthy
     volumes:
       - grafana_storage:/var/lib/grafana
     networks:
       - peresvet
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/3000'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
-  renderer:
-    image: grafana/grafana-image-renderer:latest
-    hostname: ${HOST_GRAFANA_RENDERER}
-    ports:
-      - ${PORT_GRAFANA_RENDERER}:${PORT_GRAFANA_RENDERER}
-    environment:
-      - TZ=${TIME_ZONE}
-      - RENDERING_MODE=clustered # для возможности одновременной обработки большого количества изображений
-      - RENDERING_CLUSTERING_MODE=context
-      - RENDERING_CLUSTERING_MAX_CONCURRENCY=6
-      - GF_RENDERING_IGNORE_HTTPS_ERRORS= true
-      - IGNORE_HTTPS_ERRORS=true
-    networks:
-      - peresvet
+  #renderer:
+  #  container_name: renderer
+  #  image: grafana/grafana-image-renderer:latest
+  #  hostname: ${HOST_GRAFANA_RENDERER}
+  #  ports:
+  #    - ${PORT_GRAFANA_RENDERER}:${PORT_GRAFANA_RENDERER}
+  #  environment:
+  #    - TZ=${TIME_ZONE}
+  #    - RENDERING_MODE=clustered # для возможности одновременной обработки большого количества изображений
+  #    - RENDERING_CLUSTERING_MODE=context
+  #    - RENDERING_CLUSTERING_MAX_CONCURRENCY=6
+  #    - GF_RENDERING_IGNORE_HTTPS_ERRORS= true
+  #    - IGNORE_HTTPS_ERRORS=true
+  #  networks:
+  #    - peresvet
+  #  healthcheck:
+  #    test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8081'"]
+  #    interval: 10s
+  #    timeout: 5s
+  #    retries: 10
+  #    start_period: 10s
 
 networks:
   peresvet:

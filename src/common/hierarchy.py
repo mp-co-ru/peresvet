@@ -540,8 +540,15 @@ class Hierarchy:
 
     async def get_node_id(self, node_dn: str) -> str:
         with self._cm.connection() as conn:
-            res = conn.search_s(base=node_dn, scope=CN_SCOPE_BASE,
-                    filterstr="(cn=*)", attrlist=['entryUUID'])
+            try:
+                res = conn.search_s(
+                    base=node_dn,
+                    scope=CN_SCOPE_BASE,
+                    filterstr="(cn=*)",
+                    attrlist=["entryUUID"],
+                )
+            except (ldap.NO_SUCH_OBJECT, ldap.INVALID_DN_SYNTAX):
+                return None
             if not res:
                 return None
 

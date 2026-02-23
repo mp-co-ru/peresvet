@@ -9,6 +9,8 @@ services:
         - name=value
     environment:
       TZ: ${TIME_ZONE}
+      # Enable Peresvet API v2 (dataStorages + integrational operations)
+      PRS_ENABLE_V2: ${PRS_ENABLE_V2:-0}
     networks:
       - peresvet
     volumes:

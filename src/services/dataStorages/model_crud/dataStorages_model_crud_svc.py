@@ -3,13 +3,14 @@ import copy
 import json
 from src.common import model_crud_svc
 from src.common import hierarchy
+from src.common.model_crud_settings import ModelCRUDSettings
 from src.services.dataStorages.model_crud.dataStorages_model_crud_settings import DataStoragesModelCRUDSettings
 
 
 class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
     """v1 model_crud для dataStorages (без v2 operations)."""
 
-    def __init__(self, settings: DataStoragesModelCRUDSettings, *args, **kwargs):
+    def __init__(self, settings: ModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
 
     async def _further_read(self, mes: dict, search_result: dict) -> dict:
@@ -74,6 +75,32 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             res["data"].append(new_ds)
 
         return res
+
+    async def _further_create(self, mes: dict, new_id: str) -> None:
+        """v1: ensure system child nodes `tags` and `alerts` exist.
+
+        Note: base `ModelCRUDSvc._create` always creates `cn=system` under the entity.
+        """
+        ds_dn = await self._hierarchy.get_node_dn(new_id)
+        if not ds_dn:
+            self._logger.error(f"{self._config.svc_name} :: Не удалось получить DN хранилища {new_id}.")
+            return
+
+        system_dn = f"cn=system,{ds_dn}"
+        system_id = await self._hierarchy.get_node_id(system_dn)
+        if not system_id:
+            # safety net: should already exist, but keep behavior robust
+            system_id = await self._hierarchy.add(new_id, {"cn": ["system"]})
+
+        for cn in ("tags", "alerts"):
+            child_dn = f"cn={cn},cn=system,{ds_dn}"
+            child_id = await self._hierarchy.get_node_id(child_dn)
+            if child_id:
+                continue
+            await self._hierarchy.add(
+                base=system_id,
+                attribute_values={"cn": [cn], "prsSystemNode": True},
+            )
 
     async def _further_update(self, mes: dict) -> None:
         ds_id = mes["id"]
@@ -156,7 +183,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             f"{self._config.svc_name} :: Тревога {item['alertId']} отвязана от хранилища {item['dataStorageId']}."
         )
 
-    async def _get_default_datastorage_id(self) -> str:
+    async def _get_default_datastorage_id(self) -> str | None:
         items = await self._hierarchy.search(
             {
                 "base": self._config.hierarchy["node_id"],
@@ -188,6 +215,9 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         )
         if not res:
             self._logger.error(f"{self._config.svc_name} :: Нет обработчика для хранилища {datastorage_id}.")
+            return
+        if not isinstance(res, dict):
+            self._logger.error(f"{self._config.svc_name} :: Некорректный ответ обработчика хранилища {datastorage_id}.")
             return
 
         get_tag = {"id": payload["tagId"], "attributes": ["prsValueTypeCode"]}
@@ -238,6 +268,9 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
         )
         if not res:
             self._logger.error(f"{self._config.svc_name} :: Нет обработчика для хранилища {datastorage_id}.")
+            return
+        if not isinstance(res, dict):
+            self._logger.error(f"{self._config.svc_name} :: Некорректный ответ обработчика хранилища {datastorage_id}.")
             return
 
         prs_store = res.get("prsStore")

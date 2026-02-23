@@ -42,13 +42,46 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
     # код типа привязки тега к хранилищу: 2 = интеграционный тег
     _LINK_ENTITY_TYPE_INTEGRATIONAL = 2
 
-    async def _write_cache_data(self, tag_ids: list[str] = None) -> None:
+    async def _write_cache_data(self, tag_ids: list[str] | None = None) -> None:
         # интеграционные теги не используют сброс historian-кэша
         return
 
     async def _write_tag_data_to_db(self, tag_id: str) -> None:
         # интеграционные теги не пишут точки в historian-таблицы
         return
+
+    # ---------------------------------------------------------------------
+    # DataStoragesAppBase abstract methods (not used for integrational tags)
+    # ---------------------------------------------------------------------
+
+    async def _create_store_name_for_new_tag(self, ds_id: str, tag_id: str) -> dict | None:
+        # Integrational tags do not create per-tag stores/tables.
+        return None
+
+    async def _create_store_for_tag(self, tag_id: str, ds_id: str, store: dict) -> None:
+        # Integrational tags do not create stores.
+        return
+
+    async def _create_store_name_for_new_alert(self, ds_id: str, alert_id: str) -> dict | None:
+        raise NotImplementedError("Интеграционные хранилища не поддерживают alerts в текущей реализации.")
+
+    async def _create_store_for_alert(self, alert_id: str, ds_id: str, store: dict) -> None:
+        raise NotImplementedError("Интеграционные хранилища не поддерживают alerts в текущей реализации.")
+
+    async def _read_data(
+        self,
+        tag_id: str,
+        start: int,
+        finish: int,
+        order: int,
+        count: int,
+        one_before: bool,
+        one_after: bool,
+        value: Any = None,
+    ):
+        # Historical read path is not used for integrational tags; `prsTag.app.data_get.*`
+        # is handled by `_tag_get()` override above.
+        raise NotImplementedError("Для интеграционных хранилищ чтение выполняется через операции GET (prsEntityTypeCode=2).")
 
     async def _tag_get(self, mes: dict, routing_key: str | None = None) -> dict:
         result = {"data": []}
@@ -99,8 +132,10 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
             return {"prsStore": None}
 
         await self._bind_tag(tag_id, True)
-        async with self._cache.get_redis() as r:
-            await r.json().arrappend(f"{ds_id}.{self._config.svc_name}", "tags", tag_id)
+        cache = self._cache
+        assert cache is not None
+        async with cache.get_redis() as r:
+            await r.json().arrappend(f"{ds_id}.{self._config.svc_name}", "tags", tag_id)  # type: ignore[reportGeneralTypeIssues]
 
         return {"prsStore": None}
 
@@ -109,10 +144,12 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
         ds_id = mes["dataStorageId"]
 
         await self._bind_tag(tag_id, False)
-        async with self._cache.get_redis() as r:
-            index = await r.json().arrindex(f"{ds_id}.{self._config.svc_name}", "tags", tag_id)
+        cache = self._cache
+        assert cache is not None
+        async with cache.get_redis() as r:
+            index = await r.json().arrindex(f"{ds_id}.{self._config.svc_name}", "tags", tag_id)  # type: ignore[reportGeneralTypeIssues]
             if index > -1:
-                await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "tags", index[0])
+                await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "tags", index[0])  # type: ignore[reportGeneralTypeIssues]
 
     async def _link_alert(self, mes: dict, routing_key: str | None = None) -> dict:
         raise NotImplementedError("Интеграционные хранилища не поддерживают alerts в текущей реализации.")
@@ -151,8 +188,9 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
 
         points = tag_item.get("data") or []
         for point in points:
-            y = point[0] if len(point) > 0 else None
-            x = point[1] if len(point) > 1 else None
+            # Point contract: [x, y, q]
+            x = point[0] if len(point) > 0 else None
+            y = point[1] if len(point) > 1 else None
             q = point[2] if len(point) > 2 else None
 
             ctx = {
@@ -172,8 +210,10 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
     async def _resolve_integrational_link(self, tag_id: str) -> tuple[str, dict]:
         """Находит dataStorage и LDAP-конфиг привязки для интеграционного тега."""
         for ds_id in self._connection_pools.keys():
-            async with self._cache.get_redis() as r:
-                ds_active = await r.json().get(f"{ds_id}.{self._config.svc_name}", "prsActive")
+            cache = self._cache
+            assert cache is not None
+            async with cache.get_redis() as r:
+                ds_active = await r.json().get(f"{ds_id}.{self._config.svc_name}", "prsActive")  # type: ignore[reportGeneralTypeIssues]
             if ds_active is False:
                 continue
 
@@ -309,7 +349,7 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
 
     async def _jsonata_eval(self, expr: str, data: dict, timeout_ms: int | None) -> Any:
         try:
-            import jsonatapy
+            import jsonatapy  # type: ignore[reportMissingImports]
         except ModuleNotFoundError as ex:
             raise ModuleNotFoundError(
                 "Не установлен пакет 'jsonatapy' (нужен для JSONata выражений)."
@@ -335,7 +375,8 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
             return []
 
         ensure_columns_yxq(rows[0].keys())
-        return [(r.get("y"), r.get("x"), r.get("q")) for r in rows]
+        # Return points in [x, y, q] order
+        return [(r.get("x"), r.get("y"), r.get("q")) for r in rows]
 
     async def _execute_set(self, ds_id: str, op: OperationDef, param_values: dict[str, Any]) -> None:
         sql, param_names = rewrite_named_params(op.query)

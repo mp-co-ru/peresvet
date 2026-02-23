@@ -36,24 +36,25 @@
 - ``prsEntityTypeCode = 2`` — *integrational* (PostgreSQL).
 
 Операции в LDAP
---------------
+---------------
 
 Под узлом конкретного хранилища данных (``<dataStorage>``) в LDAP хранится:
 
-- ``cn=system``
-  - ``cn=operations`` — список операций
-    - ``cn=<operationCn>`` (``objectClass=prsDatastorageOperation``)
-      - ``prsEntityTypeCode``:
-        - ``0`` — GET
-        - ``1`` — SET
-      - ``prsJsonConfigString`` — JSON со свойствами операции:
-        - ``query`` — текст запроса (строго параметризованный, ``:param``)
-        - ``prsTimeOutMs`` — таймаут выполнения/вычислений
-        - ``prsMaxRows`` — лимит строк для GET
-        - ``prsVersion`` — версия операции
-      - дочерние узлы параметров:
-        - ``cn=<paramName>`` (``objectClass=prsDatastorageOperationParameter``)
-          - ``prsJsonConfigString`` — JSON (например ``required/default/type``)
+- ``cn=system``.
+- Внутри ``cn=system`` узел ``cn=operations`` со списком операций.
+- Для каждой операции есть узел ``cn=<operationCn>`` (``objectClass=prsDatastorageOperation``) с атрибутами:
+
+  - ``prsEntityTypeCode``: ``0`` (GET) или ``1`` (SET).
+  - ``prsJsonConfigString`` с JSON-свойствами операции:
+
+    - ``query`` — текст запроса (строго параметризованный, ``:param``).
+    - ``prsTimeOutMs`` — таймаут выполнения/вычислений.
+    - ``prsMaxRows`` — лимит строк для GET.
+    - ``prsVersion`` — версия операции.
+
+  - Дочерние узлы параметров ``cn=<paramName>`` (``objectClass=prsDatastorageOperationParameter``), где:
+
+    - ``prsJsonConfigString`` — JSON с настройками параметра (например ``required/default/type``).
 
 Интеграционные теги
 -------------------
@@ -102,7 +103,7 @@ GET-операция обязана возвращать колонки (или 
     "data": [
       {
         "tagId": "<tagId>",
-        "data": [[y1, x1, q1], [y2, x2, q2]]
+        "data": [["<y1>", "<x1>", "<q1>"], ["<y2>", "<x2>", "<q2>"]]
       }
     ]
   }

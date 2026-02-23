@@ -29,7 +29,23 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
         return res
 
     async def _further_create(self, mes: dict, new_id: str) -> None:
-        await self._ensure_ds_system_nodes(ds_id=new_id)
+        # First, run v1 logic (creates system/tags/alerts).
+        await super()._further_create(mes, new_id)
+
+        # v2: for integrational dataStorages (prsEntityTypeCode=2) ensure `system/operations` exists.
+        ds_type = None
+        attrs = mes.get("attributes") or {}
+        v = attrs.get("prsEntityTypeCode")
+        if isinstance(v, list):
+            v = v[0] if v else None
+        if v is not None:
+            try:
+                ds_type = int(v)
+            except Exception:
+                ds_type = None
+
+        if ds_type == 2:
+            await self._ensure_ds_operations_node(ds_id=new_id)
 
         ops = mes.get("operations") or []
         if ops:
@@ -38,16 +54,29 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
     async def _further_update(self, mes: dict) -> None:
         ds_id = mes["id"]
 
-        if "operations" in mes and mes.get("operations") is not None:
-            await self._sync_operations(ds_id=ds_id, operations=mes["operations"])
-        else:
-            unlink_ops = mes.get("unlinkOperations") or []
-            if unlink_ops:
-                await self._delete_operations_by_cn(ds_id=ds_id, operation_cns=unlink_ops)
-
+        # First, run v1 update logic (link/unlink tags/alerts).
         await super()._further_update(mes)
 
-    async def _ensure_ds_system_nodes(self, ds_id: str) -> None:
+        ds_type = await self._get_ds_type_after_update(ds_id=ds_id, mes=mes)
+
+        # v2 policy:
+        # - for integrational dataStorages (prsEntityTypeCode=2) ensure `system/operations` exists;
+        # - for non-integrational dataStorages ensure `system/operations` is removed.
+        if ds_type == 2:
+            await self._ensure_ds_operations_node(ds_id=ds_id)
+
+            if "operations" in mes and mes.get("operations") is not None:
+                await self._sync_operations(ds_id=ds_id, operations=mes["operations"])
+            else:
+                unlink_ops = mes.get("unlinkOperations") or []
+                if unlink_ops:
+                    await self._delete_operations_by_cn(ds_id=ds_id, operation_cns=unlink_ops)
+        else:
+            # If the storage type changes from integrational to historical (or is historical),
+            # we remove the operations subtree to keep v1 contract clean.
+            await self._delete_ds_operations_node(ds_id=ds_id)
+
+    async def _ensure_ds_operations_node(self, ds_id: str) -> None:
         ds_dn = await self._hierarchy.get_node_dn(ds_id)
         if not ds_dn:
             raise ValueError(f"Не удалось получить DN хранилища {ds_id}.")
@@ -56,13 +85,51 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
         if not system_id:
             system_id = await self._hierarchy.add(ds_id, {"cn": ["system"]})
 
-        for cn in ("tags", "alerts", "operations"):
-            child_id = await self._hierarchy.get_node_id(f"cn={cn},cn=system,{ds_dn}")
-            if not child_id:
-                await self._hierarchy.add(
-                    base=system_id,
-                    attribute_values={"cn": [cn], "prsSystemNode": True},
-                )
+        ops_dn = f"cn=operations,cn=system,{ds_dn}"
+        ops_id = await self._hierarchy.get_node_id(ops_dn)
+        if not ops_id:
+            await self._hierarchy.add(
+                base=system_id,
+                attribute_values={"cn": ["operations"], "prsSystemNode": True},
+            )
+
+    async def _delete_ds_operations_node(self, ds_id: str) -> None:
+        ds_dn = await self._hierarchy.get_node_dn(ds_id)
+        if not ds_dn:
+            return
+        ops_id = await self._hierarchy.get_node_id(f"cn=operations,cn=system,{ds_dn}")
+        if ops_id:
+            await self._hierarchy.delete(ops_id)
+
+    async def _get_ds_type_after_update(self, ds_id: str, mes: dict) -> int | None:
+        """Return current `prsEntityTypeCode` after LDAP modify has been applied."""
+        attrs = mes.get("attributes") or {}
+        v = attrs.get("prsEntityTypeCode") if isinstance(attrs, dict) else None
+        if isinstance(v, list):
+            v = v[0] if v else None
+        if v is not None:
+            try:
+                return int(v)
+            except Exception:
+                return None
+
+        # Fallback: read from LDAP
+        node = await self._hierarchy.search(
+            {
+                "id": [ds_id],
+                "attributes": ["prsEntityTypeCode"],
+                "deref": False,
+            }
+        )
+        if not node:
+            return None
+        raw = node[0][2].get("prsEntityTypeCode")
+        if not raw:
+            return None
+        try:
+            return int(raw[0])
+        except Exception:
+            return None
 
     async def _read_ds_operations(self, ds_id: str) -> list[dict]:
         ds_dn = await self._hierarchy.get_node_dn(ds_id)
@@ -123,7 +190,7 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
         return result
 
     async def _delete_operations_by_cn(self, ds_id: str, operation_cns: list[str]) -> None:
-        await self._ensure_ds_system_nodes(ds_id=ds_id)
+        await self._ensure_ds_operations_node(ds_id=ds_id)
         ds_dn = await self._hierarchy.get_node_dn(ds_id)
         if not ds_dn:
             return
@@ -147,7 +214,7 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
                 await self._hierarchy.delete(found[0][0])
 
     async def _sync_operations(self, ds_id: str, operations: list[dict[str, Any]], replace: bool = True) -> None:
-        await self._ensure_ds_system_nodes(ds_id=ds_id)
+        await self._ensure_ds_operations_node(ds_id=ds_id)
 
         ds_dn = await self._hierarchy.get_node_dn(ds_id)
         operations_node_id = await self._hierarchy.get_node_id(f"cn=operations,cn=system,{ds_dn}")
@@ -271,6 +338,9 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
         )
         if not res:
             self._logger.error(f"{self._config.svc_name} :: Нет обработчика для хранилища {datastorage_id}.")
+            return
+        if not isinstance(res, dict):
+            self._logger.error(f"{self._config.svc_name} :: Некорректный ответ обработчика хранилища {datastorage_id}.")
             return
 
         get_tag = {"id": payload["tagId"], "attributes": ["prsValueTypeCode"]}

@@ -2,14 +2,19 @@ services:
   nginx_one_app:
       container_name: nginx_one_app
       hostname: ${NGINX_HOST}
+      restart: always
       build:
         context: ../..
         dockerfile: docker/docker-files/nginx/Dockerfile.nginx
       depends_on:
-        - one_app
-        - grafana
-        - mcp_peresvet
-        - mcp_grafana
+        one_app:
+          condition: service_started
+        grafana:
+          condition: service_healthy
+        mcp_peresvet:
+          condition: service_started
+        mcp_grafana:
+          condition: service_started
       ports:
         - ${NGINX_HTTP_PORT}:${NGINX_HTTP_PORT}
         - ${NGINX_HTTPS_PORT}:${NGINX_HTTPS_PORT}
