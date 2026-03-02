@@ -527,17 +527,31 @@ class ModelCRUDSvc(Svc):
 
         """
 
-        async def hierarchy_search(payload):
-            res = []
+        async def hierarchy_search(payload: dict, *, _seen: set[str]) -> list[dict]:
+            """Build a tree from LDAP subtree.
+
+            Important: LDAP aliases (when deref is enabled) can create cycles,
+            so we must protect against infinite recursion.
+            """
+            res: list[dict] = []
             items = await self._hierarchy.search(payload)
             for item in items:
-                new_payload = copy.deepcopy(payload)
-                new_payload["base"] = item[0]
+                node_id = item[0]
 
-                new_item = {}
-                new_item["id"] = item[0]
-                new_item["attributes"] = item[2]
-                new_item["children"] = await hierarchy_search(new_payload)
+                new_item: dict = {"id": node_id, "attributes": item[2]}
+                if node_id in _seen:
+                    new_item["children"] = []
+                    res.append(new_item)
+                    continue
+
+                _seen.add(node_id)
+                try:
+                    new_payload = copy.deepcopy(payload)
+                    new_payload["base"] = node_id
+                    new_item["children"] = await hierarchy_search(new_payload, _seen=_seen)
+                finally:
+                    _seen.remove(node_id)
+
                 res.append(new_item)
             return res
 
@@ -605,7 +619,10 @@ class ModelCRUDSvc(Svc):
                 })
         else:
             mes_data["scope"] = CN_SCOPE_ONELEVEL
-            items = await hierarchy_search(mes_data)
+            # For hierarchy mode we must not dereference aliases: it can jump outside the subtree
+            # and create cycles (e.g. alias->target->...->alias).
+            mes_data["deref"] = False
+            items = await hierarchy_search(mes_data, _seen=set())
             for item in items:
                 res["data"].append(item)
 

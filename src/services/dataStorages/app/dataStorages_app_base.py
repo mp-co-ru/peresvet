@@ -189,6 +189,56 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         await func(exchange=self._exchange, routing_key=f"prsDataStorage.model.may_delete.{ds_id}")
         await func(exchange=self._exchange, routing_key=f"prsDataStorage.model.deleting.{ds_id}")
 
+    async def _is_supported_ds_type(self, ds_type: int | None) -> bool:
+        return ds_type is not None and int(ds_type) == int(self._config.datastorage_type)
+
+    async def _get_ds_info(self, ds_id: str) -> dict | None:
+        payload = {
+            "id": [ds_id],
+            "attributes": ["prsEntityTypeCode", "prsJsonConfigString", "prsActive"],
+            "deref": False,
+        }
+        ds = await self._hierarchy.search(payload=payload)
+        if not ds:
+            return None
+        attrs = ds[0][2]
+        ds_type_raw = attrs.get("prsEntityTypeCode")
+        try:
+            ds_type = int(ds_type_raw[0]) if ds_type_raw and ds_type_raw[0] is not None else None
+        except Exception:
+            ds_type = None
+        return {"attrs": attrs, "type": ds_type}
+
+    async def _remove_supported_ds(self, ds_id: str) -> None:
+        if ds_id not in self._connection_pools:
+            return
+        # unbind ds-level handlers
+        await self._bind_ds(ds_id, False)
+
+        # unbind tags/alerts we previously bound (if cache exists)
+        try:
+            async with self._cache.get_redis() as r:
+                cached = await r.json().get(f"{ds_id}.{self._config.svc_name}")
+                if isinstance(cached, dict):
+                    for tag_id in cached.get("tags") or []:
+                        await self._bind_tag(str(tag_id), False)
+                    for alert_id in cached.get("alerts") or []:
+                        await self._bind_alert(str(alert_id), False)
+                await r.json().delete(f"{ds_id}.{self._config.svc_name}")
+        except Exception:
+            # cache may be unavailable during shutdown; don't fail hard
+            pass
+
+        pool = self._connection_pools.pop(ds_id, None)
+        # close pool if driver supports it (asyncpg pool has close())
+        try:
+            if pool is not None and hasattr(pool, "close"):
+                maybe = pool.close()
+                if asyncio.iscoroutine(maybe):
+                    await maybe
+        except Exception:
+            pass
+
     async def _add_supported_ds(self, ds_id: str) -> None:
 
         """Метод добавляет в список поддерживаемых хранилищ новое.
@@ -196,20 +246,30 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         Args:
             ds_id (str): _description_
         """
-        payload = {
-            "id": [ds_id],
-            "attributes": ["prsJsonConfigString", "prsActive"]
-        }
-        ds = await self._hierarchy.search(payload=payload)
+        ds_info = await self._get_ds_info(ds_id)
+        if ds_info is None:
+            return
+
+        if not await self._is_supported_ds_type(ds_info["type"]):
+            return
+
+        ds_attrs = ds_info["attrs"]
+
+        # If already supported, do nothing.
+        if ds_id in self._connection_pools:
+            return
+
         # привяжемся к сообщениям, касающимся изменениям хранилища ---------------------------------
         await self._bind_ds(ds_id, True)
         # ----------------------------------------------------------------------------------------
-        if ds[0][2]["prsActive"][0] == "TRUE":
+        if ds_attrs["prsActive"][0] == "TRUE":
             # если хранилище активно, то подсоединимся к нему
             connected = False
             while not connected:
                 try:
-                    self._connection_pools[ds_id] = await self._create_connection_pool(json.loads(ds[0][2]["prsJsonConfigString"][0]))
+                    self._connection_pools[ds_id] = await self._create_connection_pool(
+                        json.loads(ds_attrs["prsJsonConfigString"][0])
+                    )
                     self._logger.info(f"{self._config.svc_name} :: Связь с базой данных {ds_id} установлена.")
                     connected = True
                 except Exception as ex:
@@ -226,8 +286,8 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         }
 
         ds_cache = {
-            "prsActive": ds[0][2]["prsActive"][0] == "TRUE",
-            "prsJsonConfigString": json.loads(ds[0][2]["prsJsonConfigString"][0]),
+            "prsActive": ds_attrs["prsActive"][0] == "TRUE",
+            "prsJsonConfigString": json.loads(ds_attrs["prsJsonConfigString"][0]),
             "tags": [],
             "alerts": []
         }
@@ -278,10 +338,9 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.unlink_alert.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.may_update.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.updating.*")
-        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.updated.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.deleting.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.may_delete.*")
-        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.deleted.*")
+        # Keep `updated.*` and `deleted.*` bindings to detect type changes on the fly.
         # ----------------------------------------------------------------------------------------
 
         try:
@@ -359,12 +418,29 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             return
         await self._add_supported_ds(mes["id"])
 
+    async def _created(self, mes: dict, routing_key: str | None = None):
+        return await self.created(mes, routing_key=routing_key)
+
     async def updating(self, mes: dict, routing_key: str = None) -> None:
         # обновление атрибутов хранилища
         # привязка/отвязка тегов и тревог выполняется
         # методами link/unlink
         # необслуживаемые хранилища отсекаются методом reject_message
         ds_id = mes["id"]
+        ds_info = await self._get_ds_info(ds_id)
+        if ds_info is None:
+            return
+
+        if not await self._is_supported_ds_type(ds_info["type"]):
+            # if we previously supported it, drop it
+            await self._remove_supported_ds(ds_id)
+            return
+
+        if ds_id not in self._connection_pools:
+            # became supported due to type change
+            await self._add_supported_ds(ds_id)
+            return
+
         payload = {
             "id": ds_id,
             "attributes": ["prsActive", "prsJsonConfigString"]
@@ -388,10 +464,44 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
         return {"response": True}
 
+    async def updated(self, mes: dict, routing_key: str | None = None):
+        # type changes are applied after update; use this event to rebalance ownership
+        ds_id = mes.get("id")
+        if not ds_id:
+            return {"response": True}
+        ds_info = await self._get_ds_info(ds_id)
+        if ds_info is None:
+            return {"response": True}
+
+        if await self._is_supported_ds_type(ds_info["type"]):
+            if ds_id not in self._connection_pools:
+                await self._add_supported_ds(ds_id)
+        else:
+            await self._remove_supported_ds(ds_id)
+        return {"response": True}
+
+    async def _updated(self, mes: dict, routing_key: str | None = None):
+        return await self.updated(mes, routing_key=routing_key)
+
+    async def deleted(self, mes: dict, routing_key: str | None = None):
+        ds_id = mes.get("id")
+        if ds_id:
+            await self._remove_supported_ds(ds_id)
+        return {"response": True}
+
+    async def _deleted(self, mes: dict, routing_key: str | None = None):
+        return await self.deleted(mes, routing_key=routing_key)
+
+    async def _updating(self, mes: dict, routing_key: str | None = None):
+        return await self.updating(mes, routing_key=routing_key)
+
     async def deleting(self, mes: dict, routing_key: str = None) -> None:
         # удаление хранилища
         # операция, неподдерживаемая Community версией
         pass
+
+    async def _deleting(self, mes: dict, routing_key: str | None = None):
+        return await self.deleting(mes, routing_key=routing_key)
 
     async def _alarm_on(self, mes: dict, routing_key: str = None) -> None:
         pass

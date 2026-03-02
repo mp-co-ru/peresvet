@@ -4,7 +4,6 @@ class DataStoragesAPICRUDSettings(APICRUDSettings):
 
     #: имя сервиса
     svc_name: str = "dataStorages_api_crud"
-    svc_name: str = "alerts_api_crud"
     hierarchy: dict = {
         #: класс экземпляров сущности в
         #: пример: prsTag

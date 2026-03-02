@@ -76,7 +76,19 @@ location = /v1/dataStorages/ {
     if ($request_method = "OPTIONS") {
       return 204;
     }
-    proxy_pass http://datastorages_api_crud;
+    proxy_pass http://dataStorages_api_crud;
+}
+
+location = /v2/dataStorages/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
+    proxy_pass http://dataStorages_api_crud;
 }
 
 location = /v1/methods/ {

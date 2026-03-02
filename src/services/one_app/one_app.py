@@ -11,6 +11,7 @@ from fastapi import FastAPI, APIRouter
 from starlette.routing import Mount
 from contextlib import asynccontextmanager
 
+uvicorn = None
 try:
     import uvicorn
 except ModuleNotFoundError as _:
@@ -78,6 +79,7 @@ from src.services.dataStorages.api_crud.dataStorages_api_crud_svc \
     )
 
 # dataStorages_api_crud v2 router (operations/integrational extensions)
+dataStorages_api_crud_router_v2: APIRouter | None = None
 if ENABLE_V2:
     from src.services.dataStorages.api_crud.dataStorages_api_crud_v2_router import (
         router_v2 as dataStorages_api_crud_router_v2,
@@ -97,6 +99,13 @@ else:
 from src.services.dataStorages.app.postgresql.dataStorages_app_postgresql_svc \
     import (
         app as postgre_app
+    )
+
+# integrational (v2 feature; optional)
+integrational_postgre_app = None
+if ENABLE_V2:
+    from src.services.dataStorages.app.integrational.dataStorages_app_integrational_postgresql_svc import (
+        app as integrational_postgre_app,
     )
 
 # -----------------------------------------------------------------------------
@@ -195,11 +204,15 @@ from src.services.tags.datafunc_app_api.datafunc_app_api_svc \
 async def lifespan(app: FastAPI):
     for route in app.router.routes:
         if isinstance(route, Mount):
-            await route.app.on_startup()
+            sub_router = getattr(route.app, "router", None)
+            if sub_router is not None:
+                await sub_router.startup()
     yield
     for route in app.router.routes:
         if isinstance(route, Mount):
-            await route.app.on_shutdown()
+            sub_router = getattr(route.app, "router", None)
+            if sub_router is not None:
+                await sub_router.shutdown()
 
 # для привязки подприложений необходимо создать базовое приложение
 app = FastAPI(lifespan=lifespan, title="МПК-Пересвет")
@@ -224,7 +237,7 @@ api_router.include_router(router=connectors_app_api_router)
 # dataStorages ----------------------------------------------------------------
 # dataStorages_api_crud
 api_router.include_router(router=dataStorages_api_crud_router)
-if ENABLE_V2:
+if ENABLE_V2 and dataStorages_api_crud_router_v2 is not None:
     api_router.include_router(router=dataStorages_api_crud_router_v2)
 # -----------------------------------------------------------------------------
 
@@ -277,6 +290,9 @@ app.mount(path="/", app=dataStorages_api_crud)
 app.mount(path="/", app=dataStorages_model_crud)
 # postgresql
 app.mount(path="/", app=postgre_app)
+# integrational postgresql (prsEntityTypeCode=2)
+if ENABLE_V2 and integrational_postgre_app is not None:
+    app.mount(path="/", app=integrational_postgre_app)
 # -----------------------------------------------------------------------------
 
 # methods ---------------------------------------------------------------------
@@ -332,4 +348,6 @@ app.mount(path="/", app=datafunc_app_api)
 # =============================================================================
 
 if __name__ == "__main__":
+    if uvicorn is None:
+        raise ModuleNotFoundError("Не установлен пакет 'uvicorn'.")
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="debug", ws_ping_interval=3, ws_ping_timeout=2)

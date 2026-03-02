@@ -17,7 +17,3 @@ services:
   psql:
     ports:
       - ${POSTGRES_PORT}:${POSTGRES_PORT}
-
-  grafana:
-    ports:
-      - ${PORT_GRAFANA}:${PORT_GRAFANA}
