@@ -4,9 +4,9 @@
 <сущность>_api_crud.
 """
 import json
-from typing import Union
+from typing import Any, Union
 from uuid import UUID
-from pydantic import BaseModel, Field, validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from fastapi import HTTPException
 from src.common.base_svc import BaseSvc
 from src.common.api_crud_settings import APICRUDSettings
@@ -133,7 +133,10 @@ class NodeCreate(BaseModel):
         title="Атрибуты узла"
     )
 
-    validate_id = validator('parentId', allow_reuse=True)(valid_uuid)
+    @field_validator("parentId")
+    @classmethod
+    def validate_parent_id(cls, v: Any) -> Any:
+        return valid_uuid(v)
 class NodeDelete(BaseModel):
     """Базовый класс, описывающий параметры
     команды для удаления узла.
@@ -148,21 +151,27 @@ class NodeDelete(BaseModel):
         )
     )
 
-    validate_id = validator('id', allow_reuse=True)(valid_uuid)
-
-    @validator('id')
+    @field_validator("id")
     @classmethod
     def make_id_as_array(cls, v: str | list[str]) -> list[str]:
         if isinstance(v, str):
             return [v]
         return v
+
+    @field_validator("id")
+    @classmethod
+    def validate_id(cls, v: Any) -> Any:
+        return valid_uuid(v)
 class NodeUpdate(NodeCreate):
     """Базовый класс для изменения узла
     """
     id: str = Field(title="Идентификатор изменяемого узла.",
                     description="Должен быть в формате GUID.")
 
-    validate_id = validator('parentId', 'id', allow_reuse=True)(valid_uuid)
+    @field_validator("parentId", "id")
+    @classmethod
+    def validate_ids(cls, v: Any) -> Any:
+        return valid_uuid(v)
 class NodeRead(BaseModel):
     """Базовый класс, описывающий параметры для команды
     поиска/чтения узлов.
@@ -232,7 +241,10 @@ class NodeRead(BaseModel):
         description=("По умолчанию = ``False``.")
     )
 
-    validate_id = validator('id', allow_reuse=True)(valid_uuid_for_read)
+    @field_validator("id")
+    @classmethod
+    def validate_id(cls, v: Any) -> Any:
+        return valid_uuid_for_read(v)
     #validate_base = validator('base', allow_reuse=True)(valid_base)
 
 class NodeCreateResult(BaseModel):

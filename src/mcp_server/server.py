@@ -552,6 +552,9 @@ async def peresvet_data_get(query: dict[str, Any] | None = None) -> dict[str, An
     """Read historical tag data via GET `/v1/data/` using normal query params.
 
     If `query` is omitted, an empty filter `{}` is used.
+
+    Data points are returned as arrays in the order: `[x, y, q]`
+    where `x` is timestamp (microseconds), `y` is value, `q` is quality.
     """
     q = query or {}
     params = _data_query_to_params(q)
@@ -582,7 +585,10 @@ if ENABLE_V2:
 
 @mcp.tool
 async def peresvet_data_set(payload: dict[str, Any]) -> dict[str, Any]:
-    """Write historical tag data via POST `/v1/data/`."""
+    """Write historical tag data via POST `/v1/data/`.
+
+    Data points must be arrays in the order: `[x, y, q]` (or shorter forms `[y]`, `[x, y]`).
+    """
     return await _request("POST", "/v1/data/", json_body=payload)
 
 

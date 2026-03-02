@@ -164,7 +164,7 @@ class MethodsApp(AppSvc):
                 "filter": {"cn": ["*"], "objectClass": ["prsMethodParameter"]},
                 "attributes": ["prsJsonConfigString", "prsIndex", "cn"]
             })
-            await self._calc_tag(tag_id, method_id, parameters, [None, mes['time'], None])
+            await self._calc_tag(tag_id, method_id, parameters, [mes['time'], None, None])
 
     async def _start_method_by_tag(self, mes: dict, routing_key: str = None) -> dict:
 
@@ -197,7 +197,7 @@ class MethodsApp(AppSvc):
         for parameter in parameters:
             request = json.loads(parameter[2]["prsJsonConfigString"][0])
 
-            request["finish"] = data[1]
+            request["finish"] = data[0]
             self._logger.debug(f"mes: {request}")
 
             param_data = await self._post_message(
@@ -245,7 +245,7 @@ class MethodsApp(AppSvc):
                 {
                     "tagId": tag_id,
                     "data": [
-                        (res, data[1], None)
+                        (data[0], res, None)
                     ]
                 }
             ]

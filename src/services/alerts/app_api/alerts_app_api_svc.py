@@ -5,7 +5,7 @@
 import sys
 from typing import Any
 from pydantic import (
-    BaseModel, Field, validator, ConfigDict
+    BaseModel, Field, field_validator, ConfigDict
 )
 
 from fastapi import APIRouter, Query
@@ -36,15 +36,18 @@ class AlarmsGet(BaseModel):
     format: bool = Field(False, title="Флаг форматирования меток времени.")
     fired: bool = Field(True, title="Флаг возврата только активных алярмов.")
 
-    validate_id = validator('parentId', allow_reuse=True)(valid_uuid)
-
-    @validator('parentId')
+    @field_validator("parentId")
     @classmethod
     def tagId_list(cls, v: str | list[str]) -> list[str]:
         if isinstance(v, str):
             return [v]
         else:
             return v
+
+    @field_validator("parentId")
+    @classmethod
+    def validate_id(cls, v: Any) -> Any:
+        return valid_uuid(v)
 
 class AlarmData(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
@@ -64,7 +67,7 @@ class AckAlarm(BaseModel):
     id: str = Field(title="Id тревоги.")
     x: int | str = Field(None, title="Время квитирования тревоги.")
 
-    @validator('x')
+    @field_validator("x")
     @classmethod
     def ts_in_iso_format(cls, v: Any) -> int:
         try:
@@ -77,7 +80,10 @@ class AckAlarm(BaseModel):
                 )
             )
 
-    validate_id = validator('id', allow_reuse=True)(valid_uuid)
+    @field_validator("id")
+    @classmethod
+    def validate_id(cls, v: Any) -> Any:
+        return valid_uuid(v)
 
 class AlertsAppAPI(svc.Svc):
     """Сервис работы с тегами в иерархии.

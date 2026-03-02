@@ -56,8 +56,8 @@ methods (методы)
    @rpc("sum")
    async def sum(a: dict, b: dict) -> float:
       try:
-         val_a = a["data"][0]["data"][0][0]
-         val_b = b["data"][0]["data"][0][0]
+         val_a = a["data"][0]["data"][0][1]
+         val_b = b["data"][0]["data"][0][1]
          res = (val_a, 0)[val_a is None]+(val_b, 0)[val_b is None]
       except Exception as ex:
          print(f"Ошибка: {ex}")

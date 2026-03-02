@@ -10,7 +10,7 @@ from typing import Any, List, NamedTuple
 from typing_extensions import Annotated
 from pydantic import (
     BaseModel, Field,
-    validator, BeforeValidator, ConfigDict
+    field_validator, BeforeValidator, ConfigDict
 )
 
 from fastapi import APIRouter, Depends, Query
@@ -21,24 +21,18 @@ from src.common.base_svc import BaseSvc
 from src.common.api_crud_svc import valid_uuid, ErrorHandler
 from src.services.tags.app_api.tags_app_api_settings import TagsAppAPISettings
 import src.common.times as t
+from src.common.tag_data_points import normalize_point_xyq
 
 class DataPointItem(NamedTuple):
-    y: float | dict | str | list | int | None = None
     x: int | str | None = None
+    y: float | dict | str | list | int | None = None
     q: int | None = None
 
-def x_must_be_int(v):
-    match len(v):
-        case 0:
-            return DataPointItem(None, t.ts(None), None)
-        case 1:
-            return DataPointItem(v[0], t.ts(None), None)
-        case 2:
-            return DataPointItem(v[0], t.ts(v[1]), None)
-        case 3:
-            return DataPointItem(v[0], t.ts(v[1]), v[2])
-
-    return v
+def normalize_point(v):
+    v2 = normalize_point_xyq(v)
+    if isinstance(v2, tuple) and len(v2) == 3:
+        return DataPointItem(v2[0], v2[1], v2[2])
+    return v2
 
 class TagData(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
@@ -47,9 +41,12 @@ class TagData(BaseModel):
     tagId: str = Field(
         title="id тега"
     )
-    data: List[Annotated[DataPointItem, BeforeValidator(x_must_be_int)]]
+    data: List[Annotated[DataPointItem, BeforeValidator(normalize_point)]]
 
-    validate_id = validator('tagId', allow_reuse=True)(valid_uuid)
+    @field_validator("tagId")
+    @classmethod
+    def validate_id(cls, v: Any) -> Any:
+        return valid_uuid(v)
 class AllData(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
@@ -97,7 +94,7 @@ class DataGet(BaseModel):
         title="Шаг между соседними значениями."
     )
 
-    @validator('tagId')
+    @field_validator("tagId")
     @classmethod
     def tagId_list(cls, v: str | list[str]) -> list[str]:
         if isinstance(v, str):
@@ -105,7 +102,7 @@ class DataGet(BaseModel):
         else:
             return v
 
-    @validator('finish')
+    @field_validator("finish")
     @classmethod
     def finish_in_iso_format(cls, v: Any) -> int:
         # если finish в виде строки, то строка должна быть в формате ISO8601
@@ -119,7 +116,7 @@ class DataGet(BaseModel):
                 )
             )
 
-    @validator('start')
+    @field_validator("start")
     @classmethod
     def start_in_iso_format(cls, v: Any) -> int | None:
         if v is None:
@@ -135,7 +132,10 @@ class DataGet(BaseModel):
                 )
             )
 
-    validate_id = validator('tagId', allow_reuse=True)(valid_uuid)
+    @field_validator("tagId")
+    @classmethod
+    def validate_id(cls, v: Any) -> Any:
+        return valid_uuid(v)
 class TagsAppAPI(BaseSvc):
     """Сервис работы с тегами в иерархии.
 
@@ -170,6 +170,8 @@ class TagsAppAPI(BaseSvc):
         if res is None:
             res = {"error": {"code": 424, "message": f"Нет обработчика для команды чтения данных."}}
             return res
+        if not isinstance(res, dict):
+            return {"error": {"code": 500, "message": "Некорректный ответ обработчика data_get."}}
 
         if new_payload.format:
             final_res = {
@@ -183,8 +185,8 @@ class TagsAppAPI(BaseSvc):
                 }
                 for data_item in tag_item["data"]:
                     new_tag_item["data"].append((
-                        data_item[0],
-                        t.int_to_local_timestamp(data_item[1]),
+                        t.int_to_local_timestamp(data_item[0]),
+                        data_item[1],
                         data_item[2]
                     ))
                 final_res["data"].append(new_tag_item)

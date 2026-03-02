@@ -75,7 +75,7 @@ class TagsAppAPIDatafunc(TagsAppAPI):
         #TODO: оптимизировать код
         if not timeStep:
             for tag in res["data"]:
-                df = pd.DataFrame(tag["data"], columns=['code', 'ts', 'q'])
+                df = pd.DataFrame(tag["data"], columns=['ts', 'code', 'q'])
                 df = df.drop('q', axis=1).dropna().astype(int)
                 df['ts'] = df['ts'].astype(int)
 
@@ -90,7 +90,7 @@ class TagsAppAPIDatafunc(TagsAppAPI):
                 final_res['data'].append({
                     "tagId": tag["tagId"],
                     "data": [
-                        (final_value, final_ts, None)
+                        (final_ts, final_value, None)
                     ]
                 })
 
@@ -100,7 +100,7 @@ class TagsAppAPIDatafunc(TagsAppAPI):
                 data = tag["data"]
                 final_data = []
                 if data:
-                    df = pd.DataFrame(data=data,columns=["code", "ts", "q"])
+                    df = pd.DataFrame(data=data,columns=["ts", "code", "q"])
                     df = df.drop('q', axis=1)
                     #df['ts'] = df['ts'].astype(int)
                     df['date'] = df['ts'].apply(t.int_to_local_timestamp)
@@ -148,7 +148,7 @@ class TagsAppAPIDatafunc(TagsAppAPI):
 
                         if format_ts:
                             last_ts = t.int_to_local_timestamp(last_ts)
-                        final_data.append((value, x, None))
+                        final_data.append((x, value, None))
 
                 final_res['data'].append({
                     "tagId": tag["tagId"],

@@ -798,7 +798,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
                 "data": [
                     {
                         "tagId": "<some_id>",
-                        "data": [(y,x,q)]
+                        "data": [(x,y,q)]
                     }
                 ]
             }
@@ -1141,17 +1141,17 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         if tag_step or tag_type_code not in [0, 1]:
             for item in tag_data:
                 if tag_type_code == 4:
-                    y = json.loads(item[0])
+                    y = json.loads(item[1])
                 else:
-                    y = item[0]
+                    y = item[1]
                 if y in value:
                     res.append(item)
         else:
             for i in range(1, len(tag_data)):
-                y1 = tag_data[i - 1][0]
-                y2 = tag_data[i][0]
-                x1 = tag_data[i - 1][1]
-                x2 = tag_data[i][1]
+                x1 = tag_data[i - 1][0]
+                x2 = tag_data[i][0]
+                y1 = tag_data[i - 1][1]
+                y2 = tag_data[i][1]
                 if x1 == x2:
                     continue
                 if y1 in value:
@@ -1166,8 +1166,8 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
                             continue
                         if ((y1 > val and y2 < val) or (y1 < val and y2 > val)):
                             x = estimate(x1, y1, x2, y2, val)
-                            res.append((val, x, None))
-            if tag_data[-1][0] in value:
+                            res.append((x, val, None))
+            if tag_data[-1][1] in value:
                 res.append(tag_data[-1])
         return res
 
@@ -1187,7 +1187,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         time_row = self._timestep_row(time_step, count, start, finish)
 
         if not tag_data:
-            return [(None, x, None) for x in time_row]
+            return [(x, None, None) for x in time_row]
 
         return self._interpolate(tag_data, time_row)
 
@@ -1207,7 +1207,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
         # Разбиение списка ``raw_data`` на подсписки по значению None
         # Если ``raw_data`` не имеет None, получается список [raw_data]
-        none_indexes = [idx for idx, val in enumerate(raw_data) if val[0] is None]
+        none_indexes = [idx for idx, val in enumerate(raw_data) if val[1] is None]
         size = len(raw_data)
         if none_indexes:
             splitted_by_none = [raw_data[i: j+1] for i, j in
@@ -1221,13 +1221,13 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             if len(period) == 1:
                 continue
 
-            key_x = lambda d: d[1]
-            min_ts = min(period, key=key_x)[1]
-            max_ts = max(period, key=key_x)[1]
+            key_x = lambda d: d[0]
+            min_ts = min(period, key=key_x)[0]
+            max_ts = max(period, key=key_x)[0]
             is_last_period = period == splitted_by_none[-1]
 
             # В каждый подсписок добавляются значения из ряда ``time_row``
-            period = [(None , ts, None) \
+            period = [(ts, None, None) \
                       for ts in time_row if min_ts <= ts < max_ts] + period
             period.sort(key=key_x)
 
@@ -1237,21 +1237,21 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             # Расширенный подсписок заворачивается в DataFrame и индексируется по 'x'
             df = pd.DataFrame(
                 period,
-                index=[r[1] for r in period]
-            ).drop_duplicates(subset=1, keep='last')
+                index=[r[0] for r in period]
+            ).drop_duplicates(subset=0, keep='last')
 
             # линейная интерполяция значений 'y' в датафрейме для числовых тэгов
             # заполнение NaN полей ближайшими не-NaN для нечисловых тэгов
-            df[[1, 0]] = df[[1, 0]].interpolate(
-                method=('pad', 'index')[is_numeric_dtype(df[0])]
+            df[[0, 1]] = df[[0, 1]].interpolate(
+                method=('pad', 'index')[is_numeric_dtype(df[1])]
             )
 
             # None-значения 'q' заполняются ближайшим не-None значением сверху
             df[2].fillna(method='ffill', inplace=True)
 
             # Удаление из датафрейма всех элементов, чьи 'x' не принадлежат ``time_row``
-            df = df.loc[df[1].isin(time_row)]
-            df[[0, 2]] = df[[0, 2]].replace({np.nan: None})
+            df = df.loc[df[0].isin(time_row)]
+            df[[1, 2]] = df[[1, 2]].replace({np.nan: None})
 
             # Преобразование получившегося датафрейма и добавление значений к
             # результирующему списку
@@ -1304,7 +1304,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         return row
 
     def _last_point(self, x: int, data: List[tuple]) -> Tuple[int, Any]:
-        return (x, list(filter(lambda rec: rec[1] == x, data))[-1][0])
+        return (x, list(filter(lambda rec: rec[0] == x, data))[-1][1])
 
     async def _data_get_one(self,
                             tag_id: str,
@@ -1328,19 +1328,19 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
         if not tag_data:
             if finish is not None:
-                return [(None, finish, None)]
+                return [(finish, None, None)]
 
-        x0 = tag_data[0][1]
-        y0 = tag_data[0][0]
+        x0 = tag_data[0][0]
+        y0 = tag_data[0][1]
         try:
-            x1, y1 = self._last_point(tag_data[1][1], tag_data)
+            x1, y1 = self._last_point(tag_data[1][0], tag_data)
             if not step:
                 y = linear_interpolated(
                         (x0, y0), (x1, y1), finish
                     )
                 if value_type_code == 0:
                     y = round(y)
-                tag_data[0] = (y, tag_data[0][1], tag_data[0][2])
+                tag_data[0] = (tag_data[0][0], y, tag_data[0][2])
 
             # TODO: избавиться от этого try/except логикой приложения, т.к.
             # try/except отнимает слишком много времени
@@ -1350,9 +1350,9 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         except IndexError:
             # Если в выборке только одна запись и `to` меньше, чем `x` этой записи...
             if x0 > finish:
-                tag_data[0] = (None, tag_data[0][1], None)
+                tag_data[0] = (tag_data[0][0], None, None)
         finally:
-            tag_data[0] = (tag_data[0][0], finish, tag_data[0][2])
+            tag_data[0] = (finish, tag_data[0][1], tag_data[0][2])
 
         return tag_data
 
@@ -1379,45 +1379,41 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         if not tag_data:
             return []
 
-        x0 = tag_data[0][1]
-        y0 = tag_data[0][0]
+        x0 = tag_data[0][0]
+        y0 = tag_data[0][1]
 
         if start is not None:
             if x0 > start:
                 # Если `from_` раньше времени первой записи в выборке
-                tag_data.insert(0, (None, start, None))
+                tag_data.insert(0, (start, None, None))
 
             if len(tag_data) == 1:
                 if x0 < start:
-                    tag_data[0] = (tag_data[0][0], start, tag_data[0][2])
-                    tag_data.append((y0, finish, tag_data[0][2]))
+                    tag_data[0] = (start, tag_data[0][1], tag_data[0][2])
+                    tag_data.append((finish, y0, tag_data[0][2]))
                 return tag_data
 
-            x1, y1 = self._last_point(tag_data[1][1], tag_data)
+            x1, y1 = self._last_point(tag_data[1][0], tag_data)
             if x1 == start:
                 # Если время второй записи равно `from`,
                 # то запись "перед from" не нужна
                 tag_data.pop(0)
 
             if x0 < start < x1:
-                tag_data[0] = (tag_data[0][0], start, tag_data[0][2])
+                tag_data[0] = (start, tag_data[0][1], tag_data[0][2])
                 if step:
-                    tag_data[0] = (y0, tag_data[0][1], tag_data[0][2])
+                    tag_data[0] = (tag_data[0][0], y0, tag_data[0][2])
                 else:
-                    tag_data[0] = (
-                        linear_interpolated(
-                            (x0, y0), (x1, y1), start
-                        ), tag_data[0][1], tag_data[0][2]
-                    )
+                    tag_data[0] = (tag_data[0][0], linear_interpolated((x0, y0), (x1, y1), start), tag_data[0][2])
 
         if finish is not None:
             # (xn; yn) - запись "после to"
-            xn = tag_data[-1][1]
-            yn = tag_data[-1][0]
+            xn = tag_data[-1][0]
+            yn = tag_data[-1][1]
 
             # (xn_1; yn_1) - запись перед значением `to`
             try:
-                xn_1, yn_1 = self._last_point(tag_data[-2][1], tag_data)
+                xn_1, yn_1 = self._last_point(tag_data[-2][0], tag_data)
             except IndexError:
                 xn_1 = -1
                 yn_1 = None
@@ -1434,16 +1430,14 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
                     y = linear_interpolated(
                         (xn_1, yn_1), (xn, yn), finish
                     )
-                tag_data[-1] = (
-                    y, finish, tag_data[-2][2]
-                )
+                tag_data[-1] = (finish, y, tag_data[-2][2])
 
             if finish > xn:
-                tag_data.append((yn, finish, tag_data[-1][2]))
+                tag_data.append((finish, yn, tag_data[-1][2]))
 
         #if all((finish is None, now_ms > tag_data[-1][1])):
-        if finish > tag_data[-1][1]:
-            tag_data.append((tag_data[-1][0], finish, tag_data[-1][2]))
+        if finish > tag_data[-1][0]:
+            tag_data.append((finish, tag_data[-1][1], tag_data[-1][2]))
 
         tag_data = self._limit_data(tag_data, count, start, finish)
         return tag_data

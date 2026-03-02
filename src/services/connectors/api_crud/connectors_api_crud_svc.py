@@ -4,7 +4,7 @@
 """
 import sys
 import json
-from pydantic import BaseModel, Field, validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 from fastapi import APIRouter, Depends, Query
 
@@ -98,7 +98,10 @@ class ConnectorUpdate(ConnectorCreate):
         title="Список отсоединенных тегов для коннектора"
     )
 
-    validate_id = validator('id', allow_reuse=True)(svc.valid_uuid)
+    @field_validator("id")
+    @classmethod
+    def validate_id(cls, v):
+        return svc.valid_uuid(v)
 
 class ConnectorsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с коннекторами в иерархии.

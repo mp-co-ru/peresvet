@@ -423,21 +423,21 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                         data = tag_cache[0][0]["data"]
                         async with conn.transaction(isolation='read_committed'):
                             if tag_cache[0][0]["prsUpdate"]:
-                                xs = [str(x) for _, x, _ in data]
+                                xs = [str(x) for x, _, _ in data]
                                 q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
                                 await conn.execute(q)
                             if tag_cache[0][0]["prsValueTypeCode"] == 4:
                                 new_data = []
                                 for item in data:
                                     new_data.append(
-                                        (json.dumps(item[0], ensure_ascii=False), item[1], item[2])
+                                        (item[0], json.dumps(item[1], ensure_ascii=False), item[2])
                                     )
                                 data = new_data
 
                             await conn.copy_records_to_table(
                                 tag_tbl,
                                 records=data,
-                                columns=('y', 'x', 'q'))
+                                columns=('x', 'y', 'q'))
                         self._logger.debug(f"В базу {ds_id} для тега {tag_id} записано {len(data)} точек.")
 
         except Exception as ex:
@@ -647,7 +647,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                     val = r.get('y')
                     if tag_data["prsValueTypeCode"] == 4:
                         val = json.loads(val)
-                    records.append((val, r.get('x'), r.get('q')))
+                    records.append((r.get('x'), val, r.get('q')))
         return records
 
     def _get_values_filter(self, value: Any) -> tuple:

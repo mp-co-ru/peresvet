@@ -5,7 +5,7 @@
 import sys
 import json
 from typing import Any
-from pydantic import Field, validator
+from pydantic import Field, field_validator
 
 from fastapi import APIRouter, Depends, Query
 
@@ -74,14 +74,22 @@ class TagCreateAttributes(svc.NodeAttributes):
 
 class TagCreate(svc.NodeCreate):
     attributes: TagCreateAttributes = Field(TagCreateAttributes(), title="Атрибуты узла")
-    validate_id = validator('parentId', allow_reuse=True)(svc.valid_uuid)
+
+    @field_validator("parentId")
+    @classmethod
+    def validate_parent_id(cls, v):
+        return svc.valid_uuid(v)
 
 class TagRead(svc.NodeRead):
     pass
 
 class TagUpdate(svc.NodeUpdate):
     attributes: TagCreateAttributes = Field({}, title="Атрибуты узла")
-    validate_id = validator('parentId', 'id', allow_reuse=True)(svc.valid_uuid)
+
+    @field_validator("parentId", "id")
+    @classmethod
+    def validate_ids(cls, v):
+        return svc.valid_uuid(v)
 
 class TagsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с тегами в иерархии.

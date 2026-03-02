@@ -4,7 +4,7 @@
 import sys
 import json
 from copy import deepcopy
-from pydantic import Field, validator
+from pydantic import Field, field_validator
 from fastapi import APIRouter, Depends, Query
 
 sys.path.append(".")
@@ -50,7 +50,11 @@ class AlertCreateAttributes(svc.NodeAttributes):
             "value": 10,
             "autoAck": True
         }, title="Конфигурация тревоги")
-    validate_config = validator('prsJsonConfigString', allow_reuse=True)(valid_alert_config)
+
+    @field_validator("prsJsonConfigString")
+    @classmethod
+    def validate_config(cls, v: dict) -> dict:
+        return valid_alert_config(v)
     pass
 
 class AlertCreate(svc.NodeCreate):
