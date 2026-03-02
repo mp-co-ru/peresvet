@@ -3,7 +3,9 @@ from enum import IntEnum
 class CNDataStorageTypes(IntEnum):
     CN_DS_VICTORIAMETRICS : int = 1
     CN_DS_POSTGRESQL : int = 0
-    # Интеграционное хранилище (операции GET/SET в LDAP) поверх PostgreSQL
+    # Интеграционное relational-хранилище (операции GET/SET в LDAP)
+    CN_DS_INTEGRATIONAL_RELATIONAL : int = 2
+    # backward compatibility alias
     CN_DS_INTEGRATIONAL_POSTGRESQL : int = 2
 
     @classmethod
@@ -11,7 +13,7 @@ class CNDataStorageTypes(IntEnum):
         return [
             cls.CN_DS_VICTORIAMETRICS,
             cls.CN_DS_POSTGRESQL,
-            cls.CN_DS_INTEGRATIONAL_POSTGRESQL,
+            cls.CN_DS_INTEGRATIONAL_RELATIONAL,
         ]
 
 class CNHTTPExceptionCodes(IntEnum):
@@ -25,6 +27,7 @@ class CNTagValueTypes(IntEnum):
     CN_DOUBLE: int = 1
     CN_STR: int = 2
     CN_JSON: int = 4
+    CN_TABLE: int = 5
 
 class Order(IntEnum):
     """ Порядок сортировки выборки

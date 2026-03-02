@@ -14,12 +14,12 @@ import asyncpg as apg
 from src.services.dataStorages.app.integrational.dataStorages_app_integrational_base import (
     DataStoragesAppIntegrationalBase,
 )
-from src.services.dataStorages.app.integrational.dataStorages_app_integrational_postgresql_settings import (
-    DataStoragesAppIntegrationalPostgreSQLSettings,
+from src.services.dataStorages.app.integrational.dataStorages_app_integrational_relational_settings import (
+    DataStoragesAppIntegrationalRelationalSettings,
 )
 
 
-class DataStoragesAppIntegrationalPostgreSQL(DataStoragesAppIntegrationalBase):
+class DataStoragesAppIntegrationalRelational(DataStoragesAppIntegrationalBase):
     async def _create_connection_pool(self, config: dict) -> Any:
         return await apg.create_pool(dsn=config["dsn"])
 
@@ -45,8 +45,8 @@ class DataStoragesAppIntegrationalPostgreSQL(DataStoragesAppIntegrationalBase):
             await asyncio.wait_for(conn.execute(query, *args), timeout=timeout_ms / 1000)
 
 
-settings = DataStoragesAppIntegrationalPostgreSQLSettings()
-app = DataStoragesAppIntegrationalPostgreSQL(settings=settings, title="DataStoragesAppIntegrationalPostgreSQL")
+settings = DataStoragesAppIntegrationalRelationalSettings()
+app = DataStoragesAppIntegrationalRelational(settings=settings, title="DataStoragesAppIntegrationalRelational")
 
 
 if __name__ == "__main__":

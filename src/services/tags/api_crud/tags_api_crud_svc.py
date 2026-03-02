@@ -56,7 +56,7 @@ class TagCreateAttributes(svc.NodeAttributes):
         title="Тип значений тега.",
         description=(
             "0 - целое, 1 - вещественное, 2 - строковое, 3 - дискретное, "
-            "4 - json"
+            "4 - json, 5 - табличное"
         )
     )
     prsDefaultValue: Any | None = Field(

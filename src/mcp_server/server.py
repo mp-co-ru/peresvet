@@ -200,6 +200,12 @@ def _data_query_to_params(query: dict[str, Any]) -> list[tuple[str, str]]:
             params.append(("value", json.dumps(v, ensure_ascii=False)))
         else:
             params.append(("value", str(v)))
+    if "params" in query and query["params"] is not None:
+        v = query["params"]
+        if isinstance(v, dict):
+            params.append(("params", json.dumps(v, ensure_ascii=False)))
+        else:
+            params.append(("params", str(v)))
     return params
 
 
@@ -365,7 +371,7 @@ async def peresvet_tag_create(
     Wraps `POST /v1/tags/`.
 
     - `parent_id`: UUID of parent node (required for correct hierarchy).
-    - `value_type_code`: 0 int | 1 float | 2 string | 3 discrete | 4 json.
+    - `value_type_code`: 0 int | 1 float | 2 string | 3 discrete | 4 json | 5 table.
     """
     attributes: dict[str, Any] = {"cn": cn, "prsValueTypeCode": value_type_code}
     if description is not None:
@@ -555,8 +561,20 @@ async def peresvet_data_get(query: dict[str, Any] | None = None) -> dict[str, An
 
     Data points are returned as arrays in the order: `[x, y, q]`
     where `x` is timestamp (microseconds), `y` is value, `q` is quality.
+
+    Advanced options for integrational tabular tags:
+    - `query.params` (dict): extra options forwarded to `/v1/data`.
+      Example: `{"allRecordsAsValue": false}`.
+    - convenience key `query.allRecordsAsValue` is auto-mapped to
+      `query.params.allRecordsAsValue`.
     """
     q = query or {}
+    if "allRecordsAsValue" in q:
+        params_obj = q.get("params")
+        if not isinstance(params_obj, dict):
+            params_obj = {}
+        params_obj["allRecordsAsValue"] = q["allRecordsAsValue"]
+        q["params"] = params_obj
     params = _data_query_to_params(q)
     return await _request("GET", "/v1/data/", params=params)
 
@@ -574,12 +592,24 @@ if ENABLE_V2:
 
     @mcp.tool
     async def peresvet_datastorages_v2_create(payload: dict[str, Any]) -> dict[str, Any]:
-        """Create dataStorage via POST `/v2/dataStorages/` (supports `operations`)."""
+        """Create dataStorage via POST `/v2/dataStorages/`.
+
+        Notes for integrational relational storage (`prsEntityTypeCode=2`):
+        - Operations should be embedded into each tag link config
+          (`linkTags[].attributes.prsJsonConfigString.operations`).
+        - SQL params mapping is defined in operation parameters as
+          `parameters[].prsJsonConfigString.JSONata`.
+        """
         return await _request("POST", "/v2/dataStorages/", json_body=payload)
 
     @mcp.tool
     async def peresvet_datastorages_v2_update(payload: dict[str, Any]) -> dict[str, Any]:
-        """Update dataStorage via PUT `/v2/dataStorages/` (supports `operations`/`unlinkOperations`)."""
+        """Update dataStorage via PUT `/v2/dataStorages/`.
+
+        For integrational relational setup use:
+        - `linkTags` to attach/update tag link configuration with inline operations;
+        - `unlinkTags` to detach tags.
+        """
         return await _request("PUT", "/v2/dataStorages/", json_body=payload)
 
 
@@ -588,6 +618,9 @@ async def peresvet_data_set(payload: dict[str, Any]) -> dict[str, Any]:
     """Write historical tag data via POST `/v1/data/`.
 
     Data points must be arrays in the order: `[x, y, q]` (or shorter forms `[y]`, `[x, y]`).
+
+    For integrational tabular tags you can pass top-level `params`, for example:
+    - `{"operation": "insert" | "update" | "delete", ...}`
     """
     return await _request("POST", "/v1/data/", json_body=payload)
 

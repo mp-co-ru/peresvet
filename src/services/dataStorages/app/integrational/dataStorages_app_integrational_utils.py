@@ -9,6 +9,10 @@ class OperationKind(IntEnum):
 
 
 _RE_NAMED_PARAM = re.compile(r"(?<!:):([a-zA-Z_][a-zA-Z0-9_]*)")
+_RE_DDL = re.compile(
+    r"\b(create|alter|drop|truncate|comment|grant|revoke|vacuum|analyze|reindex|cluster)\b",
+    flags=re.IGNORECASE,
+)
 
 
 def validate_sql(sql: str, kind: OperationKind) -> None:
@@ -19,6 +23,9 @@ def validate_sql(sql: str, kind: OperationKind) -> None:
     if ";" in sql:
         raise ValueError("Запрещён multi-statement (символ ';').")
 
+    if _RE_DDL.search(sql):
+        raise ValueError("DDL-операции в query запрещены.")
+
     head = sql.lstrip().lower()
     if kind == OperationKind.GET:
         if not head.startswith("select") and not head.startswith("with"):
@@ -27,9 +34,10 @@ def validate_sql(sql: str, kind: OperationKind) -> None:
         if not (
             head.startswith("insert")
             or head.startswith("update")
+            or head.startswith("delete")
             or head.startswith("with")
         ):
-            raise ValueError("Для SET разрешены только INSERT/UPDATE/CTE запросы.")
+            raise ValueError("Для SET разрешены только INSERT/UPDATE/DELETE/CTE запросы.")
     else:
         raise ValueError(f"Неизвестный kind операции: {kind}.")
 

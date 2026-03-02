@@ -86,6 +86,11 @@ class TagsApp(AppSvc):
             return res
 
     async def data_set(self, mes: dict, routing_key: str | None = None) -> None:
+        common_payload = {}
+        for key, value in mes.items():
+            if key != "data":
+                common_payload[key] = value
+
         for tag_item in mes["data"]:
             tag_id = tag_item['tagId']
 
@@ -113,7 +118,10 @@ class TagsApp(AppSvc):
                     # оставим как есть, чтобы downstream сервисы могли вернуть ошибку/лог
                     new_tag_item["data"].append(data_item)
 
-            res = await self._post_message({"data": [new_tag_item]}, reply=False,
+            payload = dict(common_payload)
+            payload["data"] = [new_tag_item]
+
+            res = await self._post_message(payload, reply=False,
                 routing_key=f"{self._config.hierarchy['class']}.app.data_set.{tag_item['tagId']}"
             )
             if res is None:

@@ -54,6 +54,10 @@ class AllData(BaseModel):
     data: List[TagData] = Field(
         title="Данные"
     )
+    params: dict[str, Any] | None = Field(
+        None,
+        title="Дополнительные параметры операции",
+    )
 class DataGet(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
@@ -92,6 +96,10 @@ class DataGet(BaseModel):
     timeStep: int | None = Field(
         None,
         title="Шаг между соседними значениями."
+    )
+    params: dict[str, Any] | None = Field(
+        None,
+        title="Дополнительные параметры запроса."
     )
 
     @field_validator("tagId")
@@ -235,6 +243,7 @@ async def data_get(
     value: str | None = None,
     count: int | None = None,
     timeStep: int | None = None,
+    params: str | None = None,
     # fallback для обратной совместимости
     q: str | None = None,
     payload: DataGet | None = None,
@@ -267,6 +276,8 @@ async def data_get(
        * **timeStep** (int): шаг в микросекундах между соседними возвращаемыми значениями тега;
        * **maxCount** (int): максимальное количество значений одного тега в ответе на запрос;
        * **value** (any): фильтр на значения тега.
+       * **params** (json): дополнительные параметры запроса (например
+         ``allRecordsAsValue`` для интеграционных табличных тегов).
 
     **Ответ:**
 
@@ -311,6 +322,8 @@ async def data_get(
                 body["count"] = count
             if timeStep is not None:
                 body["timeStep"] = timeStep
+            if params is not None:
+                body["params"] = json.loads(params)
 
             p = DataGet.model_validate(body)
         except Exception as ex:
