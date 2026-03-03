@@ -16,6 +16,7 @@ _RE_DDL = re.compile(
 
 
 def validate_sql(sql: str, kind: OperationKind) -> None:
+    _ = kind
     if not isinstance(sql, str) or not sql.strip():
         raise ValueError("Пустой query.")
 
@@ -26,20 +27,8 @@ def validate_sql(sql: str, kind: OperationKind) -> None:
     if _RE_DDL.search(sql):
         raise ValueError("DDL-операции в query запрещены.")
 
-    head = sql.lstrip().lower()
-    if kind == OperationKind.GET:
-        if not head.startswith("select") and not head.startswith("with"):
-            raise ValueError("Для GET разрешены только SELECT/CTE запросы.")
-    elif kind == OperationKind.SET:
-        if not (
-            head.startswith("insert")
-            or head.startswith("update")
-            or head.startswith("delete")
-            or head.startswith("with")
-        ):
-            raise ValueError("Для SET разрешены только INSERT/UPDATE/DELETE/CTE запросы.")
-    else:
-        raise ValueError(f"Неизвестный kind операции: {kind}.")
+    # Логика GET/SET более не ограничивает тип SQL-оператора.
+    # Разрешены любые single-statement запросы, кроме DDL.
 
 
 def rewrite_named_params(sql: str) -> tuple[str, list[str]]:

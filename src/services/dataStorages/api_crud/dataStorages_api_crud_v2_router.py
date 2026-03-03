@@ -2,15 +2,15 @@
 v2 API for dataStorages.
 
 В v2 добавлена поддержка:
-- operations (cn=system/operations) в create/update/read
 - расширенная конфигурация привязки тегов (prsEntityTypeCode/prsJsonConfigString) для интеграционных тегов
+- дочерние операции у привязки тега: linkTags[].operations[].parameters[]
 
 v1 остаётся совместимым со старым контрактом.
 """
 
 import json
 from pydantic import BaseModel, Field, ConfigDict, field_validator
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from src.common import api_crud_svc as svc
 
@@ -29,7 +29,10 @@ class LinkTagOrAlertAttributesV2(BaseModel):
     prsEntityTypeCode: int | None = Field(
         None,
         title="Код типа привязки",
-        description="Для интеграционных тегов устанавливается 2.",
+        description=(
+            "Опциональное метаполе. Для интеграционных привязок может быть 2, "
+            "но runtime интеграционного сервиса не зависит от этого атрибута."
+        ),
     )
     prsJsonConfigString: dict | None = Field(
         None,
@@ -48,6 +51,10 @@ class LinkTagV2(BaseModel):
 
     tagId: str = Field(title="Идентификатор привязываемого тега")
     attributes: LinkTagOrAlertAttributesV2 = Field(default_factory=_default_link_attrs_v2)
+    operations: list["LinkTagOperationV2"] = Field(
+        default_factory=list,
+        title="Операции, связанные с привязкой тега",
+    )
 
 
 class LinkAlertV2(BaseModel):
@@ -58,7 +65,7 @@ class LinkAlertV2(BaseModel):
     attributes: LinkTagOrAlertAttributesV2 = Field(default_factory=_default_link_attrs_v2)
 
 
-class DataStorageOperationParameterV2(BaseModel):
+class LinkTagOperationParameterAttributesV2(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
 
     cn: str = Field(title="Имя параметра операции (CN)")
@@ -66,14 +73,43 @@ class DataStorageOperationParameterV2(BaseModel):
     prsJsonConfigString: dict | None = Field(default_factory=dict, title="Конфигурация параметра")
 
 
-class DataStorageOperationV2(BaseModel):
+def _default_link_tag_operation_parameter_attrs_v2() -> "LinkTagOperationParameterAttributesV2":
+    return LinkTagOperationParameterAttributesV2.model_validate({})
+
+
+class LinkTagOperationParameterV2(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
+    attributes: LinkTagOperationParameterAttributesV2 = Field(
+        default_factory=_default_link_tag_operation_parameter_attrs_v2
+    )
+
+
+class LinkTagOperationAttributesV2(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
 
     cn: str = Field(title="Имя операции (CN)")
     prsActive: bool = Field(True, title="Флаг активности операции")
     prsEntityTypeCode: int = Field(0, title="Тип операции", description="0 - GET, 1 - SET")
-    prsJsonConfigString: dict | None = Field(default_factory=dict, title="Конфигурация операции")
-    parameters: list[DataStorageOperationParameterV2] = Field(default_factory=list, title="Параметры операции")
+    prsJsonConfigString: dict | None = Field(
+        default_factory=dict,
+        title="Конфигурация операции",
+        description="Ожидаются ключи: query, timeoutMs, maxRows, version.",
+    )
+
+
+def _default_link_tag_operation_attrs_v2() -> "LinkTagOperationAttributesV2":
+    return LinkTagOperationAttributesV2.model_validate({})
+
+
+class LinkTagOperationV2(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
+    attributes: LinkTagOperationAttributesV2 = Field(default_factory=_default_link_tag_operation_attrs_v2)
+    parameters: list[LinkTagOperationParameterV2] = Field(default_factory=list, title="Параметры операции")
+
+
+LinkTagV2.model_rebuild()
 
 
 class DataStorageAttributesV2(svc.NodeAttributes):
@@ -84,7 +120,6 @@ class DataStorageCreateV2(svc.NodeCreate):
     attributes: DataStorageAttributesV2 = Field(title="Атрибуты хранилища")
     linkTags: list[LinkTagV2] = Field(default_factory=list, title="Список привязываемых тегов")
     linkAlerts: list[LinkAlertV2] = Field(default_factory=list, title="Список привязываемых тревог")
-    operations: list[DataStorageOperationV2] = Field(default_factory=list, title="Список операций")
 
     @field_validator("attributes")
     @classmethod
@@ -97,13 +132,11 @@ class DataStorageCreateV2(svc.NodeCreate):
 class DataStorageReadV2(svc.NodeRead):
     getLinkedTags: bool = Field(False, title="Возврат присоединённых тегов")
     getLinkedAlerts: bool = Field(False, title="Возврат присоединённых тревог")
-    getLinkedOperations: bool = Field(False, title="Возврат операций", description="cn=system/operations")
 
 
 class OneDataStorageInReadResultV2(svc.OneNodeInReadResult):
     linkedTags: list[LinkTagV2] | None = Field(None, title="Список присоединённых тегов")
     linkedAlerts: list[LinkAlertV2] | None = Field(None, title="Список присоединённых тревог")
-    operations: list[DataStorageOperationV2] | None = Field(None, title="Список операций")
 
 
 class DataStorageReadResultV2(svc.NodeReadResult):
@@ -116,7 +149,6 @@ class DataStorageUpdateV2(DataStorageCreateV2):
 
     unlinkTags: list[str] | None = Field(default_factory=list, title="Список id тегов.")
     unlinkAlerts: list[str] | None = Field(default_factory=list, title="Список id тревог.")
-    unlinkOperations: list[str] | None = Field(default_factory=list, title="Список CN операций для удаления.")
 
     @field_validator("id")
     @classmethod
@@ -129,8 +161,56 @@ error_handler = svc.ErrorHandler()
 
 
 @router_v2.get("/", response_model=DataStorageReadResultV2 | None, status_code=200, response_model_exclude_none=True)
-async def read_v2(q: str | None = None, payload: DataStorageReadV2 | None = None, error_handler: svc.ErrorHandler = Depends()):
-    # переходный период: поддержим q, но основной путь — payload/отдельные ключи (см. будущую правку GET).
+async def read_v2(
+    q: str | None = None,
+    payload: DataStorageReadV2 | None = None,
+    id: list[str] | None = Query(None),
+    base: str | None = None,
+    deref: bool | None = None,
+    scope: int | None = None,
+    hierarchy: bool | None = None,
+    getParent: bool | None = None,
+    attributes: list[str] | None = Query(None),
+    filter: str | None = None,
+    getLinkedTags: bool | None = None,
+    getLinkedAlerts: bool | None = None,
+    error_handler: svc.ErrorHandler = Depends(),
+):
+    def _is_fastapi_param_placeholder(value) -> bool:
+        return getattr(value, "__class__", None).__module__.startswith("fastapi.")
+
+    # Поддерживаем и legacy q=<json>, и обычные query-параметры.
+    if payload is None and not q:
+        query_payload: dict = {}
+        if id is not None and not _is_fastapi_param_placeholder(id):
+            query_payload["id"] = id
+        if base is not None:
+            query_payload["base"] = base
+        if deref is not None:
+            query_payload["deref"] = deref
+        if scope is not None:
+            query_payload["scope"] = scope
+        if hierarchy is not None:
+            query_payload["hierarchy"] = hierarchy
+        if getParent is not None:
+            query_payload["getParent"] = getParent
+        if attributes is not None and not _is_fastapi_param_placeholder(attributes):
+            query_payload["attributes"] = attributes
+        if filter is not None:
+            try:
+                query_payload["filter"] = json.loads(filter)
+            except Exception as ex:
+                res = {"error": {"code": 422, "message": f"Некорректный filter: {ex}"}}
+                await error_handler.handle_error(res)
+                return {}
+        if getLinkedTags is not None:
+            query_payload["getLinkedTags"] = getLinkedTags
+        if getLinkedAlerts is not None:
+            query_payload["getLinkedAlerts"] = getLinkedAlerts
+
+        if query_payload:
+            payload = DataStorageReadV2.model_validate(query_payload)
+
     res = await dataStorages_api_crud_app.api_get_read(DataStorageReadV2, q, payload)
     await error_handler.handle_error(res)
     return res

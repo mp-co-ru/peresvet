@@ -8,7 +8,7 @@ from typing import Any
 
 sys.path.append(".")
 
-from src.common.hierarchy import CN_SCOPE_SUBTREE
+from src.common.hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
 import src.common.times as t
 from src.services.dataStorages.app.dataStorages_app_base import DataStoragesAppBase
 from src.services.dataStorages.app.integrational.dataStorages_app_integrational_utils import (
@@ -35,13 +35,11 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
     """Базовый класс интеграционных хранилищ.
 
     Отличия от исторических хранилищ:
-    - для тегов с prsEntityTypeCode=2 используется ссылка на LDAP-операции (GET/SET),
+    - для тегов, привязанных к dataStorage типа 2, используется ссылка на LDAP-операции (GET/SET),
       а не таблица/метрика, создаваемая автоматически;
     - запись выполняется немедленно (SET), без кэширования в historian-таблицы.
     """
 
-    # код типа привязки тега к хранилищу: 2 = интеграционный тег
-    _LINK_ENTITY_TYPE_INTEGRATIONAL = 2
     _META_LINK_TTL_SEC = 30
     _META_OPERATION_TTL_SEC = 30
     _GET_MAX_ROWS_CAP = 50000
@@ -86,7 +84,7 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
     ):
         # Historical read path is not used for integrational tags; `prsTag.app.data_get.*`
         # is handled by `_tag_get()` override above.
-        raise NotImplementedError("Для интеграционных хранилищ чтение выполняется через операции GET (prsEntityTypeCode=2).")
+        raise NotImplementedError("Для интеграционных хранилищ чтение выполняется через операции GET (dataStorage type=2).")
 
     async def _tag_get(self, mes: dict, routing_key: str | None = None) -> dict:
         result = {"data": []}
@@ -112,11 +110,13 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
                     item["excess"] = excess
                 result["data"].append(item)
             except Exception as ex:
-                self._logger.error(f"{self._config.svc_name} :: Ошибка чтения интеграционного тега '{tag_id}': {ex}")
+                msg = f"Ошибка чтения интеграционного тега '{tag_id}': {ex}"
+                self._logger.error(f"{self._config.svc_name} :: {msg}")
+                return {"error": {"code": 500, "message": msg}}
 
         return result
 
-    async def _tag_set(self, mes: dict, routing_key: str | None = None) -> None:
+    async def _tag_set(self, mes: dict, routing_key: str | None = None) -> dict:
         for tag_item in mes.get("data") or []:
             tag_id = tag_item.get("tagId")
             if not tag_id:
@@ -125,7 +125,10 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
             try:
                 await self._write_integrational_points(tag_id=tag_id, tag_item=tag_item, request=mes)
             except Exception as ex:
-                self._logger.error(f"{self._config.svc_name} :: Ошибка записи интеграционного тега '{tag_id}': {ex}")
+                msg = f"Ошибка записи интеграционного тега '{tag_id}': {ex}"
+                self._logger.error(f"{self._config.svc_name} :: {msg}")
+                return {"error": {"code": 500, "message": msg}}
+        return {}
 
     async def _link_tag(self, mes: dict, routing_key: str | None = None) -> dict | None:
         """Привязка тега к интеграционному хранилищу: без создания таблиц."""
@@ -176,17 +179,18 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
         await self._invalidate_meta_cache()
 
     async def _read_integrational_points(self, tag_id: str, request: dict) -> list[tuple]:
-        ds_id, link = await self._resolve_integrational_link(tag_id=tag_id)
-
-        link_cfg = self._safe_json_loads(link.get("prsJsonConfigString"))
-        get_cfg = (link_cfg or {}).get("get") or {}
-        op_cn = get_cfg.get("operationCn")
-        if not op_cn:
-            raise ValueError("Не указан get.operationCn в конфигурации привязки.")
+        ds_id, link_id, _link = await self._resolve_integrational_link(tag_id=tag_id)
+        request_params = request.get("params") if isinstance(request.get("params"), dict) else {}
+        op_name = self._normalize_operation_name(request_params.get("operation"))
+        op_cn = await self._resolve_operation_cn_from_link(
+            link_id=link_id,
+            requested_operation=op_name,
+            expected_kind=OperationKind.GET,
+        )
 
         op = await self._load_operation_from_link(
             tag_id=tag_id,
-            link_cfg=link_cfg or {},
+            link_id=link_id,
             op_cn=op_cn,
             expected_kind=OperationKind.GET,
         )
@@ -202,16 +206,17 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
         )
 
     async def _write_integrational_points(self, tag_id: str, tag_item: dict, request: dict) -> None:
-        ds_id, link = await self._resolve_integrational_link(tag_id=tag_id)
-
-        link_cfg = self._safe_json_loads(link.get("prsJsonConfigString"))
-        set_cfg = (link_cfg or {}).get("set") or {}
+        ds_id, link_id, _link = await self._resolve_integrational_link(tag_id=tag_id)
         request_params = request.get("params") if isinstance(request.get("params"), dict) else {}
         op_name = self._normalize_operation_name(request_params.get("operation"))
-        op_cn = self._resolve_set_operation_cn(set_cfg=set_cfg, requested_operation=op_name)
+        op_cn = await self._resolve_operation_cn_from_link(
+            link_id=link_id,
+            requested_operation=op_name,
+            expected_kind=OperationKind.SET,
+        )
         op = await self._load_operation_from_link(
             tag_id=tag_id,
-            link_cfg=link_cfg or {},
+            link_id=link_id,
             op_cn=op_cn,
             expected_kind=OperationKind.SET,
         )
@@ -244,23 +249,42 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
             param_values = await self._eval_params_jsonata(op=op, context=ctx)
             await self._execute_set(ds_id=ds_id, op=op, param_values=param_values)
 
-    async def _resolve_integrational_link(self, tag_id: str) -> tuple[str, dict]:
+    async def _resolve_integrational_link(self, tag_id: str) -> tuple[str, str, dict]:
         """Находит dataStorage и LDAP-конфиг привязки для интеграционного тега."""
         cache_key = self._meta_cache_key("link", tag_id)
         cached = await self._meta_cache_get(cache_key)
         if cached:
             cached_ds_id = cached.get("ds_id")
-            if cached_ds_id in self._connection_pools:
-                return cached_ds_id, cached["attrs"]
+            cached_link_id = cached.get("link_id")
+            if cached_ds_id in self._connection_pools and isinstance(cached_link_id, str):
+                return cached_ds_id, cached_link_id, cached["attrs"]
             await self._invalidate_meta_cache_for_tag(tag_id)
 
-        for ds_id in self._connection_pools.keys():
-            cache = self._cache
-            assert cache is not None
-            async with cache.get_redis() as r:
-                ds_active = await r.json().get(f"{ds_id}.{self._config.svc_name}", "prsActive")  # type: ignore[reportGeneralTypeIssues]
-            if ds_active is False:
-                continue
+        discovered_ids: list[str] = []
+        try:
+            discovered_ids = await DataStoragesAppIntegrationalBase._discover_supported_ds_ids(self)
+        except Exception:
+            discovered_ids = []
+
+        # Ensure newly created/updated supported dataStorages are pulled into runtime pools.
+        add_supported = getattr(self, "_add_supported_ds", None)
+        if callable(add_supported):
+            for ds_id in discovered_ids:
+                if ds_id in self._connection_pools:
+                    continue
+                try:
+                    await add_supported(ds_id)
+                except Exception:
+                    # Keep lookup resilient: if add/pool creation failed,
+                    # we still try to resolve link directly from hierarchy.
+                    pass
+
+        candidate_ds_ids: list[str] = []
+        for ds_id in list(self._connection_pools.keys()) + discovered_ids:
+            if ds_id not in candidate_ds_ids:
+                candidate_ds_ids.append(ds_id)
+
+        for ds_id in candidate_ds_ids:
 
             res = await self._hierarchy.search(
                 payload={
@@ -274,93 +298,177 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
                     "attributes": ["prsActive", "prsEntityTypeCode", "prsJsonConfigString"],
                 }
             )
-            if not res:
+            # Fast path: query already filtered by cn=<tag_id>, so any active result is a valid link.
+            if res:
+                for link_id, _, attrs in res:
+                    if not self._is_ldap_active(attrs):
+                        continue
+                    await self._meta_cache_set(
+                        cache_key,
+                        {"ds_id": ds_id, "link_id": link_id, "attrs": attrs},
+                        self._META_LINK_TTL_SEC,
+                    )
+                    return ds_id, link_id, attrs
+
+            # Fallback: support non-standard link CN with alias child cn=<tag_id>.
+            match = await self._pick_matching_link(tag_id=tag_id, ds_id=ds_id, direct_res=None)
+            if not match:
                 continue
-
-            attrs = res[0][2]
-            if attrs.get("prsActive", ["TRUE"])[0] != "TRUE":
-                continue
-
-            entity_type = attrs.get("prsEntityTypeCode")
-            if not entity_type:
-                raise ValueError("Не задан prsEntityTypeCode у привязки тега к хранилищу.")
-            if int(entity_type[0]) != self._LINK_ENTITY_TYPE_INTEGRATIONAL:
-                raise ValueError(f"Привязка тега не является интеграционной (prsEntityTypeCode != 2).")
-
+            link_id, attrs = match
             await self._meta_cache_set(
                 cache_key,
-                {"ds_id": ds_id, "attrs": attrs},
+                {"ds_id": ds_id, "link_id": link_id, "attrs": attrs},
                 self._META_LINK_TTL_SEC,
             )
-            return ds_id, attrs
+            return ds_id, link_id, attrs
 
         raise ValueError("Интеграционная привязка тега к хранилищу не найдена.")
+
+    async def _discover_supported_ds_ids(self) -> list[str]:
+        configured_reader = getattr(self, "_configured_ds_ids", None)
+        if callable(configured_reader):
+            configured = configured_reader()
+        else:
+            cfg_nodes = getattr(self._config, "nodes", None)
+            if isinstance(cfg_nodes, list) and cfg_nodes:
+                configured = [str(x) for x in cfg_nodes if x]
+            else:
+                legacy = getattr(self._config, "datastorages_id", None)
+                configured = [str(x) for x in legacy if x] if isinstance(legacy, list) and legacy else []
+        if configured:
+            return configured
+
+        ds_root_id = await self._hierarchy.get_node_id("cn=dataStorages,cn=prs")
+        if not ds_root_id:
+            return []
+        items = await self._hierarchy.search(
+            payload={
+                "base": ds_root_id,
+                "scope": CN_SCOPE_ONELEVEL,
+                "filter": {
+                    "objectClass": ["prsDataStorage"],
+                    "prsEntityTypeCode": [self._config.datastorage_type],
+                },
+                "attributes": ["cn"],
+                "deref": False,
+            }
+        )
+        return [item[0] for item in (items or [])]
+
+    async def _pick_matching_link(self, tag_id: str, ds_id: str, direct_res: list | None) -> tuple[str, dict] | None:
+        """Return matching link node by cn/tag alias under one dataStorage subtree."""
+        candidates = direct_res or []
+        if not candidates:
+            candidates = await self._hierarchy.search(
+                payload={
+                    "base": ds_id,
+                    "scope": CN_SCOPE_SUBTREE,
+                    "filter": {"objectClass": ["prsDatastorageTagData"]},
+                    "deref": False,
+                    "attributes": ["cn", "prsActive", "prsEntityTypeCode", "prsJsonConfigString"],
+                }
+            ) or []
+
+        for link_id, _, attrs in candidates:
+            if not self._is_ldap_active(attrs):
+                continue
+            cn_list = attrs.get("cn") or []
+            if cn_list and cn_list[0] == tag_id:
+                return link_id, attrs
+
+            # Fallback for links with custom CN: accept alias child cn=<tag_id>.
+            alias = await self._hierarchy.search(
+                payload={
+                    "base": link_id,
+                    "scope": CN_SCOPE_SUBTREE,
+                    "filter": {"cn": [tag_id]},
+                    "deref": False,
+                    "attributes": ["cn"],
+                }
+            )
+            if alias:
+                return link_id, attrs
+        return None
 
     async def _load_operation_from_link(
             self,
             tag_id: str,
-            link_cfg: dict,
+            link_id: str,
             op_cn: str,
             expected_kind: OperationKind,
         ) -> OperationDef:
-        cache_key = self._meta_cache_key("op", tag_id, op_cn, int(expected_kind))
+        cache_key = self._meta_cache_key("op", tag_id, op_cn)
         cached = await self._meta_cache_get(cache_key)
         if cached:
             if "kind" in cached:
-                cached["kind"] = OperationKind(int(cached["kind"]))
+                try:
+                    cached["kind"] = OperationKind(int(cached["kind"]))
+                except Exception:
+                    cached["kind"] = expected_kind
             return OperationDef(**cached)
 
-        operations = link_cfg.get("operations")
-        if not isinstance(operations, list):
-            raise ValueError("В конфигурации привязки не задан массив operations.")
+        found = await self._hierarchy.search(
+            payload={
+                "base": link_id,
+                "scope": CN_SCOPE_SUBTREE,
+                "filter": {"objectClass": ["prsDatastorageTagOperation"], "cn": [op_cn]},
+                "attributes": ["cn", "prsActive", "prsEntityTypeCode", "prsJsonConfigString"],
+                "deref": False,
+            }
+        )
+        if not found:
+            raise ValueError(f"Операция '{op_cn}' не найдена в дочерних узлах link.")
 
-        op_cfg = None
-        for item in operations:
-            if isinstance(item, dict) and item.get("cn") == op_cn:
-                op_cfg = item
-                break
-        if op_cfg is None:
-            raise ValueError(f"Операция '{op_cn}' не найдена в link.operations.")
-
-        active = bool(op_cfg.get("prsActive", True))
-        if not active:
+        op_id, _, op_attrs = found[0]
+        active = self._is_ldap_active(op_attrs)
+        if not bool(active):
             raise ValueError(f"Операция '{op_cn}' неактивна.")
 
-        kind = OperationKind(int(op_cfg.get("prsEntityTypeCode", 0)))
+        kind = OperationKind(self._operation_kind_code(op_attrs))
         if kind != expected_kind:
-            raise ValueError(f"Операция '{op_cn}' имеет неверный тип (prsEntityTypeCode={int(kind)}).")
+            raise ValueError(
+                f"Операция '{op_cn}' имеет тип '{int(kind)}', ожидается '{int(expected_kind)}'."
+            )
 
-        cfg = op_cfg.get("prsJsonConfigString") or {}
+        cfg = self._safe_json_loads(op_attrs.get("prsJsonConfigString")) or {}
         query = cfg.get("query")
         if not query:
             raise ValueError(f"У операции '{op_cn}' нет ключа query.")
 
         validate_sql(query, kind)
 
-        timeout_ms = cfg.get("prsTimeOutMs")
-        max_rows = cfg.get("prsMaxRows")
-        version = cfg.get("prsVersion")
+        timeout_ms = cfg.get("timeoutMs")
+        max_rows = cfg.get("maxRows")
+        version = cfg.get("version")
 
         param_specs: dict[str, dict] = {}
-        for p in op_cfg.get("parameters") or []:
-            if not isinstance(p, dict):
+        params = await self._hierarchy.search(
+            payload={
+                "base": op_id,
+                "scope": CN_SCOPE_SUBTREE,
+                "filter": {"objectClass": ["prsDatastorageTagOperationParameter"]},
+                "attributes": ["cn", "prsActive", "prsJsonConfigString"],
+                "deref": False,
+            }
+        )
+        for _, __, p_attrs in params or []:
+            p_cn_list = p_attrs.get("cn")
+            if not p_cn_list:
                 continue
-            p_cn = p.get("cn")
-            if not p_cn:
+            p_cn = p_cn_list[0]
+            p_active = self._is_ldap_active(p_attrs)
+            if not bool(p_active):
                 continue
-            p_active = bool(p.get("prsActive", True))
-            if not p_active:
-                continue
-            p_cfg = p.get("prsJsonConfigString") or {}
+            p_cfg = self._safe_json_loads(p_attrs.get("prsJsonConfigString")) or {}
             if not isinstance(p_cfg, dict):
                 raise ValueError(f"Некорректный prsJsonConfigString у параметра '{p_cn}'.")
             param_specs[p_cn] = p_cfg
 
         op = OperationDef(
-            id=f"{tag_id}:{op_cn}",
+            id=op_id,
             cn=op_cn,
             kind=kind,
-            active=active,
+            active=bool(active),
             query=query,
             timeout_ms=int(timeout_ms) if timeout_ms is not None else None,
             max_rows=int(max_rows) if max_rows is not None else None,
@@ -451,8 +559,6 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
 
         first = self._row_to_dict(rows[0])
         cols = {str(c).lower() for c in first.keys()}
-        if "y" not in cols:
-            raise ValueError("Результат запроса должен содержать колонку y.")
 
         all_records_as_value = self._coerce_bool(req_params.get("allRecordsAsValue"), default=True)
         finish_ts = self._resolve_finish_ts(request=request)
@@ -464,11 +570,17 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
         result: list[tuple] = []
         has_x = "x" in cols
         has_q = "q" in cols
+        has_y = "y" in cols
         for r in rows:
             rec = self._row_to_dict(r)
-            x = rec.get("x") if has_x else finish_ts
-            y = rec.get("y")
-            q = rec.get("q") if has_q else 0
+            x = self._row_get_case_insensitive(rec, "x") if has_x else finish_ts
+            q = self._row_get_case_insensitive(rec, "q") if has_q else 0
+            if has_y:
+                y = self._row_get_case_insensitive(rec, "y")
+            else:
+                y = self._row_without_case_insensitive(rec, {"x", "q"})
+                if not y:
+                    y = rec
             if q is None:
                 q = 0
             result.append((x, y, q))
@@ -537,48 +649,57 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
             return None
         if not isinstance(operation, str):
             raise ValueError("params.operation должен быть строкой.")
-        op = operation.strip().lower()
+        op = operation.strip()
         if not op:
             return None
-        if not self._RE_OP_NAME.match(op):
-            raise ValueError(f"Некорректное значение params.operation: '{operation}'.")
         return op
 
-    def _resolve_set_operation_cn(self, set_cfg: dict, requested_operation: str | None) -> str:
-        operations = set_cfg.get("operations") or {}
-        if not isinstance(operations, dict):
-            operations = {}
-        operation_cn = set_cfg.get("operationCn")
-        operation_cn = self._extract_operation_cn(operation_cn)
+    async def _resolve_operation_cn_from_link(
+            self,
+            link_id: str,
+            requested_operation: str | None,
+            expected_kind: OperationKind,
+        ) -> str:
+        operations = await self._hierarchy.search(
+            payload={
+                "base": link_id,
+                "scope": CN_SCOPE_SUBTREE,
+                "filter": {"objectClass": ["prsDatastorageTagOperation"]},
+                "attributes": ["cn", "prsEntityTypeCode"],
+                "deref": False,
+            }
+        )
+        if not operations:
+            raise ValueError("У привязки тега не найдено ни одной операции.")
 
         if requested_operation:
-            op_cn = operations.get(requested_operation) or operations.get(requested_operation.upper())
-            op_cn = self._extract_operation_cn(op_cn)
-            if op_cn:
-                return op_cn
-            if operation_cn:
-                return operation_cn
-            raise ValueError(
-                f"Не задана операция set для operation='{requested_operation}' "
-                f"(ожидался set.operations.{requested_operation} или set.operationCn)."
-            )
+            for _, __, attrs in operations:
+                cn_list = attrs.get("cn")
+                if not cn_list:
+                    continue
+                cn = cn_list[0]
+                if cn == requested_operation:
+                    kind = OperationKind(self._operation_kind_code(attrs))
+                    if kind != expected_kind:
+                        raise ValueError(
+                            f"Операция '{requested_operation}' имеет тип '{int(kind)}', "
+                            f"ожидается '{int(expected_kind)}'."
+                        )
+                    return cn
+            raise ValueError(f"Операция '{requested_operation}' не найдена среди дочерних узлов link.")
 
-        if operation_cn:
-            return operation_cn
+        for _, __, attrs in operations:
+            cn_list = attrs.get("cn")
+            if not cn_list:
+                continue
+            cn = cn_list[0]
+            kind = OperationKind(self._operation_kind_code(attrs))
+            if kind == expected_kind:
+                return cn
 
-        default_operation = self._normalize_operation_name(set_cfg.get("defaultOperation"))
-        if default_operation:
-            op_cn = operations.get(default_operation) or operations.get(default_operation.upper())
-            op_cn = self._extract_operation_cn(op_cn)
-            if op_cn:
-                return op_cn
-
-        if len(operations) == 1:
-            op_cn = self._extract_operation_cn(next(iter(operations.values())))
-            if op_cn:
-                return op_cn
-
-        raise ValueError("Не указан set.operationCn и не задано однозначное соответствие set.operations.")
+        raise ValueError(
+            f"Не найдена операция нужного типа ({int(expected_kind)}) среди дочерних узлов link."
+        )
 
     def _extract_operation_cn(self, value: Any) -> str | None:
         if isinstance(value, str):
@@ -588,6 +709,30 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
             if isinstance(cn, str):
                 return cn
         return None
+
+    def _operation_kind_code(self, operation_cfg: dict) -> int:
+        raw = operation_cfg.get("prsEntityTypeCode", 0)
+        if isinstance(raw, list):
+            raw = raw[0] if raw else 0
+        try:
+            code = int(raw)
+        except Exception as ex:
+            raise ValueError(f"Некорректный prsEntityTypeCode у операции: {raw}") from ex
+        if code not in (0, 1):
+            raise ValueError(f"Недопустимый prsEntityTypeCode у операции: {code}. Ожидается 0 или 1.")
+        return code
+
+    def _is_ldap_active(self, attrs: dict, default: bool = True) -> bool:
+        raw = attrs.get("prsActive")
+        if isinstance(raw, list):
+            raw = raw[0] if raw else None
+        if raw is None:
+            return default
+        if isinstance(raw, bool):
+            return raw
+        if isinstance(raw, str):
+            return raw.strip().upper() == "TRUE"
+        return default
 
     def _build_eval_context(
             self,
@@ -624,6 +769,17 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
             return {str(k): v for k, v in row.items()}
         keys = row.keys() if hasattr(row, "keys") else []
         return {str(k): row.get(k) for k in keys}
+
+    def _row_get_case_insensitive(self, row: dict[str, Any], key: str) -> Any:
+        key_l = key.lower()
+        for k, v in row.items():
+            if str(k).lower() == key_l:
+                return v
+        return None
+
+    def _row_without_case_insensitive(self, row: dict[str, Any], excluded: set[str]) -> dict[str, Any]:
+        excluded_l = {x.lower() for x in excluded}
+        return {k: v for k, v in row.items() if str(k).lower() not in excluded_l}
 
     def _resolve_finish_ts(self, request: dict | None) -> int:
         if not request:

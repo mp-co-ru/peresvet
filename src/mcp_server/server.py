@@ -177,7 +177,7 @@ def _crud_query_to_params(query: dict[str, Any]) -> list[tuple[str, str]]:
         params.append(("filter", json.dumps(query["filter"], ensure_ascii=False)))
 
     # entity-specific flags used by some endpoints
-    for k in ("getLinkedTags", "getLinkedAlerts", "getLinkedOperations"):
+    for k in ("getLinkedTags", "getLinkedAlerts"):
         if k in query and query[k] is not None:
             params.append((k, _bool_str(query[k])))
 
@@ -584,7 +584,8 @@ if ENABLE_V2:
     async def peresvet_datastorages_v2_read(query: dict[str, Any] | None = None) -> dict[str, Any]:
         """Read dataStorages via `/v2/dataStorages/` (operations support).
 
-        Use `getLinkedOperations=true` to include operations list.
+        Use `getLinkedTags=true` to include tag links; for integrational links
+        each item may include child `operations`.
         """
         q = query or {}
         params = _crud_query_to_params(q)
@@ -595,10 +596,12 @@ if ENABLE_V2:
         """Create dataStorage via POST `/v2/dataStorages/`.
 
         Notes for integrational relational storage (`prsEntityTypeCode=2`):
-        - Operations should be embedded into each tag link config
-          (`linkTags[].attributes.prsJsonConfigString.operations`).
+        - Operations are passed as child nodes of tag link:
+          `linkTags[].operations[]`.
+        - Operation attributes live in `linkTags[].operations[].attributes`
+          (including `cn`, `prsEntityTypeCode`, `prsJsonConfigString`).
         - SQL params mapping is defined in operation parameters as
-          `parameters[].prsJsonConfigString.JSONata`.
+          `linkTags[].operations[].parameters[].attributes.prsJsonConfigString.JSONata`.
         """
         return await _request("POST", "/v2/dataStorages/", json_body=payload)
 
@@ -607,7 +610,7 @@ if ENABLE_V2:
         """Update dataStorage via PUT `/v2/dataStorages/`.
 
         For integrational relational setup use:
-        - `linkTags` to attach/update tag link configuration with inline operations;
+        - `linkTags` to attach/update tag link configuration and child `operations`;
         - `unlinkTags` to detach tags.
         """
         return await _request("PUT", "/v2/dataStorages/", json_body=payload)
@@ -620,7 +623,7 @@ async def peresvet_data_set(payload: dict[str, Any]) -> dict[str, Any]:
     Data points must be arrays in the order: `[x, y, q]` (or shorter forms `[y]`, `[x, y]`).
 
     For integrational tabular tags you can pass top-level `params`, for example:
-    - `{"operation": "insert" | "update" | "delete", ...}`
+    - `{"operation": "<operation cn>", ...}`
     """
     return await _request("POST", "/v1/data/", json_body=payload)
 

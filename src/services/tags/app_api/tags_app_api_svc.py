@@ -218,12 +218,15 @@ class TagsAppAPI(BaseSvc):
             return {}
 
         body = p.model_dump()
-        res = await self._post_message(mes=body, reply=False, routing_key = f"{self._config.hierarchy['class']}.app_api.data_set.*")
+        res = await self._post_message(mes=body, reply=True, routing_key = f"{self._config.hierarchy['class']}.app_api.data_set.*")
         # нет подписчика
         if res is None:
             res = {"error": {"code": 424, "message": f"Нет обработчика для команды записи данных."}}
             app._logger.error(res["error"]["message"])
-        return {}
+            return res
+        if not isinstance(res, dict):
+            return {"error": {"code": 500, "message": "Некорректный ответ обработчика data_set."}}
+        return res
 
 settings = TagsAppAPISettings()
 

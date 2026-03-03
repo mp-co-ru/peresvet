@@ -14,67 +14,30 @@ from src.services.dataStorages.model_crud.dataStorages_model_crud_v2_settings im
 
 class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
     """v2 model_crud расширяет v1:
-    - операции cn=system/operations (create/update/read/delete)
-    - расширенная привязка тегов (prsEntityTypeCode/prsJsonConfigString) для интеграционных тегов
+    - расширенная привязка тегов (prsJsonConfigString и опциональный prsEntityTypeCode) для интеграционных тегов
+    - операции привязки интеграционного тега как дочерние LDAP-узлы linkTags[].operations
     """
 
     async def _further_read(self, mes: dict, search_result: dict) -> dict:
         res = await super()._further_read(mes, search_result)
-        if not mes.get("getLinkedOperations"):
-            return res
 
-        for ds in res["data"]:
-            ds_id = ds["id"]
-            ds["operations"] = await self._read_ds_operations(ds_id=ds_id)
+        if mes.get("getLinkedTags"):
+            for ds in res["data"]:
+                ds_id = ds["id"]
+                for link in ds.get("linkedTags") or []:
+                    tag_id = link.get("tagId")
+                    if not tag_id:
+                        continue
+                    link["operations"] = await self._read_tag_link_operations(ds_id=ds_id, tag_id=tag_id)
         return res
 
     async def _further_create(self, mes: dict, new_id: str) -> None:
-        # First, run v1 logic (creates system/tags/alerts).
+        # v2 keeps v1 create behavior; link operations are handled inside linkTags update path.
         await super()._further_create(mes, new_id)
 
-        # v2: for integrational dataStorages (prsEntityTypeCode=2) ensure `system/operations` exists.
-        ds_type = None
-        attrs = mes.get("attributes") or {}
-        v = attrs.get("prsEntityTypeCode")
-        if isinstance(v, list):
-            v = v[0] if v else None
-        if v is not None:
-            try:
-                ds_type = int(v)
-            except Exception:
-                ds_type = None
-
-        if ds_type == 2:
-            await self._ensure_ds_operations_node(ds_id=new_id)
-
-        ops = mes.get("operations") or []
-        if ops:
-            await self._sync_operations(ds_id=new_id, operations=ops, replace=True)
-
     async def _further_update(self, mes: dict) -> None:
-        ds_id = mes["id"]
-
-        # First, run v1 update logic (link/unlink tags/alerts).
+        # v2 link operations are stored under linkTags nodes; no cn=operations subtree maintenance.
         await super()._further_update(mes)
-
-        ds_type = await self._get_ds_type_after_update(ds_id=ds_id, mes=mes)
-
-        # v2 policy:
-        # - for integrational dataStorages (prsEntityTypeCode=2) ensure `system/operations` exists;
-        # - for non-integrational dataStorages ensure `system/operations` is removed.
-        if ds_type == 2:
-            await self._ensure_ds_operations_node(ds_id=ds_id)
-
-            if "operations" in mes and mes.get("operations") is not None:
-                await self._sync_operations(ds_id=ds_id, operations=mes["operations"])
-            else:
-                unlink_ops = mes.get("unlinkOperations") or []
-                if unlink_ops:
-                    await self._delete_operations_by_cn(ds_id=ds_id, operation_cns=unlink_ops)
-        else:
-            # If the storage type changes from integrational to historical (or is historical),
-            # we remove the operations subtree to keep v1 contract clean.
-            await self._delete_ds_operations_node(ds_id=ds_id)
 
     async def _ensure_ds_operations_node(self, ds_id: str) -> None:
         ds_dn = await self._hierarchy.get_node_dn(ds_id)
@@ -154,7 +117,7 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
         result: list[dict] = []
         for op_id, _, attrs in ops:
             op_cfg_attr = attrs.get("prsJsonConfigString")
-            op_cfg = json.loads(op_cfg_attr[0]) if op_cfg_attr else {}
+            op_cfg = self._safe_json_attr(op_cfg_attr, default={})
 
             params = await self._hierarchy.search(
                 {
@@ -168,7 +131,7 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
             param_items: list[dict] = []
             for _, __, p_attrs in params or []:
                 p_cfg_attr = p_attrs.get("prsJsonConfigString")
-                p_cfg = json.loads(p_cfg_attr[0]) if p_cfg_attr else {}
+                p_cfg = self._safe_json_attr(p_cfg_attr, default={})
                 param_items.append(
                     {
                         "cn": p_attrs["cn"][0],
@@ -183,6 +146,79 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
                     "prsActive": attrs.get("prsActive", ["TRUE"])[0] == "TRUE",
                     "prsEntityTypeCode": int(attrs.get("prsEntityTypeCode", ["0"])[0]),
                     "prsJsonConfigString": op_cfg,
+                    "parameters": param_items,
+                }
+            )
+
+        return result
+
+    async def _find_tag_link_node_id(self, ds_id: str, tag_id: str) -> str | None:
+        found = await self._hierarchy.search(
+            payload={
+                "base": ds_id,
+                "scope": hierarchy.CN_SCOPE_SUBTREE,
+                "filter": {"objectClass": ["prsDatastorageTagData"], "cn": [tag_id]},
+                "attributes": ["cn"],
+                "deref": False,
+            }
+        )
+        if not found:
+            return None
+        return found[0][0]
+
+    async def _read_tag_link_operations(self, ds_id: str, tag_id: str) -> list[dict]:
+        link_id = await self._find_tag_link_node_id(ds_id=ds_id, tag_id=tag_id)
+        if not link_id:
+            return []
+
+        ops = await self._hierarchy.search(
+            {
+                "base": link_id,
+                "scope": hierarchy.CN_SCOPE_ONELEVEL,
+                "filter": {"objectClass": ["prsDatastorageTagOperation"]},
+                "attributes": ["cn", "prsActive", "prsEntityTypeCode", "prsJsonConfigString"],
+                "deref": False,
+            }
+        )
+        if not ops:
+            return []
+
+        result: list[dict] = []
+        for op_id, _, attrs in ops:
+            op_cfg_attr = attrs.get("prsJsonConfigString")
+            op_cfg = self._safe_json_attr(op_cfg_attr, default={})
+
+            params = await self._hierarchy.search(
+                {
+                    "base": op_id,
+                    "scope": hierarchy.CN_SCOPE_ONELEVEL,
+                    "filter": {"objectClass": ["prsDatastorageTagOperationParameter"]},
+                    "attributes": ["cn", "prsActive", "prsJsonConfigString"],
+                    "deref": False,
+                }
+            )
+            param_items: list[dict] = []
+            for _, __, p_attrs in params or []:
+                p_cfg_attr = p_attrs.get("prsJsonConfigString")
+                p_cfg = self._safe_json_attr(p_cfg_attr, default={})
+                param_items.append(
+                    {
+                        "attributes": {
+                            "cn": p_attrs["cn"][0],
+                            "prsActive": p_attrs.get("prsActive", ["TRUE"])[0] == "TRUE",
+                            "prsJsonConfigString": p_cfg,
+                        }
+                    }
+                )
+
+            result.append(
+                {
+                    "attributes": {
+                        "cn": attrs["cn"][0],
+                        "prsActive": attrs.get("prsActive", ["TRUE"])[0] == "TRUE",
+                        "prsEntityTypeCode": int(attrs.get("prsEntityTypeCode", ["0"])[0]),
+                        "prsJsonConfigString": op_cfg,
+                    },
                     "parameters": param_items,
                 }
             )
@@ -318,6 +354,119 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
                 if p_cn not in desired_cns:
                     await self._hierarchy.delete(existed[0])
 
+    def _attrs_dict(self, item: dict[str, Any] | None) -> dict[str, Any]:
+        if not isinstance(item, dict):
+            return {}
+        attrs = item.get("attributes")
+        if isinstance(attrs, dict):
+            return attrs
+        return item
+
+    async def _sync_link_operations(self, link_id: str, operations: list[dict[str, Any]], replace: bool = True) -> None:
+        existing_ops = await self._hierarchy.search(
+            {
+                "base": link_id,
+                "scope": hierarchy.CN_SCOPE_ONELEVEL,
+                "filter": {"objectClass": ["prsDatastorageTagOperation"]},
+                "attributes": ["cn", "prsActive", "prsEntityTypeCode", "prsJsonConfigString"],
+                "deref": False,
+            }
+        )
+        existing_by_cn = {item[2]["cn"][0]: item for item in (existing_ops or [])}
+
+        desired_cns = set()
+        for op in operations or []:
+            op_attrs = self._attrs_dict(op)
+            op_cn = op_attrs.get("cn")
+            if not op_cn:
+                continue
+            desired_cns.add(op_cn)
+
+            op_active = op_attrs.get("prsActive", True)
+            op_kind = op_attrs.get("prsEntityTypeCode", 0)
+            op_cfg = op_attrs.get("prsJsonConfigString") or {}
+
+            existed = existing_by_cn.get(op_cn)
+            if not existed:
+                op_id = await self._hierarchy.add(
+                    base=link_id,
+                    attribute_values={
+                        "objectClass": ["prsDatastorageTagOperation"],
+                        "cn": op_cn,
+                        "prsActive": op_active,
+                        "prsEntityTypeCode": op_kind,
+                        "prsJsonConfigString": op_cfg,
+                    },
+                )
+            else:
+                op_id = existed[0]
+                await self._hierarchy.modify(
+                    op_id,
+                    {
+                        "prsActive": op_active,
+                        "prsEntityTypeCode": op_kind,
+                        "prsJsonConfigString": op_cfg,
+                    },
+                )
+
+            await self._sync_link_operation_parameters(
+                op_id=op_id,
+                parameters=op.get("parameters") or [],
+                replace=True,
+            )
+
+        if replace:
+            for op_cn, existed in existing_by_cn.items():
+                if op_cn not in desired_cns:
+                    await self._hierarchy.delete(existed[0])
+
+    async def _sync_link_operation_parameters(
+        self, op_id: str, parameters: list[dict[str, Any]], replace: bool = True
+    ) -> None:
+        existing = await self._hierarchy.search(
+            {
+                "base": op_id,
+                "scope": hierarchy.CN_SCOPE_ONELEVEL,
+                "filter": {"objectClass": ["prsDatastorageTagOperationParameter"]},
+                "attributes": ["cn", "prsActive", "prsJsonConfigString"],
+                "deref": False,
+            }
+        )
+        existing_by_cn = {item[2]["cn"][0]: item for item in (existing or [])}
+
+        desired_cns = set()
+        for p in parameters or []:
+            p_attrs = self._attrs_dict(p)
+            p_cn = p_attrs.get("cn")
+            if not p_cn:
+                continue
+            desired_cns.add(p_cn)
+
+            p_active = p_attrs.get("prsActive", True)
+            p_cfg = p_attrs.get("prsJsonConfigString") or {}
+
+            existed = existing_by_cn.get(p_cn)
+            if not existed:
+                await self._hierarchy.add(
+                    base=op_id,
+                    attribute_values={
+                        "objectClass": ["prsDatastorageTagOperationParameter"],
+                        "cn": p_cn,
+                        "prsActive": p_active,
+                        "prsJsonConfigString": p_cfg,
+                    },
+                )
+            else:
+                await self._hierarchy.modify(
+                    existed[0],
+                    {"prsActive": p_active, "prsJsonConfigString": p_cfg},
+                )
+
+        if replace:
+            for p_cn, existed in existing_by_cn.items():
+                if p_cn not in desired_cns:
+                    await self._hierarchy.delete(existed[0])
+
     async def _link_tag(self, payload: dict, routing_key: str | None = None) -> None:
         """v2: сохраняем расширенную конфигурацию привязки."""
         if not payload.get("dataStorageId"):
@@ -353,6 +502,17 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
 
         node_dn = await self._hierarchy.get_node_dn(payload["dataStorageId"])
         tags_node_id = await self._hierarchy.get_node_id(f"cn=tags,cn=system,{node_dn}")
+        if not tags_node_id:
+            system_node_id = await self._hierarchy.get_node_id(f"cn=system,{node_dn}")
+            if not system_node_id:
+                system_node_id = await self._hierarchy.add(
+                    base=payload["dataStorageId"],
+                    attribute_values={"cn": ["system"], "prsSystemNode": True},
+                )
+            tags_node_id = await self._hierarchy.add(
+                base=system_node_id,
+                attribute_values={"cn": ["tags"], "prsSystemNode": True},
+            )
 
         link_attrs = payload.get("attributes") or {}
         link_entity_type = link_attrs.get("prsEntityTypeCode")
@@ -360,22 +520,40 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
         link_cfg = copy.deepcopy(link_cfg)
         link_cfg["prsValueTypeCode"] = int(tag_data[0][2]["prsValueTypeCode"][0])
 
-        attr_vals = {
-            "objectClass": ["prsDatastorageTagData"],
-            "cn": payload["tagId"],
-            "prsJsonConfigString": link_cfg,
-        }
+        existing_link = await self._hierarchy.search(
+            payload={
+                "base": tags_node_id,
+                "scope": hierarchy.CN_SCOPE_ONELEVEL,
+                "filter": {"objectClass": ["prsDatastorageTagData"], "cn": [payload["tagId"]]},
+                "attributes": ["cn"],
+                "deref": False,
+            }
+        )
+        link_id = existing_link[0][0] if existing_link else None
+
+        attr_vals: dict[str, Any] = {"prsJsonConfigString": link_cfg}
         if prs_store is not None:
             attr_vals["prsStore"] = prs_store
         if link_entity_type is not None:
             attr_vals["prsEntityTypeCode"] = int(link_entity_type)
 
-        new_node_id = await self._hierarchy.add(base=tags_node_id, attribute_values=attr_vals)
-        await self._hierarchy.add_alias(
-            parent_id=new_node_id,
-            aliased_object_id=payload["tagId"],
-            alias_name=payload["tagId"],
-        )
+        if link_id is None:
+            create_vals = {"objectClass": ["prsDatastorageTagData"], "cn": payload["tagId"], **attr_vals}
+            link_id = await self._hierarchy.add(base=tags_node_id, attribute_values=create_vals)
+            await self._hierarchy.add_alias(
+                parent_id=link_id,
+                aliased_object_id=payload["tagId"],
+                alias_name=payload["tagId"],
+            )
+        else:
+            await self._hierarchy.modify(link_id, attr_vals)
+
+        if "operations" in payload:
+            await self._sync_link_operations(
+                link_id=link_id,
+                operations=payload.get("operations") or [],
+                replace=True,
+            )
 
         self._logger.info(
             f"{self._config.svc_name} :: Тег {payload['tagId']} привязан к хранилищу {payload['dataStorageId']}"

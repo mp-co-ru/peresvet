@@ -55,6 +55,8 @@ class TagsApp(AppSvc):
             res = await self._post_message(new_payload, reply=True, routing_key=f"{self._config.hierarchy['class']}.app.data_get.{tag_id}")
             if res is None:
                 self._logger.error(f"{self._config.svc_name} :: Нет обработчика для получения данных тега '{tag_id}'.")
+            elif isinstance(res, dict) and res.get("error"):
+                return res
             else:
                 final_res["data"] += res["data"]
 
@@ -85,7 +87,7 @@ class TagsApp(AppSvc):
 
             return res
 
-    async def data_set(self, mes: dict, routing_key: str | None = None) -> None:
+    async def data_set(self, mes: dict, routing_key: str | None = None) -> dict:
         common_payload = {}
         for key, value in mes.items():
             if key != "data":
@@ -121,11 +123,15 @@ class TagsApp(AppSvc):
             payload = dict(common_payload)
             payload["data"] = [new_tag_item]
 
-            res = await self._post_message(payload, reply=False,
+            res = await self._post_message(payload, reply=True,
                 routing_key=f"{self._config.hierarchy['class']}.app.data_set.{tag_item['tagId']}"
             )
             if res is None:
                 self._logger.error(f"{self._config.svc_name} :: Нет обработчика для записи данных тега '{tag_item['tagId']}'.")
+                return {"error": {"code": 424, "message": f"Нет обработчика для записи данных тега '{tag_item['tagId']}'."}}
+            if isinstance(res, dict) and res.get("error"):
+                return res
+        return {}
 
     async def _delete_tag_cache(self, tag_id: str):
         async with self._cache.get_redis() as r:
