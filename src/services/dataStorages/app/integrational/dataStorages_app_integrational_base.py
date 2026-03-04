@@ -208,7 +208,11 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
     async def _write_integrational_points(self, tag_id: str, tag_item: dict, request: dict) -> None:
         ds_id, link_id, _link = await self._resolve_integrational_link(tag_id=tag_id)
         request_params = request.get("params") if isinstance(request.get("params"), dict) else {}
-        op_name = self._normalize_operation_name(request_params.get("operation"))
+        tag_item_params = tag_item.get("params") if isinstance(tag_item.get("params"), dict) else {}
+        merged_params = dict(request_params)
+        merged_params.update(tag_item_params)
+
+        op_name = self._normalize_operation_name(merged_params.get("operation"))
         op_cn = await self._resolve_operation_cn_from_link(
             link_id=link_id,
             requested_operation=op_name,
@@ -222,7 +226,7 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
         )
 
         points = tag_item.get("data") or []
-        if not points and request_params:
+        if not points and merged_params:
             points = [None]
 
         for point in points:
@@ -235,8 +239,11 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
                 x = None
                 q = None
 
+            req_ctx = dict(request)
+            if merged_params:
+                req_ctx["params"] = merged_params
             ctx = self._build_eval_context(
-                request=request,
+                request=req_ctx,
                 tag_id=tag_id,
                 tag_item=tag_item,
                 points=points,

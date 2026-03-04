@@ -622,8 +622,9 @@ async def peresvet_data_set(payload: dict[str, Any]) -> dict[str, Any]:
 
     Data points must be arrays in the order: `[x, y, q]` (or shorter forms `[y]`, `[x, y]`).
 
-    For integrational tabular tags you can pass top-level `params`, for example:
-    - `{"operation": "<operation cn>", ...}`
+    For integrational tabular tags, pass params per tag item:
+    - `data[i].params.operation` = operation `cn`
+    - other SQL values in `data[i].params.*`
     """
     return await _request("POST", "/v1/data/", json_body=payload)
 

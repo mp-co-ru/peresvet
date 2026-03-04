@@ -42,6 +42,10 @@ class TagData(BaseModel):
         title="id тега"
     )
     data: List[Annotated[DataPointItem, BeforeValidator(normalize_point)]]
+    params: dict[str, Any] | None = Field(
+        None,
+        title="Параметры операции для конкретного тега",
+    )
 
     @field_validator("tagId")
     @classmethod
@@ -49,14 +53,10 @@ class TagData(BaseModel):
         return valid_uuid(v)
 class AllData(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
-    model_config = ConfigDict(protected_namespaces=())
+    model_config = ConfigDict(protected_namespaces=(), extra="forbid")
 
     data: List[TagData] = Field(
         title="Данные"
-    )
-    params: dict[str, Any] | None = Field(
-        None,
-        title="Дополнительные параметры операции",
     )
 class DataGet(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322

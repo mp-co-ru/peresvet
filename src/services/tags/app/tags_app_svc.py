@@ -111,6 +111,10 @@ class TagsApp(AppSvc):
                 "tagId": tag_id,
                 "data": []
             }
+            tag_params = tag_item.get("params") if isinstance(tag_item.get("params"), dict) else None
+            if tag_params:
+                new_tag_item["params"] = tag_params
+
             for data_item in tag_item["data"]:
                 p = normalize_point_xyq(data_item)
                 if isinstance(p, tuple) and len(p) == 3:
@@ -121,6 +125,11 @@ class TagsApp(AppSvc):
                     new_tag_item["data"].append(data_item)
 
             payload = dict(common_payload)
+            # For data_set, params are per-tag (`data[i].params`).
+            # Top-level params are intentionally ignored.
+            payload.pop("params", None)
+            if tag_params:
+                payload["params"] = dict(tag_params)
             payload["data"] = [new_tag_item]
 
             res = await self._post_message(payload, reply=True,
