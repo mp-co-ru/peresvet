@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import sys
 import types
+from uuid import UUID
 
 
 uvloop_stub = types.ModuleType("uvloop")
@@ -154,6 +155,7 @@ from src.services.dataStorages.api_crud.dataStorages_api_crud_v2_router import (
     dataStorages_api_crud_app,
 )
 from src.services.dataStorages.model_crud.dataStorages_model_crud_svc import DataStoragesModelCRUD
+from src.services.dataStorages.model_crud.dataStorages_model_crud_v2_svc import DataStoragesModelCRUDV2
 
 
 def test_link_tag_payload_allows_omitting_attributes_block():
@@ -245,6 +247,130 @@ def test_further_read_linked_tags_does_not_fail_when_prsstore_is_none():
     assert len(result["data"]) == 1
     assert len(result["data"][0]["linkedTags"]) == 1
     assert result["data"][0]["linkedTags"][0]["attributes"]["prsStore"] is None
+
+
+def test_v2_sync_link_operations_keeps_extra_attrs_and_nested_parameters():
+    dummy = types.SimpleNamespace()
+    added: list[tuple[str, dict]] = []
+
+    async def _search(payload: dict):
+        flt = payload.get("filter") or {}
+        obj = (flt.get("objectClass") or [None])[0]
+        if obj in ("prsDatastorageTagOperation", "prsDatastorageTagOperationParameter"):
+            return []
+        return []
+
+    async def _add(base: str, attribute_values: dict):
+        added.append((base, attribute_values))
+        if attribute_values.get("objectClass") == ["prsDatastorageTagOperation"]:
+            return "op-node-1"
+        return "param-node-1"
+
+    async def _modify(_id: str, _attrs: dict):
+        return None
+
+    async def _delete(_id: str):
+        return None
+
+    dummy._hierarchy = types.SimpleNamespace(search=_search, add=_add, modify=_modify, delete=_delete)
+    dummy._attrs_dict = types.MethodType(DataStoragesModelCRUDV2._attrs_dict, dummy)
+    dummy._prepare_node_attrs = types.MethodType(DataStoragesModelCRUDV2._prepare_node_attrs, dummy)
+    dummy._sync_link_operation_parameters = types.MethodType(
+        DataStoragesModelCRUDV2._sync_link_operation_parameters, dummy
+    )
+
+    asyncio.run(
+        DataStoragesModelCRUDV2._sync_link_operations(
+            dummy,
+            link_id="link-1",
+            operations=[
+                {
+                    "attributes": {
+                        "cn": "calendar.select.v1",
+                        "prsEntityTypeCode": 0,
+                        "description": "Read shifts",
+                        "prsJsonConfigString": {"query": "select 1", "timeoutMs": 5000},
+                        "parameters": [
+                            {
+                                "attributes": {
+                                    "cn": "start",
+                                    "description": "Shift start",
+                                    "prsJsonConfigString": {"JSONata": "$.params.start"},
+                                }
+                            }
+                        ],
+                    }
+                }
+            ],
+            replace=True,
+        )
+    )
+
+    op_add = next(x for x in added if x[1].get("objectClass") == ["prsDatastorageTagOperation"])
+    p_add = next(x for x in added if x[1].get("objectClass") == ["prsDatastorageTagOperationParameter"])
+
+    assert op_add[1]["cn"] == "calendar.select.v1"
+    assert op_add[1]["description"] == "Read shifts"
+    assert "parameters" not in op_add[1]
+    assert p_add[1]["cn"] == "start"
+    assert p_add[1]["description"] == "Shift start"
+
+
+def test_v2_read_tag_link_operations_returns_extra_attrs():
+    dummy = types.SimpleNamespace()
+    dummy._safe_json_attr = types.MethodType(DataStoragesModelCRUD._safe_json_attr, dummy)
+    dummy._ldap_attrs_to_payload = types.MethodType(DataStoragesModelCRUDV2._ldap_attrs_to_payload, dummy)
+
+    async def _find_tag_link_node_id(_self, ds_id: str, tag_id: str):
+        _ = (ds_id, tag_id)
+        return "link-1"
+
+    async def _search(payload: dict):
+        flt = payload.get("filter") or {}
+        obj = (flt.get("objectClass") or [None])[0]
+        if obj == "prsDatastorageTagOperation":
+            return [
+                (
+                    "op-1",
+                    None,
+                    {
+                        "cn": ["calendar.select.v1"],
+                        "prsActive": ["TRUE"],
+                        "prsEntityTypeCode": ["0"],
+                        "description": ["Read shifts"],
+                        "prsJsonConfigString": ['{"query":"select 1","timeoutMs":5000}'],
+                    },
+                )
+            ]
+        if obj == "prsDatastorageTagOperationParameter":
+            return [
+                (
+                    "param-1",
+                    None,
+                    {
+                        "cn": ["start"],
+                        "prsActive": ["TRUE"],
+                        "description": ["Shift start"],
+                        "prsJsonConfigString": ['{"JSONata":"$.params.start"}'],
+                    },
+                )
+            ]
+        return []
+
+    dummy._hierarchy = types.SimpleNamespace(search=_search)
+    dummy._find_tag_link_node_id = types.MethodType(_find_tag_link_node_id, dummy)
+
+    ops = asyncio.run(
+        DataStoragesModelCRUDV2._read_tag_link_operations(
+            dummy,
+            ds_id="ds-1",
+            tag_id="tag-1",
+        )
+    )
+
+    assert ops[0]["attributes"]["description"] == "Read shifts"
+    assert ops[0]["attributes"]["prsJsonConfigString"]["query"] == "select 1"
+    assert ops[0]["parameters"][0]["attributes"]["description"] == "Shift start"
 
 
 def test_integrational_resolve_operation_cn_reads_child_nodes():
@@ -414,5 +540,20 @@ def test_integrational_load_operation_defaults_active_when_prsactive_missing():
 
     assert op.cn == "erp.orders.select.v1"
     assert op.parameters == {"a": {"JSONata": "$.params.a"}}
+
+
+def test_integrational_row_to_dict_casts_uuid_to_string():
+    dummy = types.SimpleNamespace()
+    dummy._make_json_compatible = types.MethodType(DataStoragesAppIntegrationalBase._make_json_compatible, dummy)
+
+    row = {
+        "id": UUID("ce1c0374-ac51-1040-8111-611783a0dae3"),
+        "payload": {"line": UUID("e4dde64c-ac3b-1040-80fb-611783a0dae3")},
+    }
+
+    res = DataStoragesAppIntegrationalBase._row_to_dict(dummy, row)
+
+    assert res["id"] == "ce1c0374-ac51-1040-8111-611783a0dae3"
+    assert res["payload"]["line"] == "e4dde64c-ac3b-1040-80fb-611783a0dae3"
 
 

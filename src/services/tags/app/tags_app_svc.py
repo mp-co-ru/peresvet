@@ -89,6 +89,7 @@ class TagsApp(AppSvc):
 
     async def data_set(self, mes: dict, routing_key: str | None = None) -> dict:
         common_payload = {}
+        result_items: list[dict] = []
         for key, value in mes.items():
             if key != "data":
                 common_payload[key] = value
@@ -140,6 +141,12 @@ class TagsApp(AppSvc):
                 return {"error": {"code": 424, "message": f"Нет обработчика для записи данных тега '{tag_item['tagId']}'."}}
             if isinstance(res, dict) and res.get("error"):
                 return res
+            if isinstance(res, dict):
+                returned = res.get("data")
+                if isinstance(returned, list) and returned:
+                    result_items.extend(returned)
+        if result_items:
+            return {"data": result_items}
         return {}
 
     async def _delete_tag_cache(self, tag_id: str):

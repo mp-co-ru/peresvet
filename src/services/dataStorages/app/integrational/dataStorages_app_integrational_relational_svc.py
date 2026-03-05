@@ -33,16 +33,20 @@ class DataStoragesAppIntegrationalRelational(DataStoragesAppIntegrationalBase):
                 return await conn.fetch(query, *args)
             return await asyncio.wait_for(conn.fetch(query, *args), timeout=timeout_ms / 1000)
 
-    async def _db_execute(self, ds_id: str, query: str, args: list[Any], timeout_ms: int | None) -> None:
+    async def _db_execute(self, ds_id: str, query: str, args: list[Any], timeout_ms: int | None) -> list[Any]:
         pool = self._connection_pools.get(ds_id)
         if pool is None:
             raise ValueError(f"Нет connection pool для хранилища {ds_id}.")
 
         async with pool.acquire() as conn:
+            async def _run_fetch():
+                return await conn.fetch(query, *args)
+
             if timeout_ms is None:
-                await conn.execute(query, *args)
-                return
-            await asyncio.wait_for(conn.execute(query, *args), timeout=timeout_ms / 1000)
+                rows = await _run_fetch()
+                return list(rows or [])
+            rows = await asyncio.wait_for(_run_fetch(), timeout=timeout_ms / 1000)
+            return list(rows or [])
 
 
 settings = DataStoragesAppIntegrationalRelationalSettings()

@@ -116,9 +116,6 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
 
         result: list[dict] = []
         for op_id, _, attrs in ops:
-            op_cfg_attr = attrs.get("prsJsonConfigString")
-            op_cfg = self._safe_json_attr(op_cfg_attr, default={})
-
             params = await self._hierarchy.search(
                 {
                     "base": op_id,
@@ -176,7 +173,7 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
                 "base": link_id,
                 "scope": hierarchy.CN_SCOPE_ONELEVEL,
                 "filter": {"objectClass": ["prsDatastorageTagOperation"]},
-                "attributes": ["cn", "prsActive", "prsEntityTypeCode", "prsJsonConfigString"],
+                "attributes": ["*"],
                 "deref": False,
             }
         )
@@ -193,32 +190,21 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
                     "base": op_id,
                     "scope": hierarchy.CN_SCOPE_ONELEVEL,
                     "filter": {"objectClass": ["prsDatastorageTagOperationParameter"]},
-                    "attributes": ["cn", "prsActive", "prsJsonConfigString"],
+                    "attributes": ["*"],
                     "deref": False,
                 }
             )
             param_items: list[dict] = []
             for _, __, p_attrs in params or []:
-                p_cfg_attr = p_attrs.get("prsJsonConfigString")
-                p_cfg = self._safe_json_attr(p_cfg_attr, default={})
                 param_items.append(
                     {
-                        "attributes": {
-                            "cn": p_attrs["cn"][0],
-                            "prsActive": p_attrs.get("prsActive", ["TRUE"])[0] == "TRUE",
-                            "prsJsonConfigString": p_cfg,
-                        }
+                        "attributes": self._ldap_attrs_to_payload(p_attrs)
                     }
                 )
 
             result.append(
                 {
-                    "attributes": {
-                        "cn": attrs["cn"][0],
-                        "prsActive": attrs.get("prsActive", ["TRUE"])[0] == "TRUE",
-                        "prsEntityTypeCode": int(attrs.get("prsEntityTypeCode", ["0"])[0]),
-                        "prsJsonConfigString": op_cfg,
-                    },
+                    "attributes": self._ldap_attrs_to_payload(attrs),
                     "parameters": param_items,
                 }
             )
@@ -362,6 +348,51 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
             return attrs
         return item
 
+    def _prepare_node_attrs(
+        self,
+        attrs: dict[str, Any],
+        *,
+        object_class: str,
+        defaults: dict[str, Any] | None = None,
+        drop_keys: set[str] | None = None,
+    ) -> dict[str, Any]:
+        vals = copy.deepcopy(attrs or {})
+        for k in (drop_keys or set()):
+            vals.pop(k, None)
+        for k, v in (defaults or {}).items():
+            if vals.get(k) is None:
+                vals[k] = copy.deepcopy(v)
+        vals["objectClass"] = [object_class]
+        return vals
+
+    def _ldap_attrs_to_payload(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, raw in attrs.items():
+            if key in ("entryUUID", "prsIndex"):
+                continue
+            value: Any = raw
+            if isinstance(raw, list):
+                if len(raw) == 0:
+                    value = None
+                elif len(raw) == 1:
+                    value = raw[0]
+                else:
+                    value = raw
+            if key == "prsActive":
+                if isinstance(value, str):
+                    value = value.upper() == "TRUE"
+                elif value is None:
+                    value = True
+            elif key == "prsEntityTypeCode":
+                if value is None:
+                    value = 0
+                else:
+                    value = int(value)
+            elif key == "prsJsonConfigString":
+                value = self._safe_json_attr(raw, default={})
+            result[key] = value
+        return result
+
     async def _sync_link_operations(self, link_id: str, operations: list[dict[str, Any]], replace: bool = True) -> None:
         existing_ops = await self._hierarchy.search(
             {
@@ -382,36 +413,42 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
                 continue
             desired_cns.add(op_cn)
 
-            op_active = op_attrs.get("prsActive", True)
-            op_kind = op_attrs.get("prsEntityTypeCode", 0)
-            op_cfg = op_attrs.get("prsJsonConfigString") or {}
+            operation_params = op.get("parameters") if isinstance(op, dict) else None
+            if not isinstance(operation_params, list):
+                nested_params = op_attrs.get("parameters")
+                operation_params = nested_params if isinstance(nested_params, list) else []
+
+            node_attrs = self._prepare_node_attrs(
+                op_attrs,
+                object_class="prsDatastorageTagOperation",
+                defaults={
+                    "prsActive": True,
+                    "prsEntityTypeCode": 0,
+                    "prsJsonConfigString": {},
+                },
+                drop_keys={"parameters"},
+            )
+            node_attrs["cn"] = op_cn
 
             existed = existing_by_cn.get(op_cn)
             if not existed:
                 op_id = await self._hierarchy.add(
                     base=link_id,
-                    attribute_values={
-                        "objectClass": ["prsDatastorageTagOperation"],
-                        "cn": op_cn,
-                        "prsActive": op_active,
-                        "prsEntityTypeCode": op_kind,
-                        "prsJsonConfigString": op_cfg,
-                    },
+                    attribute_values=node_attrs,
                 )
             else:
                 op_id = existed[0]
+                modify_attrs = dict(node_attrs)
+                modify_attrs.pop("objectClass", None)
+                modify_attrs.pop("cn", None)
                 await self._hierarchy.modify(
                     op_id,
-                    {
-                        "prsActive": op_active,
-                        "prsEntityTypeCode": op_kind,
-                        "prsJsonConfigString": op_cfg,
-                    },
+                    modify_attrs,
                 )
 
             await self._sync_link_operation_parameters(
                 op_id=op_id,
-                parameters=op.get("parameters") or [],
+                parameters=operation_params,
                 replace=True,
             )
 
@@ -442,24 +479,29 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
                 continue
             desired_cns.add(p_cn)
 
-            p_active = p_attrs.get("prsActive", True)
-            p_cfg = p_attrs.get("prsJsonConfigString") or {}
+            node_attrs = self._prepare_node_attrs(
+                p_attrs,
+                object_class="prsDatastorageTagOperationParameter",
+                defaults={
+                    "prsActive": True,
+                    "prsJsonConfigString": {},
+                },
+            )
+            node_attrs["cn"] = p_cn
 
             existed = existing_by_cn.get(p_cn)
             if not existed:
                 await self._hierarchy.add(
                     base=op_id,
-                    attribute_values={
-                        "objectClass": ["prsDatastorageTagOperationParameter"],
-                        "cn": p_cn,
-                        "prsActive": p_active,
-                        "prsJsonConfigString": p_cfg,
-                    },
+                    attribute_values=node_attrs,
                 )
             else:
+                modify_attrs = dict(node_attrs)
+                modify_attrs.pop("objectClass", None)
+                modify_attrs.pop("cn", None)
                 await self._hierarchy.modify(
                     existed[0],
-                    {"prsActive": p_active, "prsJsonConfigString": p_cfg},
+                    modify_attrs,
                 )
 
         if replace:
@@ -562,4 +604,3 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
 
 settings = DataStoragesModelCRUDV2Settings()
 app = DataStoragesModelCRUDV2(settings=settings, title="DataStoragesModelCRUDV2")
-

@@ -5,6 +5,7 @@ import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
+from uuid import UUID
 
 sys.path.append(".")
 
@@ -117,17 +118,22 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
         return result
 
     async def _tag_set(self, mes: dict, routing_key: str | None = None) -> dict:
+        result_items: list[dict[str, Any]] = []
         for tag_item in mes.get("data") or []:
             tag_id = tag_item.get("tagId")
             if not tag_id:
                 continue
 
             try:
-                await self._write_integrational_points(tag_id=tag_id, tag_item=tag_item, request=mes)
+                returned = await self._write_integrational_points(tag_id=tag_id, tag_item=tag_item, request=mes)
+                if returned:
+                    result_items.append({"tagId": tag_id, "data": returned})
             except Exception as ex:
                 msg = f"Ошибка записи интеграционного тега '{tag_id}': {ex}"
                 self._logger.error(f"{self._config.svc_name} :: {msg}")
                 return {"error": {"code": 500, "message": msg}}
+        if result_items:
+            return {"data": result_items}
         return {}
 
     async def _link_tag(self, mes: dict, routing_key: str | None = None) -> dict | None:
@@ -205,7 +211,7 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
             request=request,
         )
 
-    async def _write_integrational_points(self, tag_id: str, tag_item: dict, request: dict) -> None:
+    async def _write_integrational_points(self, tag_id: str, tag_item: dict, request: dict) -> list[tuple]:
         ds_id, link_id, _link = await self._resolve_integrational_link(tag_id=tag_id)
         request_params = request.get("params") if isinstance(request.get("params"), dict) else {}
         tag_item_params = tag_item.get("params") if isinstance(tag_item.get("params"), dict) else {}
@@ -229,6 +235,7 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
         if not points and merged_params:
             points = [None]
 
+        returned_points: list[tuple] = []
         for point in points:
             if isinstance(point, (tuple, list)):
                 x = point[0] if len(point) > 0 else None
@@ -254,7 +261,10 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
             )
 
             param_values = await self._eval_params_jsonata(op=op, context=ctx)
-            await self._execute_set(ds_id=ds_id, op=op, param_values=param_values)
+            rows = await self._execute_set(ds_id=ds_id, op=op, param_values=param_values)
+            if rows:
+                returned_points.extend(self._rows_to_points(rows=rows, request=req_ctx))
+        return returned_points
 
     async def _resolve_integrational_link(self, tag_id: str) -> tuple[str, str, dict]:
         """Находит dataStorage и LDAP-конфиг привязки для интеграционного тега."""
@@ -593,18 +603,47 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
             result.append((x, y, q))
         return result
 
-    async def _execute_set(self, ds_id: str, op: OperationDef, param_values: dict[str, Any]) -> None:
+    async def _execute_set(self, ds_id: str, op: OperationDef, param_values: dict[str, Any]) -> list[dict[str, Any]]:
         sql, param_names = rewrite_named_params(op.query)
         args = [param_values.get(name) for name in param_names]
-        await self._db_execute(ds_id=ds_id, query=sql, args=args, timeout_ms=op.timeout_ms)
+        rows = await self._db_execute(ds_id=ds_id, query=sql, args=args, timeout_ms=op.timeout_ms)
+        if not rows:
+            return []
+        return [self._row_to_dict(r) for r in rows]
+
+    def _rows_to_points(self, rows: list[dict[str, Any]], request: dict | None = None) -> list[tuple]:
+        if not rows:
+            return []
+
+        first = rows[0]
+        cols = {str(c).lower() for c in first.keys()}
+        has_x = "x" in cols
+        has_q = "q" in cols
+        has_y = "y" in cols
+        finish_ts = self._resolve_finish_ts(request=request)
+
+        points: list[tuple] = []
+        for rec in rows:
+            x = self._row_get_case_insensitive(rec, "x") if has_x else finish_ts
+            q = self._row_get_case_insensitive(rec, "q") if has_q else 0
+            if has_y:
+                y = self._row_get_case_insensitive(rec, "y")
+            else:
+                y = self._row_without_case_insensitive(rec, {"x", "q"})
+                if not y:
+                    y = rec
+            if q is None:
+                q = 0
+            points.append((x, y, q))
+        return points
 
     @abstractmethod
     async def _db_fetch(self, ds_id: str, query: str, args: list[Any], timeout_ms: int | None) -> list[Any]:
         """Выполнить SELECT и вернуть список записей (Record-подобных)."""
 
     @abstractmethod
-    async def _db_execute(self, ds_id: str, query: str, args: list[Any], timeout_ms: int | None) -> None:
-        """Выполнить INSERT/UPDATE/DELETE."""
+    async def _db_execute(self, ds_id: str, query: str, args: list[Any], timeout_ms: int | None) -> list[Any]:
+        """Выполнить SQL записи и вернуть строки результата (если есть)."""
 
     async def _meta_cache_get(self, key: str) -> dict | None:
         async with self._cache.get_redis() as r:
@@ -771,11 +810,22 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
 
     def _row_to_dict(self, row: Any) -> dict[str, Any]:
         if isinstance(row, dict):
-            return dict(row)
+            return {str(k): self._make_json_compatible(v) for k, v in row.items()}
         if hasattr(row, "items"):
-            return {str(k): v for k, v in row.items()}
+            return {str(k): self._make_json_compatible(v) for k, v in row.items()}
         keys = row.keys() if hasattr(row, "keys") else []
-        return {str(k): row.get(k) for k in keys}
+        return {str(k): self._make_json_compatible(row.get(k)) for k in keys}
+
+    def _make_json_compatible(self, value: Any) -> Any:
+        if isinstance(value, UUID):
+            return str(value)
+        if isinstance(value, dict):
+            return {str(k): self._make_json_compatible(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [self._make_json_compatible(v) for v in value]
+        if isinstance(value, tuple):
+            return tuple(self._make_json_compatible(v) for v in value)
+        return value
 
     def _row_get_case_insensitive(self, row: dict[str, Any], key: str) -> Any:
         key_l = key.lower()

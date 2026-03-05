@@ -66,7 +66,7 @@ class LinkAlertV2(BaseModel):
 
 
 class LinkTagOperationParameterAttributesV2(BaseModel):
-    model_config = ConfigDict(protected_namespaces=())
+    model_config = ConfigDict(protected_namespaces=(), extra="allow")
 
     cn: str = Field(title="Имя параметра операции (CN)")
     prsActive: bool = Field(True, title="Флаг активности параметра")
@@ -86,7 +86,7 @@ class LinkTagOperationParameterV2(BaseModel):
 
 
 class LinkTagOperationAttributesV2(BaseModel):
-    model_config = ConfigDict(protected_namespaces=())
+    model_config = ConfigDict(protected_namespaces=(), extra="allow")
 
     cn: str = Field(title="Имя операции (CN)")
     prsActive: bool = Field(True, title="Флаг активности операции")
