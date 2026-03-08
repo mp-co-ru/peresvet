@@ -329,3 +329,13 @@ objectClass ( 1.3.6.1.4.1.58316.2.4.19
 	NAME 'prsDatastorageOperationParameter'
 	DESC 'параметр операции интеграционного хранилища'
 	SUP prsModelNode STRUCTURAL)
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.20
+	NAME 'prsDatastorageTagOperation'
+	DESC 'операция, дочерняя к привязке тега к интеграционному хранилищу'
+	SUP prsModelNode STRUCTURAL)
+
+objectClass ( 1.3.6.1.4.1.58316.2.4.21
+	NAME 'prsDatastorageTagOperationParameter'
+	DESC 'параметр операции, дочерний к prsDatastorageTagOperation'
+	SUP prsModelNode STRUCTURAL)

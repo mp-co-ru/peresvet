@@ -102,10 +102,10 @@ from src.services.dataStorages.app.postgresql.dataStorages_app_postgresql_svc \
     )
 
 # integrational (v2 feature; optional)
-integrational_postgre_app = None
+integrational_relational_app = None
 if ENABLE_V2:
-    from src.services.dataStorages.app.integrational.dataStorages_app_integrational_postgresql_svc import (
-        app as integrational_postgre_app,
+    from src.services.dataStorages.app.integrational.dataStorages_app_integrational_relational_svc import (
+        app as integrational_relational_app,
     )
 
 # -----------------------------------------------------------------------------
@@ -290,9 +290,9 @@ app.mount(path="/", app=dataStorages_api_crud)
 app.mount(path="/", app=dataStorages_model_crud)
 # postgresql
 app.mount(path="/", app=postgre_app)
-# integrational postgresql (prsEntityTypeCode=2)
-if ENABLE_V2 and integrational_postgre_app is not None:
-    app.mount(path="/", app=integrational_postgre_app)
+# integrational relational (prsEntityTypeCode=2)
+if ENABLE_V2 and integrational_relational_app is not None:
+    app.mount(path="/", app=integrational_relational_app)
 # -----------------------------------------------------------------------------
 
 # methods ---------------------------------------------------------------------

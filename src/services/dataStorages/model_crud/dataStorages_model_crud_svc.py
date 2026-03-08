@@ -35,7 +35,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                 if items:
                     for item in items:
                         prs_store_attr = item[2].get("prsStore")
-                        prs_store_val = json.loads(prs_store_attr[0]) if prs_store_attr else None
+                        prs_store_val = self._safe_json_attr(prs_store_attr, default=None)
                         new_ds["linkedTags"].append(
                             {
                                 "tagId": item[2]["cn"][0],
@@ -60,7 +60,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                 if items:
                     for item in items:
                         prs_store_attr = item[2].get("prsStore")
-                        prs_store_val = json.loads(prs_store_attr[0]) if prs_store_attr else None
+                        prs_store_val = self._safe_json_attr(prs_store_attr, default=None)
                         new_ds["linkedAlerts"].append(
                             {
                                 "alertId": item[2]["cn"][0],
@@ -75,6 +75,24 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             res["data"].append(new_ds)
 
         return res
+
+    def _safe_json_attr(self, ldap_attr, default=None):
+        if not ldap_attr:
+            return default
+        raw = ldap_attr[0] if isinstance(ldap_attr, list) else ldap_attr
+        if raw is None:
+            return default
+        if isinstance(raw, (dict, list, int, float, bool)):
+            return raw
+        if isinstance(raw, str):
+            s = raw.strip()
+            if s == "":
+                return default
+            try:
+                return json.loads(s)
+            except Exception:
+                return raw
+        return raw
 
     async def _further_create(self, mes: dict, new_id: str) -> None:
         """v1: ensure system child nodes `tags` and `alerts` exist.

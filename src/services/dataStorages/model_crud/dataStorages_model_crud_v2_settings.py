@@ -11,6 +11,8 @@ class DataStoragesModelCRUDV2Settings(ModelCRUDSettings):
         "parent_classes": "",
         "child_classes": [
             "prsDatastorageTagData",
+            "prsDatastorageTagOperation",
+            "prsDatastorageTagOperationParameter",
             "prsDatastorageAlertData",
             "prsDatastorageOperation",
             "prsDatastorageOperationParameter",

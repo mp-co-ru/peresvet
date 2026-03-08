@@ -192,6 +192,35 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
     async def _is_supported_ds_type(self, ds_type: int | None) -> bool:
         return ds_type is not None and int(ds_type) == int(self._config.datastorage_type)
 
+    def _safe_json_attr(self, ldap_attr, default=None):
+        if not ldap_attr:
+            return default
+        raw = ldap_attr[0] if isinstance(ldap_attr, list) else ldap_attr
+        if raw is None:
+            return default
+        if isinstance(raw, (dict, list, int, float, bool)):
+            return raw
+        if isinstance(raw, str):
+            s = raw.strip()
+            if s == "":
+                return default
+            try:
+                return json.loads(s)
+            except Exception:
+                return raw
+        return raw
+
+    def _configured_ds_ids(self) -> list[str]:
+        # Primary source (current contract): AppSvcSettings.nodes
+        nodes = getattr(self._config, "nodes", None)
+        if isinstance(nodes, list) and nodes:
+            return [str(x) for x in nodes if x]
+        # Backward compatibility for legacy configs.
+        legacy = getattr(self._config, "datastorages_id", None)
+        if isinstance(legacy, list) and legacy:
+            return [str(x) for x in legacy if x]
+        return []
+
     async def _get_ds_info(self, ds_id: str) -> dict | None:
         payload = {
             "id": [ds_id],
@@ -297,6 +326,18 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             await self._bind_tag(tag[2]["cn"][0], True)
             ds_cache["tags"].append(tag[2]["cn"][0])
 
+        # Startup prewarm: build per-tag cache for all linked tags for faster first reads.
+        if ds_cache["tags"]:
+            prewarm = await asyncio.gather(
+                *[self._create_tag_cache(tag_id) for tag_id in ds_cache["tags"]],
+                return_exceptions=True,
+            )
+            for tag_id, res in zip(ds_cache["tags"], prewarm):
+                if isinstance(res, Exception):
+                    self._logger.error(
+                        f"{self._config.svc_name} :: Ошибка предзаполнения кэша тега {tag_id}: {res}"
+                    )
+
         payload = {
             "base": ds_id,
             "filter": {
@@ -345,8 +386,9 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
         try:
             payload = {}
-            if self._config.datastorages_id:
-                payload["id"] = self._config.datastorages_id
+            configured_ids = self._configured_ds_ids()
+            if configured_ids:
+                payload["id"] = configured_ids
             else:
                 ds_node_id = await self._hierarchy.get_node_id("cn=dataStorages,cn=prs")
                 payload = {
@@ -414,7 +456,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         # если в конфигурации сервиса указаны конкретные id баз для поддержки,
         # то эта ситуация отслеживается в методе _reject_message
 
-        if self._config.datastorages_id:
+        if self._configured_ds_ids():
             return
         await self._add_supported_ds(mes["id"])
 
@@ -898,7 +940,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             }
             res = await self._hierarchy.search(payload=payload)
             if res:
-                tag_cache["dss"][ds_id] = json.loads(res[0][2]["prsStore"][0])
+                tag_cache["dss"][ds_id] = self._safe_json_attr(res[0][2].get("prsStore"), default=None)
         # ------------------------------------------------------------
 
         try:
@@ -959,7 +1001,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             }
             res = await self._hierarchy.search(payload=payload)
             if res:
-                alert_cache["dss"][ds_id] = json.loads(res[0][2]["prsStore"][0])
+                alert_cache["dss"][ds_id] = self._safe_json_attr(res[0][2].get("prsStore"), default=None)
         # ------------------------------------------------------------
 
         try:

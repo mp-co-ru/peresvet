@@ -55,6 +55,8 @@ class TagsApp(AppSvc):
             res = await self._post_message(new_payload, reply=True, routing_key=f"{self._config.hierarchy['class']}.app.data_get.{tag_id}")
             if res is None:
                 self._logger.error(f"{self._config.svc_name} :: Нет обработчика для получения данных тега '{tag_id}'.")
+            elif isinstance(res, dict) and res.get("error"):
+                return res
             else:
                 final_res["data"] += res["data"]
 
@@ -85,7 +87,13 @@ class TagsApp(AppSvc):
 
             return res
 
-    async def data_set(self, mes: dict, routing_key: str | None = None) -> None:
+    async def data_set(self, mes: dict, routing_key: str | None = None) -> dict:
+        common_payload = {}
+        result_items: list[dict] = []
+        for key, value in mes.items():
+            if key != "data":
+                common_payload[key] = value
+
         for tag_item in mes["data"]:
             tag_id = tag_item['tagId']
 
@@ -104,6 +112,10 @@ class TagsApp(AppSvc):
                 "tagId": tag_id,
                 "data": []
             }
+            tag_params = tag_item.get("params") if isinstance(tag_item.get("params"), dict) else None
+            if tag_params:
+                new_tag_item["params"] = tag_params
+
             for data_item in tag_item["data"]:
                 p = normalize_point_xyq(data_item)
                 if isinstance(p, tuple) and len(p) == 3:
@@ -113,11 +125,29 @@ class TagsApp(AppSvc):
                     # оставим как есть, чтобы downstream сервисы могли вернуть ошибку/лог
                     new_tag_item["data"].append(data_item)
 
-            res = await self._post_message({"data": [new_tag_item]}, reply=False,
+            payload = dict(common_payload)
+            # For data_set, params are per-tag (`data[i].params`).
+            # Top-level params are intentionally ignored.
+            payload.pop("params", None)
+            if tag_params:
+                payload["params"] = dict(tag_params)
+            payload["data"] = [new_tag_item]
+
+            res = await self._post_message(payload, reply=True,
                 routing_key=f"{self._config.hierarchy['class']}.app.data_set.{tag_item['tagId']}"
             )
             if res is None:
                 self._logger.error(f"{self._config.svc_name} :: Нет обработчика для записи данных тега '{tag_item['tagId']}'.")
+                return {"error": {"code": 424, "message": f"Нет обработчика для записи данных тега '{tag_item['tagId']}'."}}
+            if isinstance(res, dict) and res.get("error"):
+                return res
+            if isinstance(res, dict):
+                returned = res.get("data")
+                if isinstance(returned, list) and returned:
+                    result_items.extend(returned)
+        if result_items:
+            return {"data": result_items}
+        return {}
 
     async def _delete_tag_cache(self, tag_id: str):
         async with self._cache.get_redis() as r:

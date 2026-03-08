@@ -33,28 +33,27 @@
 
 Для ``prsDataStorage`` тип хранилища задаётся атрибутом:
 
-- ``prsEntityTypeCode = 2`` — *integrational* (PostgreSQL).
+- ``prsEntityTypeCode = 2`` — *integrational relational*.
 
-Операции в LDAP
----------------
+Операции как дочерние узлы привязки тега
+----------------------------------------
 
-Под узлом конкретного хранилища данных (``<dataStorage>``) в LDAP хранится:
+Операции интеграционной привязки описываются как **дочерние LDAP-узлы** под
+узлом привязки ``prsDatastorageTagData`` (а не в ``prsJsonConfigString`` и не
+под узлом хранилища данных).
 
-- ``cn=system``.
-- Внутри ``cn=system`` узел ``cn=operations`` со списком операций.
-- Для каждой операции есть узел ``cn=<operationCn>`` (``objectClass=prsDatastorageOperation``) с атрибутами:
+- узел операции: ``objectClass = prsDatastorageTagOperation``
+- узел параметра операции: ``objectClass = prsDatastorageTagOperationParameter``
 
-  - ``prsEntityTypeCode``: ``0`` (GET) или ``1`` (SET).
-  - ``prsJsonConfigString`` с JSON-свойствами операции:
+Тип операции задаётся полем ``prsEntityTypeCode``:
 
-    - ``query`` — текст запроса (строго параметризованный, ``:param``).
-    - ``prsTimeOutMs`` — таймаут выполнения/вычислений.
-    - ``prsMaxRows`` — лимит строк для GET.
-    - ``prsVersion`` — версия операции.
+- ``0`` — GET
+- ``1`` — SET
 
-  - Дочерние узлы параметров ``cn=<paramName>`` (``objectClass=prsDatastorageOperationParameter``), где:
+Ограничения SQL:
 
-    - ``prsJsonConfigString`` — JSON с настройками параметра (например ``required/default/type``).
+- запрещён multi-statement (``;``);
+- запрещены DDL-операции (``CREATE/ALTER/DROP/TRUNCATE/...``).
 
 Интеграционные теги
 -------------------
@@ -64,28 +63,149 @@
 
 Для интеграционного тега:
 
-- ``prsEntityTypeCode = 2``
-- в ``prsJsonConfigString`` указываются ссылки на операции и маппинг параметров:
+- интеграционность определяется **принадлежностью** узла привязки
+  ``prsDatastorageTagData`` к ``prsDataStorage`` с ``prsEntityTypeCode = 2``;
+- ``prsEntityTypeCode`` у самой привязки тега является опциональным метаполем
+  (может быть ``2`` для совместимости), но не обязателен для runtime-обработки;
+- блок ``linkTags[].attributes`` также опционален: CN узла привязки задаётся как ``tagId``;
+- операции передаются в ``linkTags[].operations``:
 
 .. code-block:: json
 
   {
-    "get": {
-      "operationCn": "oee.downtimeReasons.interval.v1",
-      "params": {
-        "start": "$.start",
-        "finish": "$.finish"
+    "id": "<DATASTORAGE_ID>",
+    "linkTags": [
+      {
+        "tagId": "<TABLE_TAG_ID>",
+        "operations": [
+          {
+            "attributes": {
+              "cn": "erp.orders.select.v1",
+              "prsEntityTypeCode": 0,
+              "prsJsonConfigString": {
+                "query": "select ts as x, payload as y, 0 as q from erp_orders where ts >= :start and ts < :finish order by ts",
+                "timeoutMs": 5000,
+                "maxRows": 10000,
+                "version": 1
+              }
+            },
+            "parameters": [
+              { "attributes": { "cn": "start",  "prsJsonConfigString": { "JSONata": "$.start" } } },
+              { "attributes": { "cn": "finish", "prsJsonConfigString": { "JSONata": "$.finish" } } }
+            ]
+          },
+          {
+            "attributes": {
+              "cn": "erp.orders.insert.v1",
+              "prsEntityTypeCode": 1,
+              "prsJsonConfigString": {
+                "query": "insert into erp_orders(ts, payload) values(:x, :y)",
+                "timeoutMs": 5000
+              }
+            },
+            "parameters": [
+              { "attributes": { "cn": "x", "prsJsonConfigString": { "JSONata": "$.params.x" } } },
+              { "attributes": { "cn": "y", "prsJsonConfigString": { "JSONata": "$.params.y" } } }
+            ]
+          }
+        ]
       }
-    },
-    "set": {
-      "operationCn": "oee.downtimeReasons.set.v1",
-      "params": {
-        "code": "$.point.y.code"
-      }
-    }
+    ]
   }
 
-JSONata выражения допускаются только **в значениях параметров**.
+Правила параметров SQL
+----------------------
+
+- Для каждого параметра ``:param`` из SQL **обязательно** должен быть описан
+  параметр операции ``cn=param`` с ``prsJsonConfigString.JSONata``.
+- Значение параметра вычисляется только через это JSONata-выражение.
+- Если JSONata отсутствует или вернул ``null`` — запрос завершается ошибкой.
+- Значения по умолчанию не применяются.
+
+Контракт ``params`` в запросах
+------------------------------
+
+- ``get``: если JSONata параметров ссылается на ``$.params.*``, клиент передаёт
+  соответствующие ключи в ``params``.
+- ``get``: ``params.operation`` (строка) задаёт ``cn`` операции.
+- ``set``: ``data[i].params.operation`` (строка) задаёт ``cn`` операции для
+  конкретного тега ``data[i]``.
+  Если ключ операции не указан, выбирается первая операция нужного типа:
+  ``prsEntityTypeCode=0`` для ``data/get`` и ``prsEntityTypeCode=1`` для ``data/set``.
+
+Эталонные примеры
+-----------------
+
+1) Пример ``PUT /v2/dataStorages`` для привязки табличного тега с операциями:
+
+.. code-block:: json
+
+  {
+    "id": "<DATASTORAGE_ID>",
+    "linkTags": [
+      {
+        "tagId": "<TABLE_TAG_ID>",
+        "operations": [
+          {
+            "attributes": {
+              "cn": "erp.orders.select.v1",
+              "prsEntityTypeCode": 0,
+              "prsJsonConfigString": {
+                "query": "select ts as x, payload as y, 0 as q from erp_orders where ts >= :start and ts < :finish order by ts",
+                "timeoutMs": 5000,
+                "maxRows": 10000,
+                "version": 1
+              }
+            },
+            "parameters": [
+              { "attributes": { "cn": "start",  "prsJsonConfigString": { "JSONata": "$.start" } } },
+              { "attributes": { "cn": "finish", "prsJsonConfigString": { "JSONata": "$.finish" } } }
+            ]
+          },
+          {
+            "attributes": {
+              "cn": "erp.orders.delete.v1",
+              "prsEntityTypeCode": 1,
+              "prsJsonConfigString": {
+                "query": "delete from erp_orders where ts = :x",
+                "timeoutMs": 5000
+              }
+            },
+            "parameters": [
+              { "attributes": { "cn": "x", "prsJsonConfigString": { "JSONata": "$.params.x" } } }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+
+2) Пример пользовательского ``data/get`` запроса:
+
+.. code-block:: json
+
+  {
+    "tagId": ["<tag_id>"],
+    "start": "2026-02-02T00:00:00+03:00",
+    "finish": "2026-02-03T00:00:00+03:00"
+  }
+
+3) Пример пользовательского ``data/set`` запроса:
+
+.. code-block:: json
+
+  {
+    "data": [
+      {
+        "tagId": "<tag_id>",
+        "data": [],
+        "params": {
+          "operation": "delete",
+          "x": 1738450800000
+        }
+      }
+    ]
+  }
 
 Контракт результата GET
 -----------------------
@@ -103,7 +223,7 @@ GET-операция обязана возвращать колонки (или 
     "data": [
       {
         "tagId": "<tagId>",
-        "data": [["<y1>", "<x1>", "<q1>"], ["<y2>", "<x2>", "<q2>"]]
+        "data": [["<x1>", "<y1>", "<q1>"], ["<x2>", "<y2>", "<q2>"]]
       }
     ]
   }
@@ -111,11 +231,10 @@ GET-операция обязана возвращать колонки (или 
 API v2 для dataStorages
 -----------------------
 
-В v2 добавлены поля для операций:
+В v2 операции интеграционных тегов передаются внутри ``linkTags``:
 
-- ``operations`` в ``create/update``
-- ``getLinkedOperations`` в ``read``
-- ``unlinkOperations`` в ``update``
+- ``linkTags[].operations`` в ``create/update``
+- ``linkTags[].operations[].parameters`` в ``create/update``
 
 Эндпоинты:
 

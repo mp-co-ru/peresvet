@@ -42,6 +42,10 @@ class TagData(BaseModel):
         title="id тега"
     )
     data: List[Annotated[DataPointItem, BeforeValidator(normalize_point)]]
+    params: dict[str, Any] | None = Field(
+        None,
+        title="Параметры операции для конкретного тега",
+    )
 
     @field_validator("tagId")
     @classmethod
@@ -49,7 +53,7 @@ class TagData(BaseModel):
         return valid_uuid(v)
 class AllData(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
-    model_config = ConfigDict(protected_namespaces=())
+    model_config = ConfigDict(protected_namespaces=(), extra="forbid")
 
     data: List[TagData] = Field(
         title="Данные"
@@ -92,6 +96,10 @@ class DataGet(BaseModel):
     timeStep: int | None = Field(
         None,
         title="Шаг между соседними значениями."
+    )
+    params: dict[str, Any] | None = Field(
+        None,
+        title="Дополнительные параметры запроса."
     )
 
     @field_validator("tagId")
@@ -210,12 +218,15 @@ class TagsAppAPI(BaseSvc):
             return {}
 
         body = p.model_dump()
-        res = await self._post_message(mes=body, reply=False, routing_key = f"{self._config.hierarchy['class']}.app_api.data_set.*")
+        res = await self._post_message(mes=body, reply=True, routing_key = f"{self._config.hierarchy['class']}.app_api.data_set.*")
         # нет подписчика
         if res is None:
             res = {"error": {"code": 424, "message": f"Нет обработчика для команды записи данных."}}
             app._logger.error(res["error"]["message"])
-        return {}
+            return res
+        if not isinstance(res, dict):
+            return {"error": {"code": 500, "message": "Некорректный ответ обработчика data_set."}}
+        return res
 
 settings = TagsAppAPISettings()
 
@@ -235,6 +246,7 @@ async def data_get(
     value: str | None = None,
     count: int | None = None,
     timeStep: int | None = None,
+    params: str | None = None,
     # fallback для обратной совместимости
     q: str | None = None,
     payload: DataGet | None = None,
@@ -267,6 +279,8 @@ async def data_get(
        * **timeStep** (int): шаг в микросекундах между соседними возвращаемыми значениями тега;
        * **maxCount** (int): максимальное количество значений одного тега в ответе на запрос;
        * **value** (any): фильтр на значения тега.
+       * **params** (json): дополнительные параметры запроса (например
+         ``allRecordsAsValue`` для интеграционных табличных тегов).
 
     **Ответ:**
 
@@ -311,6 +325,8 @@ async def data_get(
                 body["count"] = count
             if timeStep is not None:
                 body["timeStep"] = timeStep
+            if params is not None:
+                body["params"] = json.loads(params)
 
             p = DataGet.model_validate(body)
         except Exception as ex:

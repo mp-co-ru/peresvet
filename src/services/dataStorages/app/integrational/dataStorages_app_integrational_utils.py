@@ -9,9 +9,14 @@ class OperationKind(IntEnum):
 
 
 _RE_NAMED_PARAM = re.compile(r"(?<!:):([a-zA-Z_][a-zA-Z0-9_]*)")
+_RE_DDL = re.compile(
+    r"\b(create|alter|drop|truncate|comment|grant|revoke|vacuum|analyze|reindex|cluster)\b",
+    flags=re.IGNORECASE,
+)
 
 
 def validate_sql(sql: str, kind: OperationKind) -> None:
+    _ = kind
     if not isinstance(sql, str) or not sql.strip():
         raise ValueError("Пустой query.")
 
@@ -19,19 +24,11 @@ def validate_sql(sql: str, kind: OperationKind) -> None:
     if ";" in sql:
         raise ValueError("Запрещён multi-statement (символ ';').")
 
-    head = sql.lstrip().lower()
-    if kind == OperationKind.GET:
-        if not head.startswith("select") and not head.startswith("with"):
-            raise ValueError("Для GET разрешены только SELECT/CTE запросы.")
-    elif kind == OperationKind.SET:
-        if not (
-            head.startswith("insert")
-            or head.startswith("update")
-            or head.startswith("with")
-        ):
-            raise ValueError("Для SET разрешены только INSERT/UPDATE/CTE запросы.")
-    else:
-        raise ValueError(f"Неизвестный kind операции: {kind}.")
+    if _RE_DDL.search(sql):
+        raise ValueError("DDL-операции в query запрещены.")
+
+    # Логика GET/SET более не ограничивает тип SQL-оператора.
+    # Разрешены любые single-statement запросы, кроме DDL.
 
 
 def rewrite_named_params(sql: str) -> tuple[str, list[str]]:
