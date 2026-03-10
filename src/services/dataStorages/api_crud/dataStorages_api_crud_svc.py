@@ -41,7 +41,7 @@ class DataStorageAttributes(svc.NodeAttributes):
 
 class DataStorageCreate(svc.NodeCreate):
     attributes: DataStorageAttributes = Field(title="Атрибуты хранилища")
-    linkTags: list[LinkTag] = Field(default_factory=list, title="Список привязываемых тегов")
+    linkedTags: list[LinkTag] = Field(default_factory=list, title="Список привязываемых тегов")
     linkAlerts: list[LinkAlert] = Field(default_factory=list, title="Список привязываемых тревог")
     # unlinkTags: list[LinkTag] | None = Field([], title="Список id тегов.")
 

@@ -123,7 +123,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
     async def _further_update(self, mes: dict) -> None:
         ds_id = mes["id"]
 
-        linked_tags = mes.get("linkTags")
+        linked_tags = mes.get("linkedTags")
         if linked_tags:
             for item in linked_tags:
                 copy_item = copy.deepcopy(item)
@@ -245,17 +245,21 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             return
 
         prs_store = res.get("prsStore")
+        tag_value_type = int(tag_data[0][2]["prsValueTypeCode"][0])
+        link_cfg = {} if tag_value_type == 5 else {"prsValueTypeCode": tag_value_type}
 
         node_dn = await self._hierarchy.get_node_dn(payload["dataStorageId"])
         tags_node_id = await self._hierarchy.get_node_id(f"cn=tags,cn=system,{node_dn}")
+        add_vals: dict = {
+            "objectClass": ["prsDatastorageTagData"],
+            "cn": payload["tagId"],
+            "prsStore": prs_store,
+        }
+        if link_cfg:
+            add_vals["prsJsonConfigString"] = link_cfg
         new_node_id = await self._hierarchy.add(
             base=tags_node_id,
-            attribute_values={
-                "objectClass": ["prsDatastorageTagData"],
-                "cn": payload["tagId"],
-                "prsStore": prs_store,
-                "prsJsonConfigString": {"prsValueTypeCode": int(tag_data[0][2]["prsValueTypeCode"][0])},
-            },
+            attribute_values=add_vals,
         )
         await self._hierarchy.add_alias(
             parent_id=new_node_id,

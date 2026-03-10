@@ -3,7 +3,7 @@ v2 API for dataStorages.
 
 В v2 добавлена поддержка:
 - расширенная конфигурация привязки тегов (prsEntityTypeCode/prsJsonConfigString) для интеграционных тегов
-- дочерние операции у привязки тега: linkTags[].operations[].parameters[]
+- дочерние операции у привязки тега: linkedTags[].operations[].parameters[]
 
 v1 остаётся совместимым со старым контрактом.
 """
@@ -118,7 +118,7 @@ class DataStorageAttributesV2(svc.NodeAttributes):
 
 class DataStorageCreateV2(svc.NodeCreate):
     attributes: DataStorageAttributesV2 = Field(title="Атрибуты хранилища")
-    linkTags: list[LinkTagV2] = Field(default_factory=list, title="Список привязываемых тегов")
+    linkedTags: list[LinkTagV2] = Field(default_factory=list, title="Список привязываемых тегов")
     linkAlerts: list[LinkAlertV2] = Field(default_factory=list, title="Список привязываемых тревог")
 
     @field_validator("attributes")

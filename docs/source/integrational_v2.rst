@@ -67,14 +67,14 @@
   ``prsDatastorageTagData`` к ``prsDataStorage`` с ``prsEntityTypeCode = 2``;
 - ``prsEntityTypeCode`` у самой привязки тега является опциональным метаполем
   (может быть ``2`` для совместимости), но не обязателен для runtime-обработки;
-- блок ``linkTags[].attributes`` также опционален: CN узла привязки задаётся как ``tagId``;
-- операции передаются в ``linkTags[].operations``:
+- блок ``linkedTags[].attributes`` также опционален: CN узла привязки задаётся как ``tagId``;
+- операции передаются в ``linkedTags[].operations``:
 
 .. code-block:: json
 
   {
     "id": "<DATASTORAGE_ID>",
-    "linkTags": [
+    "linkedTags": [
       {
         "tagId": "<TABLE_TAG_ID>",
         "operations": [
@@ -142,7 +142,7 @@
 
   {
     "id": "<DATASTORAGE_ID>",
-    "linkTags": [
+    "linkedTags": [
       {
         "tagId": "<TABLE_TAG_ID>",
         "operations": [
@@ -231,10 +231,10 @@ GET-операция обязана возвращать колонки (или 
 API v2 для dataStorages
 -----------------------
 
-В v2 операции интеграционных тегов передаются внутри ``linkTags``:
+В v2 операции интеграционных тегов передаются внутри ``linkedTags``:
 
-- ``linkTags[].operations`` в ``create/update``
-- ``linkTags[].operations[].parameters`` в ``create/update``
+- ``linkedTags[].operations`` в ``create/update``
+- ``linkedTags[].operations[].parameters`` в ``create/update``
 
 Эндпоинты:
 

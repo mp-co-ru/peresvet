@@ -52,7 +52,7 @@ async def main():
 
                 async with session.put(url_ds, json={
                     "id": ds_id,
-                    "linkTags": [{"tagId": tag_id}]
+                    "linkedTags": [{"tagId": tag_id}]
                 }) as _:
                     t3 = time.time()
 

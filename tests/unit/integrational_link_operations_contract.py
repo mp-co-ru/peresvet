@@ -557,3 +557,367 @@ def test_integrational_row_to_dict_casts_uuid_to_string():
     assert res["payload"]["line"] == "e4dde64c-ac3b-1040-80fb-611783a0dae3"
 
 
+def test_v2_link_tag_omits_prsJsonConfigString_when_tag_type_5_and_no_config_in_request():
+    """При привязке тега с prsValueTypeCode=5 без prsJsonConfigString в запросе атрибут не записывается."""
+    dummy = types.SimpleNamespace()
+    add_calls: list[tuple[str, dict]] = []
+
+    async def _post_message(*_args, **_kwargs):
+        return {"prsStore": None}
+
+    async def _search(payload: dict):
+        if payload.get("id") and payload.get("attributes") == ["prsValueTypeCode"]:
+            return [("tag-1", None, {"prsValueTypeCode": ["5"]})]
+        if payload.get("filter", {}).get("objectClass") == ["prsDatastorageTagData"]:
+            return []
+        return []
+
+    async def _get_node_dn(_node_id: str):
+        return "cn=ds1,ou=datastorages"
+
+    async def _get_node_id(dn: str):
+        if "tags" in dn:
+            return "tags-node-id"
+        if "system" in dn:
+            return "system-node-id"
+        return None
+
+    async def _add(base: str, attribute_values: dict):
+        add_calls.append((base, attribute_values))
+        return "new-link-id"
+
+    async def _add_alias(*_args, **_kwargs):
+        return None
+
+    dummy._post_message = _post_message
+    dummy._hierarchy = types.SimpleNamespace(
+        search=_search,
+        get_node_dn=_get_node_dn,
+        get_node_id=_get_node_id,
+        add=_add,
+        add_alias=_add_alias,
+    )
+    dummy._config = types.SimpleNamespace(
+        hierarchy={"class": "PrsDatastorage"},
+        svc_name="test",
+    )
+    dummy._logger = types.SimpleNamespace(error=lambda *a, **k: None, info=lambda *a, **k: None)
+
+    asyncio.run(
+        DataStoragesModelCRUDV2._link_tag(
+            dummy,
+            payload={
+                "tagId": "tag-uuid-1",
+                "dataStorageId": "ds-1",
+            },
+        )
+    )
+
+    create_call = next((c for c in add_calls if c[1].get("objectClass") == ["prsDatastorageTagData"]), None)
+    assert create_call is not None
+    assert "prsJsonConfigString" not in create_call[1]
+
+
+def test_v2_link_tag_omits_prsJsonConfigString_when_not_in_request_even_if_tag_type_not_5():
+    """Если в запросе не указан prsJsonConfigString, атрибут не записывается (в т.ч. при prsValueTypeCode != 5)."""
+    dummy = types.SimpleNamespace()
+    add_calls: list[tuple[str, dict]] = []
+
+    async def _post_message(*_args, **_kwargs):
+        return {"prsStore": None}
+
+    async def _search(payload: dict):
+        if payload.get("id") and payload.get("attributes") == ["prsValueTypeCode"]:
+            return [("tag-1", None, {"prsValueTypeCode": ["3"]})]
+        if payload.get("filter", {}).get("objectClass") == ["prsDatastorageTagData"]:
+            return []
+        return []
+
+    async def _get_node_dn(_node_id: str):
+        return "cn=ds1,ou=datastorages"
+
+    async def _get_node_id(dn: str):
+        if "tags" in dn:
+            return "tags-node-id"
+        if "system" in dn:
+            return "system-node-id"
+        return None
+
+    async def _add(base: str, attribute_values: dict):
+        add_calls.append((base, attribute_values))
+        return "new-link-id"
+
+    async def _add_alias(*_args, **_kwargs):
+        return None
+
+    dummy._post_message = _post_message
+    dummy._hierarchy = types.SimpleNamespace(
+        search=_search,
+        get_node_dn=_get_node_dn,
+        get_node_id=_get_node_id,
+        add=_add,
+        add_alias=_add_alias,
+    )
+    dummy._config = types.SimpleNamespace(
+        hierarchy={"class": "PrsDatastorage"},
+        svc_name="test",
+    )
+    dummy._logger = types.SimpleNamespace(error=lambda *a, **k: None, info=lambda *a, **k: None)
+
+    asyncio.run(
+        DataStoragesModelCRUDV2._link_tag(
+            dummy,
+            payload={
+                "tagId": "tag-uuid-1",
+                "dataStorageId": "ds-1",
+            },
+        )
+    )
+
+    create_call = next((c for c in add_calls if c[1].get("objectClass") == ["prsDatastorageTagData"]), None)
+    assert create_call is not None
+    assert "prsJsonConfigString" not in create_call[1]
+
+
+def test_v2_link_tag_sets_prsJsonConfigString_with_value_type_when_in_request_and_tag_type_not_5():
+    """Если в запросе указан prsJsonConfigString и у тега prsValueTypeCode != 5, в узел пишется конфиг с prsValueTypeCode."""
+    dummy = types.SimpleNamespace()
+    add_calls: list[tuple[str, dict]] = []
+
+    async def _post_message(*_args, **_kwargs):
+        return {"prsStore": None}
+
+    async def _search(payload: dict):
+        if payload.get("id") and payload.get("attributes") == ["prsValueTypeCode"]:
+            return [("tag-1", None, {"prsValueTypeCode": ["3"]})]
+        if payload.get("filter", {}).get("objectClass") == ["prsDatastorageTagData"]:
+            return []
+        return []
+
+    async def _get_node_dn(_node_id: str):
+        return "cn=ds1,ou=datastorages"
+
+    async def _get_node_id(dn: str):
+        if "tags" in dn:
+            return "tags-node-id"
+        if "system" in dn:
+            return "system-node-id"
+        return None
+
+    async def _add(base: str, attribute_values: dict):
+        add_calls.append((base, attribute_values))
+        return "new-link-id"
+
+    async def _add_alias(*_args, **_kwargs):
+        return None
+
+    dummy._post_message = _post_message
+    dummy._hierarchy = types.SimpleNamespace(
+        search=_search,
+        get_node_dn=_get_node_dn,
+        get_node_id=_get_node_id,
+        add=_add,
+        add_alias=_add_alias,
+    )
+    dummy._config = types.SimpleNamespace(
+        hierarchy={"class": "PrsDatastorage"},
+        svc_name="test",
+    )
+    dummy._logger = types.SimpleNamespace(error=lambda *a, **k: None, info=lambda *a, **k: None)
+
+    asyncio.run(
+        DataStoragesModelCRUDV2._link_tag(
+            dummy,
+            payload={
+                "tagId": "tag-uuid-1",
+                "dataStorageId": "ds-1",
+                "attributes": {"prsJsonConfigString": {"custom": "x"}},
+            },
+        )
+    )
+
+    create_call = next((c for c in add_calls if c[1].get("objectClass") == ["prsDatastorageTagData"]), None)
+    assert create_call is not None
+    assert create_call[1]["prsJsonConfigString"] == {"custom": "x", "prsValueTypeCode": 3}
+
+
+def test_v2_link_tag_omits_prsJsonConfigString_when_tag_type_5_and_request_config_empty():
+    """При привязке тега с prsValueTypeCode=5 и явным prsJsonConfigString={} в запросе атрибут не записывается."""
+    dummy = types.SimpleNamespace()
+    add_calls: list[tuple[str, dict]] = []
+
+    async def _post_message(*_args, **_kwargs):
+        return {"prsStore": None}
+
+    async def _search(payload: dict):
+        if payload.get("id") and payload.get("attributes") == ["prsValueTypeCode"]:
+            return [("tag-1", None, {"prsValueTypeCode": ["5"]})]
+        if payload.get("filter", {}).get("objectClass") == ["prsDatastorageTagData"]:
+            return []
+        return []
+
+    async def _get_node_dn(_node_id: str):
+        return "cn=ds1,ou=datastorages"
+
+    async def _get_node_id(dn: str):
+        if "tags" in dn:
+            return "tags-node-id"
+        if "system" in dn:
+            return "system-node-id"
+        return None
+
+    async def _add(base: str, attribute_values: dict):
+        add_calls.append((base, attribute_values))
+        return "new-link-id"
+
+    async def _add_alias(*_args, **_kwargs):
+        return None
+
+    dummy._post_message = _post_message
+    dummy._hierarchy = types.SimpleNamespace(
+        search=_search,
+        get_node_dn=_get_node_dn,
+        get_node_id=_get_node_id,
+        add=_add,
+        add_alias=_add_alias,
+    )
+    dummy._config = types.SimpleNamespace(
+        hierarchy={"class": "PrsDatastorage"},
+        svc_name="test",
+    )
+    dummy._logger = types.SimpleNamespace(error=lambda *a, **k: None, info=lambda *a, **k: None)
+
+    asyncio.run(
+        DataStoragesModelCRUDV2._link_tag(
+            dummy,
+            payload={
+                "tagId": "tag-uuid-1",
+                "dataStorageId": "ds-1",
+                "attributes": {"prsJsonConfigString": {}},
+            },
+        )
+    )
+
+    create_call = next((c for c in add_calls if c[1].get("objectClass") == ["prsDatastorageTagData"]), None)
+    assert create_call is not None
+    assert "prsJsonConfigString" not in create_call[1]
+
+
+def test_v2_link_tag_includes_request_config_when_tag_type_5_but_config_non_empty():
+    """Если в запросе передан непустой prsJsonConfigString, он записывается даже при prsValueTypeCode=5."""
+    dummy = types.SimpleNamespace()
+    add_calls: list[tuple[str, dict]] = []
+
+    async def _post_message(*_args, **_kwargs):
+        return {"prsStore": None}
+
+    async def _search(payload: dict):
+        if payload.get("id") and payload.get("attributes") == ["prsValueTypeCode"]:
+            return [("tag-1", None, {"prsValueTypeCode": ["5"]})]
+        if payload.get("filter", {}).get("objectClass") == ["prsDatastorageTagData"]:
+            return []
+        return []
+
+    async def _get_node_dn(_node_id: str):
+        return "cn=ds1,ou=datastorages"
+
+    async def _get_node_id(dn: str):
+        if "tags" in dn:
+            return "tags-node-id"
+        if "system" in dn:
+            return "system-node-id"
+        return None
+
+    async def _add(base: str, attribute_values: dict):
+        add_calls.append((base, attribute_values))
+        return "new-link-id"
+
+    async def _add_alias(*_args, **_kwargs):
+        return None
+
+    dummy._post_message = _post_message
+    dummy._hierarchy = types.SimpleNamespace(
+        search=_search,
+        get_node_dn=_get_node_dn,
+        get_node_id=_get_node_id,
+        add=_add,
+        add_alias=_add_alias,
+    )
+    dummy._config = types.SimpleNamespace(
+        hierarchy={"class": "PrsDatastorage"},
+        svc_name="test",
+    )
+    dummy._logger = types.SimpleNamespace(error=lambda *a, **k: None, info=lambda *a, **k: None)
+
+    asyncio.run(
+        DataStoragesModelCRUDV2._link_tag(
+            dummy,
+            payload={
+                "tagId": "tag-uuid-1",
+                "dataStorageId": "ds-1",
+                "attributes": {"prsJsonConfigString": {"customKey": "customValue"}},
+            },
+        )
+    )
+
+    create_call = next((c for c in add_calls if c[1].get("objectClass") == ["prsDatastorageTagData"]), None)
+    assert create_call is not None
+    assert create_call[1]["prsJsonConfigString"] == {"customKey": "customValue"}
+
+
+def test_v2_link_tag_modify_omits_prsJsonConfigString_when_empty():
+    """При обновлении привязки тега с prsValueTypeCode=5 и без конфига в запросе modify не передаёт prsJsonConfigString."""
+    dummy = types.SimpleNamespace()
+    modify_calls: list[tuple[str, dict]] = []
+
+    async def _post_message(*_args, **_kwargs):
+        return {"prsStore": None}
+
+    async def _search(payload: dict):
+        if payload.get("id") and payload.get("attributes") == ["prsValueTypeCode"]:
+            return [("tag-1", None, {"prsValueTypeCode": ["5"]})]
+        if payload.get("filter", {}).get("objectClass") == ["prsDatastorageTagData"]:
+            return [("existing-link-id", None, {"cn": ["tag-uuid-1"]})]
+        return []
+
+    async def _get_node_dn(_node_id: str):
+        return "cn=ds1,ou=datastorages"
+
+    async def _get_node_id(dn: str):
+        if "tags" in dn:
+            return "tags-node-id"
+        if "system" in dn:
+            return "system-node-id"
+        return None
+
+    async def _modify(node_id: str, attr_vals: dict):
+        modify_calls.append((node_id, attr_vals))
+
+    dummy._post_message = _post_message
+    dummy._hierarchy = types.SimpleNamespace(
+        search=_search,
+        get_node_dn=_get_node_dn,
+        get_node_id=_get_node_id,
+        modify=_modify,
+    )
+    dummy._config = types.SimpleNamespace(
+        hierarchy={"class": "PrsDatastorage"},
+        svc_name="test",
+    )
+    dummy._logger = types.SimpleNamespace(error=lambda *a, **k: None, info=lambda *a, **k: None)
+
+    asyncio.run(
+        DataStoragesModelCRUDV2._link_tag(
+            dummy,
+            payload={
+                "tagId": "tag-uuid-1",
+                "dataStorageId": "ds-1",
+            },
+        )
+    )
+
+    assert len(modify_calls) == 1
+    assert modify_calls[0][0] == "existing-link-id"
+    assert "prsJsonConfigString" not in modify_calls[0][1]
+
+

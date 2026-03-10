@@ -15,7 +15,7 @@ from src.services.dataStorages.model_crud.dataStorages_model_crud_v2_settings im
 class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
     """v2 model_crud расширяет v1:
     - расширенная привязка тегов (prsJsonConfigString и опциональный prsEntityTypeCode) для интеграционных тегов
-    - операции привязки интеграционного тега как дочерние LDAP-узлы linkTags[].operations
+    - операции привязки интеграционного тега как дочерние LDAP-узлы linkedTags[].operations
     """
 
     async def _further_read(self, mes: dict, search_result: dict) -> dict:
@@ -32,11 +32,11 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
         return res
 
     async def _further_create(self, mes: dict, new_id: str) -> None:
-        # v2 keeps v1 create behavior; link operations are handled inside linkTags update path.
+        # v2 keeps v1 create behavior; link operations are handled inside linkedTags update path.
         await super()._further_create(mes, new_id)
 
     async def _further_update(self, mes: dict) -> None:
-        # v2 link operations are stored under linkTags nodes; no cn=operations subtree maintenance.
+        # v2 link operations are stored under linkedTags nodes; no cn=operations subtree maintenance.
         await super()._further_update(mes)
 
     async def _ensure_ds_operations_node(self, ds_id: str) -> None:
@@ -558,9 +558,12 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
 
         link_attrs = payload.get("attributes") or {}
         link_entity_type = link_attrs.get("prsEntityTypeCode")
-        link_cfg = link_attrs.get("prsJsonConfigString") or {}
-        link_cfg = copy.deepcopy(link_cfg)
-        link_cfg["prsValueTypeCode"] = int(tag_data[0][2]["prsValueTypeCode"][0])
+        tag_value_type = int(tag_data[0][2]["prsValueTypeCode"][0])
+        link_cfg: dict[str, Any] | None = None
+        if "prsJsonConfigString" in link_attrs:
+            link_cfg = copy.deepcopy(link_attrs.get("prsJsonConfigString") or {})
+            if tag_value_type != 5:
+                link_cfg["prsValueTypeCode"] = tag_value_type
 
         existing_link = await self._hierarchy.search(
             payload={
@@ -573,7 +576,9 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
         )
         link_id = existing_link[0][0] if existing_link else None
 
-        attr_vals: dict[str, Any] = {"prsJsonConfigString": link_cfg}
+        attr_vals: dict[str, Any] = {}
+        if link_cfg is not None and link_cfg:
+            attr_vals["prsJsonConfigString"] = link_cfg
         if prs_store is not None:
             attr_vals["prsStore"] = prs_store
         if link_entity_type is not None:
