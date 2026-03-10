@@ -92,7 +92,7 @@ dataStorages_api_crud
    |                # Ключ активности хранилища. По умолчанию = True.                     |
    |                "prsActive": true                                                     |
    |           },                                                                         |
-   |           "linkTags": [                                                              |
+   |           "linkedTags": [                                                            |
    |                {                                                                     |
    |                    "id": "<tag_id>",                                                 |
    |                    "attributes": {                                                   |

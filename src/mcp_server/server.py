@@ -597,11 +597,11 @@ if ENABLE_V2:
 
         Notes for integrational relational storage (`prsEntityTypeCode=2`):
         - Operations are passed as child nodes of tag link:
-          `linkTags[].operations[]`.
-        - Operation attributes live in `linkTags[].operations[].attributes`
+          `linkedTags[].operations[]`.
+        - Operation attributes live in `linkedTags[].operations[].attributes`
           (including `cn`, `prsEntityTypeCode`, `prsJsonConfigString`).
         - SQL params mapping is defined in operation parameters as
-          `linkTags[].operations[].parameters[].attributes.prsJsonConfigString.JSONata`.
+          `linkedTags[].operations[].parameters[].attributes.prsJsonConfigString.JSONata`.
         """
         return await _request("POST", "/v2/dataStorages/", json_body=payload)
 
@@ -610,7 +610,7 @@ if ENABLE_V2:
         """Update dataStorage via PUT `/v2/dataStorages/`.
 
         For integrational relational setup use:
-        - `linkTags` to attach/update tag link configuration and child `operations`;
+        - `linkedTags` to attach/update tag link configuration and child `operations`;
         - `unlinkTags` to detach tags.
         """
         return await _request("PUT", "/v2/dataStorages/", json_body=payload)

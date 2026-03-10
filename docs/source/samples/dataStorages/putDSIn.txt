@@ -6,7 +6,7 @@ Authorization: No Auth
 
 {
     "id":"<id_of_dataStorage_to_update",
-    "linkTags":[{
+    "linkedTags":[{
         "tagId":"<id_of_a_tag_to_link>",
         "attributes":{
             "cn":"tag4",
