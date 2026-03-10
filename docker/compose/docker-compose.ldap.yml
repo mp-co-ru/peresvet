@@ -10,8 +10,13 @@ services:
       LDAP_LOG_LEVEL: ${LDAP_LOG_LEVEL}
     ports:
       - ${LDAP_PORT}:${LDAP_PORT}
+    volumes:
+      - ldap_data:/var/lib/ldap
     networks:
       - peresvet
+
+volumes:
+  ldap_data:
 
 networks:
   peresvet:

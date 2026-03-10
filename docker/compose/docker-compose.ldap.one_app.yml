@@ -7,8 +7,13 @@ services:
     environment:
       TZ: ${TIME_ZONE}
       LDAP_LOG_LEVEL: ${LDAP_LOG_LEVEL}
+    volumes:
+      - ldap_data_one_app:/var/lib/ldap
     networks:
       - peresvet
+
+volumes:
+  ldap_data_one_app:
 
 networks:
   peresvet:
