@@ -564,6 +564,9 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
             link_cfg = copy.deepcopy(link_attrs.get("prsJsonConfigString") or {})
             if tag_value_type != 5:
                 link_cfg["prsValueTypeCode"] = tag_value_type
+        else:
+            # Как в v1: prsJsonConfigString с prsValueTypeCode нужен для _tag_updated в app (смена типа тега).
+            link_cfg = {} if tag_value_type == 5 else {"prsValueTypeCode": tag_value_type}
 
         existing_link = await self._hierarchy.search(
             payload={

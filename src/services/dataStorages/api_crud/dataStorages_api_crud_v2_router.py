@@ -119,7 +119,7 @@ class DataStorageAttributesV2(svc.NodeAttributes):
 class DataStorageCreateV2(svc.NodeCreate):
     attributes: DataStorageAttributesV2 = Field(title="Атрибуты хранилища")
     linkedTags: list[LinkTagV2] = Field(default_factory=list, title="Список привязываемых тегов")
-    linkAlerts: list[LinkAlertV2] = Field(default_factory=list, title="Список привязываемых тревог")
+    linkedAlerts: list[LinkAlertV2] = Field(default_factory=list, title="Список привязываемых тревог")
 
     @field_validator("attributes")
     @classmethod

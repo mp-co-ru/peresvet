@@ -13,7 +13,7 @@ Authorization: No Auth
             "objectClass":"prsTag"
         }
     }],
-    "linkAlerts":[{
+    "linkedAlerts":[{
         "alertId":"<id_of_an_alert_to_link>",
         "attributes":{
             "cn":"alert1",

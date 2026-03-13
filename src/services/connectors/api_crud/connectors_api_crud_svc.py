@@ -66,7 +66,7 @@ class ConnectorAttributes(svc.NodeAttributes):
 
 class ConnectorCreate(svc.NodeCreate):
     attributes: ConnectorAttributes | None = Field(None, title="Атрибуты коннектора")
-    linkTags: list[LinkTag] = Field(
+    linkedTags: list[LinkTag] = Field(
         [],
         title="Список добавленных тегов для коннектора"
     )
@@ -159,7 +159,7 @@ async def create(payload: dict | None = None, error_handler: svc.ErrorHandler = 
             перед отдачей клиенту списка экземпляров они сортируются
             в соответствии с их индексами. Необязательный атрибут.
 
-        * **linkTags** (list[LinkTag]) - список тегов к которым прикреплен
+        * **linkedTags** (list[LinkTag]) - список тегов к которым прикреплен
           указанный коннектор. Обязательный атрибут.
 
           * **tagId** (str) - id прикрепляемого тега. Обязательный атрибут.
@@ -291,7 +291,7 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
 
         * **id** (bool) - Идентификатор изменяемого коннектора.
           Обязательный аттрибут.
-        * **linkTags** (list[LinkTag]) - список тегов, привязанных к указанному коннектору. Необязательный атрибут.
+        * **linkedTags** (list[LinkTag]) - список тегов, привязанных к указанному коннектору. Необязательный атрибут.
         * **unlinkTags** (list[str]) - Список тегов для отсоединения от коннектора.
           Необязательный аттрибут.
         * **attributes** (dict) - Атрибуты коннектора
