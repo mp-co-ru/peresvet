@@ -6,7 +6,7 @@ Authorization: No Auth
 
 {
     "id":"949823fa-cbf5-103e-9301-555c1a8a1358",
-    "linkTags": [
+    "linkedTags": [
         {
             "tagId":"99a8bc4a-b2d4-103e-83ba-b9a6d48c0bf6",
             "attributes": {
@@ -18,7 +18,7 @@ Authorization: No Auth
                 "objectClass":"objectClass"
             }
         }
-    ]
+    ],
     "unlinkTags":["94b1f028-cbf5-103e-9305-555c1a8a1358"],
     "attributes":{
         "prsJsonConfigString":{"way_of_connecting":"new_way"},

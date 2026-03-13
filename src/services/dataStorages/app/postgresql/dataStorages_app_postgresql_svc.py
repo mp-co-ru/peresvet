@@ -342,11 +342,15 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             if not tag_link_data:
                 self._logger.error(f"{self._config.svc_name} :: Тег '{tag_id}' не привязан к хранилищу '{ds_id}'")
                 continue
+            # Старый тип — из узла привязки; новый — уже из основной иерархии (tag_data выше).
             try:
-                old_type = int(json.loads(tag_link_data[0][2]["prsJsonConfigString"][0])["prsValueTypeCode"])
-            except:
-                self._logger.error(f"{self._config.svc_name} :: Ошибка определения старого типа данных для тега '{tag_id}', хранилище '{ds_id}'.")
-                continue
+                raw = tag_link_data[0][2].get("prsJsonConfigString")
+                if raw and raw[0]:
+                    old_type = int(json.loads(raw[0]).get("prsValueTypeCode", new_type))
+                else:
+                    old_type = new_type
+            except (TypeError, ValueError, KeyError):
+                old_type = new_type
 
             if new_type != old_type:
                 store = json.loads(tag_link_data[0][2]["prsStore"][0])
@@ -357,8 +361,13 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                         "prsJsonConfigString": {"prsValueTypeCode": new_type}
                     }
                 )
-
                 self._logger.info(f"{self._config.svc_name} :: Хранилище тега '{tag_id}' в '{ds_id}' изменено.")
+            elif old_type == new_type and not (tag_link_data[0][2].get("prsJsonConfigString") and tag_link_data[0][2]["prsJsonConfigString"][0]):
+                # В узле привязки не было prsValueTypeCode — дописываем из иерархии тега для следующих обновлений.
+                await self._hierarchy.modify(
+                    tag_link_data[0][0],
+                    {"prsJsonConfigString": {"prsValueTypeCode": new_type}},
+                )
 
         await self._delete_tag_cache(tag_id)
         await self._create_tag_cache(tag_id)

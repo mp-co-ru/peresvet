@@ -101,7 +101,7 @@ dataStorages_api_crud
    |                        "prsStore": "<some str>"                                      |
    |                    }                                                                 |
    |            ],                                                                        |
-   |           "linkAlerts": [                                                            |
+   |           "linkedAlerts": [                                                          |
    |                {                                                                     |
    |                    "id": "<alert_id>",                                               |
    |                    "attributes": {                                                   |

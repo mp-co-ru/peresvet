@@ -130,7 +130,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                 copy_item["dataStorageId"] = ds_id
                 await self._link_tag(copy_item)
 
-        linked_alerts = mes.get("linkAlerts")
+        linked_alerts = mes.get("linkedAlerts")
         if linked_alerts:
             for item in linked_alerts:
                 copy_item = copy.deepcopy(item)
