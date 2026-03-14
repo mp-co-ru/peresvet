@@ -584,8 +584,8 @@ if ENABLE_V2:
     async def peresvet_datastorages_v2_read(query: dict[str, Any] | None = None) -> dict[str, Any]:
         """Read dataStorages via `/v2/dataStorages/` (operations support).
 
-        Use `getLinkedTags=true` to include tag links; for integrational links
-        each item may include child `operations`.
+        Use `getLinkedTags=true` to include tag links (with child `operations`
+        for integrational links). Use `getLinkedAlerts=true` to include linked alerts.
         """
         q = query or {}
         params = _crud_query_to_params(q)
