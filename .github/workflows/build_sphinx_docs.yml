@@ -42,8 +42,7 @@ jobs:
           pip install -r requirements_make_docs.txt
       - name: Build HTML
         run: |
-          cd docs/
-          python -m sphinx -b html source build
+          python -m sphinx -b html docs/source docs/build
       - name: Run ghp-import
         run: |
           ghp-import -n -p -f docs/build/html
