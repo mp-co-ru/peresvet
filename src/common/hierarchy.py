@@ -10,7 +10,7 @@ import ldap
 import ldap.modlist
 import ldap.dn
 import ldapurl
-from ldappool import ConnectionManager
+from fast_ldap_pool import ConnectionManager
 
 CN_SCOPE_BASE = ldap.SCOPE_BASE
 CN_SCOPE_ONELEVEL = ldap.SCOPE_ONELEVEL
