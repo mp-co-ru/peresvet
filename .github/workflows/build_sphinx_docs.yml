@@ -42,6 +42,7 @@ jobs:
           pip install "setuptools>=65.0.0"
       - name: Build HTML
         run: |
+          pip install --force-reinstall "setuptools>=65.0.0"
           cd docs/
           python -m sphinx -b html source build
       - name: Run ghp-import
