@@ -14,6 +14,7 @@ RUN bash -c "DEBIAN_FRONTEND=noninteractive apt install -q -y slapd ldap-utils"
 WORKDIR /usr/src
 RUN mkdir mpc-peresvet
 COPY requirements.txt /usr/src/mpc-peresvet/
+COPY packages /usr/src/mpc-peresvet/packages
 WORKDIR /usr/src/mpc-peresvet
 RUN pip install -r requirements.txt
 RUN apt-get -y purge slapd

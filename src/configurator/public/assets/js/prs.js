@@ -981,9 +981,9 @@ addNodeToHierarchy = (api) => {
             id: data.data[0].id
           }
           if (api === "tags") {
-            payload.linkTags = [{ tagId: node.id }]
+            payload.linkedTags = [{ tagId: node.id }]
           } else {
-            payload.linkAlerts = [{ alertId: node.id }]
+            payload.linkedAlerts = [{ alertId: node.id }]
           }
 
           fetch(urlDs, {

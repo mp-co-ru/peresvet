@@ -49,6 +49,14 @@
       "arguments": {}
     },
     {
+      "source": "amq.topic",
+      "vhost": "/",
+      "destination": "peresvet",
+      "destination_type": "exchange",
+      "routing_key": "prsConnector.connection_lost.*",
+      "arguments": {}
+    },
+    {
       "source": "peresvet",
       "vhost": "/",
       "destination": "amq.topic",

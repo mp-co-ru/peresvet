@@ -107,9 +107,9 @@ ldap_stub.MOD_DELETE = 1
 ldap_stub.MOD_ADD = 0
 sys.modules.setdefault("ldap", ldap_stub)
 
-ldappool_stub = types.ModuleType("ldappool")
+ldappool_stub = types.ModuleType("fast_ldap_pool")
 ldappool_stub.ConnectionManager = object
-sys.modules.setdefault("ldappool", ldappool_stub)
+sys.modules.setdefault("fast_ldap_pool", ldappool_stub)
 
 hierarchy_stub = types.ModuleType("src.common.hierarchy")
 hierarchy_stub.CN_SCOPE_BASE = 0

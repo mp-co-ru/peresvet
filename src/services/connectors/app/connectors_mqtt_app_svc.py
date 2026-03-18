@@ -24,9 +24,11 @@ class ConnectorsMQTTApp(AppSvc):
 
     def __init__(self, settings: ConnectorsMQTTAppSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
+        self._connected_connectors: set[str] = set()
 
     def _add_app_handlers(self):
         self._handlers["conn2prs.*"] = self._send_config_to_connector
+        self._handlers["prsConnector.connection_lost.*"] = self._connection_lost
         self._handlers[f"{self._config.hierarchy['class']}.model.tag_updated.*"] = self._tags_updated
         self._handlers[f"{self._config.hierarchy['class']}.model.tag_deleted.*"] = self._tag_deleted
         self._handlers[f"{self._config.hierarchy['class']}.model.tag_link_updated.*"] = self._tags_updated
@@ -186,9 +188,62 @@ class ConnectorsMQTTApp(AppSvc):
             )
         }
 
+    async def _get_connector_tag_ids(self, conn_id: str) -> list[str]:
+        """Возвращает список id тегов, привязанных к коннектору."""
+        res = await self._hierarchy.search(payload={
+            "base": conn_id,
+            "scope": hierarchy.CN_SCOPE_SUBTREE,
+            "filter": {"objectClass": ["prsConnectorTagData"]},
+            "attributes": ["cn"],
+        })
+        return [attrs["cn"][0] for (_, _, attrs) in res]
+
+    async def _write_connector_tags_quality(self, conn_id: str, quality_code: int) -> None:
+        """Записывает во все теги коннектора значение null с указанным кодом качества."""
+        try:
+            tag_ids = await self._get_connector_tag_ids(conn_id)
+        except Exception as ex:
+            self._logger.warning(
+                f"{self._config.svc_name} :: Не удалось получить теги коннектора {conn_id} для записи качества {quality_code}: {ex}."
+            )
+            return
+        if not tag_ids:
+            return
+        now_ts = t.now_int()
+        data = {
+            "data": [
+                {"tagId": tag_id, "data": [[now_ts, None, quality_code]]}
+                for tag_id in tag_ids
+            ]
+        }
+        try:
+            await self._post_message(mes=data, routing_key="prsTag.app_api.data_set.*", reply=False)
+        except Exception as ex:
+            self._logger.warning(
+                f"{self._config.svc_name} :: Не удалось записать качество {quality_code} в теги коннектора {conn_id}: {ex}."
+            )
+
+    async def _connection_lost(self, mes: dict, routing_key: str | None = None) -> dict:
+        """Обработка потери связи с коннектором по MQTT (в т.ч. LWT): запись null с качеством 100 в теги коннектора.
+        Ожидается mes[\"id\"] или routing_key вида prsConnector.connection_lost.<conn_id>."""
+        conn_id = mes.get("id")
+        if not conn_id and routing_key and routing_key.startswith("prsConnector.connection_lost."):
+            conn_id = routing_key.split(".", 2)[-1]
+        if not conn_id:
+            self._logger.warning(f"{self._config.svc_name} :: prsConnector.connection_lost без id.")
+            return {}
+        self._connected_connectors.discard(conn_id)
+        await self._write_connector_tags_quality(conn_id, 100)
+        self._logger.info(f"{self._config.svc_name} :: Зафиксирована потеря связи с коннектором {conn_id}, в теги записано качество 100.")
+        return {}
+
     async def _send_config_to_connector(self, mes: dict, routing_key: str | None = None) -> dict:
 
         conn_id = mes["data"]["id"]
+        if conn_id not in self._connected_connectors:
+            self._connected_connectors.add(conn_id)
+            await self._write_connector_tags_quality(conn_id, 104)
+            self._logger.info(f"{self._config.svc_name} :: Связь с коннектором {conn_id} восстановлена, в теги записано качество 104.")
         res = await self._get_connector_data(conn_id=conn_id)
         if not res:
             self._logger.error(f"{self._config.svc_name} :: Отсутствует коннектор {conn_id}.")
@@ -244,6 +299,7 @@ class ConnectorsMQTTApp(AppSvc):
         await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.tag_deleted.{conn_id}")
         await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.updated.{conn_id}")
         await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.deleted.{conn_id}")
+        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.connection_lost.{conn_id}")
         self._logger.info(f"{self._config.svc_name} :: Коннектор {conn_id} {('от', 'при')[bind]}вязан.")
 
     async def _deleting(self, mes: dict, routing_key: str | None = None):
@@ -255,6 +311,7 @@ class ConnectorsMQTTApp(AppSvc):
 
     async def _deleted(self, mes: dict, routing_key: str | None = None):
         deleted_conn_id = mes["id"]
+        self._connected_connectors.discard(deleted_conn_id)
         payload = {
             "action": "prsConnector.deleted",
             "data": {
