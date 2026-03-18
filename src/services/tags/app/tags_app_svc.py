@@ -12,10 +12,13 @@ except ModuleNotFoundError as _:
 
 sys.path.append(".")
 
+import ldap
+
 from src.common.app_svc import AppSvc
 from src.services.tags.app.tags_app_settings import TagsAppSettings
-from src.common.times import ts
+from src.common.times import ts, now_int
 from src.common.tag_data_points import normalize_point_xyq
+from src.common import hierarchy
 
 class TagsApp(AppSvc):
     """Сервис работы с тегами.
@@ -26,6 +29,33 @@ class TagsApp(AppSvc):
 
     def __init__(self, settings: TagsAppSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
+
+    async def _get_all_connector_linked_tag_ids(self) -> list[str]:
+        """Возвращает список id тегов, привязанных к любым коннекторам."""
+        res = await self._hierarchy.search(
+            payload={
+                "base": "cn=connectors,cn=prs",
+                "scope": hierarchy.CN_SCOPE_SUBTREE,
+                "filter": {"objectClass": ["prsConnectorTagData"]},
+                "attributes": ["cn"],
+            }
+        )
+        tag_ids = list({attrs["cn"][0] for (_, _, attrs) in res})
+        return tag_ids
+
+    async def _write_connector_tags_quality(self, quality_code: int) -> None:
+        """Записывает во все теги, привязанные к коннекторам, значение null с указанным кодом качества."""
+        tag_ids = await self._get_all_connector_linked_tag_ids()
+        if not tag_ids:
+            return
+        now_ts = now_int()
+        data = {
+            "data": [
+                {"tagId": tag_id, "data": [[now_ts, None, quality_code]]}
+                for tag_id in tag_ids
+            ]
+        }
+        await self._post_message(mes=data, routing_key=f"{self._config.hierarchy['class']}.app_api.data_set.*", reply=False)
 
     def _add_app_handlers(self):
         self._handlers[f"{self._config.hierarchy['class']}.app_api.data_get.*"] = self.data_get
@@ -167,6 +197,31 @@ class TagsApp(AppSvc):
         async with self._cache.get_redis() as r:
             res = await r.json().set(name=f"{tag_id}.{self._config.svc_name}", path="$", obj={"prsActive": active})
         return res
+
+    async def on_startup(self) -> None:
+        await super().on_startup()
+        try:
+            await self._write_connector_tags_quality(105)
+        except Exception as ex:
+            self._logger.warning(f"{self._config.svc_name} :: Не удалось записать качество 105 при старте: {ex}")
+
+    async def on_shutdown(self) -> None:
+        try:
+            await self._write_connector_tags_quality(101)
+        except ldap.LDAPError as ex:
+            # LDAP уже может быть остановлен при остановке платформы — не пробрасываем
+            self._logger.debug(
+                "%s :: Пропуск записи качества 101 при остановке (LDAP недоступен): %s",
+                self._config.svc_name,
+                ex,
+            )
+        except Exception as ex:
+            self._logger.warning(
+                "%s :: Не удалось записать качество 101 при остановке: %s",
+                self._config.svc_name,
+                ex,
+            )
+        await super().on_shutdown()
 
     async def _updated(self, mes: dict, routing_key: str = None):
         # просто удалим кэш тега

@@ -137,7 +137,7 @@ async def get_req(websocket: WebSocket, connector_id: str):
             now_ts = t.now_int()
             data = {"data": []}
             for tag in connector_tag_data["tags"]:
-                tag_data = {"tagId": tag["tagId"], "data": [[None, now_ts, None]]}
+                tag_data = {"tagId": tag["tagId"], "data": [[now_ts, None, None]]}
                 data["data"].append(tag_data)
             res = await app._post_message(mes = data, routing_key="prsTag.app_api.data_set.*", reply=False)
             if res is None:
