@@ -18,9 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 2,
   "links": [],
-  "liveNow": false,
   "panels": [
     {
       "datasource": {
@@ -28,7 +26,6 @@
         "type": "datasource",
         "uid": "grafana"
       },
-      "description": "",
       "fieldConfig": {
         "defaults": {
           "thresholds": {
@@ -36,7 +33,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -99,7 +96,7 @@
         "styles": "",
         "wrap": false
       },
-      "pluginVersion": "5.4.0",
+      "pluginVersion": "5.7.0",
       "targets": [
         {
           "datasource": {
@@ -114,8 +111,9 @@
       "type": "marcusolsson-dynamictext-panel"
     }
   ],
+  "preload": false,
   "refresh": "5s",
-  "schemaVersion": 39,
+  "schemaVersion": 42,
   "tags": [],
   "templating": {
     "list": []
