@@ -7,7 +7,7 @@
 """
 import sys
 import os
-from fastapi import FastAPI, APIRouter, Header, HTTPException
+from fastapi import FastAPI, APIRouter
 from starlette.routing import Mount
 from contextlib import asynccontextmanager
 
@@ -265,29 +265,6 @@ api_router.include_router(router=tags_app_api_router)
 # datafunc ----------------------------------------------------------------------
 # datafunc_app_api
 api_router.include_router(router=datafunc_app_api_router)
-# -----------------------------------------------------------------------------
-# internal (оркестрация: подготовка к остановке платформы) ----------------------
-_PREPARE_SHUTDOWN_TOKEN = os.environ.get("PRS_PREPARE_SHUTDOWN_TOKEN", "").strip()
-
-
-@api_router.post("/internal/prepare-shutdown")
-async def prepare_shutdown(
-    x_prepare_shutdown_token: str | None = Header(None, alias="X-Prepare-Shutdown-Token"),
-):
-    """
-    Записывает в теги, привязанные к коннекторам, значение null с кодом качества 101.
-    Вызывается оркестратором *до* остановки контейнеров, пока доступны LDAP, Redis и очередь.
-    Если задана переменная окружения PRS_PREPARE_SHUTDOWN_TOKEN, заголовок X-Prepare-Shutdown-Token обязан совпадать.
-    """
-    if _PREPARE_SHUTDOWN_TOKEN and x_prepare_shutdown_token != _PREPARE_SHUTDOWN_TOKEN:
-        raise HTTPException(status_code=403, detail="Invalid or missing X-Prepare-Shutdown-Token")
-    try:
-        await tags_app._write_connector_tags_quality(101)
-        return {"status": "ok", "message": "connector tags quality 101 written"}
-    except Exception as ex:
-        raise HTTPException(status_code=503, detail=str(ex))
-
-
 # -----------------------------------------------------------------------------
 # =============================================================================
 
