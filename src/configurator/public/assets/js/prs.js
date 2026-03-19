@@ -568,16 +568,30 @@ onInputChange = (event) => {
 
 };
 
+prsTreeRowFromEvent = function (event) {
+  var t = event.target;
+  if (t && t.nodeType === 3) t = t.parentElement;
+  if (!t || typeof t.closest !== "function") return null;
+  return t.closest('[role="treeitem"]');
+};
+
 getFocus = (event) => {
   event.stopPropagation();
 
-  els = document.getElementsByClassName("currentNode");
-  elsArray = [...els];
-  elsArray.map((el) => {
-    el.classList.toggle("currentNode");
-  });
-  el = event.target;
-  el.classList.toggle("currentNode");
+  const prev = document.querySelectorAll(".currentNode");
+  [...prev].forEach((n) => { n.classList.remove("currentNode"); });
+  const row = prsTreeRowFromEvent(event);
+  if (row) {
+    row.classList.add("currentNode");
+    const rid = row.id;
+    const ocl = row.getAttribute("objectClass");
+    if (ocl && !topNodesIds.includes(rid)) {
+      removeClassOnElements("value-changed");
+      setAttributesVisibility(row);
+      setAddButtonsVisibility(row);
+      fillForm(row);
+    }
+  }
 };
 
 sortList = (group) => {
@@ -642,12 +656,16 @@ addNode = (parentElement, node, top = false) => {
 
     parentElement.parentNode.insertBefore(parentGroup, parentElement.nextSibling);
 
-    icon = parentElement.querySelector('.state-icon');
-    if (!icon) {
-      icon = document.createElement("i");
-      parentElement.insertBefore(icon, parentElement.firstChild);
+    parentElement.querySelectorAll(":scope > .state-icon").forEach(function (el) {
+      if (!el.hasAttribute("data-prs-tree-chevron")) el.remove();
+    });
+    var chev = parentElement.querySelector("[data-prs-tree-chevron]");
+    if (!chev) {
+      chev = document.createElement("i");
+      chev.setAttribute("data-prs-tree-chevron", "1");
+      parentElement.insertBefore(chev, parentElement.firstChild);
     }
-    icon.setAttribute("class", `state-icon ${options.expandIcon}`);
+    chev.setAttribute("class", `state-icon ${options.expandIcon}`);
   }
 
   parentAreaLevel = Number(parentElement.getAttribute("aria-level"));
@@ -706,10 +724,10 @@ const typeNames = {
 
 const visibility = {
   "prsObject": {
-    "visible": ["div-prsIndex"], // имя, описание, индекс, активный - видны всегда
+    "visible": ["div-prsIndex", "div-prsEntityTypeCode", "div-prsJsonConfigString"],
     "hidden": ["div-prsMethodAddress", "div-prsValueTypeCode", "div-tagData",
-      "div-prsJsonConfigString", "div-prsUpdate", "div-prsDefault", "div-prsStep",
-      "div-prsMeasureUnits", "div-initiatedBy", "div-parameters", "div-alertConfig", "div-scheduleConfig", "div-prsEntityTypeCode"]
+      "div-prsUpdate", "div-prsDefault", "div-prsStep",
+      "div-prsMeasureUnits", "div-initiatedBy", "div-parameters", "div-alertConfig", "div-scheduleConfig"]
   },
   "prsTag": {
     "visible": ["div-prsValueTypeCode", "div-prsUpdate", "div-prsStep", "div-prsMeasureUnits", "div-tagData"],
@@ -1353,7 +1371,8 @@ resetChanges = () => {
 clickNode = (event) => {
   event.stopPropagation();
 
-  let clickedNode = event.target;
+  let clickedNode = prsTreeRowFromEvent(event);
+  if (!clickedNode) return;
 
   removeClassOnElements("value-changed");
 
