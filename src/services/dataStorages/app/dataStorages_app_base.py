@@ -818,7 +818,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
                                 )
 
                                 if index > -1:
-                                    await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "tags", index[0])
+                                    await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "tags", index)
 
                         # если тег активен и у него есть данные в кэше
                         if res[0] and res[1] > 0:
