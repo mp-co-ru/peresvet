@@ -452,3 +452,37 @@ html, body {
     font-size: 1.35rem;
     margin: 0;
 }
+
+/* Поиск тега с якорем (метод — инициаторы и параметры) */
+.prs-method-search-results {
+    max-height: 14rem;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: #fff;
+}
+.prs-method-search-row {
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+    padding: 6px 8px;
+    border-bottom: 1px solid #e9ecef;
+}
+.prs-method-search-row:last-child { border-bottom: none; }
+.prs-method-search-row:hover { background: #e6f2f4; }
+.prs-anchor-btn {
+    flex: 0 0 auto;
+    align-self: flex-start;
+    border: none;
+    background: transparent;
+    color: #2c707f;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+.prs-anchor-btn:hover:not(:disabled) { background: rgba(44, 112, 127, 0.12); }
+.prs-anchor-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.prs-method-search-main { flex: 1; min-width: 0; }
+.prs-method-search-path { font-size: 0.8125rem; font-weight: 600; line-height: 1.25; }
+.prs-method-search-meta { font-size: 0.7rem; color: #6c757d; font-family: ui-monospace, monospace; margin-top: 2px; word-break: break-all; }
+.prs-method-initiators-wrap .nav-tabs .nav-link { padding: 6px 12px; font-size: 0.8125rem; }
+.prs-param-tag-wrap { min-width: 0; }
