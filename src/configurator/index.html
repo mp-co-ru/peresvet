@@ -195,45 +195,38 @@
 			<div class="input-group mt-2" id="div-initiatedBy">
 				<span class="input-group-text prs-input-label space-between">Инициаторы:
 							<i class="fa-solid fa-circle-info gray" data-bs-toggle="tooltip"
-								title="Список того, что инициирует запуск метода. Теги: изменение значения указанного тега; тревоги: возникновение тревоги; расписание: запланированный момент времени. Все эти события инициируют запуск метода.">
+								title="Список того, что инициирует запуск метода. Теги: изменение значения; расписание: запланированный момент. Добавляйте через поиск и кнопку с якорем.">
 							</i>
 						</span>
-				<div class="form-control d-flex">
-					<div class="nav flex-column nav-pills m-2" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-						<button class="nav-link nav-link-icon active text-start" id="v-pills-Tags-tab" data-bs-toggle="pill" data-bs-target="#v-pills-Tags" type="button" role="tab" aria-controls="v-pills-Tags" aria-selected="true" onClick="initiatorsTabClicked('tags')">
-									<i class="fa-solid fa-tags"></i>&nbsp;&nbsp;Теги
-								</button>
-						<!--
-								<button class="nav-link nav-link-icon text-start" id="v-pills-Alerts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-Alerts" type="button" role="tab" aria-controls="v-pills-Alerts" aria-selected="false">
-									<i class="fa-solid fa-bell"></i>&nbsp;&nbsp;Тревоги
-								</button>
-								-->
-						<button class="nav-link nav-link-icon text-start" id="v-pills-Schedules-tab" data-bs-toggle="pill" data-bs-target="#v-pills-Schedules" type="button" role="tab" aria-controls="v-pills-Schedules" aria-selected="false" onClick="initiatorsTabClicked('schedules')">
-									<i class="fa-solid fa-clock"></i>&nbsp;&nbsp;Расписания
-								</button>
-					</div>
-					<div class="tab-content" id="v-pills-tabContent">
-						<div class="tab-pane fade show active" id="v-pills-Tags" role="tabpanel" aria-labelledby="v-pills-Tags-tab"
-							tabindex="0">
-							<select prsAttribute="initiatedBy" onchange="onInputChange(event);" id="input-initiatedByTags" class="form-select mt-1" size="5" multiple>
-										<option selected value="true">Текст текст текст</option>
-										<option value="false">Текст текст текст</option>
-									</select>
+				<div class="form-control p-2 prs-method-initiators-wrap">
+					<ul class="nav nav-tabs nav-tabs-sm mb-2 flex-nowrap flex-shrink-0" id="prs-method-init-tabs" role="tablist">
+						<li class="nav-item" role="presentation">
+							<button class="nav-link active" id="prs-meth-tab-tags" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#prs-meth-pane-tags" aria-controls="prs-meth-pane-tags" aria-selected="true">Теги</button>
+						</li>
+						<li class="nav-item" role="presentation">
+							<button class="nav-link" id="prs-meth-tab-schedules" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#prs-meth-pane-schedules" aria-controls="prs-meth-pane-schedules" aria-selected="false">Расписания</button>
+						</li>
+					</ul>
+					<div class="tab-content" id="prs-method-init-tab-content">
+						<div class="tab-pane fade show active" id="prs-meth-pane-tags" role="tabpanel" aria-labelledby="prs-meth-tab-tags" tabindex="0">
+							<div class="input-group input-group-sm mb-2">
+								<input type="search" class="form-control" id="input-initiatorSearchTags" placeholder="Поиск тега по имени, пути или id…" autocomplete="off"/>
+								<button type="button" class="btn btn-outline-secondary" id="btn-initiatorSearchTags" title="Найти"><i class="fa-solid fa-magnifying-glass"></i></button>
+							</div>
+							<div class="prs-method-search-results" id="div-initiatorResultsTags"></div>
+							<div class="text-muted smaller mt-2 mb-0">Выбранные теги:</div>
+							<div class="prs-chips mt-1" id="div-initiatorChipsTags"></div>
+							<select class="d-none" id="input-initiatedByTags" multiple></select>
 						</div>
-						<!--
-								<div class="tab-pane fade" id="v-pills-Alerts" role="tabpanel" aria-labelledby="v-pills-Alerts-tab" tabindex="0">
-									<select prsAttribute="initiatedBy" onchange="onInputChange(event);" id="input-initiatedByAlerts" class="form-select mt-1" size="5" multiple>
-										<option selected value="true">Текст текст текст</option>
-										<option value="false">Текст текст текст</option>
-									</select>
-								</div>
-								-->
-						<div class="tab-pane fade" id="v-pills-Schedules" role="tabpanel" aria-labelledby="v-pills-Schedules-tab"
-							tabindex="0">
-							<select prsAttribute="initiatedBy" onchange="onInputChange(event);" id="input-initiatedBySchedules" class="form-select mt-1" size="5" multiple>
-										<option selected value="true">Текст текст текст</option>
-										<option value="false">Текст текст текст</option>
-									</select>
+						<div class="tab-pane fade" id="prs-meth-pane-schedules" role="tabpanel" aria-labelledby="prs-meth-tab-schedules" tabindex="0">
+							<div class="input-group input-group-sm mb-2">
+								<input type="search" class="form-control" id="input-initiatorSearchSchedules" placeholder="Поиск расписания по имени, пути или id…" autocomplete="off"/>
+								<button type="button" class="btn btn-outline-secondary" id="btn-initiatorSearchSchedules" title="Найти"><i class="fa-solid fa-magnifying-glass"></i></button>
+							</div>
+							<div class="prs-method-search-results" id="div-initiatorResultsSchedules"></div>
+							<div class="text-muted smaller mt-2 mb-0">Выбранные расписания:</div>
+							<div class="prs-chips mt-1" id="div-initiatorChipsSchedules"></div>
+							<select class="d-none" id="input-initiatedBySchedules" multiple></select>
 						</div>
 					</div>
 				</div>
@@ -375,16 +368,16 @@
 								<div class="col-1 me-2">
 									<input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-cn-0"/>
 								</div>
-								<div class="col-4 me-2">
-									<select prsAttribute="parameter" onchange="onInputChange(event);" id="input-parameter-tagId-0" class="form-select" size="1">
-											<option selected value="ttt">&#62;=</option>
-											<option value="ttttt">&#60;</option>
-										</select>
+								<div class="col-4 me-2 prs-param-tag-wrap">
+									<input type="hidden" id="input-parameter-tagId-0" value=""/>
+									<div class="input-group input-group-sm">
+										<input type="search" class="form-control" id="input-parameter-tagSearch-0" placeholder="Поиск тега по имени, пути или id…" autocomplete="off"/>
+										<button type="button" class="btn btn-outline-secondary" id="btn-parameter-tagSearch-0" title="Найти"><i class="fa-solid fa-magnifying-glass"></i></button>
+									</div>
+									<div class="prs-method-search-results mt-1 d-none" id="div-parameter-tagResults-0"></div>
+									<div class="small text-muted mt-1 text-truncate" id="span-parameter-tagPick-0">не выбран</div>
 								</div>
 								<div class="col me-2">
-									<!--
-										<input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-prsJsonConfigString-0"/>
-										-->
 									<textarea class="form-control form-control-sm" prsAttribute="parameter" autocomplete="off" id="input-parameter-prsJsonConfigString-0">{"data": []}</textarea>
 								</div>
 								<button id="but-deleteParameter-0" class="btn btn-sm m-1 btn-danger" onclick="deleteParameter(event);">

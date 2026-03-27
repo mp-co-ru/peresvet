@@ -178,6 +178,14 @@ $.fn[pluginName] = function (options) {
 
 // начало ------------------------------------------------------------------------------------------------------------------------
 
+if (typeof __prsConfiguratorHtmlNode === "undefined") {
+  __prsConfiguratorHtmlNode = document;
+}
+
+var prsMethodInitiatorIds = [];
+var prsMethodInitiatorInit = "[]";
+var prsMethodParentId = "";
+
 initiatorsTabClicked = (butName) => {
   if (butName === "schedules") {
     $("#v-pills-Tags-tab").removeClass("active");
@@ -200,6 +208,340 @@ initiatorsTabClicked = (butName) => {
   }
 }
 
+function prsGetSelectedInitiatorIds() {
+  return prsMethodInitiatorIds.slice();
+}
+
+function prsMarkInitiatorsDirty() {
+  const cur = JSON.stringify([...prsMethodInitiatorIds].sort());
+  if (cur !== prsMethodInitiatorInit) {
+    $("#but-save").removeClass("disabled");
+    $("#but-reset").removeClass("disabled");
+  }
+}
+
+function prsResetInitiatorsFromInit() {
+  try { prsMethodInitiatorIds = JSON.parse(prsMethodInitiatorInit); } catch (e) { prsMethodInitiatorIds = []; }
+  prsRenderInitiatorPickers();
+}
+
+function prsFillMethodInitiators(nodeData, allNodes) {
+  prsMethodParentId = nodeData.parentId || "";
+  prsMethodInitiatorIds = (nodeData.initiatedBy || []).slice();
+  prsMethodInitiatorInit = JSON.stringify([...prsMethodInitiatorIds].sort());
+  const { pathFor } = prsBuildPathMapFromNodes(allNodes);
+  window.prsInitiatorCatalogTags = [];
+  window.prsInitiatorCatalogSchedules = [];
+  (allNodes.data || []).forEach((dataItem) => {
+    const oc = dataItem.attributes.objectClass[0];
+    const row = {
+      id: dataItem.id,
+      cn: dataItem.attributes.cn[0],
+      path: pathFor(dataItem.id),
+      disabled: dataItem.id === prsMethodParentId
+    };
+    if (oc === "prsTag") window.prsInitiatorCatalogTags.push(row);
+    else if (oc === "prsSchedule") window.prsInitiatorCatalogSchedules.push(row);
+  });
+  prsRenderInitiatorPickers();
+  prsBindInitiatorSearch();
+}
+
+function prsEscapeHtml(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+var prsInitiatorSearchTimers = { Tags: 0, Schedules: 0 };
+
+function prsBuildPathMapFromNodes(allNodes) {
+  const byId = {};
+  (allNodes.data || []).forEach((dataItem) => {
+    byId[dataItem.id] = {
+      id: dataItem.id,
+      cn: (dataItem.attributes.cn && dataItem.attributes.cn[0]) || "",
+      oc: (dataItem.attributes.objectClass && dataItem.attributes.objectClass[0]) || "",
+      parentId: dataItem.parentId || null
+    };
+  });
+  const rootIds = new Set(["tags", "schedules", "objects", "connectors", "alerts", "methods", "dataStorages"]);
+  function pathFor(id) {
+    const parts = [];
+    let cur = id;
+    const seen = new Set();
+    while (cur && !seen.has(cur)) {
+      seen.add(cur);
+      const n = byId[cur];
+      if (!n) break;
+      if (rootIds.has(cur)) break;
+      parts.unshift(n.cn || cur);
+      cur = n.parentId;
+    }
+    return parts.length ? parts.join(" / ") : ((byId[id] && byId[id].cn) || id);
+  }
+  return { byId, pathFor };
+}
+
+function prsBindMethodInitiatorTabsOnce() {
+  const root = __prsConfiguratorHtmlNode;
+  if (!root || root.dataset.prsMethodInitTabsBound === "1") return;
+  const wrap = root.querySelector(".prs-method-initiators-wrap");
+  if (!wrap) return;
+  root.dataset.prsMethodInitTabsBound = "1";
+  wrap.querySelectorAll('[data-bs-toggle="tab"]').forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      var target = btn.getAttribute("data-bs-target");
+      if (!target) return;
+      wrap.querySelectorAll(".nav-link").forEach(function (b) {
+        b.classList.remove("active");
+        b.setAttribute("aria-selected", "false");
+      });
+      btn.classList.add("active");
+      btn.setAttribute("aria-selected", "true");
+      wrap.querySelectorAll(".tab-pane").forEach(function (p) {
+        p.classList.remove("show", "active");
+      });
+      var pane = root.querySelector(target);
+      if (pane) pane.classList.add("show", "active");
+    });
+  });
+}
+
+function prsFilterInitiatorCatalogRows(kind, catalog, q) {
+  q = (q || "").trim().toLowerCase();
+  if (!q) return [];
+  return catalog.filter((row) => {
+    if (row.disabled) return false;
+    const cn = (row.cn || "").toLowerCase();
+    const id = (row.id || "").toLowerCase();
+    const path = (row.path || "").toLowerCase();
+    return cn.includes(q) || id.includes(q) || path.includes(q);
+  }).slice(0, 50);
+}
+
+function prsPaintInitiatorResults(kind) {
+  const box = __prsConfiguratorHtmlNode.getElementById("div-initiatorResults" + kind);
+  if (!box) return;
+  const inp = __prsConfiguratorHtmlNode.getElementById("input-initiatorSearch" + kind);
+  const q = inp ? inp.value : "";
+  const catalog = kind === "Tags" ? (window.prsInitiatorCatalogTags || []) : (window.prsInitiatorCatalogSchedules || []);
+  const rows = prsFilterInitiatorCatalogRows(kind, catalog, q);
+  box.innerHTML = "";
+  if (!String(q).trim()) {
+    box.innerHTML = '<div class="prs-method-search-hint text-muted smaller p-2">Введите часть имени, пути или id и нажмите «Найти» или продолжайте ввод.</div>';
+    return;
+  }
+  if (!rows.length) {
+    box.innerHTML = '<div class="prs-method-search-hint text-muted smaller p-2">Нет совпадений</div>';
+    return;
+  }
+  rows.forEach((row) => {
+    const already = prsMethodInitiatorIds.includes(row.id);
+    const wrap = document.createElement("div");
+    wrap.className = "prs-method-search-row";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "prs-anchor-btn";
+    btn.title = already ? "Уже в списке" : "Добавить к инициаторам";
+    btn.disabled = !!row.disabled || already;
+    btn.innerHTML = '<i class="fa-solid fa-anchor" aria-hidden="true"></i>';
+    btn.addEventListener("click", function () {
+      if (btn.disabled) return;
+      if (!prsMethodInitiatorIds.includes(row.id)) prsMethodInitiatorIds.push(row.id);
+      prsRenderInitiatorChips(kind);
+      prsPaintInitiatorResults(kind);
+      prsMarkInitiatorsDirty();
+    });
+    const main = document.createElement("div");
+    main.className = "prs-method-search-main";
+    main.innerHTML =
+      '<div class="prs-method-search-path">' + prsEscapeHtml(row.path) + "</div>" +
+      '<div class="prs-method-search-meta">' + prsEscapeHtml(row.id) + " · " + prsEscapeHtml(row.cn) + "</div>";
+    wrap.appendChild(btn);
+    wrap.appendChild(main);
+    box.appendChild(wrap);
+  });
+}
+
+function prsRenderInitiatorPickers() {
+  prsBindMethodInitiatorTabsOnce();
+  prsRenderInitiatorChips("Tags");
+  prsRenderInitiatorChips("Schedules");
+  prsPaintInitiatorResults("Tags");
+  prsPaintInitiatorResults("Schedules");
+}
+
+function prsRenderInitiatorChips(kind) {
+  const box = __prsConfiguratorHtmlNode.getElementById("div-initiatorChips" + kind);
+  if (!box) return;
+  const cat = kind === "Tags" ? (window.prsInitiatorCatalogTags || []) : (window.prsInitiatorCatalogSchedules || []);
+  box.innerHTML = "";
+  prsMethodInitiatorIds.forEach((id) => {
+    const row = cat.find((r) => r.id === id);
+    if (!row) return;
+    const chip = document.createElement("span");
+    chip.className = "prs-chip";
+    chip.innerHTML = '<span class="text-truncate" style="max-width:14rem">' + prsEscapeHtml(row.cn || id) + "</span>" +
+      '<button type="button" aria-label="Убрать">&times;</button>';
+    chip.querySelector("button").addEventListener("click", function () {
+      prsMethodInitiatorIds = prsMethodInitiatorIds.filter((x) => x !== id);
+      prsRenderInitiatorPickers();
+      prsMarkInitiatorsDirty();
+    });
+    box.appendChild(chip);
+  });
+}
+
+function prsBindInitiatorSearch() {
+  ["Tags", "Schedules"].forEach((kind) => {
+    const inp = __prsConfiguratorHtmlNode.getElementById("input-initiatorSearch" + kind);
+    if (inp && !inp.dataset.prsBound) {
+      inp.dataset.prsBound = "1";
+      inp.addEventListener("input", function () {
+        clearTimeout(prsInitiatorSearchTimers[kind]);
+        prsInitiatorSearchTimers[kind] = setTimeout(function () {
+          prsPaintInitiatorResults(kind);
+        }, 280);
+      });
+    }
+    const btn = __prsConfiguratorHtmlNode.getElementById("btn-initiatorSearch" + kind);
+    if (btn && !btn.dataset.prsBound) {
+      btn.dataset.prsBound = "1";
+      btn.addEventListener("click", function () {
+        prsPaintInitiatorResults(kind);
+      });
+    }
+  });
+}
+
+var prsParamSearchTimers = {};
+
+function prsPrepareParameterTagPicker(level, allTagsData, parameterData) {
+  const { pathFor } = prsBuildPathMapFromNodes({ data: allTagsData });
+  const rows = (allTagsData || []).map((dataItem) => ({
+    id: dataItem.id,
+    cn: dataItem.attributes.cn[0],
+    path: pathFor(dataItem.id)
+  }));
+  if (!window.prsParamPickerCatalog) window.prsParamPickerCatalog = {};
+  window.prsParamPickerCatalog[level] = rows;
+
+  const inp = __prsConfiguratorHtmlNode.getElementById("input-parameter-tagSearch-" + level);
+  const btn = __prsConfiguratorHtmlNode.getElementById("btn-parameter-tagSearch-" + level);
+  if (inp && !inp.dataset.prsBound) {
+    inp.dataset.prsBound = "1";
+    inp.addEventListener("input", function () {
+      clearTimeout(prsParamSearchTimers[level]);
+      prsParamSearchTimers[level] = setTimeout(function () {
+        prsPaintParameterTagResults(level);
+      }, 280);
+    });
+  }
+  if (btn && !btn.dataset.prsBound) {
+    btn.dataset.prsBound = "1";
+    btn.addEventListener("click", function () {
+      prsPaintParameterTagResults(level);
+    });
+  }
+
+  if (parameterData) {
+    let index = Number(parameterData.attributes.prsIndex[0]);
+    let name = parameterData.attributes.cn[0];
+    let config_text = parameterData.attributes.prsJsonConfigString[0];
+    let config = JSON.parse(config_text);
+    let tagId;
+    if (Array.isArray(config.tagId)) tagId = config.tagId[0];
+    else tagId = config.tagId;
+    $(`#input-parameter-prsIndex-${level}`).val(index).attr("init-value", String(index));
+    $(`#input-parameter-cn-${level}`).val(name).attr("init-value", name);
+    $(`#input-parameter-prsJsonConfigString-${level}`).val(config_text).attr("init-value", config_text);
+    const row = rows.find((r) => r.id === tagId);
+    if (row) prsApplyParameterTagPick(level, row, true);
+    else if (tagId) {
+      const hid = __prsConfiguratorHtmlNode.getElementById("input-parameter-tagId-" + level);
+      const span = __prsConfiguratorHtmlNode.getElementById("span-parameter-tagPick-" + level);
+      if (hid) { hid.value = tagId; hid.setAttribute("init-value", tagId); }
+      if (span) span.textContent = tagId;
+    }
+  }
+}
+
+function prsApplyParameterTagPick(level, row, silentInit) {
+  const hid = __prsConfiguratorHtmlNode.getElementById("input-parameter-tagId-" + level);
+  const span = __prsConfiguratorHtmlNode.getElementById("span-parameter-tagPick-" + level);
+  const res = __prsConfiguratorHtmlNode.getElementById("div-parameter-tagResults-" + level);
+  const inp = __prsConfiguratorHtmlNode.getElementById("input-parameter-tagSearch-" + level);
+  if (hid) hid.value = row.id;
+  if (span) span.textContent = (row.cn || "") + " (" + row.id + ")";
+  if (res) {
+    res.classList.add("d-none");
+    res.innerHTML = "";
+  }
+  if (inp) inp.value = "";
+  const ta = __prsConfiguratorHtmlNode.querySelector("#input-parameter-prsJsonConfigString-" + level);
+  if (ta) {
+    const jsonStr = JSON.stringify({ tagId: [row.id] }, null, "\t");
+    $(ta).val(jsonStr);
+    if (silentInit) ta.setAttribute("init-value", jsonStr);
+    else $(ta).addClass("value-changed");
+  }
+  if (!silentInit) {
+    const inputs = __prsConfiguratorHtmlNode.querySelectorAll(".value-changed");
+    if (inputs.length > 0) {
+      $("#but-save").removeClass("disabled");
+      $("#but-reset").removeClass("disabled");
+    }
+  }
+}
+
+function prsPaintParameterTagResults(level) {
+  const box = __prsConfiguratorHtmlNode.getElementById("div-parameter-tagResults-" + level);
+  const inp = __prsConfiguratorHtmlNode.getElementById("input-parameter-tagSearch-" + level);
+  if (!box || !inp) return;
+  const catalog = (window.prsParamPickerCatalog && window.prsParamPickerCatalog[level]) || [];
+  const q = inp.value.trim().toLowerCase();
+  box.classList.remove("d-none");
+  box.innerHTML = "";
+  if (!q) {
+    box.innerHTML = '<div class="prs-method-search-hint text-muted smaller p-2">Введите запрос и нажмите «Найти».</div>';
+    return;
+  }
+  const rows = catalog.filter((row) => {
+    const cn = (row.cn || "").toLowerCase();
+    const id = (row.id || "").toLowerCase();
+    const path = (row.path || "").toLowerCase();
+    return cn.includes(q) || id.includes(q) || path.includes(q);
+  }).slice(0, 40);
+  if (!rows.length) {
+    box.innerHTML = '<div class="prs-method-search-hint text-muted smaller p-2">Нет совпадений</div>';
+    return;
+  }
+  rows.forEach((row) => {
+    const wrap = document.createElement("div");
+    wrap.className = "prs-method-search-row";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "prs-anchor-btn";
+    btn.title = "Выбрать этот тег";
+    btn.innerHTML = '<i class="fa-solid fa-anchor" aria-hidden="true"></i>';
+    btn.addEventListener("click", function () {
+      prsApplyParameterTagPick(level, row, false);
+    });
+    const main = document.createElement("div");
+    main.className = "prs-method-search-main";
+    main.innerHTML =
+      '<div class="prs-method-search-path">' + prsEscapeHtml(row.path) + "</div>" +
+      '<div class="prs-method-search-meta">' + prsEscapeHtml(row.id) + " · " + prsEscapeHtml(row.cn) + "</div>";
+    wrap.appendChild(btn);
+    wrap.appendChild(main);
+    box.appendChild(wrap);
+  });
+}
 
 var topNodes = [
   {
@@ -319,19 +661,7 @@ saveChanges = () => {
   });
 
   if (objectClass === "prsMethod") {
-    let initiatedBy = [];
-
-    // если меняется метод, то надо собрать всех инициаторов, независимо от того, что изменилось
-    $("#input-initiatedByTags > option").each(function () {
-      if (this.selected) {
-        initiatedBy.push(this.value);
-      }
-    });
-    $("#input-initiatedBySchedules > option").each(function () {
-      if (this.selected)
-        initiatedBy.push(this.value);
-    });
-    payload.initiatedBy = initiatedBy;
+    payload.initiatedBy = prsGetSelectedInitiatorIds();
 
     parameters = []
     //...а также параметры
@@ -401,7 +731,8 @@ addParameter = (event, parameterData) => {
     filter: {
       objectClass: ["prsTag"]
     },
-    attributes: ["cn", "objectClass"]
+    attributes: ["cn", "objectClass"],
+    getParent: true
   }
   params = new URLSearchParams({ q: JSON.stringify(getTagsPayload) }).toString();
 
@@ -433,16 +764,16 @@ addParameter = (event, parameterData) => {
         <div class="col-1 me-2">
           <input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-cn-${newLevel}"/>
         </div>
-        <div class="col-4 me-2">
-          <select prsAttribute="parameter" onchange="onInputChange(event);" id="input-parameter-tagId-${newLevel}" class="form-select form-select-sm" size="1">
-            <option selected value="ttt">&#62;=</option>
-            <option value="ttttt">&#60;</option>
-          </select>
+        <div class="col-4 me-2 prs-param-tag-wrap">
+          <input type="hidden" id="input-parameter-tagId-${newLevel}" value=""/>
+          <div class="input-group input-group-sm">
+            <input type="search" class="form-control" id="input-parameter-tagSearch-${newLevel}" placeholder="Поиск тега по имени, пути или id…" autocomplete="off"/>
+            <button type="button" class="btn btn-outline-secondary" id="btn-parameter-tagSearch-${newLevel}" title="Найти"><i class="fa-solid fa-magnifying-glass"></i></button>
+          </div>
+          <div class="prs-method-search-results mt-1 d-none" id="div-parameter-tagResults-${newLevel}"></div>
+          <div class="small text-muted mt-1 text-truncate" id="span-parameter-tagPick-${newLevel}">не выбран</div>
         </div>
         <div class="col me-2">
-          <!--
-          <input class="form-control form-control-sm" prsAttribute="parameter" onchange="onInputChange(event);" type="text" id="input-parameter-prsJsonConfigString-${newLevel}"/>
-          -->
           <textarea class="form-control form-control-sm" prsAttribute="parameter" autocomplete="off" rows="1" id="input-parameter-prsJsonConfigString-${newLevel}"></textarea>
         </div>
         <button id="but-deleteParameter-${newLevel}" class="btn btn-sm m-1 btn-danger" onclick="deleteParameter(event);">
@@ -451,38 +782,8 @@ addParameter = (event, parameterData) => {
       </div>
     `);
 
-    allTags = data.data;
     level = newLevel;
-    tags = [];
-    parameter_tags_select = $(`#input-parameter-tagId-${level}`);
-    $(`#input-parameter-tagId-${level} option`).remove();
-    allTags.map((dataItem) => {
-      tags.push({
-        cn: dataItem.attributes.cn[0],
-        id: dataItem.id
-      });
-    });
-    tags.map((el) => {
-      parameter_tags_select.append(`<option value="${el.id}">${el.cn}&nbsp;(${el.id})</option>`);
-    });
-    parameter_tags_select.val("");
-    if (parameterData) {
-      let index = Number(parameterData.attributes.prsIndex[0]);
-      let name = parameterData.attributes.cn[0];
-      let config_text = parameterData.attributes.prsJsonConfigString[0];
-
-      let config = JSON.parse(config_text);
-      if (Array.isArray(config.tagId))
-        tagId = config.tagId[0];
-      else
-        tagId = config.tagId;
-
-      parameter_tags_select.val(tagId);
-
-      $(`#input-parameter-prsIndex-${level}`).val(index);
-      $(`#input-parameter-cn-${level}`).val(name);
-      $(`#input-parameter-prsJsonConfigString-${level}`).val(config_text);
-    }
+    prsPrepareParameterTagPicker(level, data.data, parameterData);
   });
 }
 
@@ -543,18 +844,7 @@ onInputChange = (event) => {
   else
     targetEl.classList.add("value-changed");
 
-  // если изменился тег из списка тегов в параметре
   elId = targetEl.id;
-  if (elId.startsWith("input-parameter-tagId")) {
-    let paramIndex = elId.split("-").slice(-1);
-    selectedTag = $(targetEl).val();
-    payload = {
-      tagId: [selectedTag]
-    }
-    $(`#input-parameter-prsJsonConfigString-${paramIndex}`).val(
-      JSON.stringify(payload, null, "\t")
-    ).addClass("value-changed");
-  }
 
   inputs = document.querySelectorAll(".value-changed");
   if (inputs.length > 0) {
@@ -568,16 +858,30 @@ onInputChange = (event) => {
 
 };
 
+prsTreeRowFromEvent = function (event) {
+  var t = event.target;
+  if (t && t.nodeType === 3) t = t.parentElement;
+  if (!t || typeof t.closest !== "function") return null;
+  return t.closest('[role="treeitem"]');
+};
+
 getFocus = (event) => {
   event.stopPropagation();
 
-  els = document.getElementsByClassName("currentNode");
-  elsArray = [...els];
-  elsArray.map((el) => {
-    el.classList.toggle("currentNode");
-  });
-  el = event.target;
-  el.classList.toggle("currentNode");
+  const prev = document.querySelectorAll(".currentNode");
+  [...prev].forEach((n) => { n.classList.remove("currentNode"); });
+  const row = prsTreeRowFromEvent(event);
+  if (row) {
+    row.classList.add("currentNode");
+    const rid = row.id;
+    const ocl = row.getAttribute("objectClass");
+    if (ocl && !topNodesIds.includes(rid)) {
+      removeClassOnElements("value-changed");
+      setAttributesVisibility(row);
+      setAddButtonsVisibility(row);
+      fillForm(row);
+    }
+  }
 };
 
 sortList = (group) => {
@@ -642,12 +946,16 @@ addNode = (parentElement, node, top = false) => {
 
     parentElement.parentNode.insertBefore(parentGroup, parentElement.nextSibling);
 
-    icon = parentElement.querySelector('.state-icon');
-    if (!icon) {
-      icon = document.createElement("i");
-      parentElement.insertBefore(icon, parentElement.firstChild);
+    parentElement.querySelectorAll(":scope > .state-icon").forEach(function (el) {
+      if (!el.hasAttribute("data-prs-tree-chevron")) el.remove();
+    });
+    var chev = parentElement.querySelector("[data-prs-tree-chevron]");
+    if (!chev) {
+      chev = document.createElement("i");
+      chev.setAttribute("data-prs-tree-chevron", "1");
+      parentElement.insertBefore(chev, parentElement.firstChild);
     }
-    icon.setAttribute("class", `state-icon ${options.expandIcon}`);
+    chev.setAttribute("class", `state-icon ${options.expandIcon}`);
   }
 
   parentAreaLevel = Number(parentElement.getAttribute("aria-level"));
@@ -706,10 +1014,10 @@ const typeNames = {
 
 const visibility = {
   "prsObject": {
-    "visible": ["div-prsIndex"], // имя, описание, индекс, активный - видны всегда
+    "visible": ["div-prsIndex", "div-prsEntityTypeCode", "div-prsJsonConfigString"],
     "hidden": ["div-prsMethodAddress", "div-prsValueTypeCode", "div-tagData",
-      "div-prsJsonConfigString", "div-prsUpdate", "div-prsDefault", "div-prsStep",
-      "div-prsMeasureUnits", "div-initiatedBy", "div-parameters", "div-alertConfig", "div-scheduleConfig", "div-prsEntityTypeCode"]
+      "div-prsUpdate", "div-prsDefault", "div-prsStep",
+      "div-prsMeasureUnits", "div-initiatedBy", "div-parameters", "div-alertConfig", "div-scheduleConfig"]
   },
   "prsTag": {
     "visible": ["div-prsValueTypeCode", "div-prsUpdate", "div-prsStep", "div-prsMeasureUnits", "div-tagData"],
@@ -1264,11 +1572,8 @@ fillForm = (nodeElement) => {
       }
     });
 
-    // для метода - заполним список initiatedBy и parameters
+    // для метода — инициаторы (поиск + якорь) и параметры
     if (objClass === "prsMethod") {
-      $("#input-initiatedByTags option").remove();
-      $("#input-initiatedByAlerts option").remove();
-      $("#input-initiatedBySchedules option").remove();
       let getTagsAlertsSchedulesPayload = {
         base: "prs",
         deref: false,
@@ -1276,7 +1581,8 @@ fillForm = (nodeElement) => {
         filter: {
           objectClass: ["prsTag", "prsAlert", "prsSchedule"]
         },
-        attributes: ["cn", "objectClass"]
+        attributes: ["cn", "objectClass"],
+        getParent: true
       }
       let params = new URLSearchParams({ q: JSON.stringify(getTagsAlertsSchedulesPayload) }).toString();
 
@@ -1289,35 +1595,10 @@ fillForm = (nodeElement) => {
         return response.json();
       }).then((allNodes) => {
         if (!allNodes) return;
-        let selectId = "";
-        allNodes.data.map((dataItem) => {
-          switch (dataItem.attributes.objectClass[0]) {
-            case "prsTag":
-              selectId = "#input-initiatedByTags";
-              break;
-            case "prsAlert":
-              selectId = "#input-initiatedByAlerts";
-              break;
-            case "prsSchedule":
-              selectId = "#input-initiatedBySchedules";
-          };
+        prsFillMethodInitiators(nodeData, allNodes);
 
-          let selected = nodeData.initiatedBy.includes(dataItem.id);
-          let disabled = dataItem.id === nodeData.parentId;
-          if (selected)
-            $(selectId).append(`<option selected value="${dataItem.id}">${dataItem.attributes.cn[0]}&nbsp;(${dataItem.id})</option>`);
-          else
-            if (!disabled)
-              $(selectId).append(`<option value="${dataItem.id}">${dataItem.attributes.cn[0]}&nbsp;(${dataItem.id})</option>`);
-        });
-
-        $("#input-initiatedByTags").attr("init-value", $("#input-initiatedByTags").val());
-        $("#input-initiatedByAlerts").attr("init-value", $("#input-initiatedByAlerts").val());
-        $("#input-initiatedBySchedules").attr("init-value", $("#input-initiatedBySchedules").val());
-
-        // параметры
         $("#div-list-parameters").empty();
-        nodeData.parameters.map((item) => {
+        (nodeData.parameters || []).map((item) => {
           addParameter(null, item);
         });
       })
@@ -1346,6 +1627,7 @@ resetChanges = () => {
     el.value = initValue;
     el.classList.remove("value-changed");
   });
+  if (typeof prsResetInitiatorsFromInit === "function") prsResetInitiatorsFromInit();
   $("#but-reset").addClass("disabled");
   $("#but-save").addClass("disabled");
 };
@@ -1353,7 +1635,8 @@ resetChanges = () => {
 clickNode = (event) => {
   event.stopPropagation();
 
-  let clickedNode = event.target;
+  let clickedNode = prsTreeRowFromEvent(event);
+  if (!clickedNode) return;
 
   removeClassOnElements("value-changed");
 

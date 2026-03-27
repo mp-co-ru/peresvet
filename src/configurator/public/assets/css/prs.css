@@ -7,11 +7,11 @@
 }
 
 .prsMethod{
-    color: rgb(0,0,150);
+    color: #2c707f;
 }
 
 .prsAlert{
-    color: rgb(100,0,0);
+    color: #a34a28;
 }
 
 *, body {
@@ -203,7 +203,7 @@ html, body {
     left: -.5rem;
     display: inline-block;
     padding: .375rem .75rem;
-    background: rgba(0, 0, 0, 0.15);
+    background: rgba(0, 0, 0, 0.28);
     border-radius: .25rem 0 0 .25rem;
 }
 
@@ -287,12 +287,12 @@ html, body {
 
 .value-changed{
     border-width: 2px;
-    border-color: rgb(0,0,220);
+    border-color: #2c707f;
 }
 
 .currentNode{
     outline : none;
-    background-color: rgb(200,200,255);
+    background-color: rgba(44, 112, 127, 0.22);
   }
 
 .edge {
@@ -324,3 +324,165 @@ html, body {
     border: 1px solid #ced4da;
     border-radius: 0.25rem;
 }
+
+/* —— Конфигуратор Grafana: единый стиль и новые виджеты —— */
+.main-container {
+    gap: 8px;
+    align-items: stretch;
+}
+.element-holder {
+    background: rgba(0, 0, 0, 0.02);
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* левая колонка конфигуратора: дерево + хранилища — прокрутка внутри панели Grafana */
+.element-holder.col-4 {
+    max-height: min(92vh, 960px);
+    overflow-y: auto;
+    min-height: 0;
+}
+.sub-element {
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.6);
+}
+.prs-card {
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    background: #fff;
+    padding: 10px 12px;
+}
+.prs-card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: #343a40;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.prs-picker-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 0.875rem;
+}
+.prs-picker-row {
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f3f5;
+}
+.prs-picker-row:last-child {
+    border-bottom: none;
+}
+.prs-picker-row:hover {
+    background: #e6f2f4;
+}
+.prs-picker-row.prs-hidden {
+    display: none;
+}
+.prs-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 28px;
+}
+.prs-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #e9ecef;
+    font-size: 0.75rem;
+    max-width: 100%;
+}
+.prs-chip button {
+    border: none;
+    background: none;
+    padding: 0 2px;
+    cursor: pointer;
+    color: #6c757d;
+    line-height: 1;
+}
+.prs-chip button:hover {
+    color: #dc3545;
+}
+.prs-drop-zone {
+    min-height: 36px;
+    border: 2px dashed #adb5bd;
+    border-radius: 8px;
+    padding: 6px 8px;
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: #6c757d;
+    transition: background 0.15s, border-color 0.15s;
+}
+.prs-drop-zone.prs-drag-over {
+    background: #e6f2f4;
+    border-color: #2c707f;
+    color: #235a66;
+}
+.prs-ds-row {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 8px;
+    background: #fafbfc;
+}
+.prs-ds-row .prs-ds-meta {
+    font-size: 0.75rem;
+    color: #6c757d;
+    word-break: break-all;
+}
+.prs-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.75rem;
+}
+#attributes-form .row {
+    margin-bottom: 4px;
+}
+#attributes-form h3#div-nodeName {
+    font-size: 1.35rem;
+    margin: 0;
+}
+
+/* Поиск тега с якорем (метод — инициаторы и параметры) */
+.prs-method-search-results {
+    max-height: 14rem;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: #fff;
+}
+.prs-method-search-row {
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+    padding: 6px 8px;
+    border-bottom: 1px solid #e9ecef;
+}
+.prs-method-search-row:last-child { border-bottom: none; }
+.prs-method-search-row:hover { background: #e6f2f4; }
+.prs-anchor-btn {
+    flex: 0 0 auto;
+    align-self: flex-start;
+    border: none;
+    background: transparent;
+    color: #2c707f;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+.prs-anchor-btn:hover:not(:disabled) { background: rgba(44, 112, 127, 0.12); }
+.prs-anchor-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.prs-method-search-main { flex: 1; min-width: 0; }
+.prs-method-search-path { font-size: 0.8125rem; font-weight: 600; line-height: 1.25; }
+.prs-method-search-meta { font-size: 0.7rem; color: #6c757d; font-family: ui-monospace, monospace; margin-top: 2px; word-break: break-all; }
+.prs-method-initiators-wrap .nav-tabs .nav-link { padding: 6px 12px; font-size: 0.8125rem; }
+.prs-param-tag-wrap { min-width: 0; }
