@@ -8,6 +8,7 @@ import json
 sys.path.append(".")
 
 from src.common.app_svc import AppSvc
+from src.common.amqp_rpc import NO_AMQP_RPC_REPLY
 from src.services.alerts.app.alerts_app_settings import AlertsAppSettings
 from src.common.hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
 
@@ -251,7 +252,7 @@ class AlertsApp(AppSvc):
             routing_key=f"{self._config.hierarchy['class']}.app.alarm_acked.{alert_id}"
         )
 
-    async def _tag_value_changed(self, mes: dict, routing_key: str = None, id_alert: str = None) -> None:
+    async def _tag_value_changed(self, mes: dict, routing_key: str = None, id_alert: str = None):
         """_summary_
 
         Args:
@@ -350,8 +351,11 @@ class AlertsApp(AppSvc):
                             alert_data["acked"] = None
 
                     await r.json().set(
-                        name=f"{alert_id}.{self._config.svc_name}", path="$", obj=alert_data[0]
+                        name=f"{alert_id}.{self._config.svc_name}", path="$", obj=alert_data
                     )
+
+        # Ответ на RPC не шлём: запись в хранилище отвечает dataStorages (см. base_svc).
+        return NO_AMQP_RPC_REPLY
 
     async def _get_alerts(self, routing_key: str = None) -> None:
         get_alerts = {

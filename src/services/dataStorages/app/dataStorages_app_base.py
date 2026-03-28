@@ -832,8 +832,12 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         if scheduled:
             loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))
 
-    async def _tag_set(self, mes: dict, routing_key: str = None) -> None:
-        """
+    async def _tag_set(self, mes: dict, routing_key: str = None) -> dict:
+        """Запись точек в Redis-кэш тега.
+
+        Должен возвращать JSON-совместимый dict: иначе при RPC ``reply=True``
+        в ответ уйдёт ``null``, а ``tags_app`` воспримет это как отсутствие
+        обработчика (424), хотя запись в кэш уже выполнена.
 
         Args:
             mes (dict): {
@@ -845,6 +849,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
                 ]
             }
         """
+        result_items: list[dict] = []
         try:
             self._logger.debug(f"Tag set: {mes}")
 
@@ -868,9 +873,15 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
                             "data", *tag_item["data"]
                         )
                         self._logger.info(f"{self._config.svc_name} :: Кэш тега {tag_id} обновлён.")
+                        result_items.append(
+                            {"tagId": tag_id, "data": list(tag_item["data"])}
+                        )
 
         except Exception as ex:
             self._logger.error(f"{self._config.svc_name} :: Ошибка обновления данных в кэше: {ex}")
+        if result_items:
+            return {"data": result_items}
+        return {}
 
     async def _create_tag_cache(self, tag_id: str) -> dict | bool | None:
         """Функция подготовки кэша с данными о теге.

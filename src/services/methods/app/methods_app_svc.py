@@ -10,7 +10,8 @@ from patio_rabbitmq import RabbitMQBroker
 sys.path.append(".")
 
 from src.common.app_svc import AppSvc
-from src.common.hierarchy import CN_SCOPE_ONELEVEL
+from src.common.hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
+from src.common.amqp_rpc import NO_AMQP_RPC_REPLY
 from src.services.methods.app.methods_app_settings import MethodsAppSettings
 
 class MethodsApp(AppSvc):
@@ -166,13 +167,32 @@ class MethodsApp(AppSvc):
             })
             await self._calc_tag(tag_id, method_id, parameters, [mes['time'], None, None])
 
+    async def _tag_has_datastorage_tagdata(self, tag_id: str) -> bool:
+        """Тег привязан к хранилищу в модели — ответ на data_set даст dataStorages."""
+        try:
+            ds_root = await self._hierarchy.get_node_id("cn=dataStorages,cn=prs")
+        except Exception:
+            return False
+        res = await self._hierarchy.search(
+            {
+                "base": ds_root,
+                "scope": CN_SCOPE_SUBTREE,
+                "filter": {"cn": [tag_id], "objectClass": ["prsDatastorageTagData"]},
+                "attributes": ["cn"],
+                "deref": False,
+            }
+        )
+        return bool(res)
+
     async def _start_method_by_tag(self, mes: dict, routing_key: str = None) -> dict:
 
         self._logger.debug(f"Run methods. Data: {mes}")
 
+        tag_ids: list[str] = []
         async with self._cache.get_redis() as r:
             for tag_item in mes["data"]:
                 tag_id = tag_item["tagId"]
+                tag_ids.append(tag_id)
                 tag_data = tag_item["data"]
                 methods = await r.json().get(f"{tag_id}.{self._config.svc_name}")
                 if not methods:
@@ -188,6 +208,13 @@ class MethodsApp(AppSvc):
                     })
                     for tag_data_item in tag_data:
                         await self._calc_tag(tag_id, method_id, parameters, tag_data_item)
+
+        if not tag_ids:
+            return {}
+        for tid in tag_ids:
+            if not await self._tag_has_datastorage_tagdata(tid):
+                return {}
+        return NO_AMQP_RPC_REPLY
 
     async def _calc_tag(self, tag_id: str, method_id: str, parameters: dict, data: list[int | None]) -> None:
 
