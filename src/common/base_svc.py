@@ -18,6 +18,7 @@ from pamqp.commands import Basic
 from src.common.logger import PrsLogger
 from src.common.base_svc_settings import BaseSvcSettings
 from src.common.redis_cache import RedisCache
+from src.common.amqp_rpc import NO_AMQP_RPC_REPLY
 
 class BaseSvc(FastAPI):
 
@@ -159,11 +160,11 @@ class BaseSvc(FastAPI):
                         passed = True
                         res = await self._handlers[key](mes=mes, routing_key=message.routing_key)
 
-                        if message.reply_to:
+                        if message.reply_to and res is not NO_AMQP_RPC_REPLY:
                             # здесь нельзя использовать self._post_message
                             await self._exchange.publish(
                                 aio_pika.Message(
-                                    body=json.dumps(res,ensure_ascii=False).encode(),
+                                    body=json.dumps(res, ensure_ascii=False).encode(),
                                     correlation_id=message.correlation_id,
                                 ),
                                 routing_key=message.reply_to,
@@ -231,9 +232,19 @@ class BaseSvc(FastAPI):
         else:
             try:
                 future: asyncio.Future = self._callback_futures.pop(message.correlation_id, None)
+                if future is None:
+                    # Второй и последующие ответы по тому же correlation_id (несколько
+                    # очередей слушают prsTag.app.data_set.<id>).
+                    self._logger.debug(
+                        f"{self._config.svc_name} :: Игнорирован повторный ответ RPC "
+                        f"(correlation_id={message.correlation_id!r})."
+                    )
+                    return
                 future.set_result(json.loads(message.body.decode()))
-            except:
-                self._logger.error(f"{self._config.svc_name} :: Ошибка работы с ответом.")
+            except Exception as ex:
+                self._logger.error(
+                    f"{self._config.svc_name} :: Ошибка работы с ответом: {ex!r}"
+                )
 
     async def _generate_queue(self):
         """Логика генерации очереди/очередей сообщений
