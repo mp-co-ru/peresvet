@@ -177,9 +177,6 @@ class ModelCRUDSvc(Svc):
                 object_class.strip() for object_class in classes
             ]
 
-    #: Родители этих классов в LDAP — контейнеры; для getParent отдаём следующего предка-сущность.
-    _SKIP_GET_PARENT_CLASSES = frozenset({"prsModelNode", "alias", "extensibleObject"})
-
     def _set_handlers(self):
         self._handlers = {
             f"{self._config.hierarchy['class']}.api_crud.create": self._create,
@@ -487,31 +484,6 @@ class ModelCRUDSvc(Svc):
             ids (List[str]): список ``id`` удаляемых узлов.
         """
 
-    async def _effective_parent_id_for_read(self, node_id: str) -> str | None:
-        """Первый предок по LDAP, который не является чисто структурным узлом.
-
-        Нужен, чтобы теги/методы под ``cn=system`` и т.п. получали parentId
-        на объект или тег, а не обрывали цепочку для клиентов (дерево, rollup).
-        """
-        try:
-            parent_id, _ = await self._hierarchy.get_parent(node_id)
-        except ValueError:
-            return None
-        guard = 0
-        while parent_id and guard < 64:
-            guard += 1
-            try:
-                parent_class = await self._hierarchy.get_node_class(parent_id)
-            except ValueError:
-                return None
-            if parent_class not in self._SKIP_GET_PARENT_CLASSES:
-                return parent_id
-            try:
-                parent_id, _ = await self._hierarchy.get_parent(parent_id)
-            except ValueError:
-                return None
-        return None
-
     async def _read(self, mes: dict, routing_key: str | None = None) -> dict:
         """Правильность заполнения полей входного сообщения выполняется
         сервисом ``<сущность>_api_crud``.
@@ -656,7 +628,9 @@ class ModelCRUDSvc(Svc):
 
         if mes.get("getParent"):
             for item in res["data"]:
-                item["parentId"] = await self._effective_parent_id_for_read(item["id"])
+                parent_id, _ = await self._hierarchy.get_parent(item["id"])
+                parent_class = await self._hierarchy.get_node_class(parent_id)
+                item["parentId"] = (None, parent_id)[parent_class != "prsModelNode"]
 
         final_res = await self._further_read(mes, res)
         return final_res
