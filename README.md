@@ -332,6 +332,9 @@ $ make html
 
 В результате в каталоге ``docs/build/html`` будет сгенерирована HTML-документация на проект.
 
+Заметки по отдельным темам в корне ``docs/`` (не входят в Sphinx), например:
+[отбор точек при ``data_set`` тега](docs/tag_data_set_filtering.md).
+
 
 ![ldap-test](pics/jxplorer.png 'ldap-test')
 

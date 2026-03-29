@@ -14,8 +14,12 @@ sys.path.append(".")
 
 from src.common.app_svc import AppSvc
 from src.services.tags.app.tags_app_settings import TagsAppSettings
-from src.common.times import ts, now_int
 from src.common.tag_data_points import normalize_point_xyq
+from src.common.json_rpc_sanitize import to_redis_json_scalar
+from src.common.tag_max_line_dev import (
+    filter_data_points_for_storage,
+    parse_prs_max_line_dev_from_ldap_attrs,
+)
 
 class TagsApp(AppSvc):
     """Сервис работы с тегами.
@@ -84,6 +88,54 @@ class TagsApp(AppSvc):
 
             return res
 
+    @staticmethod
+    def _unwrap_redis_json_root(val):
+        if isinstance(val, list) and len(val) == 1:
+            return val[0]
+        return val
+
+    async def _ensure_tag_data_set_cache(self, tag_id: str) -> dict | None:
+        """Полный кэш тега в Redis для ``data_set``: активность, тип, prsMaxLineDev, последнее принятое y/q."""
+        key = f"{tag_id}.{self._config.svc_name}"
+        async with self._cache.get_redis() as r:
+            try:
+                doc = await r.json().get(key, "$")
+            except Exception:
+                doc = None
+        doc = self._unwrap_redis_json_root(doc)
+        if isinstance(doc, dict):
+            need_refresh = (
+                "prsValueTypeCode" not in doc
+                or "prsMaxLineDev" not in doc
+                or "prsLastAcceptedQ" not in doc
+            )
+        else:
+            need_refresh = True
+        if not need_refresh:
+            return doc
+
+        last_y = doc.get("prsLastAcceptedY") if isinstance(doc, dict) else None
+        last_q = doc.get("prsLastAcceptedQ") if isinstance(doc, dict) else None
+        hres = await self._hierarchy.search(
+            {
+                "id": tag_id,
+                "attributes": ["prsActive", "prsValueTypeCode", "prsMaxLineDev"],
+            }
+        )
+        if not hres:
+            return None
+        attrs = hres[0][2]
+        new_doc = {
+            "prsActive": attrs["prsActive"][0] == "TRUE",
+            "prsValueTypeCode": int(attrs["prsValueTypeCode"][0]),
+            "prsMaxLineDev": parse_prs_max_line_dev_from_ldap_attrs(attrs),
+            "prsLastAcceptedY": last_y,
+            "prsLastAcceptedQ": last_q,
+        }
+        async with self._cache.get_redis() as r:
+            await r.json().set(name=key, path="$", obj=new_doc)
+        return new_doc
+
     async def data_set(self, mes: dict, routing_key: str | None = None) -> dict:
         common_payload = {}
         result_items: list[dict] = []
@@ -96,31 +148,43 @@ class TagsApp(AppSvc):
 
             self._logger.debug(f"{self._config.svc_name} :: Запись данных тега '{tag_id}'")
 
-            res = await self._get_tag_cache_key_value(tag_id, "prsActive")
-            if res is None:
+            tag_proc = await self._ensure_tag_data_set_cache(tag_id)
+            if tag_proc is None:
                 self._logger.error(f"{self._config.svc_name} :: Нет тега c id = '{tag_id}'.")
                 continue
-            if not res:
+            if not tag_proc["prsActive"]:
                 self._logger.warning(f"{self._config.svc_name} :: Тег '{tag_id}' неактивен.")
                 continue
 
-            # проверим количество элементов в каждом массиве
-            new_tag_item = {
-                "tagId": tag_id,
-                "data": []
-            }
-            tag_params = tag_item.get("params") if isinstance(tag_item.get("params"), dict) else None
-            if tag_params:
-                new_tag_item["params"] = tag_params
-
+            normalized_data: list = []
             for data_item in tag_item["data"]:
                 p = normalize_point_xyq(data_item)
                 if isinstance(p, tuple) and len(p) == 3:
                     x, y, q = p
-                    new_tag_item["data"].append((x, y, q))
+                    normalized_data.append((x, y, q))
                 else:
-                    # оставим как есть, чтобы downstream сервисы могли вернуть ошибку/лог
-                    new_tag_item["data"].append(data_item)
+                    normalized_data.append(data_item)
+
+            vt = int(tag_proc["prsValueTypeCode"])
+            max_dev = float(tag_proc.get("prsMaxLineDev") or 0)
+            prev_y = tag_proc.get("prsLastAcceptedY")
+            prev_q = tag_proc.get("prsLastAcceptedQ")
+            accepted, new_last_y, new_last_q = filter_data_points_for_storage(
+                normalized_data, vt, max_dev, prev_y, prev_q
+            )
+            if not accepted:
+                self._logger.debug(
+                    f"{self._config.svc_name} :: Тег '{tag_id}': точки отсеяны по prsMaxLineDev."
+                )
+                continue
+
+            new_tag_item = {
+                "tagId": tag_id,
+                "data": accepted,
+            }
+            tag_params = tag_item.get("params") if isinstance(tag_item.get("params"), dict) else None
+            if tag_params:
+                new_tag_item["params"] = tag_params
 
             payload = dict(common_payload)
             # For data_set, params are per-tag (`data[i].params`).
@@ -138,6 +202,19 @@ class TagsApp(AppSvc):
                 return {"error": {"code": 424, "message": f"Нет обработчика для записи данных тега '{tag_item['tagId']}'."}}
             if isinstance(res, dict) and res.get("error"):
                 return res
+            if isinstance(res, dict) and not res.get("error"):
+                async with self._cache.get_redis() as r:
+                    rk = f"{tag_id}.{self._config.svc_name}"
+                    await r.json().set(
+                        rk,
+                        "$.prsLastAcceptedY",
+                        to_redis_json_scalar(new_last_y),
+                    )
+                    await r.json().set(
+                        rk,
+                        "$.prsLastAcceptedQ",
+                        to_redis_json_scalar(new_last_q),
+                    )
             if isinstance(res, dict):
                 returned = res.get("data")
                 if isinstance(returned, list) and returned:
@@ -153,16 +230,28 @@ class TagsApp(AppSvc):
     async def _make_tag_cache(self, tag_id: str):
         await self._delete_tag_cache(tag_id=tag_id)
 
-        res = await self._hierarchy.search({
-            "id": tag_id,
-            "attributes": ["prsActive"]
-        })
+        res = await self._hierarchy.search(
+            {
+                "id": tag_id,
+                "attributes": ["prsActive", "prsValueTypeCode", "prsMaxLineDev"],
+            }
+        )
         if not res:
             return False
 
-        active = res[0][2]["prsActive"][0] == 'TRUE'
+        attrs = res[0][2]
+        active = attrs["prsActive"][0] == "TRUE"
+        doc = {
+            "prsActive": active,
+            "prsValueTypeCode": int(attrs["prsValueTypeCode"][0]),
+            "prsMaxLineDev": parse_prs_max_line_dev_from_ldap_attrs(attrs),
+            "prsLastAcceptedY": None,
+            "prsLastAcceptedQ": None,
+        }
         async with self._cache.get_redis() as r:
-            res = await r.json().set(name=f"{tag_id}.{self._config.svc_name}", path="$", obj={"prsActive": active})
+            res = await r.json().set(
+                name=f"{tag_id}.{self._config.svc_name}", path="$", obj=doc
+            )
         return res
 
     async def on_startup(self) -> None:
