@@ -19,6 +19,7 @@ from src.common.logger import PrsLogger
 from src.common.base_svc_settings import BaseSvcSettings
 from src.common.redis_cache import RedisCache
 from src.common.amqp_rpc import NO_AMQP_RPC_REPLY
+from src.common.json_rpc_sanitize import sanitize_for_json_rpc
 
 class BaseSvc(FastAPI):
 
@@ -162,9 +163,18 @@ class BaseSvc(FastAPI):
 
                         if message.reply_to and res is not NO_AMQP_RPC_REPLY:
                             # здесь нельзя использовать self._post_message
+                            try:
+                                safe = sanitize_for_json_rpc(res)
+                                body = json.dumps(safe, ensure_ascii=False).encode()
+                            except Exception as ex:
+                                self._logger.error(
+                                    f"{self._config.svc_name} :: Не удалось сериализовать ответ RPC "
+                                    f"(routing_key={message.routing_key!r}): {ex!r}"
+                                )
+                                raise
                             await self._exchange.publish(
                                 aio_pika.Message(
-                                    body=json.dumps(res, ensure_ascii=False).encode(),
+                                    body=body,
                                     correlation_id=message.correlation_id,
                                 ),
                                 routing_key=message.reply_to,

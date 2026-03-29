@@ -21,6 +21,7 @@ from src.common.hierarchy import (
     CN_SCOPE_BASE, CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
 )
 import src.common.times as t
+from src.common.tag_data_points import tag_data_points_json_safe
 from src.common.consts import (
     CNTagValueTypes as TVT,
     Order
@@ -874,7 +875,12 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
                         )
                         self._logger.info(f"{self._config.svc_name} :: Кэш тега {tag_id} обновлён.")
                         result_items.append(
-                            {"tagId": tag_id, "data": list(tag_item["data"])}
+                            {
+                                "tagId": tag_id,
+                                "data": tag_data_points_json_safe(
+                                    list(tag_item["data"])
+                                ),
+                            }
                         )
 
         except Exception as ex:

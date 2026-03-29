@@ -38,3 +38,14 @@ def normalize_point_xyq(v: Any) -> tuple[int, Any, int | None] | Any:
 
     return v
 
+
+def tag_data_points_json_safe(points: list[Any]) -> list[Any]:
+    """Точки для JSON-RPC ответа: стандартный ``json.dumps`` не сериализует ``tuple``."""
+    out: list[Any] = []
+    for p in points:
+        if isinstance(p, tuple):
+            out.append(list(p))
+        else:
+            out.append(p)
+    return out
+
