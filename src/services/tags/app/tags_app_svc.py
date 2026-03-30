@@ -14,7 +14,7 @@ sys.path.append(".")
 
 from src.common.app_svc import AppSvc
 from src.services.tags.app.tags_app_settings import TagsAppSettings
-from src.common.tag_data_points import normalize_point_xyq
+from src.common.tag_data_points import coerce_tag_data_items_for_data_set, normalize_point_xyq
 from src.common.json_rpc_sanitize import to_redis_json_scalar
 from src.common.tag_max_line_dev import (
     filter_data_points_for_storage,
@@ -157,7 +157,7 @@ class TagsApp(AppSvc):
                 continue
 
             normalized_data: list = []
-            for data_item in tag_item["data"]:
+            for data_item in coerce_tag_data_items_for_data_set(tag_item.get("data")):
                 p = normalize_point_xyq(data_item)
                 if isinstance(p, tuple) and len(p) == 3:
                     x, y, q = p
@@ -174,7 +174,7 @@ class TagsApp(AppSvc):
             )
             if not accepted:
                 self._logger.debug(
-                    f"{self._config.svc_name} :: Тег '{tag_id}': точки отсеяны по prsMaxLineDev."
+                    f"{self._config.svc_name} :: Тег '{tag_id}': все точки отсеяны правилами записи (prsMaxLineDev / качество / тип)."
                 )
                 continue
 

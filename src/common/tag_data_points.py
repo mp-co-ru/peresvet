@@ -39,6 +39,24 @@ def normalize_point_xyq(v: Any) -> tuple[int, Any, int | None] | Any:
     return v
 
 
+def coerce_tag_data_items_for_data_set(raw: Any) -> list[Any]:
+    """Поле ``data`` тега в ``data_set``: всегда список элементов для поочерёдной обработки.
+
+    Обычно это ``[[x,y,q], ...]``. Одна точка может прийти плоским ``[x,y]`` или
+    ``[x,y,q]`` (первый элемент — скаляр времени, не вложенная последовательность);
+    тогда оборачиваем в ``[точка]``. Кортеж одной точки без списка — в ``[tuple]``.
+    """
+    if raw is None:
+        return []
+    if isinstance(raw, tuple):
+        return [raw]
+    if not isinstance(raw, list):
+        return [raw]
+    if len(raw) >= 2 and not isinstance(raw[0], (list, tuple)):
+        return [raw]
+    return raw
+
+
 def tag_data_points_json_safe(points: list[Any]) -> list[Any]:
     """Точки для JSON-RPC ответа: стандартный ``json.dumps`` не сериализует ``tuple``."""
     out: list[Any] = []
