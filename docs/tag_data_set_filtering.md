@@ -29,7 +29,27 @@
 
 Точки без третьего элемента (без `q`) считаются с **`q = None`**.
 
+## Коннекторы (WebSocket / MQTT)
+
+Данные от коннекторов публикуются с ключом маршрутизации
+`prsTag.app_api.data_set.*` и обрабатываются **тем же** методом `TagsApp.data_set`,
+что и запись через HTTP API (`TagsAppAPI` внутри пересылает на
+`prsTag.app_api.data_set.*`). Отдельного обхода хранилища нет: сначала отбор
+точек, затем `prsTag.app.data_set.<tagId>` в сервисы хранилищ.
+
+Если в сообщении для одного тега приходит **массив точек** `data: [[x1,y1,q1], [x2,y2,q2], ...]`,
+они просеиваются **по порядку**: состояние «последняя принятая пара (y, q)»
+обновляется после каждой неотсеянной точки внутри этого массива (и стыкуется с
+Redis между запросами). Поле `data` приводится к списку в
+`coerce_tag_data_items_for_data_set` (`src/common/tag_data_points.py`), в том
+числе если коннектор передал одну точку без обёртки в список.
+
+Связанный код коннекторов: `src/services/connectors/app/connectors_app_svc.py`
+(WebSocket), `src/services/connectors/app/connectors_mqtt_app_svc.py` (запись
+качества в теги и т.п.).
+
 ## Связанные файлы
 
 - `src/services/tags/app/tags_app_svc.py` — вызов фильтра и обновление Redis.
+- `src/common/tag_data_points.py` — нормализация точки и приведение `data` к списку.
 - Тесты: `tests/unit/test_tag_max_line_dev.py`, `tests/unit/test_tags_app_data_set_max_line_dev.py`.
