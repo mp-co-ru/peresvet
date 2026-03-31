@@ -595,7 +595,10 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
                 aliased_object_id=payload["tagId"],
                 alias_name=payload["tagId"],
             )
-        else:
+        elif attr_vals:
+            # Обновляем узел привязки только если действительно есть изменяемые атрибуты.
+            # В противном случае modify с пустым словарём приведёт к ошибке
+            # "Необходимо указать изменяемые атрибуты." в hierarchy.modify.
             await self._hierarchy.modify(link_id, attr_vals)
 
         if "operations" in payload:

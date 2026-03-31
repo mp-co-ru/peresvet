@@ -9,6 +9,10 @@ sys.path.append(".")
 from src.services.connectors.app.connectors_mqtt_app_settings import ConnectorsMQTTAppSettings
 from src.common.app_svc import AppSvc
 from src.common import hierarchy
+from src.common.tag_quality_codes import (
+    CN_QUALITY_CONNECTION_LOST,
+    CN_QUALITY_CONNECTION_RESTORED,
+)
 import src.common.times as t
 
 class ConnectorsMQTTApp(AppSvc):
@@ -233,8 +237,11 @@ class ConnectorsMQTTApp(AppSvc):
             self._logger.warning(f"{self._config.svc_name} :: prsConnector.connection_lost без id.")
             return {}
         self._connected_connectors.discard(conn_id)
-        await self._write_connector_tags_quality(conn_id, 100)
-        self._logger.info(f"{self._config.svc_name} :: Зафиксирована потеря связи с коннектором {conn_id}, в теги записано качество 100.")
+        await self._write_connector_tags_quality(conn_id, CN_QUALITY_CONNECTION_LOST)
+        self._logger.info(
+            f"{self._config.svc_name} :: Зафиксирована потеря связи с коннектором {conn_id}, "
+            f"в теги записано качество {CN_QUALITY_CONNECTION_LOST}."
+        )
         return {}
 
     async def _send_config_to_connector(self, mes: dict, routing_key: str | None = None) -> dict:
@@ -242,8 +249,11 @@ class ConnectorsMQTTApp(AppSvc):
         conn_id = mes["data"]["id"]
         if conn_id not in self._connected_connectors:
             self._connected_connectors.add(conn_id)
-            await self._write_connector_tags_quality(conn_id, 104)
-            self._logger.info(f"{self._config.svc_name} :: Связь с коннектором {conn_id} восстановлена, в теги записано качество 104.")
+            await self._write_connector_tags_quality(conn_id, CN_QUALITY_CONNECTION_RESTORED)
+            self._logger.info(
+                f"{self._config.svc_name} :: Связь с коннектором {conn_id} восстановлена, "
+                f"в теги записано качество {CN_QUALITY_CONNECTION_RESTORED}."
+            )
         res = await self._get_connector_data(conn_id=conn_id)
         if not res:
             self._logger.error(f"{self._config.svc_name} :: Отсутствует коннектор {conn_id}.")

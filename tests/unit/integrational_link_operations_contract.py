@@ -921,6 +921,64 @@ def test_v2_link_tag_modify_omits_prsJsonConfigString_when_empty():
     assert "prsJsonConfigString" not in modify_calls[0][1]
 
 
+def test_v2_link_tag_modify_skips_empty_attr_vals():
+    """При обновлении привязки тега без изменяемых атрибутов modify не вызывается (избегаем ошибки \"Необходимо указать изменяемые атрибуты.\")."""
+    dummy = types.SimpleNamespace()
+    modify_calls: list[tuple[str, dict]] = []
+
+    async def _post_message(*_args, **_kwargs):
+        return {"prsStore": None}
+
+    async def _search(payload: dict):
+        # Имитируем существующую привязку тега, для которой link_cfg/prsStore/prsEntityTypeCode не меняются,
+        # чтобы attr_vals в _link_tag оказался пустым.
+        if payload.get("id") and payload.get("attributes") == ["prsValueTypeCode"]:
+            return [("tag-1", None, {"prsValueTypeCode": ["5"]})]
+        if payload.get("filter", {}).get("objectClass") == ["prsDatastorageTagData"]:
+            return [("existing-link-id", None, {"cn": ["tag-uuid-1"]})]
+        return []
+
+    async def _get_node_dn(_node_id: str):
+        return "cn=ds1,ou=datastorages"
+
+    async def _get_node_id(dn: str):
+        if "tags" in dn:
+            return "tags-node-id"
+        if "system" in dn:
+            return "system-node-id"
+        return None
+
+    async def _modify(node_id: str, attr_vals: dict):
+        modify_calls.append((node_id, attr_vals))
+
+    dummy._post_message = _post_message
+    dummy._hierarchy = types.SimpleNamespace(
+        search=_search,
+        get_node_dn=_get_node_dn,
+        get_node_id=_get_node_id,
+        modify=_modify,
+    )
+    dummy._config = types.SimpleNamespace(
+        hierarchy={"class": "PrsDatastorage"},
+        svc_name="test",
+    )
+    dummy._logger = types.SimpleNamespace(error=lambda *a, **k: None, info=lambda *a, **k: None)
+
+    # payload без attributes/prsStore/prsEntityTypeCode -> attr_vals = {}
+    asyncio.run(
+        DataStoragesModelCRUDV2._link_tag(
+            dummy,
+            payload={
+                "tagId": "tag-uuid-1",
+                "dataStorageId": "ds-1",
+            },
+        )
+    )
+
+    # В этом сценарии modify вызываться не должен.
+    assert modify_calls == []
+
+
 def test_merge_integrational_request_params_empty():
     assert DataStoragesAppIntegrationalBase._merge_integrational_request_params(None) == {}
     assert DataStoragesAppIntegrationalBase._merge_integrational_request_params({}) == {}
