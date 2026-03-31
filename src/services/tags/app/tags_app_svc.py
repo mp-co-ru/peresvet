@@ -13,6 +13,7 @@ except ModuleNotFoundError as _:
 sys.path.append(".")
 
 from src.common.app_svc import AppSvc
+from src.common.consts import CNTagValueTypes as TVT
 from src.services.tags.app.tags_app_settings import TagsAppSettings
 from src.common.tag_data_points import coerce_tag_data_items_for_data_set, normalize_point_xyq
 from src.common.json_rpc_sanitize import to_redis_json_scalar
@@ -169,9 +170,20 @@ class TagsApp(AppSvc):
             max_dev = float(tag_proc.get("prsMaxLineDev") or 0)
             prev_y = tag_proc.get("prsLastAcceptedY")
             prev_q = tag_proc.get("prsLastAcceptedQ")
-            accepted, new_last_y, new_last_q = filter_data_points_for_storage(
-                normalized_data, vt, max_dev, prev_y, prev_q
-            )
+
+            tag_params = tag_item.get("params") if isinstance(tag_item.get("params"), dict) else None
+            # Табличный (интеграционный) тег: при пустом ``data`` всё равно одна логическая запись
+            # (операция по умолчанию в хранилище). Параметры — в ``data[i].params``; у HTTP POST
+            # ``/v1/data/`` на корне тела только ``data`` (см. ``AllData``). Доп. ключи на корне
+            # ``mes`` возможны у других издателей в шину — тогда они попадут в ``common_payload``.
+            params_only_set = vt == int(TVT.CN_TABLE) and not normalized_data
+            if params_only_set:
+                accepted = [normalize_point_xyq([])]
+                new_last_y, new_last_q = prev_y, prev_q
+            else:
+                accepted, new_last_y, new_last_q = filter_data_points_for_storage(
+                    normalized_data, vt, max_dev, prev_y, prev_q
+                )
             if not accepted:
                 self._logger.debug(
                     f"{self._config.svc_name} :: Тег '{tag_id}': все точки отсеяны правилами записи (prsMaxLineDev / качество / тип)."
@@ -182,16 +194,18 @@ class TagsApp(AppSvc):
                 "tagId": tag_id,
                 "data": accepted,
             }
-            tag_params = tag_item.get("params") if isinstance(tag_item.get("params"), dict) else None
             if tag_params:
                 new_tag_item["params"] = tag_params
 
             payload = dict(common_payload)
-            # For data_set, params are per-tag (`data[i].params`).
-            # Top-level params are intentionally ignored.
-            payload.pop("params", None)
+            top_level_params = payload.pop("params", None)
+            merged_rpc_params: dict = {}
+            if isinstance(top_level_params, dict):
+                merged_rpc_params.update(top_level_params)
             if tag_params:
-                payload["params"] = dict(tag_params)
+                merged_rpc_params.update(tag_params)
+            if merged_rpc_params:
+                payload["params"] = merged_rpc_params
             payload["data"] = [new_tag_item]
 
             res = await self._post_message(payload, reply=True,
