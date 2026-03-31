@@ -2,6 +2,10 @@
 
 Правила задаются атрибутом LDAP ``prsMaxLineDev`` и типом значения тега
 (``prsValueTypeCode``). Подробнее: ``docs/tag_data_set_filtering.md``.
+
+Тип ``CN_TABLE`` (табличный / интеграционный тег): ``prsMaxLineDev`` не
+применяется; точки в хранилище не отсекаются этим модулем (кроме явной смены
+качества — тогда точка всегда принимается).
 """
 
 from __future__ import annotations
@@ -107,16 +111,17 @@ def should_discard_data_point(
 ) -> bool:
     """True — точку ``(x, new_y, new_q)`` не передавать в хранилище.
 
-    Порядок правил: смена качества → всегда пишем; оба значения None и качество
-    то же — не пишем; далее — по типу тега и ``prsMaxLineDev``.
+    Порядок правил: смена качества → всегда пишем; для ``CN_TABLE`` дальше
+    ничего не отсекаем; иначе — общие правила (в т.ч. пара None/None) и
+    ``prsMaxLineDev`` по типу тега.
     """
     if _quality_changed(prev_q, new_q):
         return False
-    if prev_y is None and new_y is None:
-        return True
-
     if value_type_code == TVT.CN_TABLE:
         return False
+
+    if prev_y is None and new_y is None:
+        return True
 
     if value_type_code in (TVT.CN_STR, TVT.CN_JSON):
         if max_line_dev <= 0:

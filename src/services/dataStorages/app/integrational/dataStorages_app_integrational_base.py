@@ -45,6 +45,24 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
     _META_OPERATION_TTL_SEC = 30
     _GET_MAX_ROWS_CAP = 50000
     _RE_OP_NAME = re.compile(r"^[a-zA-Z][a-zA-Z0-9_-]*$")
+    _INTEGRATIONAL_ROOT_PARAM_SKIP = frozenset({"data"})
+
+    @staticmethod
+    def _merge_integrational_request_params(request: dict | None) -> dict[str, Any]:
+        """Параметры операции: корень запроса (кроме ``data``) + вложенный ``params`` (перекрывает корень)."""
+        if not request:
+            return {}
+        merged: dict[str, Any] = {}
+        for k, v in request.items():
+            if k in DataStoragesAppIntegrationalBase._INTEGRATIONAL_ROOT_PARAM_SKIP:
+                continue
+            if k == "params":
+                continue
+            merged[k] = v
+        nested = request.get("params")
+        if isinstance(nested, dict):
+            merged.update(nested)
+        return merged
 
     async def _write_cache_data(self, tag_ids: list[str] | None = None) -> None:
         # интеграционные теги не используют сброс historian-кэша
@@ -186,8 +204,8 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
 
     async def _read_integrational_points(self, tag_id: str, request: dict) -> list[tuple]:
         ds_id, link_id, _link = await self._resolve_integrational_link(tag_id=tag_id)
-        request_params = request.get("params") if isinstance(request.get("params"), dict) else {}
-        op_name = self._normalize_operation_name(request_params.get("operation"))
+        merged = self._merge_integrational_request_params(request)
+        op_name = self._normalize_operation_name(merged.get("operation"))
         op_cn = await self._resolve_operation_cn_from_link(
             link_id=link_id,
             requested_operation=op_name,
@@ -201,7 +219,9 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
             expected_kind=OperationKind.GET,
         )
 
-        ctx = self._build_eval_context(request=request, tag_id=tag_id)
+        req_for_ctx = dict(request)
+        req_for_ctx["params"] = merged
+        ctx = self._build_eval_context(request=req_for_ctx, tag_id=tag_id)
         param_values = await self._eval_params_jsonata(op=op, context=ctx)
 
         return await self._execute_get(
@@ -213,9 +233,9 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
 
     async def _write_integrational_points(self, tag_id: str, tag_item: dict, request: dict) -> list[tuple]:
         ds_id, link_id, _link = await self._resolve_integrational_link(tag_id=tag_id)
-        request_params = request.get("params") if isinstance(request.get("params"), dict) else {}
+        merged_params = self._merge_integrational_request_params(request)
         tag_item_params = tag_item.get("params") if isinstance(tag_item.get("params"), dict) else {}
-        merged_params = dict(request_params)
+        merged_params = dict(merged_params)
         merged_params.update(tag_item_params)
 
         op_name = self._normalize_operation_name(merged_params.get("operation"))
@@ -232,7 +252,7 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
         )
 
         points = tag_item.get("data") or []
-        if not points and merged_params:
+        if not points:
             points = [None]
 
         returned_points: list[tuple] = []
@@ -563,7 +583,7 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
         limit = self._GET_MAX_ROWS_CAP
         if op.max_rows is not None:
             limit = min(limit, int(op.max_rows))
-        req_params = request.get("params") if isinstance((request or {}).get("params"), dict) else {}
+        req_params = self._merge_integrational_request_params(request or {})
         if req_params:
             req_limit = req_params.get("limit")
             if isinstance(req_limit, int) and req_limit > 0:

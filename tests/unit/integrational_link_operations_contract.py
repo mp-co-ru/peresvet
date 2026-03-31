@@ -921,3 +921,28 @@ def test_v2_link_tag_modify_omits_prsJsonConfigString_when_empty():
     assert "prsJsonConfigString" not in modify_calls[0][1]
 
 
+def test_merge_integrational_request_params_empty():
+    assert DataStoragesAppIntegrationalBase._merge_integrational_request_params(None) == {}
+    assert DataStoragesAppIntegrationalBase._merge_integrational_request_params({}) == {}
+
+
+def test_merge_integrational_request_params_root_skips_data():
+    got = DataStoragesAppIntegrationalBase._merge_integrational_request_params(
+        {"data": [{"tagId": "x"}], "line": "L1", "finish": 123}
+    )
+    assert got == {"line": "L1", "finish": 123}
+
+
+def test_merge_integrational_request_params_nested_overrides_root():
+    got = DataStoragesAppIntegrationalBase._merge_integrational_request_params(
+        {"line": "root", "params": {"line": "nested", "name": "n"}}
+    )
+    assert got == {"line": "nested", "name": "n"}
+
+
+def test_merge_integrational_request_params_only_nested():
+    got = DataStoragesAppIntegrationalBase._merge_integrational_request_params(
+        {"params": {"operation": "op.v1"}}
+    )
+    assert got == {"operation": "op.v1"}
+
