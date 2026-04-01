@@ -159,3 +159,4 @@ docker/compose/.cont_one_app.secrets.env
 !methods/test_method.py
 scripts/
 src/configurator_grafana/*.py
+backups/
