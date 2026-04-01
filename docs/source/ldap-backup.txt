@@ -1,0 +1,68 @@
+сейчас docker-контейнер 6e5d использует docker-хранилище compose_ldap_data_one_app.
+
+как сделать его бэкап, чтобы потом, в случае чего, развернуть?
+
+Коротко
+Идея: упаковать содержимое docker‑volume compose_ldap_data_one_app в tar на хосте, а потом при необходимости распаковать его обратно в новый/пустой volume.
+
+1. Проверить, что это действительно volume
+docker volume inspect compose_ldap_data_one_app
+Если Mountpoint указывает на путь внутри /var/lib/docker/volumes/..., это обычный docker‑volume.
+
+2. По-хорошему — остановить контейнер
+Чтобы не словить битые данные (особенно для LDAP/БД), лучше остановить контейнер, который пишет в volume:
+
+docker stop 6e5d
+(если нужно онлайн – можно, но тогда на свой риск).
+
+3. Бэкап volume в tar‑архив
+Из каталога, где хотите хранить бэкап:
+
+mkdir -p ~/backups
+cd ~/backups
+docker run --rm \
+  -v compose_ldap_data_one_app:/data:ro \
+  -v "$PWD":/backup \
+  busybox \
+  sh -c 'cd /data && tar czf /backup/compose_ldap_data_one_app_$(date +%F_%H-%M-%S).tar.gz .'
+В результате в ~/backups появится архив вида
+compose_ldap_data_one_app_2026-04-01_12-00-00.tar.gz.
+
+После этого можно при необходимости запустить контейнер обратно:
+
+docker start 6e5d
+4. Восстановление из бэкапа
+4.1. Создать новый volume (или очистить существующий)
+docker volume create compose_ldap_data_one_app_restored
+(если хотите перезаписать старый volume — см. шаг 4.3).
+
+4.2. Распаковать архив в volume
+Из каталога с архивом:
+
+cd ~/backups
+docker run --rm \
+  -v compose_ldap_data_one_app_restored:/data \
+  -v "$PWD":/backup \
+  busybox \
+  sh -c 'cd /data && tar xzf /backup/compose_ldap_data_one_app_2026-04-01_12-00-00.tar.gz'
+Теперь volume compose_ldap_data_one_app_restored содержит данные из бэкапа.
+
+4.3. Если нужно восстановить “поверх” старого volume
+Остановить все контейнеры, которые его используют:
+
+docker ps --filter volume=compose_ldap_data_one_app
+docker stop <cont_id1> <cont_id2> ...
+Очистить volume (или удалить и создать заново):
+
+docker volume rm compose_ldap_data_one_app
+docker volume create compose_ldap_data_one_app
+Распаковать так же, как в 4.2, но с нужным именем:
+
+docker run --rm \
+  -v compose_ldap_data_one_app:/data \
+  -v "$PWD":/backup \
+  busybox \
+  sh -c 'cd /data && tar xzf /backup/compose_ldap_data_one_app_2026-04-01_12-00-00.tar.gz'
+Запустить контейнеры обратно.
+
+Если напишете, как именно у вас развёрнут LDAP (docker‑compose, какие сервисы), могу подсказать точные команды под ваш docker-compose.yml.
