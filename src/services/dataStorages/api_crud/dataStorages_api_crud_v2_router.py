@@ -221,6 +221,7 @@ async def create_v2(payload: dict | None = None, error_handler: svc.ErrorHandler
     if payload is None:
         payload = {}
     try:
+        svc.coerce_prs_json_strings_in_mapping_tree(payload)
         p = DataStorageCreateV2.model_validate_json(json.dumps(payload))
     except Exception as ex:
         res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
@@ -236,6 +237,7 @@ async def create_v2(payload: dict | None = None, error_handler: svc.ErrorHandler
 @router_v2.put("/", status_code=202)
 async def update_v2(payload: dict, error_handler: svc.ErrorHandler = Depends()):
     try:
+        svc.coerce_prs_json_strings_in_mapping_tree(payload)
         DataStorageUpdateV2.model_validate(payload)
     except Exception as ex:
         res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}

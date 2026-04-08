@@ -139,6 +139,7 @@ async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
 
     """
     try:
+        svc.coerce_prs_json_strings_in_mapping_tree(payload)
         s = json.dumps(payload)
         p = AlertCreate.model_validate_json(s)
     except Exception as ex:
@@ -262,6 +263,7 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
 
     """
     try:
+        svc.coerce_prs_json_strings_in_mapping_tree(payload)
         AlertUpdate.model_validate(payload)
     except Exception as ex:
         res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}

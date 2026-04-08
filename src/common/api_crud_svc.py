@@ -6,6 +6,40 @@
 import json
 from typing import Any, Union
 from uuid import UUID
+
+
+def coerce_prs_json_config_string_value(v: Any) -> Any:
+    """Нормализует prsJsonConfigString: JSON из textarea (str) -> dict; иначе без изменений.
+
+    Пустая/пробельная строка -> ``None``. Не-объект JSON (массив, число) -> ValueError.
+    """
+    if v is None or isinstance(v, dict):
+        return v
+    if isinstance(v, str):
+        s = v.strip()
+        if not s:
+            return None
+        parsed = json.loads(s)
+        if not isinstance(parsed, dict):
+            raise ValueError("prsJsonConfigString должен быть JSON-объектом (словарём)")
+        return parsed
+    return v
+
+
+def coerce_prs_json_strings_in_mapping_tree(obj: Any) -> None:
+    """Рекурсивно (dict/list): строковые значения по ключу ``prsJsonConfigString`` заменить на dict.
+
+    Нужно для тел PUT/POST, которые уходят в ``_update`` как сырой ``dict`` (без model_dump).
+    """
+    if isinstance(obj, dict):
+        for k, v in list(obj.items()):
+            if k == "prsJsonConfigString" and isinstance(v, str):
+                obj[k] = coerce_prs_json_config_string_value(v)
+            else:
+                coerce_prs_json_strings_in_mapping_tree(v)
+    elif isinstance(obj, list):
+        for item in obj:
+            coerce_prs_json_strings_in_mapping_tree(item)
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 from fastapi import HTTPException
 from src.common.base_svc import BaseSvc
@@ -105,6 +139,12 @@ class NodeAttributes(BaseModel):
             "в соответствии с их индексами."
         )
     )
+
+    @field_validator("prsJsonConfigString", mode="before")
+    @classmethod
+    def coerce_prs_json_config_string(cls, v: Any) -> Any:
+        return coerce_prs_json_config_string_value(v)
+
 class NodeCreate(BaseModel):
     """Базовый класс для команды создания экземпляра сущности.
     """

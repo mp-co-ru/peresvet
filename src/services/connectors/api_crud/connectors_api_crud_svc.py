@@ -4,7 +4,7 @@
 """
 import sys
 import json
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 
 from fastapi import APIRouter, Depends, Query
 
@@ -48,6 +48,18 @@ class LinkTagAttributes(BaseModel):
     description: str | None = Field(None, title="Пояснение")
     objectClass: str = Field("prsConnectorTagData", title="Класс объекта")
 
+    @field_validator("prsJsonConfigString", mode="before")
+    @classmethod
+    def coerce_link_tag_prs_json(cls, v):
+        if isinstance(v, ConfigStringForLinkedTag):
+            return v
+        if isinstance(v, dict):
+            return v
+        d = svc.coerce_prs_json_config_string_value(v)
+        if d is None:
+            d = {}
+        return d
+
 class LinkTag(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
@@ -64,12 +76,28 @@ class ConnectorAttributes(svc.NodeAttributes):
         )
     )
 
+    @field_validator("prsJsonConfigString", mode="before")
+    @classmethod
+    def coerce_prs_json_config_string(cls, v):
+        v = svc.coerce_prs_json_config_string_value(v)
+        if v is None:
+            return {}
+        return v
+
 class ConnectorCreate(svc.NodeCreate):
     attributes: ConnectorAttributes | None = Field(None, title="Атрибуты коннектора")
     linkedTags: list[LinkTag] = Field(
         [],
         title="Список добавленных тегов для коннектора"
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_prs_json_strings_in_body(cls, data):
+        """До разбора полей: строковые prsJsonConfigString (textarea) -> dict по всему телу."""
+        if isinstance(data, dict):
+            svc.coerce_prs_json_strings_in_mapping_tree(data)
+        return data
 
 class ConnectorRead(svc.NodeRead):
     getLinkedTags: bool = Field(
