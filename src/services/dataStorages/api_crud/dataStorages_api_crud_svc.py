@@ -174,6 +174,7 @@ async def create(payload: dict | None = None, error_handler: svc.ErrorHandler = 
         payload = {}
 
     try:
+        svc.coerce_prs_json_strings_in_mapping_tree(payload)
         p = DataStorageCreate.model_validate_json(json.dumps(payload))
     except Exception as ex:
         res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
@@ -188,6 +189,7 @@ async def create(payload: dict | None = None, error_handler: svc.ErrorHandler = 
 @router.put("/", status_code=202)
 async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
     try:
+        svc.coerce_prs_json_strings_in_mapping_tree(payload)
         DataStorageUpdate.model_validate(payload)
     except Exception as ex:
         res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}

@@ -220,6 +220,7 @@ async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends
         payload = {}
 
     try:
+        svc.coerce_prs_json_strings_in_mapping_tree(payload)
         s = json.dumps(payload)
         p = ScheduleCreate.model_validate_json(s)
     except Exception as ex:
@@ -268,7 +269,8 @@ async def read(
 @router.put("/", status_code=202)
 async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
     try:
-        m = ScheduleUpdate.model_validate(payload)
+        svc.coerce_prs_json_strings_in_mapping_tree(payload)
+        ScheduleUpdate.model_validate(payload)
     except Exception as ex:
         res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
         app._logger.exception(res)
