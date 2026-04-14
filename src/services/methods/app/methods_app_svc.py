@@ -255,8 +255,11 @@ class MethodsApp(AppSvc):
 
         self._logger.debug(f"Before call: method_id: {method_id}; method_name: {method_name}")
 
+        method_addr = method_name[0][2]["prsMethodAddress"][0]
+        if isinstance(method_addr, str):
+            method_addr = method_addr.strip()
         try:
-            res = await self._rpc_exchange.call(method_name[0][2]["prsMethodAddress"][0], *params_data)
+            res = await self._rpc_exchange.call(method_addr, *params_data)
             if isinstance(res, dict) and res.get("error") is not None:
                 self._logger.error(f"{self._config.svc_name} :: Ошибка при вычислении тега {tag_id}: {res.get('error')}")
                 return
