@@ -231,7 +231,10 @@ class TagsApp(AppSvc):
                     )
             if isinstance(res, dict):
                 returned = res.get("data")
-                if isinstance(returned, list) and returned:
+                # Тело с ``data`` нужно только для табличных (интеграционных) тегов —
+                # там хранилище может вернуть идентификатор новой строки. Остальные типы:
+                # успех без тела (``{}``) или ``error``.
+                if vt == int(TVT.CN_TABLE) and isinstance(returned, list) and returned:
                     result_items.extend(returned)
         if result_items:
             return {"data": result_items}
