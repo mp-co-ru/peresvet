@@ -182,6 +182,9 @@ class TagsAppAPI(BaseSvc):
             return {"error": {"code": 500, "message": "Некорректный ответ обработчика data_get."}}
 
         if new_payload.format:
+            if "error" in res or "data" not in res:
+                return res
+
             final_res = {
                 "data": []
             }

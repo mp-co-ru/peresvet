@@ -9,8 +9,9 @@ class OperationKind(IntEnum):
 
 
 _RE_NAMED_PARAM = re.compile(r"(?<!:):([a-zA-Z_][a-zA-Z0-9_]*)")
+# `comment` только как DDL: COMMENT ON ... (не колонка/алиас с именем comment).
 _RE_DDL = re.compile(
-    r"\b(create|alter|drop|truncate|comment|grant|revoke|vacuum|analyze|reindex|cluster)\b",
+    r"\b(create|alter|drop|truncate|grant|revoke|vacuum|analyze|reindex|cluster)\b|\bcomment\s+on\b",
     flags=re.IGNORECASE,
 )
 
