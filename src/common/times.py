@@ -10,15 +10,34 @@ import ciso8601
 microsec = 1000000
 start_ts = datetime.datetime.fromtimestamp(0, datetime.timezone.utc)
 
+
+def _int_str_as_microseconds(s: str) -> int | None:
+    """Если строка — целое в десятичной записи, вернуть его как микросекунды (как у int).
+
+    Нужно для query-параметров вида ``start=1776438870185000``, где значение приходит строкой.
+    """
+    s = s.strip()
+    if not s:
+        return None
+    sign = 1
+    if s[0] == "+":
+        s = s[1:]
+    elif s[0] == "-":
+        sign = -1
+        s = s[1:]
+    if s.isdigit():
+        return sign * int(s)
+    return None
+
+
 def ts (time_data: int | str | None = None) -> int:
     """Функция возвращает метку времени как целое число микросекунд,
     прошедших с 1 января 1970 г. UTC
 
     :param time_data: Входящая метка времени. По умолчанию - None.
-        Если целое число - будет возвращена она же,
-        если строка - будет преобразована к целому числу микросекунд.
-        Если строка не содержит даты, то вместо даты будут выбраны текущие
-        сутки.
+        Если целое число - будет возвращена она же (микросекунды).
+        Если строка из десятичных цифр (часто из query) — трактуется как то же целое.
+        Иначе строка разбирается как ISO8601; если даты нет — см. разбор только времени.
     :type time_data: int | str = None
     :returns: Целое число микросекунд с 01.01.1970
     :rtype: int
@@ -27,6 +46,10 @@ def ts (time_data: int | str | None = None) -> int:
         return now_int()
     elif isinstance (time_data, int):
         return time_data
+    elif isinstance(time_data, str):
+        as_int = _int_str_as_microseconds(time_data)
+        if as_int is not None:
+            return as_int
 
     def parse_ts(string: str) -> datetime.datetime:
         timestampFrom = ciso8601.parse_datetime (string)
