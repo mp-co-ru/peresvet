@@ -12,6 +12,7 @@
 4. [`Примеры использования`](#examples)
 5. [`Отладка`](#debugging)
 6. [`Генерация документации`](#make_docs)
+7. [`Бэкап и восстановление LDAP`](#ldap_backup)
 
 ---
 
@@ -118,6 +119,57 @@ https://devdotnet.org/post/sborka-docker-konteinerov-dlya-arm-arhitekturi-ispolz
 
 Команда построения образа для linux/arm64
 docker buildx build --platform linux/arm64 -f docker/docker-files/all/Dockerfile.all_svc.uvicorn --build-arg IMAGE_VERSION=mpc:0.4 -t mpc/peresvet_all-svc:0.4-arm64 . --load
+
+## <a name="ldap_backup"></a>Бэкап и восстановление данных OpenLDAP
+
+Данные рабочего каталога OpenLDAP в контейнере лежат в **`/var/lib/ldap`** и в Docker Compose вынесены во **внешний том** (см. `docker/compose/docker-compose.ldap.one_app.yml` и `docker/compose/docker-compose.ldap.yml`). Для снимка и восстановления тома (или каталога при bind mount) используются скрипты:
+
+- `docker/scripts/ldap/ldap_volume_backup.sh`
+- `docker/scripts/ldap/ldap_volume_restore.sh`
+
+Подробные переменные окружения и флаги описаны в комментариях в начале каждого файла.
+
+### Создание бэкапа
+
+Команды выполняются из **корня репозитория**. Чтобы перед снимком корректно остановить сервис LDAP через `docker compose`, задайте тот же `COMPOSE_FILE`, что при вашем запуске стека. Для варианта one app достаточно файла с LDAP:
+
+```bash
+COMPOSE_FILE=docker/compose/docker-compose.ldap.one_app.yml \
+  ./docker/scripts/ldap/ldap_volume_backup.sh
+```
+
+Архив `.tar.gz` по умолчанию создаётся в каталоге `./ldap-backups` (путь задаётся переменной **`BACKUP_DIR`**).
+
+Имя Docker-тома обычно имеет вид **`<префикс_проекта_compose>_ldap_data_one_app`** или **`..._ldap_data`**. Проверить: `docker volume ls | grep ldap`. Если автоопределение не подходит, укажите том явно:
+
+```bash
+LDAP_DOCKER_VOLUME=compose_ldap_data_one_app \
+  ./docker/scripts/ldap/ldap_volume_backup.sh
+```
+
+Если данные смонтированы **каталогом на хосте** (bind mount), вместо тома можно указать путь:
+
+```bash
+LDAP_DATA_DIR=/путь/к/данным/ldap ./docker/scripts/ldap/ldap_volume_backup.sh
+```
+
+Горячий бэкап без остановки контейнеров: **`SKIP_STOP=1`** (возможна неконсистентность архива, используйте осознанно).
+
+### Восстановление из бэкапа
+
+```bash
+COMPOSE_FILE=docker/compose/docker-compose.ldap.one_app.yml \
+  ./docker/scripts/ldap/ldap_volume_restore.sh -y ./ldap-backups/ИМЯ_АРХИВА.tar.gz
+```
+
+Флаг **`-y`** отключает интерактивный запрос подтверждения. Целевой том можно передать **вторым аргументом** после пути к архиву. Для восстановления в **каталог на хосте**:
+
+```bash
+LDAP_DATA_DIR=/путь/к/данным/ldap \
+  ./docker/scripts/ldap/ldap_volume_restore.sh -y ./ldap-backups/ИМЯ_АРХИВА.tar.gz
+```
+
+Скрипт восстановления останавливает LDAP (через compose или контейнеры с данным томом), очищает содержимое целевого тома или каталога и распаковывает архив, затем снова запускает сервис.
 
 # <a name="debugging"></a> Отладка
 

@@ -4,7 +4,7 @@
 """
 import sys
 from typing import List
-from pydantic import Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 import json
 from fastapi import APIRouter, Depends, Query
 #from fastapi.middleware.cors import CORSMiddleware
@@ -34,6 +34,23 @@ class ObjectReadResult(svc.NodeReadResult):
 
 class ObjectUpdate(svc.NodeUpdate):
     pass
+
+class ObjectCopy(BaseModel):
+    """Копирование объекта вместе с поддеревом (теги, тревоги, методы)."""
+
+    model_config = ConfigDict(protected_namespaces=())
+
+    sourceId: str = Field(title="Id копируемого объекта")
+    parentId: str = Field(title="Id родителя для новой копии")
+    attributes: dict | None = Field(
+        None,
+        title="Необязательные атрибуты корня копии (например cn).",
+    )
+
+    @field_validator("sourceId", "parentId")
+    @classmethod
+    def _v_uuid(cls, v: str) -> str:
+        return svc.valid_uuid(v)
 
 class ObjectsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с объектами в иерархии.
@@ -101,6 +118,21 @@ async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends
     """
     if payload is None:
         payload = {}
+    if payload.get("sourceId"):
+        try:
+            svc.coerce_prs_json_strings_in_mapping_tree(payload.get("attributes") or {})
+            p_copy = ObjectCopy.model_validate(payload)
+        except Exception as ex:
+            res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+            app._logger.exception(res)
+            await error_handler.handle_error(res)
+        res = await app._post_message(
+            mes=p_copy.model_dump(exclude_none=True),
+            reply=True,
+            routing_key="prsObject.api_crud.copy",
+        )
+        await error_handler.handle_error(res)
+        return res
     try:
         svc.coerce_prs_json_strings_in_mapping_tree(payload)
         s = json.dumps(payload)
@@ -111,6 +143,24 @@ async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends
         await error_handler.handle_error(res)
 
     res = await app._create(p)
+    await error_handler.handle_error(res)
+    return res
+
+@router.post("/copy", response_model=svc.NodeCreateResult, status_code=201)
+async def copy_object(payload: ObjectCopy, error_handler: svc.ErrorHandler = Depends()):
+    """Копирует объект и всё поддерево; внутренние ссылки пересчитываются, внешние сохраняются."""
+    try:
+        svc.coerce_prs_json_strings_in_mapping_tree(payload.attributes or {})
+    except Exception as ex:
+        res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+        app._logger.exception(res)
+        await error_handler.handle_error(res)
+    body = payload.model_dump(exclude_none=True)
+    res = await app._post_message(
+        mes=body,
+        reply=True,
+        routing_key="prsObject.api_crud.copy",
+    )
     await error_handler.handle_error(res)
     return res
 

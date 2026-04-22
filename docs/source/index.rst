@@ -21,6 +21,7 @@
    Компоненты системы<components>
    Исторические данные<historical_data>
    Установка и запуск<installation>
+   Администрирование<administration>
    Конфигуратор модели<configurator/configurator>
    Примеры работы с платформой<examples/examples>
    Создание экранов в Grafana<grafana/grafana_integration>
