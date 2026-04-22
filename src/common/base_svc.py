@@ -185,6 +185,23 @@ class BaseSvc(FastAPI):
                     self._logger.warning(f"{self._config.svc_name} :: Сообщение с ключом {message.routing_key} не обработано.")
             except Exception as ex:
                 self._logger.error(f"{self._config.svc_name} :: Ошибка обработки сообщения {mes} с ключом {message.routing_key}: {ex}")
+                reply_to = getattr(message, "reply_to", None)
+                correlation_id = getattr(message, "correlation_id", None) or ""
+                if reply_to and correlation_id:
+                    try:
+                        err_payload = {"error": {"code": 500, "message": str(ex)}}
+                        safe = sanitize_for_json_rpc(err_payload)
+                        await self._exchange.publish(
+                            aio_pika.Message(
+                                body=json.dumps(safe, ensure_ascii=False).encode(),
+                                correlation_id=correlation_id,
+                            ),
+                            routing_key=reply_to,
+                        )
+                    except Exception as pub_ex:
+                        self._logger.error(
+                            f"{self._config.svc_name} :: Не удалось отправить ответ об ошибке RPC: {pub_ex!r}"
+                        )
 
     async def _post_message(
             self, mes: dict, reply: bool = False, routing_key: str | None = None

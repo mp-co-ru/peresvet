@@ -1,5 +1,7 @@
 import sys
 import json
+
+import aiormq.exceptions
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 sys.path.append(".")
@@ -68,12 +70,18 @@ class SchedulesApp(AppSvc):
             "id": sched_id,
             "time": times.now_int()
         }
-        await self._post_message(
-            mes=body, 
-            reply=False,
-            routing_key=f"{self._config.hierarchy['class']}.app.fire_event.{sched_id}"
-        )
-        
+        try:
+            await self._post_message(
+                mes=body,
+                reply=False,
+                routing_key=f"{self._config.hierarchy['class']}.app.fire_event.{sched_id}"
+            )
+        except aiormq.exceptions.ChannelInvalidStateError:
+            self._logger.debug(
+                f"{self._config.svc_name} :: Событие '{sched_id}' не опубликовано: канал AMQP закрыт (часто при остановке)."
+            )
+            return
+
         self._logger.info(f"{self._config.svc_name} :: Событие расписания '{sched_id}'")
 
     async def start_schedule(self, schedule_id: str, sched_config: dict):
@@ -152,6 +160,12 @@ class SchedulesApp(AppSvc):
             
 
         self._scheduler.start()
+
+    async def on_shutdown(self) -> None:
+        if self._scheduler.running:
+            # До закрытия AMQP в BaseSvc, иначе интервальные задачи ловят ChannelInvalidStateError.
+            self._scheduler.shutdown(wait=False)
+        await super().on_shutdown()
 
 settings = SchedulesAppSettings()
 

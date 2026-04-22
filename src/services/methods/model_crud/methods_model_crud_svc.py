@@ -5,6 +5,7 @@ sys.path.append(".")
 
 from src.common import model_crud_svc
 from src.common import hierarchy
+from src.common import model_copy
 from src.services.methods.model_crud.methods_model_crud_settings import MethodsModelCRUDSettings
 
 class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
@@ -16,6 +17,25 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     def __init__(self, settings: MethodsModelCRUDSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
+
+    def _set_handlers(self):
+        super()._set_handlers()
+        self._handlers["prsMethod.api_crud.copy"] = self._copy_method
+        self._add_app_handlers()
+
+    async def _copy_method(self, mes: dict, routing_key: str | None = None) -> dict:
+        source_id = mes.get("sourceId")
+        parent_id = mes.get("parentId")
+        if not source_id or not parent_id:
+            return {"error": {"code": 422, "message": "Должны быть заданы sourceId и parentId."}}
+        return await model_copy.copy_single_method(
+            self._hierarchy,
+            self._post_message,
+            source_id=source_id,
+            new_parent_id=parent_id,
+            subtree_ids=frozenset(),
+            id_map={},
+        )
 
     def _add_app_handlers(self):
         self._handlers["prsTag.model.deleted.*"] = self._delete_initiator

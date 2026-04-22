@@ -5,7 +5,7 @@
 import sys
 from typing import List, Optional
 import json
-from pydantic import Field, field_validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from fastapi import APIRouter, Depends, Query
 
 sys.path.append(".")
@@ -68,6 +68,17 @@ class MethodUpdate(MethodCreate):
     id: str = Field(title="id обновляемого метода")
     attributes: MethodUpdateAttributes | None = None # type: ignore
 
+class MethodCopy(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
+    sourceId: str = Field(title="Id копируемого метода")
+    parentId: str = Field(title="Id тега или тревоги-родителя для новой копии")
+
+    @field_validator("sourceId", "parentId")
+    @classmethod
+    def validate_copy_ids(cls, v: str) -> str:
+        return svc.valid_uuid(v)
+
 class MethodsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с методами в иерархии.
 
@@ -96,7 +107,7 @@ router = APIRouter(prefix=f"{settings.api_version}/methods")
 error_handler = svc.ErrorHandler()
 
 @router.post("/", response_model=svc.NodeCreateResult, status_code=201)
-async def create(payload: MethodCreate, error_handler: svc.ErrorHandler = Depends()):
+async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
     """
     Метод добавляет метод в иерархию.
 
@@ -139,7 +150,37 @@ async def create(payload: MethodCreate, error_handler: svc.ErrorHandler = Depend
         * **detail** (str) - пояснения к ошибке
 
     """
-    res = await app._create(payload)
+    if payload.get("sourceId"):
+        try:
+            p_copy = MethodCopy.model_validate(payload)
+        except Exception as ex:
+            res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+            app._logger.exception(res)
+            await error_handler.handle_error(res)
+        res = await app._post_message(
+            mes=p_copy.model_dump(exclude_none=True),
+            reply=True,
+            routing_key="prsMethod.api_crud.copy",
+        )
+        await error_handler.handle_error(res)
+        return res
+    try:
+        p = MethodCreate.model_validate(payload)
+    except Exception as ex:
+        res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+        app._logger.exception(res)
+        await error_handler.handle_error(res)
+    res = await app._create(p)
+    await error_handler.handle_error(res)
+    return res
+
+@router.post("/copy", response_model=svc.NodeCreateResult, status_code=201)
+async def copy_method(payload: MethodCopy, error_handler: svc.ErrorHandler = Depends()):
+    res = await app._post_message(
+        mes=payload.model_dump(exclude_none=True),
+        reply=True,
+        routing_key="prsMethod.api_crud.copy",
+    )
     await error_handler.handle_error(res)
     return res
 

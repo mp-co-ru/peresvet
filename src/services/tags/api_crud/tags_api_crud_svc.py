@@ -5,7 +5,7 @@
 import sys
 import json
 from typing import Any
-from pydantic import Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from fastapi import APIRouter, Depends, Query
 
@@ -91,6 +91,18 @@ class TagUpdate(svc.NodeUpdate):
     def validate_ids(cls, v):
         return svc.valid_uuid(v)
 
+class TagCopy(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
+    sourceId: str = Field(title="Id копируемого тега")
+    parentId: str = Field(title="Id родителя для новой копии")
+    attributes: dict | None = Field(None, title="Необязательные атрибуты корня копии (например cn).")
+
+    @field_validator("sourceId", "parentId")
+    @classmethod
+    def validate_copy_ids(cls, v: str) -> str:
+        return svc.valid_uuid(v)
+
 class TagsAPICRUD(svc.APICRUDSvc):
     """Сервис работы с тегами в иерархии.
 
@@ -165,6 +177,21 @@ async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends
     """
     if payload is None:
         payload = {}
+    if payload.get("sourceId"):
+        try:
+            svc.coerce_prs_json_strings_in_mapping_tree(payload.get("attributes") or {})
+            p_copy = TagCopy.model_validate(payload)
+        except Exception as ex:
+            res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+            app._logger.exception(res)
+            await error_handler.handle_error(res)
+        res = await app._post_message(
+            mes=p_copy.model_dump(exclude_none=True),
+            reply=True,
+            routing_key="prsTag.api_crud.copy",
+        )
+        await error_handler.handle_error(res)
+        return res
     try:
         svc.coerce_prs_json_strings_in_mapping_tree(payload)
         s = json.dumps(payload)
@@ -175,6 +202,22 @@ async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends
         await error_handler.handle_error(res)
 
     res = await app._create(p)
+    await error_handler.handle_error(res)
+    return res
+
+@router.post("/copy", response_model=svc.NodeCreateResult, status_code=201)
+async def copy_tag(payload: TagCopy, error_handler: svc.ErrorHandler = Depends()):
+    try:
+        svc.coerce_prs_json_strings_in_mapping_tree(payload.attributes or {})
+    except Exception as ex:
+        res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+        app._logger.exception(res)
+        await error_handler.handle_error(res)
+    res = await app._post_message(
+        mes=payload.model_dump(exclude_none=True),
+        reply=True,
+        routing_key="prsTag.api_crud.copy",
+    )
     await error_handler.handle_error(res)
     return res
 
