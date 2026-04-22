@@ -1,6 +1,7 @@
 import sys
 import json
 
+import ldap
 from fastapi import APIRouter
 import aio_pika
 import aio_pika.abc
@@ -202,17 +203,27 @@ class ConnectorsMQTTApp(AppSvc):
         })
         return [attrs["cn"][0] for (_, _, attrs) in res]
 
-    async def _write_connector_tags_quality(self, conn_id: str, quality_code: int) -> None:
-        """Записывает во все теги коннектора значение null с указанным кодом качества."""
+    async def _write_connector_tags_quality(self, conn_id: str, quality_code: int) -> bool:
+        """Записывает во все теги коннектора значение null с указанным кодом качества.
+
+        Returns:
+            True, если LDAP доступен и (нет тегов или сообщение в брокер ушло);
+            False, если LDAP/брокер недоступны и запись пропущена (типично при остановке стека).
+        """
         try:
             tag_ids = await self._get_connector_tag_ids(conn_id)
+        except ldap.LDAPError as ex:
+            self._logger.warning(
+                f"{self._config.svc_name} :: Не удалось получить теги коннектора {conn_id} для записи качества {quality_code} (LDAP): {ex}."
+            )
+            return False
         except Exception as ex:
             self._logger.warning(
                 f"{self._config.svc_name} :: Не удалось получить теги коннектора {conn_id} для записи качества {quality_code}: {ex}."
             )
-            return
+            return False
         if not tag_ids:
-            return
+            return True
         now_ts = t.now_int()
         data = {
             "data": [
@@ -226,6 +237,8 @@ class ConnectorsMQTTApp(AppSvc):
             self._logger.warning(
                 f"{self._config.svc_name} :: Не удалось записать качество {quality_code} в теги коннектора {conn_id}: {ex}."
             )
+            return False
+        return True
 
     async def _connection_lost(self, mes: dict, routing_key: str | None = None) -> dict:
         """Обработка потери связи с коннектором по MQTT (в т.ч. LWT): запись null с качеством 100 в теги коннектора.
@@ -237,11 +250,16 @@ class ConnectorsMQTTApp(AppSvc):
             self._logger.warning(f"{self._config.svc_name} :: prsConnector.connection_lost без id.")
             return {}
         self._connected_connectors.discard(conn_id)
-        await self._write_connector_tags_quality(conn_id, CN_QUALITY_CONNECTION_LOST)
-        self._logger.info(
-            f"{self._config.svc_name} :: Зафиксирована потеря связи с коннектором {conn_id}, "
-            f"в теги записано качество {CN_QUALITY_CONNECTION_LOST}."
-        )
+        if await self._write_connector_tags_quality(conn_id, CN_QUALITY_CONNECTION_LOST):
+            self._logger.info(
+                f"{self._config.svc_name} :: Зафиксирована потеря связи с коннектором {conn_id}, "
+                f"в теги записано качество {CN_QUALITY_CONNECTION_LOST}."
+            )
+        else:
+            self._logger.warning(
+                f"{self._config.svc_name} :: Потеря связи с коннектором {conn_id}; "
+                f"запись качества {CN_QUALITY_CONNECTION_LOST} в теги пропущена (LDAP или брокер недоступны)."
+            )
         return {}
 
     async def _send_config_to_connector(self, mes: dict, routing_key: str | None = None) -> dict:
@@ -249,11 +267,16 @@ class ConnectorsMQTTApp(AppSvc):
         conn_id = mes["data"]["id"]
         if conn_id not in self._connected_connectors:
             self._connected_connectors.add(conn_id)
-            await self._write_connector_tags_quality(conn_id, CN_QUALITY_CONNECTION_RESTORED)
-            self._logger.info(
-                f"{self._config.svc_name} :: Связь с коннектором {conn_id} восстановлена, "
-                f"в теги записано качество {CN_QUALITY_CONNECTION_RESTORED}."
-            )
+            if await self._write_connector_tags_quality(conn_id, CN_QUALITY_CONNECTION_RESTORED):
+                self._logger.info(
+                    f"{self._config.svc_name} :: Связь с коннектором {conn_id} восстановлена, "
+                    f"в теги записано качество {CN_QUALITY_CONNECTION_RESTORED}."
+                )
+            else:
+                self._logger.warning(
+                    f"{self._config.svc_name} :: Связь с коннектором {conn_id} восстановлена, "
+                    f"но запись качества {CN_QUALITY_CONNECTION_RESTORED} в теги пропущена (LDAP или брокер недоступны)."
+                )
         res = await self._get_connector_data(conn_id=conn_id)
         if not res:
             self._logger.error(f"{self._config.svc_name} :: Отсутствует коннектор {conn_id}.")
