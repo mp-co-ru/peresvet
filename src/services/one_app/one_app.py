@@ -202,12 +202,16 @@ from src.services.tags.datafunc_app_api.datafunc_app_api_svc \
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    from src.common.runtime_flags import set_platform_shutting_down
+
+    set_platform_shutting_down(False)
     for route in app.router.routes:
         if isinstance(route, Mount):
             sub_router = getattr(route.app, "router", None)
             if sub_router is not None:
                 await sub_router.startup()
     yield
+    set_platform_shutting_down(True)
     for route in app.router.routes:
         if isinstance(route, Mount):
             sub_router = getattr(route.app, "router", None)
