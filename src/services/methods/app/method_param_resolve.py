@@ -3,7 +3,9 @@
 
 Поддерживаются:
 - внутренний запрос платформы: routingKey + message, опционально responseJsonata;
-- только JSONata по клиентскому запросу GET /v1/data: clientJsonata;
+- JSONata по объекту клиентского GET /v1/data: clientJsonata;
+- без routingKey и без legacy tagId: весь объект клиентского GET /v1/data (или контекст
+  инициатора), опционально clientJsonata для выборки полей;
 - устаревший режим: тело запроса GET /v1/data (поле tagId), опционально responseJsonata.
 """
 from __future__ import annotations
@@ -51,18 +53,6 @@ async def resolve_parameter_value(
             return await evaluate_jsonata(expr.strip(), raw)
         return raw
 
-    cj = cfg.get("clientJsonata")
-    if isinstance(cj, str) and cj.strip():
-        ctx = client_request if isinstance(client_request, dict) else {}
-        if not ctx and initiator_point is not None:
-            p = initiator_point
-            ctx = {
-                "finish": initiator_finish,
-                "start": None,
-                "point": {"x": p[0], "y": p[1] if len(p) > 1 else None, "q": p[2] if len(p) > 2 else None},
-            }
-        return await evaluate_jsonata(cj.strip(), ctx)
-
     if "tagId" in cfg:
         request = copy.deepcopy(cfg)
         request["finish"] = initiator_finish
@@ -76,7 +66,29 @@ async def resolve_parameter_value(
             return await evaluate_jsonata(expr.strip(), raw)
         return raw
 
+    ctx: dict = copy.deepcopy(client_request) if isinstance(client_request, dict) else {}
+    built_from_initiator = False
+    if not ctx and initiator_point is not None:
+        p = initiator_point
+        ctx = {
+            "finish": initiator_finish,
+            "start": None,
+            "point": {
+                "x": p[0],
+                "y": p[1] if len(p) > 1 else None,
+                "q": p[2] if len(p) > 2 else None,
+            },
+        }
+        built_from_initiator = True
+
+    cj = cfg.get("clientJsonata")
+    if isinstance(cj, str) and cj.strip():
+        return await evaluate_jsonata(cj.strip(), ctx)
+
+    if isinstance(client_request, dict) or built_from_initiator:
+        return ctx
+
     raise ValueError(
         "Некорректный prsJsonConfigString параметра метода: "
-        "нужен routingKey, clientJsonata или tagId (запрос GET /v1/data)."
+        "нужен routingKey, tagId (legacy GET /v1/data) или данные клиентского GET /v1/data."
     )
