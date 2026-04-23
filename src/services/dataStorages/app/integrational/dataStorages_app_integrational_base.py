@@ -110,6 +110,14 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
         tag_ids = mes.get("tagId") or []
         for tag_id in tag_ids:
             try:
+                vres = await self._read_virtual_method_response(tag_id, mes)
+                if vres is not None:
+                    if vres.get("error"):
+                        return vres
+                    for item in vres.get("data") or []:
+                        if item.get("tagId") == tag_id:
+                            result["data"].append(item)
+                    continue
                 points = await self._read_integrational_points(tag_id=tag_id, request=mes)
                 excess = False
                 max_count = mes.get("maxCount")

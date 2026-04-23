@@ -15,10 +15,15 @@ from src.services.methods.api_crud.methods_api_crud_settings import MethodsAPICR
 
 class MethodCreateAttributes(svc.NodeAttributes):
     prsMethodAddress: str = Field(" ", title="Адрес метода")
-    prsEntityTypeCode: int = Field(0, title="Тип метода") # type: ignore
+    prsEntityTypeCode: int = Field(
+        0,
+        title="Тип метода",
+        description="0 — вычислительный (инициаторы, запись в БД); 1 — виртуальный (значение при GET /v1/data).",
+    )  # type: ignore
 
 class MethodUpdateAttributes(svc.NodeAttributes):
     prsMethodAddress: Optional[str] = None
+    prsEntityTypeCode: Optional[int] = None
 
 class MethodParameter(svc.NodeCreate):
     pass
@@ -123,7 +128,9 @@ async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
         * **attributes** (dict) - Атрибуты метода. Обязательное поле. Включает в себя:
 
           * **prsMethodAddress** (str) - Адрес метода. Обязательное поле.
-          * **prsEntityTypeCode** (int) - Тип метода. Необязательное поле.
+          * **prsEntityTypeCode** (int) - Тип метода: ``0`` — вычислительный (инициаторы,
+            запись результата в БД); ``1`` — виртуальный (значение для GET ``/v1/data/``
+            вычисляется при чтении, без чтения из БД). Необязательное поле.
 
         * **parameters** (List[MethodParameter]) - Параметры метода. Необязательное поле.
 

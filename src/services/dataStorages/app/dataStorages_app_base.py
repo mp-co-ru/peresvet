@@ -975,6 +975,55 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         except Exception as ex:
             self._logger.error(f"{self._config.svc_name} :: {ex}")
 
+    async def _find_active_virtual_method_id(self, tag_id: str) -> str | None:
+        """Активный метод с prsEntityTypeCode=1 под тегом (при нескольких — минимальный prsIndex)."""
+        payload = {
+            "base": tag_id,
+            "scope": CN_SCOPE_ONELEVEL,
+            "filter": {"objectClass": ["prsMethod"], "prsActive": ["TRUE"]},
+            "attributes": ["cn", "prsEntityTypeCode", "prsIndex"],
+        }
+        rows = await self._hierarchy.search(payload=payload)
+        if not rows:
+            return None
+        candidates: list[tuple[tuple[int, str], str]] = []
+        for row in rows:
+            attrs = row[2]
+            raw_code = attrs.get("prsEntityTypeCode", ["0"])
+            try:
+                if int(raw_code[0]) != 1:
+                    continue
+            except Exception:
+                continue
+            ix = attrs.get("prsIndex", [None])[0]
+            try:
+                sort_ix = int(ix) if ix is not None else 1_000_000_000
+            except Exception:
+                sort_ix = 1_000_000_000
+            candidates.append(((sort_ix, row[0]), row[0]))
+        if not candidates:
+            return None
+        candidates.sort(key=lambda z: z[0])
+        return candidates[0][1]
+
+    async def _read_virtual_method_response(self, tag_id: str, mes: dict) -> dict | None:
+        """None — читать из хранилища как обычно. Иначе ответ виртуального метода или ошибка."""
+        mid = await self._find_active_virtual_method_id(tag_id)
+        if not mid:
+            return None
+        res = await self._post_message(
+            mes={"tagId": tag_id, "methodId": mid, "clientRequest": mes},
+            reply=True,
+            routing_key="prsMethod.app.virtual_data_get",
+        )
+        if res is None:
+            return {"error": {"code": 424, "message": "Сервис методов недоступен для виртуального чтения."}}
+        if isinstance(res, dict) and res.get("error"):
+            return res
+        if not isinstance(res, dict) or "data" not in res:
+            return {"error": {"code": 500, "message": "Некорректный ответ виртуального метода."}}
+        return res
+
     async def _create_alert_cache(self, alert_id: str) -> dict | bool | None:
         """Функция подготовки кэша с данными о тревоге.
 
@@ -1072,9 +1121,26 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
         self._logger.debug(f"Чтение данных: {mes}")
 
-        tasks = {}
+        accumulated: dict = {"data": []}
+        remaining_tag_ids: list[str] = []
+        for tag_id in mes["tagId"]:
+            vres = await self._read_virtual_method_response(tag_id, mes)
+            if vres is None:
+                remaining_tag_ids.append(tag_id)
+                continue
+            if vres.get("error"):
+                return vres
+            for item in vres.get("data") or []:
+                accumulated["data"].append(item)
 
-        await self._write_cache_data(mes["tagId"])
+        mes = {**mes, "tagId": remaining_tag_ids}
+        if not remaining_tag_ids:
+            self._logger.debug(f"Получение данных (виртуальные теги): {accumulated}")
+            return accumulated
+
+        tasks: dict = {}
+
+        await self._write_cache_data(remaining_tag_ids)
 
         for tag_id in mes["tagId"]:
             # Если ключ actual установлен в true, ключ timeStep не учитывается
@@ -1123,11 +1189,9 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
                         )
                     )
 
-            result = {"data": []}
-
             if not tasks:
                 self._logger.debug(f"Нет возвращаемых данных.")
-                return result
+                return accumulated
 
             for tag_id, task in tasks.items():
                 # задачи нельзя выполнять параллельно - возникает ошибка при одновременном обращении к кэшу
@@ -1175,11 +1239,11 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
                 }
                 if mes["maxCount"]:
                     new_item["excess"] = excess
-                result["data"].append(new_item)
+                accumulated["data"].append(new_item)
 
-            self._logger.debug(f"Получение данных: {result}")
+            self._logger.debug(f"Получение данных: {accumulated}")
 
-        return result
+        return accumulated
 
     def _filter_data(
             self, tag_data: List[tuple], value: List[Any], tag_type_code: int,
