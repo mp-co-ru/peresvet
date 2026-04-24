@@ -7,6 +7,8 @@
 - без routingKey и без legacy tagId: весь объект клиентского GET /v1/data (или контекст
   инициатора), опционально clientJsonata для выборки полей;
 - устаревший режим: тело запроса GET /v1/data (поле tagId), опционально responseJsonata.
+
+Ключ ``clientStub`` (если есть в сохранённом JSON) игнорируется при выполнении — только для UI конфигуратора.
 """
 from __future__ import annotations
 
@@ -40,6 +42,9 @@ async def resolve_parameter_value(
     initiator_finish — метка времени инициатора (для legacy data_get подставляется в finish).
     initiator_point — сырая точка (x,y,q) при запуске от тега/расписания.
     """
+    cfg = copy.deepcopy(cfg)
+    cfg.pop("clientStub", None)
+
     rk = cfg.get("routingKey")
     if isinstance(rk, str) and rk.strip():
         msg = cfg.get("message")
