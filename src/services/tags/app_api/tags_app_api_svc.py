@@ -101,6 +101,10 @@ class DataGet(BaseModel):
         None,
         title="Дополнительные параметры запроса."
     )
+    evalContextTagId: str | None = Field(
+        None,
+        title="Служебное поле платформы: предотвращение повторного виртуального чтения при разборе параметров метода.",
+    )
 
     @field_validator("tagId")
     @classmethod
@@ -144,6 +148,15 @@ class DataGet(BaseModel):
     @classmethod
     def validate_id(cls, v: Any) -> Any:
         return valid_uuid(v)
+
+    @field_validator("evalContextTagId")
+    @classmethod
+    def eval_context_tag_id(cls, v: Any) -> str | None:
+        if v is None or v == "":
+            return None
+        return str(valid_uuid(str(v)))
+
+
 class TagsAppAPI(BaseSvc):
     """Сервис работы с тегами в иерархии.
 

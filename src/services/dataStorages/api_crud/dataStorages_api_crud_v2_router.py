@@ -69,6 +69,11 @@ class LinkTagOperationParameterAttributesV2(BaseModel):
     model_config = ConfigDict(protected_namespaces=(), extra="allow")
 
     cn: str = Field(title="Имя параметра операции (CN)")
+    description: str | None = Field(
+        None,
+        title="Описание",
+        description="Текст для операторов: что передаётся в параметре.",
+    )
     prsActive: bool = Field(True, title="Флаг активности параметра")
     prsJsonConfigString: dict | None = Field(default_factory=dict, title="Конфигурация параметра")
 

@@ -453,10 +453,21 @@ class ModelCRUDSvc(Svc):
 
             await self._further_delete(mes)
 
+            parent_for_deleted_notify = None
+            try:
+                par = await self._hierarchy.get_parent(id)
+                if par and par[0]:
+                    parent_for_deleted_notify = par[0]
+            except Exception:
+                parent_for_deleted_notify = None
+
             await self._hierarchy.delete(id)
 
+            deleted_mes = {"id": id}
+            if parent_for_deleted_notify:
+                deleted_mes["parentId"] = parent_for_deleted_notify
             await self._post_message(
-                mes={"id": id}, reply=False,
+                mes=deleted_mes, reply=False,
                 routing_key=f"{self._config.hierarchy['class']}.model.deleted.{id}")
 
             for child in children:

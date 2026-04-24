@@ -13,6 +13,7 @@ except ModuleNotFoundError as _:
 sys.path.append(".")
 
 from src.common.app_svc import AppSvc
+from src.common import runtime_flags
 from src.common.consts import CNTagValueTypes as TVT
 from src.services.tags.app.tags_app_settings import TagsAppSettings
 from src.common.tag_data_points import coerce_tag_data_items_for_data_set, normalize_point_xyq
@@ -115,14 +116,29 @@ class TagsApp(AppSvc):
         if not need_refresh:
             return doc
 
+        if runtime_flags.platform_shutting_down:
+            self._logger.debug(
+                f"{self._config.svc_name} :: Пропуск обновления кэша data_set для тега '{tag_id}' "
+                f"(остановка платформы, без обращения к LDAP)."
+            )
+            return None
+
         last_y = doc.get("prsLastAcceptedY") if isinstance(doc, dict) else None
         last_q = doc.get("prsLastAcceptedQ") if isinstance(doc, dict) else None
-        hres = await self._hierarchy.search(
-            {
-                "id": tag_id,
-                "attributes": ["prsActive", "prsValueTypeCode", "prsMaxLineDev"],
-            }
-        )
+        try:
+            hres = await self._hierarchy.search(
+                {
+                    "id": tag_id,
+                    "attributes": ["prsActive", "prsValueTypeCode", "prsMaxLineDev"],
+                }
+            )
+        except BaseException as ex:
+            if not isinstance(ex, Exception):
+                raise
+            self._logger.warning(
+                f"{self._config.svc_name} :: Не удалось обновить кэш data_set для тега '{tag_id}' из LDAP: {ex!r}."
+            )
+            return None
         if not hres:
             return None
         attrs = hres[0][2]
@@ -151,7 +167,12 @@ class TagsApp(AppSvc):
 
             tag_proc = await self._ensure_tag_data_set_cache(tag_id)
             if tag_proc is None:
-                self._logger.error(f"{self._config.svc_name} :: Нет тега c id = '{tag_id}'.")
+                if runtime_flags.platform_shutting_down:
+                    self._logger.debug(
+                        f"{self._config.svc_name} :: Запись data_set для тега '{tag_id}' пропущена (остановка платформы)."
+                    )
+                else:
+                    self._logger.error(f"{self._config.svc_name} :: Нет тега c id = '{tag_id}'.")
                 continue
             if not tag_proc["prsActive"]:
                 self._logger.warning(f"{self._config.svc_name} :: Тег '{tag_id}' неактивен.")

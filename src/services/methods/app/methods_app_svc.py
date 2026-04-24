@@ -4,15 +4,20 @@
 """
 import sys
 import json
+from uuid import uuid4
+
 from patio import NullExecutor, Registry
 from patio_rabbitmq import RabbitMQBroker
 
 sys.path.append(".")
 
+import src.common.times as times
+
 from src.common.app_svc import AppSvc
 from src.common.hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
 from src.common.amqp_rpc import NO_AMQP_RPC_REPLY
 from src.services.methods.app.methods_app_settings import MethodsAppSettings
+from src.services.methods.app.method_param_resolve import parse_parameter_config, resolve_parameter_value
 
 class MethodsApp(AppSvc):
     """
@@ -78,6 +83,7 @@ class MethodsApp(AppSvc):
     def _add_app_handlers(self):
         self._handlers["prsTag.app.data_set.*"] = self._start_method_by_tag
         self._handlers["prsSchedule.app.fire_event.*"] = self._start_method_by_sched
+        self._handlers["prsMethod.app.virtual_data_get"] = self._virtual_data_get
 
     '''
     async def _tag_updated(self, mes: dict):
@@ -118,9 +124,24 @@ class MethodsApp(AppSvc):
                 self.
     '''
 
+    async def _method_entity_type(self, method_id: str) -> int:
+        res = await self._hierarchy.search(
+            {"id": method_id, "attributes": ["prsEntityTypeCode"]}
+        )
+        if not res:
+            return 0
+        raw = res[0][2].get("prsEntityTypeCode", ["0"])
+        if isinstance(raw, list):
+            raw = raw[0] if raw else 0
+        try:
+            return int(raw)
+        except Exception:
+            return 0
+
     async def _created(self, mes: dict, routing_key: str = None):
         await self._make_method_cache(mes["id"])
-        await self._bind_method(mes["id"])
+        if await self._method_entity_type(mes["id"]) != 1:
+            await self._bind_method(mes["id"])
 
     async def _updated(self, mes: dict, routing_key: str = None):
         """
@@ -134,7 +155,8 @@ class MethodsApp(AppSvc):
         active = method_data[0][2]["prsActive"][0] == 'TRUE'
         if active:
             await self._make_method_cache(mes['id'])
-            await self._bind_method(mes['id'], True)
+            if await self._method_entity_type(mes['id']) != 1:
+                await self._bind_method(mes['id'], True)
         else:
             await self._delete_method_cache(mes['id'])
             await self._bind_method(mes['id'], False)
@@ -160,6 +182,8 @@ class MethodsApp(AppSvc):
 
         self._logger.debug(f"{self._config.svc_name} :: methods_ids: {methods_ids}")
         for method_id, tag_id in methods_ids.items():
+            if await self._method_entity_type(method_id) == 1:
+                continue
             parameters = await self._hierarchy.search({
                 "base": method_id,
                 "filter": {"cn": ["*"], "objectClass": ["prsMethodParameter"]},
@@ -201,6 +225,8 @@ class MethodsApp(AppSvc):
 
                 self._logger.debug(f"methods_ids: {methods}")
                 for method_id, tag_id in methods.items():
+                    if await self._method_entity_type(method_id) == 1:
+                        continue
                     parameters = await self._hierarchy.search({
                         "base": method_id,
                         "filter": {"cn": ["*"], "objectClass": ["prsMethodParameter"]},
@@ -222,15 +248,15 @@ class MethodsApp(AppSvc):
 
         parameters_data = []
         for parameter in parameters:
-            request = json.loads(parameter[2]["prsJsonConfigString"][0])
-
-            request["finish"] = data[0]
-            self._logger.debug(f"mes: {request}")
-
-            param_data = await self._post_message(
-                mes=request,
-                reply=True,
-                routing_key=f"prsTag.app_api_client.data_get.*"
+            cfg = parse_parameter_config(parameter[2]["prsJsonConfigString"][0])
+            self._logger.debug(f"param cfg: {cfg}")
+            param_data = await resolve_parameter_value(
+                cfg,
+                post_message=self._post_message,
+                client_request=None,
+                initiator_finish=data[0],
+                initiator_point=data,
+                virtual_resolution_tag_id=tag_id,
             )
             if parameter[2]["prsIndex"][0] is None:
                 index = None
@@ -258,6 +284,12 @@ class MethodsApp(AppSvc):
         method_addr = method_name[0][2]["prsMethodAddress"][0]
         if isinstance(method_addr, str):
             method_addr = method_addr.strip()
+        rpc_call_id = str(uuid4())[:8]
+        self._logger.debug(
+            f"{self._config.svc_name} :: [methods_rpc] call_id={rpc_call_id} "
+            f"source=data_set_calc_tag method_addr={method_addr!r} method_id={method_id} "
+            f"output_tag_id={tag_id} param_slots={len(params_data)}"
+        )
         try:
             res = await self._rpc_exchange.call(method_addr, *params_data)
             if isinstance(res, dict) and res.get("error") is not None:
@@ -280,6 +312,84 @@ class MethodsApp(AppSvc):
                 }
             ]
         }, reply=False, routing_key=f"prsTag.app_api_client.data_set.{tag_id}")
+
+    async def _virtual_data_get(self, mes: dict, routing_key: str | None = None) -> dict:
+        method_id = mes.get("methodId")
+        tag_id = mes.get("tagId")
+        client_request = mes.get("clientRequest")
+        if not method_id or not tag_id:
+            return {"error": {"code": 422, "message": "В сообщении нужны methodId и tagId."}}
+        parent, _ = await self._hierarchy.get_parent(method_id)
+        if parent != tag_id:
+            return {"error": {"code": 400, "message": "Метод не принадлежит указанному тегу."}}
+        if await self._method_entity_type(method_id) != 1:
+            return {"error": {"code": 400, "message": "Метод не помечен как виртуальный (prsEntityTypeCode != 1)."}}
+        parameters = await self._hierarchy.search({
+            "base": method_id,
+            "filter": {"cn": ["*"], "objectClass": ["prsMethodParameter"]},
+            "attributes": ["prsJsonConfigString", "prsIndex", "cn"]
+        })
+        finish_ts = times.now_int()
+        if isinstance(client_request, dict):
+            fv = client_request.get("finish")
+            if fv is not None:
+                try:
+                    finish_ts = int(fv) if isinstance(fv, int) else int(times.ts(fv))
+                except Exception:
+                    finish_ts = times.now_int()
+
+        parameters_data: list[dict] = []
+        for parameter in parameters:
+            cfg = parse_parameter_config(parameter[2]["prsJsonConfigString"][0])
+            param_data = await resolve_parameter_value(
+                cfg,
+                post_message=self._post_message,
+                client_request=client_request if isinstance(client_request, dict) else None,
+                initiator_finish=finish_ts,
+                initiator_point=None,
+                virtual_resolution_tag_id=tag_id,
+            )
+            if parameter[2]["prsIndex"][0] is None:
+                index = None
+            else:
+                index = int(parameter[2]["prsIndex"][0])
+            parameters_data.append({"index": index, "data": param_data})
+
+        parameters_data.sort(key=lambda item: (item["index"], 1000)[item["index"] is None])
+        params_data = [item["data"] for item in parameters_data]
+
+        method_name = await self._hierarchy.search(
+            {"id": method_id, "attributes": ["prsMethodAddress"]}
+        )
+        if not method_name:
+            return {"error": {"code": 404, "message": "Метод не найден."}}
+        method_addr = method_name[0][2]["prsMethodAddress"][0]
+        if isinstance(method_addr, str):
+            method_addr = method_addr.strip()
+        rpc_call_id = str(uuid4())[:8]
+        self._logger.debug(
+            f"{self._config.svc_name} :: [methods_rpc] call_id={rpc_call_id} "
+            f"source=virtual_data_get method_addr={method_addr!r} method_id={method_id} "
+            f"virtual_tag_id={tag_id} param_slots={len(params_data)}"
+        )
+        try:
+            res = await self._rpc_exchange.call(method_addr, *params_data)
+        except Exception as ex:
+            self._logger.error(f"{self._config.svc_name} :: Виртуальный метод {method_id}: {ex}")
+            return {"error": {"code": 500, "message": str(ex)}}
+        if isinstance(res, dict) and res.get("error") is not None:
+            return {"error": {"code": 500, "message": str(res.get("error"))}}
+
+        return {
+            "data": [
+                {
+                    "tagId": tag_id,
+                    "data": [
+                        (finish_ts, res, None),
+                    ],
+                }
+            ]
+        }
 
     async def _deleting(self, mes: dict, routing_key: str = None):
         # перед удалением тревоги
@@ -363,6 +473,14 @@ class MethodsApp(AppSvc):
             ]
         """
         await self._delete_method_cache(method_id)
+        await self._bind_method(method_id, False)
+
+        if await self._method_entity_type(method_id) == 1:
+            self._logger.debug(
+                f"{self._config.svc_name} :: Метод '{method_id}' (prsEntityTypeCode=1): "
+                "кэш инициаторов не строится."
+            )
+            return True
 
         method_dn = await self._hierarchy.get_node_dn(method_id)
         payload = {
@@ -412,8 +530,9 @@ class MethodsApp(AppSvc):
         }
         methods = await self._hierarchy.search(payload=payload)
         for method in methods:
-            await self._make_method_cache(method[0])
-            await self._bind_method(method[0])
+            ok = await self._make_method_cache(method[0])
+            if ok and await self._method_entity_type(method[0]) != 1:
+                await self._bind_method(method[0])
 
     async def on_startup(self) -> None:
         await super().on_startup()
