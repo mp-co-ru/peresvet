@@ -4,6 +4,8 @@
 """
 import sys
 import json
+from uuid import uuid4
+
 from patio import NullExecutor, Registry
 from patio_rabbitmq import RabbitMQBroker
 
@@ -282,6 +284,12 @@ class MethodsApp(AppSvc):
         method_addr = method_name[0][2]["prsMethodAddress"][0]
         if isinstance(method_addr, str):
             method_addr = method_addr.strip()
+        rpc_call_id = str(uuid4())[:8]
+        self._logger.debug(
+            f"{self._config.svc_name} :: [methods_rpc] call_id={rpc_call_id} "
+            f"source=data_set_calc_tag method_addr={method_addr!r} method_id={method_id} "
+            f"output_tag_id={tag_id} param_slots={len(params_data)}"
+        )
         try:
             res = await self._rpc_exchange.call(method_addr, *params_data)
             if isinstance(res, dict) and res.get("error") is not None:
@@ -358,6 +366,12 @@ class MethodsApp(AppSvc):
         method_addr = method_name[0][2]["prsMethodAddress"][0]
         if isinstance(method_addr, str):
             method_addr = method_addr.strip()
+        rpc_call_id = str(uuid4())[:8]
+        self._logger.debug(
+            f"{self._config.svc_name} :: [methods_rpc] call_id={rpc_call_id} "
+            f"source=virtual_data_get method_addr={method_addr!r} method_id={method_id} "
+            f"virtual_tag_id={tag_id} param_slots={len(params_data)}"
+        )
         try:
             res = await self._rpc_exchange.call(method_addr, *params_data)
         except Exception as ex:

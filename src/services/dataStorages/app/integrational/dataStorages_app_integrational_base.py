@@ -41,6 +41,36 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
     - запись выполняется немедленно (SET), без кэширования в historian-таблицы.
     """
 
+    async def _tagdata_under_own_datastorages(self, tag_id: str) -> bool:
+        """Есть ли ``prsDatastorageTagData`` для тега под деревом одного из наших DS (пул в приложении)."""
+        for ds_id in self._connection_pools.keys():
+            res = await self._hierarchy.search(
+                {
+                    "base": ds_id,
+                    "scope": CN_SCOPE_SUBTREE,
+                    "filter": {"cn": [tag_id], "objectClass": ["prsDatastorageTagData"]},
+                    "attributes": ["cn"],
+                    "deref": False,
+                }
+            )
+            if res:
+                return True
+        return False
+
+    async def _sync_parent_tag_data_get_subscription(self, parent_tag_id: str) -> None:
+        """Не подписываемся на ``prsTag.app.data_get.<tag>``, если тег не обслуживается этим
+        интеграционным приложением — иначе в ``one_app`` то же сообщение получает и PostgreSQL
+        dataStorages, и виртуальный метод вызывается дважды."""
+        if not parent_tag_id:
+            return
+        if not await self._tagdata_under_own_datastorages(parent_tag_id):
+            try:
+                await self._bind_tag(parent_tag_id, False)
+            except Exception:
+                pass
+            return
+        await super()._sync_parent_tag_data_get_subscription(parent_tag_id)
+
     _META_LINK_TTL_SEC = 30
     _META_OPERATION_TTL_SEC = 30
     _GET_MAX_ROWS_CAP = 50000
