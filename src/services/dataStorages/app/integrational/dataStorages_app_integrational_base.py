@@ -45,7 +45,7 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
     _META_OPERATION_TTL_SEC = 30
     _GET_MAX_ROWS_CAP = 50000
     _RE_OP_NAME = re.compile(r"^[a-zA-Z][a-zA-Z0-9_-]*$")
-    _INTEGRATIONAL_ROOT_PARAM_SKIP = frozenset({"data"})
+    _INTEGRATIONAL_ROOT_PARAM_SKIP = frozenset({"data", "evalContextTagId"})
 
     @staticmethod
     def _merge_integrational_request_params(request: dict | None) -> dict[str, Any]:

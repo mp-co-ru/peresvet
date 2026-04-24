@@ -37,10 +37,15 @@ async def resolve_parameter_value(
     client_request: dict | None,
     initiator_finish: Any,
     initiator_point: list | tuple | None,
+    virtual_resolution_tag_id: str | None = None,
 ) -> Any:
     """
     initiator_finish — метка времени инициатора (для legacy data_get подставляется в finish).
     initiator_point — сырая точка (x,y,q) при запуске от тега/расписания.
+
+    virtual_resolution_tag_id — id тега-«владельца» виртуального метода: при чтении
+    того же тега по legacy ``tagId`` вложенный ``data_get`` не должен снова вызывать
+    виртуальный метод (иначе двойной вызов и рекурсия).
     """
     cfg = copy.deepcopy(cfg)
     cfg.pop("clientStub", None)
@@ -61,6 +66,8 @@ async def resolve_parameter_value(
     if "tagId" in cfg:
         request = copy.deepcopy(cfg)
         request["finish"] = initiator_finish
+        if virtual_resolution_tag_id is not None:
+            request["evalContextTagId"] = virtual_resolution_tag_id
         raw = await post_message(
             mes=request,
             reply=True,

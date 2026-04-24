@@ -26,6 +26,7 @@ from src.common.consts import (
     CNTagValueTypes as TVT,
     Order
 )
+from src.common.virtual_method_lookup import find_active_virtual_method_id
 
 def linear_interpolated(start_point: Tuple[int, Any],
                         end_point: Tuple[int, Any],
@@ -140,6 +141,9 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         self._handlers["prsDataStorage.model.unlink_tag.*"] = self._unlink_tag
         self._handlers["prsDataStorage.model.link_alert.*"] = self._link_alert
         self._handlers["prsDataStorage.model.unlink_alert.*"] = self._unlink_alert
+        self._handlers["prsMethod.model.created"] = self._prs_method_model_touch_tag_subscription
+        self._handlers["prsMethod.model.updated.*"] = self._prs_method_model_touch_tag_subscription
+        self._handlers["prsMethod.model.deleted.*"] = self._prs_method_model_deleted
 
     async def _bind_tag(self, tag_id: str, bind: bool) -> None:
         """
@@ -157,6 +161,93 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsTag.app.data_set.{tag_id}")
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsTag.model.updated.{tag_id}")
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsTag.model.deleted.{tag_id}")
+
+    async def _tag_linked_to_datastorage(self, tag_id: str) -> bool:
+        """В модели есть prsDatastorageTagData для тега (история в БД)."""
+        try:
+            ds_root = await self._hierarchy.get_node_id("cn=dataStorages,cn=prs")
+        except Exception:
+            return False
+        res = await self._hierarchy.search(
+            {
+                "base": ds_root,
+                "scope": CN_SCOPE_SUBTREE,
+                "filter": {"cn": [tag_id], "objectClass": ["prsDatastorageTagData"]},
+                "attributes": ["cn"],
+                "deref": False,
+            }
+        )
+        return bool(res)
+
+    async def _sync_parent_tag_data_get_subscription(self, parent_tag_id: str) -> None:
+        """Подписка prsTag.app.data_get.<tag> нужна и для тегов с историей, и для виртуальных (prsEntityTypeCode=1)."""
+        if not parent_tag_id:
+            return
+        need = await find_active_virtual_method_id(self._hierarchy, parent_tag_id) is not None
+        need = need or await self._tag_linked_to_datastorage(parent_tag_id)
+        try:
+            await self._bind_tag(parent_tag_id, need)
+        except Exception as ex:
+            self._logger.error(
+                f"{self._config.svc_name} :: Ошибка привязки prsTag.app.data_get для тега '{parent_tag_id}': {ex}"
+            )
+
+    async def _prs_method_model_touch_tag_subscription(self, mes: dict, routing_key: str | None = None) -> None:
+        method_id = mes.get("id")
+        if not method_id:
+            return
+        try:
+            parent, _ = await self._hierarchy.get_parent(method_id)
+        except Exception:
+            return
+        if parent:
+            await self._sync_parent_tag_data_get_subscription(parent)
+
+    async def _prs_method_model_deleted(self, mes: dict, routing_key: str | None = None) -> None:
+        parent = mes.get("parentId")
+        if parent:
+            await self._sync_parent_tag_data_get_subscription(parent)
+            return
+        method_id = mes.get("id")
+        if not method_id:
+            return
+        try:
+            p, _ = await self._hierarchy.get_parent(method_id)
+        except Exception:
+            return
+        if p:
+            await self._sync_parent_tag_data_get_subscription(p)
+
+    async def _bind_all_virtual_method_parent_tags(self) -> None:
+        """После старта: привязка data_get для родителей активных виртуальных методов (без привязки к хранилищу)."""
+        try:
+            rows = await self._hierarchy.search(
+                {
+                    "filter": {"objectClass": ["prsMethod"], "prsActive": ["TRUE"]},
+                    "attributes": ["prsEntityTypeCode", "cn"],
+                }
+            )
+        except Exception as ex:
+            self._logger.warning(f"{self._config.svc_name} :: Не удалось найти методы для привязки виртуальных тегов: {ex}")
+            return
+        seen: set[str] = set()
+        for row in rows or []:
+            attrs = row[2]
+            raw = attrs.get("prsEntityTypeCode", ["0"])
+            try:
+                if int(raw[0]) != 1:
+                    continue
+            except Exception:
+                continue
+            mid = row[0]
+            try:
+                parent, _ = await self._hierarchy.get_parent(mid)
+            except Exception:
+                continue
+            if not parent or parent in seen:
+                continue
+            seen.add(parent)
+            await self._sync_parent_tag_data_get_subscription(parent)
 
     async def _bind_alert(self, alert_id: str, bind: bool) -> None:
         """
@@ -382,6 +473,9 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.updating.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.deleting.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.may_delete.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsMethod.model.created")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsMethod.model.updated.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsMethod.model.deleted.*")
         # Keep `updated.*` and `deleted.*` bindings to detect type changes on the fly.
         # ----------------------------------------------------------------------------------------
 
@@ -404,6 +498,8 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             dss = await self._hierarchy.search(payload=payload)
             for ds in dss:
                 await self._add_supported_ds(ds[0])
+
+            await self._bind_all_virtual_method_parent_tags()
 
             loop.call_later(self._config.cache_data_period, lambda: asyncio.create_task(self._write_cache_data()))
 
@@ -976,43 +1072,21 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             self._logger.error(f"{self._config.svc_name} :: {ex}")
 
     async def _find_active_virtual_method_id(self, tag_id: str) -> str | None:
-        """Активный метод с prsEntityTypeCode=1 под тегом (при нескольких — минимальный prsIndex)."""
-        payload = {
-            "base": tag_id,
-            "scope": CN_SCOPE_ONELEVEL,
-            "filter": {"objectClass": ["prsMethod"], "prsActive": ["TRUE"]},
-            "attributes": ["cn", "prsEntityTypeCode", "prsIndex"],
-        }
-        rows = await self._hierarchy.search(payload=payload)
-        if not rows:
-            return None
-        candidates: list[tuple[tuple[int, str], str]] = []
-        for row in rows:
-            attrs = row[2]
-            raw_code = attrs.get("prsEntityTypeCode", ["0"])
-            try:
-                if int(raw_code[0]) != 1:
-                    continue
-            except Exception:
-                continue
-            ix = attrs.get("prsIndex", [None])[0]
-            try:
-                sort_ix = int(ix) if ix is not None else 1_000_000_000
-            except Exception:
-                sort_ix = 1_000_000_000
-            candidates.append(((sort_ix, row[0]), row[0]))
-        if not candidates:
-            return None
-        candidates.sort(key=lambda z: z[0])
-        return candidates[0][1]
+        return await find_active_virtual_method_id(self._hierarchy, tag_id)
 
     async def _read_virtual_method_response(self, tag_id: str, mes: dict) -> dict | None:
         """None — читать из хранилища как обычно. Иначе ответ виртуального метода или ошибка."""
+        ctx = mes.get("evalContextTagId")
+        if ctx is not None and str(ctx) == str(tag_id):
+            # Вложенный data_get при разборе параметров виртуального метода для того же тега:
+            # иначе повторный virtual_data_get и двойной вызов пользовательского метода.
+            return None
         mid = await self._find_active_virtual_method_id(tag_id)
         if not mid:
             return None
+        crm = {k: v for k, v in mes.items() if k != "evalContextTagId"}
         res = await self._post_message(
-            mes={"tagId": tag_id, "methodId": mid, "clientRequest": mes},
+            mes={"tagId": tag_id, "methodId": mid, "clientRequest": crm},
             reply=True,
             routing_key="prsMethod.app.virtual_data_get",
         )
@@ -1137,6 +1211,8 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         if not remaining_tag_ids:
             self._logger.debug(f"Получение данных (виртуальные теги): {accumulated}")
             return accumulated
+
+        mes.pop("evalContextTagId", None)
 
         tasks: dict = {}
 

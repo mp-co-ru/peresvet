@@ -254,6 +254,7 @@ class MethodsApp(AppSvc):
                 client_request=None,
                 initiator_finish=data[0],
                 initiator_point=data,
+                virtual_resolution_tag_id=tag_id,
             )
             if parameter[2]["prsIndex"][0] is None:
                 index = None
@@ -338,6 +339,7 @@ class MethodsApp(AppSvc):
                 client_request=client_request if isinstance(client_request, dict) else None,
                 initiator_finish=finish_ts,
                 initiator_point=None,
+                virtual_resolution_tag_id=tag_id,
             )
             if parameter[2]["prsIndex"][0] is None:
                 index = None
