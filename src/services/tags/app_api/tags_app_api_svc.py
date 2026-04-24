@@ -14,6 +14,7 @@ from pydantic import (
 )
 
 from fastapi import APIRouter, Depends, Query
+from starlette.requests import Request
 
 sys.path.append(".")
 
@@ -60,7 +61,8 @@ class AllData(BaseModel):
     )
 class DataGet(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
-    model_config = ConfigDict(protected_namespaces=())
+    # extra: произвольные query-параметры (например calendarTagId) для виртуальных методов → clientRequest
+    model_config = ConfigDict(protected_namespaces=(), extra="allow")
 
     tagId: str | list[str] = Field(
         title="Id или список id тегов"
@@ -155,6 +157,47 @@ class DataGet(BaseModel):
         if v is None or v == "":
             return None
         return str(valid_uuid(str(v)))
+
+
+_DATA_GET_QUERY_KNOWN_KEYS = frozenset(
+    {
+        "tagId",
+        "start",
+        "finish",
+        "maxCount",
+        "format",
+        "actual",
+        "value",
+        "count",
+        "timeStep",
+        "params",
+        "q",
+    }
+)
+# Не принимать из произвольного query (внутреннее поле цепочки data_get).
+_DATA_GET_QUERY_BLOCKED_KEYS = frozenset({"evalContextTagId"})
+
+
+def _merge_extra_data_get_query_params(request: Request, body: dict) -> dict:
+    """Проброс нестандартных query-параметров (не объявленных в сигнатуре GET) в тело DataGet."""
+    out = dict(body)
+    for key in request.query_params.keys():
+        if key in _DATA_GET_QUERY_KNOWN_KEYS or key in _DATA_GET_QUERY_BLOCKED_KEYS:
+            continue
+        if key in out:
+            continue
+        out[key] = request.query_params.get(key)
+    return out
+
+
+def _data_get_apply_query_extras(request: Request, model: DataGet) -> DataGet:
+    """Добавить к уже разобранному DataGet произвольные query-параметры (для путей ``q`` / ``payload``)."""
+    d = model.model_dump()
+    for key in request.query_params.keys():
+        if key in _DATA_GET_QUERY_KNOWN_KEYS or key in _DATA_GET_QUERY_BLOCKED_KEYS:
+            continue
+        d[key] = request.query_params.get(key)
+    return DataGet.model_validate(d)
 
 
 class TagsAppAPI(BaseSvc):
@@ -252,6 +295,7 @@ router = APIRouter(prefix=f"{settings.api_version}/data")
 
 @router.get("/", response_model=dict | None, status_code=200)
 async def data_get(
+    request: Request,
     # основной (правильный) способ для GET: отдельные query-параметры
     tagId: list[str] | None = Query(None),
     start: str | None = None,
@@ -297,6 +341,9 @@ async def data_get(
        * **value** (any): фильтр на значения тега.
        * **params** (json): дополнительные параметры запроса (например
          ``allRecordsAsValue`` для интеграционных табличных тегов).
+       * Любые другие query-параметры (например ``calendarTagId``) передаются в цепочку
+         чтения данных и попадают в ``clientRequest`` виртуального метода для параметров
+         с источником «данные из запроса клиента».
 
     **Ответ:**
 
@@ -306,13 +353,13 @@ async def data_get(
     """
     if q:
         try:
-            p = DataGet.model_validate_json(q)
+            p = _data_get_apply_query_extras(request, DataGet.model_validate_json(q))
         except ValueError as ex:
             res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
             await error_handler.handle_error(res)
             return {}
     elif payload:
-        p = payload
+        p = _data_get_apply_query_extras(request, payload)
     else:
         if not tagId:
             return None
@@ -344,6 +391,7 @@ async def data_get(
             if params is not None:
                 body["params"] = json.loads(params)
 
+            body = _merge_extra_data_get_query_params(request, body)
             p = DataGet.model_validate(body)
         except Exception as ex:
             res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}

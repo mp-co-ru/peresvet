@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 
 from fastapi import APIRouter, Query
+from starlette.requests import Request
 
 sys.path.append(".")
 
@@ -19,7 +20,12 @@ from src.common import svc
 from src.common.api_crud_svc import valid_uuid
 from src.services.tags.datafunc_app_api.datafunc_app_api_settings import DatafuncAppAPISettings
 import src.common.times as t
-from src.services.tags.app_api.tags_app_api_svc import TagsAppAPI, DataGet
+from src.services.tags.app_api.tags_app_api_svc import (
+    DataGet,
+    TagsAppAPI,
+    _data_get_apply_query_extras,
+    _merge_extra_data_get_query_params,
+)
 
 
 def _is_integral_tag_code(val: Any) -> bool:
@@ -289,6 +295,7 @@ router = APIRouter(prefix=f"{settings.api_version}/datafunc")
 
 @router.get("/", response_model=dict | None, status_code=200)
 async def data_get(
+    request: Request,
     tagId: list[str] | None = Query(None),
     start: str | None = None,
     finish: str | None = None,
@@ -302,9 +309,9 @@ async def data_get(
     payload: DataGet | None = None,
 ):
     if q:
-        p = DataGet.model_validate_json(q)
+        p = _data_get_apply_query_extras(request, DataGet.model_validate_json(q))
     elif payload:
-        p = payload
+        p = _data_get_apply_query_extras(request, payload)
     else:
         if not tagId:
             return None
@@ -327,6 +334,7 @@ async def data_get(
             body["count"] = count
         if timeStep is not None:
             body["timeStep"] = timeStep
+        body = _merge_extra_data_get_query_params(request, body)
         p = DataGet.model_validate(body)
     res = await app.data_get(p)
     return res
