@@ -473,10 +473,8 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.updating.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.deleting.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsDataStorage.model.may_delete.*")
-        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsMethod.model.created")
-        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsMethod.model.updated.*")
-        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsMethod.model.deleted.*")
-        # Keep `updated.*` and `deleted.*` bindings to detect type changes on the fly.
+        # Важно: bindings prsMethod.model.* нужны постоянно, чтобы при создании/изменении
+        # метода оперативно (пере)привязывать prsTag.app.data_get.<tag> для виртуальных тегов.
         # ----------------------------------------------------------------------------------------
 
         try:
