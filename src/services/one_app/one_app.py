@@ -192,6 +192,11 @@ from src.services.tags.app_api.tags_app_api_svc \
 # -----------------------------------------------------------------------------
 
 # datafunc ----------------------------------------------------------------------
+# datafunc app
+from src.services.tags.datafunc_app.datafunc_app_svc \
+    import (
+        app as datafunc_app
+    )
 # datafunc app api
 from src.services.tags.datafunc_app_api.datafunc_app_api_svc \
     import (
@@ -347,6 +352,7 @@ app.mount(path="/", app=schedules_app)
 # -----------------------------------------------------------------------------
 
 # datafunc ----------------------------------------------------------------------
+app.mount(path="/", app=datafunc_app)
 app.mount(path="/", app=datafunc_app_api)
 # -----------------------------------------------------------------------------
 # =============================================================================

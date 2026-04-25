@@ -579,6 +579,20 @@ async def peresvet_data_get(query: dict[str, Any] | None = None) -> dict[str, An
     return await _request("GET", "/v1/data/", params=params)
 
 
+@mcp.tool
+async def peresvet_datafunc_get(query: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Read aggregated state durations via GET `/v1/datafunc/`.
+
+    Query format matches `peresvet_data_get`:
+    - `tagId`, `start`, `finish`, `maxCount`, `count`, `timeStep`, `format`, `actual`
+    - `value`
+    - `params` (forwarded to API)
+    """
+    q = query or {}
+    params = _data_query_to_params(q)
+    return await _request("GET", "/v1/datafunc/", params=params)
+
+
 if ENABLE_V2:
     @mcp.tool
     async def peresvet_datastorages_v2_read(query: dict[str, Any] | None = None) -> dict[str, Any]:

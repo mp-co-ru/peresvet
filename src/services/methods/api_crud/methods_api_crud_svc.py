@@ -29,16 +29,16 @@ class MethodParameter(svc.NodeCreate):
     pass
 
 class MethodCreate(svc.NodeCreate):
-    attributes: MethodCreateAttributes = Field(title="Атрибуты метода", required=True)  # type: ignore[assignment]
+    attributes: MethodCreateAttributes = Field(title="Атрибуты метода")
     initiatedBy: str | list[str] | None = Field(None, title="Список id экземпляров сущностей, инициирующих вычисление тега.")
     parameters: List[MethodParameter] | None = Field(
         None,
         title="Параметры метода.",
         description=(
-            "При создании параметров метода они должны быть пронумерованы ",
-            "с помощью атрибута prsIndex. В противном случае параметры ",
+            "При создании параметров метода они должны быть пронумерованы "
+            "с помощью атрибута prsIndex. В противном случае параметры "
             "будут переданы в вычислительный метод в случайном порядке."
-        )
+        ),
     )
 
     @field_validator("initiatedBy")
@@ -52,16 +52,16 @@ class MethodRead(svc.NodeRead):
     pass
 
 class OneMethodInReadResult(svc.OneNodeInReadResult):
-    attributes: dict = Field(title="Атрибуты метода", required=True)
+    attributes: dict = Field(title="Атрибуты метода")
     initiatedBy: str | list[str] = Field([], title="Список id экземпляров сущностей, инициирующих вычисление тега.")
     parameters: List[dict] = Field(
         [],
         title="Параметры метода.",
         description=(
-            "При создании параметров метода они должны быть пронумерованы ",
-            "с помощью атрибута prsIndex. В противном случае параметры ",
+            "При создании параметров метода они должны быть пронумерованы "
+            "с помощью атрибута prsIndex. В противном случае параметры "
             "будут переданы в вычислительный метод в случайном порядке."
-        )
+        ),
     )
 
 class MethodReadResult(svc.NodeReadResult):

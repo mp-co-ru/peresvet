@@ -16,13 +16,12 @@ from starlette.requests import Request
 
 sys.path.append(".")
 
-from src.common import svc
+from src.common.base_svc import BaseSvc
 from src.common.api_crud_svc import valid_uuid
 from src.services.tags.datafunc_app_api.datafunc_app_api_settings import DatafuncAppAPISettings
 import src.common.times as t
 from src.services.tags.app_api.tags_app_api_svc import (
     DataGet,
-    TagsAppAPI,
     _data_get_apply_query_extras,
     _merge_extra_data_get_query_params,
 )
@@ -129,163 +128,30 @@ def _remap_aggregated_keys(
     return {sur_to_orig[k]: int(v) for k, v in by_surrogate.items()}
 
 
-class TagsAppAPIDatafunc(TagsAppAPI):
+class TagsAppAPIDatafunc(BaseSvc):
 
     def _set_handlers(self):
         self._handlers = {
+            f"{self._config.hierarchy['class']}.app_api_client.datafunc_get.*": self.data_get,
         }
 
-    async def data_get(self, mes: DataGet, routing_key: str = None) -> dict:
-        """Метод применяет к обычному результату data/get обработку pandas
-        с целью высчитать накопительное значение времени по кодам.
-        Код состояния (``code``) может быть целым или произвольным значением;
-        для расчёта нецелочисленные коды заменяются на устойчивый int-суррогат,
-        в ответе снова используются исходные значения.
-
-        Возвращаемые родительским data/get'ом данные по одному тегу должны быть
-        вида:
-        [
-            [<code>, <ts>]
-            [<code>, <ts>]...
-        ]
-
-        Args:
-            payload (DataGet): обычный вход для data/get
-
-        Returns:
-            dict: {
-                "data": [
-                    {
-                        "tagId": "...",
-                        "data": [
-                            [{"<code>": <накопительное значение микросекунд>}, x]
-                        ]
-                    }
-
-                ]
-            }
-        """
-        final_ts = mes.finish
-        format_ts = mes.format
-        current_ts = t.int_to_local_timestamp(t.now_int())
-        if format_ts:
-            # если изначальный запрос с флагом format = true,
-            # то удалим его и отформатируем время уже в конце
-            final_ts = t.int_to_local_timestamp(final_ts)
-            mes.format = False
-
-        timeStep = mes.timeStep
-        if timeStep:
-            mes.timeStep = None
-
-        res = await super().data_get(mes=mes)
-        if 'error' in res.keys():
-            return res
-
-        final_res = {
-            "data": []
-        }
-
-        # для скорости не оптимизируем код, просто добавляем случай, когда
-        # есть timeStep
-        #TODO: оптимизировать код
-        if not timeStep:
-            for tag in res["data"]:
-                df = pd.DataFrame(tag["data"], columns=['ts', 'code', 'q'])
-                df = df.drop('q', axis=1).dropna(subset=['ts', 'code'])
-                if df.empty:
-                    final_res['data'].append({
-                        "tagId": tag["tagId"],
-                        "data": [(final_ts, {}, None)],
-                    })
-                    continue
-                cp_to_sur, sur_to_orig = build_code_surrogate_maps(df['code'].unique())
-                df['code'] = _column_surrogate_codes(cast(pd.Series, df['code']), cp_to_sur)
-                df['ts'] = df['ts'].astype(int)
-
-                df['duration'] = df['ts'].diff(periods=-1).fillna(0)
-                df['duration'] = df['duration'] * (-1)
-                df = df.groupby('code')['duration'].sum()
-
-                df = df.astype(int)
-
-                final_value = _remap_aggregated_keys(df.to_dict(), sur_to_orig)
-
-                final_res['data'].append({
-                    "tagId": tag["tagId"],
-                    "data": [
-                        (final_ts, final_value, None)
-                    ]
-                })
-
+    async def data_get(self, mes: DataGet | dict, routing_key: str | None = None) -> dict:
+        payload: DataGet
+        if isinstance(mes, dict):
+            payload = DataGet(**mes)
         else:
-
-            for tag in res["data"]:
-                data = tag["data"]
-                final_data = []
-                if data:
-                    df = pd.DataFrame(data=data,columns=["ts", "code", "q"])
-                    df = df.drop('q', axis=1).dropna(subset=['ts', 'code'])
-                    if df.empty:
-                        final_res['data'].append({
-                            "tagId": tag["tagId"],
-                            "data": [],
-                        })
-                        continue
-                    cp_to_sur, sur_to_orig = build_code_surrogate_maps(df['code'].unique())
-                    df['code'] = _column_surrogate_codes(cast(pd.Series, df['code']), cp_to_sur)
-                    df['date'] = df['ts'].apply(t.int_to_local_timestamp)
-
-                    response_code_keys = list(dict.fromkeys(sur_to_orig.values()))
-                    df = df.set_index("date")
-                    rs = df.resample(f'{timeStep}us', label='right')
-
-                    prev_y = None
-                    prev_x = None
-                    prev_ts = None
-                    item_count = len(rs) - 1
-                    i = 0
-                    for x, y in rs:
-                        x2 = (x, current_ts)[i == item_count]
-                        i += 1
-
-                        y = y.dropna()
-                        y['ts'] = y['ts'].astype(np.int64)
-                        y['code'] = y['code'].astype(np.int64)
-                        last_ts = int((x2 - t.start_ts).total_seconds() * t.microsec)
-                        if not len(y.index):
-                            if prev_y is None:
-                                continue
-                            y = pd.DataFrame({"code": prev_y, "ts": prev_ts}, index=[prev_x])
-
-                        last_y = int(y["code"].iloc[-1])
-                        if prev_x:
-                            y = pd.concat([y, pd.DataFrame({"code": prev_y, "ts": prev_ts}, index=[prev_x])])
-                        y = pd.concat([y, pd.DataFrame({"code": last_y, "ts": last_ts}, index=[x])])
-                        prev_x = x
-                        prev_y = last_y
-                        prev_ts = last_ts
-                        y.sort_index(inplace=True)
-
-                        y['duration'] = y['ts'].diff(periods=-1).fillna(0)
-                        y['duration'] = (y['duration'] * (-1)).astype(int)
-                        y = y.groupby('code')['duration'].sum()
-                        y = y.astype(int)
-                        value = _remap_aggregated_keys(y.to_dict(), sur_to_orig)
-
-                        for state in response_code_keys:
-                            value.setdefault(state, 0)
-
-                        if format_ts:
-                            last_ts = t.int_to_local_timestamp(last_ts)
-                        final_data.append((x, value, None))
-
-                final_res['data'].append({
-                    "tagId": tag["tagId"],
-                    "data": final_data
-                })
-
-        return final_res
+            payload = mes
+        body = payload.model_dump()
+        res = await self._post_message(
+            mes=body,
+            reply=True,
+            routing_key=f"{self._config.hierarchy['class']}.app_api.datafunc_get.*",
+        )
+        if res is None:
+            return {"error": {"code": 424, "message": "Нет обработчика для команды datafunc_get."}}
+        if not isinstance(res, dict):
+            return {"error": {"code": 500, "message": "Некорректный ответ обработчика datafunc_get."}}
+        return res
 
 settings = DatafuncAppAPISettings()
 
