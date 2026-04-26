@@ -1612,6 +1612,8 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             try:
                 xn_1, yn_1 = self._last_point(tag_data[-2][0], tag_data)
             except IndexError:
+                if start is None and xn > finish:
+                    return []
                 xn_1 = -1
                 yn_1 = None
 
