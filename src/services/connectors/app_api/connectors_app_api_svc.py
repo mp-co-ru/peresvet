@@ -13,13 +13,15 @@ from pydantic import (
     field_validator, BeforeValidator, ConfigDict
 )
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 sys.path.append(".")
 
 from src.common.base_svc import BaseSvc
 from src.common.api_crud_svc import valid_uuid, ErrorHandler
 from src.services.connectors.app_api.connectors_app_api_settings import ConnectorsAppAPISettings
+
+from src.services.connectors.app.connectors_mqtt_app_svc import app as connectors_mqtt_app
 
 class Command(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
@@ -61,15 +63,26 @@ class ConnectorsAppAPI(BaseSvc):
             res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
             app._logger.exception(res)
             await error_handler.handle_error(res)
+        else:
+            body = p.model_dump()
 
-        body = p.model_dump()
-
-        res = await self._post_message(mes=body, reply=False, routing_key = f"{self._config.hierarchy['class']}.app_api.command.{body['id']}")
-        # нет подписчика
-        if res is None:
-            res = {"error": {"code": 424, "message": f"Нет обработчика для отправки команды коннектору {body['id']}."}}
-            app._logger.error(res["error"]["message"])
-        return {}
+            post_res = await self._post_message(
+                mes=body,
+                reply=False,
+                routing_key=f"{self._config.hierarchy['class']}.app_api.command.{body['id']}",
+            )
+            # нет подписчика на маршрут (сообщение не доставлено в брокер)
+            if post_res is None:
+                err = {
+                    "error": {
+                        "code": 424,
+                        "message": f"Нет обработчика для отправки команды коннектору {body['id']}.",
+                    }
+                }
+                app._logger.error(err["error"]["message"])
+                return err
+            return {"ok": True, "message": "Команда принята к доставке коннектору."}
+        assert False, "unreachable"
 
 settings = ConnectorsAppAPISettings()
 
@@ -83,20 +96,43 @@ async def command(payload: Command, error_handler: ErrorHandler = Depends()):
 
     .. http:example::
        :request: ../../../../docs/source/samples/connectors/sendCommandToConnectorIn.txt
-       :response: ../../../../docs/source/samples/data/sendCommandToConnectorOut.txt
+       :response: ../../../../docs/source/samples/connectors/sendCommandToConnectorOut.txt
 
     **Параметры запроса:**
 
       * **id** (str) - идентификатор коннектора.
-      * **command** ([str]) - список команд, которые должны быть выполнены коннектором.
+      * **command** (object) - тело команды: ``lines`` (список строк для ``os.system`` на стороне коннектора),
+        опционально ``logToPlatform`` (bool) — включить/выключить дублирование лога в платформу по MQTT.
 
     **Ответ:**
 
-      {}
+      Успех: ``{"ok": true, "message": "..."}``. Ошибка доставки в брокер: HTTP 424 с телом ``{"detail": "..."}``.
 
     """
     res = await app.command(payload)
     await error_handler.handle_error(res)
     return res
+
+
+@router.get("/link_status", status_code=200)
+async def connector_link_status(
+    id: str = Query(..., description="Идентификатор коннектора (UUID)"),
+):
+    """Состояние MQTT-связи коннектора с платформой (кэш сервиса ``connectors_mqtt_app``)."""
+    valid_uuid(id)
+    connected = id in connectors_mqtt_app._connected_connectors
+    return {"id": id, "mqttConnected": connected}
+
+
+@router.get("/log_tail", status_code=200)
+async def connector_log_tail(
+    id: str = Query(..., description="Идентификатор коннектора (UUID)"),
+):
+    """Последние строки лога, пришедшие от коннектора по MQTT (буфер ``connectors_mqtt_app``)."""
+    valid_uuid(id)
+    buf = connectors_mqtt_app._connector_log_lines.get(id)
+    entries = list(buf) if buf else []
+    return {"id": id, "entries": entries}
+
 
 app.include_router(router, tags=["connectors_app"])

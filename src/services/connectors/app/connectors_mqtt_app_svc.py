@@ -1,5 +1,7 @@
 import sys
 import json
+import logging
+from collections import deque
 from collections.abc import Iterable
 
 from fastapi import APIRouter
@@ -34,6 +36,20 @@ class ConnectorsMQTTApp(AppSvc):
         self._connected_connectors: set[str] = set()
         # id тегов, привязанных к коннектору (без LDAP при записи качества в историю через AMQP)
         self._connector_tag_ids: dict[str, set[str]] = {}
+        # последние строки лога с коннектора (prsConnector.log_line по MQTT) для UI конфигуратора
+        self._connector_log_buffer_max: int = 400
+        self._connector_log_lines: dict[str, deque[dict]] = {}
+
+    def append_connector_log_line(
+        self, conn_id: str, *, level: str, message: str, ts: int | None = None
+    ) -> None:
+        if ts is None:
+            ts = int(t.now_int())
+        buf = self._connector_log_lines.setdefault(
+            conn_id, deque(maxlen=self._connector_log_buffer_max)
+        )
+        text = (message or "")[:8192]
+        buf.append({"ts": ts, "level": level, "message": text})
 
     def _replace_connector_tag_cache(self, conn_id: str, tag_ids: Iterable[str]) -> None:
         self._connector_tag_ids[conn_id] = set(tag_ids)
@@ -87,7 +103,10 @@ class ConnectorsMQTTApp(AppSvc):
         }
         conn_id = mes["id"]
         await self._post_message(mes=mes2conn, routing_key=f"prs2conn.{conn_id}")
-        self._logger.info(f"{self._config.svc_name} :: Коннектору {conn_id} посланы команды: {mes['command']['lines']}.")
+        cmd = mes.get("command") or {}
+        self._logger.info(
+            f"{self._config.svc_name} :: Коннектору {conn_id} посланы команды: {cmd.get('lines', [])}."
+        )
 
     async def _find_connector_by_tag(self, tag_id: str) -> list[str]:
         if not self._config.nodes: # type: ignore
@@ -281,6 +300,23 @@ class ConnectorsMQTTApp(AppSvc):
         return {}
 
     async def _send_config_to_connector(self, mes: dict, routing_key: str | None = None) -> dict:
+        if mes.get("action") == "prsConnector.log_line":
+            data = mes.get("data") or {}
+            conn_id = data.get("id", "?")
+            text = data.get("message", "")
+            level_name = str(data.get("level") or "INFO").upper()
+            lvl = getattr(logging, level_name, logging.INFO)
+            self._logger.log(lvl, "%s :: %s", conn_id, text)
+            if isinstance(conn_id, str) and len(conn_id) == 36:
+                ts_raw = data.get("ts")
+                try:
+                    ts_int = int(ts_raw) if ts_raw is not None else None
+                except (TypeError, ValueError):
+                    ts_int = None
+                self.append_connector_log_line(
+                    conn_id, level=level_name, message=text, ts=ts_int
+                )
+            return {}
 
         conn_id = mes["data"]["id"]
         res = await self._get_connector_data(conn_id=conn_id)
@@ -367,6 +403,7 @@ class ConnectorsMQTTApp(AppSvc):
         deleted_conn_id = mes["id"]
         self._connected_connectors.discard(deleted_conn_id)
         self._connector_tag_ids.pop(deleted_conn_id, None)
+        self._connector_log_lines.pop(deleted_conn_id, None)
         payload = {
             "action": "prsConnector.deleted",
             "data": {
