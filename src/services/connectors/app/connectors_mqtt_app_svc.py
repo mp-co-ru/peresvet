@@ -39,6 +39,9 @@ class ConnectorsMQTTApp(AppSvc):
         # последние строки лога с коннектора (prsConnector.log_line по MQTT) для UI конфигуратора
         self._connector_log_buffer_max: int = 400
         self._connector_log_lines: dict[str, deque[dict]] = {}
+        # вывод удалённых команд (prsConnector.command_output), отдельно от log_line
+        self._connector_command_output_buffer_max: int = 200
+        self._connector_command_output_lines: dict[str, deque[dict]] = {}
 
     def append_connector_log_line(
         self, conn_id: str, *, level: str, message: str, ts: int | None = None
@@ -50,6 +53,12 @@ class ConnectorsMQTTApp(AppSvc):
         )
         text = (message or "")[:8192]
         buf.append({"ts": ts, "level": level, "message": text})
+
+    def append_connector_command_output(self, conn_id: str, entry: dict) -> None:
+        buf = self._connector_command_output_lines.setdefault(
+            conn_id, deque(maxlen=self._connector_command_output_buffer_max)
+        )
+        buf.append(entry)
 
     def _replace_connector_tag_cache(self, conn_id: str, tag_ids: Iterable[str]) -> None:
         self._connector_tag_ids[conn_id] = set(tag_ids)
@@ -318,6 +327,45 @@ class ConnectorsMQTTApp(AppSvc):
                 )
             return {}
 
+        if mes.get("action") == "prsConnector.command_output":
+            data = mes.get("data") or {}
+            conn_id = data.get("id", "?")
+            if isinstance(conn_id, str) and len(conn_id) == 36:
+                ts_raw = data.get("ts")
+                try:
+                    ts_int = int(ts_raw) if ts_raw is not None else int(t.now_int())
+                except (TypeError, ValueError):
+                    ts_int = int(t.now_int())
+                exit_raw = data.get("exitCode")
+                exit_code: int | None
+                if exit_raw is None:
+                    exit_code = None
+                else:
+                    try:
+                        exit_code = int(exit_raw)
+                    except (TypeError, ValueError):
+                        exit_code = None
+                err_msg = data.get("errorMessage")
+                if err_msg is not None and not isinstance(err_msg, str):
+                    err_msg = str(err_msg)
+                entry = {
+                    "ts": ts_int,
+                    "command": (data.get("command") or "")[:2048],
+                    "status": (data.get("status") or "")[:32],
+                    "exitCode": exit_code,
+                    "stdout": (data.get("stdout") or "")[:65536],
+                    "stderr": (data.get("stderr") or "")[:65536],
+                    "errorMessage": (err_msg[:8192] if err_msg else None),
+                }
+                self.append_connector_command_output(conn_id, entry)
+            self._logger.info(
+                "%s :: command_output %s status=%s",
+                conn_id,
+                (data.get("command") or "")[:120],
+                data.get("status"),
+            )
+            return {}
+
         conn_id = mes["data"]["id"]
         res = await self._get_connector_data(conn_id=conn_id)
         if not res:
@@ -404,6 +452,7 @@ class ConnectorsMQTTApp(AppSvc):
         self._connected_connectors.discard(deleted_conn_id)
         self._connector_tag_ids.pop(deleted_conn_id, None)
         self._connector_log_lines.pop(deleted_conn_id, None)
+        self._connector_command_output_lines.pop(deleted_conn_id, None)
         payload = {
             "action": "prsConnector.deleted",
             "data": {

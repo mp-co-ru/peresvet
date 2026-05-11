@@ -101,8 +101,13 @@ async def command(payload: Command, error_handler: ErrorHandler = Depends()):
     **Параметры запроса:**
 
       * **id** (str) - идентификатор коннектора.
-      * **command** (object) - тело команды: ``lines`` (список строк для ``os.system`` на стороне коннектора),
-        опционально ``logToPlatform`` (bool) — включить/выключить дублирование лога в платформу по MQTT.
+      * **command** (object) - тело команды: ``lines`` (список строк, каждая выполняется в shell на стороне коннектора
+        через ``subprocess``); результат каждой строки публикуется в платформу по MQTT отдельным действием
+        ``prsConnector.command_output`` (не смешивается с ``prsConnector.log_line``). Список последних результатов:
+        ``GET .../command_output_tail?id=<uuid>``;
+        опционально ``logToPlatform`` (bool) — включить/выключить дублирование **файлового** лога в платформу по ``log_line``;
+        опционально ``timeoutSec`` (число, по умолчанию 120) — таймаут на одну строку;
+        ``maxOutputBytes`` (int, по умолчанию 65536) — ограничение длины stdout/stderr до усечения.
 
     **Ответ:**
 
@@ -131,6 +136,17 @@ async def connector_log_tail(
     """Последние строки лога, пришедшие от коннектора по MQTT (буфер ``connectors_mqtt_app``)."""
     valid_uuid(id)
     buf = connectors_mqtt_app._connector_log_lines.get(id)
+    entries = list(buf) if buf else []
+    return {"id": id, "entries": entries}
+
+
+@router.get("/command_output_tail", status_code=200)
+async def connector_command_output_tail(
+    id: str = Query(..., description="Идентификатор коннектора (UUID)"),
+):
+    """Последние результаты удалённых команд (``prsConnector.command_output``), отдельно от ``log_tail``."""
+    valid_uuid(id)
+    buf = connectors_mqtt_app._connector_command_output_lines.get(id)
     entries = list(buf) if buf else []
     return {"id": id, "entries": entries}
 

@@ -7,6 +7,8 @@ Authorization: No Auth
 {
     "id": "b61a2360-cc05-103e-9308-555c1a8a1358",
     "command": {
-        "lines": ["reboot"]
+        "lines": ["echo hello"],
+        "timeoutSec": 30,
+        "maxOutputBytes": 4096
     }
 }
