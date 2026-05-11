@@ -163,3 +163,4 @@ docker/compose/.cont_one_app.secrets.env
 scripts/
 src/configurator_grafana/*.py
 backups/
+.venv-pdfbuild/
