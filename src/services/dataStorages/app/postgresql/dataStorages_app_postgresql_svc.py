@@ -496,7 +496,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         Args:
             config (dict): _description_
         """
-        return await apg.create_pool(dsn=config["dsn"])
+        return await apg.create_pool(dsn=config["dsn"], min_size=1, max_size=32)
 
     async def _unlink_alert(self, mes: dict, routing_key: str = None) -> None:
         """_summary_

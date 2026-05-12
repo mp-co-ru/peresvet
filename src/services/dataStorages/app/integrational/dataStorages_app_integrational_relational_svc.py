@@ -21,7 +21,7 @@ from src.services.dataStorages.app.integrational.dataStorages_app_integrational_
 
 class DataStoragesAppIntegrationalRelational(DataStoragesAppIntegrationalBase):
     async def _create_connection_pool(self, config: dict) -> Any:
-        return await apg.create_pool(dsn=config["dsn"])
+        return await apg.create_pool(dsn=config["dsn"], min_size=1, max_size=32)
 
     async def _db_fetch(self, ds_id: str, query: str, args: list[Any], timeout_ms: int | None) -> list[Any]:
         pool = self._connection_pools.get(ds_id)

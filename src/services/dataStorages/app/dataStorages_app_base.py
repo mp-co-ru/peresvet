@@ -330,6 +330,18 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             ds_type = None
         return {"attrs": attrs, "type": ds_type}
 
+    async def _await_close_pool(self, pool: Any) -> None:
+        """Закрывает asyncpg-pool (или совместимый), освобождая соединения с СУБД."""
+        if pool is None:
+            return
+        try:
+            if hasattr(pool, "close"):
+                maybe_close = pool.close()
+                if asyncio.iscoroutine(maybe_close):
+                    await maybe_close
+        except Exception:
+            pass
+
     async def _remove_supported_ds(self, ds_id: str) -> None:
         if ds_id not in self._connection_pools:
             return
@@ -351,14 +363,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             pass
 
         pool = self._connection_pools.pop(ds_id, None)
-        # close pool if driver supports it (asyncpg pool has close())
-        try:
-            if pool is not None and hasattr(pool, "close"):
-                maybe = pool.close()
-                if asyncio.iscoroutine(maybe):
-                    await maybe
-        except Exception:
-            pass
+        await self._await_close_pool(pool)
 
     async def _add_supported_ds(self, ds_id: str) -> None:
 
@@ -587,12 +592,15 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             self._logger.error(f"{self._config.svc_name} :: В модели нет данных по хранилищу {ds_id}")
             return
 
-        self._connection_pools[ds_id] = None
+        old_pool = self._connection_pools.pop(ds_id, None)
+        await self._await_close_pool(old_pool)
 
         connected = False
         while not connected:
             try:
-                self._connection_pools[ds_id] = await self._create_connection_pool(json.loads(ds_data[0][2]["prsJsonConfigString"][0]))
+                self._connection_pools[ds_id] = await self._create_connection_pool(
+                    json.loads(ds_data[0][2]["prsJsonConfigString"][0])
+                )
                 self._logger.info(f"{self._config.svc_name} :: Связь с базой данных {ds_id} установлена.")
                 connected = True
             except Exception as ex:
@@ -779,8 +787,8 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
         tag_id = mes["tagId"]
         ds_id = mes["dataStorageId"]
-        if ds_id not in self._connection_pools.keys():
-            self._logger.error(f"{self._config.svc_name} :: Хранилища {ds_id} нет в списке поддерживаемых.")
+        if self._connection_pools.get(ds_id) is None:
+            self._logger.error(f"{self._config.svc_name} :: Хранилища {ds_id} нет в списке поддерживаемых (пул не готов).")
             return
 
         store = None
@@ -820,8 +828,8 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
         alert_id = mes["alertId"]
         ds_id = mes['dataStorageId']
-        if ds_id not in self._connection_pools.keys():
-            self._logger.error(f"{self._config.svc_name} :: Хранилища {ds_id} нет в списке поддерживаемых.")
+        if self._connection_pools.get(ds_id) is None:
+            self._logger.error(f"{self._config.svc_name} :: Хранилища {ds_id} нет в списке поддерживаемых (пул не готов).")
             return
 
         store = None
