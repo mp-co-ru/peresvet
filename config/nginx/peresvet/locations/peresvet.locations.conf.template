@@ -67,6 +67,22 @@ location /v1/connectors/ {
     proxy_set_header Connection "upgrade";
 }
 
+# Команды коннектору и GET link_status (connectors_app_api в составе one_app / общего API-хоста)
+location /v1/connectors_app/ {
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
+
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $host;
+
+    proxy_pass http://connectors_api_crud;
+}
+
 location = /v1/dataStorages/ {
     # add proxy cors
     add_header Access-Control-Allow-Headers '*' always;

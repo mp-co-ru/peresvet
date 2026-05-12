@@ -3,4 +3,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: *
 Content-type: application/json
 
-{}
+{
+    "ok": true,
+    "message": "Команда принята к доставке коннектору."
+}

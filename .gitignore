@@ -155,8 +155,12 @@ docker/images/
 # local secrets for docker compose
 docker/compose/.cont_one_app.secrets.env
 
+# локальная сборка python-docx для генерации ТКП (seligdar)
+.tkp_build/
+
 
 !methods/test_method.py
 scripts/
 src/configurator_grafana/*.py
 backups/
+.venv-pdfbuild/
