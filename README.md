@@ -122,54 +122,61 @@ docker buildx build --platform linux/arm64 -f docker/docker-files/all/Dockerfile
 
 ## <a name="ldap_backup"></a>Бэкап и восстановление данных OpenLDAP
 
-Данные рабочего каталога OpenLDAP в контейнере лежат в **`/var/lib/ldap`** и в Docker Compose вынесены во **внешний том** (см. `docker/compose/docker-compose.ldap.one_app.yml` и `docker/compose/docker-compose.ldap.yml`). Для снимка и восстановления тома (или каталога при bind mount) используются скрипты:
+Данные рабочего каталога OpenLDAP в контейнере лежат в **`/var/lib/ldap`** и в Docker Compose вынесены во **внешний том** или каталог на хосте (см. `docker/compose/docker-compose.ldap.one_app.yml` и `docker/compose/docker-compose.ldap.yml`). Скрипты лежат в **`admin_scripts/ldap/`**:
 
-- `docker/scripts/ldap/ldap_volume_backup.sh`
-- `docker/scripts/ldap/ldap_volume_restore.sh`
+- `admin_scripts/ldap/ldap_volume_backup.sh`
+- `admin_scripts/ldap/ldap_volume_restore.sh`
+- `admin_scripts/ldap/resolve_ldap_storage.py` — внутренний разбор compose для shell-скриптов; при ручном запуске аргументы позиционные, см. `docs/source/administration.rst` (подраздел про этот файл).
 
-Подробные переменные окружения и флаги описаны в комментариях в начале каждого файла.
+**Запуск:** для рабочих операций оба shell-скрипта вызываются **из корня репозитория** (`pwd -P` должен совпадать с корнем проекта). Иначе — ошибка. Исключение: только `-h` или `--help` — справка, из любого каталога.
 
-### Создание бэкапа
+**Формат:** аргументы вида `--имя=значение` (имена в нижнем регистре). Отдельно, без `=`, допускаются `-h` и `--help` (справка). Логика «истина» для флагов: `1`, `true`, `yes`, `YES`.
 
-Команды выполняются из **корня репозитория**. Чтобы перед снимком корректно остановить сервис LDAP через `docker compose`, задайте тот же `COMPOSE_FILE`, что при вашем запуске стека. Для варианта one app достаточно файла с LDAP:
+**Приоритет цели (том или каталог):** задан `ldap_docker_volume` → именованный том; иначе задан `ldap_data_dir` → каталог на хосте; иначе разбор `compose_file` (сервис `ldap_service`, точка монтирования `/var/lib/ldap`).
+
+### Параметры `ldap_volume_backup.sh`
+
+| Параметр | По умолчанию | Назначение |
+|----------|--------------|------------|
+| `compose_file` | `docker/compose/docker-compose.ldap.one_app.yml` | Compose с LDAP; путь от корня репозитория или абсолютный. |
+| `compose_project_name` | *(пусто)* | Проект `docker compose` (`-p`). Пусто — поведение `docker compose` без `-p` (в т.ч. внешняя переменная `COMPOSE_PROJECT_NAME`). |
+| `ldap_service` | `ldap` | Имя сервиса для stop/start и разбора тома. |
+| `backup_dir` | `backups/ldap` | Куда складывать `.tar.gz` (от корня репозитория или абсолютный путь). |
+| `ldap_docker_volume` | *(пусто)* | Принудительно: полное имя Docker-тома. |
+| `ldap_data_dir` | *(пусто)* | Принудительно: каталог данных на хосте (если не задан `ldap_docker_volume`). |
+| `backup_helper_image` | `busybox:stable` | Образ для `docker run` при архивации **тома**. |
+| `skip_stop` | `0` | `1` — не останавливать контейнеры с томом (часто вместе с `skip_compose_stop=1`; риск битого архива). |
+| `skip_compose_stop` | `0` | `1` — не вызывать `docker compose stop/start` для LDAP. |
+
+### Параметры `ldap_volume_restore.sh`
+
+| Параметр | По умолчанию | Назначение |
+|----------|--------------|------------|
+| `archive` | *(обязателен)* | Путь к `.tar.gz` (от корня репозитория или абсолютный). |
+| `compose_file` | `docker/compose/docker-compose.ldap.one_app.yml` | Как в бэкапе. |
+| `compose_project_name` | *(пусто)* | Как в бэкапе. |
+| `ldap_service` | `ldap` | Как в бэкапе. |
+| `ldap_docker_volume` | *(пусто)* | Принудительный том для распаковки. |
+| `ldap_data_dir` | *(пусто)* | Принудительный каталог на хосте. |
+| `restore_helper_image` | `alpine:3.20` | Образ для `docker run` при очистке и `tar xzf`. |
+| `assume_yes` | `0` | `1` — не спрашивать подтверждение перед перезаписью. |
+| `skip_stop` | `0` | В режиме тома: `1` и занятый том → ошибка (запись без остановки запрещена). |
+| `skip_compose_stop` | `0` | `1` — не вызывать `docker compose stop/start`; для тома останавливаются контейнеры с томом (если не `skip_stop=1`). |
+
+Подробнее (включая предупреждения): раздел **«Администрирование»** в Sphinx-документации, файл `docs/source/administration.rst`.
+
+### Примеры
 
 ```bash
-COMPOSE_FILE=docker/compose/docker-compose.ldap.one_app.yml \
-  ./docker/scripts/ldap/ldap_volume_backup.sh
+cd /путь/к/peresvet
+./admin_scripts/ldap/ldap_volume_backup.sh
 ```
-
-Архив `.tar.gz` по умолчанию создаётся в каталоге `./ldap-backups` (путь задаётся переменной **`BACKUP_DIR`**).
-
-Имя Docker-тома обычно имеет вид **`<префикс_проекта_compose>_ldap_data_one_app`** или **`..._ldap_data`**. Проверить: `docker volume ls | grep ldap`. Если автоопределение не подходит, укажите том явно:
 
 ```bash
-LDAP_DOCKER_VOLUME=compose_ldap_data_one_app \
-  ./docker/scripts/ldap/ldap_volume_backup.sh
+./admin_scripts/ldap/ldap_volume_restore.sh \
+  --assume_yes=1 \
+  --archive=backups/ldap/ИМЯ_АРХИВА.tar.gz
 ```
-
-Если данные смонтированы **каталогом на хосте** (bind mount), вместо тома можно указать путь:
-
-```bash
-LDAP_DATA_DIR=/путь/к/данным/ldap ./docker/scripts/ldap/ldap_volume_backup.sh
-```
-
-Горячий бэкап без остановки контейнеров: **`SKIP_STOP=1`** (возможна неконсистентность архива, используйте осознанно).
-
-### Восстановление из бэкапа
-
-```bash
-COMPOSE_FILE=docker/compose/docker-compose.ldap.one_app.yml \
-  ./docker/scripts/ldap/ldap_volume_restore.sh -y ./ldap-backups/ИМЯ_АРХИВА.tar.gz
-```
-
-Флаг **`-y`** отключает интерактивный запрос подтверждения. Целевой том можно передать **вторым аргументом** после пути к архиву. Для восстановления в **каталог на хосте**:
-
-```bash
-LDAP_DATA_DIR=/путь/к/данным/ldap \
-  ./docker/scripts/ldap/ldap_volume_restore.sh -y ./ldap-backups/ИМЯ_АРХИВА.tar.gz
-```
-
-Скрипт восстановления останавливает LDAP (через compose или контейнеры с данным томом), очищает содержимое целевого тома или каталога и распаковывает архив, затем снова запускает сервис.
 
 # <a name="debugging"></a> Отладка
 
