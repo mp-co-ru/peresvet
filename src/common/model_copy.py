@@ -9,6 +9,9 @@ import json
 import logging
 import re
 from typing import Any, Callable, Awaitable
+from uuid import uuid4
+
+import ldap.filter
 
 from src.common.hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
 
@@ -131,6 +134,41 @@ def ensure_attrs_for_create(oc: str, raw_attrs: dict[str, Any], attrs_plain: dic
         if not str(cur or "").strip():
             addr = first_ldap_attr_value(raw_attrs, "prsMethodAddress")
             attrs_plain["prsMethodAddress"] = addr if addr and str(addr).strip() else " "
+
+
+async def uniquify_cn_under_parent(
+    hierarchy,
+    parent_id: str,
+    attrs_plain: dict[str, Any],
+) -> None:
+    """Если под родителем уже есть узел с таким cn (RDN), подбирает свободное имя."""
+    base = str(attrs_plain.get("cn") or "").strip()
+    if not base:
+        return
+    candidate = base
+    n = 0
+    while True:
+        # Значение cn вставляется в строку фильтра без кавычек; скобки и * ломают синтаксис LDAP.
+        cn_filter = ldap.filter.escape_filter_chars(candidate)
+        items = await hierarchy.search(
+            {
+                "base": parent_id,
+                "scope": CN_SCOPE_ONELEVEL,
+                "filter": {"cn": [cn_filter]},
+                "attributes": ["entryUUID"],
+            }
+        )
+        if not items:
+            attrs_plain["cn"] = candidate
+            return
+        n += 1
+        if n == 1:
+            candidate = f"{base} (копия)"
+        else:
+            candidate = f"{base} (копия {n})"
+        if n > 1000:
+            attrs_plain["cn"] = f"{base}-{uuid4().hex[:8]}"
+            return
 
 
 def filter_plain_attrs_for_class(plain: dict[str, Any], oc: str) -> dict[str, Any]:
@@ -335,6 +373,7 @@ async def copy_nodes_via_amqp(
                         ),
                     }
                 }
+            await uniquify_cn_under_parent(hierarchy, new_parent, attrs_plain)
             body = {
                 "parentId": new_parent,
                 "attributes": attrs_plain,
@@ -356,6 +395,7 @@ async def copy_nodes_via_amqp(
                         ),
                     }
                 }
+            await uniquify_cn_under_parent(hierarchy, new_parent, attrs_plain)
             if "prsJsonConfigString" in attrs_plain and attrs_plain["prsJsonConfigString"] is not None:
                 attrs_plain["prsJsonConfigString"] = remap_uuids_in_structure(
                     attrs_plain["prsJsonConfigString"], id_map, subtree_ids
