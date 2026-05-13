@@ -11,10 +11,6 @@ services:
           condition: service_started
         grafana:
           condition: service_healthy
-        mcp_peresvet:
-          condition: service_started
-        mcp_grafana:
-          condition: service_started
       ports:
         - ${NGINX_HTTP_PORT}:${NGINX_HTTP_PORT}
         - ${NGINX_HTTPS_PORT}:${NGINX_HTTPS_PORT}
