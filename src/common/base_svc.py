@@ -23,14 +23,22 @@ from src.common.json_rpc_sanitize import sanitize_for_json_rpc
 
 class BaseSvc(FastAPI):
 
+    _registered_service_names: set[str] = set()
+
+    @classmethod
+    def registered_service_names(cls) -> list[str]:
+        return sorted(cls._registered_service_names)
+
     def __init__(self, settings: BaseSvcSettings, *args, **kwargs):
 
         self._conf = settings
+        self._registered_service_names.add(settings.svc_name)
         self._logger = PrsLogger.make_logger(
             level=settings.log["level"],
             file_name=settings.log["file_name"],
             retention=settings.log["retention"],
-            rotation=settings.log["rotation"]
+            rotation=settings.log["rotation"],
+            service_name=settings.svc_name
         )
 
         self._logger.debug(f"{self._config.svc_name} :: Начало инициализации сервиса {settings.svc_name}.")
