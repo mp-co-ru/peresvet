@@ -13,31 +13,46 @@ from src.common import api_crud_svc as svc
 from src.services.alerts.api_crud.alerts_api_crud_settings import AlertsAPICRUDSettings
 
 def valid_alert_config(v: dict) -> dict:
-        new_v = deepcopy(v)
-        if not new_v:
-            return {
-                "high": True,
-                "value": 10,
-                "autoAck": True
-            }
-        new_v.setdefault("high", True)
-        new_v.setdefault("value", 10)
-        new_v.setdefault("autoAck", True)
+    new_v = deepcopy(v)
+    if not new_v:
+        return {
+            "kind": "simple",
+            "high": True,
+            "value": 10,
+            "autoAck": True,
+        }
+    new_v.setdefault("kind", "simple")
+    if new_v["kind"] not in ("simple", "duration", "complex"):
+        new_v["kind"] = "simple"
+    new_v.setdefault("high", True)
+    new_v.setdefault("value", 10)
+    new_v.setdefault("autoAck", True)
+    new_v.setdefault("rangeLow", 0)
+    new_v.setdefault("rangeHigh", 100)
+    new_v.setdefault("durationMicroseconds", 180 * 1_000_000)
+    new_v.setdefault("methodId", "")
 
-        return new_v
+    return new_v
+
+
 class AlertCreateAttributes(svc.NodeAttributes):
     """При создании тревоги атрибут ``prsJsonConfigString`` имеет формат
 
     .. code:: python
 
         {
-            # "тревожное" значение тега
-            "value": ...
-            # способ сравнения значения тега с "тревожным":
-            # если high = true, то тревога возникает, если значение тега >= value
-            # иначе - значение тега < value
-            "high": true
-            # флаг автоквитирования
+            # тип: "simple" | "duration" | "complex"
+            "kind": "simple",
+            # simple: порог по одному значению тега-родителя
+            "value": ...,
+            "high": true,
+            # duration: тревога при нахождении значения в [rangeLow, rangeHigh]
+            # непрерывно не менее durationMicroseconds (микросекунды, как метки времени)
+            "rangeLow": ...,
+            "rangeHigh": ...,
+            "durationMicroseconds": ...,
+            # complex: дочерний prsMethod с инициаторами; метод возвращает true/false
+            "methodId": "...",
             "autoAck": true
         }
 
@@ -46,10 +61,17 @@ class AlertCreateAttributes(svc.NodeAttributes):
     """
     prsJsonConfigString: dict  = Field(
         {
+            "kind": "simple",
             "high": True,
             "value": 10,
-            "autoAck": True
-        }, title="Конфигурация тревоги")
+            "autoAck": True,
+            "rangeLow": 0,
+            "rangeHigh": 100,
+            "durationMicroseconds": 180000000,
+            "methodId": "",
+        },
+        title="Конфигурация тревоги",
+    )
 
     @field_validator("prsJsonConfigString")
     @classmethod

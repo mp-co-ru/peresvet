@@ -139,8 +139,8 @@ class MethodsApp(AppSvc):
             return 0
 
     async def _created(self, mes: dict, routing_key: str = None):
-        await self._make_method_cache(mes["id"])
-        if await self._method_entity_type(mes["id"]) != 1:
+        mc = await self._make_method_cache(mes["id"])
+        if mc is not None and await self._method_entity_type(mes["id"]) != 1:
             await self._bind_method(mes["id"])
 
     async def _updated(self, mes: dict, routing_key: str = None):
@@ -154,8 +154,8 @@ class MethodsApp(AppSvc):
         method_data = await self._hierarchy.search(payload=payload)
         active = method_data[0][2]["prsActive"][0] == 'TRUE'
         if active:
-            await self._make_method_cache(mes['id'])
-            if await self._method_entity_type(mes['id']) != 1:
+            mc = await self._make_method_cache(mes['id'])
+            if mc is not None and await self._method_entity_type(mes['id']) != 1:
                 await self._bind_method(mes['id'], True)
         else:
             await self._delete_method_cache(mes['id'])
@@ -482,6 +482,14 @@ class MethodsApp(AppSvc):
             )
             return True
 
+        parent_tag, _ = await self._hierarchy.get_parent(method_id)
+        if await self._hierarchy.get_node_class(parent_tag) == "prsAlert":
+            self._logger.debug(
+                f"{self._config.svc_name} :: Метод '{method_id}' привязан к тревоге "
+                f"{parent_tag}: кэш methods_app не строится (обработка в alerts_app)."
+            )
+            return None
+
         method_dn = await self._hierarchy.get_node_dn(method_id)
         payload = {
             "base": f"cn=initiatedBy,cn=system,{method_dn}",
@@ -493,8 +501,6 @@ class MethodsApp(AppSvc):
         if not initiators:
             self._logger.warning(f"{self._config.svc_name} :: Метод '{method_id}' не имеет инициаторов.")
             return False
-
-        parent_tag, _ = await self._hierarchy.get_parent(method_id)
 
         initiators_ids = []
         async with self._cache.get_redis() as r:
@@ -531,6 +537,8 @@ class MethodsApp(AppSvc):
         methods = await self._hierarchy.search(payload=payload)
         for method in methods:
             ok = await self._make_method_cache(method[0])
+            if ok is None:
+                continue
             if ok and await self._method_entity_type(method[0]) != 1:
                 await self._bind_method(method[0])
 
