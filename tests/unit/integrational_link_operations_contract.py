@@ -275,6 +275,7 @@ def test_v2_sync_link_operations_keeps_extra_attrs_and_nested_parameters():
     dummy._hierarchy = types.SimpleNamespace(search=_search, add=_add, modify=_modify, delete=_delete)
     dummy._attrs_dict = types.MethodType(DataStoragesModelCRUDV2._attrs_dict, dummy)
     dummy._prepare_node_attrs = types.MethodType(DataStoragesModelCRUDV2._prepare_node_attrs, dummy)
+    dummy._prepare_node_add_attrs = types.MethodType(DataStoragesModelCRUDV2._prepare_node_add_attrs, dummy)
     dummy._sync_link_operation_parameters = types.MethodType(
         DataStoragesModelCRUDV2._sync_link_operation_parameters, dummy
     )
@@ -314,6 +315,80 @@ def test_v2_sync_link_operations_keeps_extra_attrs_and_nested_parameters():
     assert "parameters" not in op_add[1]
     assert p_add[1]["cn"] == "start"
     assert p_add[1]["description"] == "Shift start"
+
+
+def test_v2_sync_link_operations_omits_empty_description_on_new_nodes():
+    dummy = types.SimpleNamespace()
+    added: list[tuple[str, dict]] = []
+
+    async def _search(payload: dict):
+        flt = payload.get("filter") or {}
+        obj = (flt.get("objectClass") or [None])[0]
+        if obj in ("prsDatastorageTagOperation", "prsDatastorageTagOperationParameter"):
+            return []
+        return []
+
+    async def _add(base: str, attribute_values: dict):
+        added.append((base, attribute_values))
+        if attribute_values.get("objectClass") == ["prsDatastorageTagOperation"]:
+            return "op-node-1"
+        return f"param-node-{attribute_values['cn']}"
+
+    async def _modify(_id: str, _attrs: dict):
+        return None
+
+    async def _delete(_id: str):
+        return None
+
+    dummy._hierarchy = types.SimpleNamespace(search=_search, add=_add, modify=_modify, delete=_delete)
+    dummy._attrs_dict = types.MethodType(DataStoragesModelCRUDV2._attrs_dict, dummy)
+    dummy._prepare_node_attrs = types.MethodType(DataStoragesModelCRUDV2._prepare_node_attrs, dummy)
+    dummy._prepare_node_add_attrs = types.MethodType(DataStoragesModelCRUDV2._prepare_node_add_attrs, dummy)
+    dummy._sync_link_operation_parameters = types.MethodType(
+        DataStoragesModelCRUDV2._sync_link_operation_parameters, dummy
+    )
+
+    asyncio.run(
+        DataStoragesModelCRUDV2._sync_link_operations(
+            dummy,
+            link_id="link-1",
+            operations=[
+                {
+                    "attributes": {
+                        "cn": "products.update.v1",
+                        "prsActive": True,
+                        "prsEntityTypeCode": 1,
+                        "description": "",
+                        "prsJsonConfigString": {
+                            "query": "update products set sku = :new_sku where sku = :sku",
+                        },
+                    },
+                    "parameters": [
+                        {
+                            "attributes": {
+                                "cn": "new_sku",
+                                "prsActive": True,
+                                "description": "",
+                                "prsJsonConfigString": {"JSONata": "$.params.new_sku"},
+                            }
+                        },
+                        {
+                            "attributes": {
+                                "cn": "sku",
+                                "prsActive": True,
+                                "description": None,
+                                "prsJsonConfigString": {"JSONata": "$.params.sku"},
+                            }
+                        },
+                    ],
+                }
+            ],
+            replace=True,
+        )
+    )
+
+    for _, attrs in added:
+        assert "description" not in attrs
 
 
 def test_v2_read_tag_link_operations_returns_extra_attrs():

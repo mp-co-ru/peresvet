@@ -18,6 +18,8 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
     - операции привязки интеграционного тега как дочерние LDAP-узлы linkedTags[].operations
     """
 
+    _empty_optional_add_attrs = {"description"}
+
     async def _further_read(self, mes: dict, search_result: dict) -> dict:
         res = await super()._further_read(mes, search_result)
 
@@ -365,6 +367,18 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
         vals["objectClass"] = [object_class]
         return vals
 
+    def _prepare_node_add_attrs(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        vals = copy.deepcopy(attrs or {})
+        for key in self._empty_optional_add_attrs:
+            value = vals.get(key)
+            if value is None or (isinstance(value, str) and not value):
+                vals.pop(key, None)
+            elif isinstance(value, list) and all(
+                item is None or (isinstance(item, str) and not item) for item in value
+            ):
+                vals.pop(key, None)
+        return vals
+
     def _ldap_attrs_to_payload(self, attrs: dict[str, Any]) -> dict[str, Any]:
         result: dict[str, Any] = {}
         for key, raw in attrs.items():
@@ -434,7 +448,7 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
             if not existed:
                 op_id = await self._hierarchy.add(
                     base=link_id,
-                    attribute_values=node_attrs,
+                    attribute_values=self._prepare_node_add_attrs(node_attrs),
                 )
             else:
                 op_id = existed[0]
@@ -493,7 +507,7 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
             if not existed:
                 await self._hierarchy.add(
                     base=op_id,
-                    attribute_values=node_attrs,
+                    attribute_values=self._prepare_node_add_attrs(node_attrs),
                 )
             else:
                 modify_attrs = dict(node_attrs)
