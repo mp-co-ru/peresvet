@@ -1,6 +1,5 @@
 import sys
 import json
-import logging
 from collections import deque
 from collections.abc import Iterable
 
@@ -314,8 +313,9 @@ class ConnectorsMQTTApp(AppSvc):
             conn_id = data.get("id", "?")
             text = data.get("message", "")
             level_name = str(data.get("level") or "INFO").upper()
-            lvl = getattr(logging, level_name, logging.INFO)
-            self._logger.log(lvl, "%s :: %s", conn_id, text)
+            if level_name not in ("TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL"):
+                level_name = "INFO"
+            self._logger.log(level_name, f"{conn_id} :: {text}")
             if isinstance(conn_id, str) and len(conn_id) == 36:
                 ts_raw = data.get("ts")
                 try:
