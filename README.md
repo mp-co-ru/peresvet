@@ -12,7 +12,8 @@
 4. [`Примеры использования`](#examples)
 5. [`Отладка`](#debugging)
 6. [`Генерация документации`](#make_docs)
-7. [`Бэкап и восстановление LDAP`](#ldap_backup)
+7. [`Бэкап и восстановление всех работающих Docker-контейнеров`](#docker_runtime_backup)
+8. [`Бэкап и восстановление LDAP`](#ldap_backup)
 
 ---
 
@@ -119,6 +120,35 @@ https://devdotnet.org/post/sborka-docker-konteinerov-dlya-arm-arhitekturi-ispolz
 
 Команда построения образа для linux/arm64
 docker buildx build --platform linux/arm64 -f docker/docker-files/all/Dockerfile.all_svc.uvicorn --build-arg IMAGE_VERSION=mpc:0.4 -t mpc/peresvet_all-svc:0.4-arm64 . --load
+
+## <a name="docker_runtime_backup"></a>Бэкап и восстановление всех работающих Docker-контейнеров
+
+Для переноса всей текущей Docker-развёртки есть shell-скрипты:
+
+- `admin_scripts/docker/running_containers_backup.sh`
+- `admin_scripts/docker/running_containers_restore.sh`
+
+Скрипт бэкапа работает по `docker ps`, поэтому в архив попадают все
+работающие контейнеры, включая дополнительные контейнеры проекта, а не только
+контейнеры Пересвета. В архив сохраняются committed-образы контейнеров,
+Docker volumes, bind mounts с хоста и Docker metadata.
+
+```bash
+cd /путь/к/peresvet
+./admin_scripts/docker/running_containers_backup.sh
+```
+
+Восстановление:
+
+```bash
+./admin_scripts/docker/running_containers_restore.sh \
+  --archive=backups/docker_runtime/ИМЯ_АРХИВА.tar.gz
+```
+
+Если при восстановлении Docker volume или bind mount-путь уже существуют,
+скрипт спрашивает, перезаписать это хранилище или пропустить его
+восстановление. Подробности и параметры описаны в разделе
+`Администрирование` Sphinx-документации (`docs/source/administration.rst`).
 
 ## <a name="ldap_backup"></a>Бэкап и восстановление данных OpenLDAP
 
