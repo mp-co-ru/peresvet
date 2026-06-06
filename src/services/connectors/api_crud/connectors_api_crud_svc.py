@@ -91,6 +91,24 @@ class ConnectorCreate(svc.NodeCreate):
         title="Список добавленных тегов для коннектора"
     )
 
+class ConnectorCopy(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
+    sourceId: str = Field(title="Id копируемого коннектора")
+    copyLinkedTags: bool = Field(
+        False,
+        title="Копировать привязки тегов исходного коннектора",
+    )
+    attributes: dict | None = Field(
+        None,
+        title="Необязательные атрибуты копии (например cn).",
+    )
+
+    @field_validator("sourceId")
+    @classmethod
+    def validate_source_id(cls, v: str) -> str:
+        return svc.valid_uuid(v)
+
     @model_validator(mode="before")
     @classmethod
     def _coerce_prs_json_strings_in_body(cls, data):
@@ -209,6 +227,21 @@ async def create(payload: dict | None = None, error_handler: svc.ErrorHandler = 
     """
     if payload is None:
         payload = {}
+    if payload.get("sourceId"):
+        try:
+            svc.coerce_prs_json_strings_in_mapping_tree(payload.get("attributes") or {})
+            p_copy = ConnectorCopy.model_validate(payload)
+        except Exception as ex:
+            res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+            app._logger.exception(res)
+            await error_handler.handle_error(res)
+        res = await app._post_message(
+            mes=p_copy.model_dump(exclude_none=True),
+            reply=True,
+            routing_key="prsConnector.api_crud.copy",
+        )
+        await error_handler.handle_error(res)
+        return res
 
     try:
         s = json.dumps(payload)
