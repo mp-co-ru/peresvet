@@ -6,6 +6,7 @@ sys.path.append(".")
 
 from src.common import model_crud_svc
 from src.common import hierarchy
+from src.common.model_copy import ldap_attrs_to_plain, uniquify_cn_under_parent
 from src.services.connectors.model_crud.connectors_model_crud_settings import ConnectorsModelCRUDSettings
 
 class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
@@ -24,8 +25,68 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
     def _set_handlers(self):
         super()._set_handlers()
+        self._handlers["prsConnector.api_crud.copy"] = self._copy_connector
         self._handlers["prsTag.model.updated.*"] = self._tag_updated
         self._handlers["prsTag.model.deleted.*"] = self._tag_deleted
+
+    async def _copy_connector(self, mes: dict, routing_key: str | None = None) -> dict:
+        source_id = mes.get("sourceId")
+        if not source_id:
+            return {"error": {"code": 422, "message": "Должен быть задан sourceId."}}
+
+        items = await self._hierarchy.search(
+            {
+                "id": [source_id],
+                "attributes": [
+                    "cn",
+                    "description",
+                    "prsJsonConfigString",
+                    "prsActive",
+                    "prsDefault",
+                    "prsIndex",
+                    "prsEntityTypeCode",
+                ],
+            }
+        )
+        if not items:
+            return {"error": {"code": 422, "message": f"Коннектор {source_id} не найден."}}
+
+        attrs_plain = ldap_attrs_to_plain(items[0][2])
+        override = mes.get("attributes")
+        if isinstance(override, dict) and override.get("cn"):
+            attrs_plain["cn"] = override["cn"]
+
+        base_node = self._config.hierarchy["node_id"]
+        await uniquify_cn_under_parent(self._hierarchy, base_node, attrs_plain)
+
+        linked_tags = []
+        if mes.get("copyLinkedTags"):
+            tag_items = await self._hierarchy.search(
+                {
+                    "base": source_id,
+                    "filter": {"objectClass": ["prsConnectorTagData"]},
+                    "attributes": ["cn", "prsJsonConfigString", "description"],
+                    "scope": hierarchy.CN_SCOPE_SUBTREE,
+                }
+            )
+            for item in tag_items or []:
+                raw = item[2]
+                prs_json = raw.get("prsJsonConfigString", [None])[0]
+                if isinstance(prs_json, str):
+                    prs_json = json.loads(prs_json) if prs_json else {}
+                linked_tags.append(
+                    {
+                        "tagId": raw["cn"][0],
+                        "attributes": {
+                            "cn": raw["cn"][0],
+                            "prsJsonConfigString": prs_json or {},
+                            "description": (raw.get("description") or [None])[0],
+                            "objectClass": "prsConnectorTagData",
+                        },
+                    }
+                )
+
+        return await self._create({"attributes": attrs_plain, "linkedTags": linked_tags})
 
     async def on_startup(self) -> None:
 
