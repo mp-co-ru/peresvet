@@ -183,30 +183,134 @@ def _crud_query_to_params(query: dict[str, Any]) -> list[tuple[str, str]]:
 
     return params
 
+def _query_value_to_str(value: Any) -> str:
+    if isinstance(value, bool):
+        return _bool_str(value)
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, ensure_ascii=False)
+    return str(value)
+
+
+_DATA_QUERY_KNOWN_KEYS = frozenset(
+    {
+        "tagId",
+        "start",
+        "finish",
+        "maxCount",
+        "count",
+        "timeStep",
+        "format",
+        "actual",
+        "value",
+        "params",
+        "allRecordsAsValue",
+    }
+)
+_DATA_QUERY_BLOCKED_KEYS = frozenset({"evalContextTagId"})
+
+
 def _data_query_to_params(query: dict[str, Any]) -> list[tuple[str, str]]:
     params: list[tuple[str, str]] = []
     if "tagId" in query and query["tagId"] is not None:
         _add_list(params, "tagId", query["tagId"])
     for k in ("start", "finish", "maxCount", "count", "timeStep", "format", "actual"):
         if k in query and query[k] is not None:
-            v = query[k]
-            if isinstance(v, bool):
-                params.append((k, _bool_str(v)))
-            else:
-                params.append((k, str(v)))
+            params.append((k, _query_value_to_str(query[k])))
     if "value" in query and query["value"] is not None:
-        v = query["value"]
-        if isinstance(v, (dict, list)):
-            params.append(("value", json.dumps(v, ensure_ascii=False)))
-        else:
-            params.append(("value", str(v)))
+        params.append(("value", _query_value_to_str(query["value"])))
     if "params" in query and query["params"] is not None:
-        v = query["params"]
-        if isinstance(v, dict):
-            params.append(("params", json.dumps(v, ensure_ascii=False)))
-        else:
-            params.append(("params", str(v)))
+        params.append(("params", _query_value_to_str(query["params"])))
+    for k, v in query.items():
+        if k in _DATA_QUERY_KNOWN_KEYS or k in _DATA_QUERY_BLOCKED_KEYS or v is None:
+            continue
+        params.append((k, _query_value_to_str(v)))
     return params
+
+
+def _method_parameter_payload(parameter: dict[str, Any]) -> dict[str, Any]:
+    if "attributes" in parameter:
+        return parameter
+    attrs: dict[str, Any] = {}
+    if "cn" in parameter:
+        attrs["cn"] = parameter["cn"]
+    if "description" in parameter:
+        attrs["description"] = parameter["description"]
+    if "prsIndex" in parameter:
+        attrs["prsIndex"] = parameter["prsIndex"]
+    elif "index" in parameter:
+        attrs["prsIndex"] = parameter["index"]
+    if "prsActive" in parameter:
+        attrs["prsActive"] = parameter["prsActive"]
+    if "prsJsonConfigString" in parameter:
+        attrs["prsJsonConfigString"] = parameter["prsJsonConfigString"]
+    elif "config" in parameter:
+        attrs["prsJsonConfigString"] = parameter["config"]
+    if isinstance(parameter.get("attrs"), dict):
+        attrs.update(parameter["attrs"])
+    return {"attributes": attrs}
+
+
+def _operation_parameter_payload(parameter: dict[str, Any]) -> dict[str, Any]:
+    if "attributes" in parameter:
+        return parameter
+    attrs: dict[str, Any] = {
+        "cn": parameter.get("cn"),
+        "prsJsonConfigString": parameter.get("prsJsonConfigString", parameter.get("config", {})),
+    }
+    if "description" in parameter:
+        attrs["description"] = parameter["description"]
+    if "prsActive" in parameter:
+        attrs["prsActive"] = parameter["prsActive"]
+    if isinstance(parameter.get("attrs"), dict):
+        attrs.update(parameter["attrs"])
+    return {"attributes": attrs}
+
+
+def _tag_operation_payload(operation: dict[str, Any]) -> dict[str, Any]:
+    if "attributes" in operation:
+        op = dict(operation)
+        op["parameters"] = [_operation_parameter_payload(p) for p in operation.get("parameters") or []]
+        return op
+    cfg = operation.get("prsJsonConfigString")
+    if cfg is None:
+        cfg = {
+            "query": operation.get("query"),
+        }
+        for key, out_key in (
+            ("timeoutMs", "timeoutMs"),
+            ("timeout_ms", "timeoutMs"),
+            ("maxRows", "maxRows"),
+            ("max_rows", "maxRows"),
+            ("version", "version"),
+        ):
+            if key in operation and operation[key] is not None:
+                cfg[out_key] = operation[key]
+    attrs: dict[str, Any] = {
+        "cn": operation.get("cn"),
+        "prsEntityTypeCode": operation.get("prsEntityTypeCode", operation.get("kind", 0)),
+        "prsJsonConfigString": cfg,
+    }
+    if "prsActive" in operation:
+        attrs["prsActive"] = operation["prsActive"]
+    if isinstance(operation.get("attrs"), dict):
+        attrs.update(operation["attrs"])
+    return {
+        "attributes": attrs,
+        "parameters": [_operation_parameter_payload(p) for p in operation.get("parameters") or []],
+    }
+
+
+def _linked_tag_payload(link: dict[str, Any]) -> dict[str, Any]:
+    if "tagId" not in link:
+        raise ValueError("linked tag item requires tagId")
+    attrs = link.get("attributes")
+    if attrs is None:
+        attrs = {}
+    return {
+        "tagId": link["tagId"],
+        "attributes": attrs,
+        "operations": [_tag_operation_payload(op) for op in link.get("operations") or []],
+    }
 
 
 async def _find_child_by_cn(entity: Literal["objects", "tags"], *, parent_id: str, cn: str) -> str | None:
@@ -554,17 +658,111 @@ async def peresvet_crud_delete(entity: CrudEntity, payload: dict[str, Any]) -> d
 
 
 @mcp.tool
+async def peresvet_method_create(
+    *,
+    parent_id: str,
+    method_address: str,
+    cn: str | None = None,
+    description: str | None = None,
+    entity_type_code: int = 0,
+    initiated_by: str | list[str] | None = None,
+    parameters: list[dict[str, Any]] | None = None,
+    attrs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Create a Peresvet method under a tag or alert.
+
+    Wraps `POST /v1/methods/`.
+
+    - `entity_type_code=0`: calculated method, triggered by `initiated_by`, writes result to tag data.
+    - `entity_type_code=1`: virtual method, called on `GET /v1/data/` and returns tag data without historian read.
+    - `parameters[].config` / `parameters[].prsJsonConfigString` supports:
+      `routingKey` + `message` + optional `responseJsonata`, `clientJsonata`,
+      or legacy nested data get with `tagId`.
+    """
+    attributes: dict[str, Any] = {
+        "prsMethodAddress": method_address,
+        "prsEntityTypeCode": entity_type_code,
+    }
+    if cn is not None:
+        attributes["cn"] = cn
+    if description is not None:
+        attributes["description"] = description
+    if attrs:
+        attributes.update(attrs)
+    payload: dict[str, Any] = {
+        "parentId": parent_id,
+        "attributes": attributes,
+    }
+    if initiated_by is not None:
+        payload["initiatedBy"] = initiated_by
+    if parameters is not None:
+        payload["parameters"] = [_method_parameter_payload(p) for p in parameters]
+    return await _request("POST", "/v1/methods/", json_body=payload)
+
+
+@mcp.tool
+async def peresvet_virtual_method_create(
+    *,
+    tag_id: str,
+    method_address: str,
+    cn: str | None = None,
+    description: str | None = None,
+    parameters: list[dict[str, Any]] | None = None,
+    attrs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Create a virtual method (`prsEntityTypeCode=1`) for a tag.
+
+    The method is executed when `peresvet_data_get` reads `tag_id`. Its return
+    value becomes the tag value at the request `finish` timestamp.
+
+    Use `parameters[].config.clientJsonata` to pass data from the user's
+    `peresvet_data_get(query=...)` request, including arbitrary top-level keys.
+    """
+    return await peresvet_method_create(
+        parent_id=tag_id,
+        method_address=method_address,
+        cn=cn,
+        description=description,
+        entity_type_code=1,
+        initiated_by=None,
+        parameters=parameters,
+        attrs=attrs,
+    )
+
+
+@mcp.tool
+async def peresvet_method_copy(*, source_id: str, parent_id: str) -> dict[str, Any]:
+    """Copy an existing method to a new tag/alert parent.
+
+    Wraps `POST /v1/methods/copy`.
+    """
+    return await _request(
+        "POST",
+        "/v1/methods/copy",
+        json_body={"sourceId": source_id, "parentId": parent_id},
+    )
+
+
+@mcp.tool
 async def peresvet_data_get(query: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Read historical tag data via GET `/v1/data/` using normal query params.
+    """Read tag data via GET `/v1/data/` using normal query params.
 
     If `query` is omitted, an empty filter `{}` is used.
 
     Data points are returned as arrays in the order: `[x, y, q]`
     where `x` is timestamp (microseconds), `y` is value, `q` is quality.
 
+    The backend can return data from historian, an integrational dataStorage,
+    or a virtual method (`prsEntityTypeCode=1`) attached to the tag.
+
+    Virtual method options:
+    - arbitrary top-level query keys are forwarded to `/v1/data/` and become
+      part of the virtual method `clientRequest` for `clientJsonata` parameters.
+      Example: `{"tagId": "...", "calendarTagId": "...", "finish": "..."}`.
+
     Advanced options for integrational tabular tags:
     - `query.params` (dict): extra options forwarded to `/v1/data`.
-      Example: `{"allRecordsAsValue": false}`.
+      Example: `{"operation": "selectByCalendar", "allRecordsAsValue": false}`.
     - convenience key `query.allRecordsAsValue` is auto-mapped to
       `query.params.allRecordsAsValue`.
     """
@@ -606,6 +804,49 @@ if ENABLE_V2:
         return await _request("POST", "/v2/dataStorages/", json_body=payload)
 
     @mcp.tool
+    async def peresvet_integrational_datastorage_create(
+        *,
+        cn: str,
+        dsn: str,
+        description: str | None = None,
+        parent_id: str | None = None,
+        linked_tags: list[dict[str, Any]] | None = None,
+        attrs: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Create an integrational relational dataStorage (`prsEntityTypeCode=2`).
+
+        Wraps `POST /v2/dataStorages/`.
+
+        - `dsn`: asyncpg/PostgreSQL DSN stored in `prsJsonConfigString.dsn`.
+        - `linked_tags[]`: items with `tagId`, optional `attributes`, and
+          `operations[]`.
+        - `operations[].prsEntityTypeCode`: 0 GET, 1 SET.
+        - `operations[].query`: SQL with named params like `:start`.
+        - `operations[].parameters[]`: items with `cn` and `config.JSONata`.
+        """
+        attributes: dict[str, Any] = {
+            "cn": cn,
+            "prsEntityTypeCode": 2,
+            "prsJsonConfigString": {"dsn": dsn},
+        }
+        if description is not None:
+            attributes["description"] = description
+        if attrs:
+            extra_attrs = dict(attrs)
+            extra_cfg = extra_attrs.pop("prsJsonConfigString", None)
+            attributes.update(extra_attrs)
+            if isinstance(extra_cfg, dict):
+                attributes["prsJsonConfigString"].update(extra_cfg)
+
+        payload: dict[str, Any] = {
+            "attributes": attributes,
+            "linkedTags": [_linked_tag_payload(link) for link in linked_tags or []],
+        }
+        if parent_id is not None:
+            payload["parentId"] = parent_id
+        return await _request("POST", "/v2/dataStorages/", json_body=payload)
+
+    @mcp.tool
     async def peresvet_datastorages_v2_update(payload: dict[str, Any]) -> dict[str, Any]:
         """Update dataStorage via PUT `/v2/dataStorages/`.
 
@@ -613,6 +854,74 @@ if ENABLE_V2:
         - `linkedTags` to attach/update tag link configuration and child `operations`;
         - `unlinkTags` to detach tags.
         """
+        return await _request("PUT", "/v2/dataStorages/", json_body=payload)
+
+    @mcp.tool
+    async def peresvet_integrational_datastorage_update(
+        *,
+        datastorage_id: str,
+        cn: str | None = None,
+        dsn: str | None = None,
+        description: str | None = None,
+        linked_tags: list[dict[str, Any]] | None = None,
+        unlink_tags: list[str] | None = None,
+        attrs: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Update an integrational relational dataStorage and its tag operations.
+
+        Wraps `PUT /v2/dataStorages/`. Passing `linked_tags` replaces operations
+        for the specified tag links according to the v2 backend contract.
+        """
+        attributes: dict[str, Any] = {}
+        if cn is not None:
+            attributes["cn"] = cn
+        if description is not None:
+            attributes["description"] = description
+        if dsn is not None:
+            attributes["prsJsonConfigString"] = {"dsn": dsn}
+        if attrs:
+            extra_attrs = dict(attrs)
+            extra_cfg = extra_attrs.pop("prsJsonConfigString", None)
+            attributes.update(extra_attrs)
+            if isinstance(extra_cfg, dict):
+                cfg = attributes.get("prsJsonConfigString")
+                if not isinstance(cfg, dict):
+                    cfg = {}
+                cfg.update(extra_cfg)
+                attributes["prsJsonConfigString"] = cfg
+
+        payload: dict[str, Any] = {
+            "id": datastorage_id,
+            "linkedTags": [_linked_tag_payload(link) for link in linked_tags or []],
+        }
+        if attributes:
+            payload["attributes"] = attributes
+        if unlink_tags is not None:
+            payload["unlinkTags"] = unlink_tags
+        return await _request("PUT", "/v2/dataStorages/", json_body=payload)
+
+    @mcp.tool
+    async def peresvet_integrational_tag_operations_update(
+        *,
+        datastorage_id: str,
+        tag_id: str,
+        operations: list[dict[str, Any]],
+        link_attributes: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Replace GET/SET operations for one integrational tag link.
+
+        `operations` accepts compact operation objects:
+        `{"cn": "select", "prsEntityTypeCode": 0, "query": "...", "parameters": [{"cn": "start", "config": {"JSONata": "$.start"}}]}`.
+        """
+        link: dict[str, Any] = {
+            "tagId": tag_id,
+            "attributes": link_attributes or {},
+            "operations": operations,
+        }
+        payload = {
+            "id": datastorage_id,
+            "linkedTags": [_linked_tag_payload(link)],
+        }
         return await _request("PUT", "/v2/dataStorages/", json_body=payload)
 
 
