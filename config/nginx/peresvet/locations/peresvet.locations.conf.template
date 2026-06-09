@@ -306,9 +306,9 @@ location /mcp/peresvet/ {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
 
+    set $mcp_peresvet_url http://${HOST_MCP_PERESVET}:${PORT_MCP_PERESVET_INNER};
     # trailing slash strips /mcp/peresvet/ prefix
     rewrite ^/mcp/peresvet/(.*)$ /$1 break;
-    set $mcp_peresvet_url http://${HOST_MCP_PERESVET}:${PORT_MCP_PERESVET_INNER};
     proxy_pass $mcp_peresvet_url;
 }
 
@@ -331,8 +331,8 @@ location /mcp/grafana/ {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
 
+    set $mcp_grafana_url http://${HOST_MCP_GRAFANA}:${PORT_MCP_GRAFANA_INNER};
     # trailing slash strips /mcp/grafana/ prefix
     rewrite ^/mcp/grafana/(.*)$ /$1 break;
-    set $mcp_grafana_url http://${HOST_MCP_GRAFANA}:${PORT_MCP_GRAFANA_INNER};
     proxy_pass $mcp_grafana_url;
 }

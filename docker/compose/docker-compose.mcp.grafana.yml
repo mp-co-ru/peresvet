@@ -8,8 +8,8 @@ services:
       TZ: ${TIME_ZONE}
       # URL Grafana внутри docker-сети; в проекте Grafana работает с sub-path /grafana
       GRAFANA_URL: http://${HOST_GRAFANA}:${PORT_GRAFANA}/grafana
-      # Service account token / API key (обязательно для большинства операций)
-      GRAFANA_API_KEY: ${MCP_GRAFANA_API_KEY}
+      # Service account token (обязательно для большинства операций)
+      GRAFANA_SERVICE_ACCOUNT_TOKEN: ${GRAFANA_SERVICE_ACCOUNT_TOKEN}
       GRAFANA_ORG_ID: ${MCP_GRAFANA_ORG_ID:-1}
     command:
       - "-transport"

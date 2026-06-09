@@ -375,7 +375,7 @@ cd /путь/к/peresvet
 что клиент пытается говорить по HTTP (Streamable HTTP), но подключён к SSE URL. В этом случае укажи
 URL `.../mcp/peresvet/mcp` вместо `.../mcp/peresvet/sse`.
 
-Для хранения **секретов** (например `MCP_GRAFANA_API_KEY`) рекомендуется использовать
+Для хранения **секретов** (например `GRAFANA_SERVICE_ACCOUNT_TOKEN`) рекомендуется использовать
 локальный файл `docker/compose/.cont_one_app.secrets.env` (он добавлен в `.gitignore`).
 Шаблон: `docker/compose/.cont_one_app.secrets.env.example`.
 
