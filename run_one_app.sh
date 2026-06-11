@@ -143,4 +143,4 @@ docker compose --env-file docker/compose/.cont_one_app.env "${extra_env[@]}" \
 -f docker/compose/docker-compose.grafana.yml \
 -f "${nginx_compose}" \
 -f docker/compose/docker-compose.ports.yml \
-up
+up -d
