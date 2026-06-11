@@ -3,6 +3,8 @@ FROM grafana/grafana-enterprise:12.4.0-22081664032-ubuntu
 #EXPOSE 3000
 ARG NGINX_HOST
 
+ENV GF_USERS_DEFAULT_LANGUAGE=ru-RU
+
 USER root
 
 RUN mkdir /var/lib/grafana/dashboards
