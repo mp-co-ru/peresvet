@@ -7,7 +7,7 @@ USER root
 
 RUN mkdir /var/lib/grafana/dashboards
 COPY src/grafana/ /var/lib/grafana/dashboards-src/
-RUN find /var/lib/grafana/dashboards-src -mindepth 2 -maxdepth 2 -name '*.json' ! -name '*_old_*' \
+RUN find /var/lib/grafana/dashboards-src -mindepth 2 -maxdepth 2 -name '*.json' ! -name '*_old*' ! -name '*_new*' \
     -exec cp {} /var/lib/grafana/dashboards/ \; && \
     rm -rf /var/lib/grafana/dashboards-src
 
