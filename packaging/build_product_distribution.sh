@@ -10,7 +10,7 @@ Build a product distribution archive that contains only the files needed to run
 the platform with ./run_one_app.sh.
 
 Options:
-  --output PATH    Archive path. Defaults to build/product/peresvet-product-<version>.tar.gz
+  --output PATH    Archive path. Defaults to dist/peresvet-product-<version>.tar.gz
   --root-dir NAME  Top-level directory name inside the archive.
   -h, --help       Show this help.
 EOF
@@ -20,7 +20,7 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 repo_root="$(cd "${script_dir}/.." && pwd -P)"
 version="$(git -C "${repo_root}" describe --tags --always --dirty 2>/dev/null || date +%Y%m%d%H%M%S)"
 root_dir="peresvet-product-${version}"
-output="${repo_root}/build/product/${root_dir}.tar.gz"
+output="${repo_root}/dist/${root_dir}.tar.gz"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in

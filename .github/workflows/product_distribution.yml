@@ -35,12 +35,12 @@ jobs:
         if: steps.main_tag.outputs.on_main == 'true'
         run: |
           ./packaging/build_product_distribution.sh \
-            --output "peresvet-product-${GITHUB_REF_NAME}.tar.gz" \
+            --output "dist/peresvet-product-${GITHUB_REF_NAME}.tar.gz" \
             --root-dir "peresvet-product-${GITHUB_REF_NAME}"
 
       - name: Attach archive to GitHub Release
         if: steps.main_tag.outputs.on_main == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          files: peresvet-product-${{ github.ref_name }}.tar.gz
+          files: dist/peresvet-product-${{ github.ref_name }}.tar.gz
           fail_on_unmatched_files: true
