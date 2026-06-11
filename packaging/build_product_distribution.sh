@@ -7,7 +7,7 @@ Usage:
   packaging/build_product_distribution.sh [--output PATH] [--root-dir NAME]
 
 Build a product distribution archive that contains only the files needed to run
-the platform with ./run_one_app.sh or ./run_one_app_ssl.sh.
+the platform with ./run_one_app.sh.
 
 Options:
   --output PATH    Archive path. Defaults to build/product/peresvet-product-<version>.tar.gz
@@ -75,7 +75,6 @@ required_pathspecs=(
     "LICENSE"
     "requirements.txt"
     "run_one_app.sh"
-    "run_one_app_ssl.sh"
     "certificates/*.sh"
     "config/grafana/logos"
     "config/grafana/plugins/gapit-htmlgraphics-panel"
@@ -125,19 +124,18 @@ import sys
 
 stage_dir = pathlib.Path(sys.argv[1])
 
-for script_name in ("run_one_app.sh", "run_one_app_ssl.sh"):
-    script = stage_dir / script_name
-    text = script.read_text(encoding="utf-8")
-    restart_line = "-f docker/compose/docker-compose.restart.yml \\\n"
-    if restart_line in text:
-        continue
+script = stage_dir / "run_one_app.sh"
+text = script.read_text(encoding="utf-8")
+restart_line = "-f docker/compose/docker-compose.restart.yml \\\n"
+if restart_line in text:
+    raise SystemExit(0)
 
-    marker = "-f docker/compose/docker-compose.ports.yml \\\n"
-    replacement = marker + restart_line
-    if marker not in text:
-        raise SystemExit(f"Cannot add restart compose file to {script_name}: marker not found")
+marker = "-f docker/compose/docker-compose.ports.yml \\\n"
+replacement = marker + restart_line
+if marker not in text:
+    raise SystemExit("Cannot add restart compose file to run_one_app.sh: marker not found")
 
-    script.write_text(text.replace(marker, replacement, 1), encoding="utf-8")
+script.write_text(text.replace(marker, replacement, 1), encoding="utf-8")
 PY
 
 mkdir -p "$(dirname "${output}")"
