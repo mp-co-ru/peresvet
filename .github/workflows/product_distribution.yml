@@ -1,0 +1,46 @@
+name: Product distribution
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and attach product distribution
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check that tag belongs to main
+        id: main_tag
+        run: |
+          git fetch origin main:refs/remotes/origin/main
+          tag_commit="$(git rev-list -n 1 "${GITHUB_REF_NAME}")"
+          if git merge-base --is-ancestor "${tag_commit}" origin/main; then
+            echo "on_main=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "::notice::Tag ${GITHUB_REF_NAME} does not point to a commit from main; product distribution will not be uploaded."
+            echo "on_main=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Build product distribution archive
+        if: steps.main_tag.outputs.on_main == 'true'
+        run: |
+          ./packaging/build_product_distribution.sh \
+            --output "peresvet-product-${GITHUB_REF_NAME}.tar.gz" \
+            --root-dir "peresvet-product-${GITHUB_REF_NAME}"
+
+      - name: Attach archive to GitHub Release
+        if: steps.main_tag.outputs.on_main == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: peresvet-product-${{ github.ref_name }}.tar.gz
+          fail_on_unmatched_files: true
