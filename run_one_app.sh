@@ -2,17 +2,19 @@
 # Скрипт запускает контейнеры с сервисами платформы.
 # Имя сервера задаётся ключом --hostname, по умолчанию используется имя хоста.
 # HTTPS-вариант запуска включается ключом --ssl true.
+# Пересборка контейнеров перед запуском включается ключом --build true.
 
 set -euo pipefail
 
 show_help() {
     cat <<'EOF'
 Usage:
-  ./run_one_app.sh [--hostname HOSTNAME] [--ssl true|false]
+  ./run_one_app.sh [--hostname HOSTNAME] [--ssl true|false] [--build true|false]
 
 Options:
   --hostname HOSTNAME  Server name for nginx. Defaults to current host name.
   --ssl true|false     Use HTTPS nginx compose file. Defaults to false.
+  --build true|false   Rebuild images before starting containers. Defaults to false.
   -h, --help           Show this help.
 
 Environment:
@@ -81,6 +83,7 @@ pull_required_images() {
 
 srv="${HOSTNAME:-$(hostname)}"
 ssl="false"
+build="false"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -98,6 +101,14 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
             ssl="${2,,}"
+            shift 2
+            ;;
+        --build)
+            if [[ $# -lt 2 || -z "$2" ]]; then
+                echo "Option --build requires true or false." >&2
+                exit 1
+            fi
+            build="${2,,}"
             shift 2
             ;;
         -h|--help)
@@ -125,6 +136,19 @@ case "${ssl}" in
         ;;
 esac
 
+case "${build}" in
+    true)
+        up_args=(up -d --build)
+        ;;
+    false)
+        up_args=(up -d)
+        ;;
+    *)
+        echo "Option --build accepts only true or false." >&2
+        exit 1
+        ;;
+esac
+
 sed -i "s/NGINX_HOST=.*/NGINX_HOST=${srv}/" docker/compose/.cont_one_app.env
 
 extra_env=()
@@ -143,4 +167,4 @@ docker compose --env-file docker/compose/.cont_one_app.env "${extra_env[@]}" \
 -f docker/compose/docker-compose.grafana.yml \
 -f "${nginx_compose}" \
 -f docker/compose/docker-compose.ports.yml \
-up -d
+"${up_args[@]}"
