@@ -20,6 +20,7 @@ from src.common.base_svc_settings import BaseSvcSettings
 from src.common.redis_cache import RedisCache
 from src.common.amqp_rpc import NO_AMQP_RPC_REPLY
 from src.common.json_rpc_sanitize import sanitize_for_json_rpc
+from src.common.authorization import AuthorizationContextMiddleware
 
 class BaseSvc(FastAPI):
 
@@ -53,6 +54,7 @@ class BaseSvc(FastAPI):
             kwargs["on_shutdown"] = [self.on_shutdown]
 
         super().__init__(*args, **kwargs)
+        self.add_middleware(AuthorizationContextMiddleware)
 
         self._logger.debug(f"{self._config.svc_name} :: Смена петли событий...")
 

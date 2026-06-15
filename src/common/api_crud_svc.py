@@ -44,6 +44,7 @@ from pydantic import BaseModel, Field, field_validator, ConfigDict
 from fastapi import HTTPException
 from src.common.base_svc import BaseSvc
 from src.common.api_crud_settings import APICRUDSettings
+from src.common.authorization import authorize_action
 
 def valid_uuid(id: str | list[str]) -> str | list[str]:
     """Валидатор идентификаторов.
@@ -333,6 +334,10 @@ class APICRUDSvc(BaseSvc):
         }
 
     async def _create(self, payload: NodeCreate | None, routing_key: str | None = None) -> dict | bool | None:
+        await authorize_action(
+            f"{self._config.hierarchy['class']}.create",
+            payload=payload.model_dump() if payload is not None else {},
+        )
         body = {}
 
         if not (payload is None):
@@ -345,6 +350,16 @@ class APICRUDSvc(BaseSvc):
         )
 
     async def _read(self, payload: NodeRead, routing_key: str | None = None) -> dict | bool | None:
+        await authorize_action(
+            f"{self._config.hierarchy['class']}.read",
+            resource={
+                "ids": payload.id,
+                "base": payload.base,
+                "scope": payload.scope,
+                "filter": payload.filter,
+            },
+            payload=payload.model_dump(),
+        )
         # костыль для Grafana
         # TODO: избавиться
         if payload.id == "":
@@ -367,6 +382,11 @@ class APICRUDSvc(BaseSvc):
         )
 
     async def _update(self, payload: dict, routing_key: str | None = None) -> dict | bool | None:
+        await authorize_action(
+            f"{self._config.hierarchy['class']}.update",
+            resource={"id": payload.get("id"), "parentId": payload.get("parentId")},
+            payload=payload,
+        )
         res = await self._post_message(
             mes=payload,
             reply=True,
@@ -378,6 +398,11 @@ class APICRUDSvc(BaseSvc):
     async def _delete(self, payload: NodeDelete, routing_key: str | None = None) -> dict | bool | None:
         """Удаление узлов в иерархии.
         """
+        await authorize_action(
+            f"{self._config.hierarchy['class']}.delete",
+            resource={"ids": payload.id},
+            payload=payload.model_dump(),
+        )
         body = payload.model_dump()
 
         return await self._post_message(
