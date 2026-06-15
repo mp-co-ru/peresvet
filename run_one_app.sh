@@ -76,10 +76,21 @@ normalize_registry_mirror() {
     printf '%s' "${mirror}"
 }
 
+mirror_registry_image_path() {
+    local image="$1"
+
+    # Official Docker Hub images (no namespace) are stored as library/<name> in registry.
+    if [[ "${image}" != */* ]]; then
+        printf 'library/%s' "${image}"
+    else
+        printf '%s' "${image}"
+    fi
+}
+
 mirror_image_ref() {
     local mirror="$1"
     local image="$2"
-    printf '%s/%s' "${mirror}" "${image}"
+    printf '%s/%s' "${mirror}" "$(mirror_registry_image_path "${image}")"
 }
 
 mirror_registry_host() {
@@ -90,17 +101,10 @@ mirror_registry_host() {
 
 docker_insecure_registry_includes() {
     local host="$1"
-    local entry
+    local secure
 
-    while IFS= read -r entry; do
-        [[ "${entry}" == "${host}" ]] && return 0
-    done < <(docker info 2>/dev/null | awk '
-        /^ Insecure Registries:/ { show=1; next }
-        show && /^ [^ ]/ { sub(/^ +/, "", $0); print $0; next }
-        show && !/^ / { show=0 }
-    ')
-
-    return 1
+    secure="$(docker info --format '{{if index .RegistryConfig.IndexConfigs "'"${host}"'"}}{{(index .RegistryConfig.IndexConfigs "'"${host}"'").Secure}}{{end}}' 2>/dev/null || true)"
+    [[ "${secure}" == "false" ]]
 }
 
 report_insecure_registry_required() {
