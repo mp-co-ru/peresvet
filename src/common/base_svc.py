@@ -188,10 +188,18 @@ class BaseSvc(FastAPI):
                             "message": decision.reason or "Доступ запрещён политикой безопасности.",
                         }
                     }
+                    safe = sanitize_for_json_rpc(err_payload)
+                    headers = await amqp_publish_headers(
+                        service_name=self._config.svc_name,
+                        routing_key=message.reply_to,
+                        payload=safe,
+                        reply=False,
+                    )
                     await self._exchange.publish(
                         aio_pika.Message(
-                            body=json.dumps(sanitize_for_json_rpc(err_payload), ensure_ascii=False).encode(),
+                            body=json.dumps(safe, ensure_ascii=False).encode(),
                             correlation_id=message.correlation_id,
+                            headers=headers or None,
                         ),
                         routing_key=message.reply_to,
                     )
@@ -221,6 +229,12 @@ class BaseSvc(FastAPI):
                                 aio_pika.Message(
                                     body=body,
                                     correlation_id=message.correlation_id,
+                                    headers=(await amqp_publish_headers(
+                                        service_name=self._config.svc_name,
+                                        routing_key=message.reply_to,
+                                        payload=safe,
+                                        reply=False,
+                                    )) or None,
                                 ),
                                 routing_key=message.reply_to,
                             )
@@ -236,10 +250,17 @@ class BaseSvc(FastAPI):
                     try:
                         err_payload = {"error": {"code": 500, "message": str(ex)}}
                         safe = sanitize_for_json_rpc(err_payload)
+                        headers = await amqp_publish_headers(
+                            service_name=self._config.svc_name,
+                            routing_key=reply_to,
+                            payload=safe,
+                            reply=False,
+                        )
                         await self._exchange.publish(
                             aio_pika.Message(
                                 body=json.dumps(safe, ensure_ascii=False).encode(),
                                 correlation_id=correlation_id,
+                                headers=headers or None,
                             ),
                             routing_key=reply_to,
                         )
@@ -264,13 +285,6 @@ class BaseSvc(FastAPI):
               True - если reply = False и сообщение успешно отправлено.
         """
 
-        body = json.dumps(mes, ensure_ascii=False).encode()
-        headers = await amqp_publish_headers(
-            service_name=self._config.svc_name,
-            routing_key=routing_key or "",
-            payload=mes,
-            reply=reply,
-        )
         correlation_id = ""
         reply_to = None
         if reply:
@@ -279,6 +293,13 @@ class BaseSvc(FastAPI):
         if not routing_key:
             self._logger.error(f"{self._config.svc_name} :: Не указан routing_key для публикации сообщения.")
             return
+        body = json.dumps(mes, ensure_ascii=False).encode()
+        headers = await amqp_publish_headers(
+            service_name=self._config.svc_name,
+            routing_key=routing_key,
+            payload=mes,
+            reply=reply,
+        )
 
         res = await self._exchange.publish(
             message=aio_pika.Message(
@@ -321,7 +342,29 @@ class BaseSvc(FastAPI):
                         f"(correlation_id={message.correlation_id!r})."
                     )
                     return
-                future.set_result(json.loads(message.body.decode()))
+                payload = json.loads(message.body.decode())
+                decision = await authorize_amqp_consume(
+                    service_name=self._config.svc_name,
+                    routing_key=message.routing_key,
+                    payload=payload,
+                    headers=dict(message.headers or {}),
+                    reply_to=message.reply_to,
+                    correlation_id=message.correlation_id,
+                )
+                if not decision.allow:
+                    self._logger.warning(
+                        f"{self._config.svc_name} :: AMQP RPC-ответ с ключом "
+                        f"{message.routing_key} запрещён политикой безопасности: "
+                        f"{decision.reason or 'access denied'}."
+                    )
+                    future.set_result({
+                        "error": {
+                            "code": 403,
+                            "message": decision.reason or "Доступ запрещён политикой безопасности.",
+                        }
+                    })
+                    return
+                future.set_result(payload)
             except Exception as ex:
                 self._logger.error(
                     f"{self._config.svc_name} :: Ошибка работы с ответом: {ex!r}"
