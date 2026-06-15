@@ -6,57 +6,196 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+REQUIRED_IMAGES_MANIFEST="${SCRIPT_DIR}/packaging/required-images.manifest"
+DOTENV_FILE="${SCRIPT_DIR}/.env"
+
 show_help() {
     cat <<'EOF'
 Usage:
-  ./run_one_app.sh [--hostname HOSTNAME] [--ssl true|false] [--build true|false]
+  ./run_one_app.sh [--hostname HOSTNAME] [--ssl true|false] [--build true|false] [--mirror HOST[:PORT]]
 
 Options:
-  --hostname HOSTNAME  Server name for nginx. Defaults to current host name.
-  --ssl true|false     Use HTTPS nginx compose file. Defaults to false.
-  --build true|false   Rebuild images before starting containers. Defaults to false.
+  --hostname HOSTNAME  Server name for nginx. Defaults to PRS_HOSTNAME or host name.
+  --ssl true|false     Use HTTPS nginx compose file. Defaults to PRS_SSL from .env.
+  --build true|false   Rebuild images before starting containers. Defaults to PRS_BUILD.
+  --mirror HOST[:PORT] Registry mirror for missing base images. Defaults to
+                       PRS_REGISTRY_MIRROR from .env.
   -h, --help           Show this help.
 
-Environment:
-  PRS_SKIP_IMAGE_PULL=1  Skip the pre-flight pull of required Docker images.
+Configuration:
+  Defaults are read from .env next to this script. CLI options override .env.
+  Variables: PRS_REGISTRY_MIRROR, PRS_HOSTNAME, PRS_SSL, PRS_BUILD,
+             PRS_SKIP_IMAGE_PULL.
+
+Mirror notes:
+  - Already present local images are not downloaded again.
+  - If a mirror is configured, missing images are pulled only from the mirror.
+  - Do not add the mirror to registry-mirrors in daemon.json.
+  - For HTTP mirrors, add the host to insecure-registries in daemon.json.
 EOF
 }
 
-pull_image_with_retries() {
-    local image="$1"
+load_dotenv() {
+    local file="$1"
+    local line key value
+
+    [[ -f "${file}" ]] || return 0
+
+    while IFS= read -r line || [[ -n "${line}" ]]; do
+        line="${line%%#*}"
+        line="${line#"${line%%[![:space:]]*}"}"
+        line="${line%"${line##*[![:space:]]}"}"
+        [[ -n "${line}" ]] || continue
+        [[ "${line}" == *=* ]] || continue
+
+        key="${line%%=*}"
+        value="${line#*=}"
+        key="${key%"${key##*[![:space:]]}"}"
+        key="${key#"${key%%[![:space:]]*}"}"
+
+        value="${value#"${value%%[![:space:]]*}"}"
+        value="${value%"${value##*[![:space:]]}"}"
+        if [[ "${value}" == \"*\" && "${value}" == *\" ]]; then
+            value="${value:1:${#value}-2}"
+        elif [[ "${value}" == \'*\' && "${value}" == *\' ]]; then
+            value="${value:1:${#value}-2}"
+        fi
+
+        if [[ -z "${!key+x}" ]]; then
+            export "${key}=${value}"
+        fi
+    done < "${file}"
+}
+
+normalize_registry_mirror() {
+    local mirror="${1:-}"
+    mirror="${mirror#http://}"
+    mirror="${mirror#https://}"
+    mirror="${mirror%/}"
+    printf '%s' "${mirror}"
+}
+
+mirror_image_ref() {
+    local mirror="$1"
+    local image="$2"
+    printf '%s/%s' "${mirror}" "${image}"
+}
+
+load_required_images() {
+    local -n _images_ref="$1"
+    _images_ref=()
+
+    if [[ -f "${REQUIRED_IMAGES_MANIFEST}" ]]; then
+        local line
+        while IFS= read -r line || [[ -n "${line}" ]]; do
+            line="${line%%#*}"
+            line="${line#"${line%%[![:space:]]*}"}"
+            line="${line%"${line##*[![:space:]]}"}"
+            [[ -n "${line}" ]] || continue
+            _images_ref+=("${line}")
+        done < "${REQUIRED_IMAGES_MANIFEST}"
+    fi
+
+    if [[ "${#_images_ref[@]}" -eq 0 ]]; then
+        _images_ref=(
+            "redis/redis-stack:7.2.0-v6"
+            "rabbitmq:4.1.1-management"
+            "postgres:16.1"
+            "python:3.12-slim"
+            "osixia/openldap"
+            "grafana/grafana-enterprise:12.4.0-22081664032-ubuntu"
+            "nginx:1.25.3-alpine-slim"
+        )
+    fi
+}
+
+pull_ref_with_retries() {
+    local ref="$1"
     local max_attempts=4
     local delay=4
     local attempt=1
 
-    if docker image inspect "${image}" >/dev/null 2>&1; then
-        return
-    fi
-
     while [[ "${attempt}" -le "${max_attempts}" ]]; do
-        echo "Pull Docker image ${image} (${attempt}/${max_attempts})..."
-        if docker pull "${image}"; then
-            return
+        echo "Pull Docker image ${ref} (${attempt}/${max_attempts})..."
+        if docker pull "${ref}"; then
+            return 0
         fi
 
         if [[ "${attempt}" -lt "${max_attempts}" ]]; then
-            echo "Retry ${image} in ${delay}s..."
+            echo "Retry ${ref} in ${delay}s..."
             sleep "${delay}"
             delay=$((delay * 2))
         fi
         attempt=$((attempt + 1))
     done
 
-    cat >&2 <<EOF
+    return 1
+}
+
+report_pull_failure() {
+    local image="$1"
+    local mirror="${2:-}"
+
+    if [[ -n "${mirror}" ]]; then
+        cat >&2 <<EOF
+Cannot pull required Docker image: ${image}
+
+Configured registry mirror: ${mirror}
+Expected reference: $(mirror_image_ref "${mirror}" "${image}")
+
+Check that:
+  - the mirror is reachable from this host
+  - the image is published on the mirror under the same name and tag
+  - for HTTP mirrors, ${mirror%%/*} is listed in insecure-registries
+
+Do not use registry-mirrors in daemon.json for product installation; set
+  PRS_REGISTRY_MIRROR in .env or use --mirror HOST:PORT instead.
+EOF
+    else
+        cat >&2 <<EOF
 Cannot pull required Docker image: ${image}
 
 Check that this host can reach Docker registries, including:
   - https://auth.docker.io
   - https://registry-1.docker.io
 
+If Docker Hub is unavailable, set PRS_REGISTRY_MIRROR in .env or use --mirror.
+
 If the error contains an IPv6 address and "i/o timeout", Docker may be trying an
 unreachable IPv6 route. Fix IPv6 connectivity on the host or disable IPv6 for
 Docker/the host network, then run ./run_one_app.sh again.
 EOF
+    fi
+}
+
+pull_image_with_retries() {
+    local image="$1"
+    local mirror="${2:-}"
+
+    if docker image inspect "${image}" >/dev/null 2>&1; then
+        echo "Docker image ${image} is already present locally."
+        return 0
+    fi
+
+    if [[ -n "${mirror}" ]]; then
+        local mirror_ref
+        mirror_ref="$(mirror_image_ref "${mirror}" "${image}")"
+        if pull_ref_with_retries "${mirror_ref}"; then
+            if [[ "${mirror_ref}" != "${image}" ]]; then
+                docker tag "${mirror_ref}" "${image}"
+            fi
+            return 0
+        fi
+        report_pull_failure "${image}" "${mirror}"
+        exit 1
+    fi
+
+    if pull_ref_with_retries "${image}"; then
+        return 0
+    fi
+
+    report_pull_failure "${image}"
     exit 1
 }
 
@@ -65,25 +204,25 @@ pull_required_images() {
         return
     fi
 
-    local required_images=(
-        "redis/redis-stack:7.2.0-v6"
-        "rabbitmq:4.1.1-management"
-        "postgres:16.1"
-        "python:3.12-slim"
-        "osixia/openldap"
-        "grafana/grafana-enterprise:12.4.0-22081664032-ubuntu"
-        "nginx:1.25.3-alpine-slim"
-    )
+    local required_images=()
+    load_required_images required_images
+
+    if [[ -n "${registry_mirror}" ]]; then
+        echo "Using registry mirror: ${registry_mirror}"
+    fi
 
     local image
     for image in "${required_images[@]}"; do
-        pull_image_with_retries "${image}"
+        pull_image_with_retries "${image}" "${registry_mirror}"
     done
 }
 
-srv="${HOSTNAME:-$(hostname)}"
-ssl="false"
-build="false"
+load_dotenv "${DOTENV_FILE}"
+
+srv="${PRS_HOSTNAME:-${HOSTNAME:-$(hostname)}}"
+ssl="${PRS_SSL:-false}"
+build="${PRS_BUILD:-false}"
+registry_mirror="$(normalize_registry_mirror "${PRS_REGISTRY_MIRROR:-}")"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -109,6 +248,14 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
             build="${2,,}"
+            shift 2
+            ;;
+        --mirror)
+            if [[ $# -lt 2 || -z "$2" ]]; then
+                echo "Option --mirror requires a host[:port] value." >&2
+                exit 1
+            fi
+            registry_mirror="$(normalize_registry_mirror "$2")"
             shift 2
             ;;
         -h|--help)
