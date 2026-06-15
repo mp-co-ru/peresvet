@@ -116,6 +116,10 @@ for pathspec in "${required_pathspecs[@]}"; do
     copy_tracked_pathspec "${pathspec}"
 done
 
+mkdir -p "${stage_dir}/packaging"
+cp -p "${repo_root}/packaging/required-images.manifest" "${stage_dir}/packaging/required-images.manifest"
+cp -p "${repo_root}/.env" "${stage_dir}/.env"
+
 mkdir -p "${stage_dir}/log"
 
 python3 - "${stage_dir}" <<'PY'
