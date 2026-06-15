@@ -37,6 +37,7 @@ class AuthorizationInput:
 
     action: str
     request: Request | None = None
+    connection: Any = None
     resource: dict[str, Any] | None = None
     subject: dict[str, Any] | None = None
     environment: dict[str, Any] | None = None
@@ -152,6 +153,7 @@ async def authorize_action(
     action: str,
     *,
     request: Request | None = None,
+    connection: Any = None,
     resource: dict[str, Any] | None = None,
     subject: dict[str, Any] | None = None,
     environment: dict[str, Any] | None = None,
@@ -162,6 +164,7 @@ async def authorize_action(
     data = AuthorizationInput(
         action=action,
         request=request or get_current_request(),
+        connection=connection,
         resource=resource,
         subject=subject,
         environment=environment,
