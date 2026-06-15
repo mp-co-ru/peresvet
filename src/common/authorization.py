@@ -184,6 +184,7 @@ async def authorize_action(
 
 async def amqp_publish_headers(
     *,
+    service_name: str | None = None,
     routing_key: str,
     payload: Any,
     reply: bool,
@@ -203,7 +204,11 @@ async def amqp_publish_headers(
     data = AuthorizationInput(
         action="amqp.publish",
         request=get_current_request(),
-        resource={"routing_key": routing_key, "reply": reply},
+        resource={
+            "service": service_name,
+            "routing_key": routing_key,
+            "reply": reply,
+        },
         payload=payload,
     )
     headers = await hook(data)
@@ -216,6 +221,7 @@ async def amqp_publish_headers(
 
 async def authorize_amqp_consume(
     *,
+    service_name: str | None = None,
     routing_key: str,
     payload: Any,
     headers: dict[str, Any] | None,
@@ -227,6 +233,7 @@ async def authorize_amqp_consume(
     data = AuthorizationInput(
         action="amqp.consume",
         resource={
+            "service": service_name,
             "routing_key": routing_key,
             "reply_to": reply_to,
             "correlation_id": correlation_id,

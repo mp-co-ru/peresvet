@@ -167,6 +167,7 @@ class BaseSvc(FastAPI):
                 return
 
             decision = await authorize_amqp_consume(
+                service_name=self._config.svc_name,
                 routing_key=message.routing_key,
                 payload=mes,
                 headers=dict(message.headers or {}),
@@ -265,6 +266,7 @@ class BaseSvc(FastAPI):
 
         body = json.dumps(mes, ensure_ascii=False).encode()
         headers = await amqp_publish_headers(
+            service_name=self._config.svc_name,
             routing_key=routing_key or "",
             payload=mes,
             reply=reply,

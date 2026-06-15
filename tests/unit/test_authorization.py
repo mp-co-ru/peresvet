@@ -55,6 +55,7 @@ def test_amqp_publish_headers_default_is_empty(monkeypatch):
 
     headers = asyncio.run(
         amqp_publish_headers(
+            service_name="tags_app_api",
             routing_key="prsTag.app_api.data_set.*",
             payload={"data": []},
             reply=True,
@@ -69,6 +70,7 @@ def test_configured_provider_can_add_amqp_headers_and_deny_consume(monkeypatch):
         async def authorize(self, data: AuthorizationInput) -> AuthorizationDecision:
             if data.action == "amqp.consume":
                 assert data.resource["routing_key"] == "prsTag.app_api.data_set.*"
+                assert data.resource["service"] == "tags_app"
                 assert data.environment["headers"] == {"x-prs-security": "signed"}
                 return AuthorizationDecision(allow=False, reason="bad service token")
             return AuthorizationDecision(allow=True)
@@ -76,6 +78,7 @@ def test_configured_provider_can_add_amqp_headers_and_deny_consume(monkeypatch):
         async def amqp_publish_headers(self, data: AuthorizationInput) -> dict:
             assert data.action == "amqp.publish"
             assert data.resource == {
+                "service": "tags_app_api",
                 "routing_key": "prsTag.app_api.data_set.*",
                 "reply": False,
             }
@@ -89,6 +92,7 @@ def test_configured_provider_can_add_amqp_headers_and_deny_consume(monkeypatch):
 
     headers = asyncio.run(
         amqp_publish_headers(
+            service_name="tags_app_api",
             routing_key="prsTag.app_api.data_set.*",
             payload={"data": []},
             reply=False,
@@ -96,6 +100,7 @@ def test_configured_provider_can_add_amqp_headers_and_deny_consume(monkeypatch):
     )
     decision = asyncio.run(
         authorize_amqp_consume(
+            service_name="tags_app",
             routing_key="prsTag.app_api.data_set.*",
             payload={"data": []},
             headers=headers,
