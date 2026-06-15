@@ -19,6 +19,8 @@ except ModuleNotFoundError as _:
 
 sys.path.append(".")
 
+from src.common.authorization import AuthorizationContextMiddleware
+
 # v2 services are optional (feature flag)
 ENABLE_V2 = os.environ.get("PRS_ENABLE_V2", "").strip().lower() in ("1", "true", "yes", "on")
 
@@ -220,6 +222,7 @@ async def lifespan(app: FastAPI):
 
 # для привязки подприложений необходимо создать базовое приложение
 app = FastAPI(lifespan=lifespan, title="МПК-Пересвет")
+app.add_middleware(AuthorizationContextMiddleware)
 api_router = APIRouter(prefix="")
 
 # монтирование роутеров =======================================================
