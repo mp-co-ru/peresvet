@@ -37,7 +37,6 @@ class AuthorizationInput:
 
     action: str
     request: Request | None = None
-    connection: Any = None
     resource: dict[str, Any] | None = None
     subject: dict[str, Any] | None = None
     environment: dict[str, Any] | None = None
@@ -63,12 +62,18 @@ class AuthorizationProvider(Protocol):
     async def authorize(self, data: AuthorizationInput) -> AuthorizationDecision:
         """Return allow/deny for the supplied action/resource context."""
 
+    async def amqp_publish_headers(self, data: AuthorizationInput) -> dict[str, Any]:
+        """Return AMQP headers to add to an outgoing internal message."""
+
 
 class AllowAllAuthorizationProvider:
     """Default community-edition provider: keep existing open API behaviour."""
 
     async def authorize(self, data: AuthorizationInput) -> AuthorizationDecision:
         return AuthorizationDecision(allow=True)
+
+    async def amqp_publish_headers(self, data: AuthorizationInput) -> dict[str, Any]:
+        return {}
 
 
 class AuthorizationContextMiddleware(BaseHTTPMiddleware):
@@ -153,7 +158,6 @@ async def authorize_action(
     action: str,
     *,
     request: Request | None = None,
-    connection: Any = None,
     resource: dict[str, Any] | None = None,
     subject: dict[str, Any] | None = None,
     environment: dict[str, Any] | None = None,
@@ -164,7 +168,6 @@ async def authorize_action(
     data = AuthorizationInput(
         action=action,
         request=request or get_current_request(),
-        connection=connection,
         resource=resource,
         subject=subject,
         environment=environment,
@@ -177,4 +180,59 @@ async def authorize_action(
             detail=decision.reason or "Доступ запрещён политикой безопасности.",
         )
     return decision
+
+
+async def amqp_publish_headers(
+    *,
+    routing_key: str,
+    payload: Any,
+    reply: bool,
+) -> dict[str, Any]:
+    """Build optional AMQP headers for internal service-to-service calls.
+
+    The free edition returns no headers. Enterprise providers can use this hook
+    to propagate a signed security context derived from the current HTTP request
+    or service identity without changing the message JSON body.
+    """
+
+    provider = get_authorization_provider()
+    hook = getattr(provider, "amqp_publish_headers", None)
+    if not callable(hook):
+        return {}
+
+    data = AuthorizationInput(
+        action="amqp.publish",
+        request=get_current_request(),
+        resource={"routing_key": routing_key, "reply": reply},
+        payload=payload,
+    )
+    headers = await hook(data)
+    if not headers:
+        return {}
+    if not isinstance(headers, dict):
+        raise TypeError("amqp_publish_headers must return a dict.")
+    return headers
+
+
+async def authorize_amqp_consume(
+    *,
+    routing_key: str,
+    payload: Any,
+    headers: dict[str, Any] | None,
+    reply_to: str | None,
+    correlation_id: str | None,
+) -> AuthorizationDecision:
+    """Authorize an incoming AMQP message before dispatching to a handler."""
+
+    data = AuthorizationInput(
+        action="amqp.consume",
+        resource={
+            "routing_key": routing_key,
+            "reply_to": reply_to,
+            "correlation_id": correlation_id,
+        },
+        environment={"headers": headers or {}},
+        payload=payload,
+    )
+    return await get_authorization_provider().authorize(data)
 

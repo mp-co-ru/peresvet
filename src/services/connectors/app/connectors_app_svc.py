@@ -1,13 +1,12 @@
 import sys
 import json
 
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 sys.path.append(".")
 
 from src.services.connectors.app.connectors_app_settings import ConnectorsAppSettings
 from src.common.app_svc import AppSvc
 from src.common import hierarchy
-from src.common.authorization import authorize_action
 import src.common.times as t
 
 class ConnectorsApp(AppSvc):
@@ -97,19 +96,6 @@ router = APIRouter(prefix=f"{settings.api_version}/connectors")
 
 @router.websocket("/{connector_id}")
 async def get_req(websocket: WebSocket, connector_id: str):
-    try:
-        await authorize_action(
-            "prsConnector.connector_ws",
-            connection=websocket,
-            resource={"id": connector_id},
-            environment={
-                "headers": dict(websocket.headers),
-                "client": str(websocket.client) if websocket.client else None,
-            },
-        )
-    except HTTPException:
-        await websocket.close(code=1008)
-        return
 
     # если нет коннектора с указанным id или он неактивен, то выходим
     payload = {

@@ -20,7 +20,11 @@ from src.common.base_svc_settings import BaseSvcSettings
 from src.common.redis_cache import RedisCache
 from src.common.amqp_rpc import NO_AMQP_RPC_REPLY
 from src.common.json_rpc_sanitize import sanitize_for_json_rpc
-from src.common.authorization import AuthorizationContextMiddleware
+from src.common.authorization import (
+    AuthorizationContextMiddleware,
+    amqp_publish_headers,
+    authorize_amqp_consume,
+)
 
 class BaseSvc(FastAPI):
 
@@ -162,6 +166,36 @@ class BaseSvc(FastAPI):
                 await message.reject(True)
                 return
 
+            decision = await authorize_amqp_consume(
+                routing_key=message.routing_key,
+                payload=mes,
+                headers=dict(message.headers or {}),
+                reply_to=message.reply_to,
+                correlation_id=message.correlation_id,
+            )
+            if not decision.allow:
+                self._logger.warning(
+                    f"{self._config.svc_name} :: AMQP-сообщение с ключом "
+                    f"{message.routing_key} запрещено политикой безопасности: "
+                    f"{decision.reason or 'access denied'}."
+                )
+                await message.ack()
+                if message.reply_to:
+                    err_payload = {
+                        "error": {
+                            "code": 403,
+                            "message": decision.reason or "Доступ запрещён политикой безопасности.",
+                        }
+                    }
+                    await self._exchange.publish(
+                        aio_pika.Message(
+                            body=json.dumps(sanitize_for_json_rpc(err_payload), ensure_ascii=False).encode(),
+                            correlation_id=message.correlation_id,
+                        ),
+                        routing_key=message.reply_to,
+                    )
+                return
+
             await message.ack()
             # обработка сообщения
             try:
@@ -230,6 +264,11 @@ class BaseSvc(FastAPI):
         """
 
         body = json.dumps(mes, ensure_ascii=False).encode()
+        headers = await amqp_publish_headers(
+            routing_key=routing_key or "",
+            payload=mes,
+            reply=reply,
+        )
         correlation_id = ""
         reply_to = None
         if reply:
@@ -241,7 +280,10 @@ class BaseSvc(FastAPI):
 
         res = await self._exchange.publish(
             message=aio_pika.Message(
-                body=body, correlation_id=correlation_id, reply_to=reply_to
+                body=body,
+                correlation_id=correlation_id,
+                reply_to=reply_to,
+                headers=headers or None,
             ), routing_key=routing_key
         )
         if isinstance(res, DeliveredMessage):
