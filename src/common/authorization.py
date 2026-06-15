@@ -27,6 +27,9 @@ from starlette.responses import Response
 _current_request: ContextVar[Request | None] = ContextVar(
     "prs_current_authorization_request", default=None
 )
+_current_amqp_context: ContextVar[dict[str, Any] | None] = ContextVar(
+    "prs_current_authorization_amqp_context", default=None
+)
 _provider_cache: "AuthorizationProvider | None" = None
 _provider_cache_spec: str | None = None
 
@@ -93,6 +96,28 @@ def get_current_request() -> Request | None:
     """Return the FastAPI request currently handled in this asyncio context."""
 
     return _current_request.get()
+
+
+def get_current_amqp_context() -> dict[str, Any] | None:
+    """Return the AMQP message context currently handled in this task."""
+
+    return _current_amqp_context.get()
+
+
+def set_current_amqp_context(context: dict[str, Any]):
+    """Set current AMQP context and return a token for reset.
+
+    Enterprise providers can use this context to propagate the original actor
+    through multi-hop service-to-service calls.
+    """
+
+    return _current_amqp_context.set(context)
+
+
+def reset_current_amqp_context(token) -> None:
+    """Reset AMQP context using the token returned by ``set_current_amqp_context``."""
+
+    _current_amqp_context.reset(token)
 
 
 def reset_authorization_provider_cache() -> None:
@@ -209,6 +234,7 @@ async def amqp_publish_headers(
             "routing_key": routing_key,
             "reply": reply,
         },
+        environment={"amqp_context": get_current_amqp_context()},
         payload=payload,
     )
     headers = await hook(data)

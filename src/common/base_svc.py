@@ -24,6 +24,8 @@ from src.common.authorization import (
     AuthorizationContextMiddleware,
     amqp_publish_headers,
     authorize_amqp_consume,
+    reset_current_amqp_context,
+    set_current_amqp_context,
 )
 
 class BaseSvc(FastAPI):
@@ -207,67 +209,79 @@ class BaseSvc(FastAPI):
 
             await message.ack()
             # обработка сообщения
+            amqp_context_token = set_current_amqp_context(
+                {
+                    "service": self._config.svc_name,
+                    "routing_key": message.routing_key,
+                    "headers": dict(message.headers or {}),
+                    "reply_to": message.reply_to,
+                    "correlation_id": message.correlation_id,
+                }
+            )
             try:
-                passed = False
-                for key in self._handlers.keys():
-                    if re.fullmatch(key, message.routing_key):
-                        passed = True
-                        res = await self._handlers[key](mes=mes, routing_key=message.routing_key)
+                try:
+                    passed = False
+                    for key in self._handlers.keys():
+                        if re.fullmatch(key, message.routing_key):
+                            passed = True
+                            res = await self._handlers[key](mes=mes, routing_key=message.routing_key)
 
-                        if message.reply_to and res is not NO_AMQP_RPC_REPLY:
-                            # здесь нельзя использовать self._post_message
-                            try:
-                                safe = sanitize_for_json_rpc(res)
-                                body = json.dumps(safe, ensure_ascii=False).encode()
-                            except Exception as ex:
-                                self._logger.error(
-                                    f"{self._config.svc_name} :: Не удалось сериализовать ответ RPC "
-                                    f"(routing_key={message.routing_key!r}): {ex!r}"
+                            if message.reply_to and res is not NO_AMQP_RPC_REPLY:
+                                # здесь нельзя использовать self._post_message
+                                try:
+                                    safe = sanitize_for_json_rpc(res)
+                                    body = json.dumps(safe, ensure_ascii=False).encode()
+                                except Exception as ex:
+                                    self._logger.error(
+                                        f"{self._config.svc_name} :: Не удалось сериализовать ответ RPC "
+                                        f"(routing_key={message.routing_key!r}): {ex!r}"
+                                    )
+                                    raise
+                                await self._exchange.publish(
+                                    aio_pika.Message(
+                                        body=body,
+                                        correlation_id=message.correlation_id,
+                                        headers=(await amqp_publish_headers(
+                                            service_name=self._config.svc_name,
+                                            routing_key=message.reply_to,
+                                            payload=safe,
+                                            reply=False,
+                                        )) or None,
+                                    ),
+                                    routing_key=message.reply_to,
                                 )
-                                raise
+                            break
+
+                    if not passed:
+                        self._logger.warning(f"{self._config.svc_name} :: Сообщение с ключом {message.routing_key} не обработано.")
+                except Exception as ex:
+                    self._logger.error(f"{self._config.svc_name} :: Ошибка обработки сообщения {mes} с ключом {message.routing_key}: {ex}")
+                    reply_to = getattr(message, "reply_to", None)
+                    correlation_id = getattr(message, "correlation_id", None) or ""
+                    if reply_to and correlation_id:
+                        try:
+                            err_payload = {"error": {"code": 500, "message": str(ex)}}
+                            safe = sanitize_for_json_rpc(err_payload)
+                            headers = await amqp_publish_headers(
+                                service_name=self._config.svc_name,
+                                routing_key=reply_to,
+                                payload=safe,
+                                reply=False,
+                            )
                             await self._exchange.publish(
                                 aio_pika.Message(
-                                    body=body,
-                                    correlation_id=message.correlation_id,
-                                    headers=(await amqp_publish_headers(
-                                        service_name=self._config.svc_name,
-                                        routing_key=message.reply_to,
-                                        payload=safe,
-                                        reply=False,
-                                    )) or None,
+                                    body=json.dumps(safe, ensure_ascii=False).encode(),
+                                    correlation_id=correlation_id,
+                                    headers=headers or None,
                                 ),
-                                routing_key=message.reply_to,
+                                routing_key=reply_to,
                             )
-                        break
-
-                if not passed:
-                    self._logger.warning(f"{self._config.svc_name} :: Сообщение с ключом {message.routing_key} не обработано.")
-            except Exception as ex:
-                self._logger.error(f"{self._config.svc_name} :: Ошибка обработки сообщения {mes} с ключом {message.routing_key}: {ex}")
-                reply_to = getattr(message, "reply_to", None)
-                correlation_id = getattr(message, "correlation_id", None) or ""
-                if reply_to and correlation_id:
-                    try:
-                        err_payload = {"error": {"code": 500, "message": str(ex)}}
-                        safe = sanitize_for_json_rpc(err_payload)
-                        headers = await amqp_publish_headers(
-                            service_name=self._config.svc_name,
-                            routing_key=reply_to,
-                            payload=safe,
-                            reply=False,
-                        )
-                        await self._exchange.publish(
-                            aio_pika.Message(
-                                body=json.dumps(safe, ensure_ascii=False).encode(),
-                                correlation_id=correlation_id,
-                                headers=headers or None,
-                            ),
-                            routing_key=reply_to,
-                        )
-                    except Exception as pub_ex:
-                        self._logger.error(
-                            f"{self._config.svc_name} :: Не удалось отправить ответ об ошибке RPC: {pub_ex!r}"
-                        )
+                        except Exception as pub_ex:
+                            self._logger.error(
+                                f"{self._config.svc_name} :: Не удалось отправить ответ об ошибке RPC: {pub_ex!r}"
+                            )
+            finally:
+                reset_current_amqp_context(amqp_context_token)
 
     async def _post_message(
             self, mes: dict, reply: bool = False, routing_key: str | None = None

@@ -205,6 +205,10 @@ RabbitMQ
 
 Дополнительно enterprise provider должен подписывать AMQP security context в
 ``amqp_publish_headers`` и проверять его при ``amqp.consume``.
+При multi-hop обработке входящий AMQP context доступен следующей публикации
+через ``environment.amqp_context``. Provider должен переносить исходный
+``actor``/``request_id`` дальше только после проверки подписи, срока действия и
+доверенного сервиса-издателя.
 
 MQTT-коннекторы
 ---------------

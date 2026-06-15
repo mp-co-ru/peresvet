@@ -11,7 +11,10 @@ from src.common.authorization import (
     amqp_publish_headers,
     authorize_amqp_consume,
     authorize_action,
+    get_current_amqp_context,
     reset_authorization_provider_cache,
+    reset_current_amqp_context,
+    set_current_amqp_context,
 )
 
 
@@ -82,6 +85,7 @@ def test_configured_provider_can_add_amqp_headers_and_deny_consume(monkeypatch):
                 "routing_key": "prsTag.app_api.data_set.*",
                 "reply": False,
             }
+            assert data.environment == {"amqp_context": None}
             return {"x-prs-security": "signed"}
 
     module = types.ModuleType("fake_amqp_auth_provider")
@@ -112,3 +116,46 @@ def test_configured_provider_can_add_amqp_headers_and_deny_consume(monkeypatch):
     assert headers == {"x-prs-security": "signed"}
     assert decision.allow is False
     assert decision.reason == "bad service token"
+
+
+def test_amqp_context_is_available_to_publish_header_provider(monkeypatch):
+    class ContextProvider:
+        async def authorize(self, data: AuthorizationInput) -> AuthorizationDecision:
+            return AuthorizationDecision(allow=True)
+
+        async def amqp_publish_headers(self, data: AuthorizationInput) -> dict:
+            assert data.environment["amqp_context"] == {
+                "service": "tags_app",
+                "routing_key": "prsTag.app_api.data_set.*",
+                "headers": {"x-prs-security": "incoming"},
+            }
+            return {"x-prs-security": "outgoing"}
+
+    module = types.ModuleType("fake_amqp_context_provider")
+    module.ContextProvider = ContextProvider
+    monkeypatch.setitem(sys.modules, "fake_amqp_context_provider", module)
+    monkeypatch.setenv("PRS_AUTH_PROVIDER", "fake_amqp_context_provider:ContextProvider")
+    reset_authorization_provider_cache()
+
+    token = set_current_amqp_context(
+        {
+            "service": "tags_app",
+            "routing_key": "prsTag.app_api.data_set.*",
+            "headers": {"x-prs-security": "incoming"},
+        }
+    )
+    try:
+        assert get_current_amqp_context()["service"] == "tags_app"
+        headers = asyncio.run(
+            amqp_publish_headers(
+                service_name="dataStorages_app_postgresql",
+                routing_key="prsTag.app.data_set.tag-1",
+                payload={"data": []},
+                reply=True,
+            )
+        )
+    finally:
+        reset_current_amqp_context(token)
+
+    assert get_current_amqp_context() is None
+    assert headers == {"x-prs-security": "outgoing"}

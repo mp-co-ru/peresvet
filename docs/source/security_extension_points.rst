@@ -79,6 +79,19 @@ context. Бесплатная редакция возвращает пустой
 платной редакции строить service identity поверх RabbitMQ credentials, mTLS или
 service JWT.
 
+Если сервис обрабатывает входящее RabbitMQ-сообщение и в процессе handler-а
+публикует следующее сообщение, ``amqp_publish_headers`` получает в
+``environment.amqp_context`` контекст исходного сообщения: сервис-потребитель,
+routing key, headers, ``reply_to`` и ``correlation_id``. Это нужно для
+multi-hop цепочек:
+
+.. code-block:: text
+
+   HTTP API -> service A -> RabbitMQ -> service B -> RabbitMQ -> service C
+
+Платный provider может использовать этот context для переноса исходного actor-а
+и request id через всю цепочку внутренних сервисов.
+
 При получении сообщения из RabbitMQ ядро вызывает ``authorize`` с действием
 ``amqp.consume`` до передачи сообщения конкретному handler-у. В ``resource``
 попадает имя сервиса-потребителя, routing key, ``reply_to`` и
