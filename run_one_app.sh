@@ -82,6 +82,65 @@ mirror_image_ref() {
     printf '%s/%s' "${mirror}" "${image}"
 }
 
+mirror_registry_host() {
+    local mirror="$1"
+    mirror="${mirror%%/*}"
+    printf '%s' "${mirror}"
+}
+
+docker_insecure_registry_includes() {
+    local host="$1"
+    local entry
+
+    while IFS= read -r entry; do
+        [[ "${entry}" == "${host}" ]] && return 0
+    done < <(docker info 2>/dev/null | awk '
+        /^ Insecure Registries:/ { show=1; next }
+        show && /^ [^ ]/ { sub(/^ +/, "", $0); print $0; next }
+        show && !/^ / { show=0 }
+    ')
+
+    return 1
+}
+
+report_insecure_registry_required() {
+    local host="$1"
+
+    cat >&2 <<EOF
+HTTP registry mirror requires insecure-registries in /etc/docker/daemon.json.
+
+Add:
+  "insecure-registries": ["${host}"]
+
+Example /etc/docker/daemon.json:
+{
+  "insecure-registries": ["${host}"]
+}
+
+Then run:
+  sudo systemctl restart docker
+
+Do not use registry-mirrors for product installation; keep PRS_REGISTRY_MIRROR in .env only.
+EOF
+    exit 1
+}
+
+ensure_registry_mirror_ready() {
+    local mirror="$1"
+    local host
+
+    [[ -n "${mirror}" ]] || return 0
+
+    host="$(mirror_registry_host "${mirror}")"
+    if docker_insecure_registry_includes "${host}"; then
+        return 0
+    fi
+
+    if curl -fsS --max-time 5 "http://${host}/v2/" >/dev/null 2>&1; then
+        report_insecure_registry_required "${host}"
+    fi
+}
+
 load_required_images() {
     local -n _images_ref="$1"
     _images_ref=()
@@ -209,6 +268,7 @@ pull_required_images() {
 
     if [[ -n "${registry_mirror}" ]]; then
         echo "Using registry mirror: ${registry_mirror}"
+        ensure_registry_mirror_ready "${registry_mirror}"
     fi
 
     local image
@@ -314,4 +374,5 @@ docker compose --env-file docker/compose/.cont_one_app.env "${extra_env[@]}" \
 -f docker/compose/docker-compose.grafana.yml \
 -f "${nginx_compose}" \
 -f docker/compose/docker-compose.ports.yml \
+-f docker/compose/docker-compose.restart.yml \
 "${up_args[@]}"
