@@ -100,6 +100,9 @@ service JWT.
   ``prsTag.delete``;
 * аналогично для ``prsAlert``, ``prsMethod``, ``prsConnector``,
   ``prsDataStorage``, ``prsSchedule``.
+* copy-операции используют действия вида ``prsObject.copy``,
+  ``prsTag.copy``, ``prsAlert.copy``, ``prsMethod.copy``,
+  ``prsConnector.copy``.
 
 Операционные API вызывают отдельные действия:
 
