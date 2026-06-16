@@ -108,6 +108,7 @@ required_pathspecs=(
     "docker/docker-files/rabbitmq/enabled_plugins"
     "docker/docker-files/rabbitmq/rabbitmq.conf"
     "docs/pdf"
+    "methods"
     "packages"
     "src"
 )
@@ -115,6 +116,8 @@ required_pathspecs=(
 for pathspec in "${required_pathspecs[@]}"; do
     copy_tracked_pathspec "${pathspec}"
 done
+
+find "${stage_dir}" -type d -name __pycache__ -print0 | xargs -0 rm -rf
 
 mkdir -p "${stage_dir}/packaging"
 cp -p "${repo_root}/packaging/required-images.manifest" "${stage_dir}/packaging/required-images.manifest"

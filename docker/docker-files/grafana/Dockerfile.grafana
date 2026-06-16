@@ -7,10 +7,13 @@ ENV GF_USERS_DEFAULT_LANGUAGE=ru-RU
 
 USER root
 
-RUN mkdir /var/lib/grafana/dashboards
+RUN mkdir -p /var/lib/grafana/dashboards/root /var/lib/grafana/dashboards/admin
 COPY src/grafana/ /var/lib/grafana/dashboards-src/
-RUN find /var/lib/grafana/dashboards-src -mindepth 2 -maxdepth 2 -name '*.json' ! -name '*_old*' ! -name '*_new*' \
-    -exec cp {} /var/lib/grafana/dashboards/ \; && \
+RUN find /var/lib/grafana/dashboards-src/tags -mindepth 1 -maxdepth 1 -name '*.json' ! -name '*_old*' ! -name '*_new*' \
+    -exec cp {} /var/lib/grafana/dashboards/root/ \; && \
+    find /var/lib/grafana/dashboards-src -mindepth 2 -maxdepth 2 -name '*.json' ! -name '*_old*' ! -name '*_new*' \
+    ! -path '*/tags/*' \
+    -exec cp {} /var/lib/grafana/dashboards/admin/ \; && \
     rm -rf /var/lib/grafana/dashboards-src
 
 COPY src/grafana/configurator/Configurator.json /usr/share/grafana/public/dashboards/home.json
