@@ -20,6 +20,7 @@ sys.path.append(".")
 
 from src.common.base_svc import BaseSvc
 from src.common.api_crud_svc import valid_uuid, ErrorHandler
+from src.common.authorization import authorize_action
 from src.services.tags.app_api.tags_app_api_settings import TagsAppAPISettings
 import src.common.times as t
 from src.common.tag_data_points import normalize_point_xyq
@@ -226,6 +227,11 @@ class TagsAppAPI(BaseSvc):
             new_payload = DataGet(**mes)
 
         body = new_payload.model_dump()
+        await authorize_action(
+            f"{self._config.hierarchy['class']}.data_get",
+            resource={"tagIds": body["tagId"]},
+            payload=body,
+        )
 
         res = await self._post_message(
             mes=body, reply=True, routing_key=f"{self._config.hierarchy['class']}.app_api.data_get.*"
@@ -277,6 +283,11 @@ class TagsAppAPI(BaseSvc):
             return {}
 
         body = p.model_dump()
+        await authorize_action(
+            f"{self._config.hierarchy['class']}.data_set",
+            resource={"tagIds": [item["tagId"] for item in body["data"]]},
+            payload=body,
+        )
         res = await self._post_message(mes=body, reply=True, routing_key = f"{self._config.hierarchy['class']}.app_api.data_set.*")
         # нет подписчика
         if res is None:

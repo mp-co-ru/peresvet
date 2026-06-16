@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, Query
 sys.path.append(".")
 
 from src.common import api_crud_svc as svc
+from src.common.authorization import authorize_action
 from src.services.objects.api_crud.objects_api_crud_settings import ObjectsAPICRUDSettings
 
 class ObjectCreateAttributes(svc.NodeAttributes):
@@ -126,8 +127,14 @@ async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends
             res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
             app._logger.exception(res)
             await error_handler.handle_error(res)
+        body = p_copy.model_dump(exclude_none=True)
+        await authorize_action(
+            "prsObject.copy",
+            resource={"sourceId": body["sourceId"], "parentId": body["parentId"]},
+            payload=body,
+        )
         res = await app._post_message(
-            mes=p_copy.model_dump(exclude_none=True),
+            mes=body,
             reply=True,
             routing_key="prsObject.api_crud.copy",
         )
@@ -156,6 +163,11 @@ async def copy_object(payload: ObjectCopy, error_handler: svc.ErrorHandler = Dep
         app._logger.exception(res)
         await error_handler.handle_error(res)
     body = payload.model_dump(exclude_none=True)
+    await authorize_action(
+        "prsObject.copy",
+        resource={"sourceId": body["sourceId"], "parentId": body["parentId"]},
+        payload=body,
+    )
     res = await app._post_message(
         mes=body,
         reply=True,

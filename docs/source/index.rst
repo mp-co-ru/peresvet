@@ -26,6 +26,8 @@
    Примеры работы с платформой<examples/examples>
    Создание экранов в Grafana<grafana/grafana_integration>
    Интеграционные хранилища (v2)<integrational_v2>
+   Точки расширения безопасности<security_extension_points>
+   Настройка безопасности платной редакции<security_enterprise_setup>
    API<api>
 
 Indices and tables

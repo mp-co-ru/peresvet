@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, Query
 sys.path.append(".")
 
 from src.common import api_crud_svc as svc
+from src.common.authorization import authorize_action
 from src.services.alerts.api_crud.alerts_api_crud_settings import AlertsAPICRUDSettings
 
 def valid_alert_config(v: dict) -> dict:
@@ -158,8 +159,14 @@ async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
             res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
             app._logger.exception(f"{settings.svc_name} :: {res['message']}")
             await error_handler.handle_error(res)
+        body = p_copy.model_dump(exclude_none=True)
+        await authorize_action(
+            "prsAlert.copy",
+            resource={"sourceId": body["sourceId"], "parentId": body["parentId"]},
+            payload=body,
+        )
         res = await app._post_message(
-            mes=p_copy.model_dump(exclude_none=True),
+            mes=body,
             reply=True,
             routing_key="prsAlert.api_crud.copy",
         )
@@ -186,8 +193,14 @@ async def copy_alert(payload: AlertCopy, error_handler: svc.ErrorHandler = Depen
         res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
         app._logger.exception(res)
         await error_handler.handle_error(res)
+    body = payload.model_dump(exclude_none=True)
+    await authorize_action(
+        "prsAlert.copy",
+        resource={"sourceId": body["sourceId"], "parentId": body["parentId"]},
+        payload=body,
+    )
     res = await app._post_message(
-        mes=payload.model_dump(exclude_none=True),
+        mes=body,
         reply=True,
         routing_key="prsAlert.api_crud.copy",
     )

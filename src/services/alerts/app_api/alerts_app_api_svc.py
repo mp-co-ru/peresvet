@@ -14,6 +14,7 @@ sys.path.append(".")
 
 from src.common import svc
 from src.common.api_crud_svc import valid_uuid
+from src.common.authorization import authorize_action
 from src.services.alerts.app_api.alerts_app_api_settings import AlertsAppAPISettings
 import src.common.times as t
 
@@ -102,6 +103,11 @@ class AlertsAppAPI(svc.Svc):
     async def alarms_get(self, payload: AlarmsGet) -> dict:
 
         body = payload.model_dump()
+        await authorize_action(
+            f"{self._config.hierarchy['class']}.alarm_read",
+            resource={"parentIds": body.get("parentId")},
+            payload=body,
+        )
 
         res = await self._post_message(
             mes=body,
@@ -118,6 +124,11 @@ class AlertsAppAPI(svc.Svc):
 
     async def ack_alarm(self, payload: AckAlarm) -> None:
         body = payload.model_dump()
+        await authorize_action(
+            f"{self._config.hierarchy['class']}.alarm_ack",
+            resource={"id": body["id"]},
+            payload=body,
+        )
 
         return await self._post_message(
             mes=body,

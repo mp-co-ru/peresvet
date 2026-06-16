@@ -24,6 +24,7 @@ sys.path.append(".")
 
 from src.common.base_svc import BaseSvc
 from src.common.api_crud_svc import valid_uuid, ErrorHandler
+from src.common.authorization import authorize_action
 from src.common.logger import PrsLogBuffer
 from src.services.connectors.app_api.connectors_app_api_settings import ConnectorsAppAPISettings
 
@@ -168,6 +169,11 @@ class ConnectorsAppAPI(BaseSvc):
             await error_handler.handle_error(res)
         else:
             body = p.model_dump()
+            await authorize_action(
+                f"{self._config.hierarchy['class']}.connector_command",
+                resource={"id": body["id"]},
+                payload=body,
+            )
 
             post_res = await self._post_message(
                 mes=body,
@@ -228,6 +234,7 @@ async def connector_link_status(
 ):
     """Состояние MQTT-связи коннектора с платформой (кэш сервиса ``connectors_mqtt_app``)."""
     valid_uuid(id)
+    await authorize_action("prsConnector.link_status_read", resource={"id": id})
     connected = id in connectors_mqtt_app._connected_connectors
     return {"id": id, "mqttConnected": connected}
 
@@ -238,6 +245,7 @@ async def connector_log_tail(
 ):
     """Последние строки лога, пришедшие от коннектора по MQTT (буфер ``connectors_mqtt_app``)."""
     valid_uuid(id)
+    await authorize_action("prsConnector.connector_log_read", resource={"id": id})
     buf = connectors_mqtt_app._connector_log_lines.get(id)
     entries = list(buf) if buf else []
     return {"id": id, "entries": entries}
@@ -249,6 +257,7 @@ async def connector_command_output_tail(
 ):
     """Последние результаты удалённых команд (``prsConnector.command_output``), отдельно от ``log_tail``."""
     valid_uuid(id)
+    await authorize_action("prsConnector.connector_command_output_read", resource={"id": id})
     buf = connectors_mqtt_app._connector_command_output_lines.get(id)
     entries = list(buf) if buf else []
     return {"id": id, "entries": entries}
@@ -257,6 +266,7 @@ async def connector_command_output_tail(
 @router.get("/services", status_code=200)
 async def rabbitmq_services():
     """Сервисы, зарегистрированные в RabbitMQ как consume-очереди."""
+    await authorize_action("prsConnector.service_inventory_read")
     return await app.list_rabbitmq_services()
 
 
@@ -267,6 +277,11 @@ async def service_log_tail(
     clear: bool = Query(False, description="Очистить буфер перед чтением"),
 ):
     """Последние строки общего лога платформы, отфильтрованные по выбранным сервисам."""
+    await authorize_action(
+        "prsConnector.service_log_read",
+        resource={"services": service},
+        payload={"limit": limit, "clear": clear},
+    )
     if clear:
         app.clear_service_log_tail(service)
         return {"entries": [], "services": [], "cleared": True}
@@ -278,6 +293,7 @@ async def clear_service_log_tail(
     service: List[str] = Query([], description="Имя сервиса; можно передать несколько раз"),
 ):
     """Очистить in-memory буфер журнала для выбранных сервисов."""
+    await authorize_action("prsConnector.service_log_clear", resource={"services": service})
     return app.clear_service_log_tail(service)
 
 

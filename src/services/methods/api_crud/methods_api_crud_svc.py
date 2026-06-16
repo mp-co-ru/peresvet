@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, Query
 sys.path.append(".")
 
 from src.common import api_crud_svc as svc
+from src.common.authorization import authorize_action
 from src.services.methods.api_crud.methods_api_crud_settings import MethodsAPICRUDSettings
 
 class MethodCreateAttributes(svc.NodeAttributes):
@@ -164,8 +165,14 @@ async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
             res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
             app._logger.exception(res)
             await error_handler.handle_error(res)
+        body = p_copy.model_dump(exclude_none=True)
+        await authorize_action(
+            "prsMethod.copy",
+            resource={"sourceId": body["sourceId"], "parentId": body["parentId"]},
+            payload=body,
+        )
         res = await app._post_message(
-            mes=p_copy.model_dump(exclude_none=True),
+            mes=body,
             reply=True,
             routing_key="prsMethod.api_crud.copy",
         )
@@ -183,8 +190,14 @@ async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
 
 @router.post("/copy", response_model=svc.NodeCreateResult, status_code=201)
 async def copy_method(payload: MethodCopy, error_handler: svc.ErrorHandler = Depends()):
+    body = payload.model_dump(exclude_none=True)
+    await authorize_action(
+        "prsMethod.copy",
+        resource={"sourceId": body["sourceId"], "parentId": body["parentId"]},
+        payload=body,
+    )
     res = await app._post_message(
-        mes=payload.model_dump(exclude_none=True),
+        mes=body,
         reply=True,
         routing_key="prsMethod.api_crud.copy",
     )
