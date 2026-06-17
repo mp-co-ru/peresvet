@@ -13,13 +13,13 @@ DOTENV_FILE="${SCRIPT_DIR}/.env"
 show_help() {
     cat <<'EOF'
 Usage:
-  ./run_one_app.sh [--hostname HOSTNAME] [--ssl true|false] [--build true|false] [--mirror HOST[:PORT]]
+  ./run_one_app.sh [--hostname HOSTNAME] [--ssl true|false] [--build true|false] [--mirror URL]
 
 Options:
   --hostname HOSTNAME  Server name for nginx. Defaults to PRS_HOSTNAME or host name.
   --ssl true|false     Use HTTPS nginx compose file. Defaults to PRS_SSL from .env.
   --build true|false   Rebuild images before starting containers. Defaults to PRS_BUILD.
-  --mirror HOST[:PORT] Registry mirror for missing base images. Defaults to
+  --mirror URL         Registry mirror for missing base images. Defaults to
                        PRS_REGISTRY_MIRROR from .env.
   -h, --help           Show this help.
 
@@ -35,12 +35,17 @@ Mirror notes:
   - During mirror attempts press Ctrl+I to switch to Docker Hub immediately
     for all remaining images in this run.
   - The mirror is accessed over HTTP(S) directly; daemon.json changes are not required.
+  - Mirror URL must include a scheme: http:// or https://
+    (for example https://host/dist/images or http://127.0.0.1:5000).
   - Do not add the mirror to registry-mirrors in daemon.json.
 EOF
 }
 
 PULL_SKIP_TO_HUB=0
 PULL_MIRROR_FIRST_ANNOUNCED=0
+REGISTRY_MIRROR_SCHEME=http
+REGISTRY_MIRROR_HOST=""
+REGISTRY_MIRROR_PATH=""
 
 load_dotenv() {
     local file="$1"
@@ -74,12 +79,74 @@ load_dotenv() {
     done < "${file}"
 }
 
-normalize_registry_mirror() {
+trim_registry_mirror() {
     local mirror="${1:-}"
-    mirror="${mirror#http://}"
-    mirror="${mirror#https://}"
     mirror="${mirror%/}"
     printf '%s' "${mirror}"
+}
+
+require_registry_mirror_scheme() {
+    local mirror="${1:-}"
+
+    [[ -z "${mirror}" ]] && return 0
+
+    if [[ "${mirror}" != http://* && "${mirror}" != https://* ]]; then
+        cat >&2 <<'EOF'
+PRS_REGISTRY_MIRROR must include a scheme: http:// or https://
+
+Examples:
+  PRS_REGISTRY_MIRROR=https://mpcperesvet.matchpoint-consulting.ru/dist/images
+  PRS_REGISTRY_MIRROR=http://127.0.0.1:5000
+EOF
+        exit 1
+    fi
+}
+
+split_registry_mirror() {
+    local raw
+    raw="$(trim_registry_mirror "${1:-}")"
+
+    [[ -z "${raw}" ]] && return 0
+
+    require_registry_mirror_scheme "${raw}"
+
+    REGISTRY_MIRROR_SCHEME="${raw%%://*}"
+    local mirror="${raw#*://}"
+
+    if [[ "${mirror}" == */* ]]; then
+        REGISTRY_MIRROR_HOST="${mirror%%/*}"
+        REGISTRY_MIRROR_PATH="/${mirror#*/}"
+        REGISTRY_MIRROR_PATH="${REGISTRY_MIRROR_PATH//\/\//\/}"
+    else
+        REGISTRY_MIRROR_HOST="${mirror}"
+        REGISTRY_MIRROR_PATH=""
+    fi
+}
+
+registry_mirror_api_base() {
+    local scheme="${1:-http}"
+    local host="${2:-}"
+    local path="${3:-}"
+
+    if [[ -n "${path}" ]]; then
+        printf '%s://%s%s' "${scheme}" "${host}" "${path}"
+    else
+        printf '%s://%s' "${scheme}" "${host}"
+    fi
+}
+
+mirror_image_repo_tag() {
+    local image_ref="$1"
+    local repo_path
+
+    repo_path="$(mirror_registry_image_path "${image_ref}")"
+    if [[ "${repo_path}" == *:* ]]; then
+        MIRROR_IMAGE_TAG="${repo_path##*:}"
+        MIRROR_IMAGE_REPO="${repo_path%:*}"
+    else
+        MIRROR_IMAGE_REPO="${repo_path}"
+        MIRROR_IMAGE_TAG="latest"
+    fi
 }
 
 mirror_registry_image_path() {
@@ -120,18 +187,23 @@ EOF
 }
 
 pull_mirror_via_registry_api() {
-    local mirror_ref="$1"
-    local local_image="$2"
+    local mirror="$1"
+    local image_ref="$2"
     local cache_dir
+    local api_base
 
     if ! command -v python3 >/dev/null 2>&1; then
         report_mirror_pull_requires_python3
     fi
 
-    cache_dir="${TMPDIR:-/tmp}/prs-registry-pull/$(printf '%s' "${mirror_ref}:${local_image}" | sha256sum | awk '{print $1}')"
+    split_registry_mirror "${mirror}"
+    mirror_image_repo_tag "${image_ref}"
+    api_base="$(registry_mirror_api_base "${REGISTRY_MIRROR_SCHEME}" "${REGISTRY_MIRROR_HOST}" "${REGISTRY_MIRROR_PATH}")"
+
+    cache_dir="${TMPDIR:-/tmp}/prs-registry-pull/$(printf '%s' "${api_base}/${MIRROR_IMAGE_REPO}:${MIRROR_IMAGE_TAG}:${image_ref}" | sha256sum | awk '{print $1}')"
     mkdir -p "${cache_dir}"
 
-    PRS_PULL_CACHE_DIR="${cache_dir}" python3 - "${mirror_ref}" "${local_image}" <<'PY'
+    PRS_PULL_CACHE_DIR="${cache_dir}" python3 - "${api_base}" "${MIRROR_IMAGE_REPO}" "${MIRROR_IMAGE_TAG}" "${image_ref}" <<'PY'
 import gzip
 import hashlib
 import io
@@ -173,44 +245,8 @@ def detect_architecture():
     return mapping.get(machine, machine)
 
 
-def registry_base_url(host):
-    for scheme in ("http", "https"):
-        probe = f"{scheme}://{host}/v2/"
-        try:
-            req = urllib.request.Request(probe, method="HEAD")
-            with urllib.request.urlopen(req, timeout=5):
-                return f"{scheme}://{host}"
-        except Exception:
-            try:
-                with urllib.request.urlopen(probe, timeout=5):
-                    return f"{scheme}://{host}"
-            except Exception:
-                continue
-    return f"http://{host}"
-
-
-def parse_mirror_ref(mirror_ref):
-    slash_idx = mirror_ref.find("/")
-    if slash_idx <= 0:
-        raise SystemExit(f"Invalid mirror image reference: {mirror_ref}")
-
-    host = mirror_ref[:slash_idx]
-    repo_with_tag = mirror_ref[slash_idx + 1 :]
-    if not repo_with_tag:
-        raise SystemExit(f"Invalid mirror image reference: {mirror_ref}")
-
-    if ":" in repo_with_tag:
-        tag_idx = repo_with_tag.rfind(":")
-        tag = repo_with_tag[tag_idx + 1 :]
-        repo = repo_with_tag[:tag_idx]
-    else:
-        repo = repo_with_tag
-        tag = "latest"
-
-    if not repo or not tag:
-        raise SystemExit(f"Invalid mirror image reference: {mirror_ref}")
-
-    return host, repo, tag
+def resolve_registry_base(configured_base):
+    return configured_base.rstrip("/")
 
 
 def pull_cache_dir():
@@ -366,10 +402,11 @@ def write_layer_tar(uncompressed, layer_dir):
 
 
 def main():
-    mirror_ref = sys.argv[1]
-    local_image = sys.argv[2]
-    host, repo, tag = parse_mirror_ref(mirror_ref)
-    base = registry_base_url(host)
+    registry_base = resolve_registry_base(sys.argv[1])
+    repo = sys.argv[2]
+    tag = sys.argv[3]
+    local_image = sys.argv[4]
+    base = registry_base
 
     eprint(f"Загрузка манифеста {repo}:{tag} с {base}...")
     manifest = load_cached_manifest(repo, tag)
@@ -443,9 +480,8 @@ PY
 }
 
 pull_mirror_ref_with_retries() {
-    local mirror_ref="$1"
-    local local_image="$2"
-    local host="${mirror_ref%%/*}"
+    local mirror="$1"
+    local image_ref="$2"
     local max_attempts=4
     local delay=4
     local attempt=1
@@ -455,8 +491,8 @@ pull_mirror_ref_with_retries() {
             return 1
         fi
 
-        echo "Загрузка образа ${local_image} с зеркала ${host} (попытка ${attempt}/${max_attempts})..."
-        if pull_mirror_once_with_skip_option "${mirror_ref}" "${local_image}"; then
+        echo "Загрузка образа ${image_ref} с зеркала ${mirror} (попытка ${attempt}/${max_attempts})..."
+        if pull_mirror_once_with_skip_option "${mirror}" "${image_ref}"; then
             return 0
         fi
 
@@ -548,16 +584,16 @@ wait_with_skip_option() {
 }
 
 pull_mirror_once_with_skip_option() {
-    local mirror_ref="$1"
-    local local_image="$2"
+    local mirror="$1"
+    local image_ref="$2"
     local pull_pid
 
     if ! pull_tty_available; then
-        pull_mirror_via_registry_api "${mirror_ref}" "${local_image}"
+        pull_mirror_via_registry_api "${mirror}" "${image_ref}"
         return $?
     fi
 
-    pull_mirror_via_registry_api "${mirror_ref}" "${local_image}" &
+    pull_mirror_via_registry_api "${mirror}" "${image_ref}" &
     pull_pid=$!
 
     while kill -0 "${pull_pid}" 2>/dev/null; do
@@ -650,7 +686,7 @@ Check that:
   - python3 is installed on this host
 
 Do not use registry-mirrors in daemon.json for product installation; set
-  PRS_REGISTRY_MIRROR in .env or use --mirror HOST:PORT instead.
+  PRS_REGISTRY_MIRROR in .env or use --mirror URL instead.
 EOF
     else
         cat >&2 <<EOF
@@ -686,9 +722,7 @@ pull_image_with_retries() {
         if [[ "${PULL_SKIP_TO_HUB}" != "1" ]]; then
             announce_mirror_first "${mirror}"
 
-            local mirror_ref
-            mirror_ref="$(mirror_image_ref "${mirror}" "${image_ref}")"
-            if pull_mirror_ref_with_retries "${mirror_ref}" "${image_ref}"; then
+            if pull_mirror_ref_with_retries "${mirror}" "${image_ref}"; then
                 if [[ "${image_ref}" != "${image}" ]]; then
                     docker tag "${image_ref}" "${image}" 2>/dev/null || true
                 fi
@@ -736,7 +770,9 @@ load_dotenv "${DOTENV_FILE}"
 srv="${PRS_HOSTNAME:-${HOSTNAME:-$(hostname)}}"
 ssl="${PRS_SSL:-false}"
 build="${PRS_BUILD:-false}"
-registry_mirror="$(normalize_registry_mirror "${PRS_REGISTRY_MIRROR:-}")"
+registry_mirror="$(trim_registry_mirror "${PRS_REGISTRY_MIRROR:-}")"
+require_registry_mirror_scheme "${registry_mirror}"
+split_registry_mirror "${registry_mirror}"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -766,10 +802,12 @@ while [[ $# -gt 0 ]]; do
             ;;
         --mirror)
             if [[ $# -lt 2 || -z "$2" ]]; then
-                echo "Option --mirror requires a host[:port] value." >&2
+                echo "Option --mirror requires a mirror URL (http:// or https://)." >&2
                 exit 1
             fi
-            registry_mirror="$(normalize_registry_mirror "$2")"
+            registry_mirror="$(trim_registry_mirror "$2")"
+            require_registry_mirror_scheme "${registry_mirror}"
+            split_registry_mirror "${registry_mirror}"
             shift 2
             ;;
         -h|--help)
