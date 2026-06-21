@@ -1,5 +1,6 @@
 services:
   redis:
+    container_name: prs-redis
     image: redis/redis-stack:7.2.0-v6
     hostname: ${HOST_REDIS}
     networks:

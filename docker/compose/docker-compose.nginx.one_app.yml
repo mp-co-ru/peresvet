@@ -1,6 +1,6 @@
 services:
   nginx_one_app:
-      container_name: nginx_one_app
+      container_name: prs-nginx-one-app
       hostname: ${NGINX_HOST}
       restart: always
       build:

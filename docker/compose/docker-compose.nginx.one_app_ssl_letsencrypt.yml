@@ -1,6 +1,6 @@
 services:
   nginx_one_app:
-      container_name: nginx_one_app
+      container_name: prs-nginx-one-app
       hostname: ${NGINX_HOST}
       build:
         context: ../..
@@ -70,7 +70,7 @@ services:
         - ../../certificates/certbot/conf/:/etc/nginx/ssl/:ro
 
   certbot:
-    container_name: certbot
+    container_name: prs-certbot
     hostname: certbot
     image: certbot/certbot
     volumes:
