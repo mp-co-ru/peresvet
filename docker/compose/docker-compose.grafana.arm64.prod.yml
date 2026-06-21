@@ -4,7 +4,7 @@ services:
     build:
       image: mpc/peresvet_grafana:0.4-arm64
     #image: grafana/grafana-enterprise
-    container_name: grafana
+    container_name: prs-grafana
     hostname: ${HOST_GRAFANA}
     restart: unless-stopped
     #environment:

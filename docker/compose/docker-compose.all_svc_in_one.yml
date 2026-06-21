@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   all_svc:
+    container_name: prs-all-svc
     hostname: ${ALL_SVC_HOST}
     build:
       context: ../..

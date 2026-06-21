@@ -1,6 +1,7 @@
 version: "3.9"
 services:
   rabbitmq_load_tests:
+    container_name: prs-rabbitmq-load-tests
     image: rabbitmq:3.11.16-management
     hostname: rabbitmq_load_tests
     environment:

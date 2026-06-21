@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   test_psql:
+    container_name: prs-test-psql
     hostname: test_psql
     build:
       context: ../..

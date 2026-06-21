@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   data_storages_all:
+    container_name: prs-data-storages-all
     hostname: ${HOST_DATASTORAGES_ALL}
     build:
       context: ../..

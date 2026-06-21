@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   psql_load_tests:
+    container_name: prs-psql-load-tests
     hostname: psql_load_tests
     image: postgres:16.1
     environment:

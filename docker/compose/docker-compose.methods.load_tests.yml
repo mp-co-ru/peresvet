@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   methods_all:
+    container_name: prs-methods-all
     hostname: methods_all
     build:
       context: ../..

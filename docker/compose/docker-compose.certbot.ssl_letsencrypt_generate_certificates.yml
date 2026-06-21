@@ -1,6 +1,6 @@
 services:
   certbot:
-    container_name: certbot
+    container_name: prs-certbot
     hostname: certbot
     image: certbot/certbot
     volumes:

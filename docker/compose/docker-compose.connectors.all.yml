@@ -2,6 +2,7 @@ version: "3.9"
 
 services:
   connectors_all:
+    container_name: prs-connectors-all
     hostname: ${HOST_CONNECTORS_ALL}
     build:
       context: ../..

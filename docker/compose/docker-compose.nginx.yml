@@ -1,5 +1,6 @@
 services:
   nginx:
+    container_name: prs-nginx
       hostname: ${NGINX_HOST}
       build:
         context: ../..

@@ -1,4 +1,4 @@
-python-ldap==3.4.5
+packages/python_ldap-3.4.4-cp312-cp312-linux_x86_64.whl
 packages/fast_ldap_pool-0.1.0-cp312-cp312-linux_x86_64.whl
 fastapi==0.104.1
 ciso8601==2.3.1

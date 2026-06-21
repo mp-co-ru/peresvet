@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   nginx_all_svc_in_one:
+    container_name: prs-nginx-all-svc-in-one
       hostname: ${NGINX_HOST}
       build:
         context: ../..

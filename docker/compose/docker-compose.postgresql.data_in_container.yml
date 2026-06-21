@@ -1,5 +1,6 @@
 services:
   psql:
+    container_name: prs-psql
     hostname: ${HOST_POSTGRES}
     image: postgres:16.1
     environment:

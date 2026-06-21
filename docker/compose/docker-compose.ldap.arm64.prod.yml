@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   ldap:
+    container_name: prs-openldap
     hostname: ${LDAP_HOST}
     image: mpc/peresvet_ldap:0.4-arm64
 

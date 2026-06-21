@@ -5,19 +5,20 @@ ENV LDAP_DOMAIN mycompany.com
 ENV LDAP_ADMIN_PASSWORD 123456
 
 WORKDIR /home
-RUN apt-get update && apt-get install -y --no-install-recommends gcc \
-    build-essential python3-dev \
-    libldap2-dev libsasl2-dev tox lcov valgrind
-
-RUN bash -c "DEBIAN_FRONTEND=noninteractive apt install -q -y slapd ldap-utils"
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libldap2-dev libsasl2-dev \
+    && bash -c "DEBIAN_FRONTEND=noninteractive apt install -q -y slapd ldap-utils"
 
 WORKDIR /usr/src
 RUN mkdir mpc-peresvet
 COPY requirements.txt /usr/src/mpc-peresvet/
 COPY packages /usr/src/mpc-peresvet/packages
 WORKDIR /usr/src/mpc-peresvet
-RUN pip install -r requirements.txt
-RUN apt-get -y purge slapd
+RUN pip install --no-cache-dir --no-index --find-links=packages -r requirements.txt \
+    && apt-get -y purge slapd \
+    && apt-get -y autoremove \
+    && apt-get -y clean \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /usr/src/mpc-peresvet/log
 

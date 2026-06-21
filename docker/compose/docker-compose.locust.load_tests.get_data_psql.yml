@@ -2,6 +2,7 @@ version: '3'
 
 services:
   locust_master_get:
+    container_name: prs-locust-master-get
     build:
       context: ../..
       dockerfile: docker/docker-files/locust/Dockerfile.locust
@@ -12,6 +13,7 @@ services:
     command: -f /mnt/locust/get_test/locustfile_get_data_prs-psql.py --master -H http://locust_master_get:8089
 
   locust_worker_get:
+    container_name: prs-locust-worker-get
     build:
       context: ../..
       dockerfile: docker/docker-files/locust/Dockerfile.locust

@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   tags_prepare_load_tests:
+    container_name: prs-tags-prepare-load-tests
     hostname: tags_prepare_load_tests
     build:
       context: ../..

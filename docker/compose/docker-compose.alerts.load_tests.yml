@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   alerts_load_tests:
+    container_name: prs-alerts-load-tests
     hostname: alerts_load_tests
     build:
       context: ../..

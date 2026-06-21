@@ -13,6 +13,8 @@ Options:
   --output PATH    Archive path. Defaults to dist/peresvet-product-<version>.tar.gz
   --root-dir NAME  Top-level directory name inside the archive.
   -h, --help       Show this help.
+
+Python wheels для one_app хранятся в packages/ (обновление: packaging/update_packages.sh).
 EOF
 }
 
@@ -48,6 +50,43 @@ case "${output}" in
     /*) ;;
     *) output="${repo_root}/${output}" ;;
 esac
+
+log() {
+    printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"
+}
+
+die() {
+    log "ERROR: $*"
+    exit 1
+}
+
+verify_packages() {
+    local packages_dir="${repo_root}/packages"
+    local wheel_count
+    wheel_count="$(find "${packages_dir}" -maxdepth 1 -name '*.whl' 2>/dev/null | wc -l | tr -d ' ')"
+    if [[ "${wheel_count}" -lt 10 ]]; then
+        die "packages/ неполный (${wheel_count} wheels). Выполните: packaging/update_packages.sh"
+    fi
+    for required in \
+        "python_ldap-3.4.4-cp312-cp312-linux_x86_64.whl" \
+        "fast_ldap_pool-0.1.0-cp312-cp312-linux_x86_64.whl"; do
+        [[ -f "${packages_dir}/${required}" ]] \
+            || die "В packages/ не найден ${required}"
+    done
+    compgen -G "${packages_dir}/pyasn1-"*.whl >/dev/null \
+        || die "В packages/ не найден pyasn1 wheel (зависимость python_ldap)"
+    compgen -G "${packages_dir}/pyasn1_modules-"*.whl >/dev/null \
+        || die "В packages/ не найден pyasn1_modules wheel (зависимость python_ldap)"
+    if ! python3 -m pip wheel \
+        --no-index --find-links="${packages_dir}" \
+        -r "${repo_root}/requirements.txt" \
+        -w "${packages_dir}" >/dev/null 2>&1; then
+        die "packages/ неполный: pip wheel --no-index не проходит. Выполните: packaging/update_packages.sh"
+    fi
+    log "packages/: ${wheel_count} wheels"
+}
+
+verify_packages
 
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "${tmp_dir}"' EXIT
@@ -109,13 +148,15 @@ required_pathspecs=(
     "docker/docker-files/rabbitmq/rabbitmq.conf"
     "docs/pdf"
     "methods"
-    "packages"
     "src"
 )
 
 for pathspec in "${required_pathspecs[@]}"; do
     copy_tracked_pathspec "${pathspec}"
 done
+
+mkdir -p "${stage_dir}/packages"
+cp -p "${repo_root}"/packages/*.whl "${stage_dir}/packages/"
 
 find "${stage_dir}" -type d -name __pycache__ -print0 | xargs -0 rm -rf
 
@@ -148,4 +189,5 @@ PY
 mkdir -p "$(dirname "${output}")"
 tar -czf "${output}" -C "${tmp_dir}" "${root_dir}"
 
+log "Готово: ${output}"
 echo "${output}"

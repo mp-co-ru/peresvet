@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   tags_all:
+    container_name: prs-tags-all
     hostname: ${HOST_TAGS_ALL}
     build:
       context: ../..

@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   objects_all:
+    container_name: prs-objects-all
     hostname: ${HOST_OBJECTS_ALL}
     build:
       context: ../..

@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   nginx:
+    container_name: prs-nginx
       ports:
         - ${HTTP_PORT}:${HTTP_PORT}
         - ${HTTPS_PORT}:${HTTPS_PORT}

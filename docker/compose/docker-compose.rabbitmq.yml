@@ -1,5 +1,6 @@
 services:
   rabbitmq:
+    container_name: prs-rabbitmq
     image: rabbitmq:4.1.1-management
     hostname: ${HOST_RABBIT}
     environment:

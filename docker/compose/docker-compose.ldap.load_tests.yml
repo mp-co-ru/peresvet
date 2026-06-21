@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   ldap_load_tests:
+    container_name: prs-openldap-load-tests
     hostname: ldap_load_tests
     build:
       context: ../..

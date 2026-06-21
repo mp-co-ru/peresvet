@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   schedules_all:
+    container_name: prs-schedules-all
     hostname: ${HOST_SCHEDULES_ALL}
     build:
       context: ../..

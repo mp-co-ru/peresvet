@@ -1,6 +1,6 @@
 services:
   mcp_peresvet:
-    container_name: mcp_peresvet
+    container_name: prs-mcp-peresvet
     depends_on:
       - one_app
     build:

@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   alerts_all:
+    container_name: prs-alerts-all
     hostname: ${HOST_ALERTS_ALL}
     build:
       context: ../..

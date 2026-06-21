@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   data_storages_load_tests:
+    container_name: prs-data-storages-load-tests
     hostname: dataStorages_load_tests
     build:
       context: ../..

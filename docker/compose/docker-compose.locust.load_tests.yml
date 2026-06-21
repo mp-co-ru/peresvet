@@ -2,6 +2,7 @@ version: '3'
 
 services:
   locust_master:
+    container_name: prs-locust-master
     build:
       context: ../..
       dockerfile: docker/docker-files/locust/Dockerfile.locust
@@ -12,6 +13,7 @@ services:
     command: -f /mnt/locust --class-picker --master -H http://tags_load_tests:81/v1/data
 
   locust_worker:
+    container_name: prs-locust-worker
     build:
       context: ../..
       dockerfile: docker/docker-files/locust/Dockerfile.locust

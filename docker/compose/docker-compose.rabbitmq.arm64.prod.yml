@@ -1,6 +1,7 @@
 version: '3.9'
 services:
   rabbitmq:
+    container_name: prs-rabbitmq
     image: mpc/peresvet_rabbitmq:0.4-arm64
     hostname: ${HOST_RABBIT}
     environment:
