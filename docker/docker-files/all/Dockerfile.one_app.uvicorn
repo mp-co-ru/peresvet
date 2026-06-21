@@ -3,6 +3,7 @@ FROM python:3.12-slim
 ENV LDAP_ORGANISATION mycompany
 ENV LDAP_DOMAIN mycompany.com
 ENV LDAP_ADMIN_PASSWORD 123456
+ENV PIP_NO_INDEX=1
 
 WORKDIR /home
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -12,9 +13,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /usr/src
 RUN mkdir mpc-peresvet
 COPY requirements.txt /usr/src/mpc-peresvet/
-COPY packages /usr/src/mpc-peresvet/packages
+COPY packages/ /usr/src/mpc-peresvet/packages/
 WORKDIR /usr/src/mpc-peresvet
-RUN pip install --no-cache-dir --no-index --find-links=packages -r requirements.txt \
+RUN pip install --no-cache-dir --no-index -r requirements.txt \
     && apt-get -y purge slapd \
     && apt-get -y autoremove \
     && apt-get -y clean \

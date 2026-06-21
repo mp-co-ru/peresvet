@@ -1,2 +1,0 @@
-FROM postgres:16.2
-COPY config/postgresql/postgresql.conf /etc/postgresql/postgresql.conf
