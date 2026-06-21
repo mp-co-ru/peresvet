@@ -1,7 +1,7 @@
 services:
   mcp_grafana:
     image: mcp/grafana:latest
-    container_name: mcp_grafana
+    container_name: prs-mcp-grafana
     depends_on:
       - grafana
     environment:

@@ -6,7 +6,7 @@ services:
       args:
         - NGINX_HOST=${NGINX_HOST}
     #image: grafana/grafana-enterprise:11.2.2-ubuntu
-    container_name: grafana
+    container_name: prs-grafana
     hostname: ${HOST_GRAFANA}
     environment:
       - TZ=${TIME_ZONE}
@@ -36,7 +36,7 @@ services:
       start_period: 30s
 
   #renderer:
-  #  container_name: renderer
+  #  container_name: prs-grafana-renderer
   #  image: grafana/grafana-image-renderer:latest
   #  hostname: ${HOST_GRAFANA_RENDERER}
   #  ports:

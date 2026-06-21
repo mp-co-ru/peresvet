@@ -1,5 +1,6 @@
 services:
   ldap:
+    container_name: prs-openldap
     hostname: ${LDAP_HOST}
     build:
       context: ../..
