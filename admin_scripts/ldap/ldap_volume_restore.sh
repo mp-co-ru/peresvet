@@ -3,7 +3,7 @@
 # Том или каталог определяются по compose_file (resolve_ldap_storage.py),
 # если не заданы ldap_docker_volume / ldap_data_dir.
 #
-# Запуск только из корня репозитория. Обязательно: --archive=ПУТЬ.
+# Запуск только из корня проекта. Обязательно: --archive=ПУТЬ.
 # Полный перечень параметров — в docs/source/administration.rst.
 
 set -eu
@@ -24,7 +24,7 @@ skip_compose_stop=0
 
 usage() {
 	cat <<EOF >&2
-Использование (только из корня репозитория): $0 --archive=ARCHIVE.tar.gz [--параметр=значение ...]
+Использование (только из корня проекта): $0 --archive=ARCHIVE.tar.gz [--параметр=значение ...]
 
 Обязательно: --archive=PATH
 
@@ -96,10 +96,10 @@ done
 HERE=$(pwd -P)
 THERE=$(cd "$REPO_ROOT" && pwd -P)
 if [ "$HERE" != "$THERE" ]; then
-	echo "Ошибка: скрипт нужно запускать из корня репозитория." >&2
+	echo "Ошибка: скрипт нужно запускать из корня проекта." >&2
 	echo "  Текущий каталог: $HERE" >&2
 	echo "  Ожидаемый корень:  $THERE" >&2
-	echo "Пример: cd \"$THERE\" && ./admin_scripts/ldap/$(basename \"$0\") …" >&2
+	echo "Пример: cd \"$THERE\" && ./admin_scripts/ldap/$(basename "$0") …" >&2
 	exit 1
 fi
 
