@@ -2,7 +2,7 @@
 # Бэкап данных OpenLDAP: том или каталог на хосте определяются по compose_file
 # (см. resolve_ldap_storage.py), если не заданы явные ldap_docker_volume / ldap_data_dir.
 #
-# Запуск только из корня репозитория (см. документацию administration.rst).
+# Запуск только из корня проекта (см. документацию administration.rst).
 # Параметры: только --имя=значение (имена в нижнем регистре); полный перечень — в Sphinx.
 
 set -eu
@@ -22,7 +22,7 @@ skip_compose_stop=0
 
 usage() {
 	cat <<EOF >&2
-Использование (только из корня репозитория): $0 [--параметр=значение ...]
+Использование (только из корня проекта): $0 [--параметр=значение ...]
 
 Полное описание параметров — в docs/source/administration.rst (раздел LDAP).
 Кратко:
@@ -91,10 +91,10 @@ done
 HERE=$(pwd -P)
 THERE=$(cd "$REPO_ROOT" && pwd -P)
 if [ "$HERE" != "$THERE" ]; then
-	echo "Ошибка: скрипт нужно запускать из корня репозитория." >&2
+	echo "Ошибка: скрипт нужно запускать из корня проекта." >&2
 	echo "  Текущий каталог: $HERE" >&2
 	echo "  Ожидаемый корень:  $THERE" >&2
-	echo "Пример: cd \"$THERE\" && ./admin_scripts/ldap/$(basename \"$0\") …" >&2
+	echo "Пример: cd \"$THERE\" && ./admin_scripts/ldap/$(basename "$0") …" >&2
 	exit 1
 fi
 
