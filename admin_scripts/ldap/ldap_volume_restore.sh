@@ -21,6 +21,8 @@ restore_helper_image=alpine:3.20
 assume_yes=0
 skip_stop=0
 skip_compose_stop=0
+one_app_compose_file=docker/compose/docker-compose.one_app.yml
+one_app_service=one_app
 
 usage() {
 	cat <<EOF >&2
@@ -126,7 +128,23 @@ else
 	compose_file_abs=$compose_file
 fi
 
+if [ "${one_app_compose_file#/}" = "$one_app_compose_file" ]; then
+	one_app_compose_file_abs=$REPO_ROOT/$one_app_compose_file
+else
+	one_app_compose_file_abs=$one_app_compose_file
+fi
+
 cd "$REPO_ROOT"
+
+one_app_container=$(
+	RESOLVE_CWD=$REPO_ROOT python3 "$REPO_ROOT/admin_scripts/resolve_compose_container.py" \
+		"$one_app_compose_file_abs" "$compose_project_name" "$one_app_service"
+) || exit 1
+
+one_app_was_running=0
+if docker ps -q --filter "name=^/${one_app_container}$" | grep -q .; then
+	one_app_was_running=1
+fi
 
 resolve_storage() {
 	if [ -n "$ldap_docker_volume" ]; then
@@ -246,3 +264,12 @@ if [ "$skip_compose_stop" = "1" ] && [ -n "$stopped_containers" ] && [ "$skip_st
 	docker start $stopped_containers
 fi
 compose_start
+
+if [ "$one_app_was_running" = "1" ]; then
+	if docker container inspect "$one_app_container" >/dev/null 2>&1; then
+		echo "Перезапуск $one_app_container ($one_app_service в $one_app_compose_file, сброс кэша UUID узлов LDAP) ..."
+		docker restart "$one_app_container" >/dev/null
+	else
+		echo "Предупреждение: контейнер $one_app_container не найден." >&2
+	fi
+fi
