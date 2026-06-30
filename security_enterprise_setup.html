@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Настройка безопасности платной редакции &mdash; документация МПК-Пересвет 0.4</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sphinxcontrib-httpexample.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=11064190"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/sphinxcontrib-httpexample.js"></script>
+        <script src="_static/translations.js?v=29b1f277"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="API Платформы Пересвет" href="api.html" />
+    <link rel="prev" title="Точки расширения безопасности" href="security_extension_points.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Логотип"/>
+          </a>
+              <div class="version">
+                0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="description.html">Описание</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terms.html">Используемые термины</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка и запуск</a></li>
+<li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Примеры работы с платформой</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_extension_points.html">Точки расширения безопасности</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Настройка безопасности платной редакции</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Общая схема</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#enterprise-provider">Включение enterprise provider</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#jwt">JWT для пользователей</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#jwt-api">JWT для прямых API-клиентов</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#opa-input">OPA input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rabbitmq">RabbitMQ</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mqtt">MQTT-коннекторы</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Порядок внедрения</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#production">Проверки перед production</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">МПК-Пересвет</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Настройка безопасности платной редакции</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/security_enterprise_setup.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="id1">
+<h1>Настройка безопасности платной редакции<a class="headerlink" href="#id1" title="Link to this heading"></a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Предупреждение</p>
+<p>Этот раздел описывает целевую настройку промышленной платной редакции.
+Бесплатная редакция не включает ABAC/PDP/IdP и по умолчанию продолжает
+работать в permissive-режиме через <code class="docutils literal notranslate"><span class="pre">AllowAllAuthorizationProvider</span></code>.</p>
+</div>
+<section id="id2">
+<h2>Общая схема<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<p>Платная редакция должна подключать безопасность как надстройку над базовым
+ядром:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Browser/Grafana/API client
+       |
+       v
+nginx / API gateway / oauth2-proxy
+       |
+       v
+Peresvet API service  --(AMQP + security headers)--&gt;  RabbitMQ
+       |                                             |
+       v                                             v
+OPA / PDP                                  Internal microservices
+       ^
+       |
+LDAP resource attributes
+</pre></div>
+</div>
+<p>Роли компонентов:</p>
+<ul class="simple">
+<li><p><strong>IdP</strong> — Keycloak или Authentik. Выдаёт JWT для пользователей и
+API-клиентов.</p></li>
+<li><p><strong>PEP</strong> — API gateway и FastAPI hooks в сервисах Пересвета.</p></li>
+<li><p><strong>PDP</strong> — Open Policy Agent или другой enterprise provider.</p></li>
+<li><p><strong>PIP</strong> — LDAP-иерархия Пересвета, JWT claims, кэш Redis.</p></li>
+<li><p><strong>RabbitMQ</strong> — защищённый внутренний транспорт между микросервисами.</p></li>
+</ul>
+</section>
+<section id="enterprise-provider">
+<h2>Включение enterprise provider<a class="headerlink" href="#enterprise-provider" title="Link to this heading"></a></h2>
+<p>В платной редакции должен поставляться Python-провайдер, реализующий контракт из
+<code class="docutils literal notranslate"><span class="pre">src.common.authorization</span></code>.</p>
+<p>Пример переменных:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">PRS_AUTH_PROVIDER</span><span class="o">=</span>enterprise_security.opa_provider:OpaAuthorizationProvider
+<span class="nv">PRS_SECURITY_MODE</span><span class="o">=</span>enforce
+<span class="nv">PRS_OPA_URL</span><span class="o">=</span>http://opa:8181/v1/data/peresvet/allow
+<span class="nv">PRS_SECURITY_AUDIENCE</span><span class="o">=</span>peresvet-api
+<span class="nv">PRS_SECURITY_ISSUER</span><span class="o">=</span>https://keycloak.example.com/realms/peresvet
+</pre></div>
+</div>
+<p>Рекомендуемые режимы:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">audit</span></code> — считать решения и писать аудит, но не блокировать;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enforce</span></code> — блокировать denied-запросы;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">disabled</span></code> — только для диагностики, не для production.</p></li>
+</ul>
+</section>
+<section id="jwt">
+<h2>JWT для пользователей<a class="headerlink" href="#jwt" title="Link to this heading"></a></h2>
+<p>Для интерактивных пользователей:</p>
+<ul class="simple">
+<li><p>flow: OIDC Authorization Code;</p></li>
+<li><p>клиент IdP: <code class="docutils literal notranslate"><span class="pre">peresvet-ui</span></code> или <code class="docutils literal notranslate"><span class="pre">grafana</span></code>;</p></li>
+<li><p>Grafana настраивается через Generic OAuth;</p></li>
+<li><p>API получает <code class="docutils literal notranslate"><span class="pre">Authorization:</span> <span class="pre">Bearer</span> <span class="pre">&lt;access_token&gt;</span></code>.</p></li>
+</ul>
+<p>Минимальные claims:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;sub&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user-uuid&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;preferred_username&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;operator1&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;subject_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;roles&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;operator&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;groups&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;workshop-1&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;allowedObjectRoots&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;object-root-uuid&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;allowedApps&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;scada&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;aud&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;peresvet-api&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;iss&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://keycloak.example.com/realms/peresvet&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="jwt-api">
+<h2>JWT для прямых API-клиентов<a class="headerlink" href="#jwt-api" title="Link to this heading"></a></h2>
+<p>Для интеграций и сервисных клиентов:</p>
+<ul class="simple">
+<li><p>flow: OAuth2 Client Credentials;</p></li>
+<li><p>отдельный client в IdP на каждую интеграцию;</p></li>
+<li><p>короткоживущий access token;</p></li>
+<li><p>scopes и resource attributes выдаются через client claims или token mapper.</p></li>
+</ul>
+<p>Пример:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;sub&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;service:mes-importer&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;client_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mes-importer&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;subject_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;service&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;scopes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;peresvet:data:read&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;peresvet:data:write&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;allowedObjectRoots&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;object-root-uuid&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;allowedActions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;prsTag.data_get&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;prsTag.data_set&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;tenant&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;plant-a&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;aud&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;peresvet-api&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Legacy API tokens допускаются только как enterprise-функция совместимости. Для
+них необходимо хранить только hash, срок действия, owner, scopes, allowed roots,
+last-used и статус отзыва.</p>
+</section>
+<section id="opa-input">
+<h2>OPA input<a class="headerlink" href="#opa-input" title="Link to this heading"></a></h2>
+<p>Enterprise provider должен преобразовывать <code class="docutils literal notranslate"><span class="pre">AuthorizationInput</span></code> в стабильный
+JSON для PDP.</p>
+<p>Пример для HTTP API:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;subject&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;sub&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user-uuid&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;subject_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;roles&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;operator&quot;</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;allowedObjectRoots&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;object-root-uuid&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;action&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;prsTag.data_set&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;tagIds&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;tag-uuid&quot;</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;resolved&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tag-uuid&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;objectClass&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;prsTag&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;ancestors&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;object-root-uuid&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;unit-uuid&quot;</span><span class="p">],</span>
+<span class="w">        </span><span class="nt">&quot;attrs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;prsActive&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;prsEntityTypeCode&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;prsApp&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;scada&quot;</span><span class="p">]</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;environment&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;ip&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;10.1.2.3&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;method&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;POST&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/v1/data/&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Пример для RabbitMQ consumer:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;subject&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;subject_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;service&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;service&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tags_app_api&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;action&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;amqp.consume&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;service&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tags_app&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;routing_key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;prsTag.app_api.data_set.*&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;environment&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;headers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;x-prs-security-context&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;signed-token&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="rabbitmq">
+<h2>RabbitMQ<a class="headerlink" href="#rabbitmq" title="Link to this heading"></a></h2>
+<p>Для production-инсталляции:</p>
+<ul class="simple">
+<li><p>включить TLS для AMQP;</p></li>
+<li><p>использовать отдельный vhost на окружение;</p></li>
+<li><p>создать отдельного RabbitMQ user для каждого микросервиса;</p></li>
+<li><p>ограничить configure/read/write permissions;</p></li>
+<li><p>запретить использование admin/root credentials в runtime-контейнерах;</p></li>
+<li><p>хранить credentials в Docker/Kubernetes secrets.</p></li>
+</ul>
+<p>Пример принципа разделения:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>tags_app_api:
+  write: prsTag.app_api.*
+  read:  callback queues
+
+tags_app:
+  read:  prsTag.app_api.*
+  write: prsTag.app.*
+
+connectors_mqtt_app:
+  read/write: prsConnector.*, prsTag.app_api.data_set.*
+</pre></div>
+</div>
+<p>Дополнительно enterprise provider должен подписывать AMQP security context в
+<code class="docutils literal notranslate"><span class="pre">amqp_publish_headers</span></code> и проверять его при <code class="docutils literal notranslate"><span class="pre">amqp.consume</span></code>.
+При multi-hop обработке входящий AMQP context доступен следующей публикации
+через <code class="docutils literal notranslate"><span class="pre">environment.amqp_context</span></code>. Provider должен переносить исходный
+<code class="docutils literal notranslate"><span class="pre">actor</span></code>/<code class="docutils literal notranslate"><span class="pre">request_id</span></code> дальше только после проверки подписи, срока действия и
+доверенного сервиса-издателя.</p>
+</section>
+<section id="mqtt">
+<h2>MQTT-коннекторы<a class="headerlink" href="#mqtt" title="Link to this heading"></a></h2>
+<p>Для MQTT-коннекторов:</p>
+<ul class="simple">
+<li><p>TLS/mTLS или отдельные MQTT credentials;</p></li>
+<li><p>отдельные topic/routing-key permissions на каждого коннектора;</p></li>
+<li><p>запрет публикации данных в чужие теги;</p></li>
+<li><p>ABAC-проверка: <code class="docutils literal notranslate"><span class="pre">connectorId</span></code> может писать только в теги, которые реально
+привязаны к этому коннектору в LDAP.</p></li>
+</ul>
+<p>Рекомендуемое правило:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>allow if
+  subject.subject_type == &quot;connector&quot;
+  and action == &quot;prsTag.data_set&quot;
+  and every tagId in resource.tagIds is bound to subject.connectorId
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h2>Порядок внедрения<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Включить IdP и JWT-проверку на gateway.</p></li>
+<li><p>Подключить enterprise provider в режиме <code class="docutils literal notranslate"><span class="pre">audit</span></code>.</p></li>
+<li><p>Настроить OPA policies и тесты политик.</p></li>
+<li><p>Включить HTTP API enforcement для read-only.</p></li>
+<li><p>Включить HTTP API enforcement для write/control операций.</p></li>
+<li><p>Включить RabbitMQ TLS и per-service users.</p></li>
+<li><p>Включить <code class="docutils literal notranslate"><span class="pre">amqp.consume</span></code> enforcement для критичных consumers.</p></li>
+<li><p>Включить MQTT connector identity и topic permissions.</p></li>
+<li><p>Перевести <code class="docutils literal notranslate"><span class="pre">PRS_SECURITY_MODE=enforce</span></code>.</p></li>
+</ol>
+</section>
+<section id="production">
+<h2>Проверки перед production<a class="headerlink" href="#production" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>пользователь без прав получает <code class="docutils literal notranslate"><span class="pre">403</span></code> на CRUD/data/control API;</p></li>
+<li><p>API-клиент с Client Credentials работает без browser/Grafana session;</p></li>
+<li><p>сервис не может публиковать в чужие routing keys;</p></li>
+<li><p>consumer отклоняет сообщение без валидного AMQP security context;</p></li>
+<li><p>коннектор не может писать в непривязанные теги;</p></li>
+<li><p>audit log содержит subject/action/resource/decision/request_id;</p></li>
+<li><p>отказ OPA обрабатывается согласно fail policy: для write/control — fail
+closed.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="security_extension_points.html" class="btn btn-neutral float-left" title="Точки расширения безопасности" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="api.html" class="btn btn-neutral float-right" title="API Платформы Пересвет" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права 2026, ООО Матч Поинт Консалтинг. </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

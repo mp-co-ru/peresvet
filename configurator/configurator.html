@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Конфигуратор модели &mdash; документация МПК-Пересвет 0.4</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sphinxcontrib-httpexample.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/peresvet_middle.png"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=11064190"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../_static/sphinxcontrib-httpexample.js"></script>
+        <script src="../_static/translations.js?v=29b1f277"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="../genindex.html" />
+    <link rel="search" title="Поиск" href="../search.html" />
+    <link rel="next" title="Примеры" href="../examples/examples.html" />
+    <link rel="prev" title="Администрирование" href="../administration.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Логотип"/>
+          </a>
+              <div class="version">
+                0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../description.html">Описание</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../terms.html">Используемые термины</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components.html">Компоненты системы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Установка и запуск</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../administration.html">Администрирование</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Конфигуратор модели</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Первый запуск</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Папки модели</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Объекты</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Теги</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Коннекторы</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Расписания</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Хранилища данных</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id9">Создание новых узлов</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id10">Редактирование свойств узла</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id11">Удаление узла</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id12">Примеры</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Примеры работы с платформой</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security_extension_points.html">Точки расширения безопасности</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security_enterprise_setup.html">Настройка безопасности платной редакции</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">МПК-Пересвет</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Конфигуратор модели</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/configurator/configurator.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="configurator">
+<span id="id1"></span><h1>Конфигуратор модели<a class="headerlink" href="#configurator" title="Link to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Конфигуратор работает с платформой через <a class="reference internal" href="../api.html#api"><span class="std std-ref">API</span></a>.
+Форматы всех команд создания/чтения/обновления/удаления узлов иерархии
+можно найти в документации по указанной ссылке.</p>
+</div>
+<section id="id2">
+<h2>Первый запуск<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<p>Запускаем платформу (<a class="reference internal" href="../installation.html#installation"><span class="std std-ref">Установка и запуск</span></a>).</p>
+<p>Запускаем браузер и в строке адреса пишем: <a class="reference external" href="http://localhost/grafana">http://localhost/grafana</a>.</p>
+<p>При первом запуске вводим имя пользователя <code class="docutils literal notranslate"><span class="pre">admin</span></code>, пароль также <code class="docutils literal notranslate"><span class="pre">admin</span></code>.
+Grafana предложит сменить пароль.</p>
+<figure class="align-default">
+<img alt="Пересвет" src="../_images/01.welcome.png" />
+</figure>
+<p>По умолчанию открывается экран с конфигуратором.</p>
+<figure class="align-default">
+<img alt="Конфигуратор" src="../_images/02.configurator.png" />
+</figure>
+<p>При первом запуске в низ экрана атоматически добавляется панель, которую можно удалить:</p>
+<figure class="align-default">
+<img alt="Дополнительная панель" src="../_images/03.remove_panel.png" />
+</figure>
+</section>
+<section id="id3">
+<h2>Папки модели<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<p>Создаваемая модель объекта и информационной системы имеет иерархическую структуру.</p>
+<p>На верхнем уровне иерархии находятся узлы, в которых создаются экземпляры соответствующих
+<a class="reference internal" href="../terms.html#entity"><span class="std std-ref">сущностей</span></a>.</p>
+<p>Проще освоить работу с конфигуратором на <a class="reference internal" href="../examples/examples.html#examples"><span class="std std-ref">примерах</span></a>.</p>
+<section id="id4">
+<h3>Объекты<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<p>Внутри этой папки создаётся основная иерархия - модель объекта. Иерархия имеет любой уровень
+вложенности и может включать в себя объекты, теги, тревоги, методы.</p>
+</section>
+<section id="id5">
+<h3>Теги<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<p>Наиболее простой случай модели объекта - это линейный список его параметров (тегов).</p>
+<p>В таком случае теги можно создавать, не привязывая их к какому-либо объекту.</p>
+<p>Для этого случая служит отдельная папка <code class="docutils literal notranslate"><span class="pre">Теги</span></code>.</p>
+</section>
+<section id="id6">
+<h3>Коннекторы<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<p>В этой папке создаются описания <a class="reference internal" href="../terms.html#definition-connector"><span class="std std-ref">коннекторов</span></a>.
+Параметры, задаваемые в узле-описании коннектора, зависят от конкретного коннектора.</p>
+</section>
+<section id="id7">
+<h3>Расписания<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<p>Папка для создания расписаний - генераторов событий.</p>
+</section>
+<section id="id8">
+<h3>Хранилища данных<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<p>Папка, в которой хранятся описания хранилищ данных.
+Исторические данные, факты возникновения, пропадания
+и квитирования тревог хранятся в этих хранилищах.</p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Открытая версия платформы «Пересвет» поддерживает работу только с одним хранилищем,
+поэтому в конфигураторе для открытой платформы отсутствует узел «Хранилища данных».</p>
+</div>
+</section>
+</section>
+<section id="id9">
+<h2>Создание новых узлов<a class="headerlink" href="#id9" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Выбираем нужный узел, внутри которого хотим создать дочерний.</p></li>
+<li><p>Выбираем нужную синюю кнопку и, нажав её, создаём новый экземпляр необходимой нам сущности.</p></li>
+</ol>
+<figure class="align-default">
+<img alt="../_images/04.new_node.png" src="../_images/04.new_node.png" />
+</figure>
+<p>После нажатия кнопки в иерархию добавится новый экземпляр выбранной сущности.
+Узел в иерархии, соответствующий данному экземпляру, станет текущим и справа появится панель
+со свойствами нового узла.</p>
+<p>Кроме того, изменится набор кнопок в верхней части конфигуратора.</p>
+<p><strong>Синие кнопки</strong> показывают, экземпляры каких сущностей могут быть созданы внутри выбранного узла.</p>
+<p>Например: внутри объекта могут быть созданы другие объекты или теги; внутри тега могут быть созданы
+методы и тревоги.</p>
+<figure class="align-default" id="id13">
+<img alt="../_images/06.but_new_object.png" src="../_images/06.but_new_object.png" />
+<figcaption>
+<p><span class="caption-text">Новый объект</span><a class="headerlink" href="#id13" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-default" id="id14">
+<img alt="../_images/07.but_new_tag.png" src="../_images/07.but_new_tag.png" />
+<figcaption>
+<p><span class="caption-text">Новый тег</span><a class="headerlink" href="#id14" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-default" id="id15">
+<img alt="../_images/08.but_delete.png" src="../_images/08.but_delete.png" />
+<figcaption>
+<p><span class="caption-text"><strong>Красная кнопка</strong> - удаление выбранного узла из иерархии.</span><a class="headerlink" href="#id15" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-default">
+<img alt="../_images/05.new_object_created.png" src="../_images/05.new_object_created.png" />
+</figure>
+<p>При создании нового узла в иерархии с помощью конфигуратора он создаётся с параметрами по умолчанию.
+Поэтому имя нового узла совпадает с его идентификатором.</p>
+</section>
+<section id="id10">
+<h2>Редактирование свойств узла<a class="headerlink" href="#id10" title="Link to this heading"></a></h2>
+<p>На панели справа редактируем свойства узла. При этом изменённые свойства обводятся синей рамкой.</p>
+<p>Если у узла изменено хотя бы одно свойство, то активизируются две кнопки:</p>
+<p><strong>Записать</strong> - сохранение в модели изменённых свойств и</p>
+<p><strong>Сбросить</strong> - отмена внесённых изменений, возврат к начальным параметрам.</p>
+<figure class="align-default">
+<img alt="../_images/09.edit.png" src="../_images/09.edit.png" />
+</figure>
+<p>Нажимаем кнопку <strong>Записать</strong>:</p>
+<figure class="align-default">
+<img alt="../_images/10.changes_saved.png" src="../_images/10.changes_saved.png" />
+</figure>
+</section>
+<section id="id11">
+<h2>Удаление узла<a class="headerlink" href="#id11" title="Link to this heading"></a></h2>
+<p>Выбираем нужный узел в иерархии и нажимаем красную кнопку:</p>
+<figure class="align-default">
+<img alt="../_images/08.but_delete.png" src="../_images/08.but_delete.png" />
+</figure>
+<p>Из иерархии удаляется узел и все его потомки.</p>
+</section>
+<section id="id12">
+<h2>Примеры<a class="headerlink" href="#id12" title="Link to this heading"></a></h2>
+<p>Работу в конфигураторе с отдельными сущностями проще освоить на <a class="reference internal" href="../examples/examples.html#examples"><span class="std std-ref">примерах</span></a>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="../administration.html" class="btn btn-neutral float-left" title="Администрирование" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="../examples/examples.html" class="btn btn-neutral float-right" title="Примеры" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права 2026, ООО Матч Поинт Консалтинг. </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

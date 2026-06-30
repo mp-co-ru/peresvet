@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Точки расширения безопасности &mdash; документация МПК-Пересвет 0.4</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sphinxcontrib-httpexample.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=11064190"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/sphinxcontrib-httpexample.js"></script>
+        <script src="_static/translations.js?v=29b1f277"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Настройка безопасности платной редакции" href="security_enterprise_setup.html" />
+    <link rel="prev" title="Интеграционные хранилища и операции (API v2)" href="integrational_v2.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Логотип"/>
+          </a>
+              <div class="version">
+                0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="description.html">Описание</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terms.html">Используемые термины</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка и запуск</a></li>
+<li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Примеры работы с платформой</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Точки расширения безопасности</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Переменная окружения</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Контекст запроса</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rabbitmq">Контекст RabbitMQ</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">Типы действий</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">Назначение</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка безопасности платной редакции</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">МПК-Пересвет</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Точки расширения безопасности</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/security_extension_points.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="id1">
+<h1>Точки расширения безопасности<a class="headerlink" href="#id1" title="Link to this heading"></a></h1>
+<p>Бесплатная редакция МПК-Пересвет сохраняет прежнее поведение API: если
+специальный поставщик авторизации не настроен, все действия разрешены. Это
+сделано для того, чтобы базовая функциональность не зависела от внешнего
+Identity Provider, OPA или других enterprise-компонентов.</p>
+<p>При этом в ядре есть нейтральная точка расширения для редакций и продуктов,
+которые должны подключать собственную авторизацию.</p>
+<section id="id2">
+<h2>Переменная окружения<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<p>По умолчанию используется разрешающий поставщик:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">PRS_AUTH_PROVIDER</span><span class="o">=</span>
+</pre></div>
+</div>
+<p>Платная редакция может указать Python-объект в формате <code class="docutils literal notranslate"><span class="pre">module:attribute</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">PRS_AUTH_PROVIDER</span><span class="o">=</span>enterprise_security.opa_provider:OpaAuthorizationProvider
+</pre></div>
+</div>
+<p>Объект должен реализовать асинхронный метод:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">authorize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">AuthorizationInput</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AuthorizationDecision</span><span class="p">:</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>Если <code class="docutils literal notranslate"><span class="pre">authorize</span></code> возвращает <code class="docutils literal notranslate"><span class="pre">AuthorizationDecision(allow=False)</span></code>, API
+возвращает HTTP <code class="docutils literal notranslate"><span class="pre">403</span></code>.</p>
+<p>Для промышленной платной редакции, где микросервисы могут работать в разных
+контейнерах и на разных серверах, тот же поставщик может реализовать
+дополнительный метод:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">amqp_publish_headers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">AuthorizationInput</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>Этот метод позволяет добавить в исходящее RabbitMQ-сообщение подписанный
+контекст безопасности через AMQP headers, не меняя JSON-тело сообщения и не
+ломая совместимость бесплатной редакции.</p>
+</section>
+<section id="id3">
+<h2>Контекст запроса<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<p>Во время обработки HTTP-запроса ядро сохраняет текущий <code class="docutils literal notranslate"><span class="pre">Request</span></code> в
+context variable. Enterprise-поставщик может использовать его, чтобы прочитать:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Authorization:</span> <span class="pre">Bearer</span> <span class="pre">...</span></code>;</p></li>
+<li><p>IP-адрес клиента;</p></li>
+<li><p>путь и HTTP-метод;</p></li>
+<li><p>служебные заголовки reverse proxy.</p></li>
+</ul>
+<p>Middleware подключается как к отдельным сервисным FastAPI-приложениям, так и к
+агрегированному <code class="docutils literal notranslate"><span class="pre">one_app</span></code>. Поэтому enterprise provider получает контекст
+запроса и при запуске микросервисов по отдельности, и при запуске платформы в
+одном приложении.</p>
+</section>
+<section id="rabbitmq">
+<h2>Контекст RabbitMQ<a class="headerlink" href="#rabbitmq" title="Link to this heading"></a></h2>
+<p>При публикации внутренних сообщений ядро вызывает <code class="docutils literal notranslate"><span class="pre">amqp_publish_headers</span></code> с
+действием <code class="docutils literal notranslate"><span class="pre">amqp.publish</span></code> и ресурсом вида:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">   </span><span class="nt">&quot;service&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tags_app_api&quot;</span><span class="p">,</span>
+<span class="w">   </span><span class="nt">&quot;routing_key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;prsTag.app_api.data_set.*&quot;</span><span class="p">,</span>
+<span class="w">   </span><span class="nt">&quot;reply&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Платная редакция может вернуть, например, заголовок с подписанным actor/request
+context. Бесплатная редакция возвращает пустой набор заголовков.</p>
+<p>Поле <code class="docutils literal notranslate"><span class="pre">service</span></code> — имя сервиса-издателя из его конфигурации. Это позволяет
+платной редакции строить service identity поверх RabbitMQ credentials, mTLS или
+service JWT.</p>
+<p>Если сервис обрабатывает входящее RabbitMQ-сообщение и в процессе handler-а
+публикует следующее сообщение, <code class="docutils literal notranslate"><span class="pre">amqp_publish_headers</span></code> получает в
+<code class="docutils literal notranslate"><span class="pre">environment.amqp_context</span></code> контекст исходного сообщения: сервис-потребитель,
+routing key, headers, <code class="docutils literal notranslate"><span class="pre">reply_to</span></code> и <code class="docutils literal notranslate"><span class="pre">correlation_id</span></code>. Это нужно для
+multi-hop цепочек:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>HTTP API -&gt; service A -&gt; RabbitMQ -&gt; service B -&gt; RabbitMQ -&gt; service C
+</pre></div>
+</div>
+<p>Платный provider может использовать этот context для переноса исходного actor-а
+и request id через всю цепочку внутренних сервисов.</p>
+<p>При получении сообщения из RabbitMQ ядро вызывает <code class="docutils literal notranslate"><span class="pre">authorize</span></code> с действием
+<code class="docutils literal notranslate"><span class="pre">amqp.consume</span></code> до передачи сообщения конкретному handler-у. В <code class="docutils literal notranslate"><span class="pre">resource</span></code>
+попадает имя сервиса-потребителя, routing key, <code class="docutils literal notranslate"><span class="pre">reply_to</span></code> и
+<code class="docutils literal notranslate"><span class="pre">correlation_id</span></code>, а в <code class="docutils literal notranslate"><span class="pre">environment</span></code> — AMQP headers. Если поставщик вернёт <code class="docutils literal notranslate"><span class="pre">allow=False</span></code>, сообщение не
+обрабатывается; для RPC-запросов отправляется ответ с ошибкой <code class="docutils literal notranslate"><span class="pre">403</span></code>.</p>
+<p>RPC-ответы также проходят через extension points:</p>
+<ul class="simple">
+<li><p>при отправке ответа handler-а вызывается <code class="docutils literal notranslate"><span class="pre">amqp_publish_headers</span></code>;</p></li>
+<li><p>при получении ответа callback-очередью вызывается <code class="docutils literal notranslate"><span class="pre">authorize</span></code> с
+<code class="docutils literal notranslate"><span class="pre">amqp.consume</span></code>;</p></li>
+<li><p>если enterprise provider запрещает RPC-ответ, ожидающий вызов получает
+error payload с кодом <code class="docutils literal notranslate"><span class="pre">403</span></code>.</p></li>
+</ul>
+<p>Эти hooks нужны именно для распределённой платной инсталляции, где микросервисы
+могут находиться в разных контейнерах и на разных серверах, а RabbitMQ является
+основным внутренним каналом связи.</p>
+</section>
+<section id="id4">
+<h2>Типы действий<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<p>Базовые CRUD-сервисы вызывают авторизацию с действиями вида:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">prsObject.create</span></code> / <code class="docutils literal notranslate"><span class="pre">prsObject.read</span></code> / <code class="docutils literal notranslate"><span class="pre">prsObject.update</span></code> /
+<code class="docutils literal notranslate"><span class="pre">prsObject.delete</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prsTag.create</span></code> / <code class="docutils literal notranslate"><span class="pre">prsTag.read</span></code> / <code class="docutils literal notranslate"><span class="pre">prsTag.update</span></code> /
+<code class="docutils literal notranslate"><span class="pre">prsTag.delete</span></code>;</p></li>
+<li><p>аналогично для <code class="docutils literal notranslate"><span class="pre">prsAlert</span></code>, <code class="docutils literal notranslate"><span class="pre">prsMethod</span></code>, <code class="docutils literal notranslate"><span class="pre">prsConnector</span></code>,
+<code class="docutils literal notranslate"><span class="pre">prsDataStorage</span></code>, <code class="docutils literal notranslate"><span class="pre">prsSchedule</span></code>.</p></li>
+<li><p>copy-операции используют действия вида <code class="docutils literal notranslate"><span class="pre">prsObject.copy</span></code>,
+<code class="docutils literal notranslate"><span class="pre">prsTag.copy</span></code>, <code class="docutils literal notranslate"><span class="pre">prsAlert.copy</span></code>, <code class="docutils literal notranslate"><span class="pre">prsMethod.copy</span></code>,
+<code class="docutils literal notranslate"><span class="pre">prsConnector.copy</span></code>.</p></li>
+</ul>
+<p>Операционные API вызывают отдельные действия:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">prsTag.data_get</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prsTag.data_set</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prsAlert.alarm_read</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prsAlert.alarm_ack</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prsConnector.connector_command</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prsConnector.connector_log_read</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prsConnector.service_log_read</span></code>.</p></li>
+</ul>
+<p>Внутренний контур RabbitMQ использует действия:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">amqp.publish</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">amqp.consume</span></code>.</p></li>
+</ul>
+</section>
+<section id="id5">
+<h2>Назначение<a class="headerlink" href="#id5" title="Link to this heading"></a></h2>
+<p>Эта точка расширения предназначена для платной редакции, где поверх базового
+ядра подключаются:</p>
+<ul class="simple">
+<li><p>аутентификация пользователей и API-клиентов;</p></li>
+<li><p>ABAC/PBAC-политики;</p></li>
+<li><p>обращение к внешнему PDP, например Open Policy Agent;</p></li>
+<li><p>аудит решений авторизации;</p></li>
+<li><p>привязка прав к LDAP-иерархии объектов, тегов, тревог и коннекторов.</p></li>
+</ul>
+<p>Бесплатная редакция не содержит политик и не включает enforcement без явного
+подключения внешнего поставщика.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="integrational_v2.html" class="btn btn-neutral float-left" title="Интеграционные хранилища и операции (API v2)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="security_enterprise_setup.html" class="btn btn-neutral float-right" title="Настройка безопасности платной редакции" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права 2026, ООО Матч Поинт Консалтинг. </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

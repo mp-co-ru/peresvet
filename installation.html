@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Установка и запуск &mdash; документация МПК-Пересвет 0.4</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sphinxcontrib-httpexample.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=11064190"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/sphinxcontrib-httpexample.js"></script>
+        <script src="_static/translations.js?v=29b1f277"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Администрирование" href="administration.html" />
+    <link rel="prev" title="Исторические данные" href="historical_data.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Логотип"/>
+          </a>
+              <div class="version">
+                0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="description.html">Описание</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terms.html">Используемые термины</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Установка и запуск</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Системные требования</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">Установка из продуктового дистрибутива</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#env">Файл <code class="docutils literal notranslate"><span class="pre">.env</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Зеркало базовых образов</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#https">HTTPS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">Установка из исходников (для разработки)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">Сборка продуктового дистрибутива</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id8">Остановка платформы</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Примеры работы с платформой</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_extension_points.html">Точки расширения безопасности</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка безопасности платной редакции</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">МПК-Пересвет</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Установка и запуск</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/installation.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="installation">
+<span id="id1"></span><h1>Установка и запуск<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
+<section id="id2">
+<h2>Системные требования<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Ubuntu 22.04 (или совместимый Linux с Docker Engine).</p></li>
+<li><p><a class="reference external" href="https://docs.docker.com/engine/install/">Docker</a> с плагином <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code>.
+Для Docker не забудьте выполнить
+<a class="reference external" href="https://docs.docker.com/engine/install/linux-postinstall/">настройку</a>.</p></li>
+<li><p>Для установки из исходников — <a class="reference external" href="https://git-scm.com/">Git</a>.</p></li>
+</ol>
+<p>После запуска поднимаются компоненты: RabbitMQ, OpenLDAP, PostgreSQL, ядро
+платформы и Grafana.</p>
+</section>
+<section id="id4">
+<h2>Установка из продуктового дистрибутива<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<p>Рекомендуемый способ для конечного пользователя. Архив <code class="docutils literal notranslate"><span class="pre">peresvet-product-&lt;tag&gt;.tar.gz</span></code>
+публикуется в <a class="reference external" href="https://github.com/Vovaman/peresvet/releases">GitHub Release</a>.
+В архив входят Docker Compose-файлы, исходники runtime-сервисов, конфигурация,
+PDF-документация, скрипт <code class="docutils literal notranslate"><span class="pre">./run_one_app.sh</span></code>, файл <code class="docutils literal notranslate"><span class="pre">.env</span></code> с настройками по
+умолчанию и список базовых образов <code class="docutils literal notranslate"><span class="pre">packaging/required-images.manifest</span></code>.</p>
+<p>Распаковка и запуск:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>tar<span class="w"> </span>-xzf<span class="w"> </span>peresvet-product-&lt;tag&gt;.tar.gz
+$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>peresvet-product-&lt;tag&gt;
+$<span class="w"> </span>./run_one_app.sh
+</pre></div>
+</div>
+<section id="env">
+<h3>Файл <code class="docutils literal notranslate"><span class="pre">.env</span></code><a class="headerlink" href="#env" title="Link to this heading"></a></h3>
+<p>Параметры по умолчанию задаются в файле <code class="docutils literal notranslate"><span class="pre">.env</span></code> в корне распакованного архива.
+Перед первым запуском при необходимости отредактируйте его:</p>
+<div class="highlight-env notranslate"><div class="highlight"><pre><span></span>PRS_REGISTRY_MIRROR=10.14.143.57:5000
+PRS_HOSTNAME=
+PRS_SSL=false
+PRS_BUILD=false
+PRS_SKIP_IMAGE_PULL=0
+</pre></div>
+</div>
+<p>Приоритет настроек: <code class="docutils literal notranslate"><span class="pre">.env</span></code> → переменные окружения shell → аргументы CLI
+(<code class="docutils literal notranslate"><span class="pre">--hostname</span></code>, <code class="docutils literal notranslate"><span class="pre">--mirror</span></code> и т.д.).</p>
+<p>Примеры:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./run_one_app.sh<span class="w"> </span>--hostname<span class="w"> </span>prod-oee
+$<span class="w"> </span>./run_one_app.sh<span class="w"> </span>--build<span class="w"> </span><span class="nb">true</span>
+$<span class="w"> </span>./run_one_app.sh<span class="w"> </span>--mirror<span class="w"> </span>mirror.example.com:5000
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Зеркало базовых образов<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<p>Дистрибутив <strong>не содержит</strong> Docker-образы. При установке <code class="docutils literal notranslate"><span class="pre">./run_one_app.sh</span></code>
+проверяет наличие базовых образов локально и скачивает только отсутствующие.</p>
+<p>Если Docker Hub недоступен, укажите <strong>зеркало образов продукта</strong> — registry,
+на котором заранее опубликован фиксированный набор образов, необходимых для
+работы платформы. Адрес задаётся в <code class="docutils literal notranslate"><span class="pre">PRS_REGISTRY_MIRROR</span></code> (файл <code class="docutils literal notranslate"><span class="pre">.env</span></code>) или
+ключом <code class="docutils literal notranslate"><span class="pre">--mirror</span></code>.</p>
+<div class="admonition important">
+<p class="admonition-title">Важно</p>
+<p><strong>Не</strong> добавляйте адрес зеркала в <code class="docutils literal notranslate"><span class="pre">registry-mirrors</span></code> файла
+<code class="docutils literal notranslate"><span class="pre">/etc/docker/daemon.json</span></code>. Такая настройка перенаправляет <strong>все</strong> обращения
+к <code class="docutils literal notranslate"><span class="pre">docker.io</span></code> на указанный registry, в том числе при последующих ручных
+<code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">pull</span></code> посторонних образов. Скрипт <code class="docutils literal notranslate"><span class="pre">./run_one_app.sh</span></code> обращается к
+зеркалу <strong>явно</strong> и не меняет глобальное поведение Docker на хосте.</p>
+</div>
+<p>Список базовых образов — в <code class="docutils literal notranslate"><span class="pre">packaging/required-images.manifest</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>redis/redis-stack:7.2.0-v6
+rabbitmq:4.1.1-management
+postgres:16.1
+python:3.12-slim
+osixia/openldap
+grafana/grafana-enterprise:12.4.0-22081664032-ubuntu
+nginx:1.25.3-alpine-slim
+</pre></div>
+</div>
+<p>На зеркале каждый образ должен быть доступен по тому же пути и тегу, например:
+<code class="docutils literal notranslate"><span class="pre">10.14.143.57:5000/postgres:16.1</span></code>.</p>
+<p>Для HTTP-зеркала (без TLS) добавьте хост в <code class="docutils literal notranslate"><span class="pre">insecure-registries</span></code> в
+<code class="docutils literal notranslate"><span class="pre">/etc/docker/daemon.json</span></code> — это <strong>не</strong> то же самое, что <code class="docutils literal notranslate"><span class="pre">registry-mirrors</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;insecure-registries&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;10.14.143.57:5000&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>После изменения перезапустите Docker: <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">systemctl</span> <span class="pre">restart</span> <span class="pre">docker</span></code>.</p>
+<p>Чтобы отключить зеркало и использовать Docker Hub, очистите переменную в <code class="docutils literal notranslate"><span class="pre">.env</span></code>:</p>
+<div class="highlight-env notranslate"><div class="highlight"><pre><span></span>PRS_REGISTRY_MIRROR=
+</pre></div>
+</div>
+<p>Если все образы уже загружены на сервер:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">PRS_SKIP_IMAGE_PULL</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>./run_one_app.sh
+</pre></div>
+</div>
+<p>Локальные секреты (например, <code class="docutils literal notranslate"><span class="pre">GRAFANA_SERVICE_ACCOUNT_TOKEN</span></code>) можно вынести в
+<code class="docutils literal notranslate"><span class="pre">docker/compose/.cont_one_app.secrets.env</span></code> — шаблон:
+<code class="docutils literal notranslate"><span class="pre">docker/compose/.cont_one_app.secrets.env.example</span></code>.</p>
+</section>
+<section id="https">
+<h3>HTTPS<a class="headerlink" href="#https" title="Link to this heading"></a></h3>
+<p>HTTPS включается <code class="docutils literal notranslate"><span class="pre">PRS_SSL=true</span></code> в <code class="docutils literal notranslate"><span class="pre">.env</span></code> или <code class="docutils literal notranslate"><span class="pre">--ssl</span> <span class="pre">true</span></code>. Серверный
+сертификат должен быть подготовлен до запуска; подробности — в README репозитория
+(раздел «Запуск HTTPS-варианта»).</p>
+</section>
+</section>
+<section id="id6">
+<h2>Установка из исходников (для разработки)<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
+<ol class="arabic">
+<li><p>Клонируйте проект:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:mp-co-ru/mpc-peresvet.git
+</pre></div>
+</div>
+</li>
+<li><p>Перейдите в каталог и при необходимости настройте <code class="docutils literal notranslate"><span class="pre">.env</span></code> (см. выше).</p></li>
+<li><p>Запустите платформу:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./run_one_app.sh
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="id7">
+<h2>Сборка продуктового дистрибутива<a class="headerlink" href="#id7" title="Link to this heading"></a></h2>
+<p>Для подготовки архива релиза (из корня репозитория):</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./packaging/build_product_distribution.sh
+$<span class="w"> </span>./packaging/build_product_distribution.sh<span class="w"> </span>--output<span class="w"> </span>dist/peresvet-product-&lt;tag&gt;.tar.gz
+</pre></div>
+</div>
+<p>Архив создаётся в каталоге <code class="docutils literal notranslate"><span class="pre">dist/</span></code>. При push тега на ветку <code class="docutils literal notranslate"><span class="pre">main</span></code> сборка
+выполняется workflow <code class="docutils literal notranslate"><span class="pre">.github/workflows/product_distribution.yml</span></code> и прикрепляется
+к GitHub Release.</p>
+</section>
+<section id="id8">
+<h2>Остановка платформы<a class="headerlink" href="#id8" title="Link to this heading"></a></h2>
+<p>Остановите контейнеры, например:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>-f<span class="w"> </span>docker/compose/docker-compose.redis.yml<span class="w"> </span>down
+$<span class="w"> </span><span class="c1"># или остановите все контейнеры проекта compose вручную</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="historical_data.html" class="btn btn-neutral float-left" title="Исторические данные" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="administration.html" class="btn btn-neutral float-right" title="Администрирование" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права 2026, ООО Матч Поинт Консалтинг. </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

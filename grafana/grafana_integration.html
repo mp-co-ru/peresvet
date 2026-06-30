@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Создание экранов в Grafana &mdash; документация МПК-Пересвет 0.4</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sphinxcontrib-httpexample.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/peresvet_middle.png"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=11064190"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../_static/sphinxcontrib-httpexample.js"></script>
+        <script src="../_static/translations.js?v=29b1f277"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="../genindex.html" />
+    <link rel="search" title="Поиск" href="../search.html" />
+    <link rel="next" title="Интеграционные хранилища и операции (API v2)" href="../integrational_v2.html" />
+    <link rel="prev" title="Примеры" href="../examples/examples.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Логотип"/>
+          </a>
+              <div class="version">
+                0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../description.html">Описание</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../terms.html">Используемые термины</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components.html">Компоненты системы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Установка и запуск</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../administration.html">Администрирование</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configurator/configurator.html">Конфигуратор модели</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Примеры работы с платформой</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Создание экранов в Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security_extension_points.html">Точки расширения безопасности</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security_enterprise_setup.html">Настройка безопасности платной редакции</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">МПК-Пересвет</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Создание экранов в Grafana</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/grafana/grafana_integration.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="grafana">
+<h1>Создание экранов в Grafana<a class="headerlink" href="#grafana" title="Link to this heading"></a></h1>
+<ol class="arabic">
+<li><p>Установим платформу: <a class="reference internal" href="../installation.html#installation"><span class="std std-ref">Установка и запуск</span></a>.</p></li>
+<li><p>Запускаем на исполнение скрипт <code class="docutils literal notranslate"><span class="pre">./run_one_app.sh</span></code>.</p></li>
+<li><p>Создаём какую-либо модель (см. примеры: <a class="reference internal" href="../examples/examples.html#examples"><span class="std std-ref">Примеры</span></a>).</p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Каждый пример содержит описание того, как отображать данные в Grafana.</p>
+</div>
+</li>
+<li><p>Открываем браузер и в строке адреса вводим:
+<code class="docutils literal notranslate"><span class="pre">http://&lt;имя</span> <span class="pre">вашего</span> <span class="pre">компьютера&gt;/grafana</span></code>.</p>
+<p>В качестве имени пользователя и пароля введите <code class="docutils literal notranslate"><span class="pre">admin</span></code>.
+При первом входе будет предложено сменить пароль.</p>
+</li>
+<li><p>Регистрируем в Grafana платформу как новый источник данных,
+для чего открываем меню и выбираем команду <code class="docutils literal notranslate"><span class="pre">Add</span> <span class="pre">new</span> <span class="pre">connection</span></code>:</p>
+<img alt="../_images/01.add_new_connection.png" src="../_images/01.add_new_connection.png" />
+</li>
+<li><p>В появившемся списке плагинов выбираем «JSON API»:</p>
+<img alt="../_images/02.json_api.png" src="../_images/02.json_api.png" />
+<p>…устанавливаем его:</p>
+<img alt="../_images/03.install_json_api.png" src="../_images/03.install_json_api.png" />
+<p>…и создаём на его базе новый источник данных:</p>
+<img alt="../_images/04.add_new_ds.png" src="../_images/04.add_new_ds.png" />
+<p>…конфигурируем источник данных (имя источника может быть любым,
+имя сервера в URL замените на имя вашего компьютера):</p>
+<img alt="../_images/05.setup_ds.png" src="../_images/05.setup_ds.png" />
+<p>В завершении нажимаем кнопку «Save &amp; test»:</p>
+<img alt="../_images/06.save_and_test.png" src="../_images/06.save_and_test.png" />
+</li>
+<li><p>Допустим, в нашей модели есть тег с идентификатором <code class="docutils literal notranslate"><span class="pre">58993cd8-f3e9-103e-97a9-c54148266c5f</span></code>,
+для которого в исторической базе данных накоплены данные. Тогда для создания тренда для
+этого тега выполним следующие шаги…</p></li>
+<li><p>Создаём новый экран:</p>
+<img alt="../_images/07.new_dashboard.png" src="../_images/07.new_dashboard.png" />
+<p>…и новую панель:</p>
+<img alt="../_images/08.new_panel.png" src="../_images/08.new_panel.png" />
+<p>В появившемся окне выберем созданный нами источник данных:</p>
+<img alt="../_images/09.select_ds.png" src="../_images/09.select_ds.png" />
+</li>
+<li><p>Откроется окно настройки панели с выбранным источником данных
+и нужным нам типом панели - «Time Series»:</p>
+<img alt="../_images/10.panel_settings.png" src="../_images/10.panel_settings.png" />
+</li>
+<li><p>Настроим параметр <code class="docutils literal notranslate"><span class="pre">Path</span></code>:</p>
+<img alt="../_images/11.set_path.png" src="../_images/11.set_path.png" />
+</li>
+<li><p>Создадим новый параметр во вкладке <code class="docutils literal notranslate"><span class="pre">Params</span></code> (параметр, включаемый в URL запроса).
+Назовём параметр <code class="docutils literal notranslate"><span class="pre">q</span></code>, а в качестве его значения укажем строку:</p>
+<p><code class="docutils literal notranslate"><span class="pre">{&quot;tagId&quot;:&quot;58993cd8-f3e9-103e-97a9-c54148266c5f&quot;,&quot;format&quot;:true,&quot;start&quot;:&quot;$__isoFrom()&quot;,&quot;finish&quot;:&quot;$__isoTo()&quot;}</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Подробно запрос к платформе на получение данных описан в разделе
+<a class="reference internal" href="../data_api.html#data-api"><span class="std std-ref">Данные</span></a></p>
+</div>
+<p>Заметим, что в запросе указаны функции Grafana - <code class="docutils literal notranslate"><span class="pre">__isoFrom()</span></code> и <code class="docutils literal notranslate"><span class="pre">__isoTo()</span></code>.
+Эти функции возвращают, соответственно, начало и конец выбранного пользователем на dashboard’е
+периода.</p>
+<img alt="../_images/12.set_params.png" src="../_images/12.set_params.png" />
+</li>
+<li><p>Для проверки того, что платформа возвращает данные, нажмём кнопку <code class="docutils literal notranslate"><span class="pre">Query</span> <span class="pre">inspector</span></code>:</p>
+<img alt="../_images/13.query_inspector.png" src="../_images/13.query_inspector.png" />
+<p>…затем <code class="docutils literal notranslate"><span class="pre">Refresh</span></code>:</p>
+<img alt="../_images/14.refresh.png" src="../_images/14.refresh.png" />
+<p>…и убедимся, что платформа возвращает данные:</p>
+<img alt="../_images/15.got_data.png" src="../_images/15.got_data.png" />
+</li>
+<li><p>Теперь нам необходимо объяснить графане, как из полученного массива данных
+выбрать необходимые.</p>
+<p>Для этого переходим в закладку <code class="docutils literal notranslate"><span class="pre">Fields</span></code> и настраиваем её так, как показано на рисунке:</p>
+<img alt="../_images/16.fields.png" src="../_images/16.fields.png" />
+<p>Здесь верхнее поле - это значения тега, которые необходимо отобразить (синтаксис JSONPath),
+нижнее - метка времени.</p>
+</li>
+<li><p>Нажимаем кнопку <code class="docutils literal notranslate"><span class="pre">Apply</span></code> и видим тренд с данными тега:</p>
+<img alt="../_images/17.trend.png" src="../_images/17.trend.png" />
+</li>
+<li><p>Можно менять периоды, выбирать частоту обновления экрана, данные будут отображаться корректно:</p></li>
+</ol>
+<blockquote>
+<div><img alt="../_images/18.periods.png" src="../_images/18.periods.png" />
+</div></blockquote>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="../examples/examples.html" class="btn btn-neutral float-left" title="Примеры" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="../integrational_v2.html" class="btn btn-neutral float-right" title="Интеграционные хранилища и операции (API v2)" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права 2026, ООО Матч Поинт Консалтинг. </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Администрирование &mdash; документация МПК-Пересвет 0.4</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sphinxcontrib-httpexample.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=11064190"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/sphinxcontrib-httpexample.js"></script>
+        <script src="_static/translations.js?v=29b1f277"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Конфигуратор модели" href="configurator/configurator.html" />
+    <link rel="prev" title="Установка и запуск" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Логотип"/>
+          </a>
+              <div class="version">
+                0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="description.html">Описание</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terms.html">Используемые термины</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка и запуск</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Администрирование</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#docker">Резервное копирование всех работающих Docker-контейнеров</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Что попадает в архив</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Создание архива</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Восстановление</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#openldap">Резервное копирование и восстановление OpenLDAP</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Запуск из корня проекта</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Формат параметров</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ldap-volume-backup-sh">Параметры: <code class="docutils literal notranslate"><span class="pre">ldap_volume_backup.sh</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ldap-volume-restore-sh">Параметры: <code class="docutils literal notranslate"><span class="pre">ldap_volume_restore.sh</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Примеры</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#resolve-ldap-storage-py">Вспомогательный <code class="docutils literal notranslate"><span class="pre">resolve_ldap_storage.py</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Примеры работы с платформой</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_extension_points.html">Точки расширения безопасности</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка безопасности платной редакции</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">МПК-Пересвет</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Администрирование</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/administration.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="administration">
+<span id="id1"></span><h1>Администрирование<a class="headerlink" href="#administration" title="Link to this heading"></a></h1>
+<p>Раздел описывает операции сопровождения развёртывания, не относящиеся к
+повседневной работе с моделью в конфигураторе.</p>
+<section id="docker">
+<span id="administration-docker-runtime-backup"></span><h2>Резервное копирование всех работающих Docker-контейнеров<a class="headerlink" href="#docker" title="Link to this heading"></a></h2>
+<p>Для переноса или аварийного восстановления всей текущей Docker-развёртки
+предусмотрены shell-скрипты в <code class="docutils literal notranslate"><span class="pre">admin_scripts/docker/</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">running_containers_backup.sh</span></code> — создаёт единый <code class="docutils literal notranslate"><span class="pre">.tar.gz</span></code> архив всех
+контейнеров из <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">ps</span></code> и их хранилищ;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">running_containers_restore.sh</span></code> — загружает образы, восстанавливает
+хранилища и запускает контейнеры из архива.</p></li>
+</ul>
+<p>Скрипты работают по текущему состоянию Docker, а не по списку compose-файлов.
+Поэтому в архив попадают не только контейнеры Пересвета, но и дополнительные
+контейнеры, запущенные в рамках проекта.</p>
+<section id="id2">
+<h3>Что попадает в архив<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">running_containers_backup.sh</span></code> сохраняет:</p>
+<ul class="simple">
+<li><p>committed-образы всех работающих контейнеров;</p></li>
+<li><p>данные всех Docker volumes, смонтированных в эти контейнеры;</p></li>
+<li><p>данные bind mount-путей с хоста (если не задан <code class="docutils literal notranslate"><span class="pre">--no_bind_mounts=1</span></code>);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">inspect</span></code> metadata контейнеров, образов, volumes и сетей;</p></li>
+<li><p>сгенерированный <code class="docutils literal notranslate"><span class="pre">sh</span></code>-фрагмент с командами повторного запуска контейнеров.</p></li>
+</ul>
+<p>По умолчанию перед копированием хранилищ контейнеры останавливаются и после
+копирования запускаются обратно. Это уменьшает риск неконсистентного архива
+для PostgreSQL, LDAP, RabbitMQ и других сервисов с записью на диск. Режим
+<code class="docutils literal notranslate"><span class="pre">--skip_stop=1</span></code> оставляет контейнеры работающими, но архив может оказаться
+логически неконсистентным.</p>
+</section>
+<section id="id3">
+<h3>Создание архива<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<p>Скрипты в <code class="docutils literal notranslate"><span class="pre">admin_scripts/docker/</span></code> <strong>нужно запускать из корня проекта</strong>
+(каталог с <code class="docutils literal notranslate"><span class="pre">docker/compose/</span></code>, <code class="docutils literal notranslate"><span class="pre">admin_scripts/</span></code> и т.д.). Текущий каталог
+проверяется по <code class="docutils literal notranslate"><span class="pre">pwd</span> <span class="pre">-P</span></code>; при несовпадении скрипт завершится с ошибкой.
+Исключение: <code class="docutils literal notranslate"><span class="pre">-h</span></code> / <code class="docutils literal notranslate"><span class="pre">--help</span></code> — справка из любого каталога.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/путь/к/peresvet
+./admin_scripts/docker/running_containers_backup.sh
+</pre></div>
+</div>
+<p>Основные параметры:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 54%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Параметр</p></th>
+<th class="head"><p>Назначение</p></th>
+<th class="head"><p>По умолчанию</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">backup_dir</span></code></p></td>
+<td><p>Каталог для итогового архива: относительно корня проекта или
+абсолютный путь.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">backups/docker_runtime</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">archive_name</span></code></p></td>
+<td><p>Имя итогового <code class="docutils literal notranslate"><span class="pre">.tar.gz</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">docker_runtime_&lt;дата&gt;.tar.gz</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">helper_image</span></code></p></td>
+<td><p>Образ для архивации Docker volumes.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">busybox:stable</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">skip_stop</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code> — не останавливать контейнеры перед копированием хранилищ.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">no_bind_mounts</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code> — не включать bind mount-пути с хоста.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">keep_committed_images</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code> — оставить временные committed-образы после создания архива.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Пример с явным именем архива:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./admin_scripts/docker/running_containers_backup.sh<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--archive_name<span class="o">=</span>project_runtime_backup.tar.gz
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Восстановление<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./admin_scripts/docker/running_containers_restore.sh<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--archive<span class="o">=</span>backups/docker_runtime/project_runtime_backup.tar.gz
+</pre></div>
+</div>
+<p>При восстановлении:</p>
+<ul class="simple">
+<li><p>images загружаются через <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">load</span></code>;</p></li>
+<li><p>отсутствующие Docker volumes создаются автоматически;</p></li>
+<li><p>если Docker volume уже существует, скрипт спрашивает, перезаписать его
+содержимое или пропустить восстановление этого volume;</p></li>
+<li><p>если bind mount-путь уже существует, скрипт спрашивает, перезаписать его
+содержимое или пропустить восстановление этого bind mount;</p></li>
+<li><p>пользовательские Docker networks из архива создаются по имени, если их ещё
+нет;</p></li>
+<li><p>контейнеры запускаются из committed-образов с сохранёнными mount, port,
+hostname, restart policy и network-параметрами, которые удалось восстановить
+через Docker CLI.</p></li>
+</ul>
+<p>Параметры восстановления:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 54%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Параметр</p></th>
+<th class="head"><p>Назначение</p></th>
+<th class="head"><p>По умолчанию</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">archive</span></code></p></td>
+<td><p><strong>Обязательный.</strong> Путь к архиву <code class="docutils literal notranslate"><span class="pre">running_containers_backup.sh</span></code>.</p></td>
+<td><p><em>(нет)</em></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">helper_image</span></code></p></td>
+<td><p>Образ для очистки и распаковки хранилищ.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">alpine:3.20</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">assume_yes</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code> — перезаписывать существующие хранилища и контейнеры без вопросов.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">skip_stop</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code> — не останавливать контейнеры, использующие перезаписываемое
+хранилище; если хранилище занято, восстановление этого шага завершится
+ошибкой.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">skip_containers</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code> — восстановить только images и хранилища, контейнеры не запускать.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Предупреждение</p>
+<p>Архив содержит Docker metadata, переменные окружения контейнеров и данные
+bind mounts. Храните его как конфиденциальный файл.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Скрипт восстановления не заменяет исходные compose-файлы. Он нужен для
+разворачивания сохранённого runtime-состояния. Сложные параметры Docker
+networks (например, статические IPAM-настройки) сохраняются в metadata, но
+автоматически восстанавливаются только имена сетей.</p>
+</div>
+</section>
+</section>
+<section id="openldap">
+<span id="administration-ldap-backup"></span><h2>Резервное копирование и восстановление OpenLDAP<a class="headerlink" href="#openldap" title="Link to this heading"></a></h2>
+<p>Каталог OpenLDAP в контейнере хранит рабочие данные в каталоге
+<code class="docutils literal notranslate"><span class="pre">/var/lib/ldap</span></code>. В файлах Docker Compose этот путь монтируется во
+<strong>внешний том</strong> Docker (или в каталог на хосте при bind mount):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">docker/compose/docker-compose.ldap.one_app.yml</span></code> — том
+<code class="docutils literal notranslate"><span class="pre">ldap_data_one_app</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docker/compose/docker-compose.ldap.yml</span></code> — том <code class="docutils literal notranslate"><span class="pre">ldap_data</span></code>.</p></li>
+</ul>
+<p>Имя тома в среде Docker обычно имеет вид
+<code class="docutils literal notranslate"><span class="pre">&lt;имя_проекта_compose&gt;_&lt;ключ_тома&gt;</span></code>, например <code class="docutils literal notranslate"><span class="pre">compose_ldap_data_one_app</span></code>.
+Проверка: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">volume</span> <span class="pre">ls</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">ldap</span></code>.</p>
+<p>Скрипты расположены в <code class="docutils literal notranslate"><span class="pre">admin_scripts/ldap/</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ldap_volume_backup.sh</span></code> — создание архива;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ldap_volume_restore.sh</span></code> — восстановление из архива;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">resolve_ldap_storage.py</span></code> — вспомогательный модуль для shell-скриптов:
+по <code class="docutils literal notranslate"><span class="pre">compose_file</span></code> вызывается <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">…</span> <span class="pre">config</span> <span class="pre">--format</span> <span class="pre">json</span></code> и
+определяется монтирование <code class="docutils literal notranslate"><span class="pre">/var/lib/ldap</span></code> у сервиса (именованный том или
+bind mount); требуются <code class="docutils literal notranslate"><span class="pre">docker</span></code> и <code class="docutils literal notranslate"><span class="pre">python3</span></code> в <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p></li>
+</ul>
+<section id="id5">
+<h3>Запуск из корня проекта<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<p>Скрипты <code class="docutils literal notranslate"><span class="pre">ldap_volume_backup.sh</span></code> и <code class="docutils literal notranslate"><span class="pre">ldap_volume_restore.sh</span></code> <strong>нужно
+запускать из корня проекта</strong> (того каталога, где лежат <code class="docutils literal notranslate"><span class="pre">docker/compose/</span></code>,
+<code class="docutils literal notranslate"><span class="pre">admin_scripts/</span></code> и т.д.). Текущий каталог проверяется по <code class="docutils literal notranslate"><span class="pre">pwd</span> <span class="pre">-P</span></code> и
+должен совпадать с корнем, вычисленным по расположению скрипта. При запуске
+из другого каталога скрипт завершится с сообщением об ошибке.
+Исключение: вызов только <code class="docutils literal notranslate"><span class="pre">-h</span></code> или <code class="docutils literal notranslate"><span class="pre">--help</span></code> — справка выводится из любого
+каталога, проверка корня не выполняется.</p>
+<p>Пример:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/путь/к/peresvet
+./admin_scripts/ldap/ldap_volume_backup.sh
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Формат параметров<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<p>Все параметры задаются в виде <code class="docutils literal notranslate"><span class="pre">--имя=значение</span></code>; имена <strong>только в нижнем
+регистре</strong>. Исключение: справка — <code class="docutils literal notranslate"><span class="pre">-h</span></code> или <code class="docutils literal notranslate"><span class="pre">--help</span></code> (без <code class="docutils literal notranslate"><span class="pre">=</span></code>), только
+отдельным аргументом.</p>
+<p>Логические значения для флагов <code class="docutils literal notranslate"><span class="pre">skip_stop</span></code>, <code class="docutils literal notranslate"><span class="pre">skip_compose_stop</span></code>,
+<code class="docutils literal notranslate"><span class="pre">assume_yes</span></code>: истина — <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">true</span></code>, <code class="docutils literal notranslate"><span class="pre">yes</span></code>, <code class="docutils literal notranslate"><span class="pre">YES</span></code>; всё остальное
+интерпретируется как ложь (в т.ч. <code class="docutils literal notranslate"><span class="pre">0</span></code> и пустая строка).</p>
+<p><strong>Приоритет выбора цели бэкапа/восстановления:</strong> если задан
+<code class="docutils literal notranslate"><span class="pre">ldap_docker_volume</span></code>, используется именованный Docker-том (полное имя);
+иначе, если задан <code class="docutils literal notranslate"><span class="pre">ldap_data_dir</span></code>, используется каталог на хосте; иначе
+цель определяется по <code class="docutils literal notranslate"><span class="pre">compose_file</span></code> (сервис <code class="docutils literal notranslate"><span class="pre">ldap_service</span></code>, монтирование
+<code class="docutils literal notranslate"><span class="pre">/var/lib/ldap</span></code>).</p>
+</section>
+<section id="ldap-volume-backup-sh">
+<h3>Параметры: <code class="docutils literal notranslate"><span class="pre">ldap_volume_backup.sh</span></code><a class="headerlink" href="#ldap-volume-backup-sh" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 58%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Параметр</p></th>
+<th class="head"><p>Назначение</p></th>
+<th class="head"><p>По умолчанию</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">compose_file</span></code></p></td>
+<td><p>Путь к compose-файлу с сервисом LDAP: относительно корня проекта
+или абсолютный. По нему вызывается <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code> и при отсутствии
+переопределений ниже — разбор тома/bind.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">docker/compose/docker-compose.ldap.one_app.yml</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">compose_project_name</span></code></p></td>
+<td><p>Имя проекта Docker Compose (флаг <code class="docutils literal notranslate"><span class="pre">-p</span></code>). Пустое значение: как у
+<code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code> без <code class="docutils literal notranslate"><span class="pre">-p</span></code> (в т.ч. переменная окружения
+<code class="docutils literal notranslate"><span class="pre">COMPOSE_PROJECT_NAME</span></code>, если задана снаружи).</p></td>
+<td><p><em>(пусто)</em></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ldap_service</span></code></p></td>
+<td><p>Имя сервиса в compose, у которого ищется том на <code class="docutils literal notranslate"><span class="pre">/var/lib/ldap</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ldap</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">backup_dir</span></code></p></td>
+<td><p>Каталог для создаваемых <code class="docutils literal notranslate"><span class="pre">.tar.gz</span></code>: относительно корня проекта
+или абсолютный путь.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">backups/ldap</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ldap_docker_volume</span></code></p></td>
+<td><p>Принудительно: полное имя Docker-тома с данными LDAP (игнорируется
+разбор compose для выбора цели).</p></td>
+<td><p><em>(пусто)</em></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ldap_data_dir</span></code></p></td>
+<td><p>Принудительно: каталог на хосте с данными LDAP (bind mount). Не
+используется, если задан <code class="docutils literal notranslate"><span class="pre">ldap_docker_volume</span></code>.</p></td>
+<td><p><em>(пусто)</em></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">backup_helper_image</span></code></p></td>
+<td><p>Образ для контейнера <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">run</span></code>, в котором выполняется <code class="docutils literal notranslate"><span class="pre">tar</span></code>
+при снимке <strong>именованного тома</strong>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">busybox:stable</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">skip_stop</span></code></p></td>
+<td><p>При <code class="docutils literal notranslate"><span class="pre">1</span></code>: не останавливать контейнеры, использующие том, перед
+бэкапом (имеет смысл в сочетании с <code class="docutils literal notranslate"><span class="pre">skip_compose_stop=1</span></code>; риск
+неконсистентного архива).</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">skip_compose_stop</span></code></p></td>
+<td><p>При <code class="docutils literal notranslate"><span class="pre">1</span></code>: не вызывать <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">stop/start</span></code> для
+<code class="docutils literal notranslate"><span class="pre">ldap_service</span></code>. Для именованного тома тогда перед снимком
+выполняется остановка контейнеров с этим томом (если не
+<code class="docutils literal notranslate"><span class="pre">skip_stop=1</span></code>).</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ldap-volume-restore-sh">
+<h3>Параметры: <code class="docutils literal notranslate"><span class="pre">ldap_volume_restore.sh</span></code><a class="headerlink" href="#ldap-volume-restore-sh" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 58%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Параметр</p></th>
+<th class="head"><p>Назначение</p></th>
+<th class="head"><p>По умолчанию</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">archive</span></code></p></td>
+<td><p><strong>Обязательный.</strong> Путь к файлу архива <code class="docutils literal notranslate"><span class="pre">.tar.gz</span></code>: относительно корня
+проекта или абсолютный.</p></td>
+<td><p><em>(нет)</em></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">compose_file</span></code></p></td>
+<td><p>Как в бэкапе: для <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">stop/start</span></code> и для разбора цели.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">docker/compose/docker-compose.ldap.one_app.yml</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">compose_project_name</span></code></p></td>
+<td><p>Как в бэкапе (флаг <code class="docutils literal notranslate"><span class="pre">-p</span></code> у <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code>).</p></td>
+<td><p><em>(пусто)</em></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ldap_service</span></code></p></td>
+<td><p>Как в бэкапе.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ldap</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ldap_docker_volume</span></code></p></td>
+<td><p>Как в бэкапе: принудительный том для распаковки архива.</p></td>
+<td><p><em>(пусто)</em></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ldap_data_dir</span></code></p></td>
+<td><p>Как в бэкапе: принудительный каталог на хосте.</p></td>
+<td><p><em>(пусто)</em></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">restore_helper_image</span></code></p></td>
+<td><p>Образ для <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">run</span></code> при очистке точки монтирования и
+<code class="docutils literal notranslate"><span class="pre">tar</span> <span class="pre">xzf</span></code> (нужны <code class="docutils literal notranslate"><span class="pre">find</span></code> и <code class="docutils literal notranslate"><span class="pre">tar</span></code>).</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">alpine:3.20</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">assume_yes</span></code></p></td>
+<td><p>При <code class="docutils literal notranslate"><span class="pre">1</span></code>: не спрашивать подтверждение перед перезаписью данных.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">skip_stop</span></code></p></td>
+<td><p>При <code class="docutils literal notranslate"><span class="pre">1</span></code> и режиме тома: если контейнеры всё ещё используют том,
+скрипт завершится ошибкой (запись без остановки запрещена).</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">skip_compose_stop</span></code></p></td>
+<td><p>При <code class="docutils literal notranslate"><span class="pre">1</span></code>: не вызывать <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">stop/start</span></code>; для тома перед
+восстановлением останавливаются контейнеры с этим томом (если не
+<code class="docutils literal notranslate"><span class="pre">skip_stop=1</span></code>).</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id7">
+<h3>Примеры<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<p>Создание бэкапа (остановка <code class="docutils literal notranslate"><span class="pre">ldap</span></code> через compose по умолчанию, архив в
+<code class="docutils literal notranslate"><span class="pre">backups/ldap/</span></code>):</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./admin_scripts/ldap/ldap_volume_backup.sh
+</pre></div>
+</div>
+<p>С явными параметрами:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/путь/к/peresvet
+./admin_scripts/ldap/ldap_volume_backup.sh<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--compose_file<span class="o">=</span>docker/compose/docker-compose.ldap.one_app.yml<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--compose_project_name<span class="o">=</span>myproj<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--backup_dir<span class="o">=</span>backups/ldap
+</pre></div>
+</div>
+<p>Восстановление без запроса подтверждения:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/путь/к/peresvet
+./admin_scripts/ldap/ldap_volume_restore.sh<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--assume_yes<span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--archive<span class="o">=</span>backups/ldap/ИМЯ_АРХИВА.tar.gz
+</pre></div>
+</div>
+</section>
+<section id="resolve-ldap-storage-py">
+<h3>Вспомогательный <code class="docutils literal notranslate"><span class="pre">resolve_ldap_storage.py</span></code><a class="headerlink" href="#resolve-ldap-storage-py" title="Link to this heading"></a></h3>
+<p>Основной интерфейс для администратора — shell-скрипты выше. Python-скрипт
+вызывается ими автоматически. При ручной отладке аргументы <strong>позиционные</strong>
+(не в формате <code class="docutils literal notranslate"><span class="pre">--имя=значение</span></code>):</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">compose_file</span></code> — абсолютный или относительный путь к compose-файлу;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compose_project_name</span></code> (необязательно) — имя проекта для <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">-p</span></code>;
+пустая строка означает вызов без <code class="docutils literal notranslate"><span class="pre">-p</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ldap_service</span></code> (необязательно) — имя сервиса, по умолчанию <code class="docutils literal notranslate"><span class="pre">ldap</span></code>.</p></li>
+</ol>
+<p>Переменная окружения <code class="docutils literal notranslate"><span class="pre">RESOLVE_CWD</span></code>: рабочий каталог для <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code>
+(оболочечные скрипты передают корень проекта).</p>
+<p>Стандартный вывод: одна строка из двух полей, разделённых <strong>символом
+табуляции</strong>: режим <code class="docutils literal notranslate"><span class="pre">volume</span></code> и полное имя Docker-тома, либо режим <code class="docutils literal notranslate"><span class="pre">bind</span></code>
+и абсолютный путь на хосте.</p>
+<div class="admonition warning">
+<p class="admonition-title">Предупреждение</p>
+<p>Убедитесь, что архив соответствует той же развёртке (образ и схема LDAP),
+что и целевое окружение. Конфигурация <code class="docutils literal notranslate"><span class="pre">slapd</span></code> в образе задаётся при
+сборке; в типовом compose в том сохраняется прежде всего содержимое
+<code class="docutils literal notranslate"><span class="pre">/var/lib/ldap</span></code>.</p>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Установка и запуск" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="configurator/configurator.html" class="btn btn-neutral float-right" title="Конфигуратор модели" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права 2026, ООО Матч Поинт Консалтинг. </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

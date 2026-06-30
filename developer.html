@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Руководство разработчика &mdash; документация МПК-Пересвет 0.4</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sphinxcontrib-httpexample.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=11064190"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/sphinxcontrib-httpexample.js"></script>
+        <script src="_static/translations.js?v=29b1f277"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Логотип"/>
+          </a>
+              <div class="version">
+                0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="description.html">Описание</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terms.html">Используемые термины</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка и запуск</a></li>
+<li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Примеры работы с платформой</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_extension_points.html">Точки расширения безопасности</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка безопасности платной редакции</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">МПК-Пересвет</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Руководство разработчика</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/developer.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="id1">
+<h1>Руководство разработчика<a class="headerlink" href="#id1" title="Link to this heading"></a></h1>
+<section id="id2">
+<h2>Общие классы<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<p>В этом разделе описаны общие классы, от которых наследуются все сервисы,
+а также классы, используемые всеми сервисами.</p>
+<section id="hierarchy">
+<h3>Модуль <code class="docutils literal notranslate"><span class="pre">hierarchy</span></code><a class="headerlink" href="#hierarchy" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.common.hierarchy.</span></span><span class="sig-name descname"><span class="pre">Hierarchy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Базовые классы: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Класс для работы с иерархической моделью.</p>
+<p>Args:</p>
+<blockquote>
+<div><p>url (str): URL для связи с ldap-сервером;
+pool_size (int, optional): размер пула коннектов. По умолчанию - 10.</p>
+</div></blockquote>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">__form_filterstr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
+<dd><p>Метод формирует из переданных данных строку фильтра для поиска узлов
+в иерархии</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>filter_attributes (dict): атрибуты со значениями, по которым
+строится фильтр.
+См. <code class="xref py py-func docutils literal notranslate"><span class="pre">hierarchy.Hierarchy.search()</span></code></p>
+</dd>
+<dt>Returns:</dt><dd><p>str: строка фильтра</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_is_node_id_uuid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span></dt>
+<dd><p>Проверка того, что идентификатор узла
+имеет формат UUID.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>node (str): проверяемый идентификатор узла</p>
+</dd>
+<dt>Returns:</dt><dd><p>bool: True - идентификатор в правильной форме, False - иначе.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
+<dd><p>Добавление узла в иерархию.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>base (str): None | id | dn узла-родителя
+attribute_values (dict): словарь со значениями атрибутов</p>
+</dd>
+<dt>Returns:</dt><dd><p>str: id нового узла</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">connect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span></dt>
+<dd><p>Создание пула коннектов к ldap-серверу.
+URL передаётся при создании нового экземпляра класса <code class="docutils literal notranslate"><span class="pre">Hierarchy</span></code>.</p>
+<p>Количество попыток восстановления связи при разрыве - 10. Время
+между попытками - 0.3с.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Метод удаляет из ерархии узел и всех его потомков.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>node (str): id удаляемого узла.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">does_node_exist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span></dt>
+<dd><p>Проверка существования узла с указанным id.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>node (str): id проверяемого узла.</p>
+</dd>
+<dt>Returns:</dt><dd><p>bool: True - если узел существует, False - иначе.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_node_class</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
+<dd><p>Возвращает класс узла</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>node (str): id узла</p>
+</dd>
+<dt>Raises:</dt><dd><p>ValueError: в случае отсутствия узла генерирует исключение</p>
+</dd>
+<dt>Returns:</dt><dd><p>str: значение атрибута objectClass (одно значение, исключая <code class="docutils literal notranslate"><span class="pre">top</span></code>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_node_dn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span></dt>
+<dd><p>Метод определяет DN узла в иерархии по переданному id и
+возвращает его.
+В случае, если base = None, то возвращается DN базового узла
+всей иерархии.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>base (str, optional): id узла в форме UUID. По умолчанию - None.</p>
+</dd>
+<dt>Returns:</dt><dd><p>str: DN узла.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_parent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<dd><p>Метод возвращает для узла <code class="docutils literal notranslate"><span class="pre">node</span></code> id(guid) и dn
+родительского узла.</p>
+<p>Args:</p>
+<blockquote>
+<div><p>node (str): id или dn узла, родителя которого необходимо найти.</p>
+</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div><p>(str, str): id(guid) и dn родительского узла.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">modify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attr_vals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
+<dd><p>Метод изменяет атрибуты узла.
+В случае, если в изменяемых атрибутах присутствует cn (то есть узел
+переименовывается), то метод возвращает новый DN узла.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>node (str): id изменяемого узла.
+attr_vals (dict): словарь с новыми значениями атрибутов.</p>
+</dd>
+<dt>Returns:</dt><dd><p>str: новый DN узла в случае изменения атрибута <code class="docutils literal notranslate"><span class="pre">cn</span></code>, иначе - None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_parent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Метод перемещает узел по дереву.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>node (str): id перемещаемого узла
+new_parent (str): id нового родительского узла</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<dd><p>Метод-генератор поиска узлов и чтения их данных.</p>
+<p>Результат - массив кортежей. Каждый кортеж состоит из трёх элементов:
+<cite>id</cite> узла (entryUUID), <cite>dn</cite> узла, словарь из атрибутов и их значений.</p>
+<dl>
+<dt>Args:</dt><dd><p>payload(dict) -</p>
+<blockquote>
+<div><div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;first_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;n_id&quot;</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;base&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;base for search&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;deref&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;scope&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;filter&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;prsActive&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="kc">true</span><span class="p">],</span>
+<span class="w">        </span><span class="nt">&quot;prsEntityType&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;cn&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;description&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul>
+<li><dl class="simple">
+<dt>id</dt><dd><p>список идентификаторов узлов, данные по которым
+необходимо получить; если присутствует, то не учитываются ключи
+<code class="docutils literal notranslate"><span class="pre">base</span></code>, <code class="docutils literal notranslate"><span class="pre">scope</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>; по умолчанию - None;</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>base</dt><dd><p>id (uuid) или dn базового узла, от которого
+вести поиск;
+в случае отстутствия поиск ведётся от корня иерархии; по
+умолчанию - None;</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>deref</dt><dd><p>флаг разъименования ссылок; по умолчанию - False;
+.. todo:: Реализовать поведение флага <code class="docutils literal notranslate"><span class="pre">deref</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>scope</dt><dd><p>масштаб поиска; возможные значения:</p>
+<ul class="simple">
+<li><p>0 - возвращает данные по одному, указанному в <code class="docutils literal notranslate"><span class="pre">base</span></code> узлу;</p></li>
+<li><p>1 - поиск среди непосредственных потомков узла;</p></li>
+<li><p>2 - поиск по всему дереву;</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>filter</dt><dd><p>данные для формирования фильтра поиска; <code class="docutils literal notranslate"><span class="pre">filter</span></code>
+представляет собой словарь, ключами в котором являются имена
+атрибутов, а значениями - массивы значений; фильтр формируется
+так: значения атрибутов из массивов объединяются операцией
+<code class="docutils literal notranslate"><span class="pre">или</span></code>, а сами ключи - операцией <code class="docutils literal notranslate"><span class="pre">и</span></code>;
+например, если ключ <code class="docutils literal notranslate"><span class="pre">filter</span></code> =</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;first&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;second&quot;</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;prsEntityType&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>то будет сформирована такая строка фильтра:
+<code class="docutils literal notranslate"><span class="pre">(&amp;(|(cn=first)(cn=second))(|(prsEntityType=1)(prsEntityType=2)))</span></code></p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>attributes</dt><dd><p>список атрибутов, значения которых необходимо
+вернуть; по умолчанию - <code class="docutils literal notranslate"><span class="pre">['.']</span></code></p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</dd>
+<dt>Returns:</dt><dd><p>List[Tuple]: (id, dn, attributes)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="logger">
+<h3>Модуль <code class="docutils literal notranslate"><span class="pre">logger</span></code><a class="headerlink" href="#logger" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.common.logger.</span></span><span class="sig-name descname"><span class="pre">PrsLogBuffer</span></span></dt>
+<dd><p>Базовые классы: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Общий in-memory буфер последних логов платформы для UI.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.common.logger.</span></span><span class="sig-name descname"><span class="pre">PrsLogger</span></span></dt>
+<dd><p>Базовые классы: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Класс журнала.
+Для настройки используются 4 переменных окружения:</p>
+<p><strong>LOG_LEVEL</strong> - уровень журналирования
+(CRITICAL, ERROR, WARNING, INFO, DEBUG);</p>
+<p><strong>LOG_FILE_NAME</strong> - имя файла журнала;</p>
+<p><strong>LOG_RETENTION</strong></p>
+<p><strong>LOG_ROTATION</strong></p>
+<p>Журнал создаётся функцией <code class="docutils literal notranslate"><span class="pre">make_logger</span></code>.</p>
+<dl class="py method">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">make_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'CRITICAL'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'log/peresvet.log'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retention</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'1</span> <span class="pre">months'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'20</span> <span class="pre">days'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">service_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Функция создаёт новый журнал.</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>Настроенный экземпляр журнала.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="svc">
+<h3>Модуль <code class="docutils literal notranslate"><span class="pre">svc</span></code><a class="headerlink" href="#svc" title="Link to this heading"></a></h3>
+<p>Модуль содержит базовый класс <code class="docutils literal notranslate"><span class="pre">Svc</span></code> - предок всех сервисов.</p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.common.svc.</span></span><span class="sig-name descname"><span class="pre">Svc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SvcSettings</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Базовые классы: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseSvc</span></code></p>
+<p>Класс <code class="docutils literal notranslate"><span class="pre">Svc</span></code> - наследник класса <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseSvc</span></code></p>
+<p>Реализует дополнительную функциональность:</p>
+<ul class="simple">
+<li><p>коннект к иерархии;</p></li>
+<li><p>логика подписок на сообщения между сервисами.</p></li>
+</ul>
+<dl class="simple">
+<dt>Args:</dt><dd><p>settings (Settings): конфигурация приложения см. <code class="xref py py-class docutils literal notranslate"><span class="pre">SvcSettings</span></code></p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_ldap_connect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span></dt>
+<dd><p>Функция соединения с ldap-сервером.
+В случае неудачи ошибка будет выведена в лог и попытки связи будут
+продолжаться с периодичностью в 5 секунд.</p>
+<p>Работа сервиса будет остановлена до тех пор, пока не установится
+связь.</p>
+<p>DSN для связи с ldap-сервером указывается в переменной окружения
+<code class="docutils literal notranslate"><span class="pre">ldap_url</span></code>.</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">on_startup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span></dt>
+<dd><p>Функция, выполняемая при старте сервиса: выполняется связь с
+amqp-сервером.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="svc-settings">
+<h3>Модуль <code class="docutils literal notranslate"><span class="pre">svc_settings</span></code><a class="headerlink" href="#svc-settings" title="Link to this heading"></a></h3>
+<p>Класс, от которого наследуются все классы-настройки для сервисов.
+Наследуется от класса <code class="docutils literal notranslate"><span class="pre">pydantic.BaseSettings</span></code>, все настройки передаются
+в json-файлах либо в переменных окружения.
+По умолчанию имя файла с настройками - <code class="docutils literal notranslate"><span class="pre">config.json</span></code>.
+Имя конфигурационного файла передаётся сервису в переменной окружения
+<code class="docutils literal notranslate"><span class="pre">config_file</span></code>.</p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.common.svc_settings.</span></span><span class="sig-name descname"><span class="pre">SvcSettings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_case_sensitive</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_env_prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_env_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DotenvType</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">PosixPath('.')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_env_file_encoding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_env_nested_delimiter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_secrets_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">svc_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">broker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{'amqp_url':</span> <span class="pre">'amqp://prs:Peresvet21&#64;rabbitmq/',</span> <span class="pre">'auto_delete':</span> <span class="pre">False,</span> <span class="pre">'durable':</span> <span class="pre">True,</span> <span class="pre">'name':</span> <span class="pre">'peresvet'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hierarchy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{'class':</span> <span class="pre">''}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{'file_name':</span> <span class="pre">'log/peresvet.log',</span> <span class="pre">'level':</span> <span class="pre">'INFO',</span> <span class="pre">'retention':</span> <span class="pre">10,</span> <span class="pre">'rotation':</span> <span class="pre">'5</span> <span class="pre">MB'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'redis://redis:6379?decode_responses=True&amp;protocol=3'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ldap_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21'</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Базовые классы: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseSvcSettings</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">ldap_url</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em></dt>
+<dd><p>строка коннекта к OpenLDAP</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">SettingsConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'arbitrary_types_allowed':</span> <span class="pre">True,</span> <span class="pre">'case_sensitive':</span> <span class="pre">False,</span> <span class="pre">'env_file':</span> <span class="pre">None,</span> <span class="pre">'env_file_encoding':</span> <span class="pre">None,</span> <span class="pre">'env_nested_delimiter':</span> <span class="pre">None,</span> <span class="pre">'env_prefix':</span> <span class="pre">'',</span> <span class="pre">'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'protected_namespaces':</span> <span class="pre">(),</span> <span class="pre">'secrets_dir':</span> <span class="pre">None,</span> <span class="pre">'validate_default':</span> <span class="pre">True}</span></em></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">model_fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">FieldInfo</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'broker':</span> <span class="pre">FieldInfo(annotation=dict,</span> <span class="pre">required=False,</span> <span class="pre">default={'amqp_url':</span> <span class="pre">'amqp://prs:Peresvet21&#64;rabbitmq/',</span> <span class="pre">'name':</span> <span class="pre">'peresvet',</span> <span class="pre">'durable':</span> <span class="pre">True,</span> <span class="pre">'auto_delete':</span> <span class="pre">False}),</span> <span class="pre">'cache_url':</span> <span class="pre">FieldInfo(annotation=str,</span> <span class="pre">required=False,</span> <span class="pre">default='redis://redis:6379?decode_responses=True&amp;protocol=3'),</span> <span class="pre">'hierarchy':</span> <span class="pre">FieldInfo(annotation=dict,</span> <span class="pre">required=False,</span> <span class="pre">default={'class':</span> <span class="pre">''}),</span> <span class="pre">'ldap_url':</span> <span class="pre">FieldInfo(annotation=str,</span> <span class="pre">required=False,</span> <span class="pre">default='ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21'),</span> <span class="pre">'log':</span> <span class="pre">FieldInfo(annotation=dict,</span> <span class="pre">required=False,</span> <span class="pre">default={'level':</span> <span class="pre">'INFO',</span> <span class="pre">'file_name':</span> <span class="pre">'log/peresvet.log',</span> <span class="pre">'retention':</span> <span class="pre">10,</span> <span class="pre">'rotation':</span> <span class="pre">'5</span> <span class="pre">MB'}),</span> <span class="pre">'svc_name':</span> <span class="pre">FieldInfo(annotation=str,</span> <span class="pre">required=False,</span> <span class="pre">default='')}</span></em></dt>
+<dd><p>Metadata about the fields defined on the model,
+mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</p>
+<p>This replaces <cite>Model.__fields__</cite> from Pydantic V1.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">svc_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em></dt>
+<dd><p>имя сервиса</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+<section id="id3">
+<h2>Микросервисы<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<section id="datastorages">
+<h3>dataStorages (хранилища данных)<a class="headerlink" href="#datastorages" title="Link to this heading"></a></h3>
+<p>Группа сервисов для хранилищ данных.</p>
+<p>Особенностью этой группы сервисов является то, что сервисов
+<code class="docutils literal notranslate"><span class="pre">dataStorages_app</span></code> может быть сколь угодно много: для каждого типа
+хранилища свой сервис.</p>
+<p>Более того, в процессе работы платформы могут подключаться дополнительные
+типы хранилищ, неизвестные на момент старта.</p>
+<p>Это несколько усложняет систему сообщений.</p>
+<section id="datastorages-api-crud">
+<h4>dataStorages_api_crud<a class="headerlink" href="#datastorages-api-crud" title="Link to this heading"></a></h4>
+<p>Типовой сервис, реализующий блок команд CRUD API.</p>
+<p><strong>Configuration</strong></p>
+<p>Типовая конфигурация сервиса:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="c1"># имя сервиса. сервисы *_mod_crud создают в иерархии узел с таким же именем</span>
+    <span class="n">svc_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;dataStorages_api_crud&quot;</span>
+    <span class="c1"># строка коннекта к RabbitMQ</span>
+    <span class="n">amqp_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;amqp://prs:********@rabbitmq/&quot;</span>
+    <span class="c1"># строка коннекта к OpenLDAP</span>
+    <span class="n">ldap_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ldap://ldap:389/cn=prs????bindname=cn=admin</span><span class="si">%2c</span><span class="s2">cn=prs,X-BINDPW=********&quot;</span>
+
+    <span class="c1"># обменник для публикаций</span>
+    <span class="n">publish</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;main&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;dataStorages&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;direct&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;routing_key&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dataStorages_api_crud_publish&quot;</span><span class="p">]</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Publish</strong></p>
+<table class="docutils align-default" id="id5">
+<caption><span class="caption-text">Сообщения, генерируемые сервисом <code class="docutils literal notranslate"><span class="pre">dataStorages_api_crud</span></code></span><a class="headerlink" href="#id5" title="Link to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>action</p></th>
+<th class="head"><p>routing_key</p></th>
+<th class="head"><p>RPC</p></th>
+<th class="head"><p>Какому сервису предназначено</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>create</p></td>
+<td><p>&lt;dataStorages&gt;_api_crud_publish</p></td>
+<td><p><cite>+</cite></p></td>
+<td><p>dataStorages_model_crud,
+всем подписанным сервисам</p></td>
+</tr>
+<tr class="row-odd"><td colspan="4"><details>
+<summary><a>Описание</a></summary>
+
+Сообщение посылается как команда на создание нового хранилища данных в <br/>
+сервис <b>dataStorages_model_crud</b>
+
+</details>
+<br/>
+<details>
+<summary><a>Тело сообщения</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;create&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+           <span class="c1"># Необзяательный ключ. В случае отсутствия в качестве имени</span>
+           <span class="c1"># будет использован id хранилища.</span>
+           <span class="s2">&quot;cn&quot;</span><span class="p">:</span> <span class="s2">&quot;имя хранилища&quot;</span><span class="p">,</span>
+           <span class="c1"># также необязательный ключ</span>
+           <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;описание&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;prsJsonConfigString&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="c1"># Обязательный ключ. С таким &quot;routing_key&quot; будут посылаться</span>
+               <span class="c1"># сообщения, адресованные разным хранилищам.</span>
+                <span class="s2">&quot;routing_key&quot;</span><span class="p">:</span> <span class="s2">&quot;dataStorages_app_posgresql_consume&quot;</span>
+
+               <span class="c1"># Также могут быть указаны любые другие ключи, которые</span>
+               <span class="c1"># указываются в документации на конкретный сервис хранилища и</span>
+               <span class="c1"># интерпретируются самим сервисом.</span>
+           <span class="p">},</span>
+           <span class="c1"># Ключ активности хранилища. По умолчанию = True.</span>
+           <span class="s2">&quot;prsActive&quot;</span><span class="p">:</span> <span class="n">true</span>
+      <span class="p">},</span>
+      <span class="s2">&quot;linkedTags&quot;</span><span class="p">:</span> <span class="p">[</span>
+           <span class="p">{</span>
+               <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;tag_id&gt;&quot;</span><span class="p">,</span>
+               <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+                   <span class="c1"># Некоторая строка, интерпретируемая хранилищем.</span>
+                   <span class="c1"># В случае VitoriaMetrics может содержать имя метрики и теги.</span>
+                   <span class="s2">&quot;prsStore&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;some str&gt;&quot;</span>
+               <span class="p">}</span>
+       <span class="p">],</span>
+      <span class="s2">&quot;linkedAlerts&quot;</span><span class="p">:</span> <span class="p">[</span>
+           <span class="p">{</span>
+               <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;alert_id&gt;&quot;</span><span class="p">,</span>
+               <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+                   <span class="c1"># Некоторая строка, интерпретируемая хранилищем.</span>
+                   <span class="s2">&quot;prsStore&quot;</span><span class="p">:</span> <span class="p">{</span>
+                   <span class="p">}</span>
+               <span class="p">}</span>
+       <span class="p">]</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</details>
+<br/>
+<details>
+<summary><a>Тело ответа</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+      <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;new_dataStorage_id&gt;&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</details></td>
+</tr>
+<tr class="row-even"><td><p>read</p></td>
+<td><p>&lt;dataStorages&gt;_api_crud_publish</p></td>
+<td><p><cite>+</cite></p></td>
+<td><p>dataStorages_model_crud,
+всем подписанным сервисам</p></td>
+</tr>
+<tr class="row-odd"><td colspan="4"><details>
+<summary><a>Описание</a></summary>
+
+Типовая команда чтения данных о узлах.
+
+</details>
+<br/>
+<details>
+<summary><a>Тело сообщения</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span> <span class="p">{</span>
+    <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;read&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;first_id&quot;</span><span class="p">,</span> <span class="s2">&quot;n_id&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;scope&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;filter&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;prsActive&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">true</span><span class="p">]</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;cn&quot;</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">]</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;getLinkedTags&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;getLinkedAlerts&quot;</span><span class="p">:</span> <span class="n">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</details>
+<br/>
+<details>
+<summary><a>Тело ответа</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+      <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">[</span>
+           <span class="p">{</span>
+               <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;dataStorage_id&gt;&quot;</span><span class="p">,</span>
+               <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+                   <span class="s2">&quot;cn&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;name&gt;&quot;</span>
+               <span class="p">},</span>
+               <span class="s2">&quot;linkedTags&quot;</span><span class="p">:</span> <span class="p">[</span>
+                   <span class="p">{</span>
+                       <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;tag_id&gt;&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+                           <span class="s2">&quot;prsStore&quot;</span><span class="p">:</span> <span class="p">{</span>
+                           <span class="p">}</span>
+                       <span class="p">}</span>
+                   <span class="p">}</span>
+               <span class="p">],</span>
+               <span class="s2">&quot;linkedAlerts&quot;</span><span class="p">:</span> <span class="p">[</span>
+                   <span class="p">{</span>
+                       <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;alert_id&gt;&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+                           <span class="s2">&quot;prsStore&quot;</span><span class="p">:</span> <span class="p">{</span>
+                           <span class="p">}</span>
+                       <span class="p">}</span>
+                   <span class="p">}</span>
+               <span class="p">]</span>
+           <span class="p">}</span>
+      <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</details></td>
+</tr>
+<tr class="row-even"><td><p>update</p></td>
+<td><p>&lt;dataStorages&gt;_api_crud_publish</p></td>
+<td><p><cite>+</cite></p></td>
+<td><p>dataStorages_model_crud,
+всем подписанным сервисам</p></td>
+</tr>
+<tr class="row-odd"><td colspan="4"><details>
+<summary><a>Описание</a></summary>
+
+Типовая команда обновления данных о узлах.
+
+</details>
+<br/>
+<details>
+<summary><a>Тело сообщения</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span> <span class="p">{</span>
+    <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;update&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;first_id&quot;</span><span class="p">,</span> <span class="s2">&quot;n_id&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;scope&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;filter&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;prsActive&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">true</span><span class="p">]</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;cn&quot;</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">]</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;getLinkedTags&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;getLinkedAlerts&quot;</span><span class="p">:</span> <span class="n">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</details>
+<br/>
+<details>
+<summary><a>Тело ответа</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+      <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">[</span>
+           <span class="p">{</span>
+               <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;dataStorage_id&gt;&quot;</span><span class="p">,</span>
+               <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+                   <span class="s2">&quot;cn&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;name&gt;&quot;</span>
+               <span class="p">},</span>
+               <span class="s2">&quot;linkedTags&quot;</span><span class="p">:</span> <span class="p">[</span>
+                   <span class="p">{</span>
+                       <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;tag_id&gt;&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+                           <span class="s2">&quot;prsStore&quot;</span><span class="p">:</span> <span class="p">{</span>
+                           <span class="p">}</span>
+                       <span class="p">}</span>
+                   <span class="p">}</span>
+               <span class="p">],</span>
+               <span class="s2">&quot;linkedAlerts&quot;</span><span class="p">:</span> <span class="p">[</span>
+                   <span class="p">{</span>
+                       <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;alert_id&gt;&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+                           <span class="s2">&quot;prsStore&quot;</span><span class="p">:</span> <span class="p">{</span>
+                           <span class="p">}</span>
+                       <span class="p">}</span>
+                   <span class="p">}</span>
+               <span class="p">]</span>
+           <span class="p">}</span>
+      <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</details></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="datastorages-model-crud">
+<h4>dataStorages_model_crud<a class="headerlink" href="#datastorages-model-crud" title="Link to this heading"></a></h4>
+<p>Сервис реализует команды <strong>CRUD</strong> для сущности <code class="docutils literal notranslate"><span class="pre">dataStorages</span></code> (хранилища
+данных).</p>
+<p><strong>Publish</strong></p>
+<p><strong>Consume</strong></p>
+<p>Все сообщения для сервиса приходят в очередь <code class="docutils literal notranslate"><span class="pre">&lt;сущность&gt;_model_crud_consume</span></code>,
+<code class="docutils literal notranslate"><span class="pre">routing_key</span> <span class="pre">=</span> <span class="pre">&lt;сущность&gt;_model_crud_consume</span></code>.</p>
+<table class="docutils align-default" id="id6">
+<caption><span class="caption-text">Сообщения, обрабатываемые сервисом <code class="docutils literal notranslate"><span class="pre">&lt;сущность&gt;_model_crud</span></code></span><a class="headerlink" href="#id6" title="Link to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>action</p></th>
+<th class="head"><p>RPC</p></th>
+<th class="head"><p>Описание</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>subscribe</p></td>
+<td><p><cite>-</cite></p></td>
+<td><p>Сообщение приходит от другого сервиса, который заинтересован <br/>
+в получении уведомлений о изменении/удалении определённых узлов</p></td>
+</tr>
+<tr class="row-odd"><td colspan="3"><details>
+<summary><a>Тело сообщения</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;subscribe&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">&quot;routing_key&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;some_routing_key&gt;&quot;</span>
+         <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&lt;id_1&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;id_2&quot;</span><span class="p">]</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</details>
+<br/></td>
+</tr>
+<tr class="row-even"><td><p>unsubscribe</p></td>
+<td><p><cite>-</cite></p></td>
+<td><p>Сообщение приходит от другого сервиса, который сообщает <br/>
+об отказе в получении уведомлений о изменении/удалении узлов</p></td>
+</tr>
+<tr class="row-odd"><td colspan="3"><details>
+<summary><a>Тело сообщения</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;unsubscribe&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">&quot;routing_key&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;some_routing_key&gt;&quot;</span>
+         <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&lt;id_1&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;id_2&quot;</span><span class="p">]</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</details>
+<br/></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="datastorages-app">
+<h4>dataStorages_app_&lt;тип базы данных&gt;<a class="headerlink" href="#datastorages-app" title="Link to this heading"></a></h4>
+<p>Сервис реализует главную функциональность хранилища.</p>
+<p><strong>Publish</strong></p>
+<p><strong>Consume</strong></p>
+<p>Все сообщения для сервиса приходят в очередь <code class="docutils literal notranslate"><span class="pre">&lt;сущность&gt;_model_crud_consume</span></code>,
+<code class="docutils literal notranslate"><span class="pre">routing_key</span> <span class="pre">=</span> <span class="pre">&lt;сущность&gt;_model_crud_consume</span></code>.</p>
+<table class="docutils align-default" id="id7">
+<caption><span class="caption-text">Сообщения, обрабатываемые сервисом <code class="docutils literal notranslate"><span class="pre">&lt;сущность&gt;_model_crud</span></code></span><a class="headerlink" href="#id7" title="Link to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>action</p></th>
+<th class="head"><p>RPC</p></th>
+<th class="head"><p>Описание</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>subscribe</p></td>
+<td><p><cite>-</cite></p></td>
+<td><p>Сообщение приходит от другого сервиса, который заинтересован <br/>
+в получении уведомлений о изменении/удалении определённых узлов</p></td>
+</tr>
+<tr class="row-odd"><td colspan="3"><details>
+<summary><a>Тело сообщения</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;subscribe&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">&quot;routing_key&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;some_routing_key&gt;&quot;</span>
+         <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&lt;id_1&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;id_2&quot;</span><span class="p">]</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</details>
+<br/></td>
+</tr>
+<tr class="row-even"><td><p>unsubscribe</p></td>
+<td><p><cite>-</cite></p></td>
+<td><p>Сообщение приходит от другого сервиса, который сообщает <br/>
+об отказе в получении уведомлений о изменении/удалении узлов</p></td>
+</tr>
+<tr class="row-odd"><td colspan="3"><details>
+<summary><a>Тело сообщения</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;unsubscribe&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">&quot;routing_key&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;some_routing_key&gt;&quot;</span>
+         <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&lt;id_1&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;id_2&quot;</span><span class="p">]</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</details>
+<br/></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="methods">
+<h3>methods (методы)<a class="headerlink" href="#methods" title="Link to this heading"></a></h3>
+<p>Методы используются для вычислений значений тегов.
+Значение тега может приходить из внешнего источника, а может быть вычислено,
+для чего необходимо:</p>
+<ol class="arabic simple">
+<li><p>Написать метод для вычисления значений тега.</p></li>
+<li><p>Привязать этот метод к тегу, указав, какие события будут инициировать
+расчёт.</p></li>
+</ol>
+<section id="id4">
+<h4>Создание вычислительного метода тега<a class="headerlink" href="#id4" title="Link to this heading"></a></h4>
+<p>Рассмотрим создание вычислительного метода тега на следующем примере:
+допустим, у нас есть объект «комната» и в этой комнате - два потребителя
+электроэнергии: освещение и телевизор. С каждого потребителя мы можем получать
+количество потреблённой энергии в киловатт-часах.</p>
+<p>Комната же имеет тег «Суммарная потреблённая энергия», значение которого
+должно вычисляться как сумма потреблённой энергии освещением и телевизором,
+причём значение этого тега должно пересчитываться каждый раз, когда мы
+получаем новое значение потреблённой энергии от потребителей электроэнергии
+в комнате.</p>
+<p><strong>Подготовка иерархии объектов и тегов</strong>
+Создание объектов и тегов не будем здесь детально описывать - см.
+соответствующие разделы документации.</p>
+<p>Покажем иерархию созданных объектов и тегов:</p>
+<figure class="align-center" id="id8">
+<img alt="_images/methods_01.png" src="_images/methods_01.png" />
+<figcaption>
+<p><span class="caption-text">Объекты</span><a class="headerlink" href="#id8" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p><strong>Создание расчётного метода</strong>
+Опишем процесс создания расчётного метода для тега
+«Суммарная потреблённая энергия» объекта «Комната».</p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Для управления распределёнными вычислениями используются библиотеки
+<a class="reference external" href="https://pypi.org/project/patio/">patio</a> и
+<a class="reference external" href="https://pypi.org/project/patio-rabbitmq/">patio_rabbitmq</a>.</p>
+</div>
+<p>Создадим скрипт на языке <strong>python</strong>, предварительно установив пакеты
+«patio» и «patio_rabbitmq»:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">patio</span> <span class="kn">import</span> <span class="n">Registry</span><span class="p">,</span> <span class="n">AsyncExecutor</span>
+<span class="linenos"> 3</span><span class="kn">from</span> <span class="nn">patio_rabbitmq</span> <span class="kn">import</span> <span class="n">RabbitMQBroker</span>
+<span class="linenos"> 4</span>
+<span class="linenos"> 5</span><span class="n">rpc</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="n">project</span><span class="o">=</span><span class="s2">&quot;methods_app&quot;</span><span class="p">,</span> <span class="n">auto_naming</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="linenos"> 6</span>
+<span class="linenos"> 7</span><span class="nd">@rpc</span><span class="p">(</span><span class="s2">&quot;sum&quot;</span><span class="p">)</span>
+<span class="linenos"> 8</span><span class="k">async</span> <span class="k">def</span> <span class="nf">sum</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="linenos"> 9</span>   <span class="k">try</span><span class="p">:</span>
+<span class="linenos">10</span>      <span class="n">val_a</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+<span class="linenos">11</span>      <span class="n">val_b</span> <span class="o">=</span> <span class="n">b</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+<span class="linenos">12</span>      <span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="n">val_a</span><span class="p">,</span> <span class="mi">0</span><span class="p">)[</span><span class="n">val_a</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]</span><span class="o">+</span><span class="p">(</span><span class="n">val_b</span><span class="p">,</span> <span class="mi">0</span><span class="p">)[</span><span class="n">val_b</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]</span>
+<span class="linenos">13</span>   <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+<span class="linenos">14</span>      <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ошибка: </span><span class="si">{</span><span class="n">ex</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="linenos">15</span>      <span class="k">return</span> <span class="kc">None</span>
+<span class="linenos">16</span>
+<span class="linenos">17</span>   <span class="k">return</span> <span class="n">res</span>
+<span class="linenos">18</span>
+<span class="linenos">19</span><span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<span class="linenos">20</span>   <span class="k">async</span> <span class="k">with</span> <span class="n">AsyncExecutor</span><span class="p">(</span><span class="n">rpc</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+<span class="linenos">21</span>      <span class="k">async</span> <span class="k">with</span> <span class="n">RabbitMQBroker</span><span class="p">(</span>
+<span class="linenos">22</span>            <span class="c1"># измените параметры подключения к RabbitMQ</span>
+<span class="linenos">23</span>            <span class="n">executor</span><span class="p">,</span> <span class="n">amqp_url</span><span class="o">=</span><span class="s2">&quot;amqp://uid:pwd@localhost/&quot;</span><span class="p">,</span>
+<span class="linenos">24</span>      <span class="p">)</span> <span class="k">as</span> <span class="n">broker</span><span class="p">:</span>
+<span class="linenos">25</span>            <span class="k">await</span> <span class="n">broker</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+<span class="linenos">26</span>
+<span class="linenos">27</span><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="linenos">28</span>   <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="admonition attention">
+<p class="admonition-title">Внимание</p>
+<ol class="arabic simple">
+<li><p>Отметим, что расчётный метод регистрируется в системе под именем «sum»:
+<code class="docutils literal notranslate"><span class="pre">&#64;rpc(&quot;sum&quot;)</span></code> (строка 7).</p></li>
+<li><p>Выбор значений (строки 10-11) будет объяснён ниже.</p></li>
+</ol>
+</div>
+<div class="admonition attention">
+<p class="admonition-title">Внимание</p>
+<p>Если в процессе вычисления метода происходит какая-либо ошибка,
+либо метод не должен возвращать новое значение тега
+(к примеру, в процессе расчёта выяснилось, что нового значения у тега нет),
+то метод должен вернуть словарь с ключом <code class="docutils literal notranslate"><span class="pre">error</span></code>. Значение этого ключа -
+любое.</p>
+</div>
+<p>Созданный нами расчётный метод имеет два входных параметра: <code class="docutils literal notranslate"><span class="pre">a</span></code> и <code class="docutils literal notranslate"><span class="pre">b</span></code>.</p>
+<p><strong>Создание узла для расчётного метода</strong>
+Теперь нам необходимо создать узел, описывающий расчётный метод для тега
+«Суммарная потреблённая энергия».</p>
+<p>При создании узла мы должны указать:</p>
+<ol class="arabic simple">
+<li><p>зарегистрированное имя метода («sum»);</p></li>
+<li><p>на вход метод принимает два параметра;</p></li>
+<li><p>в качестве значений параметров должны передаваться значения тегов
+«Потреблённая энергия» объектов «Освещение» и «Телевизор»;</p></li>
+<li><p>метод должен инициироваться изменением двух вышеуказанных тегов.</p></li>
+</ol>
+<p>Соответственно, получаем такое тело запроса, который мы должны выполнить
+для создания узла метода:</p>
+<div class="admonition attention">
+<p class="admonition-title">Внимание</p>
+<p>Для удобства предположим, что:</p>
+<ol class="arabic simple">
+<li><p>id тега «Суммарная потреблённая энергия» = 1</p></li>
+<li><p>id «Освещение –&gt; Потреблённая энергия» = 2</p></li>
+<li><p>id «Телевизор –&gt; Потреблённая энергия» = 3</p></li>
+</ol>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1"># request: POST http://&lt;srv&gt;/v1/methods</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="c1"># body:</span>
+<span class="linenos"> 4</span><span class="p">{</span>
+<span class="linenos"> 5</span>   <span class="c1"># id вычисляемого тега (&quot;Суммарная потреблённая энергия&quot;)</span>
+<span class="linenos"> 6</span>   <span class="s2">&quot;parentId&quot;</span><span class="p">:</span> <span class="s2">&quot;1&quot;</span><span class="p">,</span>
+<span class="linenos"> 7</span>   <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos"> 8</span>      <span class="c1"># зарегистрированное имя метода</span>
+<span class="linenos"> 9</span>      <span class="s2">&quot;cn&quot;</span><span class="p">:</span> <span class="s2">&quot;Сумма&quot;</span><span class="p">,</span>
+<span class="linenos">10</span>      <span class="s2">&quot;prsMethodAddress&quot;</span><span class="p">:</span> <span class="s2">&quot;sum&quot;</span>
+<span class="linenos">11</span>   <span class="p">},</span>
+<span class="linenos">12</span>   <span class="c1"># id тегов &quot;Потреблённая энергия&quot; объектов &quot;Освещение&quot; и &quot;Телевизор&quot;</span>
+<span class="linenos">13</span>   <span class="s2">&quot;initiatedBy&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">],</span>
+<span class="linenos">14</span>   <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="linenos">15</span>      <span class="p">{</span>
+<span class="linenos">16</span>         <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos">17</span>            <span class="s2">&quot;prsJsonConfigString&quot;</span><span class="p">:</span> <span class="s2">&quot;{</span><span class="se">\&quot;</span><span class="s2">tagId</span><span class="se">\&quot;</span><span class="s2">: </span><span class="se">\&quot;</span><span class="s2">2</span><span class="se">\&quot;</span><span class="s2">}&quot;</span>
+<span class="linenos">18</span>         <span class="p">}</span>
+<span class="linenos">19</span>      <span class="p">},</span>
+<span class="linenos">20</span>      <span class="p">{</span>
+<span class="linenos">21</span>         <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos">22</span>            <span class="s2">&quot;prsJsonConfigString&quot;</span><span class="p">:</span> <span class="s2">&quot;{</span><span class="se">\&quot;</span><span class="s2">tagId</span><span class="se">\&quot;</span><span class="s2">: </span><span class="se">\&quot;</span><span class="s2">3</span><span class="se">\&quot;</span><span class="s2">}&quot;</span>
+<span class="linenos">23</span>         <span class="p">}</span>
+<span class="linenos">24</span>      <span class="p">}</span>
+<span class="linenos">25</span>   <span class="p">]</span>
+<span class="linenos">26</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Таким образом, имя метода передается в атрибуте <code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code>
+(строка 10).</p>
+<p>В рассматриваемом примере порядок следования параметров при вызове метода
+не важен. Если же при вызове метода необходимо учитывать порядок параметров,
+то в атрибутах параметра необходимо передать атрибут <code class="docutils literal notranslate"><span class="pre">prsIndex</span></code>. При вызове
+метода параметры будут отсортированы по этому атрибуту в порядке возрастания
+и переданы методу.</p>
+<p>Запрос с учётом порядка следования параметров:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1"># request: POST http://&lt;srv&gt;/v1/methods</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="c1"># body:</span>
+<span class="linenos"> 4</span><span class="p">{</span>
+<span class="linenos"> 5</span>   <span class="c1"># id вычисляемого тега (&quot;Суммарная потреблённая энергия&quot;)</span>
+<span class="linenos"> 6</span>   <span class="s2">&quot;parentId&quot;</span><span class="p">:</span> <span class="s2">&quot;1&quot;</span><span class="p">,</span>
+<span class="linenos"> 7</span>   <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos"> 8</span>      <span class="c1"># зарегистрированное имя метода</span>
+<span class="linenos"> 9</span>      <span class="s2">&quot;cn&quot;</span><span class="p">:</span> <span class="s2">&quot;Сумма&quot;</span><span class="p">,</span>
+<span class="linenos">10</span>      <span class="s2">&quot;prsMethodAddress&quot;</span><span class="p">:</span> <span class="s2">&quot;sum&quot;</span>
+<span class="linenos">11</span>   <span class="p">},</span>
+<span class="linenos">12</span>   <span class="c1"># id тегов &quot;Потреблённая энергия&quot; объектов &quot;Освещение&quot; и &quot;Телевизор&quot;</span>
+<span class="linenos">13</span>   <span class="s2">&quot;initiatedBy&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">],</span>
+<span class="linenos">14</span>   <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="linenos">15</span>      <span class="p">{</span>
+<span class="linenos">16</span>         <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos">17</span>            <span class="s2">&quot;prsJsonConfigString&quot;</span><span class="p">:</span> <span class="s2">&quot;{</span><span class="se">\&quot;</span><span class="s2">tagId</span><span class="se">\&quot;</span><span class="s2">: </span><span class="se">\&quot;</span><span class="s2">2</span><span class="se">\&quot;</span><span class="s2">}&quot;</span><span class="p">,</span>
+<span class="linenos">18</span>            <span class="s2">&quot;prsIndex&quot;</span><span class="p">:</span> <span class="mi">1</span>
+<span class="linenos">19</span>         <span class="p">}</span>
+<span class="linenos">20</span>      <span class="p">},</span>
+<span class="linenos">21</span>      <span class="p">{</span>
+<span class="linenos">22</span>         <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos">23</span>            <span class="s2">&quot;prsJsonConfigString&quot;</span><span class="p">:</span> <span class="s2">&quot;{</span><span class="se">\&quot;</span><span class="s2">tagId</span><span class="se">\&quot;</span><span class="s2">: </span><span class="se">\&quot;</span><span class="s2">3</span><span class="se">\&quot;</span><span class="s2">}&quot;</span><span class="p">,</span>
+<span class="linenos">24</span>            <span class="s2">&quot;prsIndex&quot;</span><span class="p">:</span> <span class="mi">2</span>
+<span class="linenos">25</span>         <span class="p">}</span>
+<span class="linenos">26</span>      <span class="p">}</span>
+<span class="linenos">27</span>   <span class="p">]</span>
+<span class="linenos">28</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Атрибут <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> содержит, фактически, запрос для команды
+<code class="docutils literal notranslate"><span class="pre">data/get</span></code>. При вызове метода в этот запрос автоматически подставляется
+флаг <code class="docutils literal notranslate"><span class="pre">finish</span></code>, который равен метке времени нового значения тега-инициатора
+расчёта. Именно поэтому в вычислительном методе такой сложный выбор значений
+(см. выше).</p>
+</section>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права 2026, ООО Матч Поинт Консалтинг. </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

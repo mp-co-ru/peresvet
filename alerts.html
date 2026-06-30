@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Тревоги &mdash; документация МПК-Пересвет 0.4</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sphinxcontrib-httpexample.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=11064190"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/sphinxcontrib-httpexample.js"></script>
+        <script src="_static/translations.js?v=29b1f277"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Теги" href="tags.html" />
+    <link rel="prev" title="API Платформы Пересвет" href="api.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Логотип"/>
+          </a>
+              <div class="version">
+                0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="description.html">Описание</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terms.html">Используемые термины</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка и запуск</a></li>
+<li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Примеры работы с платформой</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_extension_points.html">Точки расширения безопасности</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка безопасности платной редакции</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api.html#id2">Правила API</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="api.html#id3">Модули</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Тревоги</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#alerts_api_crud_svc.AlertCopy"><code class="docutils literal notranslate"><span class="pre">AlertCopy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#alerts_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#alerts_api_crud_svc.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#alerts_api_crud_svc.read"><code class="docutils literal notranslate"><span class="pre">read()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#alerts_api_crud_svc.update"><code class="docutils literal notranslate"><span class="pre">update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
+<li class="toctree-l3"><a class="reference internal" href="objects.html">Обьекты</a></li>
+<li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
+<li class="toctree-l3"><a class="reference internal" href="connectors.html#id2">Коды качества</a></li>
+<li class="toctree-l3"><a class="reference internal" href="connectors.html#last-will-and-testament-lwt">Last Will and Testament (LWT)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="connectors.html#id3">Удалённые команды коннектору</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a></li>
+<li class="toctree-l3"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="schedules.html">Расписания</a></li>
+<li class="toctree-l3"><a class="reference internal" href="methods_api_doc.html">Методы</a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_api.html">Запись/получение данных</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">МПК-Пересвет</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">API Платформы Пересвет</a></li>
+      <li class="breadcrumb-item active">Тревоги</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/alerts.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-alerts_api_crud_svc">
+<span id="id1"></span><h1>Тревоги<a class="headerlink" href="#module-alerts_api_crud_svc" title="Link to this heading"></a></h1>
+<p>Запросы на создание, чтение, обновление, удаление тревог.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="alerts_api_crud_svc.AlertCopy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">alerts_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">AlertCopy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sourceId</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parentId</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#alerts_api_crud_svc.AlertCopy" title="Link to this definition"></a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="alerts_api_crud_svc.AlertCopy.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'protected_namespaces':</span> <span class="pre">()}</span></em><a class="headerlink" href="#alerts_api_crud_svc.AlertCopy.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="alerts_api_crud_svc.AlertCopy.model_fields">
+<span class="sig-name descname"><span class="pre">model_fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">FieldInfo</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'attributes':</span> <span class="pre">FieldInfo(annotation=Union[dict,</span> <span class="pre">NoneType],</span> <span class="pre">required=False,</span> <span class="pre">title='Необязательные</span> <span class="pre">атрибуты</span> <span class="pre">корня</span> <span class="pre">копии</span> <span class="pre">(например</span> <span class="pre">cn).'),</span> <span class="pre">'parentId':</span> <span class="pre">FieldInfo(annotation=str,</span> <span class="pre">required=True,</span> <span class="pre">title='Id</span> <span class="pre">тега-родителя</span> <span class="pre">для</span> <span class="pre">новой</span> <span class="pre">копии'),</span> <span class="pre">'sourceId':</span> <span class="pre">FieldInfo(annotation=str,</span> <span class="pre">required=True,</span> <span class="pre">title='Id</span> <span class="pre">копируемой</span> <span class="pre">тревоги')}</span></em><a class="headerlink" href="#alerts_api_crud_svc.AlertCopy.model_fields" title="Link to this definition"></a></dt>
+<dd><p>Metadata about the fields defined on the model,
+mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</p>
+<p>This replaces <cite>Model.__fields__</cite> from Pydantic V1.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="alerts_api_crud_svc.create">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">alerts_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(ErrorHandler)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#alerts_api_crud_svc.create" title="Link to this definition"></a></dt>
+<dd><p>Метод добавляет тревогу в модель.</p>
+<p><strong>Запрос:</strong></p>
+<blockquote>
+<div><div class="http-example docutils container">
+<div class="http-example-http docutils container" id="id2">
+<p><span class="caption-text">http</span></p>
+<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">POST</span> <span class="nn">/v1/alerts/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
+<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
+<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
+<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
+
+<span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;parentId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;id of parent node&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;alert_name&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;test_alert&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;prsJsonConfigString&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{\&quot;value\&quot;: 10, \&quot;high\&quot;: true, \&quot;autoAck\&quot;: true}&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;prsActive&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;prsIndex&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="http-example-response docutils container" id="id3">
+<p><span class="caption-text">response</span></p>
+<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
+<span class="na">Access-Control-Allow-Origin</span><span class="o">:</span> <span class="l">*</span>
+<span class="na">Content-type</span><span class="o">:</span> <span class="l">application/json</span>
+
+<span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3e21924a-cc59-103e-9312-555c1a8a1358&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<ul>
+<li><p><strong>parentId</strong> (str) - id тега, к которому привязывается тревога. Обязательный атрибут.</p></li>
+<li><p><strong>attributes</strong> (dict) - параметры создаваемой тревоги. Необязательное поле.</p>
+<ul>
+<li><p><strong>cn</strong> (str) - имя тревоги. Необязательный атрибут.</p></li>
+<li><p><strong>description</strong> (str) - описание тревоги. Необязательный атрибут.</p></li>
+<li><p><strong>prsJsonConfigString</strong> (str) - Строка содержит, в случае необходимости,
+конфигурацию тревоги.
+При создании тревоги атрибут <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> имеет формат:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="c1"># &quot;тревожное&quot; значение тега</span>
+    <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="c1"># способ сравнения значения тега с &quot;тревожным&quot;:</span>
+    <span class="c1"># если high = true, то тревога возникает, если значение тега &gt;= value</span>
+    <span class="c1"># иначе - значение тега &lt; value</span>
+    <span class="s2">&quot;high&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="c1"># флаг автоквитирования</span>
+    <span class="s2">&quot;autoAck&quot;</span><span class="p">:</span> <span class="kc">True</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Обязательный аттрибут.</p>
+</li>
+<li><p><strong>prsActive</strong> (bool) - Определяет, активна ли тревога. По умолчанию = <code class="docutils literal notranslate"><span class="pre">true</span></code>.
+Необязательный атрибут.</p></li>
+<li><p><strong>prsIndex</strong> (int) - Если у узлов одного уровня иерархии проставлены индексы, то
+перед отдачей клиенту списка экземпляров они сортируются в соответствии
+с их индексами. Необязательный атрибут.</p></li>
+</ul>
+</li>
+</ul>
+</div></blockquote>
+<p><strong>Ответ:</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>id</strong> (str) - идентификатор созданной тревоги.</p></li>
+<li><p><strong>detail</strong> (str) - пояснение к возникшей ошибке.</p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="alerts_api_crud_svc.delete">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">alerts_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NodeDelete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(ErrorHandler)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#alerts_api_crud_svc.delete" title="Link to this definition"></a></dt>
+<dd><p>Метод удаляет тревогу из иерархии.</p>
+<p><strong>Запрос:</strong></p>
+<blockquote>
+<div><div class="http-example docutils container">
+<div class="http-example-http docutils container" id="id4">
+<p><span class="caption-text">http</span></p>
+<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">DELETE</span> <span class="nn">/v1/alerts/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
+<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
+<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
+<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
+
+<span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;id of an alert to delete&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="http-example-response docutils container" id="id5">
+<p><span class="caption-text">response</span></p>
+<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
+<span class="na">Access-Control-Allow-Origin</span><span class="o">:</span> <span class="l">*</span>
+<span class="na">Content-type</span><span class="o">:</span> <span class="l">application/json</span>
+
+<span class="w">    </span><span class="kc">null</span>
+</pre></div>
+</div>
+</div>
+</div>
+<ul class="simple">
+<li><p><strong>id</strong> (str | [str]) - id или список id тревоги (тревог) для удаления. Обязательное поле.</p></li>
+</ul>
+</div></blockquote>
+<p><strong>Ответ:</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><p>null - в случае успешного запроса</p></li>
+<li><p><strong>detail</strong> (list) - список с пояснениями к ошибке</p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="alerts_api_crud_svc.read">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">alerts_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Query(None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hierarchy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">getParent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Query(None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AlertRead</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(ErrorHandler)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#alerts_api_crud_svc.read" title="Link to this definition"></a></dt>
+<dd><p>Метод ищет тревоги в модели и возвращает запрошенные по ним данные.</p>
+<p><strong>Пример запроса в формате JSON.</strong></p>
+<div class="http-example docutils container">
+<div class="http-example-http docutils container" id="id6">
+<p><span class="caption-text">http</span></p>
+<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">GET</span> <span class="nn">/v1/alerts/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
+<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
+<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
+<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
+
+<span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;base&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;id of a node where to search&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;id of an alert to find&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;deref&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;scope&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;filter&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;alert*&quot;</span><span class="p">],</span>
+<span class="w">        </span><span class="nt">&quot;prsActive&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="kc">true</span><span class="p">],</span>
+<span class="w">        </span><span class="nt">&quot;prsIndex&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;cn&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="http-example-response docutils container" id="id7">
+<p><span class="caption-text">response</span></p>
+<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
+<span class="na">Access-Control-Allow-Origin</span><span class="o">:</span> <span class="l">*</span>
+<span class="na">Content-type</span><span class="o">:</span> <span class="l">application/json</span>
+
+<span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fd58e5c0-cc61-103e-9325-555c1a8a1358&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                    </span><span class="s2">&quot;alert1&quot;</span>
+<span class="w">                </span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;prsActive&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                    </span><span class="s2">&quot;TRUE&quot;</span>
+<span class="w">                </span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;prsDefault&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                    </span><span class="s2">&quot;TRUE&quot;</span>
+<span class="w">                </span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;objectClass&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                    </span><span class="s2">&quot;prsAlert&quot;</span>
+<span class="w">                </span><span class="p">]</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p><strong>Пример query запроса.</strong></p>
+<div class="http-example docutils container">
+<div class="http-example-http docutils container" id="id8">
+<p><span class="caption-text">http</span></p>
+<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">GET</span> <span class="nn">/v1/alerts/?q={&quot;base&quot;:&quot;id_of_a_node_where_to_search&quot;,&quot;id&quot;:&quot;id_of_an_alert_to_find&quot;,&quot;deref&quot;:true,&quot;scope&quot;:1}</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
+<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
+<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
+<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
+</pre></div>
+</div>
+</div>
+<div class="http-example-response docutils container" id="id9">
+<p><span class="caption-text">response</span></p>
+<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
+<span class="na">Access-Control-Allow-Origin</span><span class="o">:</span> <span class="l">*</span>
+<span class="na">Content-type</span><span class="o">:</span> <span class="l">application/json</span>
+
+<span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fd58e5c0-cc61-103e-9325-555c1a8a1358&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                    </span><span class="s2">&quot;alert1&quot;</span>
+<span class="w">                </span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;prsActive&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                    </span><span class="s2">&quot;TRUE&quot;</span>
+<span class="w">                </span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;prsDefault&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                    </span><span class="s2">&quot;TRUE&quot;</span>
+<span class="w">                </span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;objectClass&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                    </span><span class="s2">&quot;prsAlert&quot;</span>
+<span class="w">                </span><span class="p">]</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p><strong>Параметры запроса:</strong></p>
+<blockquote>
+<div><ul>
+<li><p><strong>id</strong> (str | list(str)) - идентификатор тревоги (тревог), данные о которой(-ых) хотим прочитать.
+Необязательный атрибут.</p></li>
+<li><p><strong>base</strong> (str) - Базовый узел для поиска. В случае отсутствия поиск проводится по всей модели.
+Необязательный атрибут.</p></li>
+<li><p><strong>deref</strong> (bool) - Флаг разыменования ссылок. По умолчанию true. Необязательный атрибут.</p></li>
+<li><p><strong>scope</strong> (int) - Масштаб поиска. По умолчанию 1.</p>
+<p>0 - получение данных по указанному в ключе <code class="docutils literal notranslate"><span class="pre">base</span></code> узлу</p>
+<p>1 - поиск среди непосредственных потомков указанного в <code class="docutils literal notranslate"><span class="pre">base</span></code> узла</p>
+<p>2 - поиск по всему дереву, начиная с указанного в <code class="docutils literal notranslate"><span class="pre">base</span></code> узла.</p>
+<p>Необязательный атрибут.</p>
+</li>
+<li><p><strong>filter</strong> (dict) - Словарь из атрибутов и их значений, из которых
+формируется фильтр для поиска. В случае отсутствия возвращаются все тревоги,
+найденные под узлом, указанным в атрибуте <code class="docutils literal notranslate"><span class="pre">base</span></code>.
+При формировании фильтра значения ключей объединяются логической операцией <code class="docutils literal notranslate"><span class="pre">ИЛИ</span></code>, а сами
+ключи - операцией <code class="docutils literal notranslate"><span class="pre">И</span></code>.
+При указании значения строкового атрибута можно использовать символ маски <code class="docutils literal notranslate"><span class="pre">*</span></code>.
+Пример фильтра:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;alert*&quot;</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;prsActive&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="kc">true</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;prsIndex&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Данный фильтр вернёт тревоги, у которых:</p>
+<p>(Имя начинается с <code class="docutils literal notranslate"><span class="pre">alert</span></code>) И (флаг активности = <code class="docutils literal notranslate"><span class="pre">true</span></code>) И (индекс равен 1 ИЛИ 2 ИЛИ 3).</p>
+</li>
+<li><p><strong>attributes</strong> (list[str]) - Список атрибутов, значения которых необходимо вернуть в ответе. По умолчанию - [„.“], то есть все атрибуты (кроме системных).</p></li>
+</ul>
+</div></blockquote>
+<p><strong>Ответ:</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>data</strong> (list) - найденные тревоги с их параметрами.</p></li>
+<li><p><strong>detail</strong> (str) - пояснение к возникшей ошибке.</p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="alerts_api_crud_svc.update">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">alerts_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(ErrorHandler)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#alerts_api_crud_svc.update" title="Link to this definition"></a></dt>
+<dd><p>Метод обновляет тревогу в модели.</p>
+<p><strong>Запрос:</strong></p>
+<blockquote>
+<div><div class="http-example docutils container">
+<div class="http-example-http docutils container" id="id10">
+<p><span class="caption-text">http</span></p>
+<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">PUT</span> <span class="nn">/v1/alerts/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
+<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
+<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
+<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
+
+<span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;id of an alert to update&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;alert name&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;description of the alert&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;prsJsonConfigString&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;node configuration&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;prsActive&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;prsDefault&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;prsIndex&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">12345</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="http-example-response docutils container" id="id11">
+<p><span class="caption-text">response</span></p>
+<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
+<span class="na">Access-Control-Allow-Origin</span><span class="o">:</span> <span class="l">*</span>
+<span class="na">Content-type</span><span class="o">:</span> <span class="l">application/json</span>
+
+<span class="p">{</span>
+<span class="w">    </span><span class="p">{}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<ul class="simple">
+<li><p><strong>id</strong> (str) - id тревоги для обновления. Обязательное поле.</p></li>
+<li><p><strong>attributes</strong> (dict) - словарь с параметрами для обновления.
+Соответствует атрибутам из команды <code class="docutils literal notranslate"><span class="pre">create</span></code>.</p></li>
+</ul>
+</div></blockquote>
+<p><strong>Ответ:</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><p>{} - пустой словарь в случае успешного запроса.</p></li>
+<li><p><strong>detail</strong> (list) - список с пояснениями к ошибке.</p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="api.html" class="btn btn-neutral float-left" title="API Платформы Пересвет" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="tags.html" class="btn btn-neutral float-right" title="Теги" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права 2026, ООО Матч Поинт Консалтинг. </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

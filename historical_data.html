@@ -1,0 +1,1896 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Исторические данные &mdash; документация МПК-Пересвет 0.4</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sphinxcontrib-httpexample.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=11064190"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/sphinxcontrib-httpexample.js"></script>
+        <script src="_static/translations.js?v=29b1f277"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Установка и запуск" href="installation.html" />
+    <link rel="prev" title="Компоненты" href="components.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Логотип"/>
+          </a>
+              <div class="version">
+                0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="description.html">Описание</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terms.html">Используемые термины</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Исторические данные</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#timestampformat">Правила работы с данными</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#qualitycodes">Коды качества</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">Получение данных</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Пример массива данных</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Формат запроса на получение данных</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Формат ответа на запрос на получение данных</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#getcurrentvalue">Получение текущего значения тэга</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#prsstep-false">Метки времени в будущем и <code class="docutils literal notranslate"><span class="pre">prsStep</span></code> = false</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#prsstep-true">Метки времени в будущем, <code class="docutils literal notranslate"><span class="pre">prsStep</span></code> = true</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#start">Ключ <code class="docutils literal notranslate"><span class="pre">start</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id10"><code class="docutils literal notranslate"><span class="pre">prsStep</span></code> = false</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id11"><code class="docutils literal notranslate"><span class="pre">prsStep</span></code> = <code class="docutils literal notranslate"><span class="pre">true</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id12">Начало периода в запросе - перед любой меткой времени в базе</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id13">Начало периода в запросе - после любой метки времени в базе</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#finish">Ключ <code class="docutils literal notranslate"><span class="pre">finish</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id14"><code class="docutils literal notranslate"><span class="pre">finish</span></code> = произвольной метке времени</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id15">Ключ <code class="docutils literal notranslate"><span class="pre">finish</span></code> установлен перед любой существующей в базе меткой времени</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id16">Ключ <code class="docutils literal notranslate"><span class="pre">finish</span></code> равен текущей метке времени</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#start-finish">Ключи <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id17"><code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> внутри существующих в базе меток</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id18"><code class="docutils literal notranslate"><span class="pre">start</span></code> выходит за пределы меток</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id19"><code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> вне меток времени</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#count">Ключ <code class="docutils literal notranslate"><span class="pre">count</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#count-finish">Ключи <code class="docutils literal notranslate"><span class="pre">count</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#count-start">Ключи <code class="docutils literal notranslate"><span class="pre">count</span></code> и <code class="docutils literal notranslate"><span class="pre">start</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#timestep">Ключ <code class="docutils literal notranslate"><span class="pre">timeStep</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#timestep-count"><code class="docutils literal notranslate"><span class="pre">timeStep</span></code> и <code class="docutils literal notranslate"><span class="pre">count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#timestep-count-finish"><code class="docutils literal notranslate"><span class="pre">timeStep</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#timestep-count-start"><code class="docutils literal notranslate"><span class="pre">timeStep</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code> и <code class="docutils literal notranslate"><span class="pre">start</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#timestep-start-finish"><code class="docutils literal notranslate"><span class="pre">timeStep</span></code>, <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#maxcount">Ключ <code class="docutils literal notranslate"><span class="pre">maxCount</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#actual">Ключ <code class="docutils literal notranslate"><span class="pre">actual</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#start-actual"><code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">actual</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#start-count-actual"><code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code>, <code class="docutils literal notranslate"><span class="pre">actual</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#actual-finish"><code class="docutils literal notranslate"><span class="pre">actual</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#finish-count-actual"><code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code>, <code class="docutils literal notranslate"><span class="pre">actual</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#start-finish-actual"><code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">actual</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#start-finish-count-actual"><code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code>, <code class="docutils literal notranslate"><span class="pre">actual</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#start-finish-maxcount-actual"><code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">maxCount</span></code>, <code class="docutils literal notranslate"><span class="pre">actual</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#value">Ключ <code class="docutils literal notranslate"><span class="pre">value</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#value-actual"><code class="docutils literal notranslate"><span class="pre">value</span></code> и <code class="docutils literal notranslate"><span class="pre">actual</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#null"><code class="docutils literal notranslate"><span class="pre">null</span></code> в истории данных</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка и запуск</a></li>
+<li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Примеры работы с платформой</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_extension_points.html">Точки расширения безопасности</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка безопасности платной редакции</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">МПК-Пересвет</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Исторические данные</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/historical_data.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="historical-data">
+<span id="id1"></span><h1>Исторические данные<a class="headerlink" href="#historical-data" title="Link to this heading"></a></h1>
+<p>Одна из главных задач Платформы - обеспечение клентов сохранёнными
+историческими данными.
+Клиенты получают данные с помощью запроса <code class="docutils literal notranslate"><span class="pre">GET</span></code> по адресу <code class="docutils literal notranslate"><span class="pre">/v1/data/</span></code>.
+Эта команда будет подробно объяснена ниже.</p>
+<section id="timestampformat">
+<span id="id2"></span><h2>Правила работы с данными<a class="headerlink" href="#timestampformat" title="Link to this heading"></a></h2>
+<div class="admonition important">
+<p class="admonition-title">Важно</p>
+<p><strong>При работе с историческими данными запомним следующие правила:</strong></p>
+<ol class="arabic">
+<li><p>Для правильной работы с историческими данными все сервера, устройства,
+клиенты должны быть синхронизированы по времени.</p></li>
+<li><p>Если в тэге нет значений с метками времени из будущего, то последнее
+сохранённое на текущий момент времени в тэге значение является
+текущим значением тэга.</p></li>
+<li><p>Если значения тэга числовые:</p>
+<ol class="arabic simple">
+<li><p>Если атрибут тэга <code class="docutils literal notranslate"><span class="pre">prsStep</span></code> равен <code class="docutils literal notranslate"><span class="pre">true</span></code>, тогда значения тэга
+между двумя метками времени не интерполируются.</p></li>
+<li><p>Если атрибут тэга <code class="docutils literal notranslate"><span class="pre">prsStep</span></code> равен <code class="docutils literal notranslate"><span class="pre">false</span></code> (по умолчанию),
+тогда значения тэга между двумя метками времени вычисляются
+с помощью линейной интерполяции.</p></li>
+<li><p>Программы, предоставляющие данные пользователям, ответственны за
+верную интерпретацию атрибута <code class="docutils literal notranslate"><span class="pre">prsStep</span></code> у тэга.
+К примеру, тренд должен правильно показывать значения тэга
+между соседними метками времени.</p></li>
+</ol>
+</li>
+<li><p>Все метки времени внутри платформы и в исторической базе данных
+хранятся и обрабатываются как целочисленные данные.
+Каждая метка времени - это количество микросекунд, начиная с
+01-01-1970 00:00:00+00:00.
+Пример: 1000000 = 01-01-1970 00:00:01+00:00</p></li>
+<li><p>Если клиент посылает в платформу метку времени как строку в формате
+ISO 8601 и не указывает временнУю зону, то Платформа устанавливает для
+такой метки времени зону по умолчанию UTC (+00:00).</p></li>
+<li><p>Клиенты могут записывать значения тэгов с метками времени из будущего.</p></li>
+<li><p>Ответ на запрос <code class="docutils literal notranslate"><span class="pre">GET</span></code> <code class="docutils literal notranslate"><span class="pre">/v1/data/</span></code> содержит массив значений тэга,
+отсортированный по метке времени в возрастающем порядке.</p></li>
+<li><p>Если тэг содержит несколько значений на одну и ту же метку времени,
+то текущим значением тэга на эту метку времени считается записанное
+последним.</p></li>
+<li><p>Каждое значение в тэге содержит код качества <code class="docutils literal notranslate"><span class="pre">q</span></code>. Если <code class="docutils literal notranslate"><span class="pre">q</span></code> = 0
+или <code class="docutils literal notranslate"><span class="pre">null</span></code>, то значению тэга можно доверять.
+Иначе значение тэга ошибочно, код
+<code class="docutils literal notranslate"><span class="pre">q</span></code> определяет ошибку. См. <a class="reference internal" href="#qualitycodes"><span class="std std-ref">коды качества</span></a>.</p>
+<p>Следующие правила касаются ключей <code class="docutils literal notranslate"><span class="pre">count</span></code>, <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code> и <code class="docutils literal notranslate"><span class="pre">timeStep</span></code>
+в запросе <code class="docutils literal notranslate"><span class="pre">GET</span></code> <code class="docutils literal notranslate"><span class="pre">/v1/data/</span></code>.</p>
+</li>
+<li><p>Комбинации ключей <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code> и <code class="docutils literal notranslate"><span class="pre">timeStep</span></code> совместно с ключом
+<code class="docutils literal notranslate"><span class="pre">count</span></code> определяют границы периода для возвращаемых данных.</p></li>
+<li><p>Ключ <code class="docutils literal notranslate"><span class="pre">count</span></code> определяет количество возвращаемых данных.
+Учитывается общее количество: и реально записанные в базе данных, и
+интерполированные значения тэгов.</p></li>
+<li><p>В случае отсутствия ключа <code class="docutils literal notranslate"><span class="pre">finish</span></code> его значение принимается равным
+текущему моменту времени.
+Это правило по умолчанию отсекает данные, записанные с метками времени
+из будущего.</p></li>
+</ol>
+</div>
+</section>
+<section id="qualitycodes">
+<span id="id3"></span><h2>Коды качества<a class="headerlink" href="#qualitycodes" title="Link to this heading"></a></h2>
+<p>У каждого записанного в базу значения тэга есть так называемый «код качества»,
+который возвращается в ключе <code class="docutils literal notranslate"><span class="pre">q</span></code>.</p>
+<p>Код качества - это, другими словами, код ошибки данных.</p>
+<table class="docutils align-default" id="id21">
+<caption><span class="caption-text">Коды качества</span><a class="headerlink" href="#id21" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 67%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Код</p></th>
+<th class="head"><p>Описание</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0 | null</p></td>
+<td><p>Обычное значение. Данные «хорошие».</p></td>
+</tr>
+<tr class="row-odd"><td><p>100</p></td>
+<td><p>Разорвана связь между платформой и коннектором, записывающим данные
+в тэг. Используется совместно со значением тэга <code class="docutils literal notranslate"><span class="pre">null</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>101</p></td>
+<td><p>Установлена (или восстановлена) связь между коннектором и платформой
+после состояния 100. Используется совместно со значением тэга <code class="docutils literal notranslate"><span class="pre">null</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>102</p></td>
+<td><p>Разорвана связь между коннектором и поставщиком данных.
+Используется совместно со значением тэга <code class="docutils literal notranslate"><span class="pre">null</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>103</p></td>
+<td><p>Ошибка источника данных.</p></td>
+</tr>
+<tr class="row-odd"><td><p>104</p></td>
+<td><p>Зарезервировано (ранее использовалось как «восстановлена связь»;
+больше не применяется в новых версиях платформы).</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id4">
+<h2>Получение данных<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<p>Подробно рассмотрим примеры получения исторических данных.</p>
+<section id="id5">
+<h3>Пример массива данных<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<p>Допустим, у нас есть тэг <code class="docutils literal notranslate"><span class="pre">Tag1</span></code> у объекта <code class="docutils literal notranslate"><span class="pre">Object1</span></code>. Идентификатор тега - <code class="docutils literal notranslate"><span class="pre">1500c712-726a-103e-9264-a5021ec2dae1</span></code>.
+Атрибут <code class="docutils literal notranslate"><span class="pre">prsTagValueTypeCode</span></code> этого тэга равен 1 и это значит, что тэг
+хранит вещественные значения.
+Исторические данные этого тэга:</p>
+<img alt="_images/datapool.png" src="_images/datapool.png" />
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Для простоты будем оперировать только часами и минутами в качестве меток
+времени.</p>
+</div>
+<p>Итак, исторические данные тэга <code class="docutils literal notranslate"><span class="pre">Tag1</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+<span class="w">  </span><span class="p">[</span><span class="s2">&quot;09:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">],</span>
+<span class="w">  </span><span class="p">[</span><span class="s2">&quot;09:35&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">],</span>
+<span class="w">  </span><span class="p">[</span><span class="s2">&quot;09:40&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">2.5</span><span class="p">],</span>
+<span class="w">  </span><span class="p">[</span><span class="s2">&quot;09:45&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">],</span>
+<span class="w">  </span><span class="p">[</span><span class="s2">&quot;09:50&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">]</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Формат запроса на получение данных<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<p>Пример:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;id первого тэга&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;id второго тэга&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2018-12-09 12:00:00+03:00&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2018-12-09 14:00:00+03:00&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;timeStep&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">60000000</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;maxCount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">700</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;actual&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul>
+<li><p><strong>tagId</strong> (str или массив из str), обязательный -
+тэг(и) для которых необходимо получить данные.</p></li>
+<li><p><strong>start</strong> (int, str), необязательный - метка времени начала периода
+для получения данных (<a class="reference internal" href="#timestampformat"><span class="std std-ref">see</span></a>).
+Если <code class="docutils literal notranslate"><span class="pre">start</span></code> - строка, то ее значение обрабатывается в соответствии со
+стандартом <a class="reference external" href="https://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a>.</p>
+<p>Возможные значения:</p>
+<ul class="simple">
+<li><p><strong>«2018-12-20 00:00:00+03:00»</strong></p></li>
+<li><p><strong>«2018-12-20 00:00:00»</strong> - временнАя зона для этого значения
+будет установлена в UTC (00:00)</p></li>
+<li><p><strong>1544662830000000</strong> значение равно:
+«2018-12-13 01:00:30+00:00»</p></li>
+<li><p><strong>«01:00»</strong> предположим, что текущая дата на сервере платформы -
+2018-12-20, тогда «01:00» будет преобразовано в «2018-12-20 01:00:00+00:00»</p></li>
+<li><p><strong>«01:00,5+03:00»</strong> равно (оставим предыдущее предположение о дате)
+«2018-12-20 01:00:30+3:00»</p></li>
+<li><p>другие примеры указания времени можно посмотреть на
+<a class="reference external" href="https://en.wikipedia.org/wiki/ISO_8601">странице стандарта ISO 8601</a></p></li>
+</ul>
+</li>
+<li><p><strong>finish</strong> (int, str), необязательный - метка времени конца периода,
+соответствует тем же правилам, что и ключ <code class="docutils literal notranslate"><span class="pre">start</span></code>.</p></li>
+<li><p><strong>count</strong> (int), необязательный - количество значений, ожидаемых в ответе</p></li>
+<li><p><strong>timeStep</strong> (int), необязательный - промежуток времени между соседними
+возвращаемыми значениями тэга</p></li>
+<li><p><strong>maxCount</strong> (int), необязательный - ключ используется, в основном, виджетами
+и принимает значение ширины виджета в пикселях. Таким образом, Платформа
+знает, что виджет не может показать больше значений, чем указано в
+<code class="docutils literal notranslate"><span class="pre">maxCount</span></code>. В этом случае платформа возвращает не больше значений, чем
+указано в <code class="docutils literal notranslate"><span class="pre">maxCount</span></code>.</p>
+<p>Ключ <code class="docutils literal notranslate"><span class="pre">maxCount</span></code> предотвращает излишнюю загрузку платформы при работе
+с большими массивами данных.</p>
+</li>
+<li><p><strong>format</strong> (любой тип и значение), необязательный -
+если этот ключ присутствует и не равен <code class="docutils literal notranslate"><span class="pre">None</span></code>, тогда метки времени
+возвращаются в виде строк в формате ISO 8601, часовая зона - зона сервера,
+на котором работает платформа.</p></li>
+<li><p><strong>actual</strong> (bool), необязательный -
+если этот ключ присутствует и установлен в <code class="docutils literal notranslate"><span class="pre">true</span></code>,
+тогда в ответе на запрос присутствуют только реальные записанные базу данных
+значения тэга.</p></li>
+<li><p><strong>value</strong> (any), необязательный - фильтр значений тега.</p></li>
+</ul>
+</section>
+<section id="id8">
+<h3>Формат ответа на запрос на получение данных<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<p>Пример:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">   </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">     </span><span class="p">{</span>
+<span class="w">       </span><span class="nt">&quot;exceed&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">       </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;id тега&quot;</span><span class="p">,</span>
+<span class="w">       </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">         </span><span class="p">[</span><span class="s2">&quot;2018-12-31T00:00:00+03:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">         </span><span class="p">[</span><span class="s2">&quot;2018-12-31T00:01:00+03:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">120</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">       </span><span class="p">]</span>
+<span class="w">     </span><span class="p">}</span>
+<span class="w">   </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Если запрос выполнен без ошибок, ответ всегда содержит один ключ - <code class="docutils literal notranslate"><span class="pre">data</span></code>,
+который является массивом элементов типа json, каждый элемент - данные по одному
+тегу из запроса.</p>
+<p>Ключи элемента из массива:</p>
+<ul>
+<li><p><strong>exceed</strong> (bool) - флаг того, что данных в архиве больше, чем запрошено;
+логика работы флага: если в запросе указан ключ <a class="reference internal" href="#maxcount"><span class="std std-ref">maxCount</span></a>,
+то в ответе устанавливается флаг <code class="docutils literal notranslate"><span class="pre">exceed</span></code>; если этот флаг = <code class="docutils literal notranslate"><span class="pre">true</span></code>, то
+это означает, что в архиве содержится больше значений, чем указано в запросе в ключе
+<code class="docutils literal notranslate"><span class="pre">maxCount</span></code>, поэтому возвращённые значения тега усреденены и лучший выход -
+изменить запрос, запросив меньшее количество значений тега; если в запросе нет ключа
+<code class="docutils literal notranslate"><span class="pre">maxCount</span></code>, то ключ <code class="docutils literal notranslate"><span class="pre">exceed</span></code> в ответе отсутствует;</p></li>
+<li><p><strong>tagId</strong> (str) - идентификатор тега;</p></li>
+<li><p><strong>data</strong> (массив массивов) - массив значений, попадающих в запрошенный период;
+каждый элемент массива - в свою очередь, тоже массив и состоит из трёх элементов:
+<code class="docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y</span> <span class="pre">,</span> <span class="pre">q]</span></code>, где:</p>
+<p><code class="docutils literal notranslate"><span class="pre">x</span></code> - метка времени, с которой записано значение тега;
+<code class="docutils literal notranslate"><span class="pre">y</span></code> - значение тега;
+<code class="docutils literal notranslate"><span class="pre">q</span></code> - код <a class="reference internal" href="#qualitycodes"><span class="std std-ref">качества значения</span></a>.</p>
+</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>В более ранних версиях платформы (и в некоторых старых примерах) порядок мог встречаться как
+<code class="docutils literal notranslate"><span class="pre">[y,</span> <span class="pre">x,</span> <span class="pre">q]</span></code>. Актуальный контракт — <strong>всегда</strong> <code class="docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y,</span> <span class="pre">q]</span></code>.</p>
+</div>
+<p>Ниже - примеры запросов.</p>
+</section>
+<section id="getcurrentvalue">
+<span id="id9"></span><h3>Получение текущего значения тэга<a class="headerlink" href="#getcurrentvalue" title="Link to this heading"></a></h3>
+<p>Самый простой запрос на получение данных выглядит так:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Запрос выше показывает, как можно получить текущее значение одного тэга.</p>
+<p>Допустим, текущий момент времени - 09:53:</p>
+<img alt="_images/tagId_step.png" src="_images/tagId_step.png" />
+<p>Ответом будет:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">1545288780000000</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="#timestampformat"><span class="std std-ref">В соответствии с правилом 2</span></a> текущее значение тэга - 4.
+Метка времени (<code class="docutils literal notranslate"><span class="pre">1545288780000000</span></code>) соответствует текущему моменту времени.
+Такой ответ будет идентичен для тэгов с атрибутом <code class="docutils literal notranslate"><span class="pre">prsStep</span></code>, равным
+<code class="docutils literal notranslate"><span class="pre">true</span></code> и <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<ol class="arabic simple">
+<li><p>Для простоты понимания меток времени во всех следующих запросах будем
+использовать ключ <code class="docutils literal notranslate"><span class="pre">format</span></code>.</p></li>
+<li><p>Опять же для простоты исключим из всех дальнейших меток времени дату.</p></li>
+</ol>
+</div>
+</section>
+<section id="prsstep-false">
+<h3>Метки времени в будущем и <code class="docutils literal notranslate"><span class="pre">prsStep</span></code> = false<a class="headerlink" href="#prsstep-false" title="Link to this heading"></a></h3>
+<p>Допустим, текущий момент времени 09:47:30.
+Это значит, что мы имеем одно значение тэга, сохранённое с меткой времени
+в будущем.
+Пусть <code class="docutils literal notranslate"><span class="pre">prsStep</span></code> = <code class="docutils literal notranslate"><span class="pre">false</span></code>, то есть мы должны интерполировать значения
+тэгов.</p>
+<img alt="_images/tagId_stepFalse.png" src="_images/tagId_stepFalse.png" />
+<p>Тогда запрос</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Вернёт:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">4.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:47:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="prsstep-true">
+<h3>Метки времени в будущем, <code class="docutils literal notranslate"><span class="pre">prsStep</span></code> = true<a class="headerlink" href="#prsstep-true" title="Link to this heading"></a></h3>
+<p>Этот пример отличается от предыдущего тем, что <code class="docutils literal notranslate"><span class="pre">prsStep</span></code> = <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<img alt="_images/tagId_stepTrue.png" src="_images/tagId_stepTrue.png" />
+<p>Тогда запрос</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Вернёт:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:47:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="start">
+<h3>Ключ <code class="docutils literal notranslate"><span class="pre">start</span></code><a class="headerlink" href="#start" title="Link to this heading"></a></h3>
+<section id="id10">
+<h4><code class="docutils literal notranslate"><span class="pre">prsStep</span></code> = false<a class="headerlink" href="#id10" title="Link to this heading"></a></h4>
+<p>Добавим к нашему запросу ключ <code class="docutils literal notranslate"><span class="pre">start</span></code>.
+Ключ <code class="docutils literal notranslate"><span class="pre">start</span></code> устанавливает начало периода для получения данных.
+Пусть <code class="docutils literal notranslate"><span class="pre">start</span></code> = 09:32:30 и <code class="docutils literal notranslate"><span class="pre">prsStep</span></code> = <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<img alt="_images/period_fromStepFalse.png" src="_images/period_fromStepFalse.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:50:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:53:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id11">
+<h4><code class="docutils literal notranslate"><span class="pre">prsStep</span></code> = <code class="docutils literal notranslate"><span class="pre">true</span></code><a class="headerlink" href="#id11" title="Link to this heading"></a></h4>
+<img alt="_images/period_fromStepTrue.png" src="_images/period_fromStepTrue.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:50:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:53:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id12">
+<h4>Начало периода в запросе - перед любой меткой времени в базе<a class="headerlink" href="#id12" title="Link to this heading"></a></h4>
+<p>Пусть <code class="docutils literal notranslate"><span class="pre">start</span></code> = 09:27:30.</p>
+<img alt="_images/period_fromBeforeData.png" src="_images/period_fromBeforeData.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:27:30&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="kc">null</span><span class="w"> </span><span class="p">,</span><span class="s2">&quot;09:27:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:30:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:50:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:53:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id13">
+<h4>Начало периода в запросе - после любой метки времени в базе<a class="headerlink" href="#id13" title="Link to this heading"></a></h4>
+<p>Пусть <code class="docutils literal notranslate"><span class="pre">start</span></code> = 09:52:30.</p>
+<img alt="_images/period_fromAfterData.png" src="_images/period_fromAfterData.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:52:30&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Возвращается последнее значение в базе как на метку <code class="docutils literal notranslate"><span class="pre">start</span></code>, так и на текущую метку времени</p>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:52:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:55:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="finish">
+<h3>Ключ <code class="docutils literal notranslate"><span class="pre">finish</span></code><a class="headerlink" href="#finish" title="Link to this heading"></a></h3>
+<section id="id14">
+<h4><code class="docutils literal notranslate"><span class="pre">finish</span></code> = произвольной метке времени<a class="headerlink" href="#id14" title="Link to this heading"></a></h4>
+<p>Устанавливая ключ <code class="docutils literal notranslate"><span class="pre">finish</span></code>, мы ограничиваем конец периода получения данных.</p>
+<img alt="_images/period_to.png" src="_images/period_to.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id15">
+<h4>Ключ <code class="docutils literal notranslate"><span class="pre">finish</span></code> установлен перед любой существующей в базе меткой времени<a class="headerlink" href="#id15" title="Link to this heading"></a></h4>
+<img alt="_images/period_toBefore.png" src="_images/period_toBefore.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:27:30&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="s2">&quot;09:27:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;y&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id16">
+<h4>Ключ <code class="docutils literal notranslate"><span class="pre">finish</span></code> равен текущей метке времени<a class="headerlink" href="#id16" title="Link to this heading"></a></h4>
+<p>Если мы установим ключ <code class="docutils literal notranslate"><span class="pre">finish</span></code> на текущую метку времени, то запрос
+будет в точности таким же, как в запросе <a class="reference internal" href="#getcurrentvalue"><span class="std std-ref">Получение текущего значения тэга</span></a>.</p>
+</section>
+</section>
+<section id="start-finish">
+<h3>Ключи <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code><a class="headerlink" href="#start-finish" title="Link to this heading"></a></h3>
+<p>Ниже - несколько примеров одновременно установленных ключей <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code>.</p>
+<section id="id17">
+<h4><code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> внутри существующих в базе меток<a class="headerlink" href="#id17" title="Link to this heading"></a></h4>
+<img alt="_images/period_fromAndToReal.png" src="_images/period_fromAndToReal.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:47:30&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">4.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:47:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id18">
+<h4><code class="docutils literal notranslate"><span class="pre">start</span></code> выходит за пределы меток<a class="headerlink" href="#id18" title="Link to this heading"></a></h4>
+<img alt="_images/period_fromNotReal.png" src="_images/period_fromNotReal.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:27:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:47:30&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:27:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:30:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">4.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:47:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id19">
+<h4><code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> вне меток времени<a class="headerlink" href="#id19" title="Link to this heading"></a></h4>
+<img alt="_images/period_fromToOutside.png" src="_images/period_fromToOutside.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:27:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:55:00&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:27:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:30:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:50:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:55:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="count">
+<h3>Ключ <code class="docutils literal notranslate"><span class="pre">count</span></code><a class="headerlink" href="#count" title="Link to this heading"></a></h3>
+<p>Ключ <code class="docutils literal notranslate"><span class="pre">count</span></code> определяет запрашиваемое количество данных.</p>
+<p>В соответствии с <a class="reference internal" href="#timestampformat"><span class="std std-ref">правилом 10</span></a> ключ <code class="docutils literal notranslate"><span class="pre">finish</span></code>
+равен текущей метке времени в случае, если установлен только ключ <code class="docutils literal notranslate"><span class="pre">count</span></code>.</p>
+<section id="count-finish">
+<h4>Ключи <code class="docutils literal notranslate"><span class="pre">count</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code><a class="headerlink" href="#count-finish" title="Link to this heading"></a></h4>
+<p>Предположим, что мы установили ключ <code class="docutils literal notranslate"><span class="pre">finish</span></code> на момент времени, не существующий
+в базе данных:</p>
+<img alt="_images/toAndCount.png" src="_images/toAndCount.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:47:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Этот запрос вернёт два сохранённых значения и одно интерполированное.</p>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">4.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:47:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Следующий пример показывает, что мы получим в случае, если ключ <code class="docutils literal notranslate"><span class="pre">finish</span></code>
+равен существующей в базе метке времени:</p>
+<img alt="_images/toAndCount2.png" src="_images/toAndCount2.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Запрос вернёт три сохранённых значения.</p>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Запрос:</p>
+<p>Ключ <code class="docutils literal notranslate"><span class="pre">count</span></code> превышает количество существующих значений
+(основываемся на предыдущей картинке).</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:30:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ключ <code class="docutils literal notranslate"><span class="pre">finish</span></code> превышает последнюю существующую метку времени:</p>
+<img alt="_images/toAndCount3.png" src="_images/toAndCount3.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:52:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Будут возвращены два сохранённых и последнее существующее значение на метку времени <code class="docutils literal notranslate"><span class="pre">finish</span></code>:</p>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:50:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:52:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="count-start">
+<h4>Ключи <code class="docutils literal notranslate"><span class="pre">count</span></code> и <code class="docutils literal notranslate"><span class="pre">start</span></code><a class="headerlink" href="#count-start" title="Link to this heading"></a></h4>
+<p>Совместное использование ключей <code class="docutils literal notranslate"><span class="pre">count</span></code> и <code class="docutils literal notranslate"><span class="pre">start</span></code> похоже на случай
+совместного использования ключей <code class="docutils literal notranslate"><span class="pre">finish</span></code> и <code class="docutils literal notranslate"><span class="pre">count</span></code> за исключением того,
+что мы ограничиваем не конец периода, а начало.</p>
+<p>Несколько следующих примеров основываются на следующей картинке:</p>
+<img alt="_images/fromAndCount.png" src="_images/fromAndCount.png" />
+<p>Запрос <code class="docutils literal notranslate"><span class="pre">count</span></code> = 1:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:42:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">3.3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:42:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Запрос <code class="docutils literal notranslate"><span class="pre">count</span></code> = 2:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:42:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">3.3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:42:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Запрос <code class="docutils literal notranslate"><span class="pre">count</span></code> = 3:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:42:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">3.3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:42:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:50:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Запрос <code class="docutils literal notranslate"><span class="pre">count</span> <span class="pre">=</span> <span class="pre">4</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:42:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">3.3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:42:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:50:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:52:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Запрос <code class="docutils literal notranslate"><span class="pre">count</span> <span class="pre">=</span> <span class="pre">5</span></code>: ответ будет в точности таким же, как предыдущий.</p>
+<p>Давайте переместим текущую метку времени:</p>
+<img alt="_images/fromAndCount2.png" src="_images/fromAndCount2.png" />
+<p>Запрос <code class="docutils literal notranslate"><span class="pre">count</span></code> = 3:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:42:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">3.3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:42:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">4.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:47:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Запрос <code class="docutils literal notranslate"><span class="pre">count</span></code> = 4: ответ будет таким же, как предыдущий в связи с
+<a class="reference internal" href="#timestampformat"><span class="std std-ref">правилом 10</span></a>, вне зависимости от того, что существует
+значение с меткой времени в будущем (09:50:00).</p>
+</section>
+</section>
+<section id="timestep">
+<h3>Ключ <code class="docutils literal notranslate"><span class="pre">timeStep</span></code><a class="headerlink" href="#timestep" title="Link to this heading"></a></h3>
+<p>Ключ <code class="docutils literal notranslate"><span class="pre">timeStep</span></code> устанавливает временнОй период между соседними возвращаемыми
+значениями. Используйте этот ключ совместно с ключом <code class="docutils literal notranslate"><span class="pre">count</span></code>.</p>
+<p>Значения ключа <code class="docutils literal notranslate"><span class="pre">timeStep</span></code> измеряется в микросекундах.</p>
+<section id="timestep-count">
+<h4><code class="docutils literal notranslate"><span class="pre">timeStep</span></code> и <code class="docutils literal notranslate"><span class="pre">count</span></code><a class="headerlink" href="#timestep-count" title="Link to this heading"></a></h4>
+<p>Как определено в <a class="reference internal" href="#timestampformat"><span class="std std-ref">правиле 2</span></a>, значение по умолчанию
+ключа <code class="docutils literal notranslate"><span class="pre">finish</span></code> - текущая метка времени.</p>
+<img alt="_images/timeStepAndCount.png" src="_images/timeStepAndCount.png" />
+<p>Запрос (<code class="docutils literal notranslate"><span class="pre">timeStep</span></code> равен 5 минутам):</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;timeStep&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">300000000</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">3.7</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:42:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">4.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:47:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:52:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Теперь рассмотрим тот же запрос, но выполненный в момент времени <code class="docutils literal notranslate"><span class="pre">10:05</span></code>:</p>
+<img alt="_images/timestep_count_2.png" src="_images/timestep_count_2.png" />
+<p>Запрос (<code class="docutils literal notranslate"><span class="pre">timeStep</span></code> равен 5 минутам):</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;timeStep&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">300000000</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:55:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;10:00:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;10:05:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Запрос (<code class="docutils literal notranslate"><span class="pre">count</span></code> = 6):</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;timeStep&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">300000000</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:27:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.725</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:37:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">3.3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:42:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">4.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:47:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:52:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="timestep-count-finish">
+<h4><code class="docutils literal notranslate"><span class="pre">timeStep</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code><a class="headerlink" href="#timestep-count-finish" title="Link to this heading"></a></h4>
+<p>Поведение запросов с ключами <code class="docutils literal notranslate"><span class="pre">timeStep</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> такое же,
+как в предыдущих примерх, за исключением того, что ключ <code class="docutils literal notranslate"><span class="pre">finish</span></code>
+явно задаёт окончание периода.</p>
+</section>
+<section id="timestep-count-start">
+<h4><code class="docutils literal notranslate"><span class="pre">timeStep</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code> и <code class="docutils literal notranslate"><span class="pre">start</span></code><a class="headerlink" href="#timestep-count-start" title="Link to this heading"></a></h4>
+<p>В этом случае ключ <code class="docutils literal notranslate"><span class="pre">finish</span></code> вычисляется в соответствии с
+<a class="reference internal" href="#timestampformat"><span class="std std-ref">правилом 12</span></a>.</p>
+<img alt="_images/timeStepFromCount.png" src="_images/timeStepFromCount.png" />
+<p>Запрос (<code class="docutils literal notranslate"><span class="pre">timeStep</span></code> равен 5 минутам):</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;timeStep&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">300000000</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">4.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Несмотря на то, что ключ <code class="docutils literal notranslate"><span class="pre">count</span></code> равен 4, возвращено только 3 значения,
+т.к. еще одно значение, имеющееся в базе, относится к будущему.</p>
+</section>
+<section id="timestep-start-finish">
+<h4><code class="docutils literal notranslate"><span class="pre">timeStep</span></code>, <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code><a class="headerlink" href="#timestep-start-finish" title="Link to this heading"></a></h4>
+<img alt="_images/timeStepFromTo.png" src="_images/timeStepFromTo.png" />
+<p>Запрос (<code class="docutils literal notranslate"><span class="pre">timeStep</span></code> равен 5 минутам):</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:42:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;timeStep&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">300000000</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Запрос (<code class="docutils literal notranslate"><span class="pre">timeStep</span></code> равен 10 минутам):</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:42:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;timeStep&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">600000000</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="maxcount">
+<span id="id20"></span><h3>Ключ <code class="docutils literal notranslate"><span class="pre">maxCount</span></code><a class="headerlink" href="#maxcount" title="Link to this heading"></a></h3>
+<p>Этот ключ используется клиентами для того, чтобы информировать платформу,
+какое максимальное количество значений тэга должно быть возвращено.</p>
+<p>Представим тренд на экране. Его ширина - 800 пикселей. Это значит, что тренд
+может отрисовать не более 800 значений по оси x.</p>
+<p>Тренд устанавливает ключ <code class="docutils literal notranslate"><span class="pre">maxCount</span></code> в 800, при любом запросе на получение
+данных. Если в хранилище больше, чем 800 значений за выбранный период,
+платформа установит в ответе ключ <code class="docutils literal notranslate"><span class="pre">excess</span></code> в <code class="docutils literal notranslate"><span class="pre">true</span></code> и вернёт только
+800 значений.</p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p><code class="docutils literal notranslate"><span class="pre">maxCount</span></code> имеет приоритет над <code class="docutils literal notranslate"><span class="pre">count</span></code>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Использование ключа <code class="docutils literal notranslate"><span class="pre">maxCount</span></code> предотвращает крах платформы и повышает
+скорость работы. Установка этого ключа не обязательна, но рекомендуется.</p>
+</div>
+</section>
+<section id="actual">
+<h3>Ключ <code class="docutils literal notranslate"><span class="pre">actual</span></code><a class="headerlink" href="#actual" title="Link to this heading"></a></h3>
+<p>Если ключ <code class="docutils literal notranslate"><span class="pre">actual</span></code> установлен в <code class="docutils literal notranslate"><span class="pre">true</span></code>, выводятся только данные,
+находящиеся в базе данных без интерполяции/присвоения на границах диапазона.
+По умолчанию ключ <code class="docutils literal notranslate"><span class="pre">actual</span></code> установлен в <code class="docutils literal notranslate"><span class="pre">false</span></code>.
+Если ключ <code class="docutils literal notranslate"><span class="pre">actual</span></code> установлен в <code class="docutils literal notranslate"><span class="pre">true</span></code>, ключ <code class="docutils literal notranslate"><span class="pre">timeStep</span></code> не учитывается.</p>
+<p>Ниже представлены случаи использования ключа <code class="docutils literal notranslate"><span class="pre">actual</span></code>
+с различными комбинациями других ключей.</p>
+<section id="start-actual">
+<h4><code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">actual</span></code><a class="headerlink" href="#start-actual" title="Link to this heading"></a></h4>
+<p>В этом случае возвращаются данные от метки времени,
+заданной <code class="docutils literal notranslate"><span class="pre">start</span></code>, до текущего момента времени.
+Если на метку <code class="docutils literal notranslate"><span class="pre">start</span></code> и/или на текущий момент времени данных нет,
+на эти метки времени ничего не возвращается.</p>
+<img alt="_images/fromAndCountActual.png" src="_images/fromAndCountActual.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:32:00&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;actual&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:50:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="start-count-actual">
+<h4><code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code>, <code class="docutils literal notranslate"><span class="pre">actual</span></code><a class="headerlink" href="#start-count-actual" title="Link to this heading"></a></h4>
+<p>Возвращаются данные в количестве, заданном в <code class="docutils literal notranslate"><span class="pre">count</span></code>.
+Если данных в базе меньше, чем задано в <code class="docutils literal notranslate"><span class="pre">count</span></code>,
+возвращаются только имеющиеся данные.</p>
+<img alt="_images/fromAndCountActual.png" src="_images/fromAndCountActual.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:32:00&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;actual&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:32:00&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;actual&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:50:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="actual-finish">
+<h4><code class="docutils literal notranslate"><span class="pre">actual</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code><a class="headerlink" href="#actual-finish" title="Link to this heading"></a></h4>
+<p>В этом случае возвращается значение на метку времени <code class="docutils literal notranslate"><span class="pre">finish</span></code>
+или последнее имеющееся значение перед меткой времени <code class="docutils literal notranslate"><span class="pre">finish</span></code>
+с соответствующей меткой
+времени, если значения на метку времени <code class="docutils literal notranslate"><span class="pre">finish</span></code> нет.</p>
+<img alt="_images/toAndCountActual.png" src="_images/toAndCountActual.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:47:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;actual&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="finish-count-actual">
+<h4><code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code>, <code class="docutils literal notranslate"><span class="pre">actual</span></code><a class="headerlink" href="#finish-count-actual" title="Link to this heading"></a></h4>
+<p>Возвращаются данные в количестве,
+заданном в <code class="docutils literal notranslate"><span class="pre">count</span></code>, от метки времени <code class="docutils literal notranslate"><span class="pre">finish</span></code>.
+Если данных в базе меньше, чем задано в <code class="docutils literal notranslate"><span class="pre">count</span></code>,
+возвращаются только имеющиеся данные.</p>
+<img alt="_images/toAndCountActual.png" src="_images/toAndCountActual.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:47:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;actual&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="start-finish-actual">
+<h4><code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">actual</span></code><a class="headerlink" href="#start-finish-actual" title="Link to this heading"></a></h4>
+<p>В этом случае возвращаются имеющиеся в базе данные от метки
+времени <code class="docutils literal notranslate"><span class="pre">start</span></code> до метки времени <code class="docutils literal notranslate"><span class="pre">finish</span></code>.</p>
+<img alt="_images/period_fromAndToRealActual.png" src="_images/period_fromAndToRealActual.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:47:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;actual&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="start-finish-count-actual">
+<h4><code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code>, <code class="docutils literal notranslate"><span class="pre">actual</span></code><a class="headerlink" href="#start-finish-count-actual" title="Link to this heading"></a></h4>
+<p>Возвращаются данные в количестве, заданном в <code class="docutils literal notranslate"><span class="pre">count</span></code>.
+Если данных в базе меньше, чем задано в <code class="docutils literal notranslate"><span class="pre">count</span></code>,
+возвращаются только имеющиеся данные.</p>
+<img alt="_images/period_fromAndToRealActual.png" src="_images/period_fromAndToRealActual.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:47:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;actual&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:47:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="mi">10</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;actual&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="start-finish-maxcount-actual">
+<h4><code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">maxCount</span></code>, <code class="docutils literal notranslate"><span class="pre">actual</span></code><a class="headerlink" href="#start-finish-maxcount-actual" title="Link to this heading"></a></h4>
+<p>Возвращаются данные в количестве, заданном в <code class="docutils literal notranslate"><span class="pre">maxCount</span></code>.
+Если данных в базе меньше, чем задано в maxCount, возвращаются все данные
+из базы и флаг <code class="docutils literal notranslate"><span class="pre">excess</span></code> устанавливается в false.
+Если данных в базе больше, чем задано в <code class="docutils literal notranslate"><span class="pre">maxCount</span></code>,
+интервал времени разбивается на отрезки в соответствии с
+<code class="docutils literal notranslate"><span class="pre">maxCount</span></code>. Данные интерполируются/заполняются. Если на метку <code class="docutils literal notranslate"><span class="pre">start</span></code>
+нет данных, возвращается <code class="docutils literal notranslate"><span class="pre">null</span></code>. Если на метку <code class="docutils literal notranslate"><span class="pre">finish</span></code> нет данных,
+возвращается последнее имеющееся значение перед меткой времени <code class="docutils literal notranslate"><span class="pre">finish</span></code>.</p>
+<img alt="_images/period_fromAndToRealActual.png" src="_images/period_fromAndToRealActual.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:47:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;maxCount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;actual&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:47:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;maxCount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;actual&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;excess&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:47:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="value">
+<h3>Ключ <code class="docutils literal notranslate"><span class="pre">value</span></code><a class="headerlink" href="#value" title="Link to this heading"></a></h3>
+<p>Ключ <code class="docutils literal notranslate"><span class="pre">value</span></code> используется для фильтрации запрошенных данных.
+Применяется в том случае,
+когда необходимо получить конкретные значения тэга.</p>
+<img alt="_images/value.png" src="_images/value.png" />
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:42:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:41:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:43:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:50:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:53:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="value-actual">
+<h4><code class="docutils literal notranslate"><span class="pre">value</span></code> и <code class="docutils literal notranslate"><span class="pre">actual</span></code><a class="headerlink" href="#value-actual" title="Link to this heading"></a></h4>
+<p>В этом случае запрос при фильтрации данных будет учитывать только
+реальные данные, не интерполируя промежуточные значения.</p>
+<p>Запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;actual&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:50:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="null">
+<h2><code class="docutils literal notranslate"><span class="pre">null</span></code> в истории данных<a class="headerlink" href="#null" title="Link to this heading"></a></h2>
+<p>Важным моментом при работе с данными является случай, когда значением тэга
+является <code class="docutils literal notranslate"><span class="pre">null</span></code>.</p>
+<p>Получение значения <code class="docutils literal notranslate"><span class="pre">null</span></code> в качестве данных тэга возможно, в первую очередь,
+тогда, когда тэг создан и в его историю ещё ничего не записано (для этого
+атрибут тэга <code class="docutils literal notranslate"><span class="pre">smtTagDefaultValue</span></code> должен быть пустым).</p>
+<p>Кроме того, значение <code class="docutils literal notranslate"><span class="pre">null</span></code> записывается в тэг, когда:</p>
+<ol class="arabic simple">
+<li><p>Тэг привязан к источнику данных и с коннектором, записывающим данные в тэг,
+рвётся связь. В этом случае Платформа запишет в тэг значение <code class="docutils literal notranslate"><span class="pre">null</span></code>, код
+качества значения <code class="docutils literal notranslate"><span class="pre">q</span></code> = 100.</p></li>
+<li><p>Платформа завершает работу. В этом случае во все тэги записывается значение
+<code class="docutils literal notranslate"><span class="pre">null</span></code>, код качества значения <code class="docutils literal notranslate"><span class="pre">q</span></code> = 101.</p></li>
+<li><p>Тэг привязан к источнику данных и у коннектора рвётся связь с поставщиком
+данных. В этом случае коннектор запишет в тэг значение <code class="docutils literal notranslate"><span class="pre">null</span></code> с кодом
+качества значения <code class="docutils literal notranslate"><span class="pre">q</span></code> = 102.</p></li>
+<li><p>Тэг привязан к источнику данных и коннектор получает от поставщика данных
+значение <code class="docutils literal notranslate"><span class="pre">null</span></code>.</p></li>
+<li><p>В тэг было записано значение <code class="docutils literal notranslate"><span class="pre">null</span></code> командой <code class="docutils literal notranslate"><span class="pre">data/set</span></code>.</p></li>
+</ol>
+<p>Считается, что с момента записи в тэг значения <code class="docutils literal notranslate"><span class="pre">null</span></code> до записи следующего
+значения мы ничего не знаем о данных тэга, в них как бы образовывается дыра.
+Поэтому значения тэга не интерполируются на этом промежутке.</p>
+<p>При запросе данных за период <code class="docutils literal notranslate"><span class="pre">null</span></code> возвращается клиенту, если попадает в
+этот промежуток.</p>
+<p>На картинке ниже показывается, как интерпретируются данные в случае, если
+в истории есть <code class="docutils literal notranslate"><span class="pre">null</span></code>.</p>
+<img alt="_images/withNull.png" src="_images/withNull.png" />
+<p>Далее - несколько примеров запросов к данным, показанным на картинке выше
+с ответами.</p>
+<p class="rubric">Запрос 1</p>
+<img alt="_images/withNull2.png" src="_images/withNull2.png" />
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:30:00&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:50:00&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Ответ без ``null``:</strong></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:30:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:50:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Ответ с ``null``:</strong></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:30:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:37:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:45:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:50:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Запрос 2</p>
+<img alt="_images/withNull3.png" src="_images/withNull3.png" />
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:39:00&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Ответ без ``null``:</strong></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.6</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:39:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Ответ с ``null``:</strong></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:32:30&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:35:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:37:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:39:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Запрос 3</p>
+<img alt="_images/withNull4.png" src="_images/withNull4.png" />
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:38:00&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:39:00&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Ответ без ``null``:</strong></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.7</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:38:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.6</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:39:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Ответ с ``null``:</strong></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:38:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:39:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Запрос 4. <code class="docutils literal notranslate"><span class="pre">timeStep</span></code></p>
+<p>Сделаем запрос с флагом <code class="docutils literal notranslate"><span class="pre">timeStep</span></code> в 4 минуты:</p>
+<img alt="_images/timestep_none_1.png" src="_images/timestep_none_1.png" />
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:32:00&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:43:00&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;timeStep&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">240000000</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Ответ без ``null``:</strong></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">1.8</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:32:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.9</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:36:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Ответ с ``null``:</strong></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">1.8</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:32:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:36:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Запрос 5. <code class="docutils literal notranslate"><span class="pre">timeStep</span></code></p>
+<p>Теперь сделаем запрос с флагом <code class="docutils literal notranslate"><span class="pre">timeStep</span></code> в 2 минуты:</p>
+<img alt="_images/timestep_none_2.png" src="_images/timestep_none_2.png" />
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:32:00&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;finish&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;09:43:00&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;timeStep&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">120000000</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Ответ без ``null``:</strong></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">1.8</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:32:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.6</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:34:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.9</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:36:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.7</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:38:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">3.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:42:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Ответ с ``null``:</strong></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500c712-726a-103e-9264-a5021ec2dae1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">1.8</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:32:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.6</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:34:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:36:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:38:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:40:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mf">3.5</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;09:42:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="components.html" class="btn btn-neutral float-left" title="Компоненты" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="installation.html" class="btn btn-neutral float-right" title="Установка и запуск" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права 2026, ООО Матч Поинт Консалтинг. </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

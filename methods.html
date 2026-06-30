@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>methods (методы) &mdash; документация МПК-Пересвет 0.4</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sphinxcontrib-httpexample.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=11064190"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/sphinxcontrib-httpexample.js"></script>
+        <script src="_static/translations.js?v=29b1f277"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Логотип"/>
+          </a>
+              <div class="version">
+                0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="description.html">Описание</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terms.html">Используемые термины</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка и запуск</a></li>
+<li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Примеры работы с платформой</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_extension_points.html">Точки расширения безопасности</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка безопасности платной редакции</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">МПК-Пересвет</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">methods (методы)</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/methods.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="methods">
+<h1>methods (методы)<a class="headerlink" href="#methods" title="Link to this heading"></a></h1>
+<p>Методы используются для вычислений значений тегов.
+Значение тега может приходить из внешнего источника, а может быть вычислено,
+для чего необходимо:</p>
+<ol class="arabic simple">
+<li><p>Написать метод для вычисления значений тега.</p></li>
+<li><p>Привязать этот метод к тегу, указав, какие события будут инициировать
+расчёт.</p></li>
+</ol>
+<section id="id1">
+<h2>Создание вычислительного метода тега<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<p>Рассмотрим создание вычислительного метода тега на следующем примере:
+допустим, у нас есть объект «комната» и в этой комнате - два потребителя
+электроэнергии: освещение и телевизор. С каждого потребителя мы можем получать
+количество потреблённой энергии в киловатт-часах.</p>
+<p>Комната же имеет тег «Суммарная потреблённая энергия», значение которого
+должно вычисляться как сумма потреблённой энергии освещением и телевизором,
+причём значение этого тега должно пересчитываться каждый раз, когда мы
+получаем новое значение потреблённой энергии от потребителей электроэнергии
+в комнате.</p>
+<p><strong>Подготовка иерархии объектов и тегов</strong>
+Создание объектов и тегов не будем здесь детально описывать - см.
+соответствующие разделы документации.</p>
+<p>Покажем иерархию созданных объектов и тегов:</p>
+<figure class="align-center" id="id2">
+<img alt="_images/methods_01.png" src="_images/methods_01.png" />
+<figcaption>
+<p><span class="caption-text">Объекты</span><a class="headerlink" href="#id2" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p><strong>Создание расчётного метода</strong>
+Опишем процесс создания расчётного метода для тега
+«Суммарная потреблённая энергия» объекта «Комната».</p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Для управления распределёнными вычислениями используются библиотеки
+<a class="reference external" href="https://pypi.org/project/patio/">patio</a> и
+<a class="reference external" href="https://pypi.org/project/patio-rabbitmq/">patio_rabbitmq</a>.</p>
+</div>
+<p>Создадим скрипт на языке <strong>python</strong>, предварительно установив пакеты
+«patio» и «patio_rabbitmq»:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">patio</span> <span class="kn">import</span> <span class="n">Registry</span><span class="p">,</span> <span class="n">AsyncExecutor</span>
+<span class="linenos"> 3</span><span class="kn">from</span> <span class="nn">patio_rabbitmq</span> <span class="kn">import</span> <span class="n">RabbitMQBroker</span>
+<span class="linenos"> 4</span>
+<span class="linenos"> 5</span><span class="n">rpc</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="n">project</span><span class="o">=</span><span class="s2">&quot;methods_app&quot;</span><span class="p">,</span> <span class="n">auto_naming</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="linenos"> 6</span>
+<span class="linenos"> 7</span><span class="nd">@rpc</span><span class="p">(</span><span class="s2">&quot;sum&quot;</span><span class="p">)</span>
+<span class="linenos"> 8</span><span class="k">async</span> <span class="k">def</span> <span class="nf">sum</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="linenos"> 9</span>   <span class="k">try</span><span class="p">:</span>
+<span class="linenos">10</span>      <span class="n">val_a</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+<span class="linenos">11</span>      <span class="n">val_b</span> <span class="o">=</span> <span class="n">b</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+<span class="linenos">12</span>      <span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="n">val_a</span><span class="p">,</span> <span class="mi">0</span><span class="p">)[</span><span class="n">val_a</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]</span><span class="o">+</span><span class="p">(</span><span class="n">val_b</span><span class="p">,</span> <span class="mi">0</span><span class="p">)[</span><span class="n">val_b</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]</span>
+<span class="linenos">13</span>   <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+<span class="linenos">14</span>      <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ошибка: </span><span class="si">{</span><span class="n">ex</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="linenos">15</span>      <span class="k">return</span> <span class="kc">None</span>
+<span class="linenos">16</span>
+<span class="linenos">17</span>   <span class="k">return</span> <span class="n">res</span>
+<span class="linenos">18</span>
+<span class="linenos">19</span><span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<span class="linenos">20</span>   <span class="k">async</span> <span class="k">with</span> <span class="n">AsyncExecutor</span><span class="p">(</span><span class="n">rpc</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+<span class="linenos">21</span>      <span class="k">async</span> <span class="k">with</span> <span class="n">RabbitMQBroker</span><span class="p">(</span>
+<span class="linenos">22</span>            <span class="c1"># измените параметры подключения к RabbitMQ</span>
+<span class="linenos">23</span>            <span class="n">executor</span><span class="p">,</span> <span class="n">amqp_url</span><span class="o">=</span><span class="s2">&quot;amqp://uid:pwd@localhost/&quot;</span><span class="p">,</span>
+<span class="linenos">24</span>      <span class="p">)</span> <span class="k">as</span> <span class="n">broker</span><span class="p">:</span>
+<span class="linenos">25</span>            <span class="k">await</span> <span class="n">broker</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+<span class="linenos">26</span>
+<span class="linenos">27</span><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="linenos">28</span>   <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="admonition attention">
+<p class="admonition-title">Внимание</p>
+<ol class="arabic simple">
+<li><p>Отметим, что расчётный метод регистрируется в системе под именем «sum»:
+<code class="docutils literal notranslate"><span class="pre">&#64;rpc(&quot;sum&quot;)</span></code> (строка 7).</p></li>
+<li><p>Выбор значений (строки 10-11) будет объяснён ниже.</p></li>
+</ol>
+</div>
+<div class="admonition attention">
+<p class="admonition-title">Внимание</p>
+<p>Если в процессе вычисления метода происходит какая-либо ошибка,
+либо метод не должен возвращать новое значение тега
+(к примеру, в процессе расчёта выяснилось, что нового значения у тега нет),
+то метод должен вернуть словарь с ключом <code class="docutils literal notranslate"><span class="pre">error</span></code>. Значение этого ключа -
+любое.</p>
+</div>
+<p>Созданный нами расчётный метод имеет два входных параметра: <code class="docutils literal notranslate"><span class="pre">a</span></code> и <code class="docutils literal notranslate"><span class="pre">b</span></code>.</p>
+<p><strong>Создание узла для расчётного метода</strong>
+Теперь нам необходимо создать узел, описывающий расчётный метод для тега
+«Суммарная потреблённая энергия».</p>
+<p>При создании узла мы должны указать:</p>
+<ol class="arabic simple">
+<li><p>зарегистрированное имя метода («sum»);</p></li>
+<li><p>на вход метод принимает два параметра;</p></li>
+<li><p>в качестве значений параметров должны передаваться значения тегов
+«Потреблённая энергия» объектов «Освещение» и «Телевизор»;</p></li>
+<li><p>метод должен инициироваться изменением двух вышеуказанных тегов.</p></li>
+</ol>
+<p>Соответственно, получаем такое тело запроса, который мы должны выполнить
+для создания узла метода:</p>
+<div class="admonition attention">
+<p class="admonition-title">Внимание</p>
+<p>Для удобства предположим, что:</p>
+<ol class="arabic simple">
+<li><p>id тега «Суммарная потреблённая энергия» = 1</p></li>
+<li><p>id «Освещение –&gt; Потреблённая энергия» = 2</p></li>
+<li><p>id «Телевизор –&gt; Потреблённая энергия» = 3</p></li>
+</ol>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1"># request: POST http://&lt;srv&gt;/v1/methods</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="c1"># body:</span>
+<span class="linenos"> 4</span><span class="p">{</span>
+<span class="linenos"> 5</span>   <span class="c1"># id вычисляемого тега (&quot;Суммарная потреблённая энергия&quot;)</span>
+<span class="linenos"> 6</span>   <span class="s2">&quot;parentId&quot;</span><span class="p">:</span> <span class="s2">&quot;1&quot;</span><span class="p">,</span>
+<span class="linenos"> 7</span>   <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos"> 8</span>      <span class="c1"># зарегистрированное имя метода</span>
+<span class="linenos"> 9</span>      <span class="s2">&quot;cn&quot;</span><span class="p">:</span> <span class="s2">&quot;Сумма&quot;</span><span class="p">,</span>
+<span class="linenos">10</span>      <span class="s2">&quot;prsMethodAddress&quot;</span><span class="p">:</span> <span class="s2">&quot;sum&quot;</span>
+<span class="linenos">11</span>   <span class="p">},</span>
+<span class="linenos">12</span>   <span class="c1"># id тегов &quot;Потреблённая энергия&quot; объектов &quot;Освещение&quot; и &quot;Телевизор&quot;</span>
+<span class="linenos">13</span>   <span class="s2">&quot;initiatedBy&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">],</span>
+<span class="linenos">14</span>   <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="linenos">15</span>      <span class="p">{</span>
+<span class="linenos">16</span>         <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos">17</span>            <span class="s2">&quot;prsJsonConfigString&quot;</span><span class="p">:</span> <span class="s2">&quot;{</span><span class="se">\&quot;</span><span class="s2">tagId</span><span class="se">\&quot;</span><span class="s2">: </span><span class="se">\&quot;</span><span class="s2">2</span><span class="se">\&quot;</span><span class="s2">}&quot;</span>
+<span class="linenos">18</span>         <span class="p">}</span>
+<span class="linenos">19</span>      <span class="p">},</span>
+<span class="linenos">20</span>      <span class="p">{</span>
+<span class="linenos">21</span>         <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos">22</span>            <span class="s2">&quot;prsJsonConfigString&quot;</span><span class="p">:</span> <span class="s2">&quot;{</span><span class="se">\&quot;</span><span class="s2">tagId</span><span class="se">\&quot;</span><span class="s2">: </span><span class="se">\&quot;</span><span class="s2">3</span><span class="se">\&quot;</span><span class="s2">}&quot;</span>
+<span class="linenos">23</span>         <span class="p">}</span>
+<span class="linenos">24</span>      <span class="p">}</span>
+<span class="linenos">25</span>   <span class="p">]</span>
+<span class="linenos">26</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Таким образом, имя метода передается в атрибуте <code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code>
+(строка 10).</p>
+<p>В рассматриваемом примере порядок следования параметров при вызове метода
+не важен. Если же при вызове метода необходимо учитывать порядок параметров,
+то в атрибутах параметра необходимо передать атрибут <code class="docutils literal notranslate"><span class="pre">prsIndex</span></code>. При вызове
+метода параметры будут отсортированы по этому атрибуту в порядке возрастания
+и переданы методу.</p>
+<p>Запрос с учётом порядка следования параметров:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1"># request: POST http://&lt;srv&gt;/v1/methods</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="c1"># body:</span>
+<span class="linenos"> 4</span><span class="p">{</span>
+<span class="linenos"> 5</span>   <span class="c1"># id вычисляемого тега (&quot;Суммарная потреблённая энергия&quot;)</span>
+<span class="linenos"> 6</span>   <span class="s2">&quot;parentId&quot;</span><span class="p">:</span> <span class="s2">&quot;1&quot;</span><span class="p">,</span>
+<span class="linenos"> 7</span>   <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos"> 8</span>      <span class="c1"># зарегистрированное имя метода</span>
+<span class="linenos"> 9</span>      <span class="s2">&quot;cn&quot;</span><span class="p">:</span> <span class="s2">&quot;Сумма&quot;</span><span class="p">,</span>
+<span class="linenos">10</span>      <span class="s2">&quot;prsMethodAddress&quot;</span><span class="p">:</span> <span class="s2">&quot;sum&quot;</span>
+<span class="linenos">11</span>   <span class="p">},</span>
+<span class="linenos">12</span>   <span class="c1"># id тегов &quot;Потреблённая энергия&quot; объектов &quot;Освещение&quot; и &quot;Телевизор&quot;</span>
+<span class="linenos">13</span>   <span class="s2">&quot;initiatedBy&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">],</span>
+<span class="linenos">14</span>   <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="linenos">15</span>      <span class="p">{</span>
+<span class="linenos">16</span>         <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos">17</span>            <span class="s2">&quot;prsJsonConfigString&quot;</span><span class="p">:</span> <span class="s2">&quot;{</span><span class="se">\&quot;</span><span class="s2">tagId</span><span class="se">\&quot;</span><span class="s2">: </span><span class="se">\&quot;</span><span class="s2">2</span><span class="se">\&quot;</span><span class="s2">}&quot;</span><span class="p">,</span>
+<span class="linenos">18</span>            <span class="s2">&quot;prsIndex&quot;</span><span class="p">:</span> <span class="mi">1</span>
+<span class="linenos">19</span>         <span class="p">}</span>
+<span class="linenos">20</span>      <span class="p">},</span>
+<span class="linenos">21</span>      <span class="p">{</span>
+<span class="linenos">22</span>         <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="linenos">23</span>            <span class="s2">&quot;prsJsonConfigString&quot;</span><span class="p">:</span> <span class="s2">&quot;{</span><span class="se">\&quot;</span><span class="s2">tagId</span><span class="se">\&quot;</span><span class="s2">: </span><span class="se">\&quot;</span><span class="s2">3</span><span class="se">\&quot;</span><span class="s2">}&quot;</span><span class="p">,</span>
+<span class="linenos">24</span>            <span class="s2">&quot;prsIndex&quot;</span><span class="p">:</span> <span class="mi">2</span>
+<span class="linenos">25</span>         <span class="p">}</span>
+<span class="linenos">26</span>      <span class="p">}</span>
+<span class="linenos">27</span>   <span class="p">]</span>
+<span class="linenos">28</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Атрибут <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> содержит, фактически, запрос для команды
+<code class="docutils literal notranslate"><span class="pre">data/get</span></code>. При вызове метода в этот запрос автоматически подставляется
+флаг <code class="docutils literal notranslate"><span class="pre">finish</span></code>, который равен метке времени нового значения тега-инициатора
+расчёта. Именно поэтому в вычислительном методе такой сложный выбор значений
+(см. выше).</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права 2026, ООО Матч Поинт Консалтинг. </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
