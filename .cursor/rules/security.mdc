@@ -1,0 +1,31 @@
+---
+description: Security rules for auth, LDAP, secrets, nginx, Docker, external input and dynamic execution.
+globs: src/**/*.py,docker/**/*,admin_scripts/**/*,*.env,*.sh,config/grafana/**/*.json
+alwaysApply: false
+---
+
+# Peresvet Security Rules
+
+Apply these rules when changing:
+
+- auth
+- LDAP
+- nginx
+- Docker/env configuration
+- external input handling
+- methods or dynamic execution
+- JSONata/expression evaluation
+- API handlers
+- connectors
+- object/tag access behavior
+
+Rules:
+
+- Never commit secrets.
+- Do not log passwords, tokens, cookies, credentials or sensitive env values.
+- Validate external input.
+- Check authorization, not only authentication.
+- Avoid exposing internal services through nginx unintentionally.
+- Be careful with Docker mounts and host paths.
+- Treat dynamic method execution and expression evaluation as high-risk areas.
+- Avoid leaking internal stack traces or infrastructure details to users.

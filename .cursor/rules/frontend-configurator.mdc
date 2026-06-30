@@ -1,0 +1,15 @@
+---
+description: Frontend rules for Grafana Configurator, dashboards, model forms and backend contract compatibility.
+globs: src/grafana/configurator/**,src/grafana/**/*.json,config/grafana/**/*.json
+alwaysApply: false
+---
+
+# Peresvet Frontend and Configurator Rules
+
+- Keep Grafana Configurator behavior aligned with backend model and API contracts.
+- Preserve existing saved model/dashboard compatibility unless the task explicitly changes persisted structure.
+- Keep create, edit, delete and display flows consistent for affected entities.
+- Validate required fields, defaults, enum values and nested model structures before sending requests.
+- Surface backend errors in a useful operator-facing way.
+- Do not mix unrelated dashboard cleanup with feature work.
+- Document manual Grafana-dependent checks when they cannot be run.

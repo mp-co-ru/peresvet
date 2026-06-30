@@ -1,0 +1,15 @@
+---
+description: Backend service rules for Peresvet API/model services, RabbitMQ/RPC contracts, settings and validation.
+globs: src/services/**/*.py,src/common/**/*.py
+alwaysApply: false
+---
+
+# Peresvet Backend Service Rules
+
+- Follow existing `api_crud`, `model_crud`, `app` and `app_api` patterns before adding new abstractions.
+- Keep API, model, RabbitMQ/RPC payloads and error responses compatible unless the task explicitly changes them.
+- Validate inputs at service boundaries before they reach storage, connectors, methods or RabbitMQ messages.
+- Keep service settings and environment behavior explicit and safe by default.
+- Do not move logic into `src/common` unless multiple services need the same behavior.
+- Add focused tests for changed behavior and important failure paths.
+- Document skipped Docker-dependent validation in the PR summary.
