@@ -1,0 +1,16 @@
+---
+description: Architecture rules for Peresvet service boundaries, shared code and cross-service behavior.
+alwaysApply: true
+---
+
+# Peresvet Architecture Rules
+
+- Keep service changes scoped to the affected domain under `src/services`.
+- Shared code in `src/common` must be changed carefully because it can affect many services.
+- Preserve existing service boundaries.
+- Do not introduce cross-service imports that bypass established communication patterns.
+- Services communicate through RabbitMQ; do not silently replace this with direct coupling.
+- Avoid broad refactors unless the task explicitly requires them.
+- When changing shared models, settings, RPC behavior or cache behavior, identify affected services.
+- Prefer existing patterns in nearby services over new abstractions.
+- Document compatibility risks in the PR summary.

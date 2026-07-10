@@ -17,7 +17,7 @@ skip_containers=0
 
 usage() {
 	cat <<EOF >&2
-Использование (только из корня репозитория): $0 --archive=ARCHIVE.tar.gz [--параметр=значение ...]
+Использование (только из корня проекта): $0 --archive=ARCHIVE.tar.gz [--параметр=значение ...]
 
 Параметры:
   --archive=PATH          обязательный путь к архиву running_containers_backup.sh
@@ -78,7 +78,7 @@ done
 HERE=$(pwd -P)
 THERE=$(cd "$REPO_ROOT" && pwd -P)
 if [ "$HERE" != "$THERE" ]; then
-	echo "Ошибка: скрипт нужно запускать из корня репозитория." >&2
+	echo "Ошибка: скрипт нужно запускать из корня проекта." >&2
 	echo "  Текущий каталог: $HERE" >&2
 	echo "  Ожидаемый корень:  $THERE" >&2
 	echo "Пример: cd \"$THERE\" && ./admin_scripts/docker/$(basename "$0") --archive=..." >&2

@@ -322,6 +322,11 @@ docker buildx build --platform linux/arm64 -f docker/docker-files/all/Dockerfile
 контейнеры Пересвета. В архив сохраняются committed-образы контейнеров,
 Docker volumes, bind mounts с хоста и Docker metadata.
 
+**Запуск:** скрипты вызываются **из корня проекта** (каталог с `docker/compose/`,
+`admin_scripts/` и т.д.; `pwd -P` должен совпадать с корнем, вычисленным по
+расположению скрипта). Исключение: только `-h` или `--help` — справка из любого
+каталога.
+
 ```bash
 cd /путь/к/peresvet
 ./admin_scripts/docker/running_containers_backup.sh
@@ -347,7 +352,10 @@ cd /путь/к/peresvet
 - `admin_scripts/ldap/ldap_volume_restore.sh`
 - `admin_scripts/ldap/resolve_ldap_storage.py` — внутренний разбор compose для shell-скриптов; при ручном запуске аргументы позиционные, см. `docs/source/administration.rst` (подраздел про этот файл).
 
-**Запуск:** для рабочих операций оба shell-скрипта вызываются **из корня репозитория** (`pwd -P` должен совпадать с корнем проекта). Иначе — ошибка. Исключение: только `-h` или `--help` — справка, из любого каталога.
+**Запуск:** для рабочих операций оба shell-скрипта вызываются **из корня проекта**
+(каталог с `docker/compose/`, `admin_scripts/` и т.д.; `pwd -P` должен совпадать
+с корнем, вычисленным по расположению скрипта). Иначе — ошибка. Исключение:
+только `-h` или `--help` — справка, из любого каталога.
 
 **Формат:** аргументы вида `--имя=значение` (имена в нижнем регистре). Отдельно, без `=`, допускаются `-h` и `--help` (справка). Логика «истина» для флагов: `1`, `true`, `yes`, `YES`.
 
@@ -357,10 +365,10 @@ cd /путь/к/peresvet
 
 | Параметр | По умолчанию | Назначение |
 |----------|--------------|------------|
-| `compose_file` | `docker/compose/docker-compose.ldap.one_app.yml` | Compose с LDAP; путь от корня репозитория или абсолютный. |
+| `compose_file` | `docker/compose/docker-compose.ldap.one_app.yml` | Compose с LDAP; путь от корня проекта или абсолютный. |
 | `compose_project_name` | *(пусто)* | Проект `docker compose` (`-p`). Пусто — поведение `docker compose` без `-p` (в т.ч. внешняя переменная `COMPOSE_PROJECT_NAME`). |
 | `ldap_service` | `ldap` | Имя сервиса для stop/start и разбора тома. |
-| `backup_dir` | `backups/ldap` | Куда складывать `.tar.gz` (от корня репозитория или абсолютный путь). |
+| `backup_dir` | `backups/ldap` | Куда складывать `.tar.gz` (от корня проекта или абсолютный путь). |
 | `ldap_docker_volume` | *(пусто)* | Принудительно: полное имя Docker-тома. |
 | `ldap_data_dir` | *(пусто)* | Принудительно: каталог данных на хосте (если не задан `ldap_docker_volume`). |
 | `backup_helper_image` | `busybox:stable` | Образ для `docker run` при архивации **тома**. |
@@ -371,7 +379,7 @@ cd /путь/к/peresvet
 
 | Параметр | По умолчанию | Назначение |
 |----------|--------------|------------|
-| `archive` | *(обязателен)* | Путь к `.tar.gz` (от корня репозитория или абсолютный). |
+| `archive` | *(обязателен)* | Путь к `.tar.gz` (от корня проекта или абсолютный). |
 | `compose_file` | `docker/compose/docker-compose.ldap.one_app.yml` | Как в бэкапе. |
 | `compose_project_name` | *(пусто)* | Как в бэкапе. |
 | `ldap_service` | `ldap` | Как в бэкапе. |

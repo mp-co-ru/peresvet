@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
-# Восстановление PostgreSQL (историческая БД) из tar.gz (созданного historian_volume_backup.sh).
-# Том или каталог определяются по compose_file (resolve_historian_storage.py),
-# если не заданы historian_docker_volume / historian_data_dir.
+# Восстановление Grafana из tar.gz (созданного grafana_volume_backup.sh).
+# Том или каталог определяются по compose_file (resolve_grafana_storage.py),
+# если не заданы grafana_docker_volume / grafana_data_dir.
 #
 # Запуск только из корня проекта. Обязательно: --archive=ПУТЬ.
 
@@ -10,12 +10,12 @@ set -eu
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
 REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
 
-compose_file=docker/compose/docker-compose.postgresql.data_in_volume.yml
+compose_file=docker/compose/docker-compose.grafana.yml
 compose_project_name=
-postgres_service=psql
+grafana_service=grafana
 archive=
-historian_docker_volume=
-historian_data_dir=
+grafana_docker_volume=
+grafana_data_dir=
 restore_helper_image=alpine:3.20
 assume_yes=0
 skip_stop=0
@@ -27,14 +27,14 @@ usage() {
 
 Обязательно: --archive=PATH
 
-Аналог admin_scripts/ldap/ldap_volume_restore.sh для данных PostgreSQL (/var/lib/postgresql/data).
+Аналог admin_scripts/ldap/ldap_volume_restore.sh для данных Grafana (/var/lib/grafana).
 
 Параметры:
   --compose_file=PATH
   --compose_project_name=NAME
-  --postgres_service=NAME
-  --historian_docker_volume=NAME
-  --historian_data_dir=PATH
+  --grafana_service=NAME
+  --grafana_docker_volume=NAME
+  --grafana_data_dir=PATH
   --restore_helper_image=IMG   (по умолчанию: alpine:3.20)
   --assume_yes=0|1
   --skip_stop=0|1
@@ -55,10 +55,10 @@ set_param() {
 	case "$key" in
 		compose_file) compose_file=$val ;;
 		compose_project_name) compose_project_name=$val ;;
-		postgres_service) postgres_service=$val ;;
+		grafana_service) grafana_service=$val ;;
 		archive) archive=$val ;;
-		historian_docker_volume) historian_docker_volume=$val ;;
-		historian_data_dir) historian_data_dir=$val ;;
+		grafana_docker_volume) grafana_docker_volume=$val ;;
+		grafana_data_dir) grafana_data_dir=$val ;;
 		restore_helper_image) restore_helper_image=$val ;;
 		assume_yes) assume_yes=$(to_bool "$val") ;;
 		skip_stop) skip_stop=$(to_bool "$val") ;;
@@ -99,7 +99,7 @@ if [ "$HERE" != "$THERE" ]; then
 	echo "Ошибка: скрипт нужно запускать из корня проекта." >&2
 	echo "  Текущий каталог: $HERE" >&2
 	echo "  Ожидаемый корень:  $THERE" >&2
-	echo "Пример: cd \"$THERE\" && ./admin_scripts/historian/$(basename "$0") …" >&2
+	echo "Пример: cd \"$THERE\" && ./admin_scripts/grafana/$(basename "$0") …" >&2
 	exit 1
 fi
 
@@ -129,16 +129,16 @@ fi
 cd "$REPO_ROOT"
 
 resolve_storage() {
-	if [ -n "$historian_docker_volume" ]; then
-		printf 'volume\t%s\n' "$historian_docker_volume"
+	if [ -n "$grafana_docker_volume" ]; then
+		printf 'volume\t%s\n' "$grafana_docker_volume"
 		return
 	fi
-	if [ -n "$historian_data_dir" ]; then
-		printf 'bind\t%s\n' "$historian_data_dir"
+	if [ -n "$grafana_data_dir" ]; then
+		printf 'bind\t%s\n' "$grafana_data_dir"
 		return
 	fi
-	RESOLVE_CWD=$REPO_ROOT python3 "$SCRIPT_DIR/resolve_historian_storage.py" \
-		"$compose_file_abs" "$compose_project_name" "$postgres_service"
+	RESOLVE_CWD=$REPO_ROOT python3 "$SCRIPT_DIR/resolve_grafana_storage.py" \
+		"$compose_file_abs" "$compose_project_name" "$grafana_service"
 }
 
 line=$(resolve_storage) || exit 1
@@ -153,11 +153,11 @@ compose_stop() {
 		return 0
 	fi
 	if [ -n "$compose_project_name" ]; then
-		echo "docker compose -p $compose_project_name -f $compose_file stop $postgres_service"
-		docker compose -p "$compose_project_name" -f "$compose_file_abs" stop "$postgres_service"
+		echo "docker compose -p $compose_project_name -f $compose_file stop $grafana_service"
+		docker compose -p "$compose_project_name" -f "$compose_file_abs" stop "$grafana_service"
 	else
-		echo "docker compose -f $compose_file stop $postgres_service"
-		docker compose -f "$compose_file_abs" stop "$postgres_service"
+		echo "docker compose -f $compose_file stop $grafana_service"
+		docker compose -f "$compose_file_abs" stop "$grafana_service"
 	fi
 }
 
@@ -166,9 +166,9 @@ compose_start() {
 		return 0
 	fi
 	if [ -n "$compose_project_name" ]; then
-		docker compose -p "$compose_project_name" -f "$compose_file_abs" start "$postgres_service" || true
+		docker compose -p "$compose_project_name" -f "$compose_file_abs" start "$grafana_service" || true
 	else
-		docker compose -f "$compose_file_abs" start "$postgres_service" || true
+		docker compose -f "$compose_file_abs" start "$grafana_service" || true
 	fi
 }
 
@@ -179,7 +179,7 @@ stop_using_containers() {
 		return 0
 	fi
 	if [ "$skip_stop" = "1" ]; then
-		echo "Ошибка: том $vol занят работающими контейнерами. Остановите PostgreSQL или уберите --skip_stop=1." >&2
+		echo "Ошибка: том $vol занят работающими контейнерами. Остановите Grafana или уберите --skip_stop=1." >&2
 		exit 1
 	fi
 	echo "Останавливаю контейнеры, использующие том $vol ..."

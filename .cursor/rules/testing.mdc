@@ -1,0 +1,15 @@
+---
+description: Testing rules for Peresvet unit tests, Docker-dependent tests and load tests.
+alwaysApply: true
+---
+
+# Peresvet Testing Rules
+
+- Add or update tests for behavior changes.
+- Prefer focused tests near the changed subsystem.
+- If tests require Docker services, state which compose stack is required.
+- If tests cannot be run in the current environment, explain why.
+- For tags, dataStorages and connectors, consider regression and load-test impact.
+- For shared code in `src/common`, identify multiple affected services and test representative paths.
+- Do not claim full validation if only static checks or partial tests were run.
+- Include test commands and results in the PR summary.

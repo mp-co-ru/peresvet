@@ -1,0 +1,29 @@
+---
+description: Rules for Docker Compose, Dockerfiles, deployment, volumes, ports, nginx, LDAP and runtime infrastructure.
+globs: docker/**/*,admin_scripts/**/*,run_*.sh,packaging/**/*,config/grafana/**/*.json,src/services/one_app/**/*
+alwaysApply: false
+---
+
+# Peresvet Docker and Infrastructure Rules
+
+Apply these rules when changing:
+
+- `docker/compose`
+- `docker/docker-files`
+- nginx files
+- LDAP files
+- RabbitMQ/Redis/PostgreSQL/Grafana configuration
+- backup/restore scripts
+- env-file behavior
+
+Rules:
+
+- Do not expose new host ports unless the task requires it.
+- Do not change persistent volume names casually.
+- Do not change bind mounts without checking data loss risk.
+- Keep compose variants compatible where possible.
+- Check whether arm64/prod compose files are affected.
+- Check service names, networks and dependencies.
+- Do not commit secrets or local `.env` files.
+- Document changed startup commands.
+- Document rollback or migration notes for operational changes.

@@ -1,9 +1,9 @@
 #!/usr/bin/env sh
-# Бэкап данных PostgreSQL (историческая БД Пересвета): том или каталог на хосте
-# определяются по compose_file (см. resolve_historian_storage.py), если не заданы
-# явные historian_docker_volume / historian_data_dir.
+# Бэкап данных Grafana: том или каталог на хосте определяются по compose_file
+# (см. resolve_grafana_storage.py), если не заданы явные grafana_docker_volume /
+# grafana_data_dir.
 #
-# По умолчанию архивы пишутся в backups/historian (от корня проекта; см. --backup_dir).
+# По умолчанию архивы пишутся в backups/grafana (от корня проекта; см. --backup_dir).
 #
 # Запуск только из корня проекта (как admin_scripts/ldap/ldap_volume_backup.sh).
 # Параметры: только --имя=значение (имена в нижнем регистре).
@@ -13,12 +13,12 @@ set -eu
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
 REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
 
-compose_file=docker/compose/docker-compose.postgresql.data_in_volume.yml
+compose_file=docker/compose/docker-compose.grafana.yml
 compose_project_name=
-postgres_service=psql
-backup_dir=backups/historian
-historian_docker_volume=
-historian_data_dir=
+grafana_service=grafana
+backup_dir=backups/grafana
+grafana_docker_volume=
+grafana_data_dir=
 backup_helper_image=busybox:stable
 skip_stop=0
 skip_compose_stop=0
@@ -27,17 +27,17 @@ usage() {
 	cat <<EOF >&2
 Использование (только из корня проекта): $0 [--параметр=значение ...]
 
-Бэкап каталога данных PostgreSQL (/var/lib/postgresql/data), как в стеке one_app
-(docker-compose.postgresql.data_in_volume.yml). Аналог ldap_volume_backup.sh.
-Восстановление: admin_scripts/historian/historian_volume_restore.sh
+Бэкап каталога данных Grafana (/var/lib/grafana), как в docker-compose.grafana.yml.
+Аналог ldap_volume_backup.sh / historian_volume_backup.sh.
+Восстановление: admin_scripts/grafana/grafana_volume_restore.sh
 
 Параметры:
-  --compose_file=PATH          (по умолчанию: docker/compose/docker-compose.postgresql.data_in_volume.yml)
+  --compose_file=PATH          (по умолчанию: docker/compose/docker-compose.grafana.yml)
   --compose_project_name=NAME
-  --postgres_service=NAME      сервис с монтированием данных PG (по умолчанию: psql)
-  --backup_dir=PATH            (по умолчанию: backups/historian)
-  --historian_docker_volume=NAME  принудительно: полное имя Docker-тома
-  --historian_data_dir=PATH    принудительно: каталог на хосте (bind mount)
+  --grafana_service=NAME       сервис с монтированием данных Grafana (по умолчанию: grafana)
+  --backup_dir=PATH            (по умолчанию: backups/grafana)
+  --grafana_docker_volume=NAME принудительно: полное имя Docker-тома
+  --grafana_data_dir=PATH      принудительно: каталог на хосте (bind mount)
   --backup_helper_image=IMG    (по умолчанию: busybox:stable)
   --skip_stop=0|1
   --skip_compose_stop=0|1
@@ -57,10 +57,10 @@ set_param() {
 	case "$key" in
 		compose_file) compose_file=$val ;;
 		compose_project_name) compose_project_name=$val ;;
-		postgres_service) postgres_service=$val ;;
+		grafana_service) grafana_service=$val ;;
 		backup_dir) backup_dir=$val ;;
-		historian_docker_volume) historian_docker_volume=$val ;;
-		historian_data_dir) historian_data_dir=$val ;;
+		grafana_docker_volume) grafana_docker_volume=$val ;;
+		grafana_data_dir) grafana_data_dir=$val ;;
 		backup_helper_image) backup_helper_image=$val ;;
 		skip_stop) skip_stop=$(to_bool "$val") ;;
 		skip_compose_stop) skip_compose_stop=$(to_bool "$val") ;;
@@ -100,7 +100,7 @@ if [ "$HERE" != "$THERE" ]; then
 	echo "Ошибка: скрипт нужно запускать из корня проекта." >&2
 	echo "  Текущий каталог: $HERE" >&2
 	echo "  Ожидаемый корень:  $THERE" >&2
-	echo "Пример: cd \"$THERE\" && ./admin_scripts/historian/$(basename "$0") …" >&2
+	echo "Пример: cd \"$THERE\" && ./admin_scripts/grafana/$(basename "$0") …" >&2
 	exit 1
 fi
 
@@ -119,16 +119,16 @@ fi
 cd "$REPO_ROOT"
 
 resolve_storage() {
-	if [ -n "$historian_docker_volume" ]; then
-		printf 'volume\t%s\n' "$historian_docker_volume"
+	if [ -n "$grafana_docker_volume" ]; then
+		printf 'volume\t%s\n' "$grafana_docker_volume"
 		return
 	fi
-	if [ -n "$historian_data_dir" ]; then
-		printf 'bind\t%s\n' "$historian_data_dir"
+	if [ -n "$grafana_data_dir" ]; then
+		printf 'bind\t%s\n' "$grafana_data_dir"
 		return
 	fi
-	RESOLVE_CWD=$REPO_ROOT python3 "$SCRIPT_DIR/resolve_historian_storage.py" \
-		"$compose_file_abs" "$compose_project_name" "$postgres_service"
+	RESOLVE_CWD=$REPO_ROOT python3 "$SCRIPT_DIR/resolve_grafana_storage.py" \
+		"$compose_file_abs" "$compose_project_name" "$grafana_service"
 }
 
 line=$(resolve_storage) || exit 1
@@ -140,11 +140,11 @@ compose_stop() {
 		return 0
 	fi
 	if [ -n "$compose_project_name" ]; then
-		echo "docker compose -p $compose_project_name -f $compose_file stop $postgres_service"
-		docker compose -p "$compose_project_name" -f "$compose_file_abs" stop "$postgres_service"
+		echo "docker compose -p $compose_project_name -f $compose_file stop $grafana_service"
+		docker compose -p "$compose_project_name" -f "$compose_file_abs" stop "$grafana_service"
 	else
-		echo "docker compose -f $compose_file stop $postgres_service"
-		docker compose -f "$compose_file_abs" stop "$postgres_service"
+		echo "docker compose -f $compose_file stop $grafana_service"
+		docker compose -f "$compose_file_abs" stop "$grafana_service"
 	fi
 }
 
@@ -153,9 +153,9 @@ compose_start() {
 		return 0
 	fi
 	if [ -n "$compose_project_name" ]; then
-		docker compose -p "$compose_project_name" -f "$compose_file_abs" start "$postgres_service" || true
+		docker compose -p "$compose_project_name" -f "$compose_file_abs" start "$grafana_service" || true
 	else
-		docker compose -f "$compose_file_abs" start "$postgres_service" || true
+		docker compose -f "$compose_file_abs" start "$grafana_service" || true
 	fi
 }
 
@@ -210,11 +210,11 @@ fi
 
 if [ "$mode" = "bind" ]; then
 	if [ ! -d "$target" ]; then
-		echo "Каталог данных PostgreSQL не найден: $target" >&2
+		echo "Каталог данных Grafana не найден: $target" >&2
 		compose_start
 		exit 1
 	fi
-	archive=$backup_dir_abs/historian_pgdata_${ts}.tar.gz
+	archive=$backup_dir_abs/grafana_data_${ts}.tar.gz
 	echo "Бэкап каталога $target -> $archive"
 	backup_dir_tar "$target" "$archive"
 else

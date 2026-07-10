@@ -104,6 +104,7 @@ copy_tracked_pathspec() {
 }
 
 required_pathspecs=(
+    "admin_scripts"
     "README.md"
     "LICENSE"
     "requirements.txt"

@@ -1,0 +1,28 @@
+---
+description: Documentation rules for README, Sphinx docs, installation, administration, Docker and operational behavior.
+globs: README.md,docs/**/*.rst,docs/source/samples/**/*.txt,docs/source/conf.py
+alwaysApply: false
+---
+
+# Peresvet Documentation Rules
+
+Update documentation when changing:
+
+- installation steps
+- Docker Compose commands
+- service startup behavior
+- env variables
+- backup/restore behavior
+- LDAP behavior
+- nginx behavior
+- public API behavior
+- examples
+- operational procedures
+
+Rules:
+
+- Keep README and Sphinx docs consistent.
+- Document new required configuration.
+- Document changed defaults.
+- Document migration or rollback steps for operational changes.
+- If documentation is not updated, explain why in the PR summary.

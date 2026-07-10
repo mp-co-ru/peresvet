@@ -3,7 +3,7 @@
 # Том или каталог определяются по compose_file (resolve_ldap_storage.py),
 # если не заданы ldap_docker_volume / ldap_data_dir.
 #
-# Запуск только из корня репозитория. Обязательно: --archive=ПУТЬ.
+# Запуск только из корня проекта. Обязательно: --archive=ПУТЬ.
 # Полный перечень параметров — в docs/source/administration.rst.
 
 set -eu
@@ -21,10 +21,12 @@ restore_helper_image=alpine:3.20
 assume_yes=0
 skip_stop=0
 skip_compose_stop=0
+one_app_compose_file=docker/compose/docker-compose.one_app.yml
+one_app_service=one_app
 
 usage() {
 	cat <<EOF >&2
-Использование (только из корня репозитория): $0 --archive=ARCHIVE.tar.gz [--параметр=значение ...]
+Использование (только из корня проекта): $0 --archive=ARCHIVE.tar.gz [--параметр=значение ...]
 
 Обязательно: --archive=PATH
 
@@ -96,10 +98,10 @@ done
 HERE=$(pwd -P)
 THERE=$(cd "$REPO_ROOT" && pwd -P)
 if [ "$HERE" != "$THERE" ]; then
-	echo "Ошибка: скрипт нужно запускать из корня репозитория." >&2
+	echo "Ошибка: скрипт нужно запускать из корня проекта." >&2
 	echo "  Текущий каталог: $HERE" >&2
 	echo "  Ожидаемый корень:  $THERE" >&2
-	echo "Пример: cd \"$THERE\" && ./admin_scripts/ldap/$(basename \"$0\") …" >&2
+	echo "Пример: cd \"$THERE\" && ./admin_scripts/ldap/$(basename "$0") …" >&2
 	exit 1
 fi
 
@@ -126,7 +128,23 @@ else
 	compose_file_abs=$compose_file
 fi
 
+if [ "${one_app_compose_file#/}" = "$one_app_compose_file" ]; then
+	one_app_compose_file_abs=$REPO_ROOT/$one_app_compose_file
+else
+	one_app_compose_file_abs=$one_app_compose_file
+fi
+
 cd "$REPO_ROOT"
+
+one_app_container=$(
+	RESOLVE_CWD=$REPO_ROOT python3 "$REPO_ROOT/admin_scripts/resolve_compose_container.py" \
+		"$one_app_compose_file_abs" "$compose_project_name" "$one_app_service"
+) || exit 1
+
+one_app_was_running=0
+if docker ps -q --filter "name=^/${one_app_container}$" | grep -q .; then
+	one_app_was_running=1
+fi
 
 resolve_storage() {
 	if [ -n "$ldap_docker_volume" ]; then
@@ -246,3 +264,12 @@ if [ "$skip_compose_stop" = "1" ] && [ -n "$stopped_containers" ] && [ "$skip_st
 	docker start $stopped_containers
 fi
 compose_start
+
+if [ "$one_app_was_running" = "1" ]; then
+	if docker container inspect "$one_app_container" >/dev/null 2>&1; then
+		echo "Перезапуск $one_app_container ($one_app_service в $one_app_compose_file, сброс кэша UUID узлов LDAP) ..."
+		docker restart "$one_app_container" >/dev/null
+	else
+		echo "Предупреждение: контейнер $one_app_container не найден." >&2
+	fi
+fi
