@@ -251,7 +251,7 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
                 "base": operations_node_id,
                 "scope": hierarchy.CN_SCOPE_ONELEVEL,
                 "filter": {"objectClass": ["prsDatastorageOperation"]},
-                "attributes": ["cn", "prsActive", "prsEntityTypeCode", "prsJsonConfigString"],
+                "attributes": ["cn", "description", "prsActive", "prsEntityTypeCode", "prsJsonConfigString"],
                 "deref": False,
             }
         )
@@ -304,7 +304,7 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
                 "base": op_id,
                 "scope": hierarchy.CN_SCOPE_ONELEVEL,
                 "filter": {"objectClass": ["prsDatastorageOperationParameter"]},
-                "attributes": ["cn", "prsActive", "prsJsonConfigString"],
+                "attributes": ["cn", "description", "prsActive", "prsJsonConfigString"],
                 "deref": False,
             }
         )
@@ -369,7 +369,7 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
 
     def _prepare_node_add_attrs(self, attrs: dict[str, Any]) -> dict[str, Any]:
         vals = copy.deepcopy(attrs or {})
-        for key in self._empty_optional_add_attrs:
+        for key in getattr(self, "_empty_optional_add_attrs", DataStoragesModelCRUDV2._empty_optional_add_attrs):
             value = vals.get(key)
             if value is None or (isinstance(value, str) and not value):
                 vals.pop(key, None)
@@ -413,7 +413,7 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
                 "base": link_id,
                 "scope": hierarchy.CN_SCOPE_ONELEVEL,
                 "filter": {"objectClass": ["prsDatastorageTagOperation"]},
-                "attributes": ["cn", "prsActive", "prsEntityTypeCode", "prsJsonConfigString"],
+                "attributes": ["cn", "description", "prsActive", "prsEntityTypeCode", "prsJsonConfigString"],
                 "deref": False,
             }
         )
@@ -479,7 +479,7 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
                 "base": op_id,
                 "scope": hierarchy.CN_SCOPE_ONELEVEL,
                 "filter": {"objectClass": ["prsDatastorageTagOperationParameter"]},
-                "attributes": ["cn", "prsActive", "prsJsonConfigString"],
+                "attributes": ["cn", "description", "prsActive", "prsJsonConfigString"],
                 "deref": False,
             }
         )
@@ -578,9 +578,6 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
             link_cfg = copy.deepcopy(link_attrs.get("prsJsonConfigString") or {})
             if tag_value_type != 5:
                 link_cfg["prsValueTypeCode"] = tag_value_type
-        else:
-            # Как в v1: prsJsonConfigString с prsValueTypeCode нужен для _tag_updated в app (смена типа тега).
-            link_cfg = {} if tag_value_type == 5 else {"prsValueTypeCode": tag_value_type}
 
         existing_link = await self._hierarchy.search(
             payload={

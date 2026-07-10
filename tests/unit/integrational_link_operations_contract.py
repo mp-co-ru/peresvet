@@ -941,12 +941,12 @@ def test_v2_link_tag_includes_request_config_when_tag_type_5_but_config_non_empt
 
 
 def test_v2_link_tag_modify_omits_prsJsonConfigString_when_empty():
-    """При обновлении привязки тега с prsValueTypeCode=5 и без конфига в запросе modify не передаёт prsJsonConfigString."""
+    """При обновлении привязки тега без конфига в запросе modify не передаёт prsJsonConfigString."""
     dummy = types.SimpleNamespace()
     modify_calls: list[tuple[str, dict]] = []
 
     async def _post_message(*_args, **_kwargs):
-        return {"prsStore": None}
+        return {"prsStore": {"enabled": True}}
 
     async def _search(payload: dict):
         if payload.get("id") and payload.get("attributes") == ["prsValueTypeCode"]:
@@ -993,6 +993,7 @@ def test_v2_link_tag_modify_omits_prsJsonConfigString_when_empty():
 
     assert len(modify_calls) == 1
     assert modify_calls[0][0] == "existing-link-id"
+    assert modify_calls[0][1]["prsStore"] == {"enabled": True}
     assert "prsJsonConfigString" not in modify_calls[0][1]
 
 

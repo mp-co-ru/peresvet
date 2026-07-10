@@ -27,6 +27,8 @@ def _patch_prs_logger_for_tests() -> None:
         file_name: str = "log/peresvet.log",
         retention: str = "1 months",
         rotation: str = "20 days",
+        service_name: str = "",
+        **kwargs,
     ):
         return _orig(
             cls,
@@ -34,6 +36,8 @@ def _patch_prs_logger_for_tests() -> None:
             file_name=_pytest_log_file_path(),
             retention=retention,
             rotation=rotation,
+            service_name=service_name,
+            **kwargs,
         )
 
     PrsLogger.make_logger = classmethod(_wrapped)  # type: ignore[method-assign]
