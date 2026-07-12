@@ -214,13 +214,14 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
         tag_id = mes["tagId"]
         ds_id = mes["dataStorageId"]
 
-        await self._bind_tag(tag_id, False)
         cache = self._cache
         assert cache is not None
         async with cache.get_redis() as r:
             index = await r.json().arrindex(f"{ds_id}.{self._config.svc_name}", "tags", tag_id)  # type: ignore[reportGeneralTypeIssues]
             if index > -1:
                 await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "tags", index[0])  # type: ignore[reportGeneralTypeIssues]
+        if not await self._tag_linked_to_other_datastorage(tag_id, ds_id):
+            await self._bind_tag(tag_id, False)
         await self._invalidate_meta_cache_for_tag(tag_id)
 
     async def _link_alert(self, mes: dict, routing_key: str | None = None) -> dict:

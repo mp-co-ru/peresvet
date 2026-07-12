@@ -140,8 +140,6 @@ class MethodsApp(AppSvc):
 
     async def _created(self, mes: dict, routing_key: str = None):
         await self._make_method_cache(mes["id"])
-        if await self._method_entity_type(mes["id"]) != 1:
-            await self._bind_method(mes["id"])
 
     async def _updated(self, mes: dict, routing_key: str = None):
         """
@@ -155,8 +153,6 @@ class MethodsApp(AppSvc):
         active = method_data[0][2]["prsActive"][0] == 'TRUE'
         if active:
             await self._make_method_cache(mes['id'])
-            if await self._method_entity_type(mes['id']) != 1:
-                await self._bind_method(mes['id'], True)
         else:
             await self._delete_method_cache(mes['id'])
             await self._bind_method(mes['id'], False)
@@ -521,6 +517,7 @@ class MethodsApp(AppSvc):
                 name=f"{method_id}.{self._config.svc_name}", path="$", obj=initiators_ids
             )
 
+        await self._bind_method(method_id, True)
         return True
 
     async def _get_methods(self):
@@ -530,9 +527,7 @@ class MethodsApp(AppSvc):
         }
         methods = await self._hierarchy.search(payload=payload)
         for method in methods:
-            ok = await self._make_method_cache(method[0])
-            if ok and await self._method_entity_type(method[0]) != 1:
-                await self._bind_method(method[0])
+            await self._make_method_cache(method[0])
 
     async def on_startup(self) -> None:
         await super().on_startup()

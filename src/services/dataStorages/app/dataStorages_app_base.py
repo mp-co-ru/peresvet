@@ -179,6 +179,41 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         )
         return bool(res)
 
+    async def _entity_linked_to_other_datastorage(
+        self, entity_id: str, current_ds_id: str, object_class: str
+    ) -> bool:
+        try:
+            ds_root = await self._hierarchy.get_node_id("cn=dataStorages,cn=prs")
+        except Exception:
+            return False
+        res = await self._hierarchy.search(
+            {
+                "base": ds_root,
+                "scope": CN_SCOPE_SUBTREE,
+                "filter": {"cn": [entity_id], "objectClass": [object_class]},
+                "attributes": ["cn"],
+                "deref": False,
+            }
+        )
+        for item in res or []:
+            try:
+                parent_id, _ = await self._hierarchy.get_parent(item[0])
+            except Exception:
+                continue
+            if parent_id != current_ds_id:
+                return True
+        return False
+
+    async def _tag_linked_to_other_datastorage(self, tag_id: str, current_ds_id: str) -> bool:
+        return await self._entity_linked_to_other_datastorage(
+            tag_id, current_ds_id, "prsDatastorageTagData"
+        )
+
+    async def _alert_linked_to_other_datastorage(self, alert_id: str, current_ds_id: str) -> bool:
+        return await self._entity_linked_to_other_datastorage(
+            alert_id, current_ds_id, "prsDatastorageAlertData"
+        )
+
     async def _sync_parent_tag_data_get_subscription(self, parent_tag_id: str) -> None:
         """Подписка prsTag.app.data_get.<tag> нужна и для тегов с историей, и для виртуальных (prsEntityTypeCode=1)."""
         if not parent_tag_id:
@@ -354,9 +389,13 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
                 cached = await r.json().get(f"{ds_id}.{self._config.svc_name}")
                 if isinstance(cached, dict):
                     for tag_id in cached.get("tags") or []:
-                        await self._bind_tag(str(tag_id), False)
+                        tag_id = str(tag_id)
+                        if not await self._tag_linked_to_other_datastorage(tag_id, ds_id):
+                            await self._bind_tag(tag_id, False)
                     for alert_id in cached.get("alerts") or []:
-                        await self._bind_alert(str(alert_id), False)
+                        alert_id = str(alert_id)
+                        if not await self._alert_linked_to_other_datastorage(alert_id, ds_id):
+                            await self._bind_alert(alert_id, False)
                 await r.json().delete(f"{ds_id}.{self._config.svc_name}")
         except Exception:
             # cache may be unavailable during shutdown; don't fail hard

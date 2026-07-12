@@ -243,6 +243,17 @@ class ConnectorsMQTTApp(AppSvc):
             )
         }
 
+    async def _get_connector_tag_ids(self, conn_id: str) -> list[str]:
+        tags = await self._hierarchy.search(payload={
+            "base": conn_id,
+            "scope": hierarchy.CN_SCOPE_SUBTREE,
+            "filter": {
+                "objectClass": ["prsConnectorTagData"]
+            },
+            "attributes": ["cn"]
+        })
+        return [attrs["cn"][0] for _, _, attrs in tags]
+
     async def _write_connector_tags_quality(self, conn_id: str, quality_code: int) -> bool:
         """Публикует null с кодом качества в шину для записи в историю тегов (БД), без LDAP.
 
@@ -286,12 +297,6 @@ class ConnectorsMQTTApp(AppSvc):
             self._logger.debug(
                 f"{self._config.svc_name} :: prsConnector.connection_lost для {conn_id} "
                 f"игнорируется: остановка платформы (запись качества {CN_QUALITY_CONNECTION_LOST} не выполняется)."
-            )
-            return {}
-        if not self._connector_tag_ids.get(conn_id):
-            self._logger.warning(
-                f"{self._config.svc_name} :: Потеря связи с коннектором {conn_id}; "
-                f"в кэше нет привязанных тегов — запись качества {CN_QUALITY_CONNECTION_LOST} в историю не выполнялась."
             )
             return {}
         wrote = await self._write_connector_tags_quality(conn_id, CN_QUALITY_CONNECTION_LOST)
@@ -430,14 +435,14 @@ class ConnectorsMQTTApp(AppSvc):
 
     async def _bind_conn(self, conn_id: str, bind: bool = True):
         func = (self._amqp_consume_queue.unbind, self._amqp_consume_queue.bind)[bind]
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.link_tag.{conn_id}")
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.tag_link_updated.{conn_id}")
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.unlink_tag.{conn_id}")
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.tag_updated.{conn_id}")
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.tag_deleted.{conn_id}")
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.updated.{conn_id}")
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.deleted.{conn_id}")
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.connection_lost.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"prsConnector.model.link_tag.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"prsConnector.model.tag_link_updated.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"prsConnector.model.unlink_tag.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"prsConnector.model.tag_updated.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"prsConnector.model.tag_deleted.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"prsConnector.model.updated.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"prsConnector.model.deleted.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"prsConnector.connection_lost.{conn_id}")
         self._logger.info(f"{self._config.svc_name} :: Коннектор {conn_id} {('от', 'при')[bind]}вязан.")
 
     async def _deleting(self, mes: dict, routing_key: str | None = None):
