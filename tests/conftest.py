@@ -1,5 +1,6 @@
 import sys
 import tempfile
+import types
 from pathlib import Path
 
 
@@ -7,6 +8,40 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
+
+
+def _patch_optional_dependency_stubs() -> None:
+    try:
+        from aio_pika import connect_robust  # noqa: F401
+    except Exception:
+        aio_pika_stub = sys.modules.get("aio_pika") or types.ModuleType("aio_pika")
+        aio_pika_abc_stub = sys.modules.get("aio_pika.abc") or types.ModuleType("aio_pika.abc")
+
+        async def _connect_robust(*_args, **_kwargs):
+            return None
+
+        for name in (
+            "AbstractIncomingMessage",
+            "AbstractRobustConnection",
+            "AbstractRobustChannel",
+            "AbstractRobustExchange",
+            "AbstractRobustQueue",
+        ):
+            setattr(aio_pika_abc_stub, name, object)
+        aio_pika_stub.connect_robust = _connect_robust
+        aio_pika_stub.abc = aio_pika_abc_stub
+        sys.modules["aio_pika"] = aio_pika_stub
+        sys.modules["aio_pika.abc"] = aio_pika_abc_stub
+
+    try:
+        import ldap.filter  # noqa: F401
+    except Exception:
+        ldap_stub = sys.modules.get("ldap") or types.ModuleType("ldap")
+        ldap_filter_stub = types.ModuleType("ldap.filter")
+        ldap_filter_stub.escape_filter_chars = lambda value: str(value)
+        ldap_stub.filter = ldap_filter_stub
+        sys.modules["ldap"] = ldap_stub
+        sys.modules["ldap.filter"] = ldap_filter_stub
 
 # Импорт сервисов (например tags_app_api_svc) сразу создаёт loguru file sink на log/peresvet.log.
 # В .venv/CI каталог log/ может быть только для чтения — перенаправляем файл лога в $TMPDIR.
@@ -43,5 +78,6 @@ def _patch_prs_logger_for_tests() -> None:
     PrsLogger.make_logger = classmethod(_wrapped)  # type: ignore[method-assign]
 
 
+_patch_optional_dependency_stubs()
 _patch_prs_logger_for_tests()
 

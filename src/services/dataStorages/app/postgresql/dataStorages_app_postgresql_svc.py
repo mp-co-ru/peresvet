@@ -529,13 +529,14 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                 f'drop table if exists "{table_name}"'
             )
 
-        await self._bind_alert(alert_id, False)
         async with self._cache.get_redis() as r:
             # если path != $, то возвращается одно значение
             # если элемент не найден, то это значение = -1
             index = await r.json().arrindex(f"{ds_id}.{self._config.svc_name}", "alerts", alert_id)
             if index > -1:
                 await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "alerts", index[0])
+        if not await self._alert_linked_to_other_datastorage(alert_id, ds_id):
+            await self._bind_alert(alert_id, False)
 
         self._logger.info(f"{self._config.svc_name} :: Тревога {alert_id} отвязана от хранилища {ds_id}.")
 
@@ -571,13 +572,14 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                 f'drop table if exists "{table_name}"'
             )
 
-        await self._bind_tag(tag_id, False)
         async with self._cache.get_redis() as r:
             # если path != $, то возвращается одно значение
             # если элемент не найден, то это значение = -1
             index = await r.json().arrindex(f"{ds_id}.{self._config.svc_name}", "tags", tag_id)
             if index > -1:
                 await r.json().arrpop(f"{ds_id}.{self._config.svc_name}", "tags", index[0])
+        if not await self._tag_linked_to_other_datastorage(tag_id, ds_id):
+            await self._bind_tag(tag_id, False)
 
         self._logger.info(f"{self._config.svc_name} :: Тег {tag_id} отвязан от хранилища {ds_id}.")
 

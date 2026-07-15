@@ -5,6 +5,7 @@ services:
       dockerfile: docker/docker-files/grafana/Dockerfile.grafana
       args:
         - NGINX_HOST=${NGINX_HOST}
+        - LOCAL_MODE=${LOCAL_MODE:-false}
     #image: grafana/grafana-enterprise:11.2.2-ubuntu
     container_name: prs-grafana
     hostname: ${HOST_GRAFANA}
