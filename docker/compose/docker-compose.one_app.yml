@@ -6,7 +6,7 @@ services:
       context: ../..
       dockerfile: docker/docker-files/all/Dockerfile.one_app.uvicorn
       args:
-        - name=value
+        - LOCAL_MODE=${LOCAL_MODE:-false}
     environment:
       TZ: ${TIME_ZONE}
       # Enable Peresvet API v2 (dataStorages + integrational operations)

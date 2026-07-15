@@ -2,10 +2,26 @@
 FROM grafana/grafana-enterprise:12.4.0-22081664032-ubuntu
 #EXPOSE 3000
 ARG NGINX_HOST
+ARG LOCAL_MODE="false"
 
 ENV GF_USERS_DEFAULT_LANGUAGE=ru-RU
 
 USER root
+
+# В локальном режиме используем предустановленные пакеты
+# LOCAL_MODE может быть задан через ARG или через файл .local-mode
+COPY .local-mode* ./
+RUN if [ -f .local-mode ]; then \
+        source .local-mode 2>/dev/null || true; \
+        LOCAL_MODE="${LOCAL_MODE:-false}"; \
+    fi
+
+# В локальном режиме используем предустановленные пакеты
+RUN if [ "${LOCAL_MODE}" = "true" ] && [ -d /preinstalled/apt-cache ]; then \
+        apt-get update && \
+        apt-get install -y --no-install-recommends /preinstalled/apt-cache/*.deb 2>/dev/null || true && \
+        apt-get clean && rm -rf /var/lib/apt/lists/*; \
+    fi
 
 RUN mkdir -p /var/lib/grafana/dashboards/root /var/lib/grafana/dashboards/admin
 COPY src/grafana/ /var/lib/grafana/dashboards-src/

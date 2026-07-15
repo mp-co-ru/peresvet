@@ -6,6 +6,8 @@ services:
     build:
       context: ../..
       dockerfile: docker/docker-files/mcp/Dockerfile.mcp.peresvet
+      args:
+        - LOCAL_MODE=${LOCAL_MODE:-false}
     environment:
       TZ: ${TIME_ZONE}
       PERESVET_BASE_URL: http://${ALL_SVC_HOST}:${PORT_ONE_APP}

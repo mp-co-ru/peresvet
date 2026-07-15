@@ -2,8 +2,25 @@ FROM python:3.12-slim
 
 WORKDIR /usr/src/peresvet-mcp
 
-# Minimal deps for MCP server + HTTP client
-RUN pip install --no-cache-dir fastmcp aiohttp
+# В локальном режиме используем предустановленные Python-пакеты
+# LOCAL_MODE может быть задан через ARG или через файл .local-mode
+ARG LOCAL_MODE="false"
+COPY .local-mode* ./
+RUN if [ -f .local-mode ]; then \
+        source .local-mode 2>/dev/null || true; \
+        LOCAL_MODE="${LOCAL_MODE:-false}"; \
+    fi && \
+    if [ "${LOCAL_MODE}" = "true" ]; then \
+        echo "Локальный режим активирован: будут использоваться предустановленные Python-пакеты"; \
+    fi
+
+# В локальном режиме используем предустановленные Python-пакеты
+RUN if [ "${LOCAL_MODE}" = "true" ] && [ -d /preinstalled/python-site-packages ]; then \
+        cp -Rp /preinstalled/python-site-packages/* /usr/local/lib/python3.12/site-packages/ 2>/dev/null || true && \
+        echo "Используются предустановленные Python-пакеты"; \
+    else \
+        pip install --no-cache-dir fastmcp aiohttp; \
+    fi
 
 COPY src/mcp_server /usr/src/peresvet-mcp/mcp_server
 

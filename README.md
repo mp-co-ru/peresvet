@@ -123,6 +123,7 @@ shell → аргументы командной строки (CLI перекры
 | `PRS_SSL` | `true` / `false` — HTTPS-вариант nginx. |
 | `PRS_BUILD` | `true` / `false` — пересборка локальных образов перед запуском. |
 | `PRS_SKIP_IMAGE_PULL` | `1` — не скачивать базовые образы перед запуском. |
+| `LOCAL_MODE` | `true` — использовать предустановленные зависимости (для локального дистрибутива). |
 
 Пример запуска с переопределением параметров из CLI:
 
@@ -130,6 +131,7 @@ shell → аргументы командной строки (CLI перекры
 ./run_one_app.sh --hostname <имя-сервера>
 ./run_one_app.sh --hostname <имя-сервера> --build true
 ./run_one_app.sh --mirror mirror.example.com:5000
+./run_one_app.sh --local
 ```
 
 Скрипт обновляет `NGINX_HOST` в `docker/compose/.cont_one_app.env`, при необходимости
@@ -211,13 +213,23 @@ Docker/хоста, либо укажите зеркало в `.env`.
 ### Сборка дистрибутива (для разработчиков)
 
 ```bash
+# Стандартная сборка (интернет доступен при установке)
 ./packaging/build_product_distribution.sh
 # или с явным путём:
 ./packaging/build_product_distribution.sh --output dist/peresvet-product-<tag>.tar.gz
+
+# Локальная сборка (интернет ограничен - зависимости включены в дистрибутив)
+./packaging/build_dev_distribution.sh --local
+# или с явным путём:
+./packaging/build_dev_distribution.sh --output dist/peresvet-dev-<tag>.tar.gz --local
 ```
 
 Архив создаётся в каталоге `dist/`. При публикации тега на ветке `main` сборка
 выполняется автоматически workflow `.github/workflows/product_distribution.yml`.
+
+**Примечание**: флаг `--local` для `build_dev_distribution.sh` устанавливает системные
+и Python-зависимости на исходниках перед упаковкой, что позволяет запускать платформу
+без доступа к интернету при установке.
 
 ### Запуск HTTPS-варианта
 

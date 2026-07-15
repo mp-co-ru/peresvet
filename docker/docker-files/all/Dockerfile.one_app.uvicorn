@@ -5,21 +5,55 @@ ENV LDAP_DOMAIN mycompany.com
 ENV LDAP_ADMIN_PASSWORD 123456
 ENV PIP_NO_INDEX=1
 
-WORKDIR /home
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libldap2-dev libsasl2-dev \
-    && bash -c "DEBIAN_FRONTEND=noninteractive apt install -q -y slapd ldap-utils"
+# В локальном режиме используем предустановленные пакеты
+# LOCAL_MODE может быть задан через ARG или через файл .local-mode
+ARG LOCAL_MODE="false"
+COPY .local-mode* ./
+RUN if [ -f .local-mode ]; then \
+        source .local-mode 2>/dev/null || true; \
+        LOCAL_MODE="${LOCAL_MODE:-false}"; \
+    fi && \
+    if [ "${LOCAL_MODE}" = "true" ]; then \
+        echo "Локальный режим активирован: будут использоваться предустановленные зависимости"; \
+    else \
+        echo "Локальный режим отключён: зависимости будут установлены при сборке"; \
+    fi
+RUN if [ "${LOCAL_MODE}" = "true" ] && [ -d /preinstalled/apt-cache ]; then \
+        apt-get update && \
+        apt-get install -y --no-install-recommends /preinstalled/apt-cache/*.deb 2>/dev/null || true && \
+        apt-get clean && rm -rf /var/lib/apt/lists/*; \
+    else \
+        apt-get update && apt-get install -y --no-install-recommends \
+            libldap2-dev libsasl2-dev \
+            && bash -c "DEBIAN_FRONTEND=noninteractive apt install -q -y slapd ldap-utils" && \
+        apt-get -y purge slapd && \
+        apt-get -y autoremove && \
+        apt-get -y clean && \
+        rm -rf /var/lib/apt/lists/*; \
+    fi
 
 WORKDIR /usr/src
 RUN mkdir mpc-peresvet
 COPY requirements.txt /usr/src/mpc-peresvet/
 COPY packages/ /usr/src/mpc-peresvet/packages/
 WORKDIR /usr/src/mpc-peresvet
-RUN pip install --no-cache-dir --no-index -r requirements.txt \
-    && apt-get -y purge slapd \
-    && apt-get -y autoremove \
-    && apt-get -y clean \
-    && rm -rf /var/lib/apt/lists/*
+
+# В локальном режиме копируем подготовленные зависимости в Docker-образ
+RUN if [ "${LOCAL_MODE}" = "true" ]; then \
+        mkdir -p /preinstalled/apt-cache /preinstalled/python-site-packages 2>/dev/null || true; \
+    fi
+
+# В локальном режиме используем предустановленные Python-пакеты
+RUN if [ "${LOCAL_MODE}" = "true" ] && [ -d /preinstalled/python-site-packages ]; then \
+        cp -Rp /preinstalled/python-site-packages/* /usr/local/lib/python3.12/site-packages/ 2>/dev/null || true && \
+        apt-get clean && rm -rf /var/lib/apt/lists/*; \
+    else \
+        pip install --no-cache-dir --no-index -r requirements.txt; \
+    fi && \
+    apt-get -y purge slapd 2>/dev/null || true && \
+    apt-get -y autoremove 2>/dev/null || true && \
+    apt-get -y clean 2>/dev/null || true && \
+    rm -rf /var/lib/apt/lists/* 2>/dev/null || true
 
 RUN mkdir /usr/src/mpc-peresvet/log
 

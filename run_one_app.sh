@@ -13,7 +13,7 @@ DOTENV_FILE="${SCRIPT_DIR}/.env"
 show_help() {
     cat <<'EOF'
 Usage:
-  ./run_one_app.sh [--hostname HOSTNAME] [--ssl true|false] [--build true|false] [--mirror URL]
+  ./run_one_app.sh [--hostname HOSTNAME] [--ssl true|false] [--build true|false] [--mirror URL] [--local]
 
 Options:
   --hostname HOSTNAME  Server name for nginx. Defaults to PRS_HOSTNAME or host name.
@@ -21,12 +21,14 @@ Options:
   --build true|false   Rebuild images before starting containers. Defaults to PRS_BUILD.
   --mirror URL         Registry mirror for missing base images. Defaults to
                        PRS_REGISTRY_MIRROR from .env.
+  --local              Local mode: use pre-installed dependencies. Use with
+                       distributions prepared with ./packaging/build_dev_distribution.sh --local.
   -h, --help           Show this help.
 
 Configuration:
   Defaults are read from .env next to this script. CLI options override .env.
   Variables: PRS_REGISTRY_MIRROR, PRS_HOSTNAME, PRS_SSL, PRS_BUILD,
-             PRS_SKIP_IMAGE_PULL.
+             LOCAL_MODE, PRS_SKIP_IMAGE_PULL.
 
 Mirror notes:
   - Already present local images are not downloaded again.
@@ -770,6 +772,7 @@ load_dotenv "${DOTENV_FILE}"
 srv="${PRS_HOSTNAME:-${HOSTNAME:-$(hostname)}}"
 ssl="${PRS_SSL:-false}"
 build="${PRS_BUILD:-false}"
+local_mode="${PRS_LOCAL_MODE:-false}"
 registry_mirror="$(trim_registry_mirror "${PRS_REGISTRY_MIRROR:-}")"
 require_registry_mirror_scheme "${registry_mirror}"
 split_registry_mirror "${registry_mirror}"
@@ -809,6 +812,10 @@ while [[ $# -gt 0 ]]; do
             require_registry_mirror_scheme "${registry_mirror}"
             split_registry_mirror "${registry_mirror}"
             shift 2
+            ;;
+        --local)
+            local_mode="true"
+            shift
             ;;
         -h|--help)
             show_help

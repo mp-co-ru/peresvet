@@ -160,6 +160,10 @@ docker/compose/.cont_one_app.secrets.env
 # локальная сборка python-docx для генерации ТКП (seligdar)
 .tkp_build/
 
+# Подготовленные зависимости для локального режима
+apt-cache/
+python-site-packages/
+.preinstalled/
 
 !methods/test_method.py
 scripts/
