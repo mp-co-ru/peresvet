@@ -7,7 +7,7 @@ Usage:
   packaging/build_dev_distribution.sh [--output PATH] [--root-dir NAME] [--local]
 
 Build a development distribution archive that contains only the files needed to run
-the platform with ./run_one_app.sh, including MCP servers for Grafana and Peresvet.
+the platform with ./run_one_app.sh.
 
 Options:
   --output PATH    Archive path. Defaults to dist/peresvet-dev-<version>.tar.gz
@@ -200,8 +200,6 @@ required_pathspecs=(
     "docker/compose/.cont_one_app.env"
     "docker/compose/docker-compose.grafana.yml"
     "docker/compose/docker-compose.ldap.one_app.yml"
-    "docker/compose/docker-compose.mcp.grafana.yml"
-    "docker/compose/docker-compose.mcp.peresvet.yml"
     "docker/compose/docker-compose.nginx.one_app.ssl.yml"
     "docker/compose/docker-compose.nginx.one_app.yml"
     "docker/compose/docker-compose.nginx.one_app_ssl_letsencrypt.yml"
@@ -217,8 +215,6 @@ required_pathspecs=(
     "docker/docker-files/grafana/Dockerfile.grafana"
     "docker/docker-files/ldap/Dockerfile.ldap.one_app"
     "docker/docker-files/ldap/src"
-    "docker/docker-files/mcp/Dockerfile.mcp.peresvet"
-    "docker/docker-files/mcp/Dockerfile.mcp.grafana"
     "docker/docker-files/nginx/Dockerfile.nginx"
     "docker/docker-files/nginx/Dockerfile.nginx.ssl"
     "docker/docker-files/nginx/Dockerfile.nginx.ssl_letsencrypt"
@@ -263,28 +259,6 @@ else
 fi
 
 mkdir -p "${stage_dir}/log"
-
-python3 - "${stage_dir}" <<'PY'
-import pathlib
-import sys
-
-stage_dir = pathlib.Path(sys.argv[1])
-
-script = stage_dir / "run_one_app.sh"
-text = script.read_text(encoding="utf-8")
-
-# Add MCP compose files to the docker compose command in run_one_app.sh
-# Look for the line with docker-compose.restart.yml and add MCP compose files before it
-marker = "-f docker/compose/docker-compose.restart.yml \\\n"
-replacement = "-f docker/compose/docker-compose.mcp.grafana.yml \\\n-f docker/compose/docker-compose.mcp.peresvet.yml \\\n" + marker
-
-if marker in text:
-    text = text.replace(marker, replacement, 1)
-    script.write_text(text, encoding="utf-8")
-    print("Successfully added MCP compose files to run_one_app.sh")
-else:
-    print("Warning: Could not find marker to add MCP compose files", file=sys.stderr)
-PY
 
 mkdir -p "$(dirname "${output}")"
 tar -czf "${output}" -C "${tmp_dir}" "${root_dir}"

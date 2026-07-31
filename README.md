@@ -106,7 +106,7 @@ cd peresvet-product-<tag>
 адрес зеркала образов или имя сервера):
 
 ```env
-PRS_REGISTRY_MIRROR=10.14.143.57:5000
+PRS_REGISTRY_MIRROR=https://<registry-host>
 PRS_HOSTNAME=
 PRS_SSL=false
 PRS_BUILD=false
@@ -118,7 +118,7 @@ shell → аргументы командной строки (CLI перекры
 
 | Переменная | Назначение |
 |---|---|
-| `PRS_REGISTRY_MIRROR` | Адрес зеркала базовых образов (`host:port`, без `http://`). Пустое значение — pull с Docker Hub. |
+| `PRS_REGISTRY_MIRROR` | URL зеркала базовых образов (`http://...` или `https://...`). Пустое значение — pull с Docker Hub. |
 | `PRS_HOSTNAME` | Имя сервера для nginx. Пустое — текущее имя хоста. |
 | `PRS_SSL` | `true` / `false` — HTTPS-вариант nginx. |
 | `PRS_BUILD` | `true` / `false` — пересборка локальных образов перед запуском. |
@@ -130,7 +130,7 @@ shell → аргументы командной строки (CLI перекры
 ```bash
 ./run_one_app.sh --hostname <имя-сервера>
 ./run_one_app.sh --hostname <имя-сервера> --build true
-./run_one_app.sh --mirror mirror.example.com:5000
+./run_one_app.sh --mirror https://<registry-host>
 ./run_one_app.sh --local
 ```
 
@@ -153,10 +153,10 @@ shell → аргументы командной строки (CLI перекры
 о зеркале, продолжая ходить на него за посторонними образами. Наш подход не меняет
 глобальное поведение Docker — зеркало используется только установочным скриптом.
 
-1. Укажите адрес зеркала в `.env` (`PRS_REGISTRY_MIRROR`) или передайте `--mirror`.
+1. Укажите URL зеркала в `.env` (`PRS_REGISTRY_MIRROR`) или передайте `--mirror`.
 2. Уже установленные локально образы повторно не скачиваются.
-3. Если зеркало настроено, отсутствующие образы берутся **только** с зеркала
-   (Docker Hub не используется).
+3. Если зеркало настроено, скрипт сначала пробует скачать отсутствующие образы
+   с него. Если зеркало недоступно, скрипт пробует Docker Hub.
 
 Список базовых образов — в `packaging/required-images.manifest`:
 
@@ -168,21 +168,73 @@ python:3.12-slim
 osixia/openldap
 grafana/grafana-enterprise:12.4.0-22081664032-ubuntu
 nginx:1.25.3-alpine-slim
+certbot/certbot
 ```
 
-На зеркале образы должны быть доступны по тем же путям, например:
-`10.14.143.57:5000/postgres:16.1`.
+На зеркале образы должны быть доступны по тем же путям и тегам, которые
+использует Docker Registry API. Для official images без namespace используйте
+префикс `library/`, например: `<registry-host>/library/postgres:16.1`.
 
-Для HTTP-зеркала добавьте хост в `insecure-registries` в `/etc/docker/daemon.json`
-(это **не** то же самое, что `registry-mirrors`):
+#### Создание собственного зеркала
+
+На сервере зеркала можно запустить локальный Docker Registry версии `3.1.1`:
+
+```bash
+docker run -d \
+  --restart=always \
+  --name prs-registry \
+  -p 5000:5000 \
+  registry:3.1.1
+```
+
+Если registry доступен по HTTP без TLS, укажите его в `insecure-registries`
+на сервере, где будут выполняться `docker push` и `./run_one_app.sh`:
 
 ```json
 {
-  "insecure-registries": ["10.14.143.57:5000"]
+  "insecure-registries": ["<registry-host>:5000"]
 }
 ```
 
 После правки перезапустите Docker: `sudo systemctl restart docker`.
+
+Опубликуйте в registry все образы из `packaging/required-images.manifest`.
+В `REGISTRY_PREFIX` указывается адрес registry без схемы; если зеркало
+использует дополнительный путь, добавьте его туда же, например
+`<registry-host>:5000/<mirror-path>`.
+
+```bash
+REGISTRY_PREFIX=<registry-host>:5000
+
+while IFS= read -r image; do
+  [ -z "$image" ] && continue
+  case "$image" in \#*) continue ;; esac
+
+  target="$image"
+  if [[ "$image" != */* ]]; then
+    target="library/$image"
+  fi
+  if [[ "$target" != *:* ]]; then
+    target="$target:latest"
+  fi
+
+  docker pull "$image"
+  docker tag "$image" "$REGISTRY_PREFIX/$target"
+  docker push "$REGISTRY_PREFIX/$target"
+done < packaging/required-images.manifest
+```
+
+После публикации образов укажите зеркало при запуске. Для HTTP-зеркала:
+
+```bash
+./run_one_app.sh --mirror http://<registry-host>:5000
+```
+
+Для HTTPS-зеркала:
+
+```bash
+./run_one_app.sh --mirror https://<registry-host>
+```
 
 Чтобы отключить зеркало и тянуть образы с Docker Hub, очистите переменную в `.env`:
 
@@ -459,10 +511,10 @@ cd /путь/к/peresvet
    ```bash
    $ docker ps
    CONTAINER ID   IMAGE                         COMMAND                  CREATED        STATUS       PORTS                                            NAMES
-   f43825ef56f3   compose_data_storages_all     "/usr/local/bin/dock…"   8 hours ago    Up 8 hours   0.0.0.0:82->82/tcp, :::82->82/tcp                compose-data_storages_all-1
-   cc6246329561   compose_alerts_all            "/usr/local/bin/dock…"   5 days ago     Up 8 hours   0.0.0.0:85-86->85-86/tcp, :::85-86->85-86/tcp    compose-alerts_all-1
-   0800773b53a8   compose_methods_all           "/usr/local/bin/dock…"   5 days ago     Up 8 hours   0.0.0.0:87->87/tcp, :::87->87/tcp                compose-methods_all-1
-   13ce75017a6a   compose_tags_all              "/usr/local/bin/dock…"   11 days ago    Up 8 hours   0.0.0.0:80-81->80-81/tcp, :::80-81->80-81/tcp    compose-tags_all-1
+   f43825ef56f3   compose_data_storages_all     "/usr/local/bin/dock…"   8 hours ago    Up 8 hours   <published-ports>                                compose-data_storages_all-1
+   cc6246329561   compose_alerts_all            "/usr/local/bin/dock…"   5 days ago     Up 8 hours   <published-ports>                                compose-alerts_all-1
+   0800773b53a8   compose_methods_all           "/usr/local/bin/dock…"   5 days ago     Up 8 hours   <published-ports>                                compose-methods_all-1
+   13ce75017a6a   compose_tags_all              "/usr/local/bin/dock…"   11 days ago    Up 8 hours   <published-ports>                                compose-tags_all-1
    ...
    ```
 
@@ -566,31 +618,6 @@ cd /путь/к/peresvet
 
 Инструкции по работе с конфигуратором
 [здесь](https://vovaman.github.io/peresvet/configurator/configurator.html).
-
-### MCP-серверы (доступ через nginx)
-
-В dev-конфигурации MCP-серверы поднимаются отдельными контейнерами, но **доступ к ним предусмотрен через nginx** (единая точка входа).
-
-- **MCP Peresvet**:
-  - **HTTP transport (recommended)**: `http://<nginx-host>/mcp/peresvet/mcp`
-  - **SSE transport (legacy)**: `http://<nginx-host>/mcp/peresvet/sse`
-  - **Проверка**: `http://<nginx-host>/mcp/peresvet/health`, `http://<nginx-host>/mcp/peresvet/config`
-
-- **MCP Grafana**:
-  - **HTTP transport** (если `MCP_GRAFANA_TRANSPORT=streamable-http`): `http://<nginx-host>/mcp/grafana/mcp`
-  - **SSE transport (legacy)** (если `MCP_GRAFANA_TRANSPORT=sse`): `http://<nginx-host>/mcp/grafana/sse`
-
-Транспорты задаются переменными в `docker/compose/.cont_one_app.env`:
-- `MCP_PERESVET_TRANSPORT` (значения: `sse`, `http`, `stdio`)
-- `MCP_GRAFANA_TRANSPORT` (значения: `sse`, `streamable-http`)
-
-Если в логах `mcp_peresvet` видно `POST /sse ... 405 Method Not Allowed`, это почти всегда означает,
-что клиент пытается говорить по HTTP (Streamable HTTP), но подключён к SSE URL. В этом случае укажи
-URL `.../mcp/peresvet/mcp` вместо `.../mcp/peresvet/sse`.
-
-Для хранения **секретов** (например `GRAFANA_SERVICE_ACCOUNT_TOKEN`) рекомендуется использовать
-локальный файл `docker/compose/.cont_one_app.secrets.env` (он добавлен в `.gitignore`).
-Шаблон: `docker/compose/.cont_one_app.secrets.env.example`.
 
 # <a name="examples"></a> Примеры использования
 
