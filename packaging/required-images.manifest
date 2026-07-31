@@ -7,5 +7,3 @@ osixia/openldap
 grafana/grafana-enterprise:12.4.0-22081664032-ubuntu
 nginx:1.25.3-alpine-slim
 certbot/certbot
-mcp/grafana:latest
-mcp/peresvet:latest
