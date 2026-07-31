@@ -1,0 +1,55 @@
+# Exclude everything by default
+*
+
+# Include paths needed for Docker builds
+!src/
+!config/
+!docker/
+
+# Exclude files within src that we don't want
+# Note: src/*.json would match src/something.json but NOT src/grafana/file.json
+# So this is safe to keep if we only want to exclude top-level .json files
+src/__pycache__/
+src/*.pyc
+src/*.pyo
+src/*.json
+src/*.md
+
+# Exclude files within config that we don't want
+config/__pycache__/
+config/*.pyc
+config/*.pyo
+
+# Exclude files within docker that we don't want
+docker/__pycache__/
+docker/*.pyc
+docker/*.pyo
+
+# Git-related files
+.git/
+.gitignore
+
+# Documentation and tests
+docs/
+tests/
+
+# Environment files
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+
+# Other
+*.md
+.backups/
+dist/
+.packaging/
+.eggs/
+
+# Подготовленные зависимости (для локального режима)
+# Они будут включены только если LOCAL_MODE=true в .env
+# В противном случае исключаются, чтобы не увеличивать размер дистрибутива
+apt-cache/
+python-site-packages/
+.preinstalled/

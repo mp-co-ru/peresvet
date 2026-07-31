@@ -11,6 +11,12 @@ sys.modules.setdefault("uvloop", uvloop_stub)
 
 aio_pika_stub = types.ModuleType("aio_pika")
 aio_pika_abc_stub = types.ModuleType("aio_pika.abc")
+
+
+async def _connect_robust(*_args, **_kwargs):
+    return None
+
+
 for _name in (
     "AbstractIncomingMessage",
     "AbstractRobustConnection",
@@ -19,6 +25,7 @@ for _name in (
     "AbstractRobustQueue",
 ):
     setattr(aio_pika_abc_stub, _name, object)
+aio_pika_stub.connect_robust = _connect_robust
 aio_pika_stub.abc = aio_pika_abc_stub
 sys.modules.setdefault("aio_pika", aio_pika_stub)
 sys.modules.setdefault("aio_pika.abc", aio_pika_abc_stub)
@@ -105,7 +112,11 @@ ldap_stub.SCOPE_ONELEVEL = 1
 ldap_stub.MOD_REPLACE = 2
 ldap_stub.MOD_DELETE = 1
 ldap_stub.MOD_ADD = 0
+ldap_filter_stub = types.ModuleType("ldap.filter")
+ldap_filter_stub.escape_filter_chars = lambda value: str(value)
+ldap_stub.filter = ldap_filter_stub
 sys.modules.setdefault("ldap", ldap_stub)
+sys.modules.setdefault("ldap.filter", ldap_filter_stub)
 
 ldappool_stub = types.ModuleType("fast_ldap_pool")
 ldappool_stub.ConnectionManager = object

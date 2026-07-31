@@ -1,0 +1,23 @@
+FROM grafana/grafana-enterprise:12.4.0-22081664032-ubuntu
+
+# Install Node.js for Grafana MCP server
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Grafana MCP server via npm
+RUN npm install -g @modelcontextprotocol/server-grafana
+
+# Create non-root user for running MCP server
+RUN useradd -m -u 1000 -s /bin/bash mcp && \
+    mkdir -p /home/mcp/.cache && \
+    chown -R mcp:mcp /home/mcp
+
+USER mcp
+
+WORKDIR /home/mcp
+
+ENV TZ=UTC
+ENV NODE_ENV=production
+
+CMD ["mcp-server-grafana", "-transport", "streamable-http", "-address", "0.0.0.0:8000"]

@@ -13,7 +13,8 @@ DOTENV_FILE="${SCRIPT_DIR}/.env"
 show_help() {
     cat <<'EOF'
 Usage:
-  ./run_one_app.sh [--hostname HOSTNAME] [--ssl true|false] [--build true|false] [--mirror URL]
+  ./run_one_app.sh [--hostname HOSTNAME] [--ssl true|false] [--build true|false]
+                   [--mirror URL] [--tmpdir DIR] [--local]
 
 Options:
   --hostname HOSTNAME  Server name for nginx. Defaults to PRS_HOSTNAME or host name.
@@ -21,12 +22,18 @@ Options:
   --build true|false   Rebuild images before starting containers. Defaults to PRS_BUILD.
   --mirror URL         Registry mirror for missing base images. Defaults to
                        PRS_REGISTRY_MIRROR from .env.
+  --tmpdir DIR         Directory for temporary files when pulling images from the
+                       mirror (layer cache and unpack). Defaults to /tmp.
+                       Use a directory on disk if /tmp is a small tmpfs, for example:
+                       ./run_one_app.sh --tmpdir /var/tmp
+  --local              Local mode: use pre-installed dependencies. Use with
+                       distributions prepared with ./packaging/build_dev_distribution.sh --local.
   -h, --help           Show this help.
 
 Configuration:
   Defaults are read from .env next to this script. CLI options override .env.
   Variables: PRS_REGISTRY_MIRROR, PRS_HOSTNAME, PRS_SSL, PRS_BUILD,
-             PRS_SKIP_IMAGE_PULL.
+             LOCAL_MODE, PRS_SKIP_IMAGE_PULL.
 
 Mirror notes:
   - Already present local images are not downloaded again.
@@ -200,7 +207,9 @@ pull_mirror_via_registry_api() {
     mirror_image_repo_tag "${image_ref}"
     api_base="$(registry_mirror_api_base "${REGISTRY_MIRROR_SCHEME}" "${REGISTRY_MIRROR_HOST}" "${REGISTRY_MIRROR_PATH}")"
 
-    cache_dir="${TMPDIR:-/tmp}/prs-registry-pull/$(printf '%s' "${api_base}/${MIRROR_IMAGE_REPO}:${MIRROR_IMAGE_TAG}:${image_ref}" | sha256sum | awk '{print $1}')"
+    mkdir -p "${pull_tmpdir}"
+    export TMPDIR="${pull_tmpdir}"
+    cache_dir="${pull_tmpdir}/prs-registry-pull/$(printf '%s' "${api_base}/${MIRROR_IMAGE_REPO}:${MIRROR_IMAGE_TAG}:${image_ref}" | sha256sum | awk '{print $1}')"
     mkdir -p "${cache_dir}"
 
     PRS_PULL_CACHE_DIR="${cache_dir}" python3 - "${api_base}" "${MIRROR_IMAGE_REPO}" "${MIRROR_IMAGE_TAG}" "${image_ref}" <<'PY'
@@ -450,15 +459,22 @@ def main():
                 out,
             )
 
-        tar_path = os.path.join(tmp, "image.tar")
-        with tarfile.open(tar_path, "w") as archive:
-            archive.add(manifest_path, arcname="manifest.json")
-            archive.add(config_path, arcname=config_filename)
-            for layer_path in layer_paths:
-                archive.add(os.path.join(tmp, layer_path), arcname=layer_path)
-
         eprint(f"Импорт образа {local_image} в Docker...")
-        subprocess.run(["docker", "load", "-i", tar_path], check=True)
+        # Stream tar into docker load to avoid a second full copy on disk
+        # (important when --tmpdir points at a small tmpfs like /tmp).
+        with subprocess.Popen(
+            ["docker", "load"],
+            stdin=subprocess.PIPE,
+        ) as proc:
+            with tarfile.open(fileobj=proc.stdin, mode="w|") as archive:
+                archive.add(manifest_path, arcname="manifest.json")
+                archive.add(config_path, arcname=config_filename)
+                for layer_path in layer_paths:
+                    archive.add(os.path.join(tmp, layer_path), arcname=layer_path)
+            proc.stdin.close()
+            returncode = proc.wait()
+        if returncode != 0:
+            raise SystemExit(f"docker load failed with exit code {returncode}")
 
 
 if __name__ == "__main__":
@@ -476,6 +492,14 @@ if __name__ == "__main__":
     except urllib.error.URLError as exc:
         eprint(f"Cannot reach registry mirror: {exc.reason}")
         raise SystemExit(1) from exc
+    except OSError as exc:
+        if getattr(exc, "errno", None) == 122:
+            eprint(
+                "Не хватает места/квоты во временном каталоге при сборке образа "
+                f"(--tmpdir={os.environ.get('TMPDIR', '/tmp')}). "
+                "Укажите каталог на диске, например: ./run_one_app.sh --tmpdir /var/tmp"
+            )
+        raise
 PY
 }
 
@@ -770,6 +794,8 @@ load_dotenv "${DOTENV_FILE}"
 srv="${PRS_HOSTNAME:-${HOSTNAME:-$(hostname)}}"
 ssl="${PRS_SSL:-false}"
 build="${PRS_BUILD:-false}"
+local_mode="${PRS_LOCAL_MODE:-false}"
+pull_tmpdir="/tmp"
 registry_mirror="$(trim_registry_mirror "${PRS_REGISTRY_MIRROR:-}")"
 require_registry_mirror_scheme "${registry_mirror}"
 split_registry_mirror "${registry_mirror}"
@@ -810,6 +836,18 @@ while [[ $# -gt 0 ]]; do
             split_registry_mirror "${registry_mirror}"
             shift 2
             ;;
+        --tmpdir)
+            if [[ $# -lt 2 || -z "$2" ]]; then
+                echo "Option --tmpdir requires a directory path." >&2
+                exit 1
+            fi
+            pull_tmpdir="$2"
+            shift 2
+            ;;
+        --local)
+            local_mode="true"
+            shift
+            ;;
         -h|--help)
             show_help
             exit 0
@@ -821,6 +859,12 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+if ! mkdir -p "${pull_tmpdir}" 2>/dev/null || [[ ! -w "${pull_tmpdir}" ]]; then
+    echo "Option --tmpdir must be a writable directory: ${pull_tmpdir}" >&2
+    exit 1
+fi
+export TMPDIR="${pull_tmpdir}"
 
 case "${ssl}" in
     true)
