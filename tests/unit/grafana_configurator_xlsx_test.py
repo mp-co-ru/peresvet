@@ -1,10 +1,16 @@
+import hashlib
 import json
 from pathlib import Path
+import shutil
+import subprocess
+
+import pytest
 
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
 ASSET_DIR = ROOT / "config/grafana/vendor/sheetjs-0.18.5"
+SHEETJS_SHA256 = "c9506197caf809a075b6dee1da0d36fb19da7158ffe8a88e7b0c96c5d8623c99"
 
 
 def _dashboard_parts():
@@ -17,7 +23,7 @@ def test_xlsx_export_dashboard_contract():
     dashboard, html, javascript = _dashboard_parts()
 
     assert dashboard["uid"] == "ddy59kw4v5ssgc"
-    assert dashboard["version"] == 43
+    assert dashboard["version"] == 44
     assert 'id="button-tagExportXlsx"' in html
     assert 'disabled="disabled"' in html
     assert html.index('id="button-tagGetData"') < html.index(
@@ -25,9 +31,11 @@ def test_xlsx_export_dashboard_contract():
     )
 
     for required_fragment in (
-        'prsConfiguratorCodeVersion="20260815-xlsx-export-v1"',
+        'prsConfiguratorCodeVersion="20260815-xlsx-export-v2"',
         "prsTagDataExportSnapshot",
         "prsInvalidateTagDataExport",
+        "prsValidateExportSnapshot",
+        "prsSensitiveRequestKeys",
         "rawResponseText",
         "dataPoints",
         '"Metadata"',
@@ -47,6 +55,7 @@ def test_sheetjs_asset_is_licensed_and_packaged():
     license_file = ASSET_DIR / "LICENSE"
 
     assert library.stat().st_size > 100_000
+    assert hashlib.sha256(library.read_bytes()).hexdigest() == SHEETJS_SHA256
     assert "Apache License" in license_file.read_text(encoding="utf-8")
 
     dockerfile = (
@@ -65,3 +74,30 @@ def test_sheetjs_asset_is_licensed_and_packaged():
     ):
         script = (ROOT / script_name).read_text(encoding="utf-8")
         assert '"config/grafana/vendor/sheetjs-0.18.5"' in script
+
+
+def test_embedded_helpers_and_xlsx_round_trip(tmp_path):
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("Node.js is required for executable Grafana XLSX validation")
+
+    _, _, javascript = _dashboard_parts()
+    embedded_script = tmp_path / "configurator-on-render.js"
+    embedded_script.write_text(javascript, encoding="utf-8")
+    subprocess.run(
+        [node, "--check", str(embedded_script)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        [
+            node,
+            str(ROOT / "tests/unit/grafana_configurator_xlsx_node_test.js"),
+            str(DASHBOARD_PATH),
+            str(ASSET_DIR / "xlsx.full.min.js"),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
