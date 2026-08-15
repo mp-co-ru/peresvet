@@ -410,7 +410,15 @@ async function main() {
   }
 
   const scripts = [];
-  context.window.XLSX = undefined;
+  const partialXlsx = { utils: {} };
+  assert.strictEqual(context.prsIsXlsxReady(XLSX), true);
+  assert.strictEqual(context.prsIsXlsxReady(partialXlsx), false);
+  assert.strictEqual(context.prsIsXlsxReady({ utils: {}, write() {} }), false);
+  context.window.XLSX = partialXlsx;
+  assert.throws(
+    () => context.prsBuildTagDataWorkbook(sampleSnapshot([])),
+    /API локальной библиотеки XLSX не готов/
+  );
   context.prsXlsxLibraryPromise = null;
   context.document = {
     baseURI: "http://localhost/grafana/",
@@ -443,27 +451,44 @@ async function main() {
   };
   scripts.push(staleExistingScript);
   const firstLoad = context.prsLoadXlsxLibrary();
-  const failedScript = scripts[0];
-  assert.notStrictEqual(failedScript, staleExistingScript);
-  failedScript.dispatch("error");
-  await assert.rejects(firstLoad, /локальную библиотеку XLSX/);
+  const incompleteScript = scripts[0];
+  assert.notStrictEqual(incompleteScript, staleExistingScript);
+  assert.strictEqual(context.window.XLSX, undefined);
+  context.window.XLSX = { utils: { book_new() {} } };
+  incompleteScript.dispatch("load");
+  await assert.rejects(firstLoad, /API XLSX неполон/);
   assert.strictEqual(scripts.length, 0);
   assert.strictEqual(context.prsXlsxLibraryPromise, null);
+  assert.strictEqual(context.window.XLSX, partialXlsx);
 
   const secondLoad = context.prsLoadXlsxLibrary();
-  const timedOutScript = scripts[0];
-  runScheduledTimer(10000);
-  await assert.rejects(secondLoad, /Истекло время/);
+  const failedScript = scripts[0];
+  failedScript.dispatch("error");
+  await assert.rejects(secondLoad, /локальную библиотеку XLSX/);
   assert.strictEqual(scripts.length, 0);
   assert.strictEqual(context.prsXlsxLibraryPromise, null);
+  assert.strictEqual(context.window.XLSX, partialXlsx);
 
   const thirdLoad = context.prsLoadXlsxLibrary();
+  const timedOutScript = scripts[0];
+  runScheduledTimer(10000);
+  await assert.rejects(thirdLoad, /Истекло время/);
+  assert.strictEqual(scripts.length, 0);
+  assert.strictEqual(context.prsXlsxLibraryPromise, null);
+  assert.strictEqual(context.window.XLSX, partialXlsx);
+
+  const fourthLoad = context.prsLoadXlsxLibrary();
   const retryScript = scripts[0];
   assert.notStrictEqual(retryScript, failedScript);
   assert.notStrictEqual(retryScript, timedOutScript);
   context.window.XLSX = XLSX;
   retryScript.dispatch("load");
-  assert.strictEqual(await thirdLoad, XLSX);
+  assert.strictEqual(await fourthLoad, XLSX);
+  assert.strictEqual(context.prsXlsxLibraryPromise, null);
+  assert.strictEqual(context.prsIsXlsxReady(context.window.XLSX), true);
+  const loadedScriptCount = scripts.length;
+  assert.strictEqual(await context.prsLoadXlsxLibrary(), XLSX);
+  assert.strictEqual(scripts.length, loadedScriptCount);
 
   console.log("embedded XLSX helpers and workbook round-trip passed");
 }

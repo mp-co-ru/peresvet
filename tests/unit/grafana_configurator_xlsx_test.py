@@ -23,16 +23,22 @@ def test_xlsx_export_dashboard_contract():
     dashboard, html, javascript = _dashboard_parts()
 
     assert dashboard["uid"] == "ddy59kw4v5ssgc"
-    assert dashboard["version"] == 45
+    assert dashboard["version"] == 46
     assert 'id="button-tagExportXlsx"' in html
     assert 'disabled="disabled"' in html
+    assert 'class="btn btn-secondary btn-sm ms-2"' in html
+    assert 'title="Сохранить в Excel"' in html
+    assert 'aria-label="Сохранить в Excel"' in html
+    assert 'class="fa-solid fa-file-excel"' in html
+    assert ">Сохранить в Excel</button>" not in html
     assert html.index('id="button-tagGetData"') < html.index(
         'id="button-tagExportXlsx"'
     )
 
     for required_fragment in (
-        'prsConfiguratorCodeVersion="20260815-xlsx-export-v3"',
+        'prsConfiguratorCodeVersion="20260815-xlsx-export-v4"',
         "prsTagDataExportSnapshot",
+        "prsIsXlsxReady",
         "prsInvalidateTagDataExport",
         "prsValidateExportSnapshot",
         "prsReadResponseText",
