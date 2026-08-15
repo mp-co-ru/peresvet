@@ -12,6 +12,35 @@ const end = source.indexOf(",setTagData=()=>", start);
 assert(start >= 0 && end > start, "XLSX helper block was not found");
 
 const XLSX = require(xlsxPath);
+class BrowserURL extends URL {}
+let objectUrlCreated = 0;
+let objectUrlRevoked = 0;
+BrowserURL.createObjectURL = () => {
+  objectUrlCreated += 1;
+  return "blob:peresvet-test";
+};
+BrowserURL.revokeObjectURL = () => {
+  objectUrlRevoked += 1;
+};
+
+let nextTimerId = 1;
+const timers = [];
+function scheduleTimer(callback, delay) {
+  const timer = { id: nextTimerId++, callback, delay, active: true };
+  timers.push(timer);
+  return timer.id;
+}
+function clearScheduledTimer(id) {
+  const timer = timers.find((item) => item.id === id);
+  if (timer) timer.active = false;
+}
+function runScheduledTimer(delay) {
+  const timer = timers.find((item) => item.active && item.delay === delay);
+  assert(timer, `active ${delay}ms timer was not found`);
+  timer.active = false;
+  timer.callback();
+}
+
 const button = { disabled: false };
 const table = {
   clearCount: 0,
@@ -38,12 +67,14 @@ function jquery(selector) {
 const context = {
   Blob,
   TextEncoder,
-  URL,
+  TextDecoder,
+  URL: BrowserURL,
   btoa: (value) => Buffer.from(value, "binary").toString("base64"),
+  clearTimeout: clearScheduledTimer,
   console,
   fetch: null,
   n: jquery,
-  setTimeout: (callback) => callback(),
+  setTimeout: scheduleTimer,
   showAlert: (...args) => {
     lastAlert = String(args[3] || "");
   },
@@ -82,8 +113,22 @@ function sheetRows(workbook, name) {
   });
 }
 
+function assertLiteralStringCells(workbook) {
+  for (const sheetName of workbook.SheetNames) {
+    const sheet = workbook.Sheets[sheetName];
+    for (const [address, cell] of Object.entries(sheet)) {
+      if (address.startsWith("!")) continue;
+      if (cell.t === "s") {
+        assert.strictEqual(cell.f, undefined);
+        assert.strictEqual(typeof cell.v, "string");
+      }
+    }
+  }
+}
+
 async function main() {
   const longText = `Начало\n${"я".repeat(65000)}\nКонец`;
+  const emojiBoundaryText = `${"a".repeat(29999)}😀z`;
   const point = [
     -12.5,
     true,
@@ -95,6 +140,7 @@ async function main() {
     "@user",
     { nested: "значение", quote: '"', lines: "a\nb" },
     longText,
+    emojiBoundaryText,
   ];
   const snapshot = sampleSnapshot([
     { tagId: "tag-1", seriesIndex: 0, pointIndex: 0, point },
@@ -109,9 +155,11 @@ async function main() {
     "Data",
     "Raw response",
   ]);
+  assertLiteralStringCells(workbook);
 
   const bytes = XLSX.write(workbook, { bookType: "xlsx", type: "buffer" });
   const roundTrip = XLSX.read(bytes, { type: "buffer" });
+  assertLiteralStringCells(roundTrip);
   const dataRows = sheetRows(roundTrip, "Data");
   const rowsForValue = (index) =>
     dataRows.slice(1).filter((row) => row[3] === index);
@@ -122,10 +170,10 @@ async function main() {
   assert.strictEqual(typeof rowsForValue(1)[0][6], "boolean");
   assert.strictEqual(rowsForValue(2)[0][6], false);
   assert.strictEqual(rowsForValue(3)[0][6], point[3]);
-  assert.strictEqual(rowsForValue(4)[0][6], "'=SUM(A1:A2)");
-  assert.strictEqual(rowsForValue(5)[0][6], "'+command");
-  assert.strictEqual(rowsForValue(6)[0][6], "'-text");
-  assert.strictEqual(rowsForValue(7)[0][6], "'@user");
+  assert.strictEqual(rowsForValue(4)[0][6], "=SUM(A1:A2)");
+  assert.strictEqual(rowsForValue(5)[0][6], "+command");
+  assert.strictEqual(rowsForValue(6)[0][6], "-text");
+  assert.strictEqual(rowsForValue(7)[0][6], "@user");
 
   const objectText = rowsForValue(8)
     .sort((left, right) => left[4] - right[4])
@@ -138,10 +186,17 @@ async function main() {
   assert(longRows.every((row) => String(row[6]).length <= 30000));
   assert.strictEqual(longRows.map((row) => row[6]).join(""), longText);
 
+  const emojiRows = rowsForValue(10).sort((left, right) => left[4] - right[4]);
+  assert.strictEqual(emojiRows.length, 2);
+  assert(emojiRows.every((row) => String(row[6]).length <= 30000));
+  assert.strictEqual(emojiRows.map((row) => row[6]).join(""), emojiBoundaryText);
+  assert(!/^[\uDC00-\uDFFF]/.test(emojiRows[1][6]));
+  assert(!/[\uD800-\uDBFF]$/.test(emojiRows[0][6]));
+
   const metadataRows = sheetRows(roundTrip, "Metadata");
   assert(
     metadataRows.some(
-      (row) => row[0] === "Tag name" && row[2] === "'=Тестовый тег"
+      (row) => row[0] === "Tag name" && row[2] === "=Тестовый тег"
     )
   );
   assert(metadataRows.some((row) => row[0] === "HTTP status" && row[2] === 200));
@@ -154,9 +209,43 @@ async function main() {
     .map((row) => row[2])
     .join("");
   assert.strictEqual(rawText, snapshot.rawResponseText);
+  const rawBase64 = rawRows
+    .slice(1)
+    .filter((row) => row[0] === "Base64 of exact UTF-8 response")
+    .sort((left, right) => left[1] - right[1])
+    .map((row) => row[2])
+    .join("");
+  assert.strictEqual(
+    Buffer.from(rawBase64, "base64").toString("utf8"),
+    snapshot.rawResponseText
+  );
 
   const emptyWorkbook = context.prsBuildTagDataWorkbook(sampleSnapshot([]));
   assert.strictEqual(sheetRows(emptyWorkbook, "Data").length, 1);
+
+  let anchorClicked = 0;
+  let anchorRemoved = 0;
+  context.document = {
+    createElement: () => ({
+      click: () => {
+        anchorClicked += 1;
+      },
+      remove: () => {
+        anchorRemoved += 1;
+      },
+    }),
+    body: { appendChild: () => {} },
+  };
+  context.prsDownloadTagDataXlsx(
+    new Uint8Array([1, 2, 3]),
+    sampleSnapshot([])
+  );
+  assert.strictEqual(anchorClicked, 1);
+  assert.strictEqual(objectUrlCreated, 1);
+  assert.strictEqual(objectUrlRevoked, 0);
+  runScheduledTimer(1000);
+  assert.strictEqual(objectUrlRevoked, 1);
+  assert.strictEqual(anchorRemoved, 1);
 
   context.prsTagDataExportSnapshot = snapshot;
   context.prsInvalidateTagDataExport();
@@ -164,7 +253,20 @@ async function main() {
   assert.strictEqual(button.disabled, true);
   assert(table.clearCount > 0);
 
-  context.fetch = async () => ({ ok: false, status: 500 });
+  const response = (text, options = {}) => ({
+    ok: options.ok !== false,
+    status: options.status || 200,
+    headers: {
+      get: (name) =>
+        name.toLowerCase() === "content-length"
+          ? options.contentLength ?? null
+          : null,
+    },
+    body: options.body || null,
+    text: async () => text,
+  });
+
+  context.fetch = async () => response("", { ok: false, status: 500 });
   button.disabled = false;
   const clearsBeforeError = table.clearCount;
   assert.strictEqual(await context.getTagData(), false);
@@ -172,11 +274,7 @@ async function main() {
   assert.strictEqual(button.disabled, true);
   assert(lastAlert.includes("HTTP 500"));
 
-  context.fetch = async () => ({
-    ok: true,
-    status: 200,
-    text: async () => '{"data":[]}',
-  });
+  context.fetch = async () => response('{"data":[]}');
   assert.strictEqual(await context.getTagData(), true);
   assert.strictEqual(button.disabled, false);
   assert.deepStrictEqual(
@@ -184,13 +282,97 @@ async function main() {
     []
   );
 
+  context.fetch = async () => response("{invalid");
+  assert.strictEqual(await context.getTagData(), false);
+  assert.strictEqual(context.prsTagDataExportSnapshot, null);
+  assert.strictEqual(button.disabled, true);
+  assert(lastAlert.includes("Некорректный JSON"));
+
+  const pendingFetches = [];
+  context.fetch = () =>
+    new Promise((resolve) => {
+      pendingFetches.push(resolve);
+    });
+  const staleRequest = context.getTagData();
+  const latestRequest = context.getTagData();
+  pendingFetches[1](response('{"data":[],"request":"latest"}'));
+  assert.strictEqual(await latestRequest, true);
+  const latestRaw = context.prsTagDataExportSnapshot.rawResponseText;
+  pendingFetches[0](response('{"data":[],"request":"stale"}'));
+  assert.strictEqual(await staleRequest, false);
+  assert.strictEqual(
+    context.prsTagDataExportSnapshot.rawResponseText,
+    latestRaw
+  );
+
+  let earlyBodyCancelled = 0;
+  await assert.rejects(
+    context.prsReadResponseText(
+      response("", {
+        contentLength: String(context.prsXlsxMaxRawBytes + 1),
+        body: {
+          cancel: async () => {
+            earlyBodyCancelled += 1;
+          },
+        },
+      })
+    ),
+    /25 MiB/
+  );
+  assert.strictEqual(earlyBodyCancelled, 1);
+  assert.strictEqual(
+    await context.prsReadResponseText(
+      response("{}", { contentLength: String(context.prsXlsxMaxRawBytes) })
+    ),
+    "{}"
+  );
+
+  const originalRawLimit = context.prsXlsxMaxRawBytes;
+  context.prsXlsxMaxRawBytes = 4;
+  let streamCancelled = 0;
+  const streamChunks = [
+    new Uint8Array([65, 66, 67]),
+    new Uint8Array([68, 69]),
+  ];
+  await assert.rejects(
+    context.prsReadResponseText(
+      response("", {
+        body: {
+          getReader: () => ({
+            read: async () =>
+              streamChunks.length
+                ? { done: false, value: streamChunks.shift() }
+                : { done: true },
+            cancel: async () => {
+              streamCancelled += 1;
+            },
+            releaseLock: () => {},
+          }),
+        },
+      })
+    ),
+    /25 MiB/
+  );
+  assert.strictEqual(streamCancelled, 1);
+  context.prsXlsxMaxRawBytes = originalRawLimit;
+
   const sensitive = context.prsSensitiveRequestKeys({
-    url: "http://localhost/v1/data/?API_KEY=value",
-    params: { nested: { Authorization: "value" }, normal: "ok" },
+    url: "http://user:pass@localhost/v1/data/?API_KEY=value&access_token=x",
+    params: {
+      nested: { Authorization: "value", client_secret: "x" },
+      "x-api-key": "x",
+      auth: "x",
+      normal: "ok",
+    },
   });
   assert.deepStrictEqual(Array.from(sensitive).sort(), [
+    "access_token",
     "api_key",
+    "auth",
     "authorization",
+    "client_secret",
+    "url_userinfo",
+    "x-api-key",
   ]);
   let confirmationCount = 0;
   context.window.confirm = () => {
@@ -204,12 +386,28 @@ async function main() {
   assert.strictEqual(await context.prsExportTagDataXlsx(), false);
   assert.strictEqual(confirmationCount, 1);
 
-  const oversized = sampleSnapshot([]);
-  oversized.rawResponseText = "x".repeat(context.prsXlsxMaxRawBytes + 1);
-  assert.throws(
-    () => context.prsValidateExportSnapshot(oversized),
-    /25 MiB/
-  );
+  const validMetrics = {
+    rawBytes: context.prsXlsxMaxRawBytes,
+    snapshotBytes: context.prsXlsxMaxSnapshotBytes,
+    dataRows: context.prsXlsxMaxDataRows,
+    workbookCells: context.prsXlsxMaxWorkbookCells,
+  };
+  assert.strictEqual(context.prsValidateExportMetrics(validMetrics), validMetrics);
+  for (const [field, message] of [
+    ["rawBytes", /25 MiB/],
+    ["snapshotBytes", /32 MiB/],
+    ["dataRows", /500000/],
+    ["workbookCells", /2000000/],
+  ]) {
+    assert.throws(
+      () =>
+        context.prsValidateExportMetrics({
+          ...validMetrics,
+          [field]: validMetrics[field] + 1,
+        }),
+      message
+    );
+  }
 
   const scripts = [];
   context.window.XLSX = undefined;
@@ -236,19 +434,36 @@ async function main() {
     },
   };
 
+  const staleExistingScript = {
+    dataset: { prsXlsx: "0.18.5" },
+    remove() {
+      const index = scripts.indexOf(this);
+      if (index >= 0) scripts.splice(index, 1);
+    },
+  };
+  scripts.push(staleExistingScript);
   const firstLoad = context.prsLoadXlsxLibrary();
   const failedScript = scripts[0];
+  assert.notStrictEqual(failedScript, staleExistingScript);
   failedScript.dispatch("error");
   await assert.rejects(firstLoad, /локальную библиотеку XLSX/);
   assert.strictEqual(scripts.length, 0);
   assert.strictEqual(context.prsXlsxLibraryPromise, null);
 
   const secondLoad = context.prsLoadXlsxLibrary();
+  const timedOutScript = scripts[0];
+  runScheduledTimer(10000);
+  await assert.rejects(secondLoad, /Истекло время/);
+  assert.strictEqual(scripts.length, 0);
+  assert.strictEqual(context.prsXlsxLibraryPromise, null);
+
+  const thirdLoad = context.prsLoadXlsxLibrary();
   const retryScript = scripts[0];
   assert.notStrictEqual(retryScript, failedScript);
+  assert.notStrictEqual(retryScript, timedOutScript);
   context.window.XLSX = XLSX;
   retryScript.dispatch("load");
-  assert.strictEqual(await secondLoad, XLSX);
+  assert.strictEqual(await thirdLoad, XLSX);
 
   console.log("embedded XLSX helpers and workbook round-trip passed");
 }

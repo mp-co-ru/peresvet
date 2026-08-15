@@ -23,7 +23,7 @@ def test_xlsx_export_dashboard_contract():
     dashboard, html, javascript = _dashboard_parts()
 
     assert dashboard["uid"] == "ddy59kw4v5ssgc"
-    assert dashboard["version"] == 44
+    assert dashboard["version"] == 45
     assert 'id="button-tagExportXlsx"' in html
     assert 'disabled="disabled"' in html
     assert html.index('id="button-tagGetData"') < html.index(
@@ -31,11 +31,18 @@ def test_xlsx_export_dashboard_contract():
     )
 
     for required_fragment in (
-        'prsConfiguratorCodeVersion="20260815-xlsx-export-v2"',
+        'prsConfiguratorCodeVersion="20260815-xlsx-export-v3"',
         "prsTagDataExportSnapshot",
         "prsInvalidateTagDataExport",
         "prsValidateExportSnapshot",
+        "prsReadResponseText",
         "prsSensitiveRequestKeys",
+        'i.t="s"',
+        "delete i.f",
+        "content-length",
+        "body.getReader",
+        "access_token",
+        "url_userinfo",
         "rawResponseText",
         "dataPoints",
         '"Metadata"',
@@ -48,6 +55,7 @@ def test_xlsx_export_dashboard_contract():
 
     assert "cdn.sheetjs.com" not in javascript
     assert "unpkg.com" not in javascript
+    assert "prsSafeExcelCell" not in javascript
 
 
 def test_sheetjs_asset_is_licensed_and_packaged():
@@ -80,6 +88,16 @@ def test_embedded_helpers_and_xlsx_round_trip(tmp_path):
     node = shutil.which("node")
     if node is None:
         pytest.skip("Node.js is required for executable Grafana XLSX validation")
+    try:
+        subprocess.run(
+            [node, "--version"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        pytest.skip("Node.js executable is present but cannot run")
 
     _, _, javascript = _dashboard_parts()
     embedded_script = tmp_path / "configurator-on-render.js"
