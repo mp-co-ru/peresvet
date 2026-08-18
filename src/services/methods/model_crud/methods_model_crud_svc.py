@@ -255,10 +255,13 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
         )
         if mes.get("parameters"):
             for parameter in mes["parameters"]:
-                parameter["attributes"]["objectClass"] = ["prsMethodParameter"]
+                attrs = hierarchy.omit_empty_ldap_description(
+                    parameter.setdefault("attributes", {})
+                )
+                attrs["objectClass"] = ["prsMethodParameter"]
                 await self._hierarchy.add(
                     parameters_node_id,
-                    parameter["attributes"]
+                    attrs
                 )
 
         payload = {

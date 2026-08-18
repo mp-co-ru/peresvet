@@ -16,6 +16,57 @@ CN_SCOPE_BASE = ldap.SCOPE_BASE
 CN_SCOPE_ONELEVEL = ldap.SCOPE_ONELEVEL
 CN_SCOPE_SUBTREE = ldap.SCOPE_SUBTREE
 
+
+def encode_ldap_add_attributes(attribute_values: dict | None) -> dict[str, list[bytes]]:
+    """Кодирует атрибуты для LDAP add, пропуская пустые DirectoryString.
+
+    OpenLDAP отклоняет нулевую длину для syntax DirectoryString (например
+    ``description``) с ``Invalid syntax`` / ``value #0 invalid per syntax``.
+    Пробельный плейсхолдер ``" "`` сохраняется — он нужен для MUST-атрибутов
+    вроде ``prsMethodAddress``.
+    """
+    encoded: dict[str, list[bytes]] = {}
+    if not attribute_values:
+        return encoded
+
+    for key, raw in attribute_values.items():
+        values = raw if isinstance(raw, list) else [raw]
+        encoded_values: list[bytes] = []
+        for value in values:
+            if value is None:
+                continue
+            if isinstance(value, str) and not value:
+                continue
+            if isinstance(value, bool):
+                new_value = "TRUE" if value else "FALSE"
+            elif isinstance(value, (int, float)):
+                new_value = str(value)
+            elif isinstance(value, dict):
+                new_value = json.dumps(value, ensure_ascii=False)
+            else:
+                new_value = value
+            encoded_values.append(new_value.encode("utf-8"))
+        if encoded_values:
+            encoded[key] = encoded_values
+    return encoded
+
+
+def omit_empty_ldap_description(attrs: dict) -> dict:
+    """Удаляет пустую ``description`` перед LDAP add.
+
+    DirectoryString нулевой длины даёт ``Invalid syntax``.
+    """
+    desc = attrs.get("description")
+    if desc is None or (isinstance(desc, str) and not desc):
+        attrs.pop("description", None)
+    elif isinstance(desc, list) and all(
+        item is None or (isinstance(item, str) and not item)
+        for item in desc
+    ):
+        attrs.pop("description", None)
+    return attrs
+
+
 class Hierarchy:
     """Класс для работы с иерархической моделью.
 
@@ -325,29 +376,7 @@ class Hierarchy:
         base_dn = await self.get_node_dn(base)
         dn = f"cn={cn_bytes},{base_dn}"
 
-        modlist = {}
-        for key, values in attrs.items():
-            modlist[key] = []
-            for value in values:
-                new_value = None
-                if value is not None:
-                    if isinstance(value, bool):
-                        if value:
-                            new_value = 'TRUE'
-                        else:
-                            new_value = 'FALSE'
-                    elif isinstance(value, (int, float)):
-                        new_value = str(value)
-                    elif isinstance(value, dict):
-                        new_value = json.dumps(value, ensure_ascii=False)
-                    else: # str
-                        new_value = value
-
-                    new_value = new_value.encode('utf-8')
-
-                modlist[key].append(new_value)
-
-        modlist = ldap.modlist.addModlist(modlist)
+        modlist = ldap.modlist.addModlist(encode_ldap_add_attributes(attrs))
 
         with self._cm.connection() as conn:
             try:

@@ -23,7 +23,7 @@ def test_xlsx_export_dashboard_contract():
     dashboard, html, javascript = _dashboard_parts()
 
     assert dashboard["uid"] == "ddy59kw4v5ssgc"
-    assert dashboard["version"] == 47
+    assert dashboard["version"] == 48
     assert 'id="button-tagExportXlsx"' in html
     assert 'disabled="disabled"' in html
     assert 'class="btn btn-secondary btn-sm"' in html
@@ -38,7 +38,7 @@ def test_xlsx_export_dashboard_contract():
     )
 
     for required_fragment in (
-        'prsConfiguratorCodeVersion="20260815-xlsx-export-v5"',
+        'prsConfiguratorCodeVersion="20260818-method-empty-desc-v1"',
         "prsTagDataExportSnapshot",
         "prsIsXlsxReady",
         "prsGetReadyXlsx",
@@ -65,6 +65,19 @@ def test_xlsx_export_dashboard_contract():
     assert "cdn.sheetjs.com" not in javascript
     assert "unpkg.com" not in javascript
     assert "prsSafeExcelCell" not in javascript
+
+
+def test_method_save_omits_empty_parameter_description():
+    _, _, javascript = _dashboard_parts()
+
+    assert (
+        "description:n(`#input-parameter-description-${index}`).val()||\"\""
+        not in javascript
+    )
+    assert "d&&(a.description=d)" in javascript
+    assert (
+        "d=n(`#input-parameter-description-${index}`).val()" in javascript
+    )
 
 
 def test_sheetjs_asset_is_licensed_and_packaged():
