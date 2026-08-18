@@ -81,7 +81,7 @@ const context = {
   window: {
     XLSX,
     confirm: () => true,
-    location: { href: "http://localhost/grafana/" },
+    location: { href: "http://localhost/grafana/", origin: "http://localhost" },
   },
   __prsConfiguratorGetEl: (id) =>
     id === "button-tagExportXlsx" ? button : null,
@@ -411,10 +411,13 @@ async function main() {
 
   const scripts = [];
   const partialXlsx = { utils: {} };
+  const existingExports = { unrelated: true };
   assert.strictEqual(context.prsIsXlsxReady(XLSX), true);
   assert.strictEqual(context.prsIsXlsxReady(partialXlsx), false);
   assert.strictEqual(context.prsIsXlsxReady({ utils: {}, write() {} }), false);
+  assert.strictEqual(context.prsGetReadyXlsx(), XLSX);
   context.window.XLSX = partialXlsx;
+  context.window.exports = existingExports;
   assert.throws(
     () => context.prsBuildTagDataWorkbook(sampleSnapshot([])),
     /API локальной библиотеки XLSX не готов/
@@ -454,12 +457,18 @@ async function main() {
   const incompleteScript = scripts[0];
   assert.notStrictEqual(incompleteScript, staleExistingScript);
   assert.strictEqual(context.window.XLSX, undefined);
+  assert.strictEqual(context.window.exports, undefined);
+  assert.strictEqual(
+    incompleteScript.src,
+    "http://localhost/grafana/public/vendor/peresvet/sheetjs-0.18.5/xlsx.full.min.js"
+  );
   context.window.XLSX = { utils: { book_new() {} } };
   incompleteScript.dispatch("load");
-  await assert.rejects(firstLoad, /API XLSX неполон/);
+  await assert.rejects(firstLoad, /API XLSX недоступен/);
   assert.strictEqual(scripts.length, 0);
   assert.strictEqual(context.prsXlsxLibraryPromise, null);
   assert.strictEqual(context.window.XLSX, partialXlsx);
+  assert.strictEqual(context.window.exports, existingExports);
 
   const secondLoad = context.prsLoadXlsxLibrary();
   const failedScript = scripts[0];

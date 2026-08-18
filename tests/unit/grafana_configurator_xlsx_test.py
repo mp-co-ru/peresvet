@@ -23,22 +23,25 @@ def test_xlsx_export_dashboard_contract():
     dashboard, html, javascript = _dashboard_parts()
 
     assert dashboard["uid"] == "ddy59kw4v5ssgc"
-    assert dashboard["version"] == 46
+    assert dashboard["version"] == 47
     assert 'id="button-tagExportXlsx"' in html
     assert 'disabled="disabled"' in html
-    assert 'class="btn btn-secondary btn-sm ms-2"' in html
+    assert 'class="btn btn-secondary btn-sm"' in html
+    assert 'style="margin-left: .5rem;"' in html
     assert 'title="Сохранить в Excel"' in html
     assert 'aria-label="Сохранить в Excel"' in html
-    assert 'class="fa-solid fa-file-excel"' in html
+    assert '<svg xmlns="http://www.w3.org/2000/svg"' in html
+    assert 'focusable="false"' in html
     assert ">Сохранить в Excel</button>" not in html
     assert html.index('id="button-tagGetData"') < html.index(
         'id="button-tagExportXlsx"'
     )
 
     for required_fragment in (
-        'prsConfiguratorCodeVersion="20260815-xlsx-export-v4"',
+        'prsConfiguratorCodeVersion="20260815-xlsx-export-v5"',
         "prsTagDataExportSnapshot",
         "prsIsXlsxReady",
+        "prsGetReadyXlsx",
         "prsInvalidateTagDataExport",
         "prsValidateExportSnapshot",
         "prsReadResponseText",
@@ -55,7 +58,7 @@ def test_xlsx_export_dashboard_contract():
         '"Data"',
         '"Raw response"',
         "URL.revokeObjectURL",
-        "sheetjs-0.18.5/xlsx.full.min.js",
+        "/grafana/public/vendor/peresvet/sheetjs-0.18.5/xlsx.full.min.js",
     ):
         assert required_fragment in javascript
 
