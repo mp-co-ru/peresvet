@@ -18,3 +18,13 @@ providers:
     options:
       path: /var/lib/grafana/dashboards/admin
       foldersFromFilesStructure: false
+
+  - name: 'ioterra-oee'
+    orgId: 1
+    folder: 'IoTerra OEE'
+    folderUid: 'dfsa4yvxlbd34f'
+    type: file
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/ioterra-oee
+      foldersFromFilesStructure: false

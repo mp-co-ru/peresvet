@@ -33,6 +33,7 @@ RUN find /var/lib/grafana/dashboards-src/tags -mindepth 1 -maxdepth 1 -name '*.j
     rm -rf /var/lib/grafana/dashboards-src
 
 COPY src/grafana/configurator/Configurator.json /usr/share/grafana/public/dashboards/home.json
+COPY config/grafana/vendor/sheetjs-0.18.5/ /usr/share/grafana/public/vendor/peresvet/sheetjs-0.18.5/
 
 COPY config/grafana/provisioning/dashboards/prs.yaml /etc/grafana/provisioning/dashboards
 COPY config/grafana/provisioning/datasources/prs.yaml /etc/grafana/provisioning/datasources

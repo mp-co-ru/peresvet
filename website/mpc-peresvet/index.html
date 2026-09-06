@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>МПК-Пересвет — платформа для диспетчеризации, MES и умных объектов</title>
+  <meta name="description" content="Конструктор информационных систем: сбор данных с поля, модель объекта, обработка, действия и экраны Grafana. SCADA, мониторинг, MES, умный дом, карты и видео." />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <a class="skip" href="#contact">К форме заявки</a>
+
+  <header class="nav" id="nav">
+    <div class="wrap nav__in">
+      <a class="nav__logo" href="#top">
+        <img src="./logo.svg" width="32" height="32" alt="" />
+        МПК-Пересвет
+      </a>
+      <button class="nav__toggle" type="button" id="navToggle" aria-expanded="false" aria-controls="navLinks">Меню</button>
+      <nav class="nav__links" id="navLinks">
+        <a href="#apps">Применения</a>
+        <a href="#loop">Как устроено</a>
+        <a href="#screens">Возможности</a>
+        <a href="#start">Старт</a>
+        <a href="#contact">Демо</a>
+        <a class="nav__phone" href="tel:+74993930040">+7 499 393-00-40</a>
+      </nav>
+      <a class="btn btn--ember nav__cta" href="#contact">Запросить демо</a>
+    </div>
+  </header>
+
+  <section class="hero" id="top">
+    <div class="wrap hero__grid">
+      <div>
+        <div class="kicker">Платформа-конструктор информационных систем</div>
+        <h1>От датчика на поле — до решения на экране</h1>
+        <p class="lead">
+          МПК-Пересвет собирает данные с оборудования, строит живую модель объекта,
+          считает, реагирует на события и показывает картину в Grafana.
+          На этой же модели живут диспетчерская, MES, умный дом и отраслевые приложения —
+          без системы «с нуля» и без замены АСУТП.
+        </p>
+        <div class="hero__actions">
+          <a class="btn btn--ember btn--wide" href="#contact">Запросить демо</a>
+          <a class="btn btn--ghost" href="tel:+74993930040">Позвонить</a>
+        </div>
+        <div class="hero__proof">
+          <span>Иерархия объектов, не плоский список метрик</span>
+          <span>Не только сбор: запись в поле</span>
+          <span>Экраны Grafana под задачу</span>
+          <span>От Raspberry Pi до кластера</span>
+        </div>
+      </div>
+      <figure class="hero__shot" aria-label="Макет диспетчерского экрана">
+        <div class="dash">
+          <div class="dash__bar">
+            <span class="live">Диспетчерская · Цех 3</span>
+            <span>14:32 · смена Б</span>
+          </div>
+          <div class="dash__grid">
+            <div class="panel">
+              <b>Модель</b>
+              <div class="tree">
+                <div>Цех 3 <span class="ok">норма</span></div>
+                <div class="pad">Линия А <span class="ok">в работе</span></div>
+                <div class="pad">Линия Б <span class="warn">медленно</span></div>
+                <div class="pad">Котельная <span class="bad">тревога</span></div>
+              </div>
+            </div>
+            <div class="panel">
+              <b>Тренд · расход пара</b>
+              <div class="kpis">
+                <div class="kpi"><small>Факт</small><strong>12.4 т/ч</strong></div>
+                <div class="kpi"><small>План</small><strong>13.0 т/ч</strong></div>
+              </div>
+              <div class="spark" aria-hidden="true"></div>
+            </div>
+            <div class="panel">
+              <b>Тревоги</b>
+              <div class="alerts">
+                <div><i class="dot bad"></i> Давление HiHi · котёл 2 <span>2 мин</span></div>
+                <div><i class="dot warn"></i> Скорость ниже нормы · линия Б <span>11 мин</span></div>
+                <div><i class="dot ok"></i> Связь с PLC восстановлена <span>сейчас</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" id="pain">
+    <div class="wrap">
+      <div class="kicker">Какую задачу закрывает</div>
+      <h2>Данные с поля есть. Системы вокруг них — обычно нет</h2>
+      <p class="sub">
+        Метрики в Prometheus или Excel не заменяют модель объекта: кто чей датчик,
+        что считать тревогой, что делать при событии и куда писать команду.
+        Пересвет — инфраструктура вокруг этих вопросов.
+      </p>
+      <div class="pain">
+        <article>
+          <h3>Сбор без смысла</h3>
+          <p>Токи, температуры и счётчики приходят в разные системы. Нет единой иерархии «предприятие → цех → агрегат → параметр».</p>
+        </article>
+        <article>
+          <h3>Картинка без действия</h3>
+          <p>База реального времени хранит числа. Не считает производные, не поднимает тревогу, не пишет уставку в контроллер.</p>
+        </article>
+        <article>
+          <h3>Каждое приложение — с нуля</h3>
+          <p>Диспетчеризация, OEE, энергоучёт, умный дом. Одинаковый контур: взять данные, обработать, показать, среагировать. Его не надо изобретать каждый раз.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="apps" style="padding-top:0">
+    <div class="wrap">
+      <div class="kicker">Что можно построить</div>
+      <h2>Одна платформа — разные информационные системы</h2>
+      <p class="sub">
+        Пересвет не «ещё один экран». Это конструктор, на котором собирают прикладные системы:
+        промышленные, инженерные, домашние и отраслевые.
+      </p>
+      <div class="apps">
+        <article>
+          <span class="mark">Промышленность</span>
+          <h3>Диспетчеризация, мониторинг, SCADA-контур</h3>
+          <p>
+            Цех, котельная, водоканал, линия — как живой объект, а не набор графиков.
+            Текущие значения, качество связи с полем, тревоги, мнемосхемы, команды оператора.
+          </p>
+          <ul>
+            <li>Состояние агрегатов в иерархии, а не в плоском списке тегов</li>
+            <li>Запись в поле через коннекторы: уставки, пуск/стоп, квитирование</li>
+            <li>Экраны диспетчерской и у линии — в Grafana, без отдельного HMI-движка</li>
+          </ul>
+        </article>
+        <article>
+          <span class="mark">Производство</span>
+          <h3>MES и прикладные производственные системы</h3>
+          <p>
+            Счётчики, скорость, простои, план смены, причины остановов, отчёты.
+            На Пересвете уже живёт IoTerra OEE: эффективность линии поверх работающей платформы, без замены АСУТП.
+          </p>
+          <ul>
+            <li>Расчётные теги: выпуск, остаток плана, эффективность</li>
+            <li>Методы и расписания: смена, отчёт, рассылка</li>
+            <li>Формы оператора прямо на дашборде</li>
+          </ul>
+        </article>
+        <article>
+          <span class="mark">Инженерия</span>
+          <h3>Энергетика, сети, инженерные системы здания</h3>
+          <p>
+            Тепло, электричество, вода, вентиляция, серверная. Учёт, лимиты, утечки, нерабочие часы.
+            Объект может быть зданием, кварталом или группой котельных на карте города.
+          </p>
+          <ul>
+            <li>Архив как «единый источник правды» по ресурсам</li>
+            <li>Тревоги Hi/Lo и сложные условия на нескольких тегах</li>
+            <li>Смежные системы подключаются через API и коннекторы</li>
+          </ul>
+        </article>
+        <article>
+          <span class="mark">Жизнь и сервис</span>
+          <h3>Умный дом, умное здание, малый объект</h3>
+          <p>
+            Та же модель: комнаты, датчики, сценарии. Свет, климат, протечки, ворота, теплица.
+            Платформа ставится на компактный компьютер и растёт вместе с объектом.
+          </p>
+          <ul>
+            <li>Событие → метод → действие: «протечка — закрыть клапан и написать»</li>
+            <li>Расписания: ночной режим, полив, прогрев к приходу</li>
+            <li>Экраны для жильца и для службы эксплуатации</li>
+          </ul>
+        </article>
+        <article>
+          <span class="mark">Территория</span>
+          <h3>Карты: объекты там, где они стоят</h3>
+          <p>
+            Grafana умеет геокарты. Котельные, скважины, машины, теплицы, опоры —
+            маркеры со статусом тегов, цветом тревоги и переходом в карточку объекта.
+            В дистрибутиве Пересвета готового шаблона карты пока нет: собирается под внедрение, без смены платформы.
+          </p>
+          <ul>
+            <li>Обзор территории и детализация одного узла</li>
+            <li>Мобильные и распределённые объекты</li>
+            <li>Слой карты рядом с трендами и тревогами</li>
+          </ul>
+        </article>
+        <article>
+          <span class="mark">Контроль</span>
+          <h3>Видео рядом с телеметрией</h3>
+          <p>
+            Камера на агрегате, в котельной, у ворот — в том же рабочем месте, что температура и ток.
+            Grafana уже показывает видеопотоки в панелях. Готовый «видеомодуль» в Пересвете ещё впереди:
+            под задачу подключается быстро, на той же модели объектов.
+          </p>
+          <ul>
+            <li>Поток и теги на одном экране</li>
+            <li>Тревога открывает нужную камеру</li>
+            <li>Архив событий и архив видео — рядом, не вместо друг друга</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="wrap">
+      <div>
+        <h2>Покажем контур на вашей задаче</h2>
+        <p>30–40 минут: модель объекта, живые теги, экран и действие по событию.</p>
+      </div>
+      <div class="actions">
+        <a class="btn btn--ember" href="#contact">Запросить демо</a>
+        <a class="btn btn--ghost" href="mailto:info@ioterra.ru">Написать на почту</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="loop">
+    <div class="wrap">
+      <div class="kicker">Рабочий контур</div>
+      <h2>Собрать → понять → среагировать → увидеть</h2>
+      <p class="sub">
+        Любое прикладное приложение на Пересвете — это один и тот же цикл.
+        Меняются протоколы, объекты и экраны, не платформа.
+      </p>
+      <div class="loop">
+        <article>
+          <h3>Сбор с поля</h3>
+          <p>Коннекторы читают PLC, счётчики, MQTT, OPC, HTTP и свои источники. Платформа знает, жива ли связь, и ставит код качества, если поле молчит.</p>
+        </article>
+        <article>
+          <h3>Модель и архив</h3>
+          <p>Объекты и теги в иерархии. История — в PostgreSQL или VictoriaMetrics, можно несколько хранилищ. Значение всегда со временем, часто — с качеством.</p>
+        </article>
+        <article>
+          <h3>Обработка</h3>
+          <p>Расчётные теги, методы на Python, тревоги, расписания. Событие изменения тега запускает счёт, проверку предела или внешний процесс.</p>
+        </article>
+        <article>
+          <h3>Действие и экран</h3>
+          <p>Запись уставки в контроллер, уведомление, отчёт, команда смежной системе. Оператор видит это в Grafana: тренд, мнемосхема, форма, карта, камера.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0">
+    <div class="wrap">
+      <div class="kicker">Конструктор</div>
+      <h2>Семь сущностей, из которых собирается система</h2>
+      <p class="sub">Их хватает для мониторинга, диспетчеризации и части MES. Если процесс сложнее — модель расширяется своими сущностями.</p>
+      <div class="entities">
+        <article>
+          <div class="ico">О</div>
+          <h3>Объект</h3>
+          <p>Предприятие, цех, линия, котёл, комната, машина. Любая вложенность: дети, теги, свои экраны.</p>
+        </article>
+        <article>
+          <div class="ico">Т</div>
+          <h3>Тег</h3>
+          <p>Параметр со временем: число, строка, JSON. С поля или расчётный. С кодом качества связи.</p>
+        </article>
+        <article>
+          <div class="ico">Тр</div>
+          <h3>Тревога</h3>
+          <p>Не только LoLo–HiHi. Любое число порогов и сложные условия через метод.</p>
+        </article>
+        <article>
+          <div class="ico">М</div>
+          <h3>Метод</h3>
+          <p>Код поведения: сумма расходов, «успеем ли план», закрыть клапан, вызвать внешний процесс.</p>
+        </article>
+        <article>
+          <div class="ico">К</div>
+          <h3>Коннектор</h3>
+          <p>Мост к протоколу. Чтение и запись. Свой коннектор собирается на общем ядре.</p>
+        </article>
+        <article>
+          <div class="ico">Х</div>
+          <h3>Хранилище</h3>
+          <p>История тегов и тревог. Разные типы баз одновременно — в промышленной версии.</p>
+        </article>
+        <article>
+          <div class="ico">Р</div>
+          <h3>Расписание</h3>
+          <p>Тики времени: смена, отчёт в 06:00, ночной режим дома, опрос «тяжёлого» узла.</p>
+        </article>
+        <article>
+          <div class="ico">+</div>
+          <h3>Свои сущности</h3>
+          <p>Тираж, наряд, рецепт, геозона — когда семи базовых мало для процесса.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="screens" style="padding-top:0">
+    <div class="wrap">
+      <div class="kicker">Рабочие места</div>
+      <h2>Экраны собираются в Grafana — под роль, не «для всех сразу»</h2>
+      <p class="sub">
+        В платформе уже есть тренды, таблицы, мнемосхемы SVG/HTML, формы ввода и сложная графика.
+        Карты и видео подключаются теми же средствами Grafana: это не другая система, а следующий экран на той же модели.
+      </p>
+      <div class="screens__nav" id="screenNav"></div>
+
+      <article class="screen is-on" data-screen="model">
+        <div class="screen__photo">
+          <div class="dash">
+            <div class="dash__bar"><span>Конфигуратор модели</span><span>LDAP-иерархия</span></div>
+            <div class="dash__grid">
+              <div class="panel" style="grid-column:1/-1">
+                <b>Объекты</b>
+                <div class="tree">
+                  <div>Предприятие «Север» <span class="ok">24 объекта</span></div>
+                  <div class="pad">Цех гофры · 3 линии · 186 тегов</div>
+                  <div class="pad">Энергоцех · 2 котла · 64 тега</div>
+                  <div class="pad">Склад · ворота, климат, камеры</div>
+                  <div>Коннекторы · Modbus, MQTT, счётчик импульсов</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3>Модель объекта</h3>
+          <p>Сначала дерево, потом экраны. Конфигуратор в Grafana описывает, из чего состоит объект и информационная система.</p>
+          <ul>
+            <li>Иерархия любой глубины</li>
+            <li>Теги у объекта или плоским списком — если модель простая</li>
+            <li>Коннекторы, хранилища и расписания живут в той же модели</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="screen" data-screen="scada">
+        <div class="screen__photo">
+          <div class="dash">
+            <div class="dash__bar"><span class="live">Мнемосхема линии</span><span>оператор</span></div>
+            <div class="mimic">
+              <div class="unit"><b>Размотка</b><span class="ok">812 м/мин</span></div>
+              <div class="unit"><b>Гофропресс</b><span class="ok">в работе</span></div>
+              <div class="unit"><b>Высечка</b><span>ожидание</span></div>
+              <div class="pipe"></div>
+              <div class="unit"><b>Пар</b><span>6.1 бар</span></div>
+              <div class="unit"><b>Клей</b><span>42 °C</span></div>
+              <div class="unit"><b>Готово</b><span>12 400 изд</span></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3>Диспетчерская и SCADA</h3>
+          <p>Мнемосхема красится тегами. Оператор видит режим, уставку и может отправить команду, не уходя в другую программу.</p>
+          <ul>
+            <li>HTML/SVG-графика по значениям тегов</li>
+            <li>Формы: уставка, причина простоя, квитирование</li>
+            <li>Качество связи: «нет данных» отличимо от «ноль»</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="screen" data-screen="mes">
+        <div class="screen__photo">
+          <div class="dash">
+            <div class="dash__bar"><span>Смена · план и факт</span><span>осталось 3 ч 28 мин</span></div>
+            <div class="dash__grid">
+              <div class="panel">
+                <b>Линия А</b>
+                <div class="kpi"><small>Выпуск</small><strong>36 200</strong></div>
+                <div class="kpi"><small>План</small><strong>48 000</strong></div>
+              </div>
+              <div class="panel">
+                <b>Успеем?</b>
+                <div class="spark" aria-hidden="true"></div>
+              </div>
+              <div class="panel">
+                <b>Простой</b>
+                <div class="alerts">
+                  <div><i class="dot bad"></i> Смена заготовки <span>14 мин</span></div>
+                  <div><i class="dot warn"></i> Ожидание сырья <span>6 мин</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3>MES-контур</h3>
+          <p>План, выпуск, простой, причина, эффективность. Не замена ERP и не управление приводом — слой прозрачности смены и цеха.</p>
+          <ul>
+            <li>Расчёты на событиях тегов и по расписанию смены</li>
+            <li>Экран мастера и экран у агрегата</li>
+            <li>Готовый пример: IoTerra OEE на МПК-Пересвет</li>
+          </ul>
+          <p class="caption">Рецепты и прямое управление оборудованием остаются в своих системах.</p>
+        </div>
+      </article>
+
+      <article class="screen" data-screen="home">
+        <div class="screen__photo">
+          <div class="dash">
+            <div class="dash__bar"><span class="live">Дом · вечерний сценарий</span><span>21:14</span></div>
+            <div class="house">
+              <div class="rooms">
+                <div class="room"><b>Гостиная</b><span>22.4 °C · свет 40%</span></div>
+                <div class="room"><b>Кухня</b><span>протечка: нет</span></div>
+                <div class="room"><b>Котельная</b><span>1.2 бар · горелка</span></div>
+                <div class="room"><b>Улица</b><span>ворота закрыты</span></div>
+              </div>
+              <div class="scene">
+                <b>Сценарий «Ушли»</b>
+                <span>свет → 0 · климат → эко · охрана → вкл</span>
+                <span>событие: дверь закрыта + 21:00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3>Умный дом и здание</h3>
+          <p>Комнаты — те же объекты, выключатели — те же теги. Сценарии — методы и расписания. Эксплуатация офиса и квартира отличаются экранами, не ядром.</p>
+          <ul>
+            <li>Климат, свет, протечки, ворота, теплица</li>
+            <li>Действие на событие, не только график температуры</li>
+            <li>Старт на одном мини-компьютере</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="screen" data-screen="maps">
+        <div class="screen__photo">
+          <div class="geo" aria-label="Макет карты объектов">
+            <div class="road" style="left:8%;right:10%;top:42%"></div>
+            <div class="road" style="left:48%;top:18%;bottom:16%;width:6px"></div>
+            <div class="pin" style="left:12%;top:22%"><b>Котельная 1</b><span class="ok">в норме</span></div>
+            <div class="pin" style="left:58%;top:18%"><b>СКВ-14</b><span class="warn">дебит ↓</span></div>
+            <div class="pin" style="left:38%;top:58%"><b>ТП-7</b><span class="bad">нет связи</span></div>
+            <div class="pin" style="left:70%;top:62%"><b>Теплица 2</b><span class="ok">климат ок</span></div>
+          </div>
+        </div>
+        <div>
+          <h3>Карты</h3>
+          <p>Когда объект не в одном цехе, а на территории. Маркер — живой узел модели: кликнул — теги, тренд, тревоги.</p>
+          <ul>
+            <li>Геокарты Grafana и слои статусов</li>
+            <li>Выездные бригады, сети, агро, транспорт</li>
+            <li>Тот же объект открывается и таблицей, и точкой на карте</li>
+          </ul>
+          <p class="caption">Шаблон карты собираем на внедрении. Платформу для этого менять не нужно.</p>
+        </div>
+      </article>
+
+      <article class="screen" data-screen="video">
+        <div class="screen__photo">
+          <div class="cams">
+            <div class="cam">
+              <div class="cam__tag">Камера · котёл 2</div>
+              <div class="cam__meta"><span class="live">live</span><span>1.2 МПа · 184 °C</span></div>
+            </div>
+            <div class="cam">
+              <div class="cam__tag">Камера · ворота склада</div>
+              <div class="cam__meta"><span>событие 14:29</span><span>открыты 4 мин</span></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3>Видео</h3>
+          <p>Диспетчер не переключает «мониторинг» и «камеры». Поток стоит рядом с тегами, тревога подсвечивает нужный кадр.</p>
+          <ul>
+            <li>IP-камеры в панелях Grafana</li>
+            <li>Оверлей: давление, ток, открыто/закрыто</li>
+            <li>Связка «событие тега → показать камеру»</li>
+          </ul>
+          <p class="caption">Видеомодуль подключается к модели объектов. В базовом дистрибутиве готового пакета камер пока нет.</p>
+        </div>
+      </article>
+
+      <article class="screen" data-screen="methods">
+        <div class="screen__photo">
+          <div class="dash">
+            <div class="dash__bar"><span>Событие → метод</span><span>Python</span></div>
+            <div class="formock">
+              <div class="row"><span>Тег «давление» изменился</span><span>14:32:01</span></div>
+              <div class="row"><span>Тревога HiHi · котёл 2</span><span>взвод</span></div>
+              <div class="row"><span>Метод «снизить нагрузку»</span><span>запись уставки</span></div>
+              <div class="row"><span>Расписание 06:00</span><span>PDF-отчёт на почту</span></div>
+              <div class="go">Действие ушло в поле</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3>Логика и автоматизация</h3>
+          <p>Модель оживает, когда на событие повешен метод. Не обязательно «большая SCADA»: достаточно «если так — сделай это».</p>
+          <ul>
+            <li>Триггеры: тег, тревога, расписание</li>
+            <li>Расчёт тега или внешний процесс</li>
+            <li>Обратная запись в источник через коннектор</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="screen" data-screen="api">
+        <div class="screen__photo">
+          <div class="dash">
+            <div class="dash__bar"><span>Смежные системы</span><span>HTTP API · MQTT</span></div>
+            <div class="formock">
+              <div class="row"><span>1C / ERP</span><span>план, номенклатура</span></div>
+              <div class="row"><span>АСУТП</span><span>теги туда и обратно</span></div>
+              <div class="row"><span>Почта, мессенджер</span><span>из метода</span></div>
+              <div class="row"><span>Свой фронт</span><span>если Grafana мало</span></div>
+              <div class="go">Модель одна — клиентов сколько нужно</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3>API и расширения</h3>
+          <p>Grafana — удобное рабочее место, не клетка. Сервисы общаются через RabbitMQ, наружу — HTTP API и MQTT коннекторов.</p>
+          <ul>
+            <li>Чтение и запись тегов, работа с иерархией</li>
+            <li>Свои коннекторы на общем ядре</li>
+            <li>Свои экраны и свои сущности поверх модели</li>
+          </ul>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0">
+    <div class="wrap">
+      <div class="kicker">Рабочее место</div>
+      <h2>Grafana уже в составе. Фронтенд с нуля писать не нужно</h2>
+      <p class="sub">Платформа отдаёт данные. Grafana собирает диспетчерскую, аналитику, формы оператора и — когда нужно — карту и видео.</p>
+      <div class="gallery">
+        <div class="dash">
+          <div class="dash__bar"><span class="live">Аналитика суток</span><span>цех · энергия · простои</span></div>
+          <div class="dash__grid">
+            <div class="panel">
+              <b>Энергия</b>
+              <div class="kpi"><small>кВт·ч</small><strong>18 420</strong></div>
+              <div class="spark"></div>
+            </div>
+            <div class="panel">
+              <b>Готовность</b>
+              <div class="kpi"><small>линии</small><strong>91%</strong></div>
+              <div class="spark"></div>
+            </div>
+            <div class="panel">
+              <b>События</b>
+              <div class="alerts">
+                <div><i class="dot warn"></i> 14 простоев &gt; 5 мин</div>
+                <div><i class="dot ok"></i> 3 смены закрыты</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="gallery__stack">
+          <div class="geo" style="height:140px;border:0">
+            <div class="pin" style="left:18%;top:28%"><b>Сеть</b><span class="ok">12 узлов</span></div>
+            <div class="pin" style="left:58%;top:48%"><b>Выезд</b><span class="warn">1 заявка</span></div>
+          </div>
+          <div class="cam" style="min-height:140px">
+            <div class="cam__tag">Пост охраны · двор</div>
+            <div class="cam__meta"><span class="live">live</span><span>ворота закрыты</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="who" style="padding-top:0">
+    <div class="wrap">
+      <div class="kicker">Для кого</div>
+      <h2>Каждой роли — свой контур, одна модель</h2>
+      <div class="roles">
+        <article>
+          <h3>Главный инженер</h3>
+          <p>Поле уже есть. Нужен слой над АСУТП: архив, диспетчерская, отчёты, без остановки цеха.</p>
+        </article>
+        <article>
+          <h3>ИТ / АСУТП</h3>
+          <p>Docker, LDAP, API, свои коннекторы. Открытый код, понятные границы сервисов.</p>
+        </article>
+        <article>
+          <h3>Производство</h3>
+          <p>План–факт, простои, эффективность. Приложение собирается на платформе, а не наоборот.</p>
+        </article>
+        <article>
+          <h3>Интегратор и продукт</h3>
+          <p>Вертикальное решение — OEE, энергоучёт, умный объект — без изобретения ядра сбора и модели.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="wrap">
+      <div>
+        <h2>Есть объект и непонятно, с чего начать?</h2>
+        <p>Напишите, что за объект и какие протоколы на поле — набросаем контур пилота.</p>
+      </div>
+      <div class="actions">
+        <a class="btn btn--ember" href="#contact">Оставить заявку</a>
+        <a class="btn btn--ghost" href="tel:+74993930040">+7 499 393-00-40</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="start">
+    <div class="wrap">
+      <div class="kicker">Как запускается</div>
+      <h2>Сначала один объект. Потом — система</h2>
+      <p class="sub">Платформа ставится контейнерами. Масштаб — от компактного компьютера до нескольких узлов. Меняется набор сервисов, не идея модели.</p>
+      <div class="steps">
+        <article>
+          <h3>Контур</h3>
+          <p>Какие объекты, какие теги, откуда данные, кому экраны. Часто поле уже отвечает — PLC, счётчик, MQTT.</p>
+        </article>
+        <article>
+          <h3>Пилот</h3>
+          <p>Модель, коннектор, архив, один-два экрана Grafana и одно действие по событию. Видно, живая ли идея.</p>
+        </article>
+        <article>
+          <h3>Система</h3>
+          <p>Остальные объекты, роли, тревоги, отчёты, карта, видео, смежные системы. Лицензия и состав — под контур, не «всё сразу».</p>
+        </article>
+      </div>
+      <div class="stack">
+        <span>Docker Compose</span>
+        <span>RabbitMQ</span>
+        <span>OpenLDAP</span>
+        <span>PostgreSQL</span>
+        <span>VictoriaMetrics</span>
+        <span>Redis</span>
+        <span>Grafana</span>
+        <span>nginx</span>
+        <span>MQTT-коннекторы</span>
+        <span>Python 3.12</span>
+      </div>
+      <p class="note" style="margin-top:28px">
+        Есть открытая версия и промышленная. Промышленная — несколько хранилищ, масштаб, инструменты для больших моделей,
+        готовые отраслевые контуры и промышленные протоколы. Исходный код платформы открыт:
+        это не «чёрный ящик западного вендора», а конструктор, который можно развивать вместе.
+        Импортозамещение здесь следствие архитектуры, а не лозунг на баннере.
+      </p>
+    </div>
+  </section>
+
+  <section class="section contact" id="contact">
+    <div class="wrap">
+      <div class="kicker">Заявка</div>
+      <h2>Запросить демо</h2>
+      <p class="sub">Два поля достаточно. Созвонимся и покажем контур: модель, теги, экран, действие.</p>
+      <div class="contact__grid">
+        <form class="form" action="mailto:info@ioterra.ru?subject=Демо МПК-Пересвет" method="post" enctype="text/plain">
+          <input name="name" type="text" placeholder="Имя" autocomplete="name" required />
+          <input name="phone" type="tel" placeholder="Телефон" autocomplete="tel" required />
+          <textarea name="message" rows="3" placeholder="Объект и задача — по желанию"></textarea>
+          <button class="btn btn--ember" type="submit">Отправить заявку</button>
+          <p class="caption" style="color:rgba(246,239,233,.55)">На Tilda замените форму штатной, с согласием на обработку данных.</p>
+        </form>
+        <div class="channels">
+          <a href="tel:+74993930040">
+            <b>+7 499 393-00-40</b>
+            <span>Позвонить сейчас</span>
+          </a>
+          <a href="mailto:info@ioterra.ru">
+            <b>info@ioterra.ru</b>
+            <span>Написать письмо</span>
+          </a>
+          <a href="http://ioterra.ru/contacts">
+            <b>Контакты на сайте</b>
+            <span>Москва, ул. Профсоюзная, д. 3</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="wrap footer__in">
+      <div>© ИоТерра 2026 · МПК-Пересвет</div>
+      <nav>
+        <a href="#apps">Применения</a>
+        <a href="#screens">Возможности</a>
+        <a href="#start">Старт</a>
+        <a href="#contact">Демо</a>
+        <a href="http://ioterra.ru/">ioterra.ru</a>
+      </nav>
+    </div>
+  </footer>
+
+  <div class="mobile-cta" aria-label="Быстрая связь">
+    <a class="btn btn--line" href="tel:+74993930040">Позвонить</a>
+    <a class="btn btn--ember" href="#contact">Демо</a>
+  </div>
+
+  <div class="popup" id="popup" role="dialog" aria-modal="true" aria-labelledby="popupTitle" hidden>
+    <div class="popup__card">
+      <button class="popup__close" type="button" id="popupClose" aria-label="Закрыть">×</button>
+      <h2 id="popupTitle">Покажем контур на вашей задаче</h2>
+      <p>Не лекция про микросервисы. Объект, данные с поля, экран и что происходит, когда срабатывает событие.</p>
+      <a class="btn btn--ember btn--wide" href="#contact" id="popupCta">Оставить телефон</a>
+    </div>
+  </div>
+
+  <script>
+    const nav = document.getElementById("nav");
+    const toggle = document.getElementById("navToggle");
+    const links = document.getElementById("navLinks");
+    toggle.addEventListener("click", () => {
+      const open = nav.classList.toggle("is-open");
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    links.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => {
+      nav.classList.remove("is-open");
+      toggle.setAttribute("aria-expanded", "false");
+    }));
+
+    const labels = {
+      model: "Модель",
+      scada: "SCADA",
+      mes: "MES",
+      home: "Дом",
+      maps: "Карты",
+      video: "Видео",
+      methods: "Логика",
+      api: "API"
+    };
+    const screenNav = document.getElementById("screenNav");
+    const screens = [...document.querySelectorAll(".screen")];
+    screens.forEach((screen, i) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = labels[screen.dataset.screen] || screen.dataset.screen;
+      if (i === 0) btn.classList.add("is-on");
+      btn.addEventListener("click", () => {
+        screenNav.querySelectorAll("button").forEach((b) => b.classList.remove("is-on");
+        screens.forEach((s) => s.classList.remove("is-on"));
+        btn.classList.add("is-on");
+        screen.classList.add("is-on");
+      });
+      screenNav.appendChild(btn);
+    });
+
+    const popup = document.getElementById("popup");
+    const seenKey = "peresvet-popup";
+    const showPopup = () => {
+      if (sessionStorage.getItem(seenKey)) return;
+      sessionStorage.setItem(seenKey, "1");
+      popup.hidden = false;
+      popup.classList.add("is-on");
+    };
+    const hidePopup = () => {
+      popup.classList.remove("is-on");
+      popup.hidden = true;
+    };
+    document.getElementById("popupClose").addEventListener("click", hidePopup);
+    document.getElementById("popupCta").addEventListener("click", hidePopup);
+    popup.addEventListener("click", (e) => { if (e.target === popup) hidePopup(); });
+    setTimeout(showPopup, 45000);
+    document.addEventListener("mouseout", (e) => {
+      if (e.clientY <= 0) showPopup();
+    });
+  </script>
+</body>
+</html>

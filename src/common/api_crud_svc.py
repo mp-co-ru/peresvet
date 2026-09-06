@@ -26,15 +26,35 @@ def coerce_prs_json_config_string_value(v: Any) -> Any:
     return v
 
 
-def coerce_prs_json_strings_in_mapping_tree(obj: Any) -> None:
-    """Рекурсивно (dict/list): строковые значения по ключу ``prsJsonConfigString`` заменить на dict.
+def coerce_optional_directory_string(v: Any) -> Any:
+    """Пустая DirectoryString -> ``None``.
 
-    Нужно для тел PUT/POST, которые уходят в ``_update`` как сырой ``dict`` (без model_dump).
+    OpenLDAP отклоняет нулевую длину (``description: ""``) с Invalid syntax.
+    Пробельный плейсхолдер ``" "`` не трогаем.
+    """
+    if isinstance(v, str) and not v:
+        return None
+    if isinstance(v, list) and all(
+        item is None or (isinstance(item, str) and not item) for item in v
+    ):
+        return None
+    return v
+
+
+def coerce_prs_json_strings_in_mapping_tree(obj: Any) -> None:
+    """Рекурсивно нормализует сырой PUT/POST dict (без model_dump).
+
+    * ``prsJsonConfigString``-строка -> dict или ``None``;
+    * пустая ``description`` -> ``None``.
     """
     if isinstance(obj, dict):
         for k, v in list(obj.items()):
             if k == "prsJsonConfigString" and isinstance(v, str):
                 obj[k] = coerce_prs_json_config_string_value(v)
+            elif k == "description":
+                obj[k] = coerce_optional_directory_string(v)
+                if obj[k] is not None:
+                    coerce_prs_json_strings_in_mapping_tree(obj[k])
             else:
                 coerce_prs_json_strings_in_mapping_tree(v)
     elif isinstance(obj, list):
@@ -140,6 +160,11 @@ class NodeAttributes(BaseModel):
             "в соответствии с их индексами."
         )
     )
+
+    @field_validator("description", mode="before")
+    @classmethod
+    def coerce_description(cls, v: Any) -> Any:
+        return coerce_optional_directory_string(v)
 
     @field_validator("prsJsonConfigString", mode="before")
     @classmethod
