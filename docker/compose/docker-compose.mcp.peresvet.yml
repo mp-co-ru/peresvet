@@ -12,6 +12,8 @@ services:
       TZ: ${TIME_ZONE}
       PERESVET_BASE_URL: http://${ALL_SVC_HOST}:${PORT_ONE_APP}
       PERESVET_TIMEOUT_SECONDS: ${PERESVET_TIMEOUT_SECONDS:-15}
+      # Optional Bearer token forwarded to Peresvet API (enterprise auth)
+      PERESVET_BEARER_TOKEN: ${PERESVET_BEARER_TOKEN:-}
       # Enable MCP v2 tools (defaults to PRS_ENABLE_V2 if unset)
       MCP_PERESVET_ENABLE_V2: ${MCP_PERESVET_ENABLE_V2:-${PRS_ENABLE_V2:-0}}
 
