@@ -1,5 +1,6 @@
 import sys
 import json
+import asyncio
 from collections import deque
 from collections.abc import Iterable
 
@@ -33,8 +34,12 @@ class ConnectorsMQTTApp(AppSvc):
     def __init__(self, settings: ConnectorsMQTTAppSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
         self._connected_connectors: set[str] = set()
+        # поколение сессии: LWT увеличивает, in-flight getConfig сверяет после RPC 101
+        self._connector_session_epoch: dict[str, int] = {}
         # id тегов, привязанных к коннектору (без LDAP при записи качества в историю через AMQP)
         self._connector_tag_ids: dict[str, set[str]] = {}
+        # ожидание ответа TagsApp при записи 101 до full_configuration
+        self._quality_write_ack_timeout_sec: float = 60.0
         # последние строки лога с коннектора (prsConnector.log_line по MQTT) для UI конфигуратора
         self._connector_log_buffer_max: int = 400
         self._connector_log_lines: dict[str, deque[dict]] = {}
@@ -73,6 +78,13 @@ class ConnectorsMQTTApp(AppSvc):
             s.discard(t)
         if not s:
             self._connector_tag_ids.pop(conn_id, None)
+
+    def _invalidate_connector_session(self, conn_id: str) -> None:
+        self._connected_connectors.discard(conn_id)
+        self._connector_session_epoch[conn_id] = self._connector_session_epoch.get(conn_id, 0) + 1
+
+    def _connector_session_is_current(self, conn_id: str, epoch: int) -> bool:
+        return self._connector_session_epoch.get(conn_id, 0) == epoch
 
     def _add_app_handlers(self):
         self._handlers["conn2prs.*"] = self._send_config_to_connector
@@ -254,33 +266,111 @@ class ConnectorsMQTTApp(AppSvc):
         })
         return [attrs["cn"][0] for _, _, attrs in tags]
 
-    async def _write_connector_tags_quality(self, conn_id: str, quality_code: int) -> bool:
+    async def _write_connector_tags_quality(
+        self,
+        conn_id: str,
+        quality_code: int,
+        *,
+        wait_ack: bool = False,
+        tag_ids: Iterable[str] | None = None,
+    ) -> bool:
         """Публикует null с кодом качества в шину для записи в историю тегов (БД), без LDAP.
 
-        Список тегов берётся из кэша привязок (обновляется при полной конфигурации и событиях модели).
+        Список тегов берётся из кэша привязок, если ``tag_ids`` не задан явно
+        (кэш обновляется при полной конфигурации и событиях модели).
+
+        Args:
+            wait_ack: если True, ждать ответ TagsApp (тот же RPC, что и у data_set),
+                а не только публикацию в брокер. Нужно для 101 до ``full_configuration``.
+            tag_ids: явный список тегов; иначе кэш коннектора.
 
         Returns:
-            True, если нечего писать или сообщение ушло в брокер;
-            False, если публикация не удалась.
+            True, если нечего писать, либо публикация (и при wait_ack — запись) удалась;
+            False, если публикация или подтверждение не удались.
         """
-        tag_ids = list(self._connector_tag_ids.get(conn_id, ()))
-        if not tag_ids:
+        ids = list(tag_ids) if tag_ids is not None else list(self._connector_tag_ids.get(conn_id, ()))
+        if not ids:
             return True
         now_ts = t.now_int()
         data = {
             "data": [
                 {"tagId": tag_id, "data": [[now_ts, None, quality_code]]}
-                for tag_id in tag_ids
+                for tag_id in ids
             ]
         }
         try:
-            await self._post_message(mes=data, routing_key="prsTag.app_api.data_set.*", reply=False)
+            send = self._post_message(
+                mes=data, routing_key="prsTag.app_api.data_set.*", reply=wait_ack
+            )
+            if wait_ack:
+                res = await asyncio.wait_for(
+                    send, timeout=self._quality_write_ack_timeout_sec
+                )
+            else:
+                res = await send
+        except TimeoutError:
+            self._logger.warning(
+                f"{self._config.svc_name} :: Таймаут записи качества {quality_code} "
+                f"для тегов коннектора {conn_id} ({self._quality_write_ack_timeout_sec} с)."
+            )
+            return False
         except Exception as ex:
             self._logger.warning(
-                f"{self._config.svc_name} :: Не удалось записать качество {quality_code} в историю тегов коннектора {conn_id}: {ex}."
+                f"{self._config.svc_name} :: Не удалось записать качество {quality_code} "
+                f"в историю тегов коннектора {conn_id}: {ex}."
+            )
+            return False
+        if not wait_ack:
+            return bool(res)
+        if res is None:
+            self._logger.warning(
+                f"{self._config.svc_name} :: Нет обработчика записи качества {quality_code} "
+                f"для тегов коннектора {conn_id}."
+            )
+            return False
+        if isinstance(res, dict) and res.get("error"):
+            self._logger.warning(
+                f"{self._config.svc_name} :: TagsApp вернул ошибку при записи качества "
+                f"{quality_code} для коннектора {conn_id}: {res.get('error')}."
             )
             return False
         return True
+
+    async def _persist_connection_restored(self, conn_id: str) -> bool:
+        """Пишет null/101 во все теги коннектора и ждёт подтверждения TagsApp.
+
+        Список тегов — из кэша привязок; если кэш пуст (рестарт сервиса), один LDAP
+        только идентификаторов, без полной конфигурации тегов.
+        """
+        tag_ids = list(self._connector_tag_ids.get(conn_id, ()))
+        if not tag_ids:
+            try:
+                tag_ids = await self._get_connector_tag_ids(conn_id)
+            except Exception as ex:
+                self._logger.warning(
+                    f"{self._config.svc_name} :: Не удалось получить список тегов коннектора "
+                    f"{conn_id} для записи качества {CN_QUALITY_CONNECTION_RESTORED}: {ex}."
+                )
+                return False
+            self._replace_connector_tag_cache(conn_id, tag_ids)
+        wrote = await self._write_connector_tags_quality(
+            conn_id,
+            CN_QUALITY_CONNECTION_RESTORED,
+            wait_ack=True,
+            tag_ids=tag_ids,
+        )
+        if wrote:
+            self._logger.info(
+                f"{self._config.svc_name} :: Связь с коннектором {conn_id} восстановлена, "
+                f"в историю тегов отправлено качество {CN_QUALITY_CONNECTION_RESTORED}."
+            )
+        else:
+            self._logger.warning(
+                f"{self._config.svc_name} :: Связь с коннектором {conn_id}: "
+                f"запись качества {CN_QUALITY_CONNECTION_RESTORED} не удалась, "
+                f"полная конфигурация не отправляется."
+            )
+        return wrote
 
     async def _connection_lost(self, mes: dict, routing_key: str | None = None) -> dict:
         """Обработка потери связи с коннектором по MQTT (в т.ч. LWT): публикация null с кодом качества в шину
@@ -292,7 +382,7 @@ class ConnectorsMQTTApp(AppSvc):
         if not conn_id:
             self._logger.warning(f"{self._config.svc_name} :: prsConnector.connection_lost без id.")
             return {}
-        self._connected_connectors.discard(conn_id)
+        self._invalidate_connector_session(conn_id)
         if runtime_flags.platform_shutting_down:
             self._logger.debug(
                 f"{self._config.svc_name} :: prsConnector.connection_lost для {conn_id} "
@@ -377,6 +467,21 @@ class ConnectorsMQTTApp(AppSvc):
             self._logger.error(f"{self._config.svc_name} :: Отсутствует коннектор {conn_id}.")
             return {}
 
+        session_epoch = self._connector_session_epoch.get(conn_id, 0)
+        need_restore = conn_id not in self._connected_connectors
+        tag_ids_before_config = set(self._connector_tag_ids.get(conn_id, ()))
+        if need_restore:
+            if not await self._persist_connection_restored(conn_id):
+                return {}
+            if not self._connector_session_is_current(conn_id, session_epoch):
+                self._logger.warning(
+                    f"{self._config.svc_name} :: Коннектор {conn_id}: потеря связи во время "
+                    f"записи качества {CN_QUALITY_CONNECTION_RESTORED}, "
+                    f"полная конфигурация не отправляется."
+                )
+                return {}
+            tag_ids_before_config = set(self._connector_tag_ids.get(conn_id, ()))
+
         res["tags"] = {}
         mes_for_connector = {
             "action": "prsConnector.full_configuration",
@@ -400,18 +505,31 @@ class ConnectorsMQTTApp(AppSvc):
 
         self._replace_connector_tag_cache(conn_id, mes_for_connector["data"]["tags"].keys())
 
-        if conn_id not in self._connected_connectors:
-            self._connected_connectors.add(conn_id)
-            if await self._write_connector_tags_quality(conn_id, CN_QUALITY_CONNECTION_RESTORED):
-                self._logger.info(
-                    f"{self._config.svc_name} :: Связь с коннектором {conn_id} восстановлена, "
-                    f"в историю тегов отправлено качество {CN_QUALITY_CONNECTION_RESTORED}."
-                )
-            else:
+        extra_tag_ids = set(mes_for_connector["data"]["tags"].keys()) - tag_ids_before_config
+        if need_restore and extra_tag_ids:
+            extra_ok = await self._write_connector_tags_quality(
+                conn_id,
+                CN_QUALITY_CONNECTION_RESTORED,
+                wait_ack=True,
+                tag_ids=extra_tag_ids,
+            )
+            if not extra_ok:
                 self._logger.warning(
-                    f"{self._config.svc_name} :: Связь с коннектором {conn_id} восстановлена, "
-                    f"но запись качества {CN_QUALITY_CONNECTION_RESTORED} в шину не удалась."
+                    f"{self._config.svc_name} :: Коннектор {conn_id}: не удалось записать "
+                    f"качество {CN_QUALITY_CONNECTION_RESTORED} для тегов, отсутствовавших "
+                    f"в кэше до полной конфигурации; full_configuration не отправляется."
                 )
+                return {}
+
+        if not self._connector_session_is_current(conn_id, session_epoch):
+            self._logger.warning(
+                f"{self._config.svc_name} :: Коннектор {conn_id}: потеря связи до отправки "
+                f"полной конфигурации, сообщение full_configuration не публикуется."
+            )
+            return {}
+
+        if need_restore:
+            self._connected_connectors.add(conn_id)
 
         await self._post_message(mes=mes_for_connector, routing_key=f"prs2conn.{conn_id}")
 
@@ -454,8 +572,9 @@ class ConnectorsMQTTApp(AppSvc):
 
     async def _deleted(self, mes: dict, routing_key: str | None = None):
         deleted_conn_id = mes["id"]
-        self._connected_connectors.discard(deleted_conn_id)
+        self._invalidate_connector_session(deleted_conn_id)
         self._connector_tag_ids.pop(deleted_conn_id, None)
+        self._connector_session_epoch.pop(deleted_conn_id, None)
         self._connector_log_lines.pop(deleted_conn_id, None)
         self._connector_command_output_lines.pop(deleted_conn_id, None)
         payload = {
