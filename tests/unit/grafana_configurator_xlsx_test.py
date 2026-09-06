@@ -23,7 +23,7 @@ def test_xlsx_export_dashboard_contract():
     dashboard, html, javascript = _dashboard_parts()
 
     assert dashboard["uid"] == "ddy59kw4v5ssgc"
-    assert dashboard["version"] == 49
+    assert dashboard["version"] == 50
     assert 'id="button-tagExportXlsx"' in html
     assert 'disabled="disabled"' in html
     assert 'class="btn btn-secondary btn-sm"' in html
@@ -38,7 +38,7 @@ def test_xlsx_export_dashboard_contract():
     )
 
     for required_fragment in (
-        'prsConfiguratorCodeVersion="20260906-object-tree-dnd-v1"',
+        'prsConfiguratorCodeVersion="20260906-tree-select-mark-v1"',
         "prsTagDataExportSnapshot",
         "prsIsXlsxReady",
         "prsGetReadyXlsx",

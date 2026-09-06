@@ -17,7 +17,7 @@ def test_object_tree_dnd_dashboard_contract():
 
     assert dashboard["uid"] == "ddy59kw4v5ssgc"
     assert (
-        'prsConfiguratorCodeVersion="20260906-object-tree-dnd-v1"' in javascript
+        'prsConfiguratorCodeVersion="20260906-tree-select-mark-v1"' in javascript
     )
     for required_fragment in (
         "prsBindAllObjectTreeDnd",
@@ -40,3 +40,10 @@ def test_object_tree_dnd_dashboard_contract():
     ):
         assert required_rule in css
         assert required_rule in javascript
+
+    assert "inset 3px 0 0" not in css
+    assert "#cde3e8" in css
+    assert 'content:"\\2714"' in css
+    assert (
+        "#tree .list-group-item[role=treeitem].currentNode::after" in css
+    )
