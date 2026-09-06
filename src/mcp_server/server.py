@@ -7,6 +7,23 @@ from fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse
 
+from .payloads import (
+    add_list,
+    alert_create_payload,
+    alarms_query_to_params,
+    auth_headers,
+    bool_str,
+    connector_create_payload,
+    connector_update_payload,
+    copy_payload,
+    crud_query_to_params,
+    extract_created_id,
+    linked_tag_payload,
+    method_parameter_payload,
+    prepare_data_query,
+    schedule_create_payload,
+)
+
 
 CrudEntity = Literal[
     "objects",
@@ -26,6 +43,7 @@ def _env(name: str, default: str) -> str:
 
 PERESVET_BASE_URL = _env("PERESVET_BASE_URL", "http://one_app:8000").rstrip("/")
 PERESVET_TIMEOUT_SECONDS = float(_env("PERESVET_TIMEOUT_SECONDS", "15"))
+PERESVET_BEARER_TOKEN = _env("PERESVET_BEARER_TOKEN", "")
 
 def _env_bool(name: str, default: bool = False) -> bool:
     v = os.getenv(name)
@@ -82,8 +100,11 @@ async def _request(
 ) -> dict[str, Any]:
     url = f"{PERESVET_BASE_URL}{path}"
     timeout = aiohttp.ClientTimeout(total=PERESVET_TIMEOUT_SECONDS)
+    headers = auth_headers(PERESVET_BEARER_TOKEN)
     async with aiohttp.ClientSession(timeout=timeout) as session:
-        async with session.request(method, url, params=params, json=json_body) as resp:
+        async with session.request(
+            method, url, params=params, json=json_body, headers=headers or None
+        ) as resp:
             text = await resp.text()
             try:
                 payload = json.loads(text) if text else None
@@ -113,6 +134,7 @@ async def config(_: Request) -> JSONResponse:
             "host": MCP_HOST,
             "port": MCP_PORT,
             "enable_v2": ENABLE_V2,
+            "auth_configured": bool(PERESVET_BEARER_TOKEN.strip()),
         }
     )
 
@@ -124,193 +146,6 @@ async def peresvet_openapi() -> dict[str, Any]:
     Note: this endpoint may return 500 in some deployments; it is not required for CRUD tools.
     """
     return await _request("GET", "/openapi.json")
-
-
-def _extract_created_id(resp: dict[str, Any]) -> str | None:
-    if not resp.get("ok"):
-        return None
-    data = resp.get("data")
-    if isinstance(data, dict):
-        v = data.get("id")
-        if isinstance(v, str) and v.strip():
-            return v
-    return None
-
-
-def _as_str_list(v: Any) -> list[str]:
-    if v is None:
-        return []
-    if isinstance(v, list):
-        return [str(x) for x in v]
-    return [str(v)]
-
-def _bool_str(v: Any) -> str:
-    return "true" if bool(v) else "false"
-
-def _add_list(params: list[tuple[str, str]], key: str, values: Any) -> None:
-    for x in _as_str_list(values):
-        if x is None:
-            continue
-        s = str(x)
-        if s.strip() == "":
-            continue
-        params.append((key, s))
-
-def _crud_query_to_params(query: dict[str, Any]) -> list[tuple[str, str]]:
-    """Convert legacy `q` dict into normal query params (no `q=`)."""
-    params: list[tuple[str, str]] = []
-    if "id" in query and query["id"] is not None:
-        _add_list(params, "id", query["id"])
-    if "base" in query and query["base"] is not None:
-        params.append(("base", str(query["base"])))
-    if "deref" in query and query["deref"] is not None:
-        params.append(("deref", _bool_str(query["deref"])))
-    if "scope" in query and query["scope"] is not None:
-        params.append(("scope", str(query["scope"])))
-    if "hierarchy" in query and query["hierarchy"] is not None:
-        params.append(("hierarchy", _bool_str(query["hierarchy"])))
-    if "getParent" in query and query["getParent"] is not None:
-        params.append(("getParent", _bool_str(query["getParent"])))
-    if "attributes" in query and query["attributes"] is not None:
-        _add_list(params, "attributes", query["attributes"])
-    if "filter" in query and query["filter"] is not None:
-        params.append(("filter", json.dumps(query["filter"], ensure_ascii=False)))
-
-    # entity-specific flags used by some endpoints
-    for k in ("getLinkedTags", "getLinkedAlerts"):
-        if k in query and query[k] is not None:
-            params.append((k, _bool_str(query[k])))
-
-    return params
-
-def _query_value_to_str(value: Any) -> str:
-    if isinstance(value, bool):
-        return _bool_str(value)
-    if isinstance(value, (dict, list)):
-        return json.dumps(value, ensure_ascii=False)
-    return str(value)
-
-
-_DATA_QUERY_KNOWN_KEYS = frozenset(
-    {
-        "tagId",
-        "start",
-        "finish",
-        "maxCount",
-        "count",
-        "timeStep",
-        "format",
-        "actual",
-        "value",
-        "params",
-        "allRecordsAsValue",
-    }
-)
-_DATA_QUERY_BLOCKED_KEYS = frozenset({"evalContextTagId"})
-
-
-def _data_query_to_params(query: dict[str, Any]) -> list[tuple[str, str]]:
-    params: list[tuple[str, str]] = []
-    if "tagId" in query and query["tagId"] is not None:
-        _add_list(params, "tagId", query["tagId"])
-    for k in ("start", "finish", "maxCount", "count", "timeStep", "format", "actual"):
-        if k in query and query[k] is not None:
-            params.append((k, _query_value_to_str(query[k])))
-    if "value" in query and query["value"] is not None:
-        params.append(("value", _query_value_to_str(query["value"])))
-    if "params" in query and query["params"] is not None:
-        params.append(("params", _query_value_to_str(query["params"])))
-    for k, v in query.items():
-        if k in _DATA_QUERY_KNOWN_KEYS or k in _DATA_QUERY_BLOCKED_KEYS or v is None:
-            continue
-        params.append((k, _query_value_to_str(v)))
-    return params
-
-
-def _method_parameter_payload(parameter: dict[str, Any]) -> dict[str, Any]:
-    if "attributes" in parameter:
-        return parameter
-    attrs: dict[str, Any] = {}
-    if "cn" in parameter:
-        attrs["cn"] = parameter["cn"]
-    if "description" in parameter:
-        attrs["description"] = parameter["description"]
-    if "prsIndex" in parameter:
-        attrs["prsIndex"] = parameter["prsIndex"]
-    elif "index" in parameter:
-        attrs["prsIndex"] = parameter["index"]
-    if "prsActive" in parameter:
-        attrs["prsActive"] = parameter["prsActive"]
-    if "prsJsonConfigString" in parameter:
-        attrs["prsJsonConfigString"] = parameter["prsJsonConfigString"]
-    elif "config" in parameter:
-        attrs["prsJsonConfigString"] = parameter["config"]
-    if isinstance(parameter.get("attrs"), dict):
-        attrs.update(parameter["attrs"])
-    return {"attributes": attrs}
-
-
-def _operation_parameter_payload(parameter: dict[str, Any]) -> dict[str, Any]:
-    if "attributes" in parameter:
-        return parameter
-    attrs: dict[str, Any] = {
-        "cn": parameter.get("cn"),
-        "prsJsonConfigString": parameter.get("prsJsonConfigString", parameter.get("config", {})),
-    }
-    if "description" in parameter:
-        attrs["description"] = parameter["description"]
-    if "prsActive" in parameter:
-        attrs["prsActive"] = parameter["prsActive"]
-    if isinstance(parameter.get("attrs"), dict):
-        attrs.update(parameter["attrs"])
-    return {"attributes": attrs}
-
-
-def _tag_operation_payload(operation: dict[str, Any]) -> dict[str, Any]:
-    if "attributes" in operation:
-        op = dict(operation)
-        op["parameters"] = [_operation_parameter_payload(p) for p in operation.get("parameters") or []]
-        return op
-    cfg = operation.get("prsJsonConfigString")
-    if cfg is None:
-        cfg = {
-            "query": operation.get("query"),
-        }
-        for key, out_key in (
-            ("timeoutMs", "timeoutMs"),
-            ("timeout_ms", "timeoutMs"),
-            ("maxRows", "maxRows"),
-            ("max_rows", "maxRows"),
-            ("version", "version"),
-        ):
-            if key in operation and operation[key] is not None:
-                cfg[out_key] = operation[key]
-    attrs: dict[str, Any] = {
-        "cn": operation.get("cn"),
-        "prsEntityTypeCode": operation.get("prsEntityTypeCode", operation.get("kind", 0)),
-        "prsJsonConfigString": cfg,
-    }
-    if "prsActive" in operation:
-        attrs["prsActive"] = operation["prsActive"]
-    if isinstance(operation.get("attrs"), dict):
-        attrs.update(operation["attrs"])
-    return {
-        "attributes": attrs,
-        "parameters": [_operation_parameter_payload(p) for p in operation.get("parameters") or []],
-    }
-
-
-def _linked_tag_payload(link: dict[str, Any]) -> dict[str, Any]:
-    if "tagId" not in link:
-        raise ValueError("linked tag item requires tagId")
-    attrs = link.get("attributes")
-    if attrs is None:
-        attrs = {}
-    return {
-        "tagId": link["tagId"],
-        "attributes": attrs,
-        "operations": [_tag_operation_payload(op) for op in link.get("operations") or []],
-    }
 
 
 async def _find_child_by_cn(entity: Literal["objects", "tags"], *, parent_id: str, cn: str) -> str | None:
@@ -348,7 +183,7 @@ async def peresvet_objects_list(
 ) -> dict[str, Any]:
     """List objects from Peresvet hierarchy.
 
-    This wraps `GET /v1/objects/?q=<json>`.
+    This wraps `GET /v1/objects/` with ordinary query params.
 
     Key hierarchy concepts in Peresvet:
     - `base`: id (UUID) or DN of the *base node* where search starts. If omitted, search starts from root.
@@ -361,15 +196,15 @@ async def peresvet_objects_list(
     """
     params: list[tuple[str, str]] = [
         ("scope", str(scope)),
-        ("hierarchy", _bool_str(hierarchy)),
-        ("getParent", _bool_str(get_parent)),
+        ("hierarchy", bool_str(hierarchy)),
+        ("getParent", bool_str(get_parent)),
     ]
     if base is not None:
         params.append(("base", base))
     if filter is not None:
         params.append(("filter", json.dumps(filter, ensure_ascii=False)))
     if attributes is not None:
-        _add_list(params, "attributes", attributes)
+        add_list(params, "attributes", attributes)
     return await _request("GET", "/v1/objects/", params=params)
 
 @mcp.tool
@@ -438,19 +273,19 @@ async def peresvet_tags_list(
     """List tags from Peresvet hierarchy.
 
     Same query semantics as `peresvet_objects_list`, but for tags.
-    Wraps `GET /v1/tags/?q=<json>`.
+    Wraps `GET /v1/tags/`.
     """
     params: list[tuple[str, str]] = [
         ("scope", str(scope)),
-        ("hierarchy", _bool_str(hierarchy)),
-        ("getParent", _bool_str(get_parent)),
+        ("hierarchy", bool_str(hierarchy)),
+        ("getParent", bool_str(get_parent)),
     ]
     if base is not None:
         params.append(("base", base))
     if filter is not None:
         params.append(("filter", json.dumps(filter, ensure_ascii=False)))
     if attributes is not None:
-        _add_list(params, "attributes", attributes)
+        add_list(params, "attributes", attributes)
     return await _request("GET", "/v1/tags/", params=params)
 
 @mcp.tool
@@ -542,7 +377,7 @@ async def peresvet_apply_hierarchy(
                 description=node.get("description"),
                 attrs=node.get("attrs") if isinstance(node.get("attrs"), dict) else None,
             )
-            obj_id = _extract_created_id(resp)
+            obj_id = extract_created_id(resp)
             if not obj_id:
                 errors.append({"kind": "object", "path": path, "cn": cn, "parent_id": parent_id, "resp": resp})
                 return None
@@ -578,7 +413,7 @@ async def peresvet_apply_hierarchy(
                     measure_units=tag.get("measure_units"),
                     attrs=tag.get("attrs") if isinstance(tag.get("attrs"), dict) else None,
                 )
-                tag_id = _extract_created_id(resp)
+                tag_id = extract_created_id(resp)
                 if not tag_id:
                     errors.append({"kind": "tag", "path": f"{path}.tags[{i}]", "cn": tcn, "parent_id": obj_id, "resp": resp})
                     if not continue_on_error:
@@ -630,7 +465,7 @@ async def peresvet_crud_read(entity: CrudEntity, query: dict[str, Any] | None = 
     If `query` is omitted, an empty filter `{}` is used.
     """
     q = query or {}
-    params = _crud_query_to_params(q)
+    params = crud_query_to_params(q)
     return await _request("GET", f"/v1/{entity}/", params=params)
 
 
@@ -639,7 +474,8 @@ async def peresvet_crud_create(entity: CrudEntity, payload: dict[str, Any]) -> d
     """Low-level create via POST `/v1/<entity>/`.
 
     Prefer the typed helpers for hierarchy entities:
-    - `peresvet_object_create` / `peresvet_tag_create`
+    - `peresvet_object_create` / `peresvet_tag_create` / `peresvet_alert_create`
+    - `peresvet_connector_create` / `peresvet_schedule_create`
     - or `peresvet_apply_hierarchy` to create whole trees safely.
     """
     return await _request("POST", f"/v1/{entity}/", json_body=payload)
@@ -696,7 +532,7 @@ async def peresvet_method_create(
     if initiated_by is not None:
         payload["initiatedBy"] = initiated_by
     if parameters is not None:
-        payload["parameters"] = [_method_parameter_payload(p) for p in parameters]
+        payload["parameters"] = [method_parameter_payload(p) for p in parameters]
     return await _request("POST", "/v1/methods/", json_body=payload)
 
 
@@ -739,7 +575,312 @@ async def peresvet_method_copy(*, source_id: str, parent_id: str) -> dict[str, A
     return await _request(
         "POST",
         "/v1/methods/copy",
-        json_body={"sourceId": source_id, "parentId": parent_id},
+        json_body=copy_payload(source_id=source_id, parent_id=parent_id),
+    )
+
+
+@mcp.tool
+async def peresvet_object_copy(
+    *,
+    source_id: str,
+    parent_id: str,
+    attributes: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Copy an object and its subtree (tags, alerts, methods).
+
+    Wraps `POST /v1/objects/copy`. Internal references are rewritten;
+    references to nodes outside the copied subtree are kept.
+    """
+    return await _request(
+        "POST",
+        "/v1/objects/copy",
+        json_body=copy_payload(source_id=source_id, parent_id=parent_id, attributes=attributes),
+    )
+
+
+@mcp.tool
+async def peresvet_tag_copy(
+    *,
+    source_id: str,
+    parent_id: str,
+    attributes: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Copy a tag (and attached alerts/methods) under a new parent.
+
+    Wraps `POST /v1/tags/copy`.
+    """
+    return await _request(
+        "POST",
+        "/v1/tags/copy",
+        json_body=copy_payload(source_id=source_id, parent_id=parent_id, attributes=attributes),
+    )
+
+
+@mcp.tool
+async def peresvet_alert_copy(
+    *,
+    source_id: str,
+    parent_id: str,
+    attributes: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Copy an alert to another tag parent.
+
+    Wraps `POST /v1/alerts/copy`.
+    """
+    return await _request(
+        "POST",
+        "/v1/alerts/copy",
+        json_body=copy_payload(source_id=source_id, parent_id=parent_id, attributes=attributes),
+    )
+
+
+@mcp.tool
+async def peresvet_alert_create(
+    *,
+    parent_id: str,
+    cn: str | None = None,
+    description: str | None = None,
+    value: Any = 10,
+    high: bool = True,
+    auto_ack: bool = True,
+    attrs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Create an alert under a tag.
+
+    Wraps `POST /v1/alerts/`.
+
+    - `parent_id`: tag UUID.
+    - `value`: threshold stored in `prsJsonConfigString.value`.
+    - `high=true`: fire when tag value >= `value`; otherwise when tag value < `value`.
+    - `auto_ack`: auto-acknowledge when the condition clears.
+    """
+    return await _request(
+        "POST",
+        "/v1/alerts/",
+        json_body=alert_create_payload(
+            parent_id=parent_id,
+            cn=cn,
+            description=description,
+            value=value,
+            high=high,
+            auto_ack=auto_ack,
+            attrs=attrs,
+        ),
+    )
+
+
+@mcp.tool
+async def peresvet_alarms_get(
+    *,
+    parent_id: str | list[str] | None = None,
+    get_children: bool = False,
+    format_ts: bool = False,
+    fired: bool = True,
+) -> dict[str, Any]:
+    """Read active (or unacked inactive) alarms.
+
+    Wraps `GET /v1/alarms/`.
+
+    - `parent_id`: object UUID or list of object UUIDs.
+    - `get_children=true`: include alarms of child objects.
+    - `fired=true`: only currently active alarms.
+    """
+    query: dict[str, Any] = {
+        "getChildren": get_children,
+        "format": format_ts,
+        "fired": fired,
+    }
+    if parent_id is not None:
+        query["parentId"] = parent_id
+    return await _request("GET", "/v1/alarms/", params=alarms_query_to_params(query))
+
+
+@mcp.tool
+async def peresvet_alarm_ack(*, alarm_id: str, x: int | str | None = None) -> dict[str, Any]:
+    """Acknowledge an alarm.
+
+    Wraps `PUT /v1/alarms/`. `x` is the ack timestamp (ISO8601 or microseconds);
+    omit it to use the platform current time.
+    """
+    payload: dict[str, Any] = {"id": alarm_id}
+    if x is not None:
+        payload["x"] = x
+    return await _request("PUT", "/v1/alarms/", json_body=payload)
+
+
+@mcp.tool
+async def peresvet_connector_create(
+    *,
+    cn: str | None = None,
+    parent_id: str | None = None,
+    description: str | None = None,
+    config: dict[str, Any] | None = None,
+    linked_tags: list[dict[str, Any]] | None = None,
+    attrs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Create a connector, optionally with tag links.
+
+    Wraps `POST /v1/connectors/`.
+
+    - `config` is stored as `prsJsonConfigString` (MQTT/broker settings depend on connector type).
+    - `linked_tags[]` items need `tagId` and either `attributes` or compact
+      `source` / `config` / `maxDev` / `JSONata` / `frequency`.
+    """
+    return await _request(
+        "POST",
+        "/v1/connectors/",
+        json_body=connector_create_payload(
+            cn=cn,
+            parent_id=parent_id,
+            description=description,
+            config=config,
+            linked_tags=linked_tags,
+            attrs=attrs,
+        ),
+    )
+
+
+@mcp.tool
+async def peresvet_connector_update(
+    *,
+    connector_id: str,
+    cn: str | None = None,
+    description: str | None = None,
+    config: dict[str, Any] | None = None,
+    linked_tags: list[dict[str, Any]] | None = None,
+    unlink_tags: list[str] | None = None,
+    attrs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Update a connector and its tag links.
+
+    Wraps `PUT /v1/connectors/`. Use `unlink_tags` to detach tags.
+    """
+    return await _request(
+        "PUT",
+        "/v1/connectors/",
+        json_body=connector_update_payload(
+            connector_id=connector_id,
+            cn=cn,
+            description=description,
+            config=config,
+            linked_tags=linked_tags,
+            unlink_tags=unlink_tags,
+            attrs=attrs,
+        ),
+    )
+
+
+@mcp.tool
+async def peresvet_connector_copy(
+    *,
+    source_id: str,
+    copy_linked_tags: bool = False,
+    attributes: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Copy a connector. Optionally copy tag links.
+
+    Wraps `POST /v1/connectors/` with `sourceId` (there is no `/copy` route).
+    """
+    return await _request(
+        "POST",
+        "/v1/connectors/",
+        json_body=copy_payload(
+            source_id=source_id,
+            attributes=attributes,
+            extra={"copyLinkedTags": copy_linked_tags},
+        ),
+    )
+
+
+@mcp.tool
+async def peresvet_connector_command(*, connector_id: str, command: dict[str, Any]) -> dict[str, Any]:
+    """Send a remote command to a connector over MQTT.
+
+    Wraps `POST /v1/connectors_app/`.
+
+    Typical `command` keys:
+    - `lines`: shell lines executed on the connector host;
+    - `timeoutSec`, `maxOutputBytes`, `logToPlatform`.
+    Results appear in `peresvet_connector_command_output_tail`.
+    """
+    return await _request(
+        "POST",
+        "/v1/connectors_app/",
+        json_body={"id": connector_id, "command": command},
+    )
+
+
+@mcp.tool
+async def peresvet_connector_link_status(*, connector_id: str) -> dict[str, Any]:
+    """MQTT link status of a connector (`mqttConnected`).
+
+    Wraps `GET /v1/connectors_app/link_status`.
+    """
+    return await _request(
+        "GET",
+        "/v1/connectors_app/link_status",
+        params=[("id", connector_id)],
+    )
+
+
+@mcp.tool
+async def peresvet_connector_log_tail(*, connector_id: str) -> dict[str, Any]:
+    """Recent connector log lines received over MQTT.
+
+    Wraps `GET /v1/connectors_app/log_tail`.
+    """
+    return await _request(
+        "GET",
+        "/v1/connectors_app/log_tail",
+        params=[("id", connector_id)],
+    )
+
+
+@mcp.tool
+async def peresvet_connector_command_output_tail(*, connector_id: str) -> dict[str, Any]:
+    """Recent remote command output (`prsConnector.command_output`).
+
+    Wraps `GET /v1/connectors_app/command_output_tail`.
+    """
+    return await _request(
+        "GET",
+        "/v1/connectors_app/command_output_tail",
+        params=[("id", connector_id)],
+    )
+
+
+@mcp.tool
+async def peresvet_schedule_create(
+    *,
+    cn: str | None = None,
+    parent_id: str | None = None,
+    description: str | None = None,
+    start: str | None = None,
+    interval_type: str = "hours",
+    interval_value: int = 1,
+    end: str | None = None,
+    attrs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Create a schedule.
+
+    Wraps `POST /v1/schedules/`.
+
+    - `interval_type`: `seconds` | `minutes` | `hours` | `days`.
+    - `start` / `end`: ISO8601 timestamps.
+    """
+    return await _request(
+        "POST",
+        "/v1/schedules/",
+        json_body=schedule_create_payload(
+            cn=cn,
+            parent_id=parent_id,
+            description=description,
+            start=start,
+            interval_type=interval_type,
+            interval_value=interval_value,
+            end=end,
+            attrs=attrs,
+        ),
     )
 
 
@@ -766,15 +907,7 @@ async def peresvet_data_get(query: dict[str, Any] | None = None) -> dict[str, An
     - convenience key `query.allRecordsAsValue` is auto-mapped to
       `query.params.allRecordsAsValue`.
     """
-    q = query or {}
-    if "allRecordsAsValue" in q:
-        params_obj = q.get("params")
-        if not isinstance(params_obj, dict):
-            params_obj = {}
-        params_obj["allRecordsAsValue"] = q["allRecordsAsValue"]
-        q["params"] = params_obj
-    params = _data_query_to_params(q)
-    return await _request("GET", "/v1/data/", params=params)
+    return await _request("GET", "/v1/data/", params=prepare_data_query(query))
 
 
 if ENABLE_V2:
@@ -786,7 +919,7 @@ if ENABLE_V2:
         for integrational links). Use `getLinkedAlerts=true` to include linked alerts.
         """
         q = query or {}
-        params = _crud_query_to_params(q)
+        params = crud_query_to_params(q)
         return await _request("GET", "/v2/dataStorages/", params=params)
 
     @mcp.tool
@@ -840,7 +973,7 @@ if ENABLE_V2:
 
         payload: dict[str, Any] = {
             "attributes": attributes,
-            "linkedTags": [_linked_tag_payload(link) for link in linked_tags or []],
+            "linkedTags": [linked_tag_payload(link) for link in linked_tags or []],
         }
         if parent_id is not None:
             payload["parentId"] = parent_id
@@ -892,7 +1025,7 @@ if ENABLE_V2:
 
         payload: dict[str, Any] = {
             "id": datastorage_id,
-            "linkedTags": [_linked_tag_payload(link) for link in linked_tags or []],
+            "linkedTags": [linked_tag_payload(link) for link in linked_tags or []],
         }
         if attributes:
             payload["attributes"] = attributes
@@ -920,7 +1053,7 @@ if ENABLE_V2:
         }
         payload = {
             "id": datastorage_id,
-            "linkedTags": [_linked_tag_payload(link)],
+            "linkedTags": [linked_tag_payload(link)],
         }
         return await _request("PUT", "/v2/dataStorages/", json_body=payload)
 
@@ -936,6 +1069,17 @@ async def peresvet_data_set(payload: dict[str, Any]) -> dict[str, Any]:
     - other SQL values in `data[i].params.*`
     """
     return await _request("POST", "/v1/data/", json_body=payload)
+
+
+@mcp.tool
+async def peresvet_datafunc_get(query: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Aggregated tag data via GET `/v1/datafunc/`.
+
+    Query keys match `peresvet_data_get` (`tagId`, `start`, `finish`, `timeStep`,
+    `format`, extra client keys for virtual methods). Use this instead of
+    `/v1/data/` when the client needs duration/code aggregations.
+    """
+    return await _request("GET", "/v1/datafunc/", params=prepare_data_query(query))
 
 
 def main() -> None:
