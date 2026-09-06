@@ -6,7 +6,10 @@ from src.common.tag_quality_codes import (
     CN_QUALITY_CONNECTION_LOST,
     CN_QUALITY_CONNECTION_RESTORED,
 )
-from src.services.connectors.app.connectors_mqtt_app_svc import ConnectorsMQTTApp
+from src.services.connectors.app.connectors_mqtt_app_svc import (
+    ConnectorsMQTTApp,
+    connector_id_from_broker_connection_headers,
+)
 
 
 class _Logger:
@@ -26,6 +29,24 @@ class _Logger:
         pass
 
 
+CONN_UUID = "86c90602-277b-1041-8738-a50fb7246d3e"
+
+
+class _BrokerEvent:
+    def __init__(self, routing_key, headers):
+        self.routing_key = routing_key
+        self.headers = headers
+
+    def process(self, ignore_processed=True):
+        return self
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        return False
+
+
 def _make_service(*, post_results=None):
     posts = []
     results = list(post_results or [])
@@ -42,6 +63,7 @@ def _make_service(*, post_results=None):
         _connected_connectors=set(),
         _connector_session_epoch={},
         _connector_tag_ids={},
+        _mqtt_broker_conn_by_connector={},
         _quality_write_ack_timeout_sec=60.0,
         _config=types.SimpleNamespace(svc_name="connectors_mqtt_app"),
         _logger=_Logger(),
@@ -60,6 +82,12 @@ def _make_service(*, post_results=None):
     )
     svc._connector_session_is_current = MethodType(
         ConnectorsMQTTApp._connector_session_is_current, svc
+    )
+    svc._load_connector_tag_ids_for_quality = MethodType(
+        ConnectorsMQTTApp._load_connector_tag_ids_for_quality, svc
+    )
+    svc._on_broker_connection_event = MethodType(
+        ConnectorsMQTTApp._on_broker_connection_event, svc
     )
     svc._write_connector_tags_quality = MethodType(
         ConnectorsMQTTApp._write_connector_tags_quality, svc
@@ -362,3 +390,100 @@ def test_wait_ack_timeout_does_not_send_configuration():
 
     assert all(p["routing_key"] != "prs2conn.conn-1" for p in svc._posts)
     assert "conn-1" not in svc._connected_connectors
+
+
+def test_broker_headers_extract_mqtt_client_uuid():
+    conn_id = connector_id_from_broker_connection_headers(
+        {
+            "protocol": "MQTT 3.1.1",
+            "client_properties": {"client_id": CONN_UUID},
+            "pid": "<0.1.0>",
+            "name": "1.2.3.4:1234 -> 1.2.3.4:1883",
+        }
+    )
+    assert conn_id == CONN_UUID
+
+
+def test_broker_headers_ignore_non_mqtt_protocol():
+    assert connector_id_from_broker_connection_headers(
+        {
+            "protocol": [0, 9, 1],
+            "port": 1883,
+            "client_properties": {"client_id": CONN_UUID},
+        }
+    ) is None
+
+
+def test_broker_headers_ignore_amqp_service_connection():
+    assert connector_id_from_broker_connection_headers(
+        {
+            "protocol": [0, 9, 1],
+            "port": 5672,
+            "user": "prs",
+            "client_properties": {"connection_name": "connectors_mqtt_app"},
+        }
+    ) is None
+
+
+def test_connection_lost_loads_tag_ids_when_cache_empty():
+    svc = _make_service()
+
+    async def _get_ids(conn_id):
+        return ["tag-from-ldap"]
+
+    svc._get_connector_tag_ids = _get_ids
+
+    asyncio.run(ConnectorsMQTTApp._connection_lost(svc, {"id": "conn-1"}))
+
+    assert svc._posts[0]["mes"]["data"][0]["tagId"] == "tag-from-ldap"
+    assert svc._posts[0]["mes"]["data"][0]["data"][0][2] == CN_QUALITY_CONNECTION_LOST
+
+
+def test_broker_connection_closed_writes_100():
+    svc = _make_service()
+    svc._connector_tag_ids[CONN_UUID] = {"tag-a"}
+    svc._connected_connectors.add(CONN_UUID)
+    svc._mqtt_broker_conn_by_connector[CONN_UUID] = "<0.1.0>|mqtt-a"
+
+    asyncio.run(
+        ConnectorsMQTTApp._on_broker_connection_event(
+            svc,
+            _BrokerEvent(
+                "connection.closed",
+                {
+                    "protocol": "MQTT",
+                    "pid": "<0.1.0>",
+                    "name": "mqtt-a",
+                    "client_properties": {"client_id": CONN_UUID},
+                },
+            ),
+        )
+    )
+
+    assert CONN_UUID not in svc._connected_connectors
+    assert svc._posts[0]["mes"]["data"][0]["data"][0][2] == CN_QUALITY_CONNECTION_LOST
+
+
+def test_stale_broker_connection_closed_is_ignored():
+    svc = _make_service()
+    svc._connector_tag_ids[CONN_UUID] = {"tag-a"}
+    svc._connected_connectors.add(CONN_UUID)
+    svc._mqtt_broker_conn_by_connector[CONN_UUID] = "<0.2.0>|mqtt-new"
+
+    asyncio.run(
+        ConnectorsMQTTApp._on_broker_connection_event(
+            svc,
+            _BrokerEvent(
+                "connection.closed",
+                {
+                    "protocol": "MQTT",
+                    "pid": "<0.1.0>",
+                    "name": "mqtt-old",
+                    "client_properties": {"client_id": CONN_UUID},
+                },
+            ),
+        )
+    )
+
+    assert CONN_UUID in svc._connected_connectors
+    assert svc._posts == []
