@@ -114,6 +114,7 @@ required_pathspecs=(
     "renew_certificates.sh"
     "certificates/*.sh"
     "config/grafana/logos"
+    "config/grafana/vendor/sheetjs-0.18.5"
     "config/grafana/plugins/gapit-htmlgraphics-panel"
     "config/grafana/plugins/marcusolsson-dynamictext-panel"
     "config/grafana/plugins/marcusolsson-json-datasource"

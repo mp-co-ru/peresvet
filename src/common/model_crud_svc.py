@@ -294,7 +294,17 @@ class ModelCRUDSvc(Svc):
         if new_parent:
             await self._hierarchy.move(id, new_parent)
 
-        await self._further_update(mes)
+        try:
+            await self._further_update(mes)
+        except Exception as ex:
+            err_mes = f"Ошибка обновления узла: {ex}."
+            self._logger.error(f"{self._config.svc_name} :: {err_mes}")
+            return {
+                "error": {
+                    "code": 422,
+                    "message": err_mes
+                }
+            }
 
         await self._post_message(
             mes={"id": id},

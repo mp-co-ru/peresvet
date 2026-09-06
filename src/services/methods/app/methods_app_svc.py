@@ -140,8 +140,6 @@ class MethodsApp(AppSvc):
 
     async def _created(self, mes: dict, routing_key: str = None):
         await self._make_method_cache(mes["id"])
-        if await self._method_entity_type(mes["id"]) != 1:
-            await self._bind_method(mes["id"])
 
     async def _updated(self, mes: dict, routing_key: str = None):
         """
@@ -155,8 +153,6 @@ class MethodsApp(AppSvc):
         active = method_data[0][2]["prsActive"][0] == 'TRUE'
         if active:
             await self._make_method_cache(mes['id'])
-            if await self._method_entity_type(mes['id']) != 1:
-                await self._bind_method(mes['id'], True)
         else:
             await self._delete_method_cache(mes['id'])
             await self._bind_method(mes['id'], False)
@@ -444,23 +440,31 @@ class MethodsApp(AppSvc):
                     continue
 
     async def _delete_method_cache(self, method_id: str):
+        cache_suffix = self._config.svc_name
+        method_key = f"{method_id}.{cache_suffix}"
         async with self._cache.get_redis() as r:
-            method_cache = await r.json().get(f"{method_id}.{self._config.svc_name}")
+            method_cache = await r.json().get(method_key)
             if method_cache is None:
                 return
 
             async with r.pipeline() as p:
                 for initiator_id in method_cache:
-                    res = await (p.json().delete(
-                        key=f"{initiator_id}.{self._config.svc_name}",
-                        path=method_id
-                    ).json().get(f"{initiator_id}.{self._config.svc_name}")).execute()
+                    initiator_key = f"{initiator_id}.{cache_suffix}"
+                    res = await (
+                        p.json().delete(
+                            key=initiator_key,
+                            path=method_id
+                        ).json().get(initiator_key)
+                    ).execute()
 
-                    if res is not None:
-                        if not res[1].keys():
-                            await r.json().delete(
-                                key=f"{initiator_id}.{self._config.svc_name}"
-                            )
+                    leftover = None
+                    if isinstance(res, (list, tuple)) and len(res) > 1:
+                        leftover = res[1]
+                    # Нет ключа, пустой JSON или не объект — кэш инициатора уже отсутствует.
+                    if not isinstance(leftover, dict) or not leftover.keys():
+                        await r.json().delete(key=initiator_key)
+
+            await r.json().delete(key=method_key)
 
     async def _make_method_cache(self, method_id: str):
         """
@@ -521,6 +525,7 @@ class MethodsApp(AppSvc):
                 name=f"{method_id}.{self._config.svc_name}", path="$", obj=initiators_ids
             )
 
+        await self._bind_method(method_id, True)
         return True
 
     async def _get_methods(self):
@@ -530,9 +535,13 @@ class MethodsApp(AppSvc):
         }
         methods = await self._hierarchy.search(payload=payload)
         for method in methods:
-            ok = await self._make_method_cache(method[0])
-            if ok and await self._method_entity_type(method[0]) != 1:
-                await self._bind_method(method[0])
+            method_id = method[0]
+            try:
+                await self._make_method_cache(method_id)
+            except Exception as ex:
+                self._logger.error(
+                    f"{self._config.svc_name} :: Ошибка кэширования метода '{method_id}': {ex}"
+                )
 
     async def on_startup(self) -> None:
         await super().on_startup()

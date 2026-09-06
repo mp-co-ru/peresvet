@@ -1,5 +1,7 @@
 import sys
 import json
+import asyncio
+import re
 from collections import deque
 from collections.abc import Iterable
 
@@ -18,6 +20,74 @@ from src.common.tag_quality_codes import (
 )
 import src.common.times as t
 
+_CONNECTOR_UUID_RE = re.compile(
+    r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+)
+
+
+def _amqp_scalar_to_str(value) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", "replace")
+    if isinstance(value, (list, tuple)):
+        return " ".join(_amqp_scalar_to_str(item) for item in value)
+    return str(value)
+
+
+def _amqp_table_to_dict(value) -> dict:
+    if not isinstance(value, dict):
+        return {}
+    out = {}
+    for key, item in value.items():
+        name = key.decode("utf-8", "replace") if isinstance(key, bytes) else str(key)
+        if isinstance(item, dict):
+            out[name] = _amqp_table_to_dict(item)
+        elif isinstance(item, bytes):
+            out[name] = item.decode("utf-8", "replace")
+        else:
+            out[name] = item
+    return out
+
+
+def _as_connector_uuid(value) -> str | None:
+    text = _amqp_scalar_to_str(value).strip()
+    if _CONNECTOR_UUID_RE.fullmatch(text):
+        return text.lower()
+    return None
+
+
+def _is_mqtt_broker_connection(headers: dict) -> bool:
+    return "mqtt" in _amqp_scalar_to_str(headers.get("protocol")).lower()
+
+
+def broker_connection_identity(headers: dict | None) -> str:
+    headers = _amqp_table_to_dict(headers or {})
+    pid = _amqp_scalar_to_str(headers.get("pid"))
+    name = _amqp_scalar_to_str(headers.get("name"))
+    return f"{pid}|{name}"
+
+
+def connector_id_from_broker_connection_headers(headers: dict | None) -> str | None:
+    """Id коннектора из события RabbitMQ ``connection.*`` (MQTT client_id = UUID)."""
+    headers = _amqp_table_to_dict(headers or {})
+    if not _is_mqtt_broker_connection(headers):
+        return None
+    props = headers.get("client_properties")
+    if not isinstance(props, dict):
+        props = {}
+    for candidate in (
+        props.get("client_id"),
+        props.get("clientId"),
+        props.get("user_provided_name"),
+        headers.get("client_id"),
+        headers.get("user"),
+    ):
+        conn_id = _as_connector_uuid(candidate)
+        if conn_id:
+            return conn_id
+    return None
+
 
 class ConnectorsMQTTApp(AppSvc):
     """Сервис работы с коннекторами.
@@ -33,8 +103,15 @@ class ConnectorsMQTTApp(AppSvc):
     def __init__(self, settings: ConnectorsMQTTAppSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
         self._connected_connectors: set[str] = set()
+        # поколение сессии: LWT увеличивает, in-flight getConfig сверяет после RPC 101
+        self._connector_session_epoch: dict[str, int] = {}
         # id тегов, привязанных к коннектору (без LDAP при записи качества в историю через AMQP)
         self._connector_tag_ids: dict[str, set[str]] = {}
+        # MQTT-сессия на брокере: connector_id → identity (pid|name) из connection.created
+        self._mqtt_broker_conn_by_connector: dict[str, str] = {}
+        self._broker_events_channel = None
+        # ожидание ответа TagsApp при записи 101 до full_configuration
+        self._quality_write_ack_timeout_sec: float = 60.0
         # последние строки лога с коннектора (prsConnector.log_line по MQTT) для UI конфигуратора
         self._connector_log_buffer_max: int = 400
         self._connector_log_lines: dict[str, deque[dict]] = {}
@@ -73,6 +150,13 @@ class ConnectorsMQTTApp(AppSvc):
             s.discard(t)
         if not s:
             self._connector_tag_ids.pop(conn_id, None)
+
+    def _invalidate_connector_session(self, conn_id: str) -> None:
+        self._connected_connectors.discard(conn_id)
+        self._connector_session_epoch[conn_id] = self._connector_session_epoch.get(conn_id, 0) + 1
+
+    def _connector_session_is_current(self, conn_id: str, epoch: int) -> bool:
+        return self._connector_session_epoch.get(conn_id, 0) == epoch
 
     def _add_app_handlers(self):
         self._handlers["conn2prs.*"] = self._send_config_to_connector
@@ -243,33 +327,129 @@ class ConnectorsMQTTApp(AppSvc):
             )
         }
 
-    async def _write_connector_tags_quality(self, conn_id: str, quality_code: int) -> bool:
+    async def _get_connector_tag_ids(self, conn_id: str) -> list[str]:
+        tags = await self._hierarchy.search(payload={
+            "base": conn_id,
+            "scope": hierarchy.CN_SCOPE_SUBTREE,
+            "filter": {
+                "objectClass": ["prsConnectorTagData"]
+            },
+            "attributes": ["cn"]
+        })
+        return [attrs["cn"][0] for _, _, attrs in tags]
+
+    async def _write_connector_tags_quality(
+        self,
+        conn_id: str,
+        quality_code: int,
+        *,
+        wait_ack: bool = False,
+        tag_ids: Iterable[str] | None = None,
+    ) -> bool:
         """Публикует null с кодом качества в шину для записи в историю тегов (БД), без LDAP.
 
-        Список тегов берётся из кэша привязок (обновляется при полной конфигурации и событиях модели).
+        Список тегов берётся из кэша привязок, если ``tag_ids`` не задан явно
+        (кэш обновляется при полной конфигурации и событиях модели).
+
+        Args:
+            wait_ack: если True, ждать ответ TagsApp (тот же RPC, что и у data_set),
+                а не только публикацию в брокер. Нужно для 101 до ``full_configuration``.
+            tag_ids: явный список тегов; иначе кэш коннектора.
 
         Returns:
-            True, если нечего писать или сообщение ушло в брокер;
-            False, если публикация не удалась.
+            True, если нечего писать, либо публикация (и при wait_ack — запись) удалась;
+            False, если публикация или подтверждение не удались.
         """
-        tag_ids = list(self._connector_tag_ids.get(conn_id, ()))
-        if not tag_ids:
+        ids = list(tag_ids) if tag_ids is not None else list(self._connector_tag_ids.get(conn_id, ()))
+        if not ids:
             return True
         now_ts = t.now_int()
         data = {
             "data": [
                 {"tagId": tag_id, "data": [[now_ts, None, quality_code]]}
-                for tag_id in tag_ids
+                for tag_id in ids
             ]
         }
         try:
-            await self._post_message(mes=data, routing_key="prsTag.app_api.data_set.*", reply=False)
+            send = self._post_message(
+                mes=data, routing_key="prsTag.app_api.data_set.*", reply=wait_ack
+            )
+            if wait_ack:
+                res = await asyncio.wait_for(
+                    send, timeout=self._quality_write_ack_timeout_sec
+                )
+            else:
+                res = await send
+        except TimeoutError:
+            self._logger.warning(
+                f"{self._config.svc_name} :: Таймаут записи качества {quality_code} "
+                f"для тегов коннектора {conn_id} ({self._quality_write_ack_timeout_sec} с)."
+            )
+            return False
         except Exception as ex:
             self._logger.warning(
-                f"{self._config.svc_name} :: Не удалось записать качество {quality_code} в историю тегов коннектора {conn_id}: {ex}."
+                f"{self._config.svc_name} :: Не удалось записать качество {quality_code} "
+                f"в историю тегов коннектора {conn_id}: {ex}."
+            )
+            return False
+        if not wait_ack:
+            return bool(res)
+        if res is None:
+            self._logger.warning(
+                f"{self._config.svc_name} :: Нет обработчика записи качества {quality_code} "
+                f"для тегов коннектора {conn_id}."
+            )
+            return False
+        if isinstance(res, dict) and res.get("error"):
+            self._logger.warning(
+                f"{self._config.svc_name} :: TagsApp вернул ошибку при записи качества "
+                f"{quality_code} для коннектора {conn_id}: {res.get('error')}."
             )
             return False
         return True
+
+    async def _load_connector_tag_ids_for_quality(self, conn_id: str) -> list[str] | None:
+        tag_ids = list(self._connector_tag_ids.get(conn_id, ()))
+        if tag_ids:
+            return tag_ids
+        try:
+            tag_ids = await self._get_connector_tag_ids(conn_id)
+        except Exception as ex:
+            self._logger.warning(
+                f"{self._config.svc_name} :: Не удалось получить список тегов коннектора "
+                f"{conn_id} для записи кода качества: {ex}."
+            )
+            return None
+        self._replace_connector_tag_cache(conn_id, tag_ids)
+        return tag_ids
+
+    async def _persist_connection_restored(self, conn_id: str) -> bool:
+        """Пишет null/101 во все теги коннектора и ждёт подтверждения TagsApp.
+
+        Список тегов — из кэша привязок; если кэш пуст (рестарт сервиса), один LDAP
+        только идентификаторов, без полной конфигурации тегов.
+        """
+        tag_ids = await self._load_connector_tag_ids_for_quality(conn_id)
+        if tag_ids is None:
+            return False
+        wrote = await self._write_connector_tags_quality(
+            conn_id,
+            CN_QUALITY_CONNECTION_RESTORED,
+            wait_ack=True,
+            tag_ids=tag_ids,
+        )
+        if wrote:
+            self._logger.info(
+                f"{self._config.svc_name} :: Связь с коннектором {conn_id} восстановлена, "
+                f"в историю тегов отправлено качество {CN_QUALITY_CONNECTION_RESTORED}."
+            )
+        else:
+            self._logger.warning(
+                f"{self._config.svc_name} :: Связь с коннектором {conn_id}: "
+                f"запись качества {CN_QUALITY_CONNECTION_RESTORED} не удалась, "
+                f"полная конфигурация не отправляется."
+            )
+        return wrote
 
     async def _connection_lost(self, mes: dict, routing_key: str | None = None) -> dict:
         """Обработка потери связи с коннектором по MQTT (в т.ч. LWT): публикация null с кодом качества в шину
@@ -281,20 +461,24 @@ class ConnectorsMQTTApp(AppSvc):
         if not conn_id:
             self._logger.warning(f"{self._config.svc_name} :: prsConnector.connection_lost без id.")
             return {}
-        self._connected_connectors.discard(conn_id)
+        self._invalidate_connector_session(conn_id)
+        self._mqtt_broker_conn_by_connector.pop(conn_id, None)
         if runtime_flags.platform_shutting_down:
             self._logger.debug(
                 f"{self._config.svc_name} :: prsConnector.connection_lost для {conn_id} "
                 f"игнорируется: остановка платформы (запись качества {CN_QUALITY_CONNECTION_LOST} не выполняется)."
             )
             return {}
-        if not self._connector_tag_ids.get(conn_id):
+        tag_ids = await self._load_connector_tag_ids_for_quality(conn_id)
+        if tag_ids is None:
             self._logger.warning(
                 f"{self._config.svc_name} :: Потеря связи с коннектором {conn_id}; "
-                f"в кэше нет привязанных тегов — запись качества {CN_QUALITY_CONNECTION_LOST} в историю не выполнялась."
+                f"список тегов недоступен, качество {CN_QUALITY_CONNECTION_LOST} не записано."
             )
             return {}
-        wrote = await self._write_connector_tags_quality(conn_id, CN_QUALITY_CONNECTION_LOST)
+        wrote = await self._write_connector_tags_quality(
+            conn_id, CN_QUALITY_CONNECTION_LOST, tag_ids=tag_ids
+        )
         if wrote:
             self._logger.info(
                 f"{self._config.svc_name} :: Зафиксирована потеря связи с коннектором {conn_id}, "
@@ -372,6 +556,21 @@ class ConnectorsMQTTApp(AppSvc):
             self._logger.error(f"{self._config.svc_name} :: Отсутствует коннектор {conn_id}.")
             return {}
 
+        session_epoch = self._connector_session_epoch.get(conn_id, 0)
+        need_restore = conn_id not in self._connected_connectors
+        tag_ids_before_config = set(self._connector_tag_ids.get(conn_id, ()))
+        if need_restore:
+            if not await self._persist_connection_restored(conn_id):
+                return {}
+            if not self._connector_session_is_current(conn_id, session_epoch):
+                self._logger.warning(
+                    f"{self._config.svc_name} :: Коннектор {conn_id}: потеря связи во время "
+                    f"записи качества {CN_QUALITY_CONNECTION_RESTORED}, "
+                    f"полная конфигурация не отправляется."
+                )
+                return {}
+            tag_ids_before_config = set(self._connector_tag_ids.get(conn_id, ()))
+
         res["tags"] = {}
         mes_for_connector = {
             "action": "prsConnector.full_configuration",
@@ -395,23 +594,86 @@ class ConnectorsMQTTApp(AppSvc):
 
         self._replace_connector_tag_cache(conn_id, mes_for_connector["data"]["tags"].keys())
 
-        if conn_id not in self._connected_connectors:
-            self._connected_connectors.add(conn_id)
-            if await self._write_connector_tags_quality(conn_id, CN_QUALITY_CONNECTION_RESTORED):
-                self._logger.info(
-                    f"{self._config.svc_name} :: Связь с коннектором {conn_id} восстановлена, "
-                    f"в историю тегов отправлено качество {CN_QUALITY_CONNECTION_RESTORED}."
-                )
-            else:
+        extra_tag_ids = set(mes_for_connector["data"]["tags"].keys()) - tag_ids_before_config
+        if need_restore and extra_tag_ids:
+            extra_ok = await self._write_connector_tags_quality(
+                conn_id,
+                CN_QUALITY_CONNECTION_RESTORED,
+                wait_ack=True,
+                tag_ids=extra_tag_ids,
+            )
+            if not extra_ok:
                 self._logger.warning(
-                    f"{self._config.svc_name} :: Связь с коннектором {conn_id} восстановлена, "
-                    f"но запись качества {CN_QUALITY_CONNECTION_RESTORED} в шину не удалась."
+                    f"{self._config.svc_name} :: Коннектор {conn_id}: не удалось записать "
+                    f"качество {CN_QUALITY_CONNECTION_RESTORED} для тегов, отсутствовавших "
+                    f"в кэше до полной конфигурации; full_configuration не отправляется."
                 )
+                return {}
+
+        if not self._connector_session_is_current(conn_id, session_epoch):
+            self._logger.warning(
+                f"{self._config.svc_name} :: Коннектор {conn_id}: потеря связи до отправки "
+                f"полной конфигурации, сообщение full_configuration не публикуется."
+            )
+            return {}
+
+        if need_restore:
+            self._connected_connectors.add(conn_id)
 
         await self._post_message(mes=mes_for_connector, routing_key=f"prs2conn.{conn_id}")
 
         self._logger.info(f"{self._config.svc_name} :: Отправлена полная конфигурация коннектору {conn_id}.")
         return {}
+
+    async def _on_broker_connection_event(self, message: aio_pika.abc.AbstractIncomingMessage) -> None:
+        async with message.process(ignore_processed=True):
+            try:
+                headers = _amqp_table_to_dict(dict(message.headers or {}))
+                routing_key = message.routing_key or ""
+                conn_id = connector_id_from_broker_connection_headers(headers)
+                if not conn_id:
+                    return
+                identity = broker_connection_identity(headers)
+                if routing_key == "connection.created":
+                    self._mqtt_broker_conn_by_connector[conn_id] = identity
+                    self._logger.debug(
+                        f"{self._config.svc_name} :: MQTT-сессия коннектора {conn_id} на брокере: {identity}."
+                    )
+                    return
+                if routing_key != "connection.closed":
+                    return
+                current = self._mqtt_broker_conn_by_connector.get(conn_id)
+                if current is not None and current != identity:
+                    self._logger.debug(
+                        f"{self._config.svc_name} :: Игнорировано устаревшее connection.closed "
+                        f"коннектора {conn_id} ({identity}, актуальна {current})."
+                    )
+                    return
+                self._logger.info(
+                    f"{self._config.svc_name} :: Брокер закрыл MQTT-сессию коннектора {conn_id}."
+                )
+                await self._connection_lost({"id": conn_id})
+            except Exception as ex:
+                self._logger.warning(
+                    f"{self._config.svc_name} :: Ошибка обработки события брокера "
+                    f"{message.routing_key}: {ex}."
+                )
+
+    async def _subscribe_broker_connection_events(self) -> None:
+        self._broker_events_channel = await self._amqp_connection.channel()
+        await self._broker_events_channel.set_qos(1)
+        queue = await self._broker_events_channel.declare_queue(
+            exclusive=True, durable=False, auto_delete=True
+        )
+        event_exchange = await self._broker_events_channel.declare_exchange(
+            "amq.rabbitmq.event", aio_pika.ExchangeType.TOPIC, durable=True, passive=True
+        )
+        await queue.bind(event_exchange, routing_key="connection.created")
+        await queue.bind(event_exchange, routing_key="connection.closed")
+        await queue.consume(self._on_broker_connection_event)
+        self._logger.info(
+            f"{self._config.svc_name} :: Подписка на события брокера connection.created/closed."
+        )
 
     async def on_startup(self) -> None:
 
@@ -425,19 +687,30 @@ class ConnectorsMQTTApp(AppSvc):
                     await self._bind_conn(conn_id=conn_id, bind=True)
             else:
                 await self._bind_conn(conn_id="*", bind=True)
+            await self._subscribe_broker_connection_events()
         except Exception as ex:
             self._logger.error(f"{self._config.svc_name} :: Ошибка инициализации сервиса коннекторов: {ex}")
 
+    async def on_shutdown(self) -> None:
+        channel = self._broker_events_channel
+        self._broker_events_channel = None
+        if channel is not None:
+            try:
+                await channel.close()
+            except Exception:
+                pass
+        await super().on_shutdown()
+
     async def _bind_conn(self, conn_id: str, bind: bool = True):
         func = (self._amqp_consume_queue.unbind, self._amqp_consume_queue.bind)[bind]
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.link_tag.{conn_id}")
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.tag_link_updated.{conn_id}")
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.unlink_tag.{conn_id}")
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.tag_updated.{conn_id}")
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.tag_deleted.{conn_id}")
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.updated.{conn_id}")
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.model.deleted.{conn_id}")
-        await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsConnector.connection_lost.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"prsConnector.model.link_tag.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"prsConnector.model.tag_link_updated.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"prsConnector.model.unlink_tag.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"prsConnector.model.tag_updated.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"prsConnector.model.tag_deleted.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"prsConnector.model.updated.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"prsConnector.model.deleted.{conn_id}")
+        await func(exchange=self._exchange, routing_key=f"prsConnector.connection_lost.{conn_id}")
         self._logger.info(f"{self._config.svc_name} :: Коннектор {conn_id} {('от', 'при')[bind]}вязан.")
 
     async def _deleting(self, mes: dict, routing_key: str | None = None):
@@ -449,8 +722,10 @@ class ConnectorsMQTTApp(AppSvc):
 
     async def _deleted(self, mes: dict, routing_key: str | None = None):
         deleted_conn_id = mes["id"]
-        self._connected_connectors.discard(deleted_conn_id)
+        self._invalidate_connector_session(deleted_conn_id)
         self._connector_tag_ids.pop(deleted_conn_id, None)
+        self._connector_session_epoch.pop(deleted_conn_id, None)
+        self._mqtt_broker_conn_by_connector.pop(deleted_conn_id, None)
         self._connector_log_lines.pop(deleted_conn_id, None)
         self._connector_command_output_lines.pop(deleted_conn_id, None)
         payload = {

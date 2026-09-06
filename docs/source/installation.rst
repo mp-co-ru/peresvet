@@ -129,9 +129,8 @@ PDF-документация, скрипт ``./run_one_app.sh``, файл ``.env
 
    $ PRS_SKIP_IMAGE_PULL=1 ./run_one_app.sh
 
-Локальные секреты (например, ``GRAFANA_SERVICE_ACCOUNT_TOKEN``) можно вынести в
-``docker/compose/.cont_one_app.secrets.env`` — шаблон:
-``docker/compose/.cont_one_app.secrets.env.example``.
+Локальные секреты можно вынести в ``docker/compose/.cont_one_app.secrets.env`` —
+шаблон: ``docker/compose/.cont_one_app.secrets.env.example``.
 
 HTTPS
 ~~~~~

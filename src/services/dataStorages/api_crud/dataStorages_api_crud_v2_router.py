@@ -94,6 +94,11 @@ class LinkTagOperationAttributesV2(BaseModel):
     model_config = ConfigDict(protected_namespaces=(), extra="allow")
 
     cn: str = Field(title="Имя операции (CN)")
+    description: str | None = Field(
+        None,
+        title="Описание",
+        description="Текст для операторов: что выполняет операция.",
+    )
     prsActive: bool = Field(True, title="Флаг активности операции")
     prsEntityTypeCode: int = Field(0, title="Тип операции", description="0 - GET, 1 - SET")
     prsJsonConfigString: dict | None = Field(
