@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MCP-сервер платформы &mdash; документация МПК-Пересвет 0.4</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sphinxcontrib-httpexample.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=11064190"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/sphinxcontrib-httpexample.js"></script>
+        <script src="_static/translations.js?v=29b1f277"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Точки расширения безопасности" href="security_extension_points.html" />
+    <link rel="prev" title="Интеграционные хранилища и операции (API v2)" href="integrational_v2.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Логотип"/>
+          </a>
+              <div class="version">
+                0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="description.html">Описание</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terms.html">Используемые термины</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка и запуск</a></li>
+<li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Примеры работы с платформой</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MCP-сервер</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Запуск</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Переменные окружения</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">Инструменты</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="security_extension_points.html">Точки расширения безопасности</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка безопасности платной редакции</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">МПК-Пересвет</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">MCP-сервер платформы</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/mcp.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="mcp">
+<span id="id1"></span><h1>MCP-сервер платформы<a class="headerlink" href="#mcp" title="Link to this heading"></a></h1>
+<p>Контейнер <code class="docutils literal notranslate"><span class="pre">mcp_peresvet</span></code> даёт агентам (Cursor, Roo и т.п.) набор инструментов
+поверх HTTP API <code class="docutils literal notranslate"><span class="pre">one_app</span></code>. Транспорт по умолчанию — Streamable HTTP,
+конечная точка <code class="docutils literal notranslate"><span class="pre">http://localhost:8009/mcp</span></code>.</p>
+<section id="id2">
+<h2>Запуск<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<p>MCP <strong>не</strong> входит в <code class="docutils literal notranslate"><span class="pre">./run_one_app.sh</span></code>. После старта платформы поднимите
+сервер отдельным compose-файлом (тот же <code class="docutils literal notranslate"><span class="pre">.cont_one_app.env</span></code>):</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>--env-file<span class="w"> </span>docker/compose/.cont_one_app.env<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-f<span class="w"> </span>docker/compose/docker-compose.one_app.yml<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-f<span class="w"> </span>docker/compose/docker-compose.mcp.peresvet.yml<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>up<span class="w"> </span>-d<span class="w"> </span>--build<span class="w"> </span>mcp_peresvet
+</pre></div>
+</div>
+<p>Проверка: <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">http://localhost:8009/health</span></code> должен вернуть <code class="docutils literal notranslate"><span class="pre">OK</span></code>.</p>
+</section>
+<section id="id3">
+<h2>Переменные окружения<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<p>Пример клиента (<code class="docutils literal notranslate"><span class="pre">.roo/mcp.json</span></code> / Cursor MCP):</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;mcpServers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;peresvet&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;streamable-http&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://localhost:8009/mcp&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h2>Инструменты<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<p>Иерархия и CRUD:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_objects_list</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_objects_tree</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_object_create</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_tags_list</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_tags_tree</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_tag_create</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_apply_hierarchy</span></code> — безопасное создание дерева объектов и тегов</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_crud_read</span></code> / <code class="docutils literal notranslate"><span class="pre">create</span></code> / <code class="docutils literal notranslate"><span class="pre">update</span></code> / <code class="docutils literal notranslate"><span class="pre">delete</span></code> — низкоуровневый
+доступ к <code class="docutils literal notranslate"><span class="pre">objects</span></code>, <code class="docutils literal notranslate"><span class="pre">tags</span></code>, <code class="docutils literal notranslate"><span class="pre">alerts</span></code>, <code class="docutils literal notranslate"><span class="pre">methods</span></code>, <code class="docutils literal notranslate"><span class="pre">connectors</span></code>,
+<code class="docutils literal notranslate"><span class="pre">schedules</span></code>, <code class="docutils literal notranslate"><span class="pre">dataStorages</span></code></p></li>
+</ul>
+<p>Копирование узлов (<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/&lt;entity&gt;/copy</span></code>, для коннекторов — <code class="docutils literal notranslate"><span class="pre">POST</span></code> с
+<code class="docutils literal notranslate"><span class="pre">sourceId</span></code>):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_object_copy</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_tag_copy</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_alert_copy</span></code>,
+<code class="docutils literal notranslate"><span class="pre">peresvet_method_copy</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_connector_copy</span></code></p></li>
+</ul>
+<p>Тревоги и алармы:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_alert_create</span></code> — порог <code class="docutils literal notranslate"><span class="pre">value</span></code> / <code class="docutils literal notranslate"><span class="pre">high</span></code> / <code class="docutils literal notranslate"><span class="pre">autoAck</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_alarms_get</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_alarm_ack</span></code></p></li>
+</ul>
+<p>Коннекторы (MQTT runtime):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_create</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_connector_update</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_command</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_link_status</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_log_tail</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_command_output_tail</span></code></p></li>
+</ul>
+<p>Данные и методы:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_data_get</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_data_set</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_datafunc_get</span></code> — агрегации <code class="docutils literal notranslate"><span class="pre">/v1/datafunc/</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_method_create</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_virtual_method_create</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_schedule_create</span></code></p></li>
+</ul>
+<p>Интеграционные хранилища (v2, при <code class="docutils literal notranslate"><span class="pre">MCP_PERESVET_ENABLE_V2</span></code> / <code class="docutils literal notranslate"><span class="pre">PRS_ENABLE_V2</span></code>):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_datastorages_v2_read</span></code> / <code class="docutils literal notranslate"><span class="pre">create</span></code> / <code class="docutils literal notranslate"><span class="pre">update</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_integrational_datastorage_create</span></code> / <code class="docutils literal notranslate"><span class="pre">update</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_integrational_tag_operations_update</span></code></p></li>
+</ul>
+<p>Служебные:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_openapi</span></code></p></li>
+<li><p>HTTP <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/health</span></code>, <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/config</span></code> (<code class="docutils literal notranslate"><span class="pre">auth_configured</span></code> не раскрывает токен)</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="integrational_v2.html" class="btn btn-neutral float-left" title="Интеграционные хранилища и операции (API v2)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="security_extension_points.html" class="btn btn-neutral float-right" title="Точки расширения безопасности" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права 2026, ООО Матч Поинт Консалтинг. </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
