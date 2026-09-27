@@ -279,3 +279,33 @@ def test_postgresql_and_victoria_sql_filters():
     vm = object.__new__(DataStoragesAppVictoriametrics)
     assert vm._get_values_filter(None)[0] == ""
     assert '"y" = $1' in vm._get_values_filter(3)[0]
+
+
+def test_numeric_value_filter_is_not_measured_with_len():
+    assert DataStoragesAppBase._has_value_filter(1) is True
+    assert DataStoragesAppBase._has_value_filter(0) is True
+    assert DataStoragesAppBase._has_value_filter(1.5) is True
+    assert DataStoragesAppBase._has_value_filter(True) is True
+    assert DataStoragesAppBase._has_value_filter(False) is True
+    assert DataStoragesAppBase._has_value_filter(None) is False
+    assert DataStoragesAppBase._has_value_filter("") is False
+    assert DataStoragesAppBase._has_value_filter([]) is False
+    assert DataStoragesAppBase._has_value_filter({}) is False
+
+    pg = object.__new__(DataStoragesAppPostgreSQL)
+    points = [(1, 1, 0), (2, 2, 0)]
+    assert pg._filter_data(points, 1, 1, True) == [(1, 1, 0)]
+    assert DataStoragesAppBase.coerce_filter_value(1, 2) == "1"
+    assert DataStoragesAppBase.coerce_filter_value("1", 2) == "1"
+    assert DataStoragesAppBase.coerce_filter_value([1, 2], 2) == ["1", "2"]
+    assert DataStoragesAppBase.coerce_filter_value(1, 0) == 1
+    assert DataStoragesAppBase.coerce_filter_value("2", 0) == 2
+    assert DataStoragesAppBase.coerce_filter_value(1, 1) == 1.0
+    assert DataStoragesAppBase.coerce_filter_value(None, 2) is None
+    points = [(1, "1", 0), (2, "2", 0)]
+    assert pg._filter_data(points, 1, 2, True) == [(1, "1", 0)]
+    cond, adapted = pg._get_values_filter(DataStoragesAppBase.coerce_filter_value(1, 2))
+    assert adapted == ["1"]
+    pg._tags = {"t1": {"value_type": 0, "step": False}}
+    meta = asyncio.run(pg._tag_value_filter_meta("t1"))
+    assert meta == {"value_type": 0, "step": False}
