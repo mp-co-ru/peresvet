@@ -631,6 +631,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         if finish is not None:
             conditions.append(f'x <= {finish}')
 
+        value = self.coerce_filter_value(value, tag_data.get("prsValueTypeCode"))
         value_filter, adapted_value = self._get_values_filter(value)
 
         queries = []
