@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" fill="none" role="img">
+  <rect width="640" height="360" fill="#f6efe9"/>
+  <rect x="36" y="96" width="168" height="168" rx="16" fill="#fff" stroke="#4c2c2c" stroke-width="3"/>
+  <circle cx="120" cy="158" r="26" fill="#fb6b3b"/>
+  <text x="72" y="230" fill="#4c2c2c" font-family="Arial, sans-serif" font-size="18" font-weight="700">Событие</text>
+  <path d="M204 180h56" stroke="#4c2c2c" stroke-width="3" stroke-linecap="round" stroke-dasharray="7 8"/>
+  <circle cx="204" cy="180" r="5" fill="#fb6b3b"/>
+  <circle cx="260" cy="180" r="5" fill="#fb6b3b"/>
+  <rect x="272" y="96" width="168" height="168" rx="16" fill="#4c2c2c"/>
+  <text x="314" y="190" fill="#f6efe9" font-family="Arial, sans-serif" font-size="22" font-weight="700">Метод</text>
+  <path d="M440 180h48" stroke="#4c2c2c" stroke-width="3" stroke-linecap="round" stroke-dasharray="7 8"/>
+  <circle cx="440" cy="180" r="5" fill="#fb6b3b"/>
+  <circle cx="488" cy="180" r="5" fill="#fb6b3b"/>
+  <rect x="500" y="118" width="104" height="124" rx="14" fill="#fff" stroke="#4c2c2c" stroke-width="3"/>
+  <rect x="516" y="140" width="72" height="22" rx="6" fill="#1ea85a" stroke="#4c2c2c" stroke-width="2"/>
+  <rect x="516" y="172" width="72" height="22" rx="6" fill="#f3e4dc" stroke="#4c2c2c" stroke-width="2"/>
+  <rect x="516" y="204" width="48" height="16" rx="6" fill="#fb6b3b"/>
+</svg>

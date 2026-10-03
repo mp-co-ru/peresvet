@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" fill="none" role="img">
+  <rect width="640" height="360" fill="#f6efe9"/>
+  <defs>
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M24 0H0V24" stroke="#4c2c2c" stroke-opacity=".08"/>
+    </pattern>
+  </defs>
+  <rect width="640" height="360" fill="url(#grid)"/>
+  <rect x="36" y="48" width="188" height="264" rx="16" fill="#fff" stroke="#4c2c2c" stroke-width="3"/>
+  <text x="54" y="84" fill="#4c2c2c" font-family="Arial, sans-serif" font-size="18" font-weight="700">Объект</text>
+  <rect x="54" y="104" width="152" height="40" rx="8" fill="#4c2c2c"/>
+  <text x="68" y="130" fill="#f6efe9" font-family="Arial, sans-serif" font-size="15">Предприятие</text>
+  <rect x="70" y="156" width="136" height="36" rx="8" fill="#f3e4dc" stroke="#4c2c2c" stroke-width="2"/>
+  <text x="84" y="179" fill="#4c2c2c" font-family="Arial, sans-serif" font-size="15">Цех</text>
+  <rect x="86" y="204" width="120" height="36" rx="8" fill="#f3e4dc" stroke="#4c2c2c" stroke-width="2"/>
+  <text x="100" y="227" fill="#4c2c2c" font-family="Arial, sans-serif" font-size="15">Агрегат</text>
+  <rect x="102" y="252" width="104" height="36" rx="8" fill="#fb6b3b"/>
+  <text x="116" y="275" fill="#4c2c2c" font-family="Arial, sans-serif" font-size="15">Тег</text>
+  <path d="M224 180h52" stroke="#4c2c2c" stroke-width="3" stroke-linecap="round" stroke-dasharray="7 8"/>
+  <circle cx="224" cy="180" r="5" fill="#fb6b3b"/>
+  <circle cx="276" cy="180" r="5" fill="#fb6b3b"/>
+  <rect x="288" y="72" width="156" height="216" rx="16" fill="#fff" stroke="#4c2c2c" stroke-width="3"/>
+  <text x="306" y="108" fill="#4c2c2c" font-family="Arial, sans-serif" font-size="18" font-weight="700">Теги</text>
+  <rect x="306" y="126" width="120" height="32" rx="8" fill="#f3e4dc" stroke="#4c2c2c" stroke-width="2"/>
+  <text x="318" y="147" fill="#4c2c2c" font-family="Arial, sans-serif" font-size="14">температура</text>
+  <rect x="306" y="168" width="120" height="32" rx="8" fill="#f3e4dc" stroke="#4c2c2c" stroke-width="2"/>
+  <text x="318" y="189" fill="#4c2c2c" font-family="Arial, sans-serif" font-size="14">расход</text>
+  <rect x="306" y="210" width="120" height="32" rx="8" fill="#4c2c2c"/>
+  <text x="318" y="231" fill="#f6efe9" font-family="Arial, sans-serif" font-size="14">расчёт</text>
+  <rect x="306" y="252" width="120" height="18" rx="8" fill="#fb6b3b"/>
+  <path d="M444 180h36" stroke="#4c2c2c" stroke-width="3" stroke-linecap="round" stroke-dasharray="7 8"/>
+  <circle cx="444" cy="180" r="5" fill="#fb6b3b"/>
+  <circle cx="480" cy="180" r="5" fill="#fb6b3b"/>
+  <rect x="492" y="96" width="116" height="168" rx="14" fill="#fff" stroke="#4c2c2c" stroke-width="3"/>
+  <text x="508" y="128" fill="#4c2c2c" font-family="Arial, sans-serif" font-size="16" font-weight="700">Экран</text>
+  <rect x="508" y="142" width="84" height="46" rx="6" fill="#f3e4dc" stroke="#4c2c2c" stroke-width="2"/>
+  <path d="M518 176c8-14 16-6 26-16 8 12 14 4 32 2" stroke="#4c2c2c" stroke-width="2" stroke-linecap="round"/>
+  <rect x="508" y="198" width="84" height="16" rx="5" fill="#1ea85a" stroke="#4c2c2c" stroke-width="2"/>
+  <rect x="508" y="222" width="60" height="16" rx="5" fill="#fb6b3b"/>
+</svg>
