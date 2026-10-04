@@ -37,7 +37,7 @@ def test_csv_export_dashboard_contract():
     assert "sheetjs" not in javascript.lower()
 
     for required_fragment in (
-        'prsConfiguratorCodeVersion="20260930-configurator-settings-v2"',
+        'prsConfiguratorCodeVersion="20261004-video-toggle-v1"',
         "prsTagDataExportSnapshot",
         "prsBuildTagDataCsv",
         "prsExportTagDataCsv",
@@ -58,6 +58,38 @@ def test_csv_export_dashboard_contract():
     assert "prsTagSetPoint" in javascript
     assert "prsCoerceTagSetValue" in javascript
     assert 'Number(n("#input-prsValueTypeCode").attr("init-value"))' in javascript
+    assert '<option value="6">Видеопоток</option>' in html
+    assert 'id="input-prsCameraRtsp"' not in html
+    assert 'id="div-videoTagPreview"' in html
+    assert "prsShowVideoTagPreview" in javascript
+    assert 'id="prs-video-preview-stage"' in html
+    assert "Без start и finish — живой поток" in html
+    assert "prsSyncVideoTagDataChrome" in javascript
+    assert "prsSetVideoPlayButton" in javascript
+    assert "prsTagDataPlayClick" in javascript
+    assert "prsStopVideoMedia();prsSetVideoPlayButton(!1)" in javascript
+    assert 'fa-solid fa-play' in javascript
+    assert 'fa-solid fa-pause' in javascript
+    assert '"6"===String(i.value)' in javascript
+    assert "prsVideoPreviewCtl" in javascript
+    assert "n.error&&(n.error.message||n.error.detail)" in javascript
+    assert 'id="button-tagStopVideo"' not in html
+    assert "Остановить поток" in javascript
+    assert "prsStopVideoPreview" in javascript
+    assert "window.prsTagDataPlayClick=prsTagDataPlayClick" in javascript
+    assert "Тег видеопотока не привязывается к хранилищу истории" in javascript
+    autolink = javascript[
+        javascript.index('function(e,t){if("tags"===e&&6===Number') :
+        javascript.index('}(e,node)', javascript.index('function(e,t){if("tags"===e&&6===Number'))
+    ]
+    assert "const n=" not in autolink
+    assert "let n=" not in autolink
+    assert "var n=" not in autolink
+    assert "prsStorageUrl" in autolink
+    assert "prsCameraOnRtspChange" not in javascript
+    assert 'id="input-prsCameraArchivePath"' not in html
+    assert 'id="input-prsCameraRetention"' not in html
+    assert "prs-settings-video" not in html
     assert 'placeholder="микросекунды или дата/время"' in html
     assert 'id="input-tagSetDataTimePicker"' in html
     assert 'type="datetime-local"' in html[html.index('id="input-tagSetDataTime"') :]

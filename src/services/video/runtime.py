@@ -1,0 +1,308 @@
+"""Один процесс ffmpeg на камеру: архив сегментов и раздача живого MJPEG."""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+import time
+from pathlib import Path
+
+from src.services.video.camera import (
+    CameraConfig,
+    ffmpeg_bin,
+    redact_rtsp,
+    segment_seconds,
+    session_ffmpeg_args,
+)
+
+logger = logging.getLogger("video")
+
+
+class VideoRuntimeError(Exception):
+    def __init__(self, message: str):
+        super().__init__(message)
+        self.message = message
+
+
+def prune_archive(directory: Path, *, keep_seconds: int, now_sec: int | None = None) -> None:
+    if not directory.is_dir():
+        return
+    now_sec = int(time.time()) if now_sec is None else now_sec
+    cutoff = now_sec - keep_seconds
+    for path in directory.glob("*.ts"):
+        try:
+            start_sec = int(path.stem)
+        except ValueError:
+            continue
+        if start_sec < cutoff:
+            path.unlink(missing_ok=True)
+
+
+class CameraSession:
+    def __init__(self, connector_id: str, camera: CameraConfig, directory: Path):
+        self.connector_id = connector_id
+        self.camera = camera
+        self.directory = directory
+        self.subscribers: list[asyncio.Queue] = []
+        self.ready = asyncio.Event()
+        self._proc: asyncio.subprocess.Process | None = None
+        self._pump_task: asyncio.Task | None = None
+        self._stderr_task: asyncio.Task | None = None
+        self._stopped = False
+        self._restarting = False
+
+    @property
+    def url(self) -> str:
+        return self.camera.rtsp_url
+
+    def alive(self) -> bool:
+        if self._stopped:
+            return False
+        if self._restarting:
+            return True
+        return self._proc is not None and self._proc.returncode is None
+
+    async def start(self) -> None:
+        self.directory.mkdir(parents=True, exist_ok=True)
+        prune_archive(self.directory, keep_seconds=int(self.camera.retention_hours * 3600))
+        logger.info(
+            "Камера %s: RTSP %s",
+            self.connector_id,
+            self.camera.log_target,
+        )
+        await self._open_process()
+        self._pump_task = asyncio.create_task(self._pump())
+        try:
+            await asyncio.wait_for(self.ready.wait(), timeout=8)
+        except TimeoutError as ex:
+            await self.stop()
+            raise VideoRuntimeError(
+                f"Камера {self.camera.log_target} не прислала кадр за 8 с."
+            ) from ex
+
+    async def stop(self) -> None:
+        self._stopped = True
+        proc = self._proc
+        self._proc = None
+        if proc is not None and proc.returncode is None:
+            proc.kill()
+            try:
+                await proc.wait()
+            except ProcessLookupError:
+                pass
+        for task in (self._pump_task, self._stderr_task):
+            if task is not None and not task.done():
+                task.cancel()
+        for queue in list(self.subscribers):
+            queue.put_nowait(None)
+        self.subscribers.clear()
+
+    def subscribe(self) -> asyncio.Queue:
+        queue: asyncio.Queue = asyncio.Queue(maxsize=8)
+        self.subscribers.append(queue)
+        return queue
+
+    def unsubscribe(self, queue: asyncio.Queue) -> None:
+        if queue in self.subscribers:
+            self.subscribers.remove(queue)
+
+    def _broadcast(self, chunk: bytes) -> None:
+        stale: list[asyncio.Queue] = []
+        for queue in list(self.subscribers):
+            if queue.full():
+                try:
+                    queue.get_nowait()
+                except asyncio.QueueEmpty:
+                    pass
+            try:
+                queue.put_nowait(chunk)
+            except asyncio.QueueFull:
+                stale.append(queue)
+        for queue in stale:
+            self.unsubscribe(queue)
+
+    async def _open_process(self) -> None:
+        args = session_ffmpeg_args(self.camera, self.directory, segment_seconds(), ffmpeg_bin())
+        self._proc = await asyncio.create_subprocess_exec(
+            *args,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        if self._stderr_task is not None and not self._stderr_task.done():
+            self._stderr_task.cancel()
+        self._stderr_task = asyncio.create_task(self._drain_stderr())
+
+    async def _respawn(self) -> bool:
+        self._restarting = True
+        try:
+            old = self._proc
+            self._proc = None
+            if old is not None and old.returncode is None:
+                old.kill()
+                try:
+                    await old.wait()
+                except ProcessLookupError:
+                    pass
+            logger.warning("Камера %s: поток прервался, перезапуск", self.connector_id)
+            await asyncio.sleep(1)
+            if self._stopped:
+                return False
+            await self._open_process()
+            return True
+        except Exception as ex:
+            logger.warning(
+                "Камера %s не перезапустилась: %s",
+                self.camera.log_target,
+                redact_rtsp(str(ex)),
+            )
+            return False
+        finally:
+            self._restarting = False
+
+    async def _pump(self) -> None:
+        try:
+            while not self._stopped:
+                proc = self._proc
+                if proc is None or proc.stdout is None:
+                    break
+                while not self._stopped:
+                    chunk = await proc.stdout.read(65536)
+                    if not chunk:
+                        break
+                    self.ready.set()
+                    self._broadcast(chunk)
+                if self._stopped:
+                    break
+                if not await self._respawn():
+                    break
+        except asyncio.CancelledError:
+            raise
+        finally:
+            for queue in list(self.subscribers):
+                queue.put_nowait(None)
+
+    async def _drain_stderr(self) -> None:
+        proc = self._proc
+        if proc is None or proc.stderr is None:
+            return
+        try:
+            while not self._stopped:
+                line = await proc.stderr.readline()
+                if not line:
+                    break
+                text = redact_rtsp(line.decode("utf-8", errors="replace")).strip()
+                if text:
+                    logger.warning("Камера %s: %s", self.connector_id, text)
+        except asyncio.CancelledError:
+            raise
+
+
+_sessions: dict[str, CameraSession] = {}
+_locks: dict[str, asyncio.Lock] = {}
+
+
+def _lock_for(connector_id: str) -> asyncio.Lock:
+    lock = _locks.get(connector_id)
+    if lock is None:
+        lock = asyncio.Lock()
+        _locks[connector_id] = lock
+    return lock
+
+
+async def get_session(connector_id: str, camera: CameraConfig, directory: Path | None = None) -> CameraSession:
+    directory = directory or camera.segment_dir(connector_id)
+    async with _lock_for(connector_id):
+        current = _sessions.get(connector_id)
+        if (
+            current is not None
+            and current.url == camera.rtsp_url
+            and current.directory == directory
+            and current.camera.retention_hours == camera.retention_hours
+            and current.alive()
+        ):
+            return current
+        if current is not None:
+            await current.stop()
+        session = CameraSession(connector_id, camera, directory)
+        try:
+            await session.start()
+        except Exception:
+            await session.stop()
+            _sessions.pop(connector_id, None)
+            raise
+        _sessions[connector_id] = session
+        return session
+
+
+def ensure_session(connector_id: str, camera: CameraConfig, directory: Path | None = None) -> None:
+    """Запускает сеанс, не дожидаясь первого кадра. Для архивного чтения."""
+    directory = directory or camera.segment_dir(connector_id)
+    current = _sessions.get(connector_id)
+    if (
+        current is not None
+        and current.url == camera.rtsp_url
+        and current.directory == directory
+        and current.camera.retention_hours == camera.retention_hours
+        and current.alive()
+    ):
+        return
+
+    async def _open() -> None:
+        try:
+            await get_session(connector_id, camera, directory)
+        except Exception as ex:
+            logger.warning(
+                "Камера %s не открылась: %s",
+                camera.log_target,
+                redact_rtsp(str(ex)),
+            )
+
+    asyncio.create_task(_open())
+
+
+async def stop_session(connector_id: str) -> None:
+    async with _lock_for(connector_id):
+        current = _sessions.pop(connector_id, None)
+        if current is not None:
+            await current.stop()
+
+
+def session_ids() -> list[str]:
+    return [connector_id for connector_id, session in _sessions.items() if session.alive()]
+
+
+async def stop_all_sessions() -> None:
+    for connector_id in list(_sessions):
+        await stop_session(connector_id)
+
+
+async def _spawn_ffmpeg(args: list[str], timeout: float):
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *args,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+    except FileNotFoundError as ex:
+        raise VideoRuntimeError("Не найден ffmpeg. Установите его в образ платформы.") from ex
+    try:
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout)
+    except TimeoutError as ex:
+        proc.kill()
+        await proc.wait()
+        raise VideoRuntimeError("ffmpeg не успел отдать кадр или фрагмент.") from ex
+    if proc.returncode != 0:
+        message = redact_rtsp((stderr or b"").decode("utf-8", errors="replace"))[-400:]
+        raise VideoRuntimeError(message or "ffmpeg завершился с ошибкой.")
+    return stdout or b""
+
+
+async def run_ffmpeg(args: list[str], timeout: float) -> None:
+    await _spawn_ffmpeg(args, timeout)
+
+
+async def run_ffmpeg_bytes(args: list[str], timeout: float) -> bytes:
+    stdout = await _spawn_ffmpeg(args, timeout)
+    if not stdout:
+        raise VideoRuntimeError("ffmpeg завершился без данных.")
+    return stdout

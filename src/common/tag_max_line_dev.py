@@ -119,6 +119,10 @@ def should_discard_data_point(
         return False
     if value_type_code == TVT.CN_TABLE:
         return False
+    # Видеопоток: в шину попадают только отметки качества, не кадры.
+    # Повтор пустого значения с тем же качеством не пишем.
+    if value_type_code == TVT.CN_VIDEO:
+        return prev_y is None and new_y is None
 
     if prev_y is None and new_y is None:
         return True

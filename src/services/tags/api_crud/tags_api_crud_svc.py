@@ -57,7 +57,7 @@ class TagCreateAttributes(svc.NodeAttributes):
         title="Тип значений тега.",
         description=(
             "0 - целое, 1 - вещественное, 2 - строковое, 3 - дискретное, "
-            "4 - json, 5 - табличное"
+            "4 - json, 5 - табличное, 6 - видеопоток"
         )
     )
     prsDefaultValue: Any | None = Field(
@@ -166,6 +166,7 @@ async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends
           * **prsStep** (bool) - Флаг `ступенчатого тега`. Необязательный атрибут.
           * **prsUpdate** (bool) - Флаг обновления значений тега. Необязательный атрибут.
           * **prsValueTypeCode** (int) - Тип значений тега. Необязательный атрибут.
+            6 — видеопоток: окно в камеру, привязанную как коннектор.
           * **prsDefaultValue** (Any) - Значение тега по умолчанию. Необязательный атрибут.
           * **prsMeasureUnits** (str) - Единицы измерения тега. Необязательный атрибут.
 

@@ -17,7 +17,7 @@ def test_object_tree_dnd_dashboard_contract():
 
     assert dashboard["uid"] == "ddy59kw4v5ssgc"
     assert (
-        'prsConfiguratorCodeVersion="20260930-configurator-settings-v2"' in javascript
+        'prsConfiguratorCodeVersion="20261004-video-toggle-v1"' in javascript
     )
     for required_fragment in (
         "prsBindAllObjectTreeDnd",

@@ -1,5 +1,6 @@
 services:
   one_app:
+    image: prs-one-app
     container_name: prs-one-app
     hostname: ${ALL_SVC_HOST}
     build:

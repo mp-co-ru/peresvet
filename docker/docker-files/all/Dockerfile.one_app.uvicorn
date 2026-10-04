@@ -57,6 +57,9 @@ RUN if [ "${LOCAL_MODE}" = "true" ] && [ -d /preinstalled/python-site-packages ]
 
 RUN mkdir /usr/src/mpc-peresvet/log
 
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 COPY src /usr/src/mpc-peresvet/src
 RUN rm -r -f /usr/src/mpc-peresvet/src/__pycache__
 

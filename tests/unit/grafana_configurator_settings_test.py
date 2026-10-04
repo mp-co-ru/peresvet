@@ -8,7 +8,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20260930-configurator-settings-v2"
+CODE_VERSION = "20261004-video-toggle-v1"
 
 
 def _parts():

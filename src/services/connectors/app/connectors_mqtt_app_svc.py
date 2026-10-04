@@ -22,6 +22,7 @@ from src.common.tag_quality_codes import (
     CN_QUALITY_CONNECTION_LOST,
     CN_QUALITY_CONNECTION_RESTORED,
 )
+from src.services.video.camera import config_is_camera, is_camera_connector
 import src.common.times as t
 
 _CONNECTOR_UUID_RE = re.compile(
@@ -200,8 +201,21 @@ class ConnectorsMQTTApp(AppSvc):
         self._handlers[f"{self._config.hierarchy['class']}.model.link_tag.*"] = self._tag_linked
         self._handlers[f"{self._config.hierarchy['class']}.app_api.command.*"] = self._send_command
 
+    async def _is_camera(self, conn_id: str) -> bool:
+        try:
+            res = await self._get_connector_data(conn_id)
+        except (KeyError, IndexError, TypeError, json.JSONDecodeError):
+            return False
+        if not res:
+            return False
+        return is_camera_connector(res.get("prsEntityTypeCode")) or config_is_camera(
+            res.get("prsJsonConfigString")
+        )
+
     async def _tag_linked(self, mes: dict, routing_key: str | None = None):
         conn_id = mes["connectorId"]
+        if await self._is_camera(conn_id):
+            return {}
         tags = mes["tagId"]
         if isinstance(tags, str):
             tags = [tags]
@@ -221,6 +235,9 @@ class ConnectorsMQTTApp(AppSvc):
         self._logger.info(f"{self._config.svc_name} :: Коннектору {conn_id} послано сообщение о привязке тега {tags}.")
 
     async def _send_command(self, mes: dict, routing_key: str | None = None):
+        conn_id = mes["id"]
+        if await self._is_camera(conn_id):
+            return {}
         mes2conn = {
             "action": "prsConnector.command",
             "data": mes
@@ -268,6 +285,8 @@ class ConnectorsMQTTApp(AppSvc):
         if isinstance(tags, str):
             tags = [tags]
         conn_id = mes["connectorId"]
+        if await self._is_camera(conn_id):
+            return {}
 
         tags_data = {}
         for tag_id in tags:
@@ -290,6 +309,8 @@ class ConnectorsMQTTApp(AppSvc):
         if isinstance(tags, str):
             tags = [tags]
         conn_id = mes["connectorId"]
+        if await self._is_camera(conn_id):
+            return {}
         mes2conn = {
             "action": "prsConnector.tags_deleted",
             "data": {"tags": tags}
@@ -305,6 +326,8 @@ class ConnectorsMQTTApp(AppSvc):
 
         tag_id = mes["tagId"]
         conn_id = mes["connectorId"]
+        if await self._is_camera(conn_id):
+            return {}
         mes2conn = {
             "action": "prsConnector.tags_deleted",
             "data": {"tags": [tag_id]}
@@ -587,6 +610,10 @@ class ConnectorsMQTTApp(AppSvc):
         if not res:
             self._logger.error(f"{self._config.svc_name} :: Отсутствует коннектор {conn_id}.")
             return {}
+        if is_camera_connector(res.get("prsEntityTypeCode")) or config_is_camera(
+            res.get("prsJsonConfigString")
+        ):
+            return {}
 
         session_epoch = self._connector_session_epoch.get(conn_id, 0)
         need_restore = conn_id not in self._connected_connectors
@@ -837,6 +864,10 @@ class ConnectorsMQTTApp(AppSvc):
         if not res:
             self._logger.error(f"{self._config.svc_name} :: Отсутствует коннектор {conn_id}.")
             return {}
+        if is_camera_connector(res.get("prsEntityTypeCode")) or config_is_camera(
+            res.get("prsJsonConfigString")
+        ):
+            return {"response": True}
 
         mes_for_connector = {
             "action": "prsConnector.connector_configuration",
