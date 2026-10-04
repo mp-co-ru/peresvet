@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from types import SimpleNamespace
 
 from pathlib import Path
@@ -342,4 +343,190 @@ def test_platform_proxies_video_tag_when_video_server_is_configured(monkeypatch)
     assert called["query"] == f"tagId={TAG}"
     assert isinstance(response, JR)
     assert response.status_code == 200
+
+
+def test_connector_attributes_reject_inactive_and_keep_retention():
+    from src.services.video.camera import camera_from_connector_attributes
+
+    camera = camera_from_connector_attributes({
+        "prsActive": ["TRUE"],
+        "prsJsonConfigString": [json.dumps({
+            "rtspUrl": CAMERA_URL,
+            "archivePath": "/var/lib/peresvet/video/rear-cam",
+            "retentionHours": 4,
+        })],
+    })
+    assert camera is not None
+    assert camera.retention_hours == 4
+    assert camera_from_connector_attributes({
+        "prsActive": ["FALSE"],
+        "prsJsonConfigString": ['{"rtspUrl": "rtsp://192.168.1.72/live"}'],
+    }) is None
+    assert camera_from_connector_attributes({
+        "prsActive": [b"TRUE"],
+        "prsJsonConfigString": [b"{}"],
+    }) is None
+
+
+def test_retention_change_prunes_without_second_rtsp(monkeypatch, tmp_path):
+    from src.services.video import runtime
+    from src.services.video.runtime import CameraSession
+
+    archive = tmp_path / "rear-cam"
+    old = parse_camera_config({
+        "rtspUrl": CAMERA_URL,
+        "archivePath": str(archive),
+        "retentionHours": 24,
+    })
+    session = CameraSession(CONN, old, old.segment_dir(CONN))
+    session._proc = SimpleNamespace(returncode=None)
+    runtime._sessions[CONN] = session
+    opened = []
+    pruned = []
+    monkeypatch.setattr(runtime, "ensure_session", lambda *args, **kwargs: opened.append(args))
+    monkeypatch.setattr(
+        runtime,
+        "prune_archive",
+        lambda directory, keep_seconds, now_sec=None: pruned.append(keep_seconds),
+    )
+    try:
+        newer = parse_camera_config({
+            "rtspUrl": CAMERA_URL,
+            "archivePath": str(archive),
+            "retentionHours": 4,
+        })
+        assert runtime.sync_session(CONN, newer) == "retention"
+        assert session.camera.retention_hours == 4
+        assert pruned == [4 * 3600]
+        assert opened == []
+    finally:
+        runtime._sessions.pop(CONN, None)
+
+
+def test_stream_change_reopens_session(monkeypatch, tmp_path):
+    from src.services.video import runtime
+    from src.services.video.runtime import CameraSession
+
+    archive = tmp_path / "rear-cam"
+    old = parse_camera_config({
+        "rtspUrl": CAMERA_URL,
+        "archivePath": str(archive),
+        "retentionHours": 4,
+    })
+    session = CameraSession(CONN, old, old.segment_dir(CONN))
+    session._proc = SimpleNamespace(returncode=None)
+    runtime._sessions[CONN] = session
+    opened = []
+    monkeypatch.setattr(runtime, "ensure_session", lambda *args, **kwargs: opened.append(args[0]))
+    try:
+        moved = parse_camera_config({
+            "rtspUrl": "rtsp://192.168.1.73:554/live/ch00_0",
+            "archivePath": str(archive),
+            "retentionHours": 4,
+        })
+        assert runtime.sync_session(CONN, moved) == "restart"
+        assert opened == [CONN]
+    finally:
+        runtime._sessions.pop(CONN, None)
+
+
+def test_video_app_subscribes_to_connector_changes():
+    from src.common.app_svc import AppSvc
+    from src.services.video.video_app_settings import VideoAppSettings
+    from src.services.video.video_app_svc import VideoApp
+
+    assert "_set_handlers" not in VideoApp.__dict__
+    app = object.__new__(VideoApp)
+    app._handlers = {}
+    app._config = VideoAppSettings()
+    AppSvc._set_handlers(app)
+    assert app._handlers["prsConnector.model.created"].__func__ is VideoApp._created
+    assert app._handlers["prsConnector.model.updated.*"].__func__ is VideoApp._updated
+    assert app._handlers["prsConnector.model.deleted.*"].__func__ is VideoApp._deleted
+    result = asyncio.run(app._may_update({"id": CONN}))
+    assert result == {"response": True}
+
+
+def test_connector_updated_message_applies_retention(monkeypatch):
+    from src.services.video import video_app_svc
+
+    synced = []
+
+    async def search(payload):
+        assert payload["id"] == [CONN]
+        return [(
+            CONN,
+            "dn",
+            {
+                "prsActive": ["TRUE"],
+                "prsJsonConfigString": [json.dumps({
+                    "rtspUrl": CAMERA_URL,
+                    "archivePath": "/var/lib/peresvet/video/rear-cam",
+                    "retentionHours": 4,
+                })],
+            },
+        )]
+
+    def sync_session(conn_id, camera, directory=None):
+        synced.append((conn_id, camera.retention_hours))
+        return "retention"
+
+    monkeypatch.setattr(video_app_svc, "sync_session", sync_session)
+    svc = SimpleNamespace(
+        _hierarchy=SimpleNamespace(search=search),
+        _config=SimpleNamespace(svc_name="video_app"),
+        _logger=_Logger(),
+    )
+    svc._apply_connector = video_app_svc.VideoApp._apply_connector.__get__(svc, SimpleNamespace)
+    svc._created = video_app_svc.VideoApp._created.__get__(svc, SimpleNamespace)
+    asyncio.run(video_app_svc.VideoApp._updated(svc, {"id": CONN}))
+    assert synced == [(CONN, 4.0)]
+
+
+def test_connector_deleted_message_stops_session_without_ldap(monkeypatch):
+    from src.services.video import video_app_svc
+
+    stopped = []
+
+    async def stop_session(conn_id):
+        stopped.append(conn_id)
+        return True
+
+    async def search(payload):
+        raise AssertionError(payload)
+
+    monkeypatch.setattr(video_app_svc, "stop_session", stop_session)
+    svc = SimpleNamespace(
+        _hierarchy=SimpleNamespace(search=search),
+        _config=SimpleNamespace(svc_name="video_app"),
+        _logger=_Logger(),
+    )
+    asyncio.run(video_app_svc.VideoApp._deleted(svc, {"id": CONN}))
+    assert stopped == [CONN]
+
+
+def test_mqtt_presence_packet_uses_connector_id():
+    from src.services.video.presence import hold_camera_presence, mqtt_connect_packet
+    import src.services.video.presence as presence
+
+    packet = mqtt_connect_packet(CONN, "prs", "secret", 60)
+    assert packet[0] == 0x10
+    assert CONN.encode() in packet
+    marker = packet.index(b"MQTT")
+    assert packet[marker + 4] == 4
+    assert packet[marker + 5] == 0xC2
+    presence._settings = None
+    hold_camera_presence(CONN)
+    assert CONN not in presence._tasks
+
+
+class _Logger:
+    def info(self, *args, **kwargs):
+        pass
+
+    def warning(self, *args, **kwargs):
+        pass
+
+    def error(self, *args, **kwargs):
+        pass
 

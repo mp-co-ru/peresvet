@@ -87,6 +87,34 @@ class CameraConfig:
         return default_archive_config().path / connector_id
 
 
+def _ldap_value(attrs: dict, name: str) -> Any:
+    raw = attrs.get(name)
+    if raw is None or raw == [] or raw == "":
+        return None
+    if isinstance(raw, (list, tuple)):
+        raw = raw[0]
+    if isinstance(raw, bytes):
+        raw = raw.decode()
+    return raw
+
+
+def camera_from_connector_attributes(attrs: dict) -> CameraConfig | None:
+    """Активная камера по атрибутам узла коннектора.
+
+    ``None`` — коннектор выключен или в конфигурации нет ``rtspUrl``.
+    ``ValueError`` — JSON или путь архива нельзя применить.
+    """
+    active = _ldap_value(attrs, "prsActive")
+    if active is not None and str(active).upper() != "TRUE":
+        return None
+    raw = _ldap_value(attrs, "prsJsonConfigString")
+    if isinstance(raw, str):
+        raw = json.loads(raw) if raw.strip() else {}
+    if not config_is_camera(raw or {}):
+        return None
+    return parse_camera_config(raw or {})
+
+
 def parse_camera_config(raw: Any) -> CameraConfig:
     raw = _config_dict(raw)
     url = str(_pick(raw, KEY_RTSP) or "").strip()

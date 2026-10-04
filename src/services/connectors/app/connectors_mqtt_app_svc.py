@@ -28,6 +28,13 @@ import src.common.times as t
 _CONNECTOR_UUID_RE = re.compile(
     r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 )
+# RabbitMQ 4 отдаёт client_properties MQTT-сессии строкой терма:
+# {client_id,longstr,<<"uuid">>}, а не таблицей.
+_CLIENT_ID_IN_PROPERTIES_RE = re.compile(
+    r"client_id.*?([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-"
+    r"[0-9a-fA-F]{4}-[0-9a-fA-F]{12})",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 def _amqp_scalar_to_str(value) -> str:
@@ -73,6 +80,21 @@ def broker_connection_identity(headers: dict | None) -> str:
     return f"{pid}|{name}"
 
 
+def _client_id_from_properties_term(props) -> str | None:
+    """UUID из client_properties, когда брокер прислал терм строкой, а не таблицей."""
+    if isinstance(props, dict):
+        chunks = [str(key) + str(value) for key, value in props.items()]
+    elif isinstance(props, (list, tuple)):
+        chunks = [_amqp_scalar_to_str(item) for item in props]
+    else:
+        chunks = [_amqp_scalar_to_str(props)]
+    for chunk in chunks:
+        match = _CLIENT_ID_IN_PROPERTIES_RE.search(chunk)
+        if match:
+            return match.group(1).lower()
+    return None
+
+
 def connector_id_from_broker_connection_headers(headers: dict | None) -> str | None:
     """Id коннектора из события RabbitMQ ``connection.*`` (MQTT client_id = UUID)."""
     headers = _amqp_table_to_dict(headers or {})
@@ -91,7 +113,7 @@ def connector_id_from_broker_connection_headers(headers: dict | None) -> str | N
         conn_id = _as_connector_uuid(candidate)
         if conn_id:
             return conn_id
-    return None
+    return _client_id_from_properties_term(headers.get("client_properties"))
 
 
 def connector_id_from_management_connection(connection: dict | None) -> str | None:
@@ -136,6 +158,8 @@ class ConnectorsMQTTApp(AppSvc):
     def __init__(self, settings: ConnectorsMQTTAppSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
         self._connected_connectors: set[str] = set()
+        # камеры, чья MQTT-сессия — признак связи видеосервера, без кодов 100/101
+        self._camera_presence_ids: set[str] = set()
         # поколение сессии: LWT увеличивает, in-flight getConfig сверяет после RPC 101
         self._connector_session_epoch: dict[str, int] = {}
         # id тегов, привязанных к коннектору (без LDAP при записи качества в историю через AMQP)
@@ -684,6 +708,25 @@ class ConnectorsMQTTApp(AppSvc):
         self._logger.info(f"{self._config.svc_name} :: Отправлена полная конфигурация коннектору {conn_id}.")
         return {}
 
+    async def _broker_session_is_camera(self, conn_id: str) -> bool:
+        """Камера держит MQTT только как признак связи, без кодов качества."""
+        known = getattr(self, "_camera_presence_ids", None)
+        if known is not None and conn_id in known:
+            return True
+        checker = getattr(self, "_is_camera", None)
+        if checker is None:
+            return False
+        try:
+            is_camera = bool(await checker(conn_id))
+        except Exception as ex:
+            self._logger.warning(
+                f"{self._config.svc_name} :: Не удалось проверить, камера ли коннектор {conn_id}: {ex}."
+            )
+            return False
+        if is_camera and known is not None:
+            known.add(conn_id)
+        return is_camera
+
     async def _on_broker_connection_event(self, message: aio_pika.abc.AbstractIncomingMessage) -> None:
         async with message.process(ignore_processed=True):
             try:
@@ -695,9 +738,16 @@ class ConnectorsMQTTApp(AppSvc):
                 identity = broker_connection_identity(headers)
                 if routing_key == "connection.created":
                     self._mqtt_broker_conn_by_connector[conn_id] = identity
-                    self._logger.debug(
-                        f"{self._config.svc_name} :: MQTT-сессия коннектора {conn_id} на брокере: {identity}."
-                    )
+                    if await self._broker_session_is_camera(conn_id):
+                        self._connected_connectors.add(conn_id)
+                        self._logger.info(
+                            f"{self._config.svc_name} :: Камера {conn_id} на связи "
+                            f"(MQTT-сессия {identity})."
+                        )
+                    else:
+                        self._logger.debug(
+                            f"{self._config.svc_name} :: MQTT-сессия коннектора {conn_id} на брокере: {identity}."
+                        )
                     return
                 if routing_key != "connection.closed":
                     return
@@ -706,6 +756,16 @@ class ConnectorsMQTTApp(AppSvc):
                     self._logger.debug(
                         f"{self._config.svc_name} :: Игнорировано устаревшее connection.closed "
                         f"коннектора {conn_id} ({identity}, актуальна {current})."
+                    )
+                    return
+                if await self._broker_session_is_camera(conn_id):
+                    known = getattr(self, "_camera_presence_ids", None)
+                    if known is not None:
+                        known.discard(conn_id)
+                    self._connected_connectors.discard(conn_id)
+                    self._mqtt_broker_conn_by_connector.pop(conn_id, None)
+                    self._logger.info(
+                        f"{self._config.svc_name} :: Камера {conn_id} без связи: MQTT-сессия закрыта."
                     )
                     return
                 self._logger.info(

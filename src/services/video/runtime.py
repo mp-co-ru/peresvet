@@ -14,6 +14,7 @@ from src.services.video.camera import (
     segment_seconds,
     session_ffmpeg_args,
 )
+from src.services.video.presence import drop_camera_presence, hold_camera_presence
 
 logger = logging.getLogger("video")
 
@@ -79,9 +80,11 @@ class CameraSession:
             raise VideoRuntimeError(
                 f"Камера {self.camera.log_target} не прислала кадр за 8 с."
             ) from ex
+        hold_camera_presence(self.connector_id)
 
     async def stop(self) -> None:
         self._stopped = True
+        await drop_camera_presence(self.connector_id)
         proc = self._proc
         self._proc = None
         if proc is not None and proc.returncode is None:
@@ -180,6 +183,8 @@ class CameraSession:
         finally:
             for queue in list(self.subscribers):
                 queue.put_nowait(None)
+            if not self._stopped:
+                await drop_camera_presence(self.connector_id)
 
     async def _drain_stderr(self) -> None:
         proc = self._proc
@@ -216,6 +221,7 @@ async def get_session(connector_id: str, camera: CameraConfig, directory: Path |
         if (
             current is not None
             and current.url == camera.rtsp_url
+            and current.camera.transport == camera.transport
             and current.directory == directory
             and current.camera.retention_hours == camera.retention_hours
             and current.alive()
@@ -234,6 +240,38 @@ async def get_session(connector_id: str, camera: CameraConfig, directory: Path |
         return session
 
 
+def sync_session(connector_id: str, camera: CameraConfig, directory: Path | None = None) -> str:
+    """Применяет конфигурацию к уже открытому сеансу.
+
+    Смена адреса, каталога или транспорта открывает сеанс заново.
+    Смена срока хранения только переписывает окно очистки и удаляет
+    лишние фрагменты: второй RTSP-клиент к камере не открывается.
+    """
+    directory = directory or camera.segment_dir(connector_id)
+    current = _sessions.get(connector_id)
+    if (
+        current is not None
+        and current.alive()
+        and current.url == camera.rtsp_url
+        and current.camera.transport == camera.transport
+        and current.directory == directory
+    ):
+        keep_seconds = int(camera.retention_hours * 3600)
+        if current.camera.retention_hours != camera.retention_hours:
+            current.camera = camera
+            logger.info(
+                "Камера %s: хранение %.4g ч",
+                connector_id,
+                camera.retention_hours,
+            )
+            prune_archive(directory, keep_seconds=keep_seconds)
+            return "retention"
+        prune_archive(directory, keep_seconds=keep_seconds)
+        return "kept"
+    ensure_session(connector_id, camera, directory)
+    return "restart"
+
+
 def ensure_session(connector_id: str, camera: CameraConfig, directory: Path | None = None) -> None:
     """Запускает сеанс, не дожидаясь первого кадра. Для архивного чтения."""
     directory = directory or camera.segment_dir(connector_id)
@@ -241,6 +279,7 @@ def ensure_session(connector_id: str, camera: CameraConfig, directory: Path | No
     if (
         current is not None
         and current.url == camera.rtsp_url
+        and current.camera.transport == camera.transport
         and current.directory == directory
         and current.camera.retention_hours == camera.retention_hours
         and current.alive()
@@ -260,15 +299,21 @@ def ensure_session(connector_id: str, camera: CameraConfig, directory: Path | No
     asyncio.create_task(_open())
 
 
-async def stop_session(connector_id: str) -> None:
+async def stop_session(connector_id: str) -> bool:
     async with _lock_for(connector_id):
         current = _sessions.pop(connector_id, None)
-        if current is not None:
-            await current.stop()
+        if current is None:
+            return False
+        await current.stop()
+        return True
 
 
 def session_ids() -> list[str]:
     return [connector_id for connector_id, session in _sessions.items() if session.alive()]
+
+
+def tracked_session_ids() -> list[str]:
+    return list(_sessions)
 
 
 async def stop_all_sessions() -> None:
