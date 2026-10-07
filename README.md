@@ -4,6 +4,7 @@
 
 [![Лицензия Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-green.svg)
+[![Coverage Status](https://coveralls.io/repos/github/mp-co-ru/peresvet/badge.svg?branch=dev)](https://coveralls.io/github/mp-co-ru/peresvet?branch=dev)
 
 # МПК-Пересвет
 
@@ -12,7 +13,7 @@
 Интерфейс — Grafana, точка входа в сервисы — nginx.
 
 Полная документация собирается из `docs/` и публикуется на
-[vovaman.github.io/peresvet](https://vovaman.github.io/peresvet/).
+[mp-co-ru.github.io/peresvet](https://mp-co-ru.github.io/peresvet/).
 
 # Запуск
 
@@ -56,7 +57,7 @@ cd peresvet
 ```
 
 Зеркало образов, HTTPS и сборка дистрибутива описаны в разделе
-[«Установка и запуск»](https://vovaman.github.io/peresvet/installation.html).
+[«Установка и запуск»](https://mp-co-ru.github.io/peresvet/installation.html).
 
 ## Открыть платформу
 
@@ -75,9 +76,9 @@ Grafana предложит сменить пароль. Дальше откро�
 </div>
 
 Дальше по интерфейсу:
-[конфигуратор](https://vovaman.github.io/peresvet/configurator/configurator.html),
-[подключение видеокамер](https://vovaman.github.io/peresvet/video.html),
-[пример с объектом и тегом](https://vovaman.github.io/peresvet/examples/examples.html).
+[конфигуратор](https://mp-co-ru.github.io/peresvet/configurator/configurator.html),
+[подключение видеокамер](https://mp-co-ru.github.io/peresvet/video.html),
+[пример с объектом и тегом](https://mp-co-ru.github.io/peresvet/examples/examples.html).
 
 ## Остановка
 
@@ -104,7 +105,7 @@ docker compose --env-file docker/compose/.cont_one_app.env \
 # Документация и проверка
 
 Раздел администрирования (резервные копии Docker и LDAP) —
-[administration.html](https://vovaman.github.io/peresvet/administration.html),
+[administration.html](https://mp-co-ru.github.io/peresvet/administration.html),
 исходник `docs/source/administration.rst`.
 
 Локальная сборка HTML, из каталога `docs` после установки зависимостей проекта:
