@@ -1,3 +1,5 @@
+:orphan:
+
 .. include:: <isobox.txt>
 
 |boxDL| unicode:: U+02557 .. BOX DRAWINGS DOUBLE DOWN AND LEFT

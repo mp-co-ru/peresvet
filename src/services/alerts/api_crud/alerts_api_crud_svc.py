@@ -138,6 +138,7 @@ async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
                     # флаг автоквитирования
                     "autoAck": True
                 }
+
             Обязательный аттрибут.
           * **prsActive** (bool) - Определяет, активна ли тревога. По умолчанию = ``true``.
             Необязательный атрибут.
