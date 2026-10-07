@@ -808,6 +808,9 @@ class DataStoragesAppVictoriametrics(svc.Svc):
         if finish is not None:
             conditions.append(f'x <= {finish}')
 
+        value = self.coerce_filter_value(
+            value, tag_cache.get("prsValueTypeCode", tag_cache.get("value_type"))
+        )
         value_filter, adapted_value = self._get_values_filter(value)
 
         queries = []

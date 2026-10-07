@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>МПК-Пересвет — платформа для приложений автоматизации</title>
+  <meta name="description" content="МПК-Пересвет — платформа-конструктор: модель технического объекта, теги, тревоги, методы и экраны. На ней собирают приложения автоматизации для разных объектов." />
+  <meta name="robots" content="index,follow" />
+  <meta name="theme-color" content="#4c2c2c" />
+  <link rel="icon" href="./logo.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="./logo.svg" />
+  <meta property="og:locale" content="ru_RU" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ИоТерра" />
+  <meta property="og:title" content="МПК-Пересвет — платформа для приложений автоматизации" />
+  <meta property="og:description" content="Конструктор моделей технических объектов. На платформе собирают диспетчеризацию, мониторинг, MES, умный дом и программно-аппаратные комплексы." />
+  <meta property="og:url" content="https://ioterra.ru/peresvet" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="МПК-Пересвет — платформа для приложений автоматизации" />
+  <meta name="twitter:description" content="Платформа, на которой собирают приложения автоматизации для разных технических объектов." />
+  <link rel="stylesheet" href="./styles-3d.css" />
+  <style>
+    .role-grid a,
+    .timeline a {
+      text-decoration: none;
+      border-bottom: 1px solid currentColor;
+    }
+    .role-grid a { color: var(--teal); }
+    .process .sub a,
+    .timeline a,
+    .contact .sub a {
+      color: #fb6b3b;
+    }
+    .process .actions { margin-top: 22px; }
+    .contact .sub + .sub { margin-top: 14px; }
+    .hero-card--main,
+    .hero-card--back,
+    .hero-card--front { aspect-ratio: 16 / 9; }
+    .hero-card img {
+      object-fit: contain;
+      object-position: center;
+      background: #f6efe9;
+    }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "name": "ИоТерра",
+        "url": "https://ioterra.ru/",
+        "telephone": "+7-499-393-00-40",
+        "email": "info@ioterra.ru",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "ул. Профсоюзная, д. 3",
+          "addressLocality": "Москва",
+          "addressCountry": "RU"
+        }
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "МПК-Пересвет",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Linux",
+        "description": "Платформа-конструктор моделей технических объектов и информационных систем для приложений автоматизации.",
+        "url": "https://ioterra.ru/peresvet",
+        "license": "https://www.apache.org/licenses/LICENSE-2.0",
+        "publisher": { "@type": "Organization", "name": "ИоТерра", "url": "https://ioterra.ru/" }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a class="skip" href="#contact">К форме заявки</a>
+
+  <header class="nav" id="nav">
+    <div class="wrap nav__in">
+      <a class="nav__logo" href="#top" aria-label="МПК-Пересвет, к началу страницы">
+        <img src="./logo.svg" width="52" height="52" alt="" />
+        <span>МПК-Пересвет <em>платформа</em></span>
+      </a>
+      <button class="nav__toggle" type="button" id="navToggle" aria-expanded="false" aria-controls="navLinks">Меню</button>
+      <nav class="nav__links" id="navLinks">
+        <a href="#apps">Применения</a>
+        <a href="#model">Модель</a>
+        <a href="#parts">Состав</a>
+        <a href="#start">Запуск</a>
+        <a href="#docs">Документация</a>
+        <a href="#contact">Заявка</a>
+        <a class="nav__phone" href="tel:+74993930040">+7 499 393-00-40</a>
+      </nav>
+      <a class="btn btn--gold nav__cta" href="#contact">Обсудить задачу</a>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="orb orb--one"></div>
+      <div class="orb orb--two"></div>
+      <div class="wrap hero__grid">
+        <div class="hero__copy">
+          <div class="kicker">Платформа-конструктор</div>
+          <h1>МПК-Пересвет: приложения автоматизации для разных объектов</h1>
+          <p class="lead">
+            На платформе собирают информационные системы вокруг модели технического объекта:
+            иерархия, параметры, события и действия. Один и тот же каркас служит
+            диспетчеризации, производственному контуру, умному зданию и программно-аппаратному комплексу.
+          </p>
+          <div class="hero__actions">
+            <a class="btn btn--gold btn--wide" href="#contact">Обсудить задачу</a>
+            <a class="btn btn--glass" href="https://mp-co-ru.github.io/peresvet/">Документация</a>
+          </div>
+          <div class="hero__proof" aria-label="Ключевые возможности">
+            <span>Иерархия объектов</span>
+            <span>Расчётные теги</span>
+            <span>Запись в поле</span>
+            <span>Экраны Grafana</span>
+          </div>
+        </div>
+
+        <div class="hero__stage" aria-label="Схема: объект, теги и экран">
+          <figure class="hero-card hero-card--main tilt-card">
+            <img src="./illustrations/model.svg" width="640" height="360" fetchpriority="high" decoding="async" alt="Схема: иерархия объекта, теги и экран" />
+          </figure>
+          <figure class="hero-card hero-card--back">
+            <img src="./illustrations/tags.svg" width="640" height="360" loading="lazy" decoding="async" alt="Схема расчётного тега из двух параметров" />
+          </figure>
+          <figure class="hero-card hero-card--front">
+            <img src="./illustrations/action.svg" width="640" height="360" loading="lazy" decoding="async" alt="Схема: событие запускает метод и действие" />
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section intro" id="model">
+      <div class="wrap intro__grid">
+        <div>
+          <div class="kicker">Что это</div>
+          <h2>Модель объекта, а не плоский список метрик</h2>
+          <p class="sub">
+            Платформа стоит над хранилищем истории. У объекта есть параметры,
+            по событиям запускаются методы, а через коннекторы данные не только читаются с поля,
+            но и записываются обратно. Задача — автоматизация технического объекта, а не только сбор чисел.
+          </p>
+        </div>
+        <div class="intro__cards">
+          <article>
+            <b>Модель</b>
+            <span>Иерархия объектов. У каждого свой набор тегов: температура, расход, состояние, расчёт.</span>
+          </article>
+          <article>
+            <b>Поле</b>
+            <span>Коннекторы забирают значения и записывают команды во внешние источники.</span>
+          </article>
+          <article>
+            <b>Событие</b>
+            <span>Изменение тега, тревога или расписание запускают метод и внешний процесс.</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="apps">
+      <div class="wrap">
+        <div class="kicker">Какие приложения собирают</div>
+        <h2>Одна платформа под разные объекты</h2>
+        <p class="sub">
+          Область применения — промышленная автоматизация, умный дом и здание,
+          программно-аппаратные комплексы. Прикладную систему собирают на модели объекта,
+          а не начинают инфраструктуру заново.
+        </p>
+        <div class="role-grid">
+          <article>
+            <span>01</span>
+            <h3>Диспетчеризация и мониторинг</h3>
+            <p>SCADA-контур и диспетчерская: текущие значения, тревоги, экраны и запись команд в поле.</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>MES и производственные контуры</h3>
+            <p>На платформе уже работает <a href="https://ioterra.ru/ioterra_oee">ИоТерра OEE</a>: линия, смены, простои и план-факт.</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Умный дом и здание</h3>
+            <p>Комнаты, климат, протечки и сценарии: событие запускает метод, расписание держит режим.</p>
+          </article>
+          <article>
+            <span>04</span>
+            <h3>Программно-аппаратные комплексы</h3>
+            <p>Платформа как основа комплекса: модель, история, доступ и экраны вокруг конкретного объекта.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section fit" id="parts">
+      <div class="wrap">
+        <div class="kicker">Из чего собирается система</div>
+        <h2>Семь сущностей модели</h2>
+        <div class="role-grid">
+          <article>
+            <span>01</span>
+            <h3>Объект</h3>
+            <p>Узел иерархии: предприятие, цех, агрегат, комната. У объекта свои параметры.</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>Тег</h3>
+            <p>Параметр объекта. Значение приходит с поля или считается по другим тегам.</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Тревога</h3>
+            <p>Условие на теге. Срабатывание — отдельное событие, к нему можно привязать метод.</p>
+          </article>
+          <article>
+            <span>04</span>
+            <h3>Метод</h3>
+            <p>Действие на изменение тега, тревогу или расписание, в том числе внешний процесс.</p>
+          </article>
+          <article>
+            <span>05</span>
+            <h3>Коннектор</h3>
+            <p>Связь с полем: чтение значений и запись во внешние источники.</p>
+          </article>
+          <article>
+            <span>06</span>
+            <h3>Хранилище</h3>
+            <p>История значений. В открытой поставке по умолчанию используется PostgreSQL.</p>
+          </article>
+          <article>
+            <span>07</span>
+            <h3>Расписание</h3>
+            <p>Запуск по времени: отчёт, смена режима, периодический метод.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section process" id="start">
+      <div class="wrap process__grid">
+        <div>
+          <div class="kicker">Как запускают</div>
+          <h2>Архив релиза и Docker Compose</h2>
+          <p class="sub">
+            Открытая редакция публикуется в GitHub Release под лицензией
+            <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a>.
+            Промышленная редакция поставляется отдельно.
+            Для запуска нужен Docker Compose.
+          </p>
+          <div class="actions">
+            <a class="btn btn--gold" href="https://github.com/mp-co-ru/peresvet/releases">Релизы</a>
+            <a class="btn btn--glass" href="https://mp-co-ru.github.io/peresvet/installation.html">Установка</a>
+          </div>
+        </div>
+        <ol class="timeline">
+          <li>
+            <b>Взять продуктовый архив</b>
+            <span>Файл peresvet-product из <a href="https://github.com/mp-co-ru/peresvet/releases">релизов</a> репозитория.</span>
+          </li>
+          <li>
+            <b>Подготовить Docker Compose</b>
+            <span>Платформа поднимается контейнерами. Состав и параметры описаны в документации по установке.</span>
+          </li>
+          <li>
+            <b>Запустить run_one_app.sh</b>
+            <span>Скрипт в корне поставки стартует платформу. Рядом лежит .env с параметрами по умолчанию.</span>
+          </li>
+          <li>
+            <b>Собрать модель</b>
+            <span>Дальше — объекты, теги, коннекторы и экраны Grafana под конкретную задачу.</span>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="cta-band" id="docs">
+      <div class="wrap cta-band__in">
+        <div>
+          <div class="kicker">Куда идти дальше</div>
+          <h2>Код, документация и примеры</h2>
+          <p>Репозиторий, руководство и примеры приложений. Номер версии на этой странице не фиксируем: актуальный релиз лежит на GitHub.</p>
+        </div>
+        <div class="actions">
+          <a class="btn btn--gold" href="https://mp-co-ru.github.io/peresvet/">Документация</a>
+          <a class="btn btn--glass" href="https://github.com/mp-co-ru/peresvet">Репозиторий</a>
+          <a class="btn btn--glass" href="https://github.com/mp-co-ru/peresvet_examples">Примеры</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section fit" id="fit">
+      <div class="wrap">
+        <div class="kicker">Для кого</div>
+        <h2>Тем, кто собирает приложение, и тем, кому оно нужно</h2>
+        <div class="role-grid">
+          <article>
+            <span>01</span>
+            <h3>Интегратор</h3>
+            <p>Собирает модель объекта, коннекторы, тревоги и экраны под площадку заказчика.</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>Разработчик приложения</h3>
+            <p>Пишет методы и прикладные экраны поверх платформы, не поднимая инфраструктуру с нуля.</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Заказчик</h3>
+            <p>Получает приложение под свой объект: диспетчерскую, производственный контур или здание.</p>
+          </article>
+          <article>
+            <span>04</span>
+            <h3>Эксплуатация</h3>
+            <p>Работает с уже собранной системой: значения, тревоги, история и экраны Grafana.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section contact" id="contact">
+      <div class="wrap contact__grid">
+        <div>
+          <div class="kicker">Заявка</div>
+          <h2>Обсудить приложение на МПК-Пересвет</h2>
+          <p class="sub">
+            Оставьте контакт: какой объект автоматизируете и какое приложение нужно собрать.
+            Письмо откроется в почтовой программе на info@ioterra.ru.
+            Можно сразу позвонить: <a href="tel:+74993930040">+7 499 393-00-40</a>.
+          </p>
+          <p class="sub">Москва, ул. Профсоюзная, д. 3</p>
+        </div>
+        <form class="form" id="demoForm" action="mailto:info@ioterra.ru" method="post" enctype="text/plain">
+          <input name="name" type="text" placeholder="Имя" autocomplete="name" required />
+          <input name="phone" type="tel" placeholder="Телефон" autocomplete="tel" required />
+          <input name="email" type="email" placeholder="Ваша почта" autocomplete="email" required />
+          <textarea name="message" rows="3" placeholder="Объект и какое приложение нужно собрать"></textarea>
+          <div class="form__consents">
+            <label class="form__consent">
+              <input name="privacy" type="checkbox" required />
+              <span>Заполняя форму на сайте, вы соглашаетесь с нашей <a href="https://ioterra.ru/confidence_politik" target="_blank" rel="noreferrer noopener">политикой конфиденциальности</a></span>
+            </label>
+            <label class="form__consent">
+              <input name="personal" type="checkbox" required />
+              <span>Подтверждаю <a href="https://ioterra.ru/personal_data" target="_blank" rel="noreferrer noopener">согласие на обработку персональных данных</a></span>
+            </label>
+          </div>
+          <button class="btn btn--gold" type="submit">Отправить заявку</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer__in">
+      <div>© ИоТерра 2026 · МПК-Пересвет</div>
+      <nav>
+        <a href="#apps">Применения</a>
+        <a href="#model">Модель</a>
+        <a href="#start">Запуск</a>
+        <a href="#docs">Документация</a>
+        <a href="https://github.com/mp-co-ru/peresvet">GitHub</a>
+        <a href="https://ioterra.ru/">ioterra.ru</a>
+      </nav>
+    </div>
+  </footer>
+
+  <div class="mobile-cta" aria-label="Быстрая связь">
+    <a class="btn btn--glass" href="tel:+74993930040">Позвонить</a>
+    <a class="btn btn--gold" href="#contact">Заявка</a>
+  </div>
+
+  <script>
+    const nav = document.getElementById("nav");
+    const toggle = document.getElementById("navToggle");
+    const links = document.getElementById("navLinks");
+
+    toggle.addEventListener("click", () => {
+      const open = nav.classList.toggle("is-open");
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+
+    links.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => {
+        nav.classList.remove("is-open");
+        toggle.setAttribute("aria-expanded", "false");
+      });
+    });
+
+    document.querySelectorAll(".tilt-card").forEach((card) => {
+      card.addEventListener("pointermove", (event) => {
+        const rect = card.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width - 0.5) * 10;
+        const y = ((event.clientY - rect.top) / rect.height - 0.5) * -10;
+        card.style.setProperty("--tilt-x", `${y.toFixed(2)}deg`);
+        card.style.setProperty("--tilt-y", `${x.toFixed(2)}deg`);
+      });
+      card.addEventListener("pointerleave", () => {
+        card.style.removeProperty("--tilt-x");
+        card.style.removeProperty("--tilt-y");
+      });
+    });
+
+    document.getElementById("demoForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const data = new FormData(event.currentTarget);
+      const body = [
+        `Имя: ${String(data.get("name") || "").trim()}`,
+        `Телефон: ${String(data.get("phone") || "").trim()}`,
+        `Почта: ${String(data.get("email") || "").trim()}`,
+        "",
+        String(data.get("message") || "").trim()
+      ].join("\n");
+      window.location.href = `mailto:info@ioterra.ru?subject=${encodeURIComponent("Заявка: МПК-Пересвет")}&body=${encodeURIComponent(body)}`;
+    });
+  </script>
+</body>
+</html>

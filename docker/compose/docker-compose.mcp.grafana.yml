@@ -1,7 +1,8 @@
 services:
   mcp_grafana:
-    image: mcp/grafana:latest
+    image: grafana/mcp-grafana:1.3.0
     container_name: prs-mcp-grafana
+    restart: always
     depends_on:
       - grafana
     environment:
@@ -11,11 +12,17 @@ services:
       # Service account token (обязательно для большинства операций)
       GRAFANA_SERVICE_ACCOUNT_TOKEN: ${GRAFANA_SERVICE_ACCOUNT_TOKEN}
       GRAFANA_ORG_ID: ${MCP_GRAFANA_ORG_ID:-1}
+    # Image entrypoint already includes `--transport sse`; replace it.
+    entrypoint: ["/app/mcp-grafana"]
     command:
       - "-transport"
       - "${MCP_GRAFANA_TRANSPORT:-streamable-http}"
       - "-address"
       - "0.0.0.0:${PORT_MCP_GRAFANA_INNER}"
+      - "-allowed-hosts"
+      - "*"
+      - "-allowed-origins"
+      - "*"
     ports:
       - ${PORT_MCP_GRAFANA}:${PORT_MCP_GRAFANA_INNER}
     networks:

@@ -4,4 +4,5 @@
 
 | Страница | Макет |
 |---|---|
-| МПК-Пересвет | [`mpc-peresvet/index.html`](mpc-peresvet/index.html) |
+| МПК-Пересвет, карточка платформы | [`peresvet/index.html`](peresvet/index.html) |
+| МПК-Пересвет, ранний черновик | [`mpc-peresvet/index.html`](mpc-peresvet/index.html) |

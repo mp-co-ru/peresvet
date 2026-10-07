@@ -5,8 +5,20 @@ alwaysApply: true
 
 # Peresvet Testing Rules
 
-- Add or update tests for behavior changes.
-- Prefer focused tests near the changed subsystem.
+After every code change you make:
+
+1. Add new unit tests for the changed behavior (or update existing ones). Do not leave a behavior change without tests.
+2. Run the full unit suite, not only the new tests:
+
+```bash
+.venv/bin/python -m pytest tests/unit
+```
+
+3. Show the user the command and the result (passed/failed counts and any failures). Do not claim tests passed unless this run completed.
+
+Other rules:
+
+- Prefer focused tests near the changed subsystem (`tests/unit/`).
 - If tests require Docker services, state which compose stack is required.
 - If tests cannot be run in the current environment, explain why.
 - For tags, dataStorages and connectors, consider regression and load-test impact.

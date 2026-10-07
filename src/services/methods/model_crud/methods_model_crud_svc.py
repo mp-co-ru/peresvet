@@ -41,6 +41,18 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
         self._handlers["prsTag.model.deleted.*"] = self._delete_initiator
         self._handlers["prsSchedule.model.deleted.*"] = self._delete_initiator
 
+    @staticmethod
+    def _unwrap_redis_json_root(val):
+        # RedisJSON GET path="$" wraps the document in a one-element array.
+        # A real one-element list of method ids must stay a list.
+        if isinstance(val, list) and len(val) == 1 and isinstance(val[0], (dict, list)):
+            return val[0]
+        return val
+
+    @staticmethod
+    def _is_missing_node_error(ex: BaseException) -> bool:
+        return isinstance(ex, ValueError) and "не найден" in str(ex)
+
     async def _delete_initiator(self, mes: dict, routing_key: str):
         deleted_id = mes['id']
         obj_class = routing_key.split('.')[0]
@@ -53,29 +65,50 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         # сообщим методам, что инициатор удалился, чтобы они могли отписаться от событий...
         async with self._cache.get_redis() as r:
-            initiator_cache = await r.json().get(f"{deleted_id}.{self._config.svc_name}")
+            initiator_cache = self._unwrap_redis_json_root(
+                await r.json().get(f"{deleted_id}.{self._config.svc_name}")
+            )
 
             if initiator_cache is None:
                 self._logger.error(f"{self._config.svc_name} :: Нет кэша для удалённого инициатора {deleted_id}.")
                 return
-            # удалим кэш
+            # удалим только кэш этого инициатора, не трогая ключи других инициаторов
             await r.json().delete(f"{deleted_id}.{self._config.svc_name}")
 
-        for method_id in initiator_cache:
-            payload = {
-                "base": method_id,
-                "filter": {"cn": deleted_id},
-                "attributes": ["cn"]
-            }
-            initiator = await self._hierarchy.search(payload=payload)
-            if initiator:
-                await self._hierarchy.delete(initiator[0][0])
-                await self._post_message(
-                    mes={"id": method_id},
-                    routing_key=f"{self._config.hierarchy['class']}.model.updated.{method_id}"
+        if isinstance(initiator_cache, dict):
+            method_ids = list(initiator_cache.keys())
+        elif isinstance(initiator_cache, list):
+            method_ids = list(initiator_cache)
+        else:
+            self._logger.error(
+                f"{self._config.svc_name} :: Некорректный кэш удалённого инициатора {deleted_id}."
+            )
+            return
+
+        for method_id in method_ids:
+            try:
+                payload = {
+                    "base": method_id,
+                    "filter": {"cn": deleted_id},
+                    "attributes": ["cn"]
+                }
+                initiator = await self._hierarchy.search(payload=payload)
+                if initiator:
+                    await self._hierarchy.delete(initiator[0][0])
+                    await self._post_message(
+                        mes={"id": method_id},
+                        routing_key=f"{self._config.hierarchy['class']}.model.updated.{method_id}"
+                    )
+                else:
+                    self._logger.error(
+                        f"{self._config.svc_name} :: Нет данных по инициатору '{deleted_id}' "
+                        f"для метода '{method_id}'."
+                    )
+            except Exception as ex:
+                self._logger.error(
+                    f"{self._config.svc_name} :: Ошибка очистки инициатора '{deleted_id}' "
+                    f"у метода '{method_id}': {ex}"
                 )
-            else:
-                self._logger.error(f"{self._config.svc_name} :: Нет данных по инициатору '{deleted_id}' для метода '{method_id}'.")
 
     async def _make_method_cache(self, method_id: str):
         """Создаёт кэш метода для всех его инициаторов."""
@@ -121,12 +154,24 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
         Returns:
             list[tuple[str, dict]]: Список кортежей (initiator_id, initiator_data)
         """
-        payload = {
-            "base": method_id,
-            "filter": {"cn": ["initiatedBy"]},
-            "attributes": ["cn"]
-        }
-        initiatedBy_result = await self._hierarchy.search(payload=payload)
+        try:
+            payload = {
+                "base": method_id,
+                "filter": {"cn": ["initiatedBy"]},
+                "attributes": ["cn"]
+            }
+            initiatedBy_result = await self._hierarchy.search(payload=payload)
+        except Exception as ex:
+            if self._is_missing_node_error(ex):
+                self._logger.warning(
+                    f"{self._config.svc_name} :: Метод '{method_id}' уже удалён, "
+                    "кэш инициаторов не читаем."
+                )
+                return []
+            self._logger.error(
+                f"{self._config.svc_name} :: Ошибка чтения инициаторов метода '{method_id}': {ex}"
+            )
+            return []
 
         if not initiatedBy_result:
             self._logger.warning(
@@ -161,12 +206,13 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
         Returns:
             bool: True если кэш был удалён, False иначе
         """
-        initiator_cache = await r.json().get(f"{initiator_id}.{self._config.svc_name}")
+        initiator_cache = self._unwrap_redis_json_root(
+            await r.json().get(f"{initiator_id}.{self._config.svc_name}")
+        )
 
-        if not initiator_cache or initiator_cache[0] is None:
+        if not initiator_cache or not isinstance(initiator_cache, list):
             return False
 
-        index = 0
         try:
             index = initiator_cache.index(method_id)
         except ValueError:
@@ -177,8 +223,10 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
         )
 
         # Проверяем, остались ли ещё методы в кэше
-        updated_cache = await r.json().get(f"{initiator_id}.{self._config.svc_name}")
-        if not updated_cache or not updated_cache[0]:
+        updated_cache = self._unwrap_redis_json_root(
+            await r.json().get(f"{initiator_id}.{self._config.svc_name}")
+        )
+        if not updated_cache:
             # Кэш пуст, удаляем его и отписываемся от событий
             await self._amqp_consume_queue.unbind(
                 exchange=self._exchange,
@@ -199,7 +247,14 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         async with self._cache.get_redis() as r:
             for method_id in method_ids:
-                initiators = await self._get_method_initiators(method_id)
+                try:
+                    initiators = await self._get_method_initiators(method_id)
+                except Exception as ex:
+                    self._logger.warning(
+                        f"{self._config.svc_name} :: Не удалось прочитать инициаторов "
+                        f"метода '{method_id}' при очистке кэша: {ex}"
+                    )
+                    continue
 
                 for initiator_id, initiator_data in initiators:
                     obj_class = initiator_data["objectClass"][0]

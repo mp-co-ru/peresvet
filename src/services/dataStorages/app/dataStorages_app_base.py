@@ -1265,8 +1265,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
         for tag_id in mes["tagId"]:
             # Если ключ actual установлен в true, ключ timeStep не учитывается
-            if mes["actual"] or (mes["value"] is not None \
-            and len(mes["value"]) > 0):
+            if mes["actual"] or self._has_value_filter(mes["value"]):
                 mes["timeStep"] = None
 
             if mes["actual"]:
@@ -1291,7 +1290,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
             elif mes["start"] is None and \
                 mes["count"] is None and \
-                (mes["value"] is None or len(mes["value"]) == 0):
+                not self._has_value_filter(mes["value"]):
                 tasks[tag_id] = asyncio.create_task(
                         self._data_get_one(
                             tag_id,
@@ -1320,18 +1319,21 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
                 tag_data = task.result()
 
-                if not mes["actual"] and \
-                    (
-                        mes["value"] is not None and \
-                        len(mes["value"]) > 0
-                    ):
-                    tag_data = self._filter_data(
-                        tag_data,
-                        mes["value"],
-                        self._tags[tag_id]['value_type'],
-                        self._tags[tag_id]['step']
-                    )
-                    if mes["from_"] is None:
+                if not mes["actual"] and self._has_value_filter(mes["value"]):
+                    meta = await self._tag_value_filter_meta(tag_id)
+                    if meta is None:
+                        self._logger.error(
+                            f"{self._config.svc_name} :: Тег {tag_id} отсутствует в кэше, фильтр value пропущен."
+                        )
+                        tag_data = []
+                    else:
+                        tag_data = self._filter_data(
+                            tag_data,
+                            self.coerce_filter_value(mes["value"], meta["value_type"]),
+                            meta["value_type"],
+                            meta["step"],
+                        )
+                    if mes.get("from_") is None and tag_data:
                         tag_data = [tag_data[-1]]
 
                 excess = False
@@ -1366,6 +1368,86 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
         return accumulated
 
+    async def _tag_value_filter_meta(self, tag_id: str) -> dict | None:
+        tags = getattr(self, "_tags", None)
+        if isinstance(tags, dict):
+            cached = tags.get(tag_id)
+            if isinstance(cached, dict) and "value_type" in cached:
+                return {
+                    "value_type": int(cached["value_type"]),
+                    "step": bool(cached.get("step")),
+                }
+        async with self._cache.get_redis() as r:
+            tag_cache = await r.json().get(
+                f"{tag_id}.{self._config.svc_name}", "prsStep", "prsValueTypeCode"
+            )
+        if not isinstance(tag_cache, dict) or "prsValueTypeCode" not in tag_cache:
+            return None
+        return {
+            "value_type": int(tag_cache["prsValueTypeCode"]),
+            "step": bool(tag_cache.get("prsStep")),
+        }
+
+    @staticmethod
+    def _has_value_filter(value: Any) -> bool:
+        """Число и bool — заданный фильтр. Пустые строка, список и словарь — нет."""
+        if value is None:
+            return False
+        if isinstance(value, (str, bytes, list, tuple, dict, set)):
+            return len(value) > 0
+        return True
+
+    @staticmethod
+    def coerce_filter_value(value: Any, value_type: Any) -> Any:
+        """Приводит фильтр value к типу тега перед сравнением с колонкой y.
+
+        Число 1 для строкового тега становится строкой \"1\": иначе драйвер
+        PostgreSQL отказывает в запросе (expected str, got int).
+        """
+        if value is None or value_type is None:
+            return value
+        try:
+            value_type = int(value_type)
+        except (TypeError, ValueError):
+            return value
+        if isinstance(value, (list, tuple)):
+            return type(value)(
+                DataStoragesAppBase.coerce_filter_value(item, value_type)
+                for item in value
+            )
+        if isinstance(value, dict):
+            return value
+        if value_type in (2, 5):
+            if isinstance(value, str):
+                return value
+            if isinstance(value, bool):
+                return "true" if value else "false"
+            if isinstance(value, float) and value.is_integer():
+                return str(int(value))
+            return str(value)
+        if value_type == 0:
+            if isinstance(value, bool):
+                return int(value)
+            if isinstance(value, int):
+                return value
+            if isinstance(value, float) and value.is_integer():
+                return int(value)
+            if isinstance(value, str) and value.strip().lstrip("+-").isdigit():
+                return int(value.strip())
+            return value
+        if value_type == 1:
+            if isinstance(value, bool):
+                return float(int(value))
+            if isinstance(value, (int, float)):
+                return float(value)
+            if isinstance(value, str):
+                try:
+                    return float(value.strip())
+                except ValueError:
+                    return value
+            return value
+        return value
+
     def _filter_data(
             self, tag_data: List[tuple], value: List[Any], tag_type_code: int,
             tag_step: bool) -> List[tuple]:
@@ -1380,6 +1462,11 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
             return x
 
+
+        value = self.coerce_filter_value(value, tag_type_code)
+
+        if not isinstance(value, (str, bytes, list, tuple, dict, set)):
+            value = [value]
 
         res = []
         if tag_step or tag_type_code not in [0, 1]:

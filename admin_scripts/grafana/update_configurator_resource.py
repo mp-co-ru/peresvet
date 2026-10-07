@@ -33,7 +33,7 @@ def main() -> int:
     payload = {
         "apiVersion": "dashboard.grafana.app/v1beta1",
         "kind": "Dashboard",
-        "metadata": {"name": args.uid, "namespace": "default"},
+        "metadata": {"name": args.uid, "namespace": "default", "uid": args.uid},
         "spec": dash,
     }
     value = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
