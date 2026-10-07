@@ -214,15 +214,25 @@ def _lock_for(connector_id: str) -> asyncio.Lock:
     return lock
 
 
+def _same_capture(current: CameraSession, camera: CameraConfig, directory: Path) -> bool:
+    """Тот же RTSP и та же картинка архива. Срок хранения сюда не входит."""
+    stored = current.camera
+    return (
+        current.url == camera.rtsp_url
+        and stored.transport == camera.transport
+        and current.directory == directory
+        and stored.archive_width == camera.archive_width
+        and stored.archive_fps == camera.archive_fps
+    )
+
+
 async def get_session(connector_id: str, camera: CameraConfig, directory: Path | None = None) -> CameraSession:
     directory = directory or camera.segment_dir(connector_id)
     async with _lock_for(connector_id):
         current = _sessions.get(connector_id)
         if (
             current is not None
-            and current.url == camera.rtsp_url
-            and current.camera.transport == camera.transport
-            and current.directory == directory
+            and _same_capture(current, camera, directory)
             and current.camera.retention_hours == camera.retention_hours
             and current.alive()
         ):
@@ -243,18 +253,17 @@ async def get_session(connector_id: str, camera: CameraConfig, directory: Path |
 def sync_session(connector_id: str, camera: CameraConfig, directory: Path | None = None) -> str:
     """Применяет конфигурацию к уже открытому сеансу.
 
-    Смена адреса, каталога или транспорта открывает сеанс заново.
-    Смена срока хранения только переписывает окно очистки и удаляет
-    лишние фрагменты: второй RTSP-клиент к камере не открывается.
+    Смена адреса, каталога, транспорта, ширины или частоты архива
+    открывает сеанс заново. Смена срока хранения только переписывает
+    окно очистки и удаляет лишние фрагменты: второй RTSP-клиент
+    к камере не открывается.
     """
     directory = directory or camera.segment_dir(connector_id)
     current = _sessions.get(connector_id)
     if (
         current is not None
         and current.alive()
-        and current.url == camera.rtsp_url
-        and current.camera.transport == camera.transport
-        and current.directory == directory
+        and _same_capture(current, camera, directory)
     ):
         keep_seconds = int(camera.retention_hours * 3600)
         if current.camera.retention_hours != camera.retention_hours:
@@ -278,9 +287,7 @@ def ensure_session(connector_id: str, camera: CameraConfig, directory: Path | No
     current = _sessions.get(connector_id)
     if (
         current is not None
-        and current.url == camera.rtsp_url
-        and current.camera.transport == camera.transport
-        and current.directory == directory
+        and _same_capture(current, camera, directory)
         and current.camera.retention_hours == camera.retention_hours
         and current.alive()
     ):

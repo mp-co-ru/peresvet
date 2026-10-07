@@ -132,6 +132,29 @@ async def _tag_type(hierarchy_api, tag_id: str) -> int | None:
         return None
 
 
+async def resolve_camera_control(hierarchy_api, tag_id: str):
+    """Камера для управления: тег типа 6 и активный коннектор с rtspUrl."""
+    tag_res = await hierarchy_api.search({
+        "id": tag_id,
+        "attributes": ["prsValueTypeCode", "prsActive"],
+    })
+    if not tag_res:
+        return VideoFailure(404, "Тег не найден.")
+    attrs = tag_res[0][2]
+    try:
+        value_type = int(_first(attrs, "prsValueTypeCode"))
+    except (TypeError, ValueError):
+        return VideoFailure(422, "Управление камерой доступно только для тега видеопотока.")
+    if value_type != int(CNTagValueTypes.CN_VIDEO):
+        return VideoFailure(422, "Управление камерой доступно только для тега видеопотока.")
+    if not _flag(attrs, "prsActive", default=True):
+        return VideoFailure(409, "Тег видеопотока выключен.")
+    connector_id, camera, error = await _camera_for_tag(hierarchy_api, tag_id)
+    if error is not None:
+        return error
+    return connector_id, camera
+
+
 async def _camera_for_tag(hierarchy_api, tag_id: str) -> tuple[str | None, CameraConfig | None, VideoFailure | None]:
     connectors = await hierarchy_api.search({
         "base": "cn=connectors,cn=prs",

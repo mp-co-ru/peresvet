@@ -25,6 +25,11 @@ _RTSP_USERINFO_RE = re.compile(r"(rtsps?://)([^/\s@]+)@")
 KEY_RTSP = "rtspUrl"
 KEY_ARCHIVE = "archivePath"
 KEY_RETENTION = "retentionHours"
+KEY_ARCHIVE_WIDTH = "archiveWidth"
+KEY_ARCHIVE_FPS = "archiveFps"
+KEY_ONVIF_PORT = "onvifPort"
+KEY_ONVIF_USER = "onvifUser"
+KEY_ONVIF_PASSWORD = "onvifPassword"
 
 
 def _config_dict(raw: Any) -> dict:
@@ -73,6 +78,15 @@ class CameraConfig:
     transport: str
     archive_path: Path | None = None
     retention_hours: float = 24.0
+    archive_width: int | None = None
+    archive_fps: float | None = None
+    onvif_port: int = 8899
+    onvif_user: str | None = None
+    onvif_password: str | None = None
+
+    @property
+    def onvif_host(self) -> str:
+        return urlsplit(self.rtsp_url).hostname or ""
 
     @property
     def log_target(self) -> str:
@@ -144,7 +158,84 @@ def parse_camera_config(raw: Any) -> CameraConfig:
         transport=transport,
         archive_path=archive_path,
         retention_hours=retention,
+        archive_width=_optional_even_width(raw),
+        archive_fps=_optional_fps(raw),
+        onvif_port=_onvif_port(raw),
+        onvif_user=_optional_text(raw, KEY_ONVIF_USER),
+        onvif_password=_optional_text(raw, KEY_ONVIF_PASSWORD),
     )
+
+
+def _optional_text(raw: dict, key: str) -> str | None:
+    value = _pick(raw, key)
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def _onvif_port(raw: dict) -> int:
+    value = _pick(raw, KEY_ONVIF_PORT)
+    if value is None:
+        return 8899
+    if isinstance(value, bool):
+        raise ValueError("Ключ onvifPort должен быть портом от 1 до 65535.")
+    try:
+        port = int(value)
+    except (TypeError, ValueError) as ex:
+        raise ValueError("Ключ onvifPort должен быть портом от 1 до 65535.") from ex
+    if port < 1 or port > 65535:
+        raise ValueError("Ключ onvifPort должен быть портом от 1 до 65535.")
+    return port
+
+
+def _optional_even_width(raw: dict) -> int | None:
+    value = _pick(raw, KEY_ARCHIVE_WIDTH)
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        raise ValueError("Ключ archiveWidth должен быть чётной шириной в пикселях.")
+    try:
+        number = float(value)
+    except (TypeError, ValueError) as ex:
+        raise ValueError("Ключ archiveWidth должен быть чётной шириной в пикселях.") from ex
+    width = int(number)
+    if width != number or width < 2 or width % 2:
+        raise ValueError("Ключ archiveWidth должен быть чётной шириной в пикселях.")
+    return width
+
+
+def _optional_fps(raw: dict) -> float | None:
+    value = _pick(raw, KEY_ARCHIVE_FPS)
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        raise ValueError("Ключ archiveFps должен быть больше нуля.")
+    try:
+        fps = float(value)
+    except (TypeError, ValueError) as ex:
+        raise ValueError("Ключ archiveFps должен быть больше нуля.") from ex
+    if fps <= 0:
+        raise ValueError("Ключ archiveFps должен быть больше нуля.")
+    return fps
+
+
+def _format_fps(fps: float) -> str:
+    if fps == int(fps):
+        return str(int(fps))
+    return f"{fps:g}"
+
+
+def archive_video_filter(camera: CameraConfig) -> str | None:
+    """Фильтр архива. Пусто — в файл пишется размер и частота камеры."""
+    parts: list[str] = []
+    if camera.archive_fps is not None:
+        parts.append(f"fps={_format_fps(camera.archive_fps)}")
+    if camera.archive_width is not None:
+        parts.append(f"scale={camera.archive_width}:-2")
+    if not parts:
+        return None
+    return ",".join(parts)
 
 
 def video_get_mode(fields: set[str]) -> str:
@@ -240,6 +331,21 @@ def session_ffmpeg_args(
     ffmpeg: str | None = None,
 ) -> list[str]:
     pattern = str(directory / "%s.ts")
+    archive_encode = [
+        "-map", "0:v:0", "-an",
+    ]
+    video_filter = archive_video_filter(camera)
+    if video_filter:
+        archive_encode.extend(["-vf", video_filter])
+    archive_encode.extend([
+        "-c:v", "libx264", "-preset", "ultrafast", "-tune", "zerolatency", "-pix_fmt", "yuv420p",
+        "-f", "segment",
+        "-segment_time", str(segment_seconds_value),
+        "-segment_format", "mpegts",
+        "-reset_timestamps", "1",
+        "-strftime", "1",
+        pattern,
+    ])
     return [
         ffmpeg or ffmpeg_bin(),
         "-hide_banner",
@@ -249,15 +355,7 @@ def session_ffmpeg_args(
         "-use_wallclock_as_timestamps", "1",
         "-fflags", "+genpts",
         "-i", camera.rtsp_url,
-        "-map", "0:v:0", "-an",
-        "-vf", "scale=640:-2",
-        "-c:v", "libx264", "-preset", "ultrafast", "-tune", "zerolatency", "-pix_fmt", "yuv420p",
-        "-f", "segment",
-        "-segment_time", str(segment_seconds_value),
-        "-segment_format", "mpegts",
-        "-reset_timestamps", "1",
-        "-strftime", "1",
-        pattern,
+        *archive_encode,
         "-map", "0:v:0", "-an",
         "-vf", "fps=8,scale=960:-2",
         "-c:v", "mjpeg", "-q:v", "8",

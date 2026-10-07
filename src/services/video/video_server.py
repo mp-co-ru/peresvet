@@ -18,6 +18,7 @@ from starlette.responses import JSONResponse
 sys.path.append(".")
 
 from src.services.video.http_response import maybe_video_data_response
+from src.services.video.ptz_http import build_ptz_router
 from src.services.video.query import payload_from_request
 from src.services.video.video_app_svc import app
 
@@ -48,6 +49,7 @@ async def video_data_get(request: Request):
 
 
 app.include_router(router)
+app.include_router(build_ptz_router(app))
 
 
 if __name__ == "__main__":

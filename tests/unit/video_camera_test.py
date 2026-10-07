@@ -124,7 +124,10 @@ def test_session_ffmpeg_uses_one_rtsp_input(tmp_path):
     assert "libx264" in args
     assert "copy" not in args
     assert "fps=8,scale=960:-2" in args
-    assert "scale=640:-2" in args
+    preview = args.index("fps=8,scale=960:-2")
+    archive = args[:preview]
+    assert "scale=" not in " ".join(archive)
+    assert "fps=" not in " ".join(archive)
     assert args[-1] == "pipe:1"
     assert str(tmp_path / "%s.ts") in args
     concat = tmp_path / "list.txt"
@@ -137,6 +140,27 @@ def test_session_ffmpeg_uses_one_rtsp_input(tmp_path):
     assert shot.index("-i") < shot.index("-ss")
     assert shot[shot.index("-ss") + 1] == "12.500"
     assert "yuvj420p" in shot
+
+
+def test_archive_size_and_rate_come_from_the_connector(tmp_path):
+    camera = parse_camera_config({
+        "rtspUrl": CAMERA_URL,
+        "archiveWidth": 640,
+        "archiveFps": 12,
+    })
+    assert camera.archive_width == 640
+    assert camera.archive_fps == 12
+    args = session_ffmpeg_args(camera, tmp_path, 10, ffmpeg="ffmpeg")
+    preview = args.index("fps=8,scale=960:-2")
+    assert args[args.index("-vf")] == "-vf"
+    assert "fps=12,scale=640:-2" in args[:preview]
+    native = parse_camera_config({"rtspUrl": CAMERA_URL})
+    assert native.archive_width is None
+    assert native.archive_fps is None
+    with pytest.raises(ValueError):
+        parse_camera_config({"rtspUrl": CAMERA_URL, "archiveWidth": 641})
+    with pytest.raises(ValueError):
+        parse_camera_config({"rtspUrl": CAMERA_URL, "archiveFps": 0})
 
 
 class _Hierarchy:
@@ -426,6 +450,16 @@ def test_stream_change_reopens_session(monkeypatch, tmp_path):
         })
         assert runtime.sync_session(CONN, moved) == "restart"
         assert opened == [CONN]
+        opened.clear()
+        narrower = parse_camera_config({
+            "rtspUrl": CAMERA_URL,
+            "archivePath": str(archive),
+            "retentionHours": 4,
+            "archiveWidth": 640,
+            "archiveFps": 10,
+        })
+        assert runtime.sync_session(CONN, narrower) == "restart"
+        assert opened == [CONN]
     finally:
         runtime._sessions.pop(CONN, None)
 
@@ -518,6 +552,178 @@ def test_mqtt_presence_packet_uses_connector_id():
     presence._settings = None
     hold_camera_presence(CONN)
     assert CONN not in presence._tasks
+
+
+def test_onvif_profile_and_move_command_stay_within_one_session():
+    from src.services.video.onvif_ptz import (
+        _axis,
+        _move_body,
+        password_digest,
+        profile_token_from_profiles,
+        soap_envelope,
+    )
+
+    xml = (
+        '<trt:Profiles token="PROFILE_000"><tt:PTZConfiguration token="PTZCFG_000"/>'
+        "</trt:Profiles>"
+    )
+    assert profile_token_from_profiles(xml) == "PROFILE_000"
+    body = _move_body("PROFILE_000", "ContinuousMove", _axis(2), _axis(None), _axis(-3))
+    assert 'x="1.0000"' in body and 'y="0.0000"' in body and 'x="-1.0000"' in body
+    assert "PROFILE_000" in body
+    digest = password_digest(b"nonce", "2026-10-05T00:00:00Z", "secret")
+    assert digest
+    envelope = soap_envelope("<GetStatus/>", "admin", "secret")
+    assert "UsernameToken" in envelope and "secret" not in envelope
+
+
+def test_camera_motion_track_adds_up_until_stop():
+    from src.services.video.onvif_ptz import _Track
+
+    track = _Track()
+    track.begin(0.5, 0, 0)
+    track.started -= 2
+    track.settle(track.started + 2)
+    assert track.pan == pytest.approx(1.0)
+    assert track.started is None
+
+
+def test_ptz_request_reaches_onvif_for_a_video_tag(monkeypatch):
+    from starlette.requests import Request
+
+    from src.services.video import ptz_http
+
+    hierarchy = _Hierarchy(
+        {TAG: _video_tag()},
+        _camera_connector(),
+        {CONN: [(TAG, "dn", {"cn": [TAG]})]},
+    )
+    seen = {}
+
+    async def fake_perform(camera, command):
+        seen["host"] = camera.onvif_host
+        seen["port"] = camera.onvif_port
+        seen["action"] = command["action"]
+        return {"ok": True, "action": command["action"]}
+
+    monkeypatch.setattr(ptz_http, "perform_ptz", fake_perform)
+    monkeypatch.setattr(ptz_http, "video_server_url", lambda: None)
+    app = _app(hierarchy)
+    raw = json.dumps({"tagId": TAG, "action": "stop"}).encode()
+
+    async def receive():
+        return {"type": "http.request", "body": raw, "more_body": False}
+
+    request = Request({
+        "type": "http",
+        "method": "POST",
+        "path": "/v1/ptz/",
+        "headers": [(b"content-type", b"application/json")],
+        "query_string": b"",
+    }, receive)
+    response = asyncio.run(ptz_http.ptz_response(app, request))
+    assert response.status_code == 200
+    assert seen == {"host": "192.168.1.72", "port": 8899, "action": "stop"}
+
+
+_IMAGING_SETTINGS = """<?xml version="1.0"?>
+<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope"
+ xmlns:tt="http://www.onvif.org/ver10/schema"
+ xmlns:timg="http://www.onvif.org/ver20/imaging/wsdl"><s:Body>
+<timg:GetImagingSettingsResponse><timg:ImagingSettings>
+<tt:BacklightCompensation><tt:Mode>OFF</tt:Mode><tt:Level>10.0</tt:Level></tt:BacklightCompensation>
+<tt:Brightness>50.0</tt:Brightness>
+<tt:ColorSaturation>40.0</tt:ColorSaturation>
+<tt:Contrast>60.0</tt:Contrast>
+<tt:IrCutFilter>AUTO</tt:IrCutFilter>
+<tt:Sharpness>30.0</tt:Sharpness>
+<tt:WideDynamicRange><tt:Mode>ON</tt:Mode><tt:Level>50.0</tt:Level></tt:WideDynamicRange>
+<tt:WhiteBalance><tt:Mode>MANUAL</tt:Mode></tt:WhiteBalance>
+</timg:ImagingSettings></timg:GetImagingSettingsResponse>
+</s:Body></s:Envelope>"""
+
+_IMAGING_OPTIONS = """<?xml version="1.0"?>
+<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope"
+ xmlns:tt="http://www.onvif.org/ver10/schema"><s:Body>
+<timg:GetOptionsResponse xmlns:timg="http://www.onvif.org/ver20/imaging/wsdl"><timg:ImagingOptions>
+<tt:BacklightCompensation><tt:Mode>OFF</tt:Mode><tt:Mode>ON</tt:Mode></tt:BacklightCompensation>
+<tt:Brightness><tt:Min>0.0</tt:Min><tt:Max>100.0</tt:Max></tt:Brightness>
+<tt:ColorSaturation><tt:Min>0.0</tt:Min><tt:Max>100.0</tt:Max></tt:ColorSaturation>
+<tt:Contrast><tt:Min>0.0</tt:Min><tt:Max>100.0</tt:Max></tt:Contrast>
+<tt:IrCutFilterModes>ON</tt:IrCutFilterModes>
+<tt:IrCutFilterModes>OFF</tt:IrCutFilterModes>
+<tt:IrCutFilterModes>AUTO</tt:IrCutFilterModes>
+<tt:Sharpness><tt:Min>0.0</tt:Min><tt:Max>100.0</tt:Max></tt:Sharpness>
+<tt:WideDynamicRange><tt:Mode>ON</tt:Mode><tt:Mode>OFF</tt:Mode></tt:WideDynamicRange>
+<tt:WhiteBalance><tt:Mode>AUTO</tt:Mode><tt:Mode>MANUAL</tt:Mode></tt:WhiteBalance>
+</timg:ImagingOptions></timg:GetOptionsResponse>
+</s:Body></s:Envelope>"""
+
+
+def test_onvif_imaging_settings_round_trip_into_one_field():
+    from src.services.video.onvif_ptz import (
+        OnvifError,
+        imaging_options_from_xml,
+        imaging_settings_body,
+        imaging_settings_from_xml,
+    )
+
+    settings = imaging_settings_from_xml(_IMAGING_SETTINGS)
+    assert settings["brightness"] == 50
+    assert settings["saturation"] == 40
+    assert settings["irCut"] == "AUTO"
+    assert settings["backlight"] == "OFF"
+    assert settings["wideDynamicRange"] == "ON"
+    assert settings["whiteBalance"] == "MANUAL"
+    options = imaging_options_from_xml(_IMAGING_OPTIONS)
+    assert options["brightness"] == {"min": 0.0, "max": 100.0}
+    assert options["irCut"]["choices"] == ["ON", "OFF", "AUTO"]
+    body = imaging_settings_body("V_SRC_000", {"brightness": 140, "irCut": "OFF"}, options)
+    assert "<VideoSourceToken>V_SRC_000</VideoSourceToken>" in body
+    assert "<tt:Brightness>100.0</tt:Brightness>" in body
+    assert "<tt:IrCutFilter>OFF</tt:IrCutFilter>" in body
+    assert "Contrast" not in body
+    with pytest.raises(OnvifError):
+        imaging_settings_body("V_SRC_000", {"irCut": "DAY"}, options)
+    with pytest.raises(OnvifError):
+        imaging_settings_body("V_SRC_000", {}, options)
+
+
+def test_ptz_image_set_reaches_onvif_for_a_video_tag(monkeypatch):
+    from starlette.requests import Request
+
+    from src.services.video import ptz_http
+
+    hierarchy = _Hierarchy(
+        {TAG: _video_tag()},
+        _camera_connector(),
+        {CONN: [(TAG, "dn", {"cn": [TAG]})]},
+    )
+    seen = {}
+
+    async def fake_perform(camera, command):
+        seen["action"] = command["action"]
+        seen["brightness"] = command["brightness"]
+        return {"imaging": {"brightness": command["brightness"]}, "options": {}}
+
+    monkeypatch.setattr(ptz_http, "perform_ptz", fake_perform)
+    monkeypatch.setattr(ptz_http, "video_server_url", lambda: None)
+    app = _app(hierarchy)
+    raw = json.dumps({"tagId": TAG, "action": "image_set", "brightness": 40}).encode()
+
+    async def receive():
+        return {"type": "http.request", "body": raw, "more_body": False}
+
+    request = Request({
+        "type": "http",
+        "method": "POST",
+        "path": "/v1/ptz/",
+        "headers": [(b"content-type", b"application/json")],
+        "query_string": b"",
+    }, receive)
+    response = asyncio.run(ptz_http.ptz_response(app, request))
+    assert response.status_code == 200
+    assert seen == {"action": "image_set", "brightness": 40}
 
 
 class _Logger:
