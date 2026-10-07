@@ -17,15 +17,16 @@
    :caption: Содержание:
 
    Описание<description>
-   Используемые термины<terms>
-   Компоненты системы<components>
-   Исторические данные<historical_data>
+   Терминология<terms>
    Установка и запуск<installation>
    Администрирование<administration>
+   Исторические данные<historical_data>
    Конфигуратор модели<configurator/configurator>
-   Подключение видеокамер<video>
-   Примеры работы с платформой<examples/examples>
    Создание экранов в Grafana<grafana/grafana_integration>
+   Примеры работы с платформой<examples/examples>
+   Компоненты системы<components>
+   Коннекторы<connectors_guide>
+   Работа с видеоданными<video_data>
    Интеграционные хранилища (v2)<integrational_v2>
    MCP-сервер<mcp>
    Точки расширения безопасности<security_extension_points>
