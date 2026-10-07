@@ -23,6 +23,7 @@
    Установка и запуск<installation>
    Администрирование<administration>
    Конфигуратор модели<configurator/configurator>
+   Подключение видеокамер<video>
    Примеры работы с платформой<examples/examples>
    Создание экранов в Grafana<grafana/grafana_integration>
    Интеграционные хранилища (v2)<integrational_v2>

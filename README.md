@@ -4,99 +4,32 @@
 
 [![Лицензия Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-green.svg)
-[![Coverage Status](https://coveralls.io/repos/github/mp-co-ru/peresvet/badge.svg?branch=dev)](https://coveralls.io/github/mp-co-ru/peresvet?branch=dev)
 
-# Содержание
+# МПК-Пересвет
 
----
+Платформа для моделей технических объектов: иерархия, теги, тревоги,
+методы, коннекторы, расписания и хранилища данных.
+Интерфейс — Grafana, точка входа в сервисы — nginx.
 
-1. [`Описание`](#description)
-2. [`Различие в версиях`](#versions)
-3. [`Запуск платформы`](#running)
-4. [`Запуск платформы из продуктового дистрибутива`](#running_product_distribution)
-5. [`Примеры использования`](#examples)
-6. [`Отладка`](#debugging)
-7. [`Запуск unit-тестов`](#tests)
-8. [`Генерация документации`](#make_docs)
-9. [`Бэкап и восстановление всех работающих Docker-контейнеров`](#docker_runtime_backup)
-10. [`Бэкап и восстановление LDAP`](#ldap_backup)
+Полная документация собирается из `docs/` и публикуется на
+[vovaman.github.io/peresvet](https://vovaman.github.io/peresvet/).
 
----
+# Запуск
 
-**Полная текущая документация доступна по адресу https://vovaman.github.io/peresvet/.**
-**В настоящее время документация обновляется каждый раз,**
-**когда в ветку разработки `dev` добавляется**
-**новая функциональность.**
+Нужны Linux и [Docker](https://docs.docker.com/engine/install/) с плагином
+`docker compose`. После установки Docker выполните
+[настройку прав](https://docs.docker.com/engine/install/linux-postinstall/),
+чтобы команды ниже шли без `sudo`.
 
-# <a name="description"></a>Описание
+Скрипт `./run_one_app.sh` скачивает недостающие образы, собирает локальные
+и запускает контейнеры в фоне: RabbitMQ, Redis, OpenLDAP, PostgreSQL,
+ядро платформы, видеосервер, Grafana и nginx.
+Первый запуск занимает несколько минут.
 
-**МПК-Пересвет** - платформа-конструктор для создания моделей технических объектов и информационных систем.
-Область применения:
+## Из архива релиза
 
-1. Промышленная автоматизация уровней SCADA, диспетчеризация/мониторинг, MES.
-2. Умный дом, умное здание.
-3. Создание программно-аппаратных комплексов
-4. И т.д.
-
-Главная задача - построение модели технического объекта.
-
-Основные сущности, которыми оперирует модель: объект, тег, тревога, метод, коннектор, хранилище данных.
-Этих сущностей достаточно для построения моделей, решающих множество задач: мониторинг, часть задач MES.
-
-Кроме этого, модель может быть расширена дополнительными сущностями для моделирования более сложных
-объектов и процессов.
-
-Платформа может использоваться для сбора, хранения, обработки данных, а также
-автоматизации процессов, протекающих в рамках технического объекта.
-
-Отличия от баз данных реального времени (Prometheus, VictoriaMetrics и т.д.):
-
-1. Инфраструктура. Платформа представляет собой, в первую очередь,
-   инфраструктурную надстройку над базой данных реального времени,
-   т.е. предлагает создание иерархии объектов, каждый из которых обладает
-   набором параметров (тэгов).
-2. Расчётные тэги. У объекта могут быть параметры, которые рассчитываются
-   на основании других параметров.
-3. Внешние расчётные методы. К событиям, происходящим в платформе
-   (изменения тэгов; тревоги; расписания) могут быть привязаны как
-   расчётные методы тэгов, так и просто внешние методы,
-   запускающие какие-либо внешние процессы.
-4. Платформа позволяет не только собирать внешние данные, но и записывать
-   (через коннекторы) данные во внешние источники.
-   Таким образом, на базе платформы можно строить SCADA-системы,
-   системы управления умным домом и т.д.
-
-Говоря в общем, платформа МПК-Пересвет, в отличие от большинства баз данных
-реального времени, нацелена не столько на сбор метрик,
-сколько на автоматизацию технических объектов.
-
-# <a name="installing"></a> Установка
-
-Процесс установки описан в документации:
-[Установка](https://mp-co-ru.github.io/mpc-peresvet/installation.html).
-
-# <a name="running"></a> Запуск и создание контейнеров
-
-Docker-контейнеры - основной способ запуска сервисов платформы.
-Сервисы - независимые приложения, которые общаются друг с другом
-через RabbitMQ.
-
-Возможны совершенно разные комбинации сервисов в одном контейнере.
-Это открывает большие возможности по масштабированию создаваемой
-информационной системы.
-
-Реализованные варианты запуска платформы:
-
-## <a name="running_product_distribution"></a>Запуск платформы из продуктового дистрибутива
-
-Продуктовый дистрибутив публикуется в GitHub Release как архив
-`peresvet-product-<tag>.tar.gz`. В архив входят только файлы, необходимые для
-запуска платформы через `./run_one_app.sh`: Docker Compose-файлы, Dockerfile-ы,
-конфигурация сервисов, исходный код runtime-сервисов, PDF-документация, скрипты
-генерации сертификатов, файл `.env` с настройками по умолчанию, список базовых
-образов `packaging/required-images.manifest` и этот README.
-
-Для запуска нужен Docker с плагином `docker compose`.
+Архив `peresvet-product-<tag>.tar.gz` лежит в
+[релизах](https://github.com/Vovaman/peresvet/releases).
 
 ```bash
 tar -xzf peresvet-product-<tag>.tar.gz
@@ -104,810 +37,86 @@ cd peresvet-product-<tag>
 ./run_one_app.sh
 ```
 
-### Файл `.env`
+## Из репозитория
 
-Рядом с `./run_one_app.sh` лежит файл `.env` с параметрами по умолчанию.
-Перед первым запуском при необходимости отредактируйте его (например, укажите
-адрес зеркала образов или имя сервера):
-
-```env
-PRS_REGISTRY_MIRROR=https://<registry-host>
-PRS_HOSTNAME=
-PRS_SSL=false
-PRS_BUILD=false
-PRS_SKIP_IMAGE_PULL=0
+```bash
+git clone git@github.com:mp-co-ru/peresvet.git
+cd peresvet
+./run_one_app.sh
 ```
 
-Приоритет настроек: значения из `.env` → переменные окружения, уже заданные в
-shell → аргументы командной строки (CLI перекрывает всё).
-
-| Переменная | Назначение |
-|---|---|
-| `PRS_REGISTRY_MIRROR` | URL зеркала базовых образов (`http://...` или `https://...`). Пустое значение — pull с Docker Hub. |
-| `PRS_HOSTNAME` | Имя сервера для nginx. Пустое — текущее имя хоста. |
-| `PRS_SSL` | `true` / `false` — HTTPS-вариант nginx. |
-| `PRS_BUILD` | `true` / `false` — пересборка локальных образов перед запуском. |
-| `PRS_SKIP_IMAGE_PULL` | `1` — не скачивать базовые образы перед запуском. |
-| `LOCAL_MODE` | `true` — использовать предустановленные зависимости (для локального дистрибутива). |
-
-Пример запуска с переопределением параметров из CLI:
+Параметры по умолчанию читаются из `.env` рядом со скриптом.
+Менять его перед первым запуском не нужно.
+Ключи командной строки перекрывают `.env`:
 
 ```bash
 ./run_one_app.sh --hostname <имя-сервера>
-./run_one_app.sh --hostname <имя-сервера> --build true
-./run_one_app.sh --mirror https://<registry-host>
-./run_one_app.sh --local
+./run_one_app.sh --build true
+./run_one_app.sh --help
 ```
 
-Скрипт обновляет `NGINX_HOST` в `docker/compose/.cont_one_app.env`, при необходимости
-скачивает отсутствующие базовые образы, собирает локальные образы приложения и
-запускает контейнеры в фоне.
-В продуктовом дистрибутиве скрипт запуска подключает
-`docker/compose/docker-compose.restart.yml`, поэтому контейнеры автоматически
-перезапускаются после сбоя или перезапуска Docker.
+Зеркало образов, HTTPS и сборка дистрибутива описаны в разделе
+[«Установка и запуск»](https://vovaman.github.io/peresvet/installation.html).
 
-### Зеркало базовых образов
+## Открыть платформу
 
-Дистрибутив **не** включает Docker-образы — они скачиваются при установке.
-Если Docker Hub недоступен, используйте **зеркало образов продукта** — registry
-с заранее опубликованным набором базовых образов.
-
-Скрипт `./run_one_app.sh` **явно** запрашивает только нужные образы с указанного
-зеркала. Это отличается от настройки `registry-mirrors` в `/etc/docker/daemon.json`:
-последняя перенаправляет **все** обращения к `docker.io`, и клиент может «забыть»
-о зеркале, продолжая ходить на него за посторонними образами. Наш подход не меняет
-глобальное поведение Docker — зеркало используется только установочным скриптом.
-
-1. Укажите URL зеркала в `.env` (`PRS_REGISTRY_MIRROR`) или передайте `--mirror`.
-2. Уже установленные локально образы повторно не скачиваются.
-3. Если зеркало настроено, скрипт сначала пробует скачать отсутствующие образы
-   с него. Если зеркало недоступно, скрипт пробует Docker Hub.
-
-Список базовых образов — в `packaging/required-images.manifest`:
-
-```
-redis/redis-stack:7.2.0-v6
-rabbitmq:4.1.1-management
-postgres:16.1
-python:3.12-slim
-osixia/openldap
-grafana/grafana-enterprise:12.4.0-22081664032-ubuntu
-nginx:1.25.3-alpine-slim
-certbot/certbot
-```
-
-На зеркале образы должны быть доступны по тем же путям и тегам, которые
-использует Docker Registry API. Для official images без namespace используйте
-префикс `library/`, например: `<registry-host>/library/postgres:16.1`.
-
-#### Создание собственного зеркала
-
-На сервере зеркала можно запустить локальный Docker Registry версии `3.1.1`:
-
-```bash
-docker run -d \
-  --restart=always \
-  --name prs-registry \
-  -p 5000:5000 \
-  registry:3.1.1
-```
-
-Если registry доступен по HTTP без TLS, укажите его в `insecure-registries`
-на сервере, где будут выполняться `docker push` и `./run_one_app.sh`:
-
-```json
-{
-  "insecure-registries": ["<registry-host>:5000"]
-}
-```
-
-После правки перезапустите Docker: `sudo systemctl restart docker`.
-
-Опубликуйте в registry все образы из `packaging/required-images.manifest`.
-В `REGISTRY_PREFIX` указывается адрес registry без схемы; если зеркало
-использует дополнительный путь, добавьте его туда же, например
-`<registry-host>:5000/<mirror-path>`.
-
-```bash
-REGISTRY_PREFIX=<registry-host>:5000
-
-while IFS= read -r image; do
-  [ -z "$image" ] && continue
-  case "$image" in \#*) continue ;; esac
-
-  target="$image"
-  if [[ "$image" != */* ]]; then
-    target="library/$image"
-  fi
-  if [[ "$target" != *:* ]]; then
-    target="$target:latest"
-  fi
-
-  docker pull "$image"
-  docker tag "$image" "$REGISTRY_PREFIX/$target"
-  docker push "$REGISTRY_PREFIX/$target"
-done < packaging/required-images.manifest
-```
-
-После публикации образов укажите зеркало при запуске. Для HTTP-зеркала:
-
-```bash
-./run_one_app.sh --mirror http://<registry-host>:5000
-```
-
-Для HTTPS-зеркала:
-
-```bash
-./run_one_app.sh --mirror https://<registry-host>
-```
-
-Чтобы отключить зеркало и тянуть образы с Docker Hub, очистите переменную в `.env`:
-
-```env
-PRS_REGISTRY_MIRROR=
-```
-
-Если образы уже загружены на сервер вручную и скачивание не нужно:
-
-```bash
-PRS_SKIP_IMAGE_PULL=1 ./run_one_app.sh
-```
-
-### Ошибки при скачивании образов
-
-Если зеркало не задано и при pull появляется ошибка вида
-`failed to fetch anonymous token` / `auth.docker.io` / `i/o timeout`, проблема
-на уровне доступа Docker daemon к Docker Hub. Частый случай — Docker
-пытается подключиться к `auth.docker.io` по неработающему IPv6-маршруту. Проверьте
-сетевой доступ с сервера к `https://auth.docker.io` и
-`https://registry-1.docker.io`, настройте рабочий IPv6 или отключите IPv6 для
-Docker/хоста, либо укажите зеркало в `.env`.
-
-Локальные секреты можно вынести в файл
-`docker/compose/.cont_one_app.secrets.env`; если файл существует, скрипт запуска
-подключит его как дополнительный `--env-file`.
-
-### Сборка дистрибутива (для разработчиков)
-
-```bash
-# Стандартная сборка (интернет доступен при установке)
-./packaging/build_product_distribution.sh
-# или с явным путём:
-./packaging/build_product_distribution.sh --output dist/peresvet-product-<tag>.tar.gz
-
-# Локальная сборка (интернет ограничен - зависимости включены в дистрибутив)
-./packaging/build_dev_distribution.sh --local
-# или с явным путём:
-./packaging/build_dev_distribution.sh --output dist/peresvet-dev-<tag>.tar.gz --local
-```
-
-Архив создаётся в каталоге `dist/`. При публикации тега на ветке `main` сборка
-выполняется автоматически workflow `.github/workflows/product_distribution.yml`.
-
-**Примечание**: флаг `--local` для `build_dev_distribution.sh` устанавливает системные
-и Python-зависимости на исходниках перед упаковкой, что позволяет запускать платформу
-без доступа к интернету при установке.
-
-### Запуск HTTPS-варианта
-
-HTTPS-вариант включается тем же скриптом через `--ssl true` и рассчитан на то,
-что серверный сертификат уже подготовлен до первого запуска. Имя каталога и имена
-файлов сертификата должны совпадать с именем сервера, переданным через
-`--hostname`:
+Когда контейнер `prs-nginx-one-app` запущен, откройте в браузере:
 
 ```text
-certificates/tls/servers/<имя-сервера>/<имя-сервера>.crt
-certificates/tls/servers/<имя-сервера>/<имя-сервера>.key
+http://localhost/grafana
 ```
 
-После подготовки сертификатов запустите:
-
-```bash
-./run_one_app.sh --hostname <имя-сервера> --ssl true
-```
-
-#### Самоподписанный сертификат
-
-В дистрибутив входят скрипты из каталога `certificates`. Их нужно запускать из
-этого каталога:
-
-```bash
-cd certificates
-./01.\ gen_root.sh
-./02.\ gen_server.sh -h <имя-сервера>
-cd ..
-./run_one_app.sh --hostname <имя-сервера> --ssl true
-```
-
-Скрипт `01. gen_root.sh` создаёт локальный корневой CA в
-`certificates/tls/rootCA`, а `02. gen_server.sh` создаёт серверные файлы
-`certificates/tls/servers/<имя-сервера>/<имя-сервера>.crt` и
-`certificates/tls/servers/<имя-сервера>/<имя-сервера>.key`.
-
-#### Уже существующий сертификат
-
-Если сертификат уже выпущен внешним CA, положите его в структуру, которую
-ожидает Dockerfile nginx:
-
-```bash
-mkdir -p certificates/tls/servers/<имя-сервера>
-cp /path/to/server.crt certificates/tls/servers/<имя-сервера>/<имя-сервера>.crt
-cp /path/to/server.key certificates/tls/servers/<имя-сервера>/<имя-сервера>.key
-./run_one_app.sh --hostname <имя-сервера> --ssl true
-```
-
-Для сертификатов Let's Encrypt обычно в качестве `server.crt` используется
-`fullchain.pem`, а в качестве `server.key` - `privkey.pem`.
-
-## <a name="running_all_peresvet_svcs_in_one_container"></a>Все сервисы платформы в одном контейнере
-
-```bash
-$ ./run_all_svc_in_one.sh
-```
-
-## <a name="running_one_group_in_one_container"></a>Все сервисы для одной сущности в одном контейнере
-Для запуска такой конфигурации достаточно запустить на исполнение скрипт:
-
-```bash
-$ ./run.sh
-```
-
-Скрипт, если необходимо, создаст контейнеры и запустит их на исполнение.
-Для запуска контейнеров в фоне запускаем скрипт с ключом ``-d``:
-
-```bash
-$ ./run.sh -d
-```
-
-Для создания контейнера запускаем команду вида:
-
-```bash
-$ docker compose --env-file docker/compose/.cont_all_in_one.env -f docker/compose/docker-compose.alerts.all.yml build
-```
-
-В файле ``docker/compose/.cont_all_in_one.env`` содержатся переменные с портами
-и именами хостов для следующей конфигурации:
-
-1. Сервисы, относящиеся к одной группе, работают в одном контейнере.
-2. На хостовую машину не маппируются никакие порты из контейнеров.
-3. Одна точка входа в платформу - через контейнер ``nginx`` по порту 80.
-
-## <a name="building_image_for_arm64"></a>Построение образа для архитектуры ARM64
-Руководство по построению образов для разных платформ:
-https://devdotnet.org/post/sborka-docker-konteinerov-dlya-arm-arhitekturi-ispolzuya-buildx/
-
-Команда построения образа для linux/arm64
-docker buildx build --platform linux/arm64 -f docker/docker-files/all/Dockerfile.all_svc.uvicorn --build-arg IMAGE_VERSION=mpc:0.4 -t mpc/peresvet_all-svc:0.4-arm64 . --load
-
-## <a name="docker_runtime_backup"></a>Бэкап и восстановление всех работающих Docker-контейнеров
-
-Для переноса всей текущей Docker-развёртки есть shell-скрипты:
-
-- `admin_scripts/docker/running_containers_backup.sh`
-- `admin_scripts/docker/running_containers_restore.sh`
-
-Скрипт бэкапа работает по `docker ps`, поэтому в архив попадают все
-работающие контейнеры, включая дополнительные контейнеры проекта, а не только
-контейнеры Пересвета. В архив сохраняются committed-образы контейнеров,
-Docker volumes, bind mounts с хоста и Docker metadata.
-
-**Запуск:** скрипты вызываются **из корня проекта** (каталог с `docker/compose/`,
-`admin_scripts/` и т.д.; `pwd -P` должен совпадать с корнем, вычисленным по
-расположению скрипта). Исключение: только `-h` или `--help` — справка из любого
-каталога.
-
-```bash
-cd /путь/к/peresvet
-./admin_scripts/docker/running_containers_backup.sh
-```
-
-Восстановление:
-
-```bash
-./admin_scripts/docker/running_containers_restore.sh \
-  --archive=backups/docker_runtime/ИМЯ_АРХИВА.tar.gz
-```
-
-Если при восстановлении Docker volume или bind mount-путь уже существуют,
-скрипт спрашивает, перезаписать это хранилище или пропустить его
-восстановление. Подробности и параметры описаны в разделе
-`Администрирование` Sphinx-документации (`docs/source/administration.rst`).
-
-## <a name="ldap_backup"></a>Бэкап и восстановление данных OpenLDAP
-
-Данные рабочего каталога OpenLDAP в контейнере лежат в **`/var/lib/ldap`** и в Docker Compose вынесены во **внешний том** или каталог на хосте (см. `docker/compose/docker-compose.ldap.one_app.yml` и `docker/compose/docker-compose.ldap.yml`). Скрипты лежат в **`admin_scripts/ldap/`**:
-
-- `admin_scripts/ldap/ldap_volume_backup.sh`
-- `admin_scripts/ldap/ldap_volume_restore.sh`
-- `admin_scripts/ldap/resolve_ldap_storage.py` — внутренний разбор compose для shell-скриптов; при ручном запуске аргументы позиционные, см. `docs/source/administration.rst` (подраздел про этот файл).
-
-**Запуск:** для рабочих операций оба shell-скрипта вызываются **из корня проекта**
-(каталог с `docker/compose/`, `admin_scripts/` и т.д.; `pwd -P` должен совпадать
-с корнем, вычисленным по расположению скрипта). Иначе — ошибка. Исключение:
-только `-h` или `--help` — справка, из любого каталога.
-
-**Формат:** аргументы вида `--имя=значение` (имена в нижнем регистре). Отдельно, без `=`, допускаются `-h` и `--help` (справка). Логика «истина» для флагов: `1`, `true`, `yes`, `YES`.
-
-**Приоритет цели (том или каталог):** задан `ldap_docker_volume` → именованный том; иначе задан `ldap_data_dir` → каталог на хосте; иначе разбор `compose_file` (сервис `ldap_service`, точка монтирования `/var/lib/ldap`).
-
-### Параметры `ldap_volume_backup.sh`
-
-| Параметр | По умолчанию | Назначение |
-|----------|--------------|------------|
-| `compose_file` | `docker/compose/docker-compose.ldap.one_app.yml` | Compose с LDAP; путь от корня проекта или абсолютный. |
-| `compose_project_name` | *(пусто)* | Проект `docker compose` (`-p`). Пусто — поведение `docker compose` без `-p` (в т.ч. внешняя переменная `COMPOSE_PROJECT_NAME`). |
-| `ldap_service` | `ldap` | Имя сервиса для stop/start и разбора тома. |
-| `backup_dir` | `backups/ldap` | Куда складывать `.tar.gz` (от корня проекта или абсолютный путь). |
-| `ldap_docker_volume` | *(пусто)* | Принудительно: полное имя Docker-тома. |
-| `ldap_data_dir` | *(пусто)* | Принудительно: каталог данных на хосте (если не задан `ldap_docker_volume`). |
-| `backup_helper_image` | `busybox:stable` | Образ для `docker run` при архивации **тома**. |
-| `skip_stop` | `0` | `1` — не останавливать контейнеры с томом (часто вместе с `skip_compose_stop=1`; риск битого архива). |
-| `skip_compose_stop` | `0` | `1` — не вызывать `docker compose stop/start` для LDAP. |
-
-### Параметры `ldap_volume_restore.sh`
-
-| Параметр | По умолчанию | Назначение |
-|----------|--------------|------------|
-| `archive` | *(обязателен)* | Путь к `.tar.gz` (от корня проекта или абсолютный). |
-| `compose_file` | `docker/compose/docker-compose.ldap.one_app.yml` | Как в бэкапе. |
-| `compose_project_name` | *(пусто)* | Как в бэкапе. |
-| `ldap_service` | `ldap` | Как в бэкапе. |
-| `ldap_docker_volume` | *(пусто)* | Принудительный том для распаковки. |
-| `ldap_data_dir` | *(пусто)* | Принудительный каталог на хосте. |
-| `restore_helper_image` | `alpine:3.20` | Образ для `docker run` при очистке и `tar xzf`. |
-| `assume_yes` | `0` | `1` — не спрашивать подтверждение перед перезаписью. |
-| `skip_stop` | `0` | В режиме тома: `1` и занятый том → ошибка (запись без остановки запрещена). |
-| `skip_compose_stop` | `0` | `1` — не вызывать `docker compose stop/start`; для тома останавливаются контейнеры с томом (если не `skip_stop=1`). |
-
-Подробнее (включая предупреждения): раздел **«Администрирование»** в Sphinx-документации, файл `docs/source/administration.rst`.
-
-### Примеры
-
-```bash
-cd /путь/к/peresvet
-./admin_scripts/ldap/ldap_volume_backup.sh
-```
-
-```bash
-./admin_scripts/ldap/ldap_volume_restore.sh \
-  --assume_yes=1 \
-  --archive=backups/ldap/ИМЯ_АРХИВА.tar.gz
-```
-
-# <a name="debugging"></a> Отладка
-
-**Пересвет** разрабатывается с использованием VSCode, поэтому отладка описана
-применительно к этому инструменту.
-
-> Так как основной способ развёртывания платформы - в контейнерах, поэтому
-> отладка сервисов производится также в контейнерах.
-
-> Текущие версии контейнеров не экранируют исполняемый код в папку проекта,
-> поэтому при изменении кода сервисов при отладке необходимо пересобирать
-> контейнеры.
-> Для того, чтобы при изменении кода сервиса процесс в контейнере перезапускался
-> автоматически, необходимо создать новые docker-compose файлы.
-
-> Для отладки в VSCode должен быть установлен плагин
-> `ms-vscode-remote.remote-containers`.
-
-Далее описан процесс запуска отладки.
-
-1. Допустим, мы запустили какие-либо контейнеры с сервисами платформы.
-   Если их запустить во внутреннем терминале VSCode с помощью команды
-
-   ```bash
-   $ ./run.sh -d
-   ```
-
-   , то конейнеры будут запущены в фоновом режиме и продолжать процесс можно
-   будет в этом же терминале.
-1. Пусть мы собираемся отлаживать сервис `app_psql`, который запущен в
-   контейнере `data_storages_all`.
-
-   Имена сервисов указаны в соответствующих файлах конфигураций для
-   `nginx.unit`. К примеру:
-   `mpc-peresvet/docker/docker-files/dataStorages/config_nginx.unit_dataStorages.all.json`
-   в этих же файлах указывается и имя исполняемого модуля. Для нашего примера
-   это `"module": "dataStorages_app_postgresql_svc"`
-1. Выведем список всех работающих контейнеров, чтобы определить id нужного
-   нам контейнера:
-
-   ```bash
-   $ docker ps
-   CONTAINER ID   IMAGE                         COMMAND                  CREATED        STATUS       PORTS                                            NAMES
-   f43825ef56f3   compose_data_storages_all     "/usr/local/bin/dock…"   8 hours ago    Up 8 hours   <published-ports>                                compose-data_storages_all-1
-   cc6246329561   compose_alerts_all            "/usr/local/bin/dock…"   5 days ago     Up 8 hours   <published-ports>                                compose-alerts_all-1
-   0800773b53a8   compose_methods_all           "/usr/local/bin/dock…"   5 days ago     Up 8 hours   <published-ports>                                compose-methods_all-1
-   13ce75017a6a   compose_tags_all              "/usr/local/bin/dock…"   11 days ago    Up 8 hours   <published-ports>                                compose-tags_all-1
-   ...
-   ```
-
-   Нужный нам контейнер - `compose-data_storages_all-1`, в качестве его id
-   возьмём `f438`.
-1. Находясь с корневой папке проекта, запускаем на исполнение скрипт
-   `run_debug.sh`, передавая ему в качестве параметров id контейнера
-   и имя сервиса для отладки:
-
-   ```bash
-   $ ./run_debug.sh f438 app_psql
-   ```
-
-   > При первом запуске отладки в контейнере будут установлены пакеты
-   > `debugpy` и `uvicorn`, поэтому в связи с этим требуется соединение
-   > с интернетом и первый запуск потребует несколько больше времени.
-
-   Выполнение скрипта остановится выводом строки
-
-   ```bash
-   $ Запускаем процесс uvicorn. Для остановки процесса нажмите Ctrl+C...
-   ```
-1. В VSCode открываем файл запускаемого модуля. В нашем примере
-   это `mpc-peresvet/src/services/dataStorages/app/postgresql/dataStorages_app_postgresql_svc.py`.
-   Устанавливаем необходимые точки установки.
-1. Переключаемся на панель "Запуск и отладка" и выбираем конфигурацию
-   `MPC_DEBUG: f438 app_psql`:
-
-   ![Отладка](pics/vscode_debug.png "Отладка")
-1. Нажимаем `F5` или зелёную стрелку слева от имени конфигурации и входим в
-   режим отладки.
-
-Для выхода из режима отладки необходимо остановить отладку в VSCode и нажать
-`Ctrl+C` в терминале, в котором был запущен скрипт `run_debug.sh`.
-
-# <a name="tests"></a>Запуск unit-тестов
-
-Находясь в корневой папке проекта:
-
-```bash
-$ pytest
-```
-
-Будут запущены unit-тесты, также будет показана статистика покрытия тестами исходных кодов проекта.
-При пуше и pull request в ветку `dev` тот же прогон выполняется GitHub Actions, покрытие уходит на [Coveralls](https://coveralls.io/github/mp-co-ru/peresvet?branch=dev).
-
-## Подготовка
-1. Копируем платформу со [страницы релизов](https://github.com/Vovaman/peresvet/releases).
-2. Распаковываем архив в локальную папку.
-3. При необходимости правим `.env` (имя сервера, адрес зеркала образов).
-
-## Запуск на локальном сервере
-Этот способ самый простой и применяется для работы с платформой во внутренней сети,
-для построения тестовых моделей и т.д.
-Работа происходит по протоколу HTTP.
-
-4. Заходим в папку с распакованным архивом и запускаем на исполнение скрипт:
-
-   ```console
-   $ ./run_one_app.sh
-   ```
-
-   Параметры по умолчанию берутся из `.env`. Имя сервера можно задать так:
-   ``./run_one_app.sh --hostname myserver``.
-
-## Запуск на сервере, доступном из интернета
-Этот способ используется для развёртывания платформы на рабочем сервере.
-
-5. Заходим в папку с распакованным архивом и запускаем на исполнение скрипт, в качестве
-   параметра передавая имя сайта, под которым сервер будет доступен в интернете.
-   В момент запуска скрипта сервер уже должен быть доступен под указанным именем в интернете.
-
-   > :warning: Скрипт обязательно должен запускаться от имени администратора.
-
-   ```console
-   $ sudo ./run_one_app_ssl_letsencrypt_generate_certificates.sh <имя сайта>
-   ```
-
-   Скрипт получит сертификаты для сервера, а также создаст сервис для автоматического обновления сертификатов.
-   Обновление будет происходит один раз в 11 недель.
-
-6. Запускаем скрипт:
-
-   ```console
-   $ ./run_one_app_ssl_letsencrypt.sh
-   ```
-
-   Скрипт запустит платформу.
-
-## Интерфейс
-
-7. Открываем браузер и в строке адреса вводим: http://localhost/grafana.
-
-   <div style="text-align: center;">
-      <img src="pics/welcome.png" alt="Пересвет" />
-   </div>
-
-   > :warning: Имя пользователя и пароль по умолчанию: user=admin, password=admin.
-   > При первом входе в систему Grafana предложит сменить пароль.
-
-8. По умолчанию откроется панель с конфигуратором системы.
+Если платформа на другой машине, подставьте её адрес.
+Имя и пароль при первом входе: `admin` / `admin`.
+Grafana предложит сменить пароль. Дальше откроется конфигуратор модели.
 
 <div style="text-align: center;">
-   <img src="pics/configurator.png" alt="Пересвет" />
+   <img src="pics/configurator.png" alt="Конфигуратор" />
 </div>
 
-Инструкции по работе с конфигуратором
-[здесь](https://vovaman.github.io/peresvet/configurator/configurator.html).
+Дальше по интерфейсу:
+[конфигуратор](https://vovaman.github.io/peresvet/configurator/configurator.html),
+[подключение видеокамер](https://vovaman.github.io/peresvet/video.html),
+[пример с объектом и тегом](https://vovaman.github.io/peresvet/examples/examples.html).
 
-# <a name="examples"></a> Примеры использования
+## Остановка
 
-Начальный пример работы с платформой описан в документации:
-[пример](https://vovaman.github.io/peresvet/examples/examples.html).
-
-Примеры работы с платформой собраны в отдельном проекте
-[peresvet_examples](https://github.com/Vovaman/peresvet_examples).
-
-Проект постоянно пополняется.
-
-# <a name="debugging"></a> Отладка
-
-Для отладки платформы необходимо создать виртуальное окружение проекта с помощью инструмента
-[pipenv](https://pipenv.pypa.io/en/latest/).
-
-После установки `pipenv` заходим в папку проекта и выполняем команду
-
-```console
-$ pipenv install
-```
-
-Теперь запускаем все контейнеры, кроме сервисов платформы, скриптом
-
-```console
-$ ./run_one_app_debug.sh
-```
-
-Далее открываем файл ``src/services/one_app/one_app.py``, это главный исполняемый файл платформы,
-и запускаем его в режиме отладки.
-
-# <a name="make_docs"></a> Генерация документации
-
-Перед генерацией документации необходимо также, как и в случае с отладкой, сначала создать виртуальное окружение проекта.
-
-После создания виртуального окружения заходим в папку ``docs`` и выполняем команду
-
-```console
-$ make html
-```
-
-В результате в каталоге ``docs/build/html`` будет сгенерирована HTML-документация на проект.
-
-Заметки по отдельным темам в корне ``docs/`` (не входят в Sphinx), например:
-[отбор точек при ``data_set`` тега](docs/tag_data_set_filtering.md).
-
-
-![ldap-test](pics/jxplorer.png 'ldap-test')
-
-> :zap:Контейнер, на котором работает тестовый ldap-сервер, называется `ldap_test`.
-> Не забудьте вручную остановить контейнер `ldap_test` командой
-> `$ docker stop ldap_test`
-
-# <a name="load_tests"></a>Запуск нагрузочных тестов
-
-В настоящем разделе содержится инструкция для разворачивания полигона для
-выполнения нагрузочных тестов для команд `data/set` и `data/get`.
-
-Предполагается, что все команды выполняются в корневой папке проекта.
-
-## 1. ldap image
-
-Восстанавливаем из архива образ иерархической базы с 4000 тегов, для чего
-выполняем команду
+Из каталога, где лежит `./run_one_app.sh`:
 
 ```bash
-$ docker load -i load_tests/images/ldap_4000_tags.tar
+docker compose --env-file docker/compose/.cont_one_app.env \
+  -f docker/compose/docker-compose.redis.yml \
+  -f docker/compose/docker-compose.rabbitmq.yml \
+  -f docker/compose/docker-compose.ldap.one_app.yml \
+  -f docker/compose/docker-compose.postgresql.data_in_volume.yml \
+  -f docker/compose/docker-compose.one_app.yml \
+  -f docker/compose/docker-compose.video.yml \
+  -f docker/compose/docker-compose.grafana.yml \
+  -f docker/compose/docker-compose.nginx.one_app.yml \
+  -f docker/compose/docker-compose.ports.yml \
+  -f docker/compose/docker-compose.restart.yml \
+  down
 ```
 
-## 2. Подготовка базы данных PostgreSQL
+Для HTTPS замените файл nginx на `docker-compose.nginx.one_app.ssl.yml`.
+Тома с данными остаются.
 
-Выполним следующее: создадим две базы данных PostgreSQL для двух разных
-типов тестов, для записи и для чтения данных. Обе базы будут идентичны
-по структуре таблиц, только база для тестов на чтение будет заполнена данными.
+# Документация и проверка
 
-### Создание пустой базы для тестов data/set
+Раздел администрирования (резервные копии Docker и LDAP) —
+[administration.html](https://vovaman.github.io/peresvet/administration.html),
+исходник `docs/source/administration.rst`.
 
-1. Создадим каталог для базы данных PostgreSQL. Этот каталог должен быть
-   вне папки проекта, так как в противном случае построение контейнеров будет
-   занимать очень много времени в связи с большим размером баз.
-
-   Допустим, каталог базы будет располагаться в корневом каталоге:
-
-   ```bash
-   $ mkdir /psql_set_data
-   ```
-
-2. Создадим пустую базу.
-
-   Для этого откроем файл `docker-compose.postgres.set_test.yml`
-   и значение параметра `volumes` приведём к следующему виду:
-
-   ```
-   - /psql_set_data:/var/lib/postgresql/data
-   ```
-
-   Сохраним файл.
-
-   Запустим контейнер с PostgreSQL:
-
-   ```bash
-   $ docker compose -f docker-compose.postgres.set_test.yml up
-   ```
-
-   В результате в созданном нами на предыдущем шаге каталоге будет создана
-   база данных `peresvet` (параметры создания базы - в файле `.env`).
-
-3. Создадим в базе данных таблицы (их имена будут соответствовать тегам
-   в восстановленной нами из архива иерархической базе):
-   ```bash
-   $ pipenv shell
-   $ cd load_tests
-   $ python create_tables.py
-   ```
-   Запущенный скрипт откроет файл `tags_in_postgres.json`, в котором записаны
-   id всех тегов и для каждого тега создаст таблицу.
-
-Подготовка для тестов команды `data/set` завершена.
-
-### Создание пустой базы для тестов data/get
-
-Теперь необходимо создать аналогичную базу и заполнить её данными.
-
-1. Продублируем созданную базу, для чего просто скопируем каталог уже
-   созданной нами базы. Выполнять команду необходимо с правами администратора.
-
-   ```bash
-   $ sudo su
-   # cp -apr /psql_set_data/ /psql_get_data
-   # exit
-   ```
-
-2. Откроем файл `docker-compose.postgres.get_test.yml` и исправим параметр
-   `volumes`:
-
-   ```
-   - /psql_get_data:/var/lib/postgresql/data
-   ```
-
-   Сохраним файл.
-
-3. Запустим PostgreSQL с новой базой:
-
-   ```bash
-   $ docker compose -f docker-compose.postgres.get_test.yml up
-   ```
-
-4. Заполним данными базу:
-   ```bash
-   $ pipenv shell
-   $ cd load_tests
-   $ python set_data_to_db_many.py
-   ```
-   > :warning: Внимание! Процесс записи данных будет долгим.
-
-## 3. Запуск тестов data/set
-
-Запустим все необходимые контейнеры.
+Локальная сборка HTML, из каталога `docs` после установки зависимостей проекта:
 
 ```bash
-$ ./run_locust_data_set_prs-psql.sh
+make html
 ```
 
-В скрипте указано, что будут запущены 4 копии сервиса `peresvet`.
-Это число можно изменить, исходя из правила, что количество копий сервиса
-равно числу ядер процессора.
+Результат: `docs/build/html/index.html`.
 
-В целях ускорения работы платформы уровень логирования во всех сервисах
-понижен до минимального.
-
-При запуске платформа начинает создавать кэш для каждого тега.
-Для этого требуется некоторое время, в течение которого платформа не будет
-отвечать на запросы.
-
-При отсутствии логов определить, что построение кэша закончено, можно
-по активности процессов: запускаем в консоли команду `top` и наблюдаем
-за активностью процессов `slapd`, `uvicorn`. Как только активность
-этих процессов упадёт, значит, кэши построены.
-
-Запускаем браузер и вводим в адресную строку: `http://localhost:8089`.
-
-![set-test](pics/locust.png 'set-test')
-
-Указываем нужное количество пользователей, а также адрес - `http://nginx`.
-В этом случае в тесте будут задействованы все запущенные экземпляры платформы.
-
-Для теста одного экземпляра платформы, без nginx-прокси, в строке адреса
-указываем `http://peresvet`.
-
-После выполнения тестов можно очистить от данных базу. Для этого сначала
-остановим все контейнеры, затем выполним команды:
+Unit-тесты из корня репозитория:
 
 ```bash
-$ docker compose -f docker-compose.postgres.set_test.yml up
-$ cd load_tests
-$ python delete_data.py
+.venv/bin/python -m pytest tests/unit
 ```
-
-> :warning: Выполняйте скрипт удаления данных только на базе для теста
-> data/set! Не путайте с data/get!
-
-## 4. Запуск тестов data/get
-
-Запуск тестов на получение данных аналогичен предыдущему, за исключением того,
-что выполняется он скриптом
-
-```bash
-$ ./run_locust_data_get_prs-psql.sh
-```
-
-## 5. Создание новых тестов
-
-В тестах data/set используется файл
-`load_tests/src/locustfile_set_data_prs-psql.py`, а в тестах data/get -
-`locustfile_get_data_prs-psql.py`.
-
-Файлы можно расширять новыми тестами, а также создавать новые файлы.
-
-## 6. Запуск теста реальной работы системы
-
-Эмулируется одновременная работа 100 коннекторов, каждый из которых раз в
-секунду записывает значения для 50 тегов, а также 50 экранов, каждый из
-которых раз в секунду читает текущие значения для 28 тегов.
-
-```bash
-$ ./run_locust_real_job.sh
-```
-
-# <a name="make_docs"></a>Генерация документации
-
-Документация создаётся с помощью инструмента
-`"sphinx" <https://www.sphinx-doc.org/en/master/>`\_. Все необходимые пакеты
-прописаны в `Pipfile` и устанавливаются автоматически при создании
-окружения проекта.
-
-## <a name="html-docs"></a> HTML
-
-В консоли заходим в папку `docs` и выполняем команду
-
-```bash
-$ make html
-```
-
-Созданная документация будет расположена в папке `docs/build/html`.
-Основной файл - `index.html`.
-
-## <a name="pdf"></a> PDF
-
-PDF вариант документации создаётся с помощью
-`LaTeX <https://www.latex-project.org/>`\_.
-
-Устанавливаем необходимые пакеты:
-
-```bash
-$ sudo apt-get install  texmaker gummi texlive texlive-full \
-texlive-latex-recommended latexdraw intltool-debian lacheck \
-lmodern luatex po-debconf tex-common texlive-binaries texlive-extra-utils \
-texlive-latex-base texlive-latex-base-doc texlive-luatex texlive-xetex \
-texlive-lang-cyrillic texlive-fonts-extra texlive-science \
-texlive-latex-extra texlive-pstricks
-```
-
-Заходим в каталог `docs/latex` и выполняем команды:
-
-```bash
-$ pdflatex mpc_peresvet.tex
-$ makeindex mpc_peresvet.idx
-$ pdflatex mpc_peresvet.tex
-```
-
-В этой же папке появится сгенерированный файл документации
-`mpc_peresvet.pdf`.
-
-Для генерации исходных кодов в виде pdf-файла выполняем два раза одну и ту же
-команду:
-
-```bash
-$ pdflatex sources.tex
-$ pdflatex sources.tex
-```
-# <a name="swap_on_raspberry_pi"></a>Настройка swap-файла на Raspberry Pi
-
-https://linuxtut.com/en/71e3874cb83ed12ec405/

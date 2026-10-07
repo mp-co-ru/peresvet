@@ -173,9 +173,25 @@ HTTPS включается ``PRS_SSL=true`` в ``.env`` или ``--ssl true``. �
 Остановка платформы
 -------------------
 
-Остановите контейнеры, например:
+Из корня проекта остановите тот же набор compose-файлов, с которым
+платформу поднимает ``./run_one_app.sh``. Для HTTP-варианта:
 
 .. code:: sh
 
-   $ docker compose -f docker/compose/docker-compose.redis.yml down
-   $ # или остановите все контейнеры проекта compose вручную
+   $ docker compose --env-file docker/compose/.cont_one_app.env \
+     -f docker/compose/docker-compose.redis.yml \
+     -f docker/compose/docker-compose.rabbitmq.yml \
+     -f docker/compose/docker-compose.ldap.one_app.yml \
+     -f docker/compose/docker-compose.postgresql.data_in_volume.yml \
+     -f docker/compose/docker-compose.one_app.yml \
+     -f docker/compose/docker-compose.video.yml \
+     -f docker/compose/docker-compose.grafana.yml \
+     -f docker/compose/docker-compose.nginx.one_app.yml \
+     -f docker/compose/docker-compose.ports.yml \
+     -f docker/compose/docker-compose.restart.yml \
+     down
+
+Для HTTPS замените ``docker-compose.nginx.one_app.yml`` на
+``docker-compose.nginx.one_app.ssl.yml``.
+Команда ``down`` останавливает контейнеры и удаляет сеть проекта.
+Тома с данными LDAP, PostgreSQL, Grafana и видеоархивом остаются.
