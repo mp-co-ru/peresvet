@@ -135,6 +135,7 @@ required_pathspecs=(
     "docker/compose/docker-compose.nginx.ssl_letsencrypt_generate_certificates.yml"
     "docker/compose/docker-compose.certbot.ssl_letsencrypt_generate_certificates.yml"
     "docker/compose/docker-compose.one_app.yml"
+    "docker/compose/docker-compose.video.yml"
     "docker/compose/docker-compose.ports.yml"
     "docker/compose/docker-compose.postgresql.data_in_volume.yml"
     "docker/compose/docker-compose.rabbitmq.yml"

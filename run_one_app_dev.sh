@@ -23,6 +23,7 @@ docker compose --env-file docker/compose/.cont_one_app.env $extra_env \
 -f docker/compose/docker-compose.ldap.one_app.yml \
 -f docker/compose/docker-compose.postgresql.data_in_volume.yml \
 -f docker/compose/docker-compose.one_app.yml \
+-f docker/compose/docker-compose.video.yml \
 -f docker/compose/docker-compose.grafana.yml \
 -f docker/compose/docker-compose.nginx.one_app.yml \
 -f docker/compose/docker-compose.ports.yml \

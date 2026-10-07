@@ -22,6 +22,7 @@ from src.common.base_svc import BaseSvc
 from src.common.api_crud_svc import valid_uuid, ErrorHandler
 from src.common.authorization import authorize_action
 from src.services.tags.app_api.tags_app_api_settings import TagsAppAPISettings
+from src.services.video.http_response import maybe_video_data_response
 import src.common.times as t
 from src.common.tag_data_points import normalize_point_xyq
 
@@ -408,6 +409,9 @@ async def data_get(
             res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
             await error_handler.handle_error(res)
             return {}
+    media = await maybe_video_data_response(app, p, request)
+    if media is not None:
+        return media
     res = await app.data_get(p)
     await error_handler.handle_error(res)
     return res

@@ -191,6 +191,7 @@ from src.services.tags.app_api.tags_app_api_svc \
         app as tags_app_api,
         router as tags_app_api_router
     )
+from src.services.video.ptz_http import build_ptz_router
 # -----------------------------------------------------------------------------
 
 # datafunc ----------------------------------------------------------------------
@@ -267,6 +268,7 @@ api_router.include_router(router=schedules_api_crud_router)
 api_router.include_router(router=tags_api_crud_router)
 # tags_app_api
 api_router.include_router(router=tags_app_api_router)
+api_router.include_router(build_ptz_router(tags_app_api))
 # -----------------------------------------------------------------------------
 
 # datafunc ----------------------------------------------------------------------

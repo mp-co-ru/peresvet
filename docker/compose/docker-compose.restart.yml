@@ -23,6 +23,10 @@ services:
     container_name: prs-one-app
     restart: always
 
+  video:
+    container_name: prs-video
+    restart: always
+
   nginx_one_app:
     container_name: prs-nginx-one-app
     restart: always

@@ -99,6 +99,9 @@ def _make_service(*, post_results=None):
         ConnectorsMQTTApp._send_config_to_connector, svc
     )
     svc._connection_lost = MethodType(ConnectorsMQTTApp._connection_lost, svc)
+    svc._broker_session_is_camera = MethodType(
+        ConnectorsMQTTApp._broker_session_is_camera, svc
+    )
     return svc
 
 
@@ -404,6 +407,19 @@ def test_broker_headers_extract_mqtt_client_uuid():
     assert conn_id == CONN_UUID
 
 
+def test_broker_headers_read_rabbitmq4_mqtt_client_id_term():
+    conn_id = connector_id_from_broker_connection_headers(
+        {
+            "protocol": "{'MQTT',{3,1,1}}",
+            "user": "prs",
+            "client_properties": [
+                '{client_id,longstr,<<"' + CONN_UUID + '">>}'
+            ],
+        }
+    )
+    assert conn_id == CONN_UUID
+
+
 def test_broker_headers_ignore_non_mqtt_protocol():
     assert connector_id_from_broker_connection_headers(
         {
@@ -437,6 +453,45 @@ def test_connection_lost_loads_tag_ids_when_cache_empty():
 
     assert svc._posts[0]["mes"]["data"][0]["tagId"] == "tag-from-ldap"
     assert svc._posts[0]["mes"]["data"][0]["data"][0][2] == CN_QUALITY_CONNECTION_LOST
+
+
+def test_camera_mqtt_session_marks_link_without_quality():
+    svc = _make_service()
+    svc._camera_presence_ids = set()
+
+    async def _is_camera(conn_id):
+        return conn_id == CONN_UUID
+
+    svc._is_camera = _is_camera
+    created = _BrokerEvent(
+        "connection.created",
+        {
+            "protocol": "MQTT 3.1.1",
+            "pid": "<0.9.0>",
+            "name": "video",
+            "client_properties": {"client_id": CONN_UUID},
+        },
+    )
+    asyncio.run(ConnectorsMQTTApp._on_broker_connection_event(svc, created))
+
+    assert CONN_UUID in svc._connected_connectors
+    assert CONN_UUID in svc._camera_presence_ids
+    assert svc._posts == []
+
+    closed = _BrokerEvent(
+        "connection.closed",
+        {
+            "protocol": "MQTT 3.1.1",
+            "pid": "<0.9.0>",
+            "name": "video",
+            "client_properties": {"client_id": CONN_UUID},
+        },
+    )
+    asyncio.run(ConnectorsMQTTApp._on_broker_connection_event(svc, closed))
+
+    assert CONN_UUID not in svc._connected_connectors
+    assert CONN_UUID not in svc._camera_presence_ids
+    assert svc._posts == []
 
 
 def test_broker_connection_closed_writes_100():

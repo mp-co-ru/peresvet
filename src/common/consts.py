@@ -28,6 +28,17 @@ class CNTagValueTypes(IntEnum):
     CN_STR: int = 2
     CN_JSON: int = 4
     CN_TABLE: int = 5
+    # Окно в камеру. Байты кадра и потока в историю не пишутся.
+    CN_VIDEO: int = 6
+
+class CNConnectorTypes(IntEnum):
+    """Тип коннектора в ``prsEntityTypeCode``.
+
+    0 и пустое значение — прежние коннекторы (MQTT и внешние процессы).
+    Камера держит RTSP сама, в очередь ``prs2conn`` её конфигурация не уходит.
+    """
+    CN_MQTT: int = 0
+    CN_CAMERA: int = 10
 
 class Order(IntEnum):
     """ Порядок сортировки выборки

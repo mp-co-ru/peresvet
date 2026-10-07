@@ -1,0 +1,40 @@
+services:
+  video:
+    container_name: prs-video
+    hostname: video
+    image: prs-one-app
+    build:
+      context: ../..
+      dockerfile: docker/docker-files/all/Dockerfile.one_app.uvicorn
+      args:
+        - LOCAL_MODE=${LOCAL_MODE:-false}
+    command: ["python", "src/services/video/video_server.py"]
+    environment:
+      TZ: ${TIME_ZONE}
+      VIDEO_ARCHIVE_DIR: /var/lib/peresvet/video
+      VIDEO_ARCHIVE_HOURS: ${VIDEO_ARCHIVE_HOURS:-24}
+      VIDEO_HTTP_PORT: "8090"
+    volumes:
+      - video_archive:/var/lib/peresvet/video
+      - ../../log:/usr/src/mpc-peresvet/log
+    networks:
+      - peresvet
+
+  # Платформа после проверки прав отдаёт зрителей на видеосервер.
+  one_app:
+    environment:
+      VIDEO_SERVER_URL: http://video:8090
+    depends_on:
+      video:
+        condition: service_started
+
+networks:
+  peresvet:
+    driver: bridge
+    ipam:
+      config:
+          - subnet: 10.66.0.0/16
+            gateway: 10.66.0.1
+
+volumes:
+  video_archive:
