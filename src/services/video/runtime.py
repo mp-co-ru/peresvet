@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import socket
 import time
 from pathlib import Path
 
@@ -45,10 +46,14 @@ class CameraSession:
         self.camera = camera
         self.directory = directory
         self.subscribers: list[asyncio.Queue] = []
+        self.audio_subscribers: list[asyncio.Queue] = []
         self.ready = asyncio.Event()
         self._proc: asyncio.subprocess.Process | None = None
         self._pump_task: asyncio.Task | None = None
+        self._audio_task: asyncio.Task | None = None
         self._stderr_task: asyncio.Task | None = None
+        self._stderr_lines: list[str] = []
+        self._want_audio = True
         self._stopped = False
         self._restarting = False
 
@@ -74,11 +79,11 @@ class CameraSession:
         await self._open_process()
         self._pump_task = asyncio.create_task(self._pump())
         try:
-            await asyncio.wait_for(self.ready.wait(), timeout=8)
+            await asyncio.wait_for(self.ready.wait(), timeout=20)
         except TimeoutError as ex:
             await self.stop()
             raise VideoRuntimeError(
-                f"Камера {self.camera.log_target} не прислала кадр за 8 с."
+                f"Камера {self.camera.log_target} не прислала кадр за 20 с."
             ) from ex
         hold_camera_presence(self.connector_id)
 
@@ -93,12 +98,13 @@ class CameraSession:
                 await proc.wait()
             except ProcessLookupError:
                 pass
-        for task in (self._pump_task, self._stderr_task):
+        for task in (self._pump_task, self._audio_task, self._stderr_task):
             if task is not None and not task.done():
                 task.cancel()
         for queue in list(self.subscribers):
             queue.put_nowait(None)
         self.subscribers.clear()
+        self._end_audio()
 
     def subscribe(self) -> asyncio.Queue:
         queue: asyncio.Queue = asyncio.Queue(maxsize=8)
@@ -108,6 +114,23 @@ class CameraSession:
     def unsubscribe(self, queue: asyncio.Queue) -> None:
         if queue in self.subscribers:
             self.subscribers.remove(queue)
+
+    def subscribe_audio(self) -> asyncio.Queue:
+        queue: asyncio.Queue = asyncio.Queue(maxsize=32)
+        if not self._want_audio:
+            queue.put_nowait(None)
+        else:
+            self.audio_subscribers.append(queue)
+        return queue
+
+    def unsubscribe_audio(self, queue: asyncio.Queue) -> None:
+        if queue in self.audio_subscribers:
+            self.audio_subscribers.remove(queue)
+
+    def _end_audio(self) -> None:
+        for queue in list(self.audio_subscribers):
+            queue.put_nowait(None)
+        self.audio_subscribers.clear()
 
     def _broadcast(self, chunk: bytes) -> None:
         stale: list[asyncio.Queue] = []
@@ -125,14 +148,35 @@ class CameraSession:
             self.unsubscribe(queue)
 
     async def _open_process(self) -> None:
-        args = session_ffmpeg_args(self.camera, self.directory, segment_seconds(), ffmpeg_bin())
+        if self._audio_task is not None and not self._audio_task.done():
+            self._audio_task.cancel()
+        audio_server = None
+        audio_target = None
+        if self._want_audio:
+            audio_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            audio_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            audio_server.bind(("127.0.0.1", 0))
+            audio_server.listen(1)
+            audio_server.setblocking(False)
+            port = audio_server.getsockname()[1]
+            audio_target = f"tcp://127.0.0.1:{port}"
+        args = session_ffmpeg_args(
+            self.camera,
+            self.directory,
+            segment_seconds(),
+            ffmpeg_bin(),
+            audio_target=audio_target,
+        )
         self._proc = await asyncio.create_subprocess_exec(
             *args,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
+        if audio_server is not None:
+            self._audio_task = asyncio.create_task(self._read_audio(audio_server))
         if self._stderr_task is not None and not self._stderr_task.done():
             self._stderr_task.cancel()
+        self._stderr_lines = []
         self._stderr_task = asyncio.create_task(self._drain_stderr())
 
     async def _respawn(self) -> bool:
@@ -146,6 +190,13 @@ class CameraSession:
                     await old.wait()
                 except ProcessLookupError:
                     pass
+            if self._stderr_says_no_audio():
+                self._want_audio = False
+                self._end_audio()
+                logger.info(
+                    "Камера %s: в RTSP нет звука, сеанс только с картинкой",
+                    self.connector_id,
+                )
             logger.warning("Камера %s: поток прервался, перезапуск", self.connector_id)
             await asyncio.sleep(1)
             if self._stopped:
@@ -176,6 +227,7 @@ class CameraSession:
                     self._broadcast(chunk)
                 if self._stopped:
                     break
+                await asyncio.sleep(0.1)
                 if not await self._respawn():
                     break
         except asyncio.CancelledError:
@@ -197,9 +249,55 @@ class CameraSession:
                     break
                 text = redact_rtsp(line.decode("utf-8", errors="replace")).strip()
                 if text:
+                    self._stderr_lines.append(text)
                     logger.warning("Камера %s: %s", self.connector_id, text)
         except asyncio.CancelledError:
             raise
+
+    def _stderr_says_no_audio(self) -> bool:
+        if not self._want_audio:
+            return False
+        text = "\n".join(self._stderr_lines)
+        return (
+            "does not contain any stream" in text
+            or "matches no streams" in text
+        )
+
+    async def _read_audio(self, server: socket.socket) -> None:
+        """Читает звук всегда, даже без слушателей: иначе ffmpeg заполнит канал и встанет картинка."""
+        loop = asyncio.get_running_loop()
+        try:
+            conn, _ = await loop.sock_accept(server)
+        except asyncio.CancelledError:
+            server.close()
+            raise
+        server.close()
+        conn.setblocking(False)
+        try:
+            while not self._stopped:
+                try:
+                    chunk = await loop.sock_recv(conn, 4096)
+                except (ConnectionError, OSError):
+                    break
+                if not chunk:
+                    break
+                self._broadcast_audio(chunk)
+        except asyncio.CancelledError:
+            raise
+        finally:
+            conn.close()
+
+    def _broadcast_audio(self, chunk: bytes) -> None:
+        for queue in list(self.audio_subscribers):
+            if queue.full():
+                try:
+                    queue.get_nowait()
+                except asyncio.QueueEmpty:
+                    pass
+            try:
+                queue.put_nowait(chunk)
+            except asyncio.QueueFull:
+                self.unsubscribe_audio(queue)
 
 
 _sessions: dict[str, CameraSession] = {}

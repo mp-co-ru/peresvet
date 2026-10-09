@@ -37,6 +37,11 @@ logger = logging.getLogger("video")
 _NO_FRAME = "Нет записи камеры на этот момент."
 
 
+def wants_live_audio(payload) -> bool:
+    extra = getattr(payload, "model_extra", None) or {}
+    return str(extra.get("audio") or "") in {"1", "true", "True"}
+
+
 def _error(code: int, message: str) -> JSONResponse:
     return JSONResponse({"error": {"code": code, "message": message}}, status_code=code)
 
@@ -93,6 +98,10 @@ async def maybe_video_data_response(app, payload, request: Request | None = None
             return _error(500, "Нет HTTP-запроса для проксирования на видеосервер.")
         return await proxy_video_get(request)
     try:
+        if wants_live_audio(payload):
+            if resolved.mode != "live":
+                return _error(422, "Звук камеры есть только у живого потока.")
+            return await _live_audio(resolved, request)
         if resolved.mode == "live":
             return await _live(resolved, request)
         if resolved.mode == "snapshot":
@@ -124,6 +133,27 @@ async def _live(binding: VideoBinding, request: Request | None) -> StreamingResp
         chunks(),
         media_type="multipart/x-mixed-replace; boundary=ffmpeg",
     )
+
+
+async def _live_audio(binding: VideoBinding, request: Request | None) -> Response:
+    session = await get_session(binding.connector_id, binding.camera, _camera_dir(binding))
+    if not session._want_audio:
+        return _error(404, "У камеры нет звука в потоке.")
+    queue = session.subscribe_audio()
+
+    async def chunks():
+        try:
+            while True:
+                if request is not None and await request.is_disconnected():
+                    break
+                chunk = await queue.get()
+                if chunk is None:
+                    break
+                yield chunk
+        finally:
+            session.unsubscribe_audio(queue)
+
+    return StreamingResponse(chunks(), media_type="audio/mpeg")
 
 
 async def _snapshot(binding: VideoBinding) -> Response:

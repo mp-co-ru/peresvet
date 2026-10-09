@@ -8,7 +8,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261009-services-splitter-v6"
+CODE_VERSION = "20261009-camera-audio-v1"
 
 
 def _parts():

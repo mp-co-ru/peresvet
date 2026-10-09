@@ -44,8 +44,12 @@ _profiles: dict[tuple, str] = {}
 _ptz_paths: dict[tuple, str] = {}
 _source_tokens: dict[tuple, str] = {}
 _image_options: dict[tuple, dict] = {}
+_speed_ready: set[tuple] = set()
+_motion: dict[tuple, tuple[float, float, float] | None] = {}
+_io_locks: dict[tuple, threading.RLock] = {}
 _tracks: dict[tuple, "_Track"] = {}
 _track_guard = threading.Lock()
+_io_guard = threading.Lock()
 
 
 class _Track:
@@ -178,9 +182,121 @@ def _device_url(camera: CameraConfig) -> str:
     return f"http://{camera.onvif_host}:{camera.onvif_port}/onvif/device_service"
 
 
+def _io_lock(camera: CameraConfig) -> threading.RLock:
+    key = _cache_key(camera)
+    with _io_guard:
+        lock = _io_locks.get(key)
+        if lock is None:
+            lock = threading.RLock()
+            _io_locks[key] = lock
+        return lock
+
+
 def _call(camera: CameraConfig, url: str, action: str, body: str) -> str:
+    """Один обмен с камерой за раз: её OnVif не держит параллельные команды."""
     payload = soap_envelope(body, camera.onvif_user, camera.onvif_password)
-    return _post(url, payload, action)
+    with _io_lock(camera):
+        return _post(url, payload, action)
+
+
+def pantilt_speed_max(nodes_xml: str) -> float | None:
+    """Верх шкалы скорости поворота. У части камер это 8, а не 1."""
+    match = re.search(
+        r"PanTiltSpeedSpace\b[\s\S]{0,500}?<(?:\w+:)?Max>([^<]+)",
+        nodes_xml,
+    )
+    if not match:
+        return None
+    try:
+        return float(match.group(1))
+    except ValueError:
+        return None
+
+
+def default_pantilt_speed(config_xml: str) -> float | None:
+    match = re.search(
+        r"DefaultPTZSpeed\b[\s\S]{0,300}?PanTilt\b[^>]*\bx=\"([^\"]+)\"",
+        config_xml,
+    )
+    if not match:
+        return None
+    try:
+        return float(match.group(1))
+    except ValueError:
+        return None
+
+
+def ptz_configuration_identity(config_xml: str) -> tuple[str, str, str] | None:
+    block = re.search(
+        r"<(?:\w+:)?PTZConfiguration\b([^>]*)>([\s\S]*?)</(?:\w+:)?PTZConfiguration>",
+        config_xml,
+    )
+    if not block:
+        return None
+    token = re.search(r"\btoken=\"([^\"]+)\"", block.group(1))
+    name = re.search(r"<(?:\w+:)?Name>([^<]+)", block.group(2))
+    node = re.search(r"<(?:\w+:)?NodeToken>([^<]+)", block.group(2))
+    if not (token and name and node):
+        return None
+    return token.group(1), name.group(1), node.group(1)
+
+
+def set_pantilt_speed_body(token: str, name: str, node: str, speed: float) -> str:
+    return (
+        f'<SetConfiguration xmlns="{_PTZ_NS}">'
+        f'<PTZConfiguration token="{escape(token)}">'
+        f"<tt:Name>{escape(name)}</tt:Name>"
+        "<tt:UseCount>1</tt:UseCount>"
+        f"<tt:NodeToken>{escape(node)}</tt:NodeToken>"
+        "<tt:DefaultPTZSpeed>"
+        '<tt:PanTilt x="{speed:.1f}" y="{speed:.1f}" '
+        'space="http://www.onvif.org/ver10/tptz/PanTiltSpaces/GenericSpeedSpace"/>'
+        '<tt:Zoom x="1" '
+        'space="http://www.onvif.org/ver10/tptz/ZoomSpaces/ZoomGenericSpeedSpace"/>'
+        "</tt:DefaultPTZSpeed>"
+        "<tt:DefaultPTZTimeout>PT5S</tt:DefaultPTZTimeout>"
+        "</PTZConfiguration>"
+        "<ForcePersistence>true</ForcePersistence></SetConfiguration>"
+    ).format(speed=speed)
+
+
+def _ensure_ptz_speed(camera: CameraConfig) -> None:
+    """Поднимает скорость поворота до максимума, который объявила камера."""
+    key = _cache_key(camera)
+    if key in _speed_ready:
+        return
+    try:
+        nodes = _call(
+            camera,
+            _ptz_url(camera),
+            f"{_PTZ_NS}/GetNodes",
+            f'<GetNodes xmlns="{_PTZ_NS}"/>',
+        )
+        configs = _call(
+            camera,
+            _ptz_url(camera),
+            f"{_PTZ_NS}/GetConfigurations",
+            f'<GetConfigurations xmlns="{_PTZ_NS}"/>',
+        )
+        fastest = pantilt_speed_max(nodes)
+        current = default_pantilt_speed(configs)
+        identity = ptz_configuration_identity(configs)
+        if (
+            fastest is not None
+            and fastest > 1
+            and identity is not None
+            and (current is None or current < fastest - 0.1)
+        ):
+            token, name, node = identity
+            _call(
+                camera,
+                _ptz_url(camera),
+                f"{_PTZ_NS}/SetConfiguration",
+                set_pantilt_speed_body(token, name, node, fastest),
+            )
+    except OnvifError:
+        pass
+    _speed_ready.add(key)
 
 
 def _ptz_url(camera: CameraConfig) -> str:
@@ -303,25 +419,34 @@ def continuous_move(
     timeout_s: int = 8,
 ) -> None:
     pan, tilt, zoom = _axis(pan), _axis(tilt), _axis(zoom)
-    _track_for(camera).begin(pan, tilt, zoom)
-    token = _profile_token(camera)
-    _call(
-        camera,
-        _ptz_url(camera),
-        f"{_PTZ_NS}/ContinuousMove",
-        _move_body(token, "ContinuousMove", pan, tilt, zoom, timeout_s=timeout_s),
-    )
+    _ensure_ptz_speed(camera)
+    key = _cache_key(camera)
+    with _io_lock(camera):
+        if _motion.get(key) == (pan, tilt, zoom):
+            return
+        _track_for(camera).begin(pan, tilt, zoom)
+        token = _profile_token(camera)
+        _call(
+            camera,
+            _ptz_url(camera),
+            f"{_PTZ_NS}/ContinuousMove",
+            _move_body(token, "ContinuousMove", pan, tilt, zoom, timeout_s=timeout_s),
+        )
+        _motion[key] = (pan, tilt, zoom)
 
 
 def relative_move(camera: CameraConfig, pan: float, tilt: float, zoom: float) -> None:
     pan, tilt, zoom = _axis(pan), _axis(tilt), _axis(zoom)
-    token = _profile_token(camera)
-    _call(
-        camera,
-        _ptz_url(camera),
-        f"{_PTZ_NS}/RelativeMove",
-        _move_body(token, "RelativeMove", pan, tilt, zoom),
-    )
+    _ensure_ptz_speed(camera)
+    with _io_lock(camera):
+        _motion[_cache_key(camera)] = None
+        token = _profile_token(camera)
+        _call(
+            camera,
+            _ptz_url(camera),
+            f"{_PTZ_NS}/RelativeMove",
+            _move_body(token, "RelativeMove", pan, tilt, zoom),
+        )
     track = _track_for(camera)
     track.settle()
     track.pan += pan
@@ -333,16 +458,21 @@ def stop_move(camera: CameraConfig) -> None:
     track = _track_for(camera)
     track.cancel.set()
     track.settle()
-    token = _profile_token(camera)
-    _call(
-        camera,
-        _ptz_url(camera),
-        f"{_PTZ_NS}/Stop",
-        (
-            f'<Stop xmlns="{_PTZ_NS}"><ProfileToken>{escape(token)}</ProfileToken>'
-            "<PanTilt>true</PanTilt><Zoom>true</Zoom></Stop>"
-        ),
-    )
+    key = _cache_key(camera)
+    with _io_lock(camera):
+        if key in _motion and _motion[key] is None:
+            return
+        token = _profile_token(camera)
+        _call(
+            camera,
+            _ptz_url(camera),
+            f"{_PTZ_NS}/Stop",
+            (
+                f'<Stop xmlns="{_PTZ_NS}"><ProfileToken>{escape(token)}</ProfileToken>'
+                "<PanTilt>true</PanTilt><Zoom>true</Zoom></Stop>"
+            ),
+        )
+        _motion[key] = None
 
 
 def zoom_pulse(camera: CameraConfig, direction: float, seconds: float = 0.9) -> None:

@@ -324,11 +324,30 @@ def segments_overlapping(segments: list[Segment], start_us: int, finish_us: int)
     ]
 
 
+def session_audio_args(target: str) -> list[str]:
+    """Звук того же RTSP отдельным MP3. Картинка архива остаётся без звука."""
+    return [
+        "-map", "0:a:0?",
+        "-vn",
+        "-af", "aresample=async=1:first_pts=0",
+        "-c:a", "libmp3lame",
+        "-ar", "22050",
+        "-ac", "1",
+        "-b:a", "32k",
+        "-f", "mp3",
+        "-muxdelay", "0",
+        "-muxpreload", "0",
+        target,
+    ]
+
+
 def session_ffmpeg_args(
     camera: CameraConfig,
     directory: Path,
     segment_seconds_value: int,
     ffmpeg: str | None = None,
+    *,
+    audio_target: str | None = None,
 ) -> list[str]:
     pattern = str(directory / "%s.ts")
     archive_encode = [
@@ -346,7 +365,7 @@ def session_ffmpeg_args(
         "-strftime", "1",
         pattern,
     ])
-    return [
+    args = [
         ffmpeg or ffmpeg_bin(),
         "-hide_banner",
         "-loglevel", "error",
@@ -362,6 +381,11 @@ def session_ffmpeg_args(
         "-f", "mpjpeg",
         "pipe:1",
     ]
+    if audio_target is not None:
+        preview = args.index("fps=8,scale=960:-2")
+        insert_at = max(index for index, item in enumerate(args[:preview]) if item == "-map")
+        args[insert_at:insert_at] = session_audio_args(audio_target)
+    return args
 
 
 def snapshot_file_args(
