@@ -129,6 +129,16 @@ def test_session_ffmpeg_uses_one_rtsp_input(tmp_path):
     assert "scale=" not in " ".join(archive)
     assert "fps=" not in " ".join(archive)
     assert args[-1] == "pipe:1"
+    assert "libmp3lame" not in args
+    target = "tcp://127.0.0.1:9"
+    with_audio = session_ffmpeg_args(
+        camera, tmp_path, 10, ffmpeg="ffmpeg", audio_target=target,
+    )
+    assert target in with_audio
+    assert "libmp3lame" in with_audio
+    assert with_audio.index(target) < with_audio.index("fps=8,scale=960:-2")
+    assert with_audio[-1] == "pipe:1"
+    assert with_audio.count("-i") == 1
     assert str(tmp_path / "%s.ts") in args
     concat = tmp_path / "list.txt"
     write_concat_list(concat, [tmp_path / "100.ts"])
@@ -658,6 +668,47 @@ _IMAGING_OPTIONS = """<?xml version="1.0"?>
 <tt:WhiteBalance><tt:Mode>AUTO</tt:Mode><tt:Mode>MANUAL</tt:Mode></tt:WhiteBalance>
 </timg:ImagingOptions></timg:GetOptionsResponse>
 </s:Body></s:Envelope>"""
+
+
+def test_live_audio_query_is_separate_from_the_picture():
+    from types import SimpleNamespace
+
+    from src.services.video.http_response import wants_live_audio
+
+    assert wants_live_audio(SimpleNamespace(model_extra={"audio": "1"}))
+    assert not wants_live_audio(SimpleNamespace(model_extra={}))
+    assert not wants_live_audio(SimpleNamespace(model_extra=None))
+
+
+def test_onvif_raises_pantilt_speed_to_the_scale_the_camera_announces():
+    from src.services.video.onvif_ptz import (
+        default_pantilt_speed,
+        pantilt_speed_max,
+        ptz_configuration_identity,
+        set_pantilt_speed_body,
+    )
+
+    nodes = (
+        "<PanTiltSpeedSpace><URI>http://www.onvif.org/ver10/tptz/"
+        "PanTiltSpaces/GenericSpeedSpace</URI><XRange><Min>1.0</Min>"
+        "<Max>8.0</Max></XRange></PanTiltSpeedSpace>"
+    )
+    configs = (
+        '<PTZConfiguration token="PTZConfigurationToken"><Name>PTZConfiguration</Name>'
+        "<NodeToken>NODE_000</NodeToken><DefaultPTZSpeed>"
+        '<PanTilt x="0.5" y="0.5" space="http://www.onvif.org/ver10/tptz/'
+        'PanTiltSpaces/GenericSpeedSpace"/></DefaultPTZSpeed></PTZConfiguration>'
+    )
+    assert pantilt_speed_max(nodes) == 8
+    assert default_pantilt_speed(configs) == 0.5
+    assert ptz_configuration_identity(configs) == (
+        "PTZConfigurationToken",
+        "PTZConfiguration",
+        "NODE_000",
+    )
+    body = set_pantilt_speed_body("PTZConfigurationToken", "PTZConfiguration", "NODE_000", 8)
+    assert 'x="8.0"' in body and 'y="8.0"' in body
+    assert "ForcePersistence>true" in body
 
 
 def test_onvif_imaging_settings_round_trip_into_one_field():
