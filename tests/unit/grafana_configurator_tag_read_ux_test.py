@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
 DOCS_HOST = "mp-co-ru.github.io/peresvet"
-CODE_VERSION = "20261005-image-v1"
+CODE_VERSION = "20261009-services-splitter-v6"
 
 
 def _dashboard_parts():
