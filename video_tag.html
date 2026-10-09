@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Видеопоток (тег типа 6) &mdash; документация МПК-Пересвет 0.4</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sphinxcontrib-httpexample.css" type="text/css" />
+      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=11064190"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/sphinxcontrib-httpexample.js"></script>
+        <script src="_static/translations.js?v=29b1f277"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Интеграционные хранилища и операции (API v2)" href="integrational_v2.html" />
+    <link rel="prev" title="Подключение видеокамер" href="video.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Логотип"/>
+          </a>
+              <div class="version">
+                0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="description.html">Описание</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terms.html">Терминология</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка и запуск</a></li>
+<li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Примеры работы с платформой</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="video_data.html">Работа с видеоданными</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="video.html">Подключение видеокамер</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Видеопоток (тег типа 6)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Чтение</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Ошибки чтения</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Фрагмент</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#html">Своя HTML-страница</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Просмотр в конфигураторе</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Частота кадров просмотра</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Диск и мощность видеосервера</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Архив на диске</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Изменение коннектора</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Индикатор в дереве</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_extension_points.html">Точки расширения безопасности</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка безопасности платной редакции</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">МПК-Пересвет</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="video_data.html">Работа с видеоданными</a></li>
+      <li class="breadcrumb-item active">Видеопоток (тег типа 6)</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/video_tag.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="video-tag">
+<span id="id1"></span><h1>Видеопоток (тег типа 6)<a class="headerlink" href="#video-tag" title="Link to this heading"></a></h1>
+<p>Как завести камеру в конфигураторе, описано в <a class="reference internal" href="video.html#video-cameras"><span class="std std-ref">Подключение видеокамер</span></a>.
+Ниже — контракт чтения, архива и управления.</p>
+<p>Тег с <code class="docutils literal notranslate"><span class="pre">prsValueTypeCode</span> <span class="pre">=</span> <span class="pre">6</span></code> — окно в камеру, а не ряд чисел.
+Кадры не пишутся в RabbitMQ, VictoriaMetrics и PostgreSQL.
+Камера заводится как обычный коннектор: адрес потока, каталог архива
+и срок хранения лежат ключами в уже существующем атрибуте <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code>.
+Новых атрибутов LDAP для этого нет.</p>
+<p>Пример конфигурации коннектора:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;rtspUrl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;rtsp://192.168.1.72:554/live/ch00_0&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;rtspTransport&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tcp&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;archivePath&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/var/lib/peresvet/video/rear-cam&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;retentionHours&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;archiveWidth&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;archiveFps&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;onvifPort&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8899</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;onvifUser&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;onvifPassword&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">rtspUrl</span></code> обязателен и должен быть адресом <code class="docutils literal notranslate"><span class="pre">rtsp://</span></code> или <code class="docutils literal notranslate"><span class="pre">rtsps://</span></code>.
+Наличие этого ключа и делает коннектор камерой.
+<code class="docutils literal notranslate"><span class="pre">archivePath</span></code> — абсолютный путь. В контейнере видеосервера смонтирован
+том <code class="docutils literal notranslate"><span class="pre">/var/lib/peresvet/video</span></code>; каталог вне этого тома не переживёт
+перезапуск контейнера. Если ключ опущен, архив пишется в
+<code class="docutils literal notranslate"><span class="pre">{VIDEO_ARCHIVE_DIR}/{id</span> <span class="pre">коннектора}</span></code>.
+<code class="docutils literal notranslate"><span class="pre">retentionHours</span></code> — срок хранения в часах; если ключ опущен, берётся 24.
+<code class="docutils literal notranslate"><span class="pre">archiveWidth</span></code> — ширина картинки архива в пикселях, чётное число.
+Высота подстраивается под пропорции кадра. <code class="docutils literal notranslate"><span class="pre">null</span></code> или пустое значение
+означает ширину, которую отдаёт камера.
+<code class="docutils literal notranslate"><span class="pre">archiveFps</span></code> — частота кадров архива. <code class="docutils literal notranslate"><span class="pre">null</span></code> или пустое значение
+означает частоту камеры.
+Пустые <code class="docutils literal notranslate"><span class="pre">onvifUser</span></code> и <code class="docutils literal notranslate"><span class="pre">onvifPassword</span></code> означают, что камера логин не требует.
+Транспорт по умолчанию TCP. Его можно задать ключом <code class="docutils literal notranslate"><span class="pre">rtspTransport</span></code>
+со значением <code class="docutils literal notranslate"><span class="pre">tcp</span></code> или <code class="docutils literal notranslate"><span class="pre">udp</span></code>.
+Управление камерой идёт по OnVif, отдельным запросом, без второго
+подключения RTSP. Хост берётся из <code class="docutils literal notranslate"><span class="pre">rtspUrl</span></code>, порт по умолчанию 8899
+(ключ <code class="docutils literal notranslate"><span class="pre">onvifPort</span></code>). Если камера требует логин, его задают ключами
+<code class="docutils literal notranslate"><span class="pre">onvifUser</span></code> и <code class="docutils literal notranslate"><span class="pre">onvifPassword</span></code>. В блоке «Данные тега» кнопки
+стоят слева от картинки. Стрелки двигают камеру, пока их держат.
+«Ближе» и «Дальше» делают один шаг зума. «Стоп» останавливает
+поворот и наклон сразу. «Домой» возвращает камеру по уже сделанным
+с этой страницы движениям и снимает накопленный зум: сама камера
+положение не запоминает.
+Под стрелками камера показывает параметры изображения, которые сама
+отдаёт по OnVif: яркость, контраст, насыщенность, резкость, засветка,
+динамический диапазон, ИК-фильтр (день, ночь, авто) и баланс белого.
+Ползунок или список отправляет на камеру только изменённый параметр.
+Камера может ответить успехом и при этом не изменить кадр: прошивка
+принимает зум и параметры изображения, сохраняет числа и не применяет
+их к объективу. Поворот и наклон при этом могут работать.</p>
+<p>Снаружи конфигуратора то же управление — <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/ptz/</span></code>, тело JSON.
+Обязателен <code class="docutils literal notranslate"><span class="pre">tagId</span></code> тега видеопотока. Поле <code class="docutils literal notranslate"><span class="pre">action</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">status</span></code> — профиль, <code class="docutils literal notranslate"><span class="pre">pan</span></code>, <code class="docutils literal notranslate"><span class="pre">tilt</span></code>, <code class="docutils literal notranslate"><span class="pre">zoom</span></code> и список пресетов.
+То же делает <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/ptz/?tagId=&lt;id&gt;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">move</span></code> — непрерывный поворот, пока не придёт <code class="docutils literal notranslate"><span class="pre">stop</span></code> или не истекут
+8 секунд таймаута команды. <code class="docutils literal notranslate"><span class="pre">pan</span></code>, <code class="docutils literal notranslate"><span class="pre">tilt</span></code> и <code class="docutils literal notranslate"><span class="pre">zoom</span></code> от −1 до 1.
+Если камера объявляет свою шкалу скорости выше 1, перед первым
+поворотом платформа поднимает её скорость до этого максимума:
+иначе команда доходит сразу, а объектив ползёт. Повтор той же
+команды, пока поворот уже идёт, на камеру не отправляется.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step</span></code> — один относительный сдвиг с теми же тремя полями.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pulse</span></code> — шаг зума. Знак <code class="docutils literal notranslate"><span class="pre">zoom</span></code> задаёт направление, на камеру уходит ±1.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stop</span></code> — остановить текущий поворот и наклон.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">home</span></code> — пройти назад движения, посланные с момента старта процесса
+видеосервера, затем вызвать домашнее положение камеры.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">preset</span></code> — перейти к пресету, поле <code class="docutils literal notranslate"><span class="pre">token</span></code> или <code class="docutils literal notranslate"><span class="pre">preset</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">image</span></code> — текущие параметры изображения и допустимые значения.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">image_set</span></code> — записать параметры: <code class="docutils literal notranslate"><span class="pre">brightness</span></code>, <code class="docutils literal notranslate"><span class="pre">contrast</span></code>,
+<code class="docutils literal notranslate"><span class="pre">saturation</span></code>, <code class="docutils literal notranslate"><span class="pre">sharpness</span></code> (числа), <code class="docutils literal notranslate"><span class="pre">backlight</span></code> и
+<code class="docutils literal notranslate"><span class="pre">wideDynamicRange</span></code> (<code class="docutils literal notranslate"><span class="pre">ON</span></code> или <code class="docutils literal notranslate"><span class="pre">OFF</span></code>), <code class="docutils literal notranslate"><span class="pre">irCut</span></code>
+(<code class="docutils literal notranslate"><span class="pre">ON</span></code>, <code class="docutils literal notranslate"><span class="pre">OFF</span></code>, <code class="docutils literal notranslate"><span class="pre">AUTO</span></code>), <code class="docutils literal notranslate"><span class="pre">whiteBalance</span></code> (<code class="docutils literal notranslate"><span class="pre">AUTO</span></code> или <code class="docutils literal notranslate"><span class="pre">MANUAL</span></code>).</p></li>
+</ul>
+<p>Ошибка управления приходит тем же JSON <code class="docutils literal notranslate"><span class="pre">error.code</span></code> и <code class="docutils literal notranslate"><span class="pre">error.message</span></code>.
+Чужой тег — 422, выключенный тег — 409, тег без камеры — 424,
+камера отклонила команду — 502.</p>
+<p>Тег типа «Видеопоток» привязывается к этому коннектору на вкладке коннектора
+и не кладётся в хранилище истории.</p>
+<section id="id2">
+<h2>Чтение<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/?tagId=&lt;id&gt;</span></code> для такого тега отдаёт не JSON-точки, а медиа:</p>
+<ul class="simple">
+<li><p>без <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> — живой поток <code class="docutils literal notranslate"><span class="pre">multipart/x-mixed-replace</span></code> (MJPEG);</p></li>
+<li><p>только <code class="docutils literal notranslate"><span class="pre">finish</span></code> — снимок <code class="docutils literal notranslate"><span class="pre">image/jpeg</span></code> на этот момент;
+если фрагмента на это время нет, ответ <code class="docutils literal notranslate"><span class="pre">404</span></code> без картинки;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> — фрагмент <code class="docutils literal notranslate"><span class="pre">video/mp4</span></code> за период.</p></li>
+</ul>
+<p>Ключи <code class="docutils literal notranslate"><span class="pre">timeStep</span></code> и <code class="docutils literal notranslate"><span class="pre">count</span></code> для видеопотока пока не поддерживаются.
+На одну камеру держится один сеанс RTSP в контейнере видеосервера.
+Смотрящих может быть несколько: платформа проверяет право чтения тега
+и проксирует запрос на видеосервер, а тот раздаёт один и тот же сеанс.</p>
+<p>В дашборде Grafana тот же URL можно поставить в <code class="docutils literal notranslate"><span class="pre">&lt;img&gt;</span></code> (живой поток и снимок)
+или в <code class="docutils literal notranslate"><span class="pre">&lt;video&gt;</span></code> (фрагмент).</p>
+<p>Метки <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> — микросекунды или дата ISO 8601.
+Для видеотега отсутствие обеих меток означает живой поток.
+У остальных тегов отсутствие метки по-прежнему означает «сейчас».</p>
+</section>
+<section id="id3">
+<h2>Ошибки чтения<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<p>Тело ошибки — JSON <code class="docutils literal notranslate"><span class="pre">{&quot;error&quot;:</span> <span class="pre">{&quot;code&quot;:</span> <span class="pre">...,</span> <span class="pre">&quot;message&quot;:</span> <span class="pre">&quot;...&quot;}}</span></code>, не картинка.</p>
+<ul class="simple">
+<li><p>404 «Нет записи камеры на этот момент.» — на <code class="docutils literal notranslate"><span class="pre">finish</span></code> нет фрагмента.</p></li>
+<li><p>404 «Нет записи камеры за этот период.» — между <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> нет файлов.</p></li>
+<li><p>409 «Тег видеопотока выключен.»</p></li>
+<li><p>422 «Видеопоток читается по одному тегу за запрос.»</p></li>
+<li><p>422 «Для видеопотока ключи timeStep и count пока не поддерживаются.»</p></li>
+<li><p>422 «В периоде видеопотока finish должен быть позже start.»</p></li>
+<li><p>422 «Слишком длинный видеофрагмент.» Период длиннее
+<code class="docutils literal notranslate"><span class="pre">VIDEO_MAX_FRAGMENT_SECONDS</span></code>, по умолчанию 7200 секунд.</p></li>
+<li><p>424 «Тег видеопотока не привязан к активному коннектору-камере.»</p></li>
+<li><p>502 — камера или ffmpeg не отдали кадр или фрагмент.</p></li>
+<li><p>503 «Не найден ffmpeg.»</p></li>
+</ul>
+</section>
+<section id="id4">
+<h2>Фрагмент<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> не отдают готовый файл с диска. Видеосервер
+находит покрывающие период фрагменты MPEG-TS, склеивает их и
+перекодирует в один <code class="docutils literal notranslate"><span class="pre">video/mp4</span></code> (H.264, preset <code class="docutils literal notranslate"><span class="pre">ultrafast</span></code>).
+На сборку даётся 180 секунд. Пока она идёт, страница ждёт тело ответа:
+в конфигураторе это надпись «Загрузка…».</p>
+</section>
+<section id="html">
+<h2>Своя HTML-страница<a class="headerlink" href="#html" title="Link to this heading"></a></h2>
+<p>Если <code class="docutils literal notranslate"><span class="pre">tagId</span></code> известен заранее, живой поток ставится в <code class="docutils literal notranslate"><span class="pre">img</span></code>.
+Браузер показывает <code class="docutils literal notranslate"><span class="pre">multipart/x-mixed-replace</span></code> кадр за кадром и не ждёт
+конца ответа.</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">img</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;cam&quot;</span> <span class="na">alt</span><span class="o">=</span><span class="s">&quot;Камера&quot;</span>
+     <span class="na">src</span><span class="o">=</span><span class="s">&quot;/v1/data/?tagId=67bde18c-5431-1041-925c-470278307e33&quot;</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">audio</span> <span class="na">autoplay</span>
+       <span class="na">src</span><span class="o">=</span><span class="s">&quot;/v1/data/?tagId=67bde18c-5431-1041-925c-470278307e33&amp;amp;audio=1&quot;</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">audio</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">audio=1</span></code> — звук того же сеанса, <code class="docutils literal notranslate"><span class="pre">audio/mpeg</span></code>. Если в потоке камеры
+звука нет, ответ 404 и тег <code class="docutils literal notranslate"><span class="pre">audio</span></code> молчит. Картинка по-прежнему без звука.</p>
+<p>Страницу открывают с того же хоста, что и платформу: путь <code class="docutils literal notranslate"><span class="pre">/v1/data/</span></code>
+уже проксируется nginx. В атрибут <code class="docutils literal notranslate"><span class="pre">src</span></code> нельзя подставить заголовок
+авторизации. При включённой авторизации браузер отправит только куку
+этого хоста, поэтому страница должна быть на нём же.
+Если перед картинкой стоит свой прокси, для <code class="docutils literal notranslate"><span class="pre">/v1/data/</span></code> отключают
+буферизацию ответа. Иначе живой поток приходит одним куском или с
+большой задержкой.</p>
+<p>Остановить просмотр в браузере — убрать адрес. Запись архива при этом
+продолжается:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s2">&quot;#cam&quot;</span><span class="p">).</span><span class="nx">removeAttribute</span><span class="p">(</span><span class="s2">&quot;src&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Снимок на момент — тот же адрес с <code class="docutils literal notranslate"><span class="pre">finish</span></code>. Знак плюс в часовом поясе
+кодируется как <code class="docutils literal notranslate"><span class="pre">%2B</span></code>:</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">img</span> <span class="na">alt</span><span class="o">=</span><span class="s">&quot;Снимок&quot;</span>
+     <span class="na">src</span><span class="o">=</span><span class="s">&quot;/v1/data/?tagId=67bde18c-5431-1041-925c-470278307e33&amp;amp;finish=2026-10-05T18:36:20%2B03:00&quot;</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<p>Если записи нет, ответ — JSON, и тег <code class="docutils literal notranslate"><span class="pre">img</span></code> остаётся пустым.
+Текст ошибки тогда читают отдельным <code class="docutils literal notranslate"><span class="pre">fetch</span></code> по тому же адресу.</p>
+<p>Фрагмент за период — тег <code class="docutils literal notranslate"><span class="pre">video</span></code>. Картинка появится после сборки mp4:</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">video</span> <span class="na">controls</span>
+       <span class="na">src</span><span class="o">=</span><span class="s">&quot;/v1/data/?tagId=67bde18c-5431-1041-925c-470278307e33&amp;amp;start=2026-10-05T18:36:00%2B03:00&amp;amp;finish=2026-10-05T18:37:00%2B03:00&quot;</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">video</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">fetch</span></code> живого потока без чтения тела по частям не завершается.
+Клиент вроде Advanced REST Client остаётся на строке «получены заголовки».</p>
+</section>
+<section id="id5">
+<h2>Просмотр в конфигураторе<a class="headerlink" href="#id5" title="Link to this heading"></a></h2>
+<p>У тега типа 6 блок «Данные тега» открыт и без привязки к хранилищу истории.
+Кнопка с иконкой воспроизведения читает тег по тем же правилам, что и <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/</span></code>:</p>
+<ul class="simple">
+<li><p>пустые <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> — живой поток;</p></li>
+<li><p>только <code class="docutils literal notranslate"><span class="pre">finish</span></code> — снимок;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> — фрагмент за период.</p></li>
+</ul>
+<p>Пока картинка или поток открыты, та же кнопка меняет иконку на паузу
+и закрывает просмотр в браузере. Запись архива при этом не останавливается:
+сеанс с камерой держит видеосервер, а не открытая страница.</p>
+</section>
+<section id="id6">
+<h2>Частота кадров просмотра<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
+<p>8 кадров в секунду — это не частота камеры. Для картинки в браузере
+видеосервер принудительно оставляет 8 кадров в секунду и ширину 960 пикселей
+(MJPEG). Так сервер с небольшим объёмом памяти успевает и показывать,
+и писать архив. Полный кадр камеры в двух кодированиях сразу на машине
+с 2 ГБ памяти процесс убивал.</p>
+<p>В архив по умолчанию пишется картинка камеры целиком: её ширина и её
+частота кадров, кодеком H.264 (preset <code class="docutils literal notranslate"><span class="pre">ultrafast</span></code>). Уменьшить архив
+можно ключами <code class="docutils literal notranslate"><span class="pre">archiveWidth</span></code> и <code class="docutils literal notranslate"><span class="pre">archiveFps</span></code> в конфигурации коннектора.
+Битрейт архива от сюжета и от этих ключей зависит и заранее не фиксируется:
+его нужно померить по уже записанным файлам.</p>
+<p>Просмотр на диск не пишется. Один зритель при текущих настройках
+забирает по сети порядка 8 Мбит/с. Кодирование одно на камеру,
+сколько бы страниц ни было открыто.</p>
+</section>
+<section id="id7">
+<h2>Диск и мощность видеосервера<a class="headerlink" href="#id7" title="Link to this heading"></a></h2>
+<p>Объём архива одной камеры:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ГБ ≈ часы_хранения × битрейт_Мбит/с × 0,44
+</pre></div>
+</div>
+<p>Множитель 0,44 — это перевод Мбит/с в гигабайты за час:
+<code class="docutils literal notranslate"><span class="pre">3600</span> <span class="pre">/</span> <span class="pre">8</span> <span class="pre">/</span> <span class="pre">1024</span></code>. На несколько камер результат умножается на их число.</p>
+<p>По камере с ключом <code class="docutils literal notranslate"><span class="pre">archiveWidth</span></code> 640 измеренный поток около 1,15 Мбит/с,
+то есть около 492 МБ в час. При <code class="docutils literal notranslate"><span class="pre">retentionHours</span></code> 24 это около 12 ГБ
+на эту камеру. Пока сеанс перезапускается, в часе бывают пустые промежутки,
+и фактический объём чуть меньше расчётного.</p>
+<p>Мощность видеосервера считается по числу камер, не по числу зрителей.
+На каждую камеру один процесс: приём RTSP, запись архива и подготовка
+просмотра. Сеть видеосервера растёт отдельно, примерно на 8 Мбит/с
+на каждого зрителя живого потока. Перед добавлением следующей камеры
+смотрите загрузку контейнера <code class="docutils literal notranslate"><span class="pre">prs-video</span></code>. Если память подходит к пределу,
+камер должно быть меньше либо картинка архива ещё уже.</p>
+</section>
+<section id="id8">
+<h2>Архив на диске<a class="headerlink" href="#id8" title="Link to this heading"></a></h2>
+<p>Архив — это фрагменты MPEG-TS. Каталог берётся из <code class="docutils literal notranslate"><span class="pre">archivePath</span></code>
+коннектора. У камеры с путём <code class="docutils literal notranslate"><span class="pre">/var/lib/peresvet/video/rear-cam</span></code>
+файлы лежат там, внутри тома контейнера видеосервера.
+Имя файла — время начала фрагмента в секундах Unix, например <code class="docutils literal notranslate"><span class="pre">1791117621.ts</span></code>.</p>
+<p>Номинальная длина фрагмента — <code class="docutils literal notranslate"><span class="pre">VIDEO_SEGMENT_SECONDS</span></code>, по умолчанию 10 секунд.
+Если сеанс с камерой перезапускался, промежуток между соседними файлами
+бывает длиннее. Файлы старше <code class="docutils literal notranslate"><span class="pre">retentionHours</span></code> удаляются, когда коннектор
+сохраняют, и затем примерно раз в 20 секунд, пока сеанс с камерой жив.
+Тот же 20-секундный обход заново читает конфигурацию всех камер, если
+сообщение брокера о правке не дошло.</p>
+<p>Список фрагментов:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>prs-video<span class="w"> </span>ls<span class="w"> </span>-lh<span class="w"> </span>/var/lib/peresvet/video/rear-cam
+</pre></div>
+</div>
+<p>Посмотреть запись из конфигуратора: у тега задайте <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code>
+и нажмите кнопку воспроизведения. Плеер получит один mp4 за этот период,
+склеенный из покрывающих его фрагментов.</p>
+</section>
+<section id="id9">
+<h2>Изменение коннектора<a class="headerlink" href="#id9" title="Link to this heading"></a></h2>
+<p>Сохранение коннектора в конфигураторе публикует в брокер сообщение
+<code class="docutils literal notranslate"><span class="pre">prsConnector.model.updated.&lt;id&gt;</span></code>. Видеосервер подписан на создание,
+изменение и удаление коннектора так же, как остальные сервисы этой
+сущности. Голос на саму правку он отдаёт разрешающий: сохранить
+коннектор можно и пока видеосервер применяет новую конфигурацию.
+По сообщению сервер заново читает <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code>. Новый
+<code class="docutils literal notranslate"><span class="pre">rtspUrl</span></code>, <code class="docutils literal notranslate"><span class="pre">archivePath</span></code>, <code class="docutils literal notranslate"><span class="pre">rtspTransport</span></code>, <code class="docutils literal notranslate"><span class="pre">archiveWidth</span></code> или
+<code class="docutils literal notranslate"><span class="pre">archiveFps</span></code> открывают сеанс заново. Новый <code class="docutils literal notranslate"><span class="pre">retentionHours</span></code>
+применяется сразу: лишние фрагменты удаляются, а поток с камеры
+не переоткрывается.</p>
+</section>
+<section id="id10">
+<h2>Индикатор в дереве<a class="headerlink" href="#id10" title="Link to this heading"></a></h2>
+<p>Кружок у коннектора зелёный, пока на брокере есть MQTT-сессия с ClientId,
+равным id этого коннектора. Для камеры такую сессию открывает видеосервер
+на время живого сеанса RTSP и закрывает её, когда сеанс останавливается.
+В теги камеры при этом не пишутся коды качества 100 и 101, и полная
+конфигурация коннектора на камеру не отправляется.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="video.html" class="btn btn-neutral float-left" title="Подключение видеокамер" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="integrational_v2.html" class="btn btn-neutral float-right" title="Интеграционные хранилища и операции (API v2)" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права 2026, ООО Матч Поинт Консалтинг. </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Коннекторы &mdash; документация МПК-Пересвет 0.4</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sphinxcontrib-httpexample.css" type="text/css" />
+      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=11064190"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/sphinxcontrib-httpexample.js"></script>
+        <script src="_static/translations.js?v=29b1f277"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Работа с видеоданными" href="video_data.html" />
+    <link rel="prev" title="Компоненты" href="components.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Логотип"/>
+          </a>
+              <div class="version">
+                0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="description.html">Описание</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terms.html">Терминология</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка и запуск</a></li>
+<li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Примеры работы с платформой</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Коннекторы</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Где запускать</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Как проходит работа</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">Журнал</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">Свой коннектор</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_extension_points.html">Точки расширения безопасности</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка безопасности платной редакции</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">МПК-Пересвет</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Коннекторы</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/connectors_guide.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="connectors-guide">
+<span id="id1"></span><h1>Коннекторы<a class="headerlink" href="#connectors-guide" title="Link to this heading"></a></h1>
+<p>Коннектор — программа, которая читает данные внешнего источника и записывает
+их в теги платформы. Источником может быть контроллер, прибор, промышленная
+шина, база или любой другой протокол.</p>
+<p>Один коннектор рассчитан на один источник и на один протокол: Modbus, OPC,
+собственный протокол прибора. Несколько одинаковых приборов — несколько
+запущенных копий одной программы, у каждой свой идентификатор в платформе
+и свой файл конфигурации.</p>
+<p>Платформа хранит описание коннектора и список привязанных тегов.
+Сам коннектор стоит рядом с источником и сам ходит к нему за значениями.
+Связь с платформой — по MQTT.</p>
+<section id="id2">
+<h2>Где запускать<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<p>Коннектор ставят как можно ближе к источнику данных: на компьютер цеха,
+шлюз рядом с контроллером, ту же машину, где висит последовательный порт.</p>
+<p>Так короткий и капризный участок — опрос прибора — остаётся локальным.
+До платформы данные идут уже по MQTT, и этот участок может быть длиннее.
+Пока MQTT нет, коннектор копит значения в файле буфера на своей машине
+и отдаёт их после восстановления связи, с исходными метками времени.</p>
+</section>
+<section id="id3">
+<h2>Как проходит работа<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>В конфигураторе в папке «Коннекторы» создаётся узел. В конфигурации узла
+лежат параметры источника (ключ <code class="docutils literal notranslate"><span class="pre">source</span></code>) и параметры журнала (ключ <code class="docutils literal notranslate"><span class="pre">log</span></code>).
+К коннектору привязываются теги: у каждой привязки свои адрес в источнике,
+выражение JSONata, значимое отклонение и период опроса.</p></li>
+<li><p>На машине коннектора лежит короткий файл: идентификатор узла в платформе
+и адрес MQTT. Полную конфигурацию коннектор получает от платформы
+и сохраняет у себя на диске. Правка в конфигураторе доходит до уже
+запущенного коннектора без переписывания этого файла.</p></li>
+<li><p>Коннектор открывает MQTT-сессию. Идентификатор сессии — UUID узла
+коннектора. При обрыве брокер публикует Last Will, и платформа пишет
+во все привязанные теги <code class="docutils literal notranslate"><span class="pre">null</span></code> с кодом качества 100.</p></li>
+<li><p>После соединения коннектор запрашивает конфигурацию. Платформа сначала
+пишет в теги <code class="docutils literal notranslate"><span class="pre">null</span></code> с кодом качества 101, затем отдаёт полную
+конфигурацию. Только после неё коннектор читает источник и присылает
+текущие значения.</p></li>
+<li><p>Прочитанное значение проходит JSONata, приводится к типу тега
+и сравнивается с последним отправленным. Если отклонение меньше порога
+<code class="docutils literal notranslate"><span class="pre">maxDev</span></code>, точка не отправляется. Если связи с платформой нет,
+точка пишется в буфер.</p></li>
+</ol>
+<p>Коды качества 100 и 101 описаны в <a class="reference internal" href="historical_data.html#qualitycodes"><span class="std std-ref">Коды качества</span></a>.
+Камера с ключом <code class="docutils literal notranslate"><span class="pre">rtspUrl</span></code> этой схемой не пользуется: её ведёт видеосервер,
+см. <a class="reference internal" href="video.html#video-cameras"><span class="std std-ref">Подключение видеокамер</span></a>.</p>
+</section>
+<section id="id4">
+<h2>Журнал<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<p>Коннектор всегда пишет журнал в файл на своей машине. Имя файла, уровень,
+размер и число архивных копий задаются в блоке <code class="docutils literal notranslate"><span class="pre">log</span></code> конфигурации.
+Пока флажок <strong>Лог в платформу</strong> в конфигураторе выключен, строки остаются
+только в этом файле.</p>
+<p>Если флажок включён, те же строки уходят в платформу сообщением
+<code class="docutils literal notranslate"><span class="pre">prsConnector.log_line</span></code> и видны на вкладке <strong>Лог коннектора</strong>.
+Вывод удалённых команд на эту вкладку не попадает: он идёт отдельно,
+действием <code class="docutils literal notranslate"><span class="pre">prsConnector.command_output</span></code>.</p>
+<p>Ниже — строки, по которым видно, что происходит с коннектором.
+В журнале перед текстом стоит уровень (<code class="docutils literal notranslate"><span class="pre">INFO</span></code>, <code class="docutils literal notranslate"><span class="pre">WARNING</span></code>, <code class="docutils literal notranslate"><span class="pre">ERROR</span></code>).</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 48%" />
+<col style="width: 52%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Сообщение</p></th>
+<th class="head"><p>Что произошло</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Подключение</span> <span class="pre">к</span> <span class="pre">брокеру</span> <span class="pre">MQTT</span> <span class="pre">платформы</span> <span class="pre">...</span></code></p></td>
+<td><p>Начата попытка открыть сессию с платформой.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Связь</span> <span class="pre">с</span> <span class="pre">платформой</span> <span class="pre">установлена.</span></code></p></td>
+<td><p>Сессия открыта. Следом коннектор запрашивает конфигурацию.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Разрыв</span> <span class="pre">связи</span> <span class="pre">с</span> <span class="pre">платформой:</span> <span class="pre">...</span></code></p></td>
+<td><p>Сессия оборвалась. Новые значения пишутся в буфер.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Сообщение</span> <span class="pre">от</span> <span class="pre">платформы:</span> <span class="pre">prsConnector.full_configuration.</span></code></p></td>
+<td><p>Пришла полная конфигурация. После первого такого сообщения
+в этой сессии коннектор читает все привязанные теги.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Сообщение</span> <span class="pre">от</span> <span class="pre">платформы:</span> <span class="pre">prsConnector.connector_configuration.</span></code></p></td>
+<td><p>Изменились параметры самого коннектора: источник, журнал, активность.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Конфигурация</span> <span class="pre">коннектора</span> <span class="pre">изменена.</span></code></p></td>
+<td><p>Новые параметры коннектора приняты.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Сообщение</span> <span class="pre">от</span> <span class="pre">платформы:</span> <span class="pre">prsConnector.tags_configuration.</span></code></p></td>
+<td><p>Добавлен тег или изменена привязка.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Конфигурация</span> <span class="pre">тегов</span> <span class="pre">изменена.</span></code></p></td>
+<td><p>Список тегов принят, чтение перезапущено с новыми параметрами.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Тег</span> <span class="pre">&lt;id&gt;</span> <span class="pre">удалён</span> <span class="pre">из</span> <span class="pre">списка.</span></code></p></td>
+<td><p>Тег отвязан от коннектора.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Конфигурация</span> <span class="pre">сохранена.</span></code></p></td>
+<td><p>Конфигурация записана на диск коннектора.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Коннектор</span> <span class="pre">активен,</span> <span class="pre">работа</span> <span class="pre">по</span> <span class="pre">чтению</span> <span class="pre">данных</span> <span class="pre">запущена.</span></code></p></td>
+<td><p>Узел включён, опрос источника идёт.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Коннектор</span> <span class="pre">неактивен,</span> <span class="pre">работа</span> <span class="pre">по</span> <span class="pre">чтению</span> <span class="pre">данных</span> <span class="pre">остановлена.</span></code></p></td>
+<td><p>Узел выключен. Коннектор остаётся на связи и ждёт новую конфигурацию.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Отправка</span> <span class="pre">данных</span> <span class="pre">в</span> <span class="pre">платформу.</span></code></p></td>
+<td><p>Очередь значений ушла в платформу.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Данные</span> <span class="pre">сохранены</span> <span class="pre">в</span> <span class="pre">буфер.</span></code></p></td>
+<td><p>Связи не было, точка осталась в файле буфера.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Ошибка</span> <span class="pre">передачи</span> <span class="pre">данных:</span> <span class="pre">сохраняем</span> <span class="pre">в</span> <span class="pre">буфер.</span></code></p></td>
+<td><p>Отправка не удалась, точка ушла в буфер.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Обработка</span> <span class="pre">буфера</span> <span class="pre">данных.</span></code></p></td>
+<td><p>Связь есть, накопленные точки возвращаются в очередь отправки.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Тег</span> <span class="pre">'&lt;id&gt;'.</span> <span class="pre">Ошибка</span> <span class="pre">конвертации</span> <span class="pre">значения</span> <span class="pre">...</span></code></p></td>
+<td><p>Значение с источника не привелось к типу тега.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Неверная</span> <span class="pre">конфигурация</span> <span class="pre">тега</span> <span class="pre">&lt;id&gt;.</span></code></p></td>
+<td><p>Привязка тега не разобралась, тег в опрос не попал.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Очередь</span> <span class="pre">сообщений</span> <span class="pre">переполнена.</span></code></p></td>
+<td><p>Отправка не успевает за чтением, часть буфера отложена.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Получен</span> <span class="pre">сигнал</span> <span class="pre">завершения</span> <span class="pre">работы,</span> <span class="pre">сохраняем</span> <span class="pre">данные...</span></code></p></td>
+<td><p>Коннектор останавливается и сбрасывает буфер на диск.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Работа</span> <span class="pre">коннектора</span> <span class="pre">завершена.</span></code></p></td>
+<td><p>Процесс закончил остановку.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id5">
+<h2>Свой коннектор<a class="headerlink" href="#id5" title="Link to this heading"></a></h2>
+<p>Общая часть вынесена в проект
+<a class="reference external" href="https://github.com/mp-co-ru/prs-connector-core">prs-connector-core</a>.
+Это Python-пакет. Его главный класс — <code class="docutils literal notranslate"><span class="pre">BaseConnector</span></code>.</p>
+<p>Базовый класс сам открывает MQTT, запрашивает и применяет конфигурацию,
+хранит её на диске, выполняет JSONata, приводит тип, сравнивает отклонение,
+ведёт буфер, настраивает Last Will и пишет журнал.
+В наследнике остаётся чтение источника: метод забирает значения и кладёт их
+в очередь. Дальше их обрабатывает базовый класс.</p>
+<p>В <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> коннектора ключ <code class="docutils literal notranslate"><span class="pre">source</span></code> описывает, как подключиться
+к прибору. Формат ключа задаёт конкретный коннектор. В привязке тега свой
+ключ <code class="docutils literal notranslate"><span class="pre">source</span></code> описывает, как прочитать именно этот тег.</p>
+<p>Порядок разработки и формат сообщений — в документации репозитория
+<code class="docutils literal notranslate"><span class="pre">prs-connector-core</span></code>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="components.html" class="btn btn-neutral float-left" title="Компоненты" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="video_data.html" class="btn btn-neutral float-right" title="Работа с видеоданными" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права 2026, ООО Матч Поинт Консалтинг. </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

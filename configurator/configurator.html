@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Конфигуратор модели &mdash; документация МПК-Пересвет 0.4</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sphinxcontrib-httpexample.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/peresvet_middle.png"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=11064190"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../_static/sphinxcontrib-httpexample.js"></script>
+        <script src="../_static/translations.js?v=29b1f277"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="../genindex.html" />
+    <link rel="search" title="Поиск" href="../search.html" />
+    <link rel="next" title="Создание экранов в Grafana" href="../grafana/grafana_integration.html" />
+    <link rel="prev" title="Исторические данные" href="../historical_data.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Логотип"/>
+          </a>
+              <div class="version">
+                0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../description.html">Описание</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../terms.html">Терминология</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Установка и запуск</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../administration.html">Администрирование</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Конфигуратор модели</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Как открыть</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Папки модели</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">Поиск</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">Настройки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">Меню команд узла</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">Перетаскивание</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id8">Пометки в дереве</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id9">Свойства узла</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id10">Тег: хранилище и коннектор</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id11">Данные тега</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id12">Запрос на чтение</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id13">Запрос на запись</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#csv">Экспорт в CSV</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id14">Коннектор: журнал и команды</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id15">Метод</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id16">Тревога и расписание</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id17">Хранилища данных</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id18">Сервисы</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id19">Примеры</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Примеры работы с платформой</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components.html">Компоненты системы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../connectors_guide.html">Коннекторы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mcp.html">MCP-сервер</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security_extension_points.html">Точки расширения безопасности</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security_enterprise_setup.html">Настройка безопасности платной редакции</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">МПК-Пересвет</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Конфигуратор модели</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/configurator/configurator.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="configurator">
+<span id="id1"></span><h1>Конфигуратор модели<a class="headerlink" href="#configurator" title="Link to this heading"></a></h1>
+<p>Конфигуратор — главная панель Grafana. В нём собирают иерархию
+платформы: объекты, теги, тревоги, методы, коннекторы, расписания
+и хранилища данных. Туда же выведены журналы сервисов.</p>
+<p>Конфигуратор ходит в платформу через <a class="reference internal" href="../api.html#api"><span class="std std-ref">API</span></a>.
+Форматы команд создания, чтения, обновления и удаления узлов
+описаны в документации API.</p>
+<section id="id2">
+<h2>Как открыть<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<p>Запустите платформу (<a class="reference internal" href="../installation.html#installation"><span class="std std-ref">Установка и запуск</span></a>) и откройте в браузере
+<code class="docutils literal notranslate"><span class="pre">http://localhost/grafana</span></code>. Если платформа стоит на другом компьютере,
+подставьте его адрес.</p>
+<p>При первом входе имя и пароль — <code class="docutils literal notranslate"><span class="pre">admin</span></code> / <code class="docutils literal notranslate"><span class="pre">admin</span></code>.
+Grafana предложит сменить пароль.</p>
+<figure class="align-default" id="id20">
+<img alt="Экран конфигуратора" src="../_images/01.screen.png" />
+<figcaption>
+<p><span class="caption-text">Слева дерево модели, справа свойства выбранного узла.
+Между колонками — разделитель: его можно перетащить.
+Такой же разделитель стоит между иерархией и блоком «Сервисы».</span><a class="headerlink" href="#id20" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>Пока узел не выбран, справа написано «Выберите узел в дереве слева».</p>
+</section>
+<section id="id3">
+<h2>Папки модели<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<p>На верхнем уровне лежат папки сущностей.</p>
+<p><strong>Объекты.</strong> Основная иерархия. Внутри объекта бывают другие объекты и теги.
+У тега — тревоги и методы.</p>
+<p><strong>Теги.</strong> Теги без привязки к объекту: линейный список параметров.</p>
+<p><strong>Коннекторы.</strong> Описания <a class="reference internal" href="../terms.html#definition-connector"><span class="std std-ref">коннекторов</span></a>.
+Состав полей зависит от коннектора. Камера — частный случай коннектора,
+см. <a class="reference internal" href="../video.html#video-cameras"><span class="std std-ref">Подключение видеокамер</span></a>.</p>
+<p><strong>Расписания.</strong> Генераторы событий по времени.</p>
+<p><strong>Хранилища данных.</strong> Куда пишутся история тегов и события тревог.
+У одного хранилища может стоять признак «по умолчанию».</p>
+<p><strong>Сервисы.</strong> Журналы процессов платформы. Это не узлы модели.</p>
+<p>Порядок внутри одного типа задаёт атрибут <code class="docutils literal notranslate"><span class="pre">prsIndex</span></code>.
+Алфавитная сортировка включается в настройках и запоминается в браузере.</p>
+</section>
+<section id="id4">
+<h2>Поиск<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<p>Над деревом поле «Поиск по имени или GUID».
+Список показывает совпадения по имени и по идентификатору.
+Выбор строки раскрывает ветку и делает узел текущим.</p>
+</section>
+<section id="id5">
+<h2>Настройки<a class="headerlink" href="#id5" title="Link to this heading"></a></h2>
+<p>Шестерёнка стоит в одной строке с надписью «Пересвет», у правого края.
+Окно запоминает флажки в браузере.</p>
+<figure class="align-default">
+<img alt="Настройки конфигуратора" src="../_images/04.settings.png" />
+</figure>
+<p><strong>Привязка тегов и тревог к хранилищу по умолчанию при создании.</strong>
+Если флажок включён, новый тег или новая тревога сразу привязываются
+к хранилищу с признаком «по умолчанию». Если флажок снят, узел создаётся
+без этой привязки. Тег типа «Видеопоток» к хранилищу истории не привязывается
+в любом случае.</p>
+<p><strong>Сортировка узлов по алфавиту.</strong>
+Сначала узлы группируются по типу: объекты, затем теги, тревоги, методы,
+коннекторы, расписания и хранилища. Пока флажок снят, внутри типа
+сохраняется порядок платформы по <code class="docutils literal notranslate"><span class="pre">prsIndex</span></code>. Если флажок включён,
+внутри типа узлы сортируются по имени. Настройка применяется и к уже
+раскрытым веткам.</p>
+</section>
+<section id="id6">
+<h2>Меню команд узла<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
+<p>У строки дерева слева стоит кнопка «…» с подсказкой «Команды».
+В меню только те пункты, которые допустимы для этого узла.
+<code class="docutils literal notranslate"><span class="pre">Escape</span></code> и щелчок мимо меню его закрывают.</p>
+<figure class="align-default">
+<img alt="Меню команд объекта" src="../_images/05.menu.png" />
+</figure>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Узел</p></th>
+<th class="head"><p>Пункты меню</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Папка «Объекты»</p></td>
+<td><p>Новый объект</p></td>
+</tr>
+<tr class="row-odd"><td><p>Объект</p></td>
+<td><p>Новый объект, новый тег, копировать,
+приостановить, удалить</p></td>
+</tr>
+<tr class="row-even"><td><p>Папка «Теги»</p></td>
+<td><p>Новый тег</p></td>
+</tr>
+<tr class="row-odd"><td><p>Тег</p></td>
+<td><p>Новая тревога, новый метод, копировать,
+приостановить, удалить</p></td>
+</tr>
+<tr class="row-even"><td><p>Тревога</p></td>
+<td><p>Новый метод, копировать, приостановить,
+удалить</p></td>
+</tr>
+<tr class="row-odd"><td><p>Метод</p></td>
+<td><p>Копировать, приостановить, удалить</p></td>
+</tr>
+<tr class="row-even"><td><p>Папка «Коннекторы»</p></td>
+<td><p>Новый коннектор</p></td>
+</tr>
+<tr class="row-odd"><td><p>Коннектор</p></td>
+<td><p>Приостановить, удалить</p></td>
+</tr>
+<tr class="row-even"><td><p>Папка «Расписания»</p></td>
+<td><p>Новое расписание</p></td>
+</tr>
+<tr class="row-odd"><td><p>Расписание</p></td>
+<td><p>Приостановить, удалить</p></td>
+</tr>
+<tr class="row-even"><td><p>Папка «Хранилища данных»</p></td>
+<td><p>Новое хранилище</p></td>
+</tr>
+<tr class="row-odd"><td><p>Хранилище</p></td>
+<td><p>Приостановить, удалить</p></td>
+</tr>
+</tbody>
+</table>
+<p>Новый узел создаётся с параметрами по умолчанию: имя совпадает
+с идентификатором, справа сразу открываются его свойства.</p>
+<p><strong>Копировать.</strong> Копия появляется рядом с исходным узлом, вместе с потомками.
+Если такое имя уже занято, платформа подбирает свободное.
+Для объекта конфигуратор сначала спрашивает имя копии.</p>
+<p><strong>Приостановить</strong> и <strong>Включить</strong> меняют признак «Активный»
+у выбранного узла и у потомков, которые уже раскрыты в дереве.
+Свёрнутая ветка, которую дерево ещё не загрузило, в этот обход не попадает.
+У приостановленного узла имя бледнее, а значок у строки подписан
+«Узел приостановлен».</p>
+<p><strong>Удалить</strong> убирает узел и всех его потомков.</p>
+<p>Копирование, удаление и приостановка спрашивают подтверждение:
+окно с жёлтым треугольником, кнопки «Подтвердить» и «Отмена».</p>
+</section>
+<section id="id7">
+<h2>Перетаскивание<a class="headerlink" href="#id7" title="Link to this heading"></a></h2>
+<p>Объекты и теги можно переносить мышью. Папки верхнего уровня
+не перетаскиваются.</p>
+<p>Узел отпускают на объект: он становится его потомком.
+Перенос внутрь самого себя или внутрь своего поддерева конфигуратор отклоняет.</p>
+<p>Несколько узлов одного вида выделяют вместе.
+<code class="docutils literal notranslate"><span class="pre">Ctrl</span></code> (на macOS <code class="docutils literal notranslate"><span class="pre">Cmd</span></code>) добавляет строку к выделению,
+<code class="docutils literal notranslate"><span class="pre">Shift</span></code> выделяет диапазон среди соседей того же вида.
+Перетаскивание любой выделенной строки переносит всю группу.
+Обычный щелчок выделение снимает.</p>
+</section>
+<section id="id8">
+<h2>Пометки в дереве<a class="headerlink" href="#id8" title="Link to this heading"></a></h2>
+<p>Подсказка строки собирается из того, что конфигуратор уже знает об узле.</p>
+<ul class="simple">
+<li><p>Знак паузы на родителе — в ветке есть приостановленный узел.</p></li>
+<li><p>Знак «пусто» (∅) у тега или тревоги — нет привязки к хранилищу данных.
+Тот же знак на родителе значит, что такая привязка отсутствует где-то в ветке.</p></li>
+<li><p>Молния у тега — нет ни коннектора, ни дочернего метода, откуда брались бы данные.</p></li>
+<li><p>У хранилища с признаком «по умолчанию» стоит соответствующая пометка.</p></li>
+<li><p>Кружок у коннектора — сессия MQTT. Зелёный: связь есть.
+Красный: сессии нет. Серый: статус ещё не получен.
+Конфигуратор спрашивает статус примерно раз в пять секунд.
+У камеры кружок зелёный, пока видеосервер держит сеанс RTSP.</p></li>
+</ul>
+</section>
+<section id="id9">
+<h2>Свойства узла<a class="headerlink" href="#id9" title="Link to this heading"></a></h2>
+<p>Справа — имя, идентификатор и поля, которые относятся к этому виду узла.
+Изменённое поле обводится бирюзовой рамкой.</p>
+<p>Пока есть несохранённые правки, активны две кнопки под формой:</p>
+<ul class="simple">
+<li><p>галочка <strong>Записать</strong> — отправить правки в платформу;</p></li>
+<li><p>круговая стрелка <strong>Сбросить</strong> — вернуть значения, которые были при открытии узла.</p></li>
+</ul>
+<figure class="align-default">
+<img alt="Изменённое свойство и кнопки записи" src="../_images/07.properties.png" />
+</figure>
+<p>Имя, описание и признак «Активный» есть почти у всех узлов.
+Остальной набор зависит от вида.</p>
+<p><strong>Объект.</strong> Индекс, код типа, конфигурация JSON.</p>
+<p><strong>Тег.</strong> Тип значений, «Обновлять», «Шаговый», значимое отклонение,
+единицы измерения и блок «Данные тега».
+Типы значений: целый, вещественный, строковый, json, интеграционный,
+видеопоток.</p>
+<p><strong>Тревога.</strong> Сравнение значения тега (<code class="docutils literal notranslate"><span class="pre">&gt;=</span></code> или <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>), порог
+и тип квитирования: вручную или автоматически.</p>
+<p><strong>Метод.</strong> Адрес, под которым метод зарегистрирован в системе,
+код типа и блоки инициаторов и параметров.
+Код <code class="docutils literal notranslate"><span class="pre">0</span></code> — вычислительный метод по инициаторам.
+Код <code class="docutils literal notranslate"><span class="pre">1</span></code> — виртуальный: ответ <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data</span></code> берётся из метода,
+без чтения базы.</p>
+<p><strong>Коннектор.</strong> Конфигурация JSON, флажок «Лог в платформу»,
+журнал и команды.</p>
+<p><strong>Расписание.</strong> Начало, конец и шаг: секунды, минуты, часы или дни.</p>
+<p><strong>Хранилище данных.</strong> Признак «по умолчанию», код типа и конфигурация JSON.</p>
+<p>Поле «Активный» у одного узла при записи меняет только этот узел.
+Чтобы выключить раскрытую ветку целиком, пользуйтесь пунктом меню
+«Приостановить».</p>
+</section>
+<section id="id10">
+<h2>Тег: хранилище и коннектор<a class="headerlink" href="#id10" title="Link to this heading"></a></h2>
+<p>У тега и у тревоги справа появляется вкладка <strong>Хранилище</strong>.
+У тега есть ещё вкладка <strong>Коннектор</strong>.</p>
+<p><strong>Хранилище.</strong> Одно хранилище на тег. Смена отвязывает тег от предыдущего.
+На этой же вкладке лежит блок «Данные тега»: запрос на чтение, запись и экспорт.
+Тревога привязывается к хранилищу на этой вкладке и не имеет своего блока данных.
+Папка «Хранилища данных» в дереве показывает те же связи со стороны хранилища.</p>
+<p><strong>Коннектор.</strong> Одно подключение на тег. В поле конфигурации привязки
+лежит JSON <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> узла связи тега с коннектором:
+адреса регистра, топики и прочие параметры источника.
+Кнопка записи сохраняет и свойства тега, и эту привязку.</p>
+<p>Тег «Видеопоток» к хранилищу истории не привязывают.
+Вкладка <strong>Хранилище</strong> у него всё равно открывает просмотр.
+Связь — с коннектором-камерой. Подробности в <a class="reference internal" href="../video.html#video-cameras"><span class="std std-ref">Подключение видеокамер</span></a>.</p>
+</section>
+<section id="id11">
+<h2>Данные тега<a class="headerlink" href="#id11" title="Link to this heading"></a></h2>
+<p>Блок «Данные тега» стоит на вкладке <strong>Хранилище</strong>.
+Он есть у обычного тега с выбранным хранилищем и у тега «Видеопоток»
+даже без привязки к истории.</p>
+<section id="id12">
+<h3>Запрос на чтение<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<p>Вкладка показывает готовый <code class="docutils literal notranslate"><span class="pre">GET</span></code> и адрес. Кнопка рядом копирует запрос.</p>
+<p>Ключи запроса совпадают с <a class="reference internal" href="../historical_data.html#historical-data"><span class="std std-ref">получением исторических данных</span></a>:
+<code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">actual</span></code>, <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>,
+<code class="docutils literal notranslate"><span class="pre">timeStep</span></code>, <code class="docutils literal notranslate"><span class="pre">maxCount</span></code>. У <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> есть календарь
+и кнопка очистки. В строку можно вставить дату из таблицы ответа.</p>
+<figure class="align-default">
+<img alt="Запрос на чтение тега" src="../_images/08.tag-read.png" />
+</figure>
+<p><strong>Получить данные</strong> выполняет запрос и заполняет таблицу «Время / Значение / Качество».
+Коды качества те же, что в <a class="reference internal" href="../historical_data.html#qualitycodes"><span class="std std-ref">Коды качества</span></a>.</p>
+<p>Для интеграционного тега на этой вкладке дополнительно задаётся <code class="docutils literal notranslate"><span class="pre">params</span></code> —
+JSON фактических значений операции.</p>
+</section>
+<section id="id13">
+<h3>Запрос на запись<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<p>Вкладка <strong>Запрос на запись</strong> задаёт значение и, при необходимости, метку времени.
+Перед отправкой значение приводится к типу тега: целое, вещественное,
+строка или JSON. Пустая метка означает текущий момент.
+Заполненная метка — целое число микросекунд или строка даты и времени.
+Кнопка календаря подставляет дату строкой с часовым поясом.</p>
+<figure class="align-default">
+<img alt="Запрос на запись тега" src="../_images/09.tag-write.png" />
+</figure>
+<p>Кнопка <strong>Записать данные</strong> отправляет <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/data/</span></code>.
+У видеопотока этой вкладки нет: кадр в историю тегов не пишется.</p>
+</section>
+<section id="csv">
+<h3>Экспорт в CSV<a class="headerlink" href="#csv" title="Link to this heading"></a></h3>
+<p>После успешного <strong>Получить данные</strong> становится доступна кнопка
+<strong>Сохранить в CSV</strong>. Успешным считается HTTP-ответ с кодом <code class="docutils literal notranslate"><span class="pre">2xx</span></code>
+и корректным JSON. Пустой список тоже можно экспортировать.
+Ошибка HTTP или JSON, новый запрос и смена тега или любого параметра
+очищают таблицу и блокируют экспорт до следующего успешного чтения.</p>
+<p>Имя файла: <code class="docutils literal notranslate"><span class="pre">&lt;имя</span> <span class="pre">тега&gt;</span> <span class="pre">::</span> <span class="pre">&lt;текущая</span> <span class="pre">метка</span> <span class="pre">времени&gt;.csv</span></code>.
+Метка берётся в момент сохранения, в локальном часовом поясе.
+Внутри файла сначала идут имя тега, его id и полная строка запроса
+(<code class="docutils literal notranslate"><span class="pre">GET</span></code> и URL), затем ключи запроса и их значения.
+После заголовка <code class="docutils literal notranslate"><span class="pre">x,y,q</span></code> записываются точки.
+Если в запросе был ключ <code class="docutils literal notranslate"><span class="pre">format</span></code>, метки <code class="docutils literal notranslate"><span class="pre">x</span></code> попадают в файл
+строками ISO 8601. Если ключ снят, <code class="docutils literal notranslate"><span class="pre">x</span></code> записывается целым числом
+микросекунд, как в ответе платформы.</p>
+<p>В файл попадают полный URL и ключи запроса как есть.
+Если в адресе есть userinfo или среди параметров обнаружены
+<code class="docutils literal notranslate"><span class="pre">token</span></code>, <code class="docutils literal notranslate"><span class="pre">api_key</span></code>, <code class="docutils literal notranslate"><span class="pre">apikey</span></code>, <code class="docutils literal notranslate"><span class="pre">password</span></code>, <code class="docutils literal notranslate"><span class="pre">secret</span></code>,
+<code class="docutils literal notranslate"><span class="pre">authorization</span></code>, <code class="docutils literal notranslate"><span class="pre">access_token</span></code>, <code class="docutils literal notranslate"><span class="pre">client_secret</span></code>, <code class="docutils literal notranslate"><span class="pre">x-api-key</span></code>
+или <code class="docutils literal notranslate"><span class="pre">auth</span></code> без учёта регистра, конфигуратор спрашивает подтверждение
+перед скачиванием.</p>
+</section>
+</section>
+<section id="id14">
+<h2>Коннектор: журнал и команды<a class="headerlink" href="#id14" title="Link to this heading"></a></h2>
+<p>Флажок <strong>Лог в платформу</strong> включает приём строк журнала коннектора.</p>
+<p>Ниже две вкладки.</p>
+<p><strong>Лог коннектора.</strong> Хвост журнала. Пауза останавливает обновление на экране,
+запись на стороне платформы при этом продолжается.
+Кнопка со стрелкой вниз сохраняет видимый хвост в файл.</p>
+<p><strong>Команды коннектору.</strong> Строки уходят коннектору по одной команде на строку
+(<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/connectors_app/</span></code>). Снизу видны ответ API и вывод,
+который коннектор прислал обратно.</p>
+<p>Камера в это меню команд shell не входит: поворот и параметры изображения
+задаются у тега видеопотока, см. <a class="reference internal" href="../video.html#video-cameras"><span class="std std-ref">Подключение видеокамер</span></a>.</p>
+</section>
+<section id="id15">
+<h2>Метод<a class="headerlink" href="#id15" title="Link to this heading"></a></h2>
+<p><strong>Инициаторы</strong> — две вкладки, «Теги» и «Расписания».
+Поиск находит узел по имени, пути или id и добавляет его в список.
+Событие тега или срабатывание расписания запускает метод.</p>
+<p><strong>Параметры</strong> передаются в расчёт. У каждого параметра есть имя,
+описание для оператора, источник и индекс.</p>
+<p>Источник «Данные тега» собирает <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data</span></code>: в запрос добавляют теги,
+при необходимости применяют JSONata к ответу. Кнопка <strong>Пробный запрос</strong>
+показывает, что вернёт платформа.</p>
+<p>Источник «Данные из запроса клиента» берёт объект запроса, который
+пришёл на чтение родительского тега. К нему тоже можно применить JSONata.
+Пробный HTTP в этом режиме конфигуратор не выполняет.</p>
+</section>
+<section id="id16">
+<h2>Тревога и расписание<a class="headerlink" href="#id16" title="Link to this heading"></a></h2>
+<p>Тревога живёт под тегом. В конфигурации задают сравнение с порогом
+и квитирование. Факт появления, пропадания и квитирования пишется
+в хранилище, к которому тревога привязана.</p>
+<p>Расписание задаёт окно времени и шаг. Метод может подписаться
+на расписание так же, как на тег.</p>
+<p>Порядок работы с этими узлами разобран в <a class="reference internal" href="../examples/examples.html#examples"><span class="std std-ref">примерах</span></a>.</p>
+</section>
+<section id="id17">
+<h2>Хранилища данных<a class="headerlink" href="#id17" title="Link to this heading"></a></h2>
+<p>Папка «Хранилища данных» открывает справа карточки хранилищ.
+У выбранного хранилища в дереве видны привязанные теги.</p>
+<p>У привязки к интеграционному хранилищу задают операции чтения и записи:
+имя, описание и выражения параметров. Запись операций уходит отдельно,
+кнопкой <strong>Записать операции (v2)</strong>. Подробности контракта —
+в разделе <a class="reference internal" href="../integrational_v2.html#integrational-v2"><span class="std std-ref">Интеграционные хранилища и операции (API v2)</span></a>.</p>
+</section>
+<section id="id18">
+<h2>Сервисы<a class="headerlink" href="#id18" title="Link to this heading"></a></h2>
+<p>Папка «Сервисы» — журналы платформы, а не узлы модели.
+У каждой строки флажок «Показывать лог сервиса» и число consumer-ов.
+Справа общий хвост отмеченных сервисов.</p>
+<p>Пауза останавливает обновление на экране.
+Корзина очищает журнал выбранных сервисов.
+Стрелка вниз сохраняет видимый текст в файл.</p>
+</section>
+<section id="id19">
+<h2>Примеры<a class="headerlink" href="#id19" title="Link to this heading"></a></h2>
+<p>Короткий сценарий с объектом, тегом и методом — в <a class="reference internal" href="../examples/examples.html#examples"><span class="std std-ref">примерах</span></a>.
+Подключение камеры — в <a class="reference internal" href="../video.html#video-cameras"><span class="std std-ref">Подключение видеокамер</span></a>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="../historical_data.html" class="btn btn-neutral float-left" title="Исторические данные" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="../grafana/grafana_integration.html" class="btn btn-neutral float-right" title="Создание экранов в Grafana" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права 2026, ООО Матч Поинт Консалтинг. </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
