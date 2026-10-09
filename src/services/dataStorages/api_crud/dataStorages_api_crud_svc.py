@@ -201,4 +201,25 @@ async def update(payload: dict, error_handler: svc.ErrorHandler = Depends()):
     await error_handler.handle_error(res)
     return res
 
+@router.delete("/", status_code=202)
+async def delete(payload: svc.NodeDelete, error_handler: svc.ErrorHandler = Depends()):
+    """Удаление хранилища данных.
+
+    **Запрос:**
+
+        .. http:example::
+            :request: ../../../../docs/source/samples/dataStorages/deleteDSIn.txt
+            :response: ../../../../docs/source/samples/dataStorages/deleteDSOut.txt
+
+        * **id** (str | list[str]) - идентификатор(ы) удаляемого хранилища.
+
+    **Ответ:**
+
+        * null - в случае успешного запроса.
+        * **detail** (list) - детали ошибки.
+    """
+    res = await app._delete(payload)
+    await error_handler.handle_error(res)
+    return res
+
 app.include_router(router, tags=["dataStorages"])
