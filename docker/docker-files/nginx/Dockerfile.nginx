@@ -7,6 +7,14 @@ RUN mkdir -p /var/www/docs/pdf
 COPY docs/pdf/*.pdf /var/www/docs/pdf/
 RUN chown -R www-data:www-data /var/www
 COPY config/nginx/nginx.conf /etc/nginx/
+RUN apk add --no-cache openssl \
+    && mkdir -p /etc/nginx/ssl \
+    && openssl req -x509 -nodes -newkey rsa:2048 -days 825 \
+        -keyout /etc/nginx/ssl/stand.key \
+        -out /etc/nginx/ssl/stand.crt \
+        -subj "/CN=192.168.1.50" \
+        -addext "subjectAltName=IP:192.168.1.50,IP:127.0.0.1,DNS:localhost,DNS:usrv" \
+    && apk del openssl
 COPY config/nginx/no_ssl/default.conf.no_ssl.template /etc/nginx/templates/default.conf.template
 #COPY config/nginx/ssl/default.conf.ssl.template /etc/nginx/templates/
 COPY config/nginx/peresvet /etc/nginx/templates/

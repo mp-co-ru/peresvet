@@ -155,6 +155,47 @@ async def resolve_camera_control(hierarchy_api, tag_id: str):
     return connector_id, camera
 
 
+async def connector_id_for_tag(hierarchy_api, tag_id: str) -> str | None:
+    """Коннектор камеры, к которому привязан тег. Активность тега не учитывается."""
+    connector_id, _camera, error = await _camera_for_tag(hierarchy_api, tag_id)
+    if error is not None or not connector_id:
+        return None
+    return connector_id
+
+
+async def active_video_tag_linked(hierarchy_api, connector_id: str) -> bool:
+    """Сеанс камеры нужен, пока к ней привязан хотя бы один включённый тег типа 6."""
+    links = await hierarchy_api.search({
+        "base": connector_id,
+        "scope": hierarchy.CN_SCOPE_SUBTREE,
+        "filter": {"objectClass": ["prsConnectorTagData"]},
+        "attributes": ["cn"],
+    })
+    for _link_id, _, attrs in links or []:
+        tag_id = _first(attrs, "cn")
+        if tag_id is None:
+            continue
+        if isinstance(tag_id, bytes):
+            tag_id = tag_id.decode("utf-8", errors="replace")
+        tag_id = str(tag_id)
+        tag = await hierarchy_api.search({
+            "id": tag_id,
+            "attributes": ["prsValueTypeCode", "prsActive"],
+        })
+        if not tag:
+            continue
+        tag_attrs = tag[0][2]
+        try:
+            value_type = int(_first(tag_attrs, "prsValueTypeCode"))
+        except (TypeError, ValueError):
+            continue
+        if value_type != int(CNTagValueTypes.CN_VIDEO):
+            continue
+        if _flag(tag_attrs, "prsActive", default=True):
+            return True
+    return False
+
+
 async def _camera_for_tag(hierarchy_api, tag_id: str) -> tuple[str | None, CameraConfig | None, VideoFailure | None]:
     connectors = await hierarchy_api.search({
         "base": "cn=connectors,cn=prs",
