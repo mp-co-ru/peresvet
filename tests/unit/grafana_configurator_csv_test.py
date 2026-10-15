@@ -37,7 +37,7 @@ def test_csv_export_dashboard_contract():
     assert "sheetjs" not in javascript.lower()
 
     for required_fragment in (
-        'prsConfiguratorCodeVersion="20261009-camera-audio-v1"',
+        'prsConfiguratorCodeVersion="20261015-svg-icons-v7"',
         "prsTagDataExportSnapshot",
         "prsBuildTagDataCsv",
         "prsExportTagDataCsv",
