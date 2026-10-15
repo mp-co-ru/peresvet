@@ -352,7 +352,7 @@ def test_video_query_keeps_finish_only_when_client_sent_it():
     assert "finish" not in payload_from_request(live).model_fields_set
 
 
-def test_platform_proxies_video_tag_when_video_server_is_configured(monkeypatch):
+def test_platform_proxies_video_tag_to_the_delivery_base_url(monkeypatch):
     from starlette.responses import JSONResponse as JR
 
     from src.services.video import http_response
@@ -362,19 +362,31 @@ def test_platform_proxies_video_tag_when_video_server_is_configured(monkeypatch)
         _camera_connector(),
         {CONN: [(TAG, "dn", {"cn": [TAG]})]},
     )
-    monkeypatch.setenv("VIDEO_SERVER_URL", "http://video:8090")
     called = {}
 
-    async def fake_proxy(request):
+    async def post_message(mes, reply=False, routing_key=None):
+        called["key"] = routing_key
+        called["mes"] = mes
+        return {"baseUrl": "http://video-delivery:8092"}
+
+    async def fake_proxy(request, url, forward_query=True):
+        called["url"] = url
         called["query"] = request.url.query
+        called["forward"] = forward_query
         return JR({"proxied": True}, status_code=200)
 
-    monkeypatch.setattr(http_response, "proxy_video_get", fake_proxy)
+    app = _app(hierarchy)
+    app._post_message = post_message
+    monkeypatch.setattr(http_response, "proxy_stream", fake_proxy)
     request = SimpleNamespace(url=SimpleNamespace(query=f"tagId={TAG}"))
     response = asyncio.run(
-        http_response.maybe_video_data_response(_app(hierarchy), DataGet.model_validate({"tagId": TAG}), request)
+        http_response.maybe_video_data_response(app, DataGet.model_validate({"tagId": TAG}), request)
     )
+    assert called["key"] == f"video.delivery.locate.{TAG}"
+    assert called["mes"] == {"tagId": TAG}
+    assert called["url"] == "http://video-delivery:8092/v1/data/"
     assert called["query"] == f"tagId={TAG}"
+    assert called["forward"] is True
     assert isinstance(response, JR)
     assert response.status_code == 200
 
@@ -474,25 +486,27 @@ def test_stream_change_reopens_session(monkeypatch, tmp_path):
         runtime._sessions.pop(CONN, None)
 
 
-def test_video_app_subscribes_to_connector_changes():
+def test_video_capture_subscribes_to_connector_changes():
     from src.common.app_svc import AppSvc
-    from src.services.video.video_app_settings import VideoAppSettings
-    from src.services.video.video_app_svc import VideoApp
+    from src.services.video.video_capture_settings import VideoCaptureSettings
+    from src.services.video.video_capture_svc import VideoCapture
 
-    assert "_set_handlers" not in VideoApp.__dict__
-    app = object.__new__(VideoApp)
+    assert "_set_handlers" not in VideoCapture.__dict__
+    app = object.__new__(VideoCapture)
     app._handlers = {}
-    app._config = VideoAppSettings()
+    app._config = VideoCaptureSettings()
     AppSvc._set_handlers(app)
-    assert app._handlers["prsConnector.model.created"].__func__ is VideoApp._created
-    assert app._handlers["prsConnector.model.updated.*"].__func__ is VideoApp._updated
-    assert app._handlers["prsConnector.model.deleted.*"].__func__ is VideoApp._deleted
+    assert app._handlers["prsConnector.model.created"].__func__ is VideoCapture._created
+    assert app._handlers["prsConnector.model.updated.*"].__func__ is VideoCapture._updated
+    assert app._handlers["prsConnector.model.deleted.*"].__func__ is VideoCapture._deleted
+    assert app._handlers["video.capture.lookup.*"].__func__ is VideoCapture._lookup
     result = asyncio.run(app._may_update({"id": CONN}))
     assert result == {"response": True}
+    assert asyncio.run(app._may_delete({"id": CONN})) == {"response": True}
 
 
 def test_connector_updated_message_applies_retention(monkeypatch):
-    from src.services.video import video_app_svc
+    from src.services.video import video_capture_svc as video_app_svc
 
     synced = []
 
@@ -515,20 +529,24 @@ def test_connector_updated_message_applies_retention(monkeypatch):
         synced.append((conn_id, camera.retention_hours))
         return "retention"
 
+    async def active_tag(_hierarchy, connector_id):
+        return True
+
     monkeypatch.setattr(video_app_svc, "sync_session", sync_session)
+    monkeypatch.setattr(video_app_svc, "active_video_tag_linked", active_tag)
     svc = SimpleNamespace(
         _hierarchy=SimpleNamespace(search=search),
-        _config=SimpleNamespace(svc_name="video_app"),
+        _config=SimpleNamespace(svc_name="video_capture", nodes=[]),
         _logger=_Logger(),
     )
-    svc._apply_connector = video_app_svc.VideoApp._apply_connector.__get__(svc, SimpleNamespace)
-    svc._created = video_app_svc.VideoApp._created.__get__(svc, SimpleNamespace)
-    asyncio.run(video_app_svc.VideoApp._updated(svc, {"id": CONN}))
+    svc._apply_connector = video_app_svc.VideoCapture._apply_connector.__get__(svc, SimpleNamespace)
+    svc._created = video_app_svc.VideoCapture._created.__get__(svc, SimpleNamespace)
+    asyncio.run(video_app_svc.VideoCapture._updated(svc, {"id": CONN}))
     assert synced == [(CONN, 4.0)]
 
 
 def test_connector_deleted_message_stops_session_without_ldap(monkeypatch):
-    from src.services.video import video_app_svc
+    from src.services.video import video_capture_svc as video_app_svc
 
     stopped = []
 
@@ -545,7 +563,7 @@ def test_connector_deleted_message_stops_session_without_ldap(monkeypatch):
         _config=SimpleNamespace(svc_name="video_app"),
         _logger=_Logger(),
     )
-    asyncio.run(video_app_svc.VideoApp._deleted(svc, {"id": CONN}))
+    asyncio.run(video_app_svc.VideoCapture._deleted(svc, {"id": CONN}))
     assert stopped == [CONN]
 
 
@@ -599,16 +617,13 @@ def test_camera_motion_track_adds_up_until_stop():
 
 
 def test_ptz_request_reaches_onvif_for_a_video_tag(monkeypatch):
-    from starlette.requests import Request
+    from src.services.video import capture_http
 
-    from src.services.video import ptz_http
-
-    hierarchy = _Hierarchy(
-        {TAG: _video_tag()},
-        _camera_connector(),
-        {CONN: [(TAG, "dn", {"cn": [TAG]})]},
-    )
     seen = {}
+
+    async def search(payload):
+        assert payload["id"] == [CONN]
+        return _camera_connector()
 
     async def fake_perform(camera, command):
         seen["host"] = camera.onvif_host
@@ -616,22 +631,12 @@ def test_ptz_request_reaches_onvif_for_a_video_tag(monkeypatch):
         seen["action"] = command["action"]
         return {"ok": True, "action": command["action"]}
 
-    monkeypatch.setattr(ptz_http, "perform_ptz", fake_perform)
-    monkeypatch.setattr(ptz_http, "video_server_url", lambda: None)
-    app = _app(hierarchy)
-    raw = json.dumps({"tagId": TAG, "action": "stop"}).encode()
-
-    async def receive():
-        return {"type": "http.request", "body": raw, "more_body": False}
-
-    request = Request({
-        "type": "http",
-        "method": "POST",
-        "path": "/v1/ptz/",
-        "headers": [(b"content-type", b"application/json")],
-        "query_string": b"",
-    }, receive)
-    response = asyncio.run(ptz_http.ptz_response(app, request))
+    monkeypatch.setattr(capture_http, "perform_ptz", fake_perform)
+    app = SimpleNamespace(
+        _hierarchy=SimpleNamespace(search=search),
+        _config=SimpleNamespace(nodes=[]),
+    )
+    response = asyncio.run(capture_http.capture_ptz(app, CONN, {"action": "stop"}))
     assert response.status_code == 200
     assert seen == {"host": "192.168.1.72", "port": 8899, "action": "stop"}
 
@@ -741,38 +746,27 @@ def test_onvif_imaging_settings_round_trip_into_one_field():
 
 
 def test_ptz_image_set_reaches_onvif_for_a_video_tag(monkeypatch):
-    from starlette.requests import Request
+    from src.services.video import capture_http
 
-    from src.services.video import ptz_http
-
-    hierarchy = _Hierarchy(
-        {TAG: _video_tag()},
-        _camera_connector(),
-        {CONN: [(TAG, "dn", {"cn": [TAG]})]},
-    )
     seen = {}
+
+    async def search(payload):
+        assert payload["id"] == [CONN]
+        return _camera_connector()
 
     async def fake_perform(camera, command):
         seen["action"] = command["action"]
         seen["brightness"] = command["brightness"]
         return {"imaging": {"brightness": command["brightness"]}, "options": {}}
 
-    monkeypatch.setattr(ptz_http, "perform_ptz", fake_perform)
-    monkeypatch.setattr(ptz_http, "video_server_url", lambda: None)
-    app = _app(hierarchy)
-    raw = json.dumps({"tagId": TAG, "action": "image_set", "brightness": 40}).encode()
-
-    async def receive():
-        return {"type": "http.request", "body": raw, "more_body": False}
-
-    request = Request({
-        "type": "http",
-        "method": "POST",
-        "path": "/v1/ptz/",
-        "headers": [(b"content-type", b"application/json")],
-        "query_string": b"",
-    }, receive)
-    response = asyncio.run(ptz_http.ptz_response(app, request))
+    monkeypatch.setattr(capture_http, "perform_ptz", fake_perform)
+    app = SimpleNamespace(
+        _hierarchy=SimpleNamespace(search=search),
+        _config=SimpleNamespace(nodes=[]),
+    )
+    response = asyncio.run(
+        capture_http.capture_ptz(app, CONN, {"action": "image_set", "brightness": 40})
+    )
     assert response.status_code == 200
     assert seen == {"action": "image_set", "brightness": 40}
 

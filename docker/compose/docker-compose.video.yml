@@ -1,32 +1,44 @@
 services:
-  video:
-    container_name: prs-video
-    hostname: video
+  video-capture:
+    container_name: prs-video-capture
+    hostname: video-capture
     image: prs-one-app
     build:
       context: ../..
       dockerfile: docker/docker-files/all/Dockerfile.one_app.uvicorn
       args:
         - LOCAL_MODE=${LOCAL_MODE:-false}
-    command: ["python", "src/services/video/video_server.py"]
+    command: ["python", "src/services/video/video_capture_server.py"]
     environment:
       TZ: ${TIME_ZONE}
       VIDEO_ARCHIVE_DIR: /var/lib/peresvet/video
       VIDEO_ARCHIVE_HOURS: ${VIDEO_ARCHIVE_HOURS:-24}
-      VIDEO_HTTP_PORT: "8090"
+      http_base_url: http://video-capture:8091
+      http_port: "8091"
     volumes:
       - video_archive:/var/lib/peresvet/video
       - ../../log:/usr/src/mpc-peresvet/log
     networks:
       - peresvet
 
-  # Платформа после проверки прав отдаёт зрителей на видеосервер.
-  one_app:
+  video-delivery:
+    container_name: prs-video-delivery
+    hostname: video-delivery
+    image: prs-one-app
+    build:
+      context: ../..
+      dockerfile: docker/docker-files/all/Dockerfile.one_app.uvicorn
+      args:
+        - LOCAL_MODE=${LOCAL_MODE:-false}
+    command: ["python", "src/services/video/video_delivery_server.py"]
     environment:
-      VIDEO_SERVER_URL: http://video:8090
-    depends_on:
-      video:
-        condition: service_started
+      TZ: ${TIME_ZONE}
+      http_base_url: http://video-delivery:8092
+      http_port: "8092"
+    volumes:
+      - ../../log:/usr/src/mpc-peresvet/log
+    networks:
+      - peresvet
 
 networks:
   peresvet:
