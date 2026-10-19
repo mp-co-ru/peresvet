@@ -1,0 +1,30 @@
+POST /v1/methods/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+
+{
+    "parentId": "id of prsTag or prsAlert",
+    "catalogMethodId": "id of catalog prsMethod",
+    "attributes": {
+        "cn": "sum from catalog",
+        "prsEntityTypeCode": 0
+    },
+    "initiatedBy": ["id of initiator tag"],
+    "parameters": [
+        {
+            "attributes": {
+                "cn": "a",
+                "prsIndex": 1,
+                "prsJsonConfigString": {"binding": "tag", "tagId": "id of source tag"}
+            }
+        },
+        {
+            "attributes": {
+                "cn": "b",
+                "prsIndex": 2,
+                "prsJsonConfigString": {"binding": "literal", "value": 1, "valueTypeCode": 2}
+            }
+        }
+    ]
+}

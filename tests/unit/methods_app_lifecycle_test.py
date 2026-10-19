@@ -252,6 +252,21 @@ def test_make_method_cache_does_not_rebind_without_initiators():
     assert svc._cache.store == {}
 
 
+def test_make_method_cache_skips_methods_outside_tag_or_alert():
+    svc = _make_service(
+        _Hierarchy(
+            initiators=["initiator-tag"],
+            initiator_classes={"result-tag": "prsModelNode"},
+        )
+    )
+
+    ok = asyncio.run(MethodsApp._make_method_cache(svc, "method-1"))
+
+    assert ok is True
+    assert svc._cache.store == {}
+    assert svc._amqp_consume_queue.calls == []
+
+
 def test_make_method_cache_does_not_build_initiator_cache_for_virtual_method():
     svc = _make_service(_Hierarchy(method_type=1, initiators=["initiator-tag"]))
 

@@ -13,6 +13,12 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+# Несколько pull request публикуют одну и ту же ветку gh-pages.
+# Параллельные push отклоняются: ref уже сдвинут другим запуском.
+concurrency:
+  group: gh-pages
+  cancel-in-progress: false
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -45,4 +51,20 @@ jobs:
           python -m sphinx -b html docs/source docs/build
       - name: Run ghp-import
         run: |
-          ghp-import -n -p -f docs/build
+          set -eu
+          attempt=1
+          max_attempts=5
+          while true; do
+            # ghp-import берёт родителя из origin/gh-pages и не делает fetch сам.
+            git fetch origin '+refs/heads/gh-pages:refs/remotes/origin/gh-pages' || true
+            if ghp-import -n -p -f docs/build; then
+              exit 0
+            fi
+            if [ "${attempt}" -ge "${max_attempts}" ]; then
+              echo "Не удалось опубликовать ветку gh-pages после ${max_attempts} попыток." >&2
+              exit 1
+            fi
+            echo "Ветка gh-pages изменилась во время публикации, повтор ${attempt}." >&2
+            attempt=$((attempt + 1))
+            sleep $((attempt * 2))
+          done

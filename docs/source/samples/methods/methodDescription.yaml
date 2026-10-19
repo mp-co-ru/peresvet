@@ -1,0 +1,28 @@
+folders:
+  - cn: stdlib
+    description: Стандартные арифметические методы
+    methods:
+      - cn: add
+        address: prs.stdlib.add
+        description: Сложение
+        parameters:
+          - cn: a
+            type: float
+          - cn: b
+            index: 2
+            type: float
+        probe: [2, 3]
+      - cn: div
+        address: prs.stdlib.div
+        description: Деление
+        parameters:
+          - {cn: a, type: float}
+          - {cn: b, type: float}
+        probe: [4, 2]
+methods:
+  - cn: echo
+    address: prs.example.echo
+    parameters:
+      - cn: text
+        type: string
+    probe: ["проверка"]

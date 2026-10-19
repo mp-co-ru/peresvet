@@ -326,6 +326,7 @@ class OneNodeInReadResult(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
 
     id: str = Field(title="Id узла.")
+    dn: str | None = Field(None, title="DN узла.")
     parentId: str | None = Field(None, title="Id родительского узла.")
     attributes: dict = Field(title="Атрибуты узла")
     children: list[dict] | None = Field(

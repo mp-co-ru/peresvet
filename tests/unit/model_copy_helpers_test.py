@@ -49,6 +49,12 @@ def test_attr_helpers_and_remap():
     assert "objectClass" not in plain
     filtered = filter_plain_attrs_for_class({**plain, "unknown": 1}, "prsTag")
     assert "unknown" not in filtered
+    assert filter_plain_attrs_for_class(
+        {"prsCatalogMethodId": "cat-1", "cn": "m", "extra": 1}, "prsMethod"
+    )["prsCatalogMethodId"] == "cat-1"
+    assert filter_plain_attrs_for_class(
+        {"prsValueTypeCode": 2, "cn": "a"}, "prsMethodParameter"
+    )["prsValueTypeCode"] == 2
     attrs = {}
     ensure_attrs_for_create("prsMethod", {"cn": ["m"], "prsMethodAddress": []}, attrs)
     assert attrs["cn"] == "m"
@@ -197,7 +203,16 @@ def test_list_ds_ids_and_copy_object_tree():
 def test_copy_single_method_and_wrong_class():
     class H:
         async def get_node_class(self, nid):
-            return "prsTag" if nid == "not-method" else "prsMethod"
+            if nid in ("not-method", "parent-tag", "p"):
+                return "prsTag"
+            if nid == "folder-1":
+                return "prsModelNode"
+            return "prsMethod"
+
+        async def get_parent(self, nid):
+            if nid == "catalog-method":
+                return "folder-1", None
+            return "parent-tag", None
 
         async def get_node_dn(self, nid):
             return f"cn={nid}"
@@ -205,6 +220,8 @@ def test_copy_single_method_and_wrong_class():
         async def search(self, payload):
             if payload.get("id") == ["m1"]:
                 return [("m1", None, {"cn": ["m"], "prsMethodAddress": [" "]})]
+            if payload.get("id") == ["catalog-method"]:
+                return [("catalog-method", None, {"cn": ["add"], "prsMethodAddress": ["prs.stdlib.add"]})]
             return []
 
     async def post_message(**kwargs):
@@ -218,6 +235,28 @@ def test_copy_single_method_and_wrong_class():
         copy_single_method(H(), post_message, source_id="m1", new_parent_id="p", subtree_ids=frozenset(), id_map={})
     )
     assert ok == {"id": "copied"}
+    blocked = asyncio.run(
+        copy_single_method(
+            H(),
+            post_message,
+            source_id="catalog-method",
+            new_parent_id="p",
+            subtree_ids=frozenset(),
+            id_map={},
+        )
+    )
+    assert blocked["error"]["code"] == 422
+    copied_to_folder = asyncio.run(
+        copy_single_method(
+            H(),
+            post_message,
+            source_id="catalog-method",
+            new_parent_id="folder-1",
+            subtree_ids=frozenset(),
+            id_map={},
+        )
+    )
+    assert copied_to_folder == {"id": "copied"}
 
 
 def test_copy_subtree_wrong_class():
