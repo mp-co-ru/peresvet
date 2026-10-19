@@ -224,6 +224,22 @@ def test_remove_last_method_from_initiator_cache_deletes_key():
     assert ("unbind", "main", "prsSchedule.model.deleted.sched-1") in svc._amqp_consume_queue.calls
 
 
+def test_make_method_cache_skips_catalog_parent():
+    class Hierarchy:
+        async def get_parent(self, method_id):
+            return "folder", None
+
+        async def get_node_class(self, node_id):
+            return "prsModelNode"
+
+        async def search(self, payload):
+            raise AssertionError(payload)
+
+    svc = _make_service(Hierarchy())
+    asyncio.run(MethodsModelCRUD._make_method_cache(svc, "catalog-method"))
+    assert svc._cache.store == {}
+
+
 def test_get_method_initiators_treats_missing_method_as_already_removed():
     hierarchy = _Hierarchy(missing_nodes=["gone-method"])
     svc = _make_service(hierarchy)

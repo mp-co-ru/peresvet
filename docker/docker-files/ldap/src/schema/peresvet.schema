@@ -217,6 +217,15 @@ attributetype ( 1.3.6.1.4.1.58316.2.3.30
 	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
 	SINGLE-VALUE )
 
+# идентификатор метода каталога (entryUUID), Directory String
+attributetype ( 1.3.6.1.4.1.58316.2.3.31
+	NAME 'prsCatalogMethodId'
+	DESC 'Идентификатор метода каталога (entryUUID)'
+	EQUALITY caseIgnoreMatch
+	SUBSTR caseIgnoreSubstringsMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+	SINGLE-VALUE )
+
 objectClass ( 1.3.6.1.4.1.58316.2.4.1
 	NAME 'prsModelNode'
 	DESC 'класс, на базе которого создаются все узлы в модели'
@@ -255,7 +264,8 @@ objectClass ( 1.3.6.1.4.1.58316.2.4.7
 	NAME 'prsMethod'
 	DESC 'класс "метод"'
 	SUP prsModelNode STRUCTURAL
-	MUST ( prsMethodAddress ))
+	MUST ( prsMethodAddress )
+	MAY ( prsCatalogMethodId ))
 
 objectClass ( 1.3.6.1.4.1.58316.2.4.8
 	NAME 'prsObject'
@@ -299,7 +309,8 @@ objectClass ( 1.3.6.1.4.1.58316.2.4.14
 objectClass ( 1.3.6.1.4.1.58316.2.4.15
 	NAME 'prsMethodParameter'
 	DESC 'параметр метода'
-	SUP prsModelNode STRUCTURAL)
+	SUP prsModelNode STRUCTURAL
+	MAY ( prsValueTypeCode ))
 
 objectClass ( 1.3.6.1.4.1.58316.2.4.16
 	NAME 'prsDatastorageTagData'

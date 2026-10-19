@@ -259,3 +259,11 @@ async def update_v2(payload: dict, error_handler: svc.ErrorHandler = Depends()):
     await error_handler.handle_error(res)
     return res
 
+
+@router_v2.delete("/", status_code=202)
+async def delete_v2(payload: svc.NodeDelete, error_handler: svc.ErrorHandler = Depends()):
+    """Удаление хранилища данных (v2)."""
+    res = await dataStorages_api_crud_app._delete(payload)
+    await error_handler.handle_error(res)
+    return res
+

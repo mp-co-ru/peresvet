@@ -7,7 +7,7 @@ class MethodsModelCRUDSettings(ModelCRUDSettings):
     hierarchy: dict = {
         #: имя узла для хранения сущностей в иерархии
         #: если узел не требуется, то пустая строка
-        "node": "",
+        "node": "methods",
         #: класс экзмепляров сущности в иерархии
         "class": "prsMethod",
         #: список через запятую родительских классов

@@ -2,6 +2,7 @@ import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
+from src.common.api_crud_svc import OneNodeInReadResult
 from src.common.model_crud_svc import ModelCRUDSvc
 from src.services.objects.model_crud.objects_model_crud_svc import ObjectsModelCRUD
 
@@ -55,3 +56,37 @@ def test_objects_copy_subtree_requires_ids_and_delegates():
     svc._handlers = {}
     ObjectsModelCRUD._set_handlers(svc)
     assert "prsObject.api_crud.copy" in svc._handlers
+
+
+def test_read_result_includes_node_dn():
+    svc = object.__new__(ModelCRUDSvc)
+    svc._config = SimpleNamespace(
+        svc_name="methods_model_crud",
+        hierarchy={"class": "prsMethod", "node": "methods", "node_id": "root"},
+    )
+    svc._logger = _Logger()
+    dn = "cn=Новый метод,cn=C,cn=objects,cn=prs"
+
+    async def search(_payload):
+        return [("method-1", dn, {"cn": ["Новый метод"]})]
+
+    svc._hierarchy = SimpleNamespace(search=search)
+
+    async def further_read(_mes, result):
+        return result
+
+    svc._further_read = further_read
+    result = asyncio.run(
+        svc._read(
+            {
+                "id": "method-1",
+                "base": None,
+                "hierarchy": False,
+                "scope": 0,
+                "filter": {},
+            }
+        )
+    )
+    assert result["data"][0]["dn"] == dn
+    parsed = OneNodeInReadResult.model_validate(result["data"][0])
+    assert parsed.model_dump()["dn"] == dn

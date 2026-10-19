@@ -3,6 +3,15 @@ include conf.d/upstreams/*.conf;
 server {
     listen ${NGINX_HTTP_PORT};
     server_name 0.0.0.0 localhost ${NGINX_HOST};
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen ${NGINX_HTTPS_PORT} ssl;
+    server_name 0.0.0.0 localhost ${NGINX_HOST};
+
+    ssl_certificate /etc/nginx/ssl/stand.crt;
+    ssl_certificate_key /etc/nginx/ssl/stand.key;
 
     client_max_body_size 15m;
 

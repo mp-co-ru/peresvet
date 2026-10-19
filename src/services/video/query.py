@@ -16,7 +16,7 @@ def payload_from_request(request: Request) -> DataGet:
     if not tag_ids:
         raise ValueError("Нужен tagId.")
     body: dict = {"tagId": tag_ids}
-    for key in ("start", "finish", "timeStep", "count"):
+    for key in ("start", "finish", "timeStep", "count", "audio"):
         if key in query:
             body[key] = query.get(key)
     return DataGet.model_validate(body)

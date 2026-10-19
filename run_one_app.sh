@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Скрипт запускает контейнеры с сервисами платформы.
 # Имя сервера задаётся ключом --hostname, по умолчанию используется имя хоста.
-# HTTPS-вариант запуска включается ключом --ssl true.
+# По умолчанию nginx работает по HTTPS и при старте выпускает самоподписанный
+# сертификат на IPv4-адрес из PRS_IP (.env) или ключа --ip.
+# Ключ --ssl true подключает заранее подготовленные сертификаты.
 # Пересборка контейнеров перед запуском включается ключом --build true.
 
 set -euo pipefail
@@ -13,26 +15,31 @@ DOTENV_FILE="${SCRIPT_DIR}/.env"
 show_help() {
     cat <<'EOF'
 Usage:
-  ./run_one_app.sh [--hostname HOSTNAME] [--ssl true|false] [--build true|false]
-                   [--mirror URL] [--tmpdir DIR] [--local]
+  ./run_one_app.sh [--ip ADDRESS] [--hostname HOSTNAME] [--ssl true|false]
+                   [--build true|false] [--mirror URL] [--tmpdir DIR] [--local]
 
 Options:
+  --ip ADDRESS         IPv4 address of this server. The default startup puts it
+                       into a self-signed HTTPS certificate. Defaults to PRS_IP
+                       from .env. Required unless --ssl true.
   --hostname HOSTNAME  Server name for nginx. Defaults to PRS_HOSTNAME or host name.
-  --ssl true|false     Use HTTPS nginx compose file. Defaults to PRS_SSL from .env.
+  --ssl true|false     true: nginx with prepared certificates.
+                       false (default): nginx with a generated self-signed
+                       certificate. Defaults to PRS_SSL from .env.
   --build true|false   Rebuild images before starting containers. Defaults to PRS_BUILD.
   --mirror URL         Registry mirror for missing base images. Defaults to
                        PRS_REGISTRY_MIRROR from .env.
   --tmpdir DIR         Directory for temporary files when pulling images from the
                        mirror (layer cache and unpack). Defaults to /tmp.
                        Use a directory on disk if /tmp is a small tmpfs, for example:
-                       ./run_one_app.sh --tmpdir /var/tmp
+                       ./run_one_app.sh --ip 192.168.1.10 --tmpdir /var/tmp
   --local              Local mode: use pre-installed dependencies. Use with
                        distributions prepared with ./packaging/build_dev_distribution.sh --local.
   -h, --help           Show this help.
 
 Configuration:
   Defaults are read from .env next to this script. CLI options override .env.
-  Variables: PRS_REGISTRY_MIRROR, PRS_HOSTNAME, PRS_SSL, PRS_BUILD,
+  Variables: PRS_REGISTRY_MIRROR, PRS_HOSTNAME, PRS_IP, PRS_SSL, PRS_BUILD,
              LOCAL_MODE, PRS_SKIP_IMAGE_PULL.
 
 Mirror notes:
@@ -497,7 +504,7 @@ if __name__ == "__main__":
             eprint(
                 "Не хватает места/квоты во временном каталоге при сборке образа "
                 f"(--tmpdir={os.environ.get('TMPDIR', '/tmp')}). "
-                "Укажите каталог на диске, например: ./run_one_app.sh --tmpdir /var/tmp"
+                "Укажите каталог на диске, например: ./run_one_app.sh --ip 192.168.1.10 --tmpdir /var/tmp"
             )
         raise
 PY
@@ -789,12 +796,49 @@ pull_required_images() {
     done
 }
 
+is_ipv4() {
+    local ip="$1"
+    local octet
+
+    [[ "${ip}" =~ ^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$ ]] || return 1
+    for octet in "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}" "${BASH_REMATCH[4]}"; do
+        if ((10#${octet} > 255)); then
+            return 1
+        fi
+    done
+}
+
+upsert_env_value() {
+    local file="$1"
+    local key="$2"
+    local value="$3"
+    local tmp
+
+    tmp="$(mktemp)"
+    awk -v key="${key}" -v value="${value}" '
+        BEGIN { found = 0 }
+        index($0, key "=") == 1 {
+            print key "=" value
+            found = 1
+            next
+        }
+        { print }
+        END {
+            if (found == 0) {
+                print key "=" value
+            }
+        }
+    ' "${file}" > "${tmp}"
+    mv "${tmp}" "${file}"
+}
+
 load_dotenv "${DOTENV_FILE}"
 
 srv="${PRS_HOSTNAME:-${HOSTNAME:-$(hostname)}}"
 ssl="${PRS_SSL:-false}"
 build="${PRS_BUILD:-false}"
 local_mode="${PRS_LOCAL_MODE:-false}"
+tls_ip="${PRS_IP:-}"
 pull_tmpdir="/tmp"
 registry_mirror="$(trim_registry_mirror "${PRS_REGISTRY_MIRROR:-}")"
 require_registry_mirror_scheme "${registry_mirror}"
@@ -808,6 +852,14 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
             srv="$2"
+            shift 2
+            ;;
+        --ip)
+            if [[ $# -lt 2 || -z "$2" ]]; then
+                echo "Option --ip requires an IPv4 address." >&2
+                exit 1
+            fi
+            tls_ip="$2"
             shift 2
             ;;
         --ssl)
@@ -892,7 +944,31 @@ case "${build}" in
         ;;
 esac
 
-sed -i "s/NGINX_HOST=.*/NGINX_HOST=${srv}/" docker/compose/.cont_one_app.env
+if [[ "${ssl}" == "false" ]]; then
+    if [[ -z "${tls_ip}" ]]; then
+        cat >&2 <<'EOF'
+Предупреждение: укажите IP-адрес сервера в .env (PRS_IP) или ключом --ip.
+На этот адрес выпускается самоподписанный HTTPS-сертификат.
+Пример: PRS_IP=192.168.1.10 или ./run_one_app.sh --ip 192.168.1.10
+EOF
+        exit 1
+    fi
+    if ! is_ipv4 "${tls_ip}"; then
+        echo "IP-адрес должен быть IPv4, получено: ${tls_ip}." >&2
+        exit 1
+    fi
+fi
+
+cont_env_file="${PRS_CONT_ENV_FILE:-docker/compose/.cont_one_app.env}"
+sed -i "s/NGINX_HOST=.*/NGINX_HOST=${srv}/" "${cont_env_file}"
+if [[ "${ssl}" == "false" ]]; then
+    upsert_env_value "${cont_env_file}" "NGINX_TLS_IP" "${tls_ip}"
+    echo "HTTPS: самоподписанный сертификат для ${tls_ip}."
+fi
+
+if [[ "${PRS_LAUNCH_DRY_RUN:-0}" == "1" ]]; then
+    exit 0
+fi
 
 extra_env=()
 if [ -f docker/compose/.cont_one_app.secrets.env ]; then
@@ -901,7 +977,7 @@ fi
 
 pull_required_images
 
-docker compose --env-file docker/compose/.cont_one_app.env "${extra_env[@]}" \
+docker compose --env-file "${cont_env_file}" "${extra_env[@]}" \
 -f docker/compose/docker-compose.redis.yml \
 -f docker/compose/docker-compose.rabbitmq.yml \
 -f docker/compose/docker-compose.ldap.one_app.yml \

@@ -281,6 +281,12 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
                 continue
             if not parent or parent in seen:
                 continue
+            try:
+                parent_class = await self._hierarchy.get_node_class(parent)
+            except Exception:
+                continue
+            if parent_class != "prsTag":
+                continue
             seen.add(parent)
             await self._sync_parent_tag_data_get_subscription(parent)
 

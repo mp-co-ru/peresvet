@@ -37,7 +37,7 @@ def test_csv_export_dashboard_contract():
     assert "sheetjs" not in javascript.lower()
 
     for required_fragment in (
-        'prsConfiguratorCodeVersion="20261005-image-v1"',
+        'prsConfiguratorCodeVersion="20261018-method-description-v3"',
         "prsTagDataExportSnapshot",
         "prsBuildTagDataCsv",
         "prsExportTagDataCsv",
@@ -79,6 +79,9 @@ def test_csv_export_dashboard_contract():
     assert 'data-ptz="home"' in html
     assert 'data-ptz="pulse"' in html
     assert "prs-video-preview-row" in html
+    assert 'id="prs-video-preview-audio"' in html
+    assert "prsStartVideoAudio" in javascript
+    assert '"audio=1"' in javascript
     assert html.index('id="prs-video-ptz"') < html.index('id="prs-video-preview-stage"')
     assert 'id="prs-video-image"' in html
     assert "prsRenderVideoImage" in javascript

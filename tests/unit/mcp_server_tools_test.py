@@ -83,6 +83,21 @@ def test_mcp_tools_call_http_layer():
             await _unwrap(mcp_server.peresvet_crud_update)(entity="objects", payload={"id": "a"})
             await _unwrap(mcp_server.peresvet_crud_delete)(entity="objects", payload={"id": "a"})
             await _unwrap(mcp_server.peresvet_method_create)(cn="m", parent_id="p", method_address="pkg.fn")
+            await _unwrap(mcp_server.peresvet_method_create)(
+                cn="from-catalog",
+                parent_id="p",
+                method_address="placeholder",
+                catalog_method_id="cat-1",
+            )
+            await _unwrap(mcp_server.peresvet_method_folder_create)(cn="stdlib", description="arith")
+            await _unwrap(mcp_server.peresvet_method_folders_list)(base="root", scope=2, filter={"cn": ["stdlib"]})
+            await _unwrap(mcp_server.peresvet_method_folder_update)(folder_id="f1", cn="renamed")
+            await _unwrap(mcp_server.peresvet_method_folder_delete)(folder_id=["f1"])
+            await _unwrap(mcp_server.peresvet_method_description_import)(
+                yaml_text="folders: []",
+                parent_id="methods",
+                probe=True,
+            )
             await _unwrap(mcp_server.peresvet_virtual_method_create)(tag_id="t", method_address="pkg.fn")
             await _unwrap(mcp_server.peresvet_object_copy)(source_id="s", parent_id="p")
             await _unwrap(mcp_server.peresvet_tag_copy)(source_id="s", parent_id="p")
@@ -99,9 +114,36 @@ def test_mcp_tools_call_http_layer():
             await _unwrap(mcp_server.peresvet_apply_hierarchy)(
                 root_parent_id="p", tree=[{"cn": "obj", "tags": [{"cn": "t"}]}]
             )
+            await _unwrap(mcp_server.peresvet_connector_services)()
+            await _unwrap(mcp_server.peresvet_connector_service_log_tail)(services=["methods_app"], limit=10)
+            await _unwrap(mcp_server.peresvet_connector_service_log_clear)(services=["methods_app"])
+            await _unwrap(mcp_server.peresvet_ptz)(tag_id="cam")
+            await _unwrap(mcp_server.peresvet_ptz)(tag_id="cam", action="move", pan=1, tilt=0, zoom=0)
 
     asyncio.run(run())
     paths = [c[1] for c in captured]
     assert "/openapi.json" in paths
     assert "/v1/objects/" in paths
     assert "/v1/tags/copy" in paths
+    catalog_calls = [
+        item for item in captured
+        if item[1].endswith("/methods/") and item[3] and item[3].get("catalogMethodId") == "cat-1"
+    ]
+    assert catalog_calls
+    assert catalog_calls[0][3]["attributes"]["prsCatalogMethodId"] == "cat-1"
+    assert catalog_calls[0][3]["attributes"]["prsMethodAddress"] == "placeholder"
+    folder_create = next(item for item in captured if item[1] == "/v1/methods/folders" and item[0] == "POST")
+    assert folder_create[3]["attributes"]["cn"] == "stdlib"
+    description = next(item for item in captured if item[1] == "/v1/methods/description")
+    assert description[3] == {"yaml": "folders: []", "probe": True}
+    assert "parentId" not in description[3]
+    status = next(item for item in captured if item[1] == "/v1/ptz/" and item[0] == "GET")
+    assert ("tagId", "cam") in status[2]
+    move = next(item for item in captured if item[1] == "/v1/ptz/" and item[0] == "POST")
+    assert move[3]["action"] == "move"
+    assert move[3]["pan"] == 1
+    services = next(item for item in captured if item[1] == "/v1/connectors_app/services")
+    assert services[0] == "GET"
+    log_tail = next(item for item in captured if item[1] == "/v1/connectors_app/service_log_tail" and item[0] == "GET")
+    assert ("service", "methods_app") in log_tail[2]
+    assert ("limit", "10") in log_tail[2]

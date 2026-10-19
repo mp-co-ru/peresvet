@@ -21,16 +21,34 @@ class MethodCreateAttributes(svc.NodeAttributes):
         title="Тип метода",
         description="0 — вычислительный (инициаторы, запись в БД); 1 — виртуальный (значение при GET /v1/data).",
     )  # type: ignore
+    prsCatalogMethodId: Optional[str] = Field(
+        None,
+        title="Метод каталога",
+        description="entryUUID метода из cn=methods. Для локального метода не задаётся.",
+    )
 
 class MethodUpdateAttributes(svc.NodeAttributes):
     prsMethodAddress: Optional[str] = None
     prsEntityTypeCode: Optional[int] = None
+    prsCatalogMethodId: Optional[str] = None
+
+class MethodParameterAttributes(svc.NodeAttributes):
+    prsValueTypeCode: Optional[int] = Field(
+        None,
+        title="Тип параметра",
+        description="1 — целый, 2 — вещественный, 3 — строка, 4 — json.",
+    )
 
 class MethodParameter(svc.NodeCreate):
-    pass
+    attributes: MethodParameterAttributes = Field(default_factory=MethodParameterAttributes)  # type: ignore[assignment]
 
 class MethodCreate(svc.NodeCreate):
     attributes: MethodCreateAttributes = Field(title="Атрибуты метода", required=True)  # type: ignore[assignment]
+    catalogMethodId: Optional[str] = Field(
+        None,
+        title="Метод каталога",
+        description="То же, что attributes.prsCatalogMethodId.",
+    )
     initiatedBy: str | list[str] | None = Field(None, title="Список id экземпляров сущностей, инициирующих вычисление тега.")
     parameters: List[MethodParameter] | None = Field(
         None,
@@ -54,6 +72,11 @@ class MethodRead(svc.NodeRead):
 
 class OneMethodInReadResult(svc.OneNodeInReadResult):
     attributes: dict = Field(title="Атрибуты метода", required=True)
+    parameterCount: int | None = Field(
+        None,
+        title="Число параметров метода каталога",
+        description="Только для чтения. Считается по дочерним prsMethodParameter.",
+    )
     initiatedBy: str | list[str] = Field([], title="Список id экземпляров сущностей, инициирующих вычисление тега.")
     parameters: List[dict] = Field(
         [],
@@ -73,6 +96,42 @@ class MethodUpdate(MethodCreate):
     # не было поля для id, для обновляемого метода
     id: str = Field(title="id обновляемого метода")
     attributes: MethodUpdateAttributes | None = None # type: ignore
+
+class MethodFolderCreate(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
+    parentId: str | None = Field(None, title="Родитель: корень каталога или другая папка")
+    attributes: svc.NodeAttributes = Field(default_factory=svc.NodeAttributes)
+
+    @field_validator("parentId")
+    @classmethod
+    def validate_folder_parent(cls, v: str | None) -> str | None:
+        return svc.valid_uuid(v)
+
+
+class MethodFolderUpdate(MethodFolderCreate):
+    id: str = Field(title="Идентификатор папки")
+
+    @field_validator("id")
+    @classmethod
+    def validate_folder_id(cls, v: str) -> str:
+        return svc.valid_uuid(v)
+
+
+class MethodDescriptionImport(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
+    yaml: str = Field(title="Текст описания методов в YAML")
+    parentId: str | None = Field(None, title="Папка каталога или пусто для корня «Методы»")
+    probe: bool = Field(False, title="После создания выполнить пробный вызов каждого метода")
+
+    @field_validator("parentId")
+    @classmethod
+    def validate_description_parent(cls, v: str | None) -> str | None:
+        if v in (None, "", "methods"):
+            return None
+        return svc.valid_uuid(v)
+
 
 class MethodCopy(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
@@ -259,5 +318,106 @@ async def delete(payload: svc.NodeDelete, error_handler: svc.ErrorHandler = Depe
     res = await app._delete(payload)
     await error_handler.handle_error(res)
     return res
+
+@router.post("/description", status_code=200)
+async def import_description(payload: MethodDescriptionImport, error_handler: svc.ErrorHandler = Depends()):
+    """Загружает YAML-описание папок и методов. При probe=true делает пробный вызов каждого метода."""
+    body = payload.model_dump(exclude_none=True)
+    await authorize_action(
+        "prsMethod.create",
+        resource={"parentId": body.get("parentId"), "kind": "description"},
+        payload=body,
+    )
+    res = await app._post_message(
+        mes=body,
+        reply=True,
+        routing_key="prsMethod.api_crud.description.import",
+    )
+    if isinstance(res, dict) and res.get("error"):
+        await error_handler.handle_error(res)
+        return res
+    checks = []
+    if payload.probe and isinstance(res, dict):
+        for item in res.get("probes") or []:
+            if not item.get("id"):
+                checks.append(
+                    {
+                        "ok": False,
+                        "cn": item.get("cn") or "",
+                        "path": item.get("path") or "",
+                        "address": item.get("address") or "",
+                        "arguments": item.get("arguments") or [],
+                        "error": "Метод не создан, пробный вызов не запускался.",
+                    }
+                )
+                continue
+            check = await app._post_message(
+                mes=item,
+                reply=True,
+                routing_key="prsMethod.app.probe",
+            )
+            if not isinstance(check, dict):
+                check = {"ok": False, "cn": item.get("cn") or "", "address": item.get("address") or "", "error": "Пустой ответ пробного вызова."}
+            checks.append(check)
+    if isinstance(res, dict):
+        res = dict(res)
+        res["checks"] = checks
+    return res
+
+
+@router.post("/folders", response_model=svc.NodeCreateResult, status_code=201)
+async def create_folder(payload: MethodFolderCreate, error_handler: svc.ErrorHandler = Depends()):
+    body = payload.model_dump(exclude_none=True)
+    await authorize_action("prsMethod.create", resource={"parentId": body.get("parentId"), "kind": "folder"}, payload=body)
+    res = await app._post_message(mes=body, reply=True, routing_key="prsMethod.api_crud.folder.create")
+    await error_handler.handle_error(res)
+    return res
+
+
+@router.get("/folders", status_code=200)
+async def read_folders(
+    id: list[str] | None = Query(None),
+    base: str | None = None,
+    scope: int = 1,
+    attributes: list[str] | None = Query(None),
+    filter: str | None = None,
+    error_handler: svc.ErrorHandler = Depends(),
+):
+    body: dict = {"scope": scope}
+    if id is not None:
+        body["id"] = id
+    if base is not None:
+        body["base"] = base
+    if attributes is not None:
+        body["attributes"] = attributes
+    if filter is not None:
+        body["filter"] = json.loads(filter)
+    await authorize_action("prsMethod.read", resource={"base": base, "kind": "folder"}, payload=body)
+    res = await app._post_message(mes=body, reply=True, routing_key="prsMethod.api_crud.folder.read")
+    await error_handler.handle_error(res)
+    return res
+
+
+@router.put("/folders", status_code=202)
+async def update_folder(payload: dict, error_handler: svc.ErrorHandler = Depends()):
+    try:
+        MethodFolderUpdate.model_validate(payload)
+    except Exception as ex:
+        res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+        await error_handler.handle_error(res)
+    await authorize_action("prsMethod.update", resource={"id": payload.get("id"), "kind": "folder"}, payload=payload)
+    res = await app._post_message(mes=payload, reply=True, routing_key="prsMethod.api_crud.folder.update")
+    await error_handler.handle_error(res)
+    return res
+
+
+@router.delete("/folders", status_code=202)
+async def delete_folder(payload: svc.NodeDelete, error_handler: svc.ErrorHandler = Depends()):
+    body = payload.model_dump()
+    await authorize_action("prsMethod.delete", resource={"ids": body.get("id"), "kind": "folder"}, payload=body)
+    res = await app._post_message(mes=body, reply=True, routing_key="prsMethod.api_crud.folder.delete")
+    await error_handler.handle_error(res)
+    return res
+
 
 app.include_router(router, tags=["methods"])
