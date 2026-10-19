@@ -217,6 +217,7 @@ required_pathspecs=(
     "docker/docker-files/ldap/Dockerfile.ldap.one_app"
     "docker/docker-files/ldap/src"
     "docker/docker-files/nginx/Dockerfile.nginx"
+    "docker/docker-files/nginx/20-self-signed-cert.sh"
     "docker/docker-files/nginx/Dockerfile.nginx.ssl"
     "docker/docker-files/nginx/Dockerfile.nginx.ssl_letsencrypt"
     "docker/docker-files/nginx/Dockerfile.nginx.ssl_letsencrypt_generate_certificates"

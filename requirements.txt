@@ -34,6 +34,7 @@ packages/pydantic_settings-2.0.3-py3-none-any.whl
 packages/pygments-2.17.1-py3-none-any.whl
 packages/python_dateutil-2.8.2-py2.py3-none-any.whl
 packages/python_dotenv-1.2.2-py3-none-any.whl
+packages/pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
 packages/pytz-2026.2-py2.py3-none-any.whl
 packages/redis-5.0.8-py3-none-any.whl
 packages/six-1.16.0-py2.py3-none-any.whl

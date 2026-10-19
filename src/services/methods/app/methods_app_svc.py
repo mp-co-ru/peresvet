@@ -2,6 +2,7 @@
 Модуль содержит классы, описывающие входные данные для команд CRUD для тегов
 и класс сервиса ``methods_api_crud_svc``.
 """
+import asyncio
 import sys
 import json
 from uuid import uuid4
@@ -18,6 +19,12 @@ from src.common.hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
 from src.common.amqp_rpc import NO_AMQP_RPC_REPLY
 from src.services.methods.app.methods_app_settings import MethodsAppSettings
 from src.services.methods.app.method_param_resolve import parse_parameter_config, resolve_parameter_value
+from src.services.methods.method_catalog import (
+    as_int,
+    catalog_call_error,
+    ldap_first,
+    parent_allows_initiator_cache,
+)
 
 class MethodsApp(AppSvc):
     """
@@ -84,6 +91,7 @@ class MethodsApp(AppSvc):
         self._handlers["prsTag.app.data_set.*"] = self._start_method_by_tag
         self._handlers["prsSchedule.app.fire_event.*"] = self._start_method_by_sched
         self._handlers["prsMethod.app.virtual_data_get"] = self._virtual_data_get
+        self._handlers["prsMethod.app.probe"] = self._probe_method
 
     '''
     async def _tag_updated(self, mes: dict):
@@ -276,9 +284,86 @@ class MethodsApp(AppSvc):
                 return {}
         return NO_AMQP_RPC_REPLY
 
+    async def _lookup_constant(self, constant_id: str):
+        try:
+            node_class = await self._hierarchy.get_node_class(constant_id)
+        except Exception as ex:
+            raise ValueError(f"Константа {constant_id} не найдена.") from ex
+        if node_class != "prsConstant":
+            raise ValueError(f"Узел {constant_id} не является константой.")
+        rows = await self._hierarchy.search(
+            {"id": constant_id, "attributes": ["prsConstantValue"]}
+        )
+        if not rows:
+            raise ValueError(f"Константа {constant_id} не найдена.")
+        return ldap_first(rows[0][2], "prsConstantValue")
+
+    async def _resolve_method_target(self, method_id: str) -> dict:
+        rows = await self._hierarchy.search(
+            {"id": method_id, "attributes": ["prsMethodAddress", "prsCatalogMethodId"]}
+        )
+        if not rows:
+            return {"error": {"code": 404, "message": "Метод не найден."}}
+        catalog_id = ldap_first(rows[0][2], "prsCatalogMethodId")
+        if isinstance(catalog_id, str):
+            catalog_id = catalog_id.strip()
+        else:
+            catalog_id = None
+        if not catalog_id:
+            address = ldap_first(rows[0][2], "prsMethodAddress", "")
+            if isinstance(address, str):
+                address = address.strip()
+            return {"address": address, "catalogId": None, "catalogParameters": []}
+
+        catalog_rows = await self._hierarchy.search(
+            {"id": catalog_id, "attributes": ["prsMethodAddress"]}
+        )
+        if not catalog_rows:
+            return {"error": {"code": 404, "message": "Метод каталога не найден."}}
+        try:
+            catalog_class = await self._hierarchy.get_node_class(catalog_id)
+        except Exception:
+            catalog_class = None
+        if catalog_class != "prsMethod":
+            return {"error": {"code": 404, "message": "Метод каталога не найден."}}
+        address = ldap_first(catalog_rows[0][2], "prsMethodAddress", "")
+        if isinstance(address, str):
+            address = address.strip()
+        if not address:
+            return {"error": {"code": 422, "message": "У метода каталога нет адреса."}}
+        parameter_rows = await self._hierarchy.search(
+            {
+                "base": catalog_id,
+                "filter": {"objectClass": ["prsMethodParameter"]},
+                "attributes": ["prsIndex", "prsValueTypeCode", "cn"],
+            }
+        )
+        catalog_parameters = []
+        for row in parameter_rows or []:
+            attrs = row[2]
+            catalog_parameters.append(
+                {
+                    "index": as_int(ldap_first(attrs, "prsIndex")),
+                    "valueTypeCode": as_int(ldap_first(attrs, "prsValueTypeCode")),
+                    "cn": ldap_first(attrs, "cn"),
+                }
+            )
+        return {
+            "address": address,
+            "catalogId": catalog_id,
+            "catalogParameters": catalog_parameters,
+        }
+
     async def _calc_tag(self, tag_id: str, method_id: str, parameters: dict, data: list[int | None]) -> None:
 
         self._logger.debug(f"calc_tag. tag_id: {tag_id}; method_id: {method_id}; parameters: {parameters}; data: {data}")
+
+        target = await self._resolve_method_target(method_id)
+        if target.get("error"):
+            self._logger.error(
+                f"{self._config.svc_name} :: {target['error']['message']} (метод {method_id})."
+            )
+            return
 
         parameters_data = []
         for parameter in parameters:
@@ -291,6 +376,7 @@ class MethodsApp(AppSvc):
                 initiator_finish=data[0],
                 initiator_point=data,
                 virtual_resolution_tag_id=tag_id,
+                lookup_constant=self._lookup_constant,
             )
             if parameter[2]["prsIndex"][0] is None:
                 index = None
@@ -305,19 +391,16 @@ class MethodsApp(AppSvc):
 
         parameters_data.sort(key=lambda item: (item["index"], 1000)[item["index"] is None])
         params_data = [item["data"] for item in parameters_data]
+        if target.get("catalogId"):
+            call_error = catalog_call_error(target.get("catalogParameters") or [], parameters_data)
+            if call_error:
+                self._logger.error(
+                    f"{self._config.svc_name} :: Метод каталога {target['catalogId']}: {call_error}"
+                )
+                return
+        method_addr = target["address"]
 
-        method_name = await self._hierarchy.search(
-            {
-                "id": method_id,
-                "attributes": ["prsMethodAddress"]
-            }
-        )
-
-        self._logger.debug(f"Before call: method_id: {method_id}; method_name: {method_name}")
-
-        method_addr = method_name[0][2]["prsMethodAddress"][0]
-        if isinstance(method_addr, str):
-            method_addr = method_addr.strip()
+        self._logger.debug(f"Before call: method_id: {method_id}; method_addr: {method_addr}")
         rpc_call_id = str(uuid4())[:8]
         self._logger.debug(
             f"{self._config.svc_name} :: [methods_rpc] call_id={rpc_call_id} "
@@ -347,6 +430,48 @@ class MethodsApp(AppSvc):
             ]
         }, reply=False, routing_key=f"prsTag.app_api_client.data_set.{tag_id}")
 
+    async def _probe_method(self, mes: dict, routing_key: str | None = None) -> dict:
+        """Пробный вызов метода каталога по адресу и списку аргументов."""
+        address = str((mes or {}).get("address") or (mes or {}).get("prsMethodAddress") or "").strip()
+        arguments = (mes or {}).get("arguments")
+        if arguments is None:
+            arguments = (mes or {}).get("probe") or []
+        report = {
+            "ok": False,
+            "id": (mes or {}).get("id"),
+            "cn": (mes or {}).get("cn") or "",
+            "path": (mes or {}).get("path") or "",
+            "address": address,
+            "arguments": arguments if isinstance(arguments, list) else [],
+        }
+        if not address:
+            report["error"] = "Нет адреса метода."
+            return report
+        if not isinstance(arguments, list):
+            report["error"] = "Пробные аргументы должны быть списком."
+            return report
+        if self._rpc_exchange is None:
+            report["error"] = "Вызов методов недоступен."
+            return report
+        try:
+            result = await asyncio.wait_for(
+                self._rpc_exchange.call(address, *arguments),
+                timeout=getattr(self, "_probe_timeout", 8),
+            )
+        except asyncio.TimeoutError:
+            report["error"] = "Пробный вызов не ответил за 8 секунд."
+            return report
+        except Exception as ex:
+            report["error"] = str(ex)
+            return report
+        if isinstance(result, dict) and result.get("error") is not None:
+            report["error"] = str(result.get("error"))
+            report["result"] = result
+            return report
+        report["ok"] = True
+        report["result"] = result
+        return report
+
     async def _virtual_data_get(self, mes: dict, routing_key: str | None = None) -> dict:
         method_id = mes.get("methodId")
         tag_id = mes.get("tagId")
@@ -358,6 +483,9 @@ class MethodsApp(AppSvc):
             return {"error": {"code": 400, "message": "Метод не принадлежит указанному тегу."}}
         if await self._method_entity_type(method_id) != 1:
             return {"error": {"code": 400, "message": "Метод не помечен как виртуальный (prsEntityTypeCode != 1)."}}
+        target = await self._resolve_method_target(method_id)
+        if target.get("error"):
+            return target
         parameters = await self._hierarchy.search({
             "base": method_id,
             "filter": {"cn": ["*"], "objectClass": ["prsMethodParameter"]},
@@ -382,6 +510,7 @@ class MethodsApp(AppSvc):
                 initiator_finish=finish_ts,
                 initiator_point=None,
                 virtual_resolution_tag_id=tag_id,
+                lookup_constant=self._lookup_constant,
             )
             if parameter[2]["prsIndex"][0] is None:
                 index = None
@@ -391,15 +520,11 @@ class MethodsApp(AppSvc):
 
         parameters_data.sort(key=lambda item: (item["index"], 1000)[item["index"] is None])
         params_data = [item["data"] for item in parameters_data]
-
-        method_name = await self._hierarchy.search(
-            {"id": method_id, "attributes": ["prsMethodAddress"]}
-        )
-        if not method_name:
-            return {"error": {"code": 404, "message": "Метод не найден."}}
-        method_addr = method_name[0][2]["prsMethodAddress"][0]
-        if isinstance(method_addr, str):
-            method_addr = method_addr.strip()
+        if target.get("catalogId"):
+            call_error = catalog_call_error(target.get("catalogParameters") or [], parameters_data)
+            if call_error:
+                return {"error": {"code": 422, "message": call_error}}
+        method_addr = target["address"]
         rpc_call_id = str(uuid4())[:8]
         self._logger.debug(
             f"{self._config.svc_name} :: [methods_rpc] call_id={rpc_call_id} "
@@ -573,6 +698,9 @@ class MethodsApp(AppSvc):
                 "<initiator_id1>", "<initiator_id2>"
             ]
         """
+        if not await parent_allows_initiator_cache(self._hierarchy, method_id):
+            return True
+
         await self._delete_method_cache(method_id)
         await self._bind_method(method_id, False)
 

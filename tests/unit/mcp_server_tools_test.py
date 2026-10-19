@@ -83,6 +83,12 @@ def test_mcp_tools_call_http_layer():
             await _unwrap(mcp_server.peresvet_crud_update)(entity="objects", payload={"id": "a"})
             await _unwrap(mcp_server.peresvet_crud_delete)(entity="objects", payload={"id": "a"})
             await _unwrap(mcp_server.peresvet_method_create)(cn="m", parent_id="p", method_address="pkg.fn")
+            await _unwrap(mcp_server.peresvet_method_create)(
+                cn="from-catalog",
+                parent_id="p",
+                method_address="placeholder",
+                catalog_method_id="cat-1",
+            )
             await _unwrap(mcp_server.peresvet_virtual_method_create)(tag_id="t", method_address="pkg.fn")
             await _unwrap(mcp_server.peresvet_object_copy)(source_id="s", parent_id="p")
             await _unwrap(mcp_server.peresvet_tag_copy)(source_id="s", parent_id="p")
@@ -105,3 +111,10 @@ def test_mcp_tools_call_http_layer():
     assert "/openapi.json" in paths
     assert "/v1/objects/" in paths
     assert "/v1/tags/copy" in paths
+    catalog_calls = [
+        item for item in captured
+        if item[1].endswith("/methods/") and item[3] and item[3].get("catalogMethodId") == "cat-1"
+    ]
+    assert catalog_calls
+    assert catalog_calls[0][3]["attributes"]["prsCatalogMethodId"] == "cat-1"
+    assert catalog_calls[0][3]["attributes"]["prsMethodAddress"] == "placeholder"

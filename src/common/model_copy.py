@@ -71,6 +71,7 @@ ENTITY_ALLOWED_ATTRS: dict[str, frozenset[str]] = {
             "prsEntityTypeCode",
             "prsIndex",
             "prsMethodAddress",
+            "prsCatalogMethodId",
         }
     ),
     "prsMethodParameter": frozenset(
@@ -80,6 +81,7 @@ ENTITY_ALLOWED_ATTRS: dict[str, frozenset[str]] = {
             "prsJsonConfigString",
             "prsActive",
             "prsIndex",
+            "prsValueTypeCode",
         }
     ),
 }
@@ -309,7 +311,14 @@ async def read_method_initiated_by_and_parameters(hierarchy, method_id: str) -> 
         "base": f"cn=parameters,cn=system,{method_dn}",
         "scope": CN_SCOPE_ONELEVEL,
         "filter": {"objectClass": ["prsMethodParameter"]},
-        "attributes": ["cn", "description", "prsActive", "prsIndex", "prsJsonConfigString"],
+        "attributes": [
+            "cn",
+            "description",
+            "prsActive",
+            "prsIndex",
+            "prsJsonConfigString",
+            "prsValueTypeCode",
+        ],
     }
     for row in await hierarchy.search(payload_p):
         parameters.append({"attributes": copy.deepcopy(row[2])})
@@ -401,6 +410,11 @@ async def copy_nodes_via_amqp(
                     attrs_plain["prsJsonConfigString"], id_map, subtree_ids
                 )
             body = {"parentId": new_parent, "attributes": attrs_plain}
+
+        if oc == "prsMethod":
+            rejected = await reject_catalog_method_copy_to_tag_or_alert(hierarchy, nid, new_parent)
+            if rejected:
+                return rejected
 
         res = await post_message(mes=body, reply=True, routing_key=routing[oc])
         if not res or res.get("id") is None:
@@ -762,6 +776,21 @@ def pending_internal_refs(obj: Any, subtree_ids: frozenset[str], id_map: dict[st
     return walk(obj)
 
 
+async def reject_catalog_method_copy_to_tag_or_alert(hierarchy, source_id: str, new_parent_id: str):
+    """Копирование определения каталога в тег или тревогу отклоняется."""
+    parent_id, _ = await hierarchy.get_parent(source_id)
+    parent_class = await hierarchy.get_node_class(parent_id) if parent_id else ""
+    dest_class = await hierarchy.get_node_class(new_parent_id)
+    if parent_class not in ("prsTag", "prsAlert") and dest_class in ("prsTag", "prsAlert"):
+        return {
+            "error": {
+                "code": 422,
+                "message": "Нельзя копировать метод каталога в тег или тревогу.",
+            }
+        }
+    return None
+
+
 async def copy_single_method(
     hierarchy,
     post_message: Callable[..., Awaitable[Any]],
@@ -774,6 +803,9 @@ async def copy_single_method(
     oc = await hierarchy.get_node_class(source_id)
     if oc != "prsMethod":
         return {"error": {"code": 422, "message": "Источник должен быть методом."}}
+    rejected = await reject_catalog_method_copy_to_tag_or_alert(hierarchy, source_id, new_parent_id)
+    if rejected:
+        return rejected
     raw_items = await hierarchy.search(
         {"id": [source_id], "attributes": ["*"], "deref": False}
     )

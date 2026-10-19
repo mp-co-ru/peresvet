@@ -16,6 +16,7 @@ services:
         - ${NGINX_HTTPS_PORT}:${NGINX_HTTPS_PORT}
       environment:
         NGINX_HOST: ${NGINX_HOST}
+        NGINX_TLS_IP: ${NGINX_TLS_IP}
         NGINX_HTTP_PORT: ${NGINX_HTTP_PORT}
         NGINX_HTTPS_PORT: ${NGINX_HTTPS_PORT}
 

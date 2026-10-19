@@ -1,0 +1,46 @@
+{
+  "id": "stdlib",
+  "license": {"mode": "none"},
+  "folder": {
+    "cn": "stdlib",
+    "description": "Стандартные арифметические методы"
+  },
+  "methods": [
+    {
+      "cn": "add",
+      "prsMethodAddress": "prs.stdlib.add",
+      "description": "Сложение",
+      "parameters": [
+        {"cn": "a", "prsIndex": 1, "prsValueTypeCode": 2},
+        {"cn": "b", "prsIndex": 2, "prsValueTypeCode": 2}
+      ]
+    },
+    {
+      "cn": "sub",
+      "prsMethodAddress": "prs.stdlib.sub",
+      "description": "Вычитание",
+      "parameters": [
+        {"cn": "a", "prsIndex": 1, "prsValueTypeCode": 2},
+        {"cn": "b", "prsIndex": 2, "prsValueTypeCode": 2}
+      ]
+    },
+    {
+      "cn": "mul",
+      "prsMethodAddress": "prs.stdlib.mul",
+      "description": "Умножение",
+      "parameters": [
+        {"cn": "a", "prsIndex": 1, "prsValueTypeCode": 2},
+        {"cn": "b", "prsIndex": 2, "prsValueTypeCode": 2}
+      ]
+    },
+    {
+      "cn": "div",
+      "prsMethodAddress": "prs.stdlib.div",
+      "description": "Деление",
+      "parameters": [
+        {"cn": "a", "prsIndex": 1, "prsValueTypeCode": 2},
+        {"cn": "b", "prsIndex": 2, "prsValueTypeCode": 2}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+POST /v1/methods/ HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+
+{
+    "parentId": "id of a prsModelNode folder or omit for cn=methods",
+    "attributes": {
+        "cn": "add",
+        "prsMethodAddress": "prs.stdlib.add",
+        "prsEntityTypeCode": 0
+    },
+    "parameters": [
+        {
+            "attributes": {
+                "cn": "a",
+                "prsIndex": 1,
+                "prsValueTypeCode": 2
+            }
+        },
+        {
+            "attributes": {
+                "cn": "b",
+                "prsIndex": 2,
+                "prsValueTypeCode": 2
+            }
+        }
+    ]
+}

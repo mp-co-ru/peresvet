@@ -504,21 +504,26 @@ async def peresvet_method_create(
     initiated_by: str | list[str] | None = None,
     parameters: list[dict[str, Any]] | None = None,
     attrs: dict[str, Any] | None = None,
+    catalog_method_id: str | None = None,
 ) -> dict[str, Any]:
-    """Create a Peresvet method under a tag or alert.
+    """Create a Peresvet method under a tag, an alert, or the method catalog.
 
     Wraps `POST /v1/methods/`.
 
     - `entity_type_code=0`: calculated method, triggered by `initiated_by`, writes result to tag data.
     - `entity_type_code=1`: virtual method, called on `GET /v1/data/` and returns tag data without historian read.
+    - `catalog_method_id`: optional catalog method. The service copies its `prsMethodAddress`
+      and expects parameter bindings (`tag`, `literal` or `constant`) instead of `routingKey`.
     - `parameters[].config` / `parameters[].prsJsonConfigString` supports:
       `routingKey` + `message` + optional `responseJsonata`, `clientJsonata`,
-      or legacy nested data get with `tagId`.
+      legacy nested data get with `tagId`, or a catalog binding.
     """
     attributes: dict[str, Any] = {
         "prsMethodAddress": method_address,
         "prsEntityTypeCode": entity_type_code,
     }
+    if catalog_method_id:
+        attributes["prsCatalogMethodId"] = catalog_method_id
     if cn is not None:
         attributes["cn"] = cn
     if description is not None:
@@ -529,6 +534,8 @@ async def peresvet_method_create(
         "parentId": parent_id,
         "attributes": attributes,
     }
+    if catalog_method_id:
+        payload["catalogMethodId"] = catalog_method_id
     if initiated_by is not None:
         payload["initiatedBy"] = initiated_by
     if parameters is not None:

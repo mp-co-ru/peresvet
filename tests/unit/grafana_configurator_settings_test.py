@@ -8,7 +8,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261015-svg-icons-v7"
+CODE_VERSION = "20261018-method-description-v3"
 
 
 def _parts():
@@ -42,6 +42,7 @@ def test_configurator_settings_dialog_contract():
     assert ".prs-settings-overlay.is-open{display:flex}" in css
 
     assert "prs.configurator.autoLinkTagDefault" in javascript
+    assert 'if(202===e.status){pe();var prsCur=n("div.currentNode")[0];prsCur&&String(prsCur.id)===String(t.id)&&me(t.id)}' in javascript
     assert "prs.configurator.sortNodesAlphabetically" in javascript
     assert "prsNodesSortedByName=function()" in javascript
     assert 'localeCompare(i,"ru",{numeric:!0,sensitivity:"base"})' in javascript

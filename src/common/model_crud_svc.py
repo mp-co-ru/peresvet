@@ -559,7 +559,7 @@ class ModelCRUDSvc(Svc):
             for item in items:
                 node_id = item[0]
 
-                new_item: dict = {"id": node_id, "attributes": item[2]}
+                new_item: dict = {"id": node_id, "dn": item[1], "attributes": item[2]}
                 if node_id in _seen:
                     new_item["children"] = []
                     res.append(new_item)
@@ -636,6 +636,7 @@ class ModelCRUDSvc(Svc):
             for item in items:
                 res["data"].append({
                     "id": item[0],
+                    "dn": item[1],
                     "attributes": item[2]
                 })
         else:
