@@ -95,11 +95,28 @@ MCP **не** входит в ``./run_one_app.sh``. После старта пл�
 * ``peresvet_data_get`` / ``peresvet_data_set``
 * ``peresvet_datafunc_get`` — агрегации ``/v1/datafunc/``
 * ``peresvet_method_create`` / ``peresvet_virtual_method_create``
+* ``peresvet_method_folder_create`` / ``peresvet_method_folders_list`` /
+  ``peresvet_method_folder_update`` / ``peresvet_method_folder_delete`` —
+  папки каталога ``/v1/methods/folders``
+* ``peresvet_method_description_import`` — YAML-описание каталога
+  (``POST /v1/methods/description``, пробный вызов при ``probe=true``)
 * ``peresvet_schedule_create``
+
+Камера (тег ``prsValueTypeCode=6``):
+
+* ``peresvet_ptz`` — ``GET/POST /v1/ptz/`` (``status``, ``move``, ``step``,
+  ``pulse``, ``stop``, ``home``, ``preset``, ``image``, ``image_set``).
+  Живой поток, снимок и фрагмент остаются бинарным ``GET /v1/data/`` и
+  в JSON-инструмент чтения данных не заворачиваются.
+
+Журнал сервисов платформы:
+
+* ``peresvet_connector_services`` — очереди RabbitMQ
+* ``peresvet_connector_service_log_tail`` / ``peresvet_connector_service_log_clear``
 
 Интеграционные хранилища (v2, при ``MCP_PERESVET_ENABLE_V2`` / ``PRS_ENABLE_V2``):
 
-* ``peresvet_datastorages_v2_read`` / ``create`` / ``update``
+* ``peresvet_datastorages_v2_read`` / ``create`` / ``update`` / ``delete``
 * ``peresvet_integrational_datastorage_create`` / ``update``
 * ``peresvet_integrational_tag_operations_update``
 

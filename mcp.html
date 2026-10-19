@@ -199,11 +199,28 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">peresvet_data_get</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_data_set</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">peresvet_datafunc_get</span></code> — агрегации <code class="docutils literal notranslate"><span class="pre">/v1/datafunc/</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">peresvet_method_create</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_virtual_method_create</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_method_folder_create</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_method_folders_list</span></code> /
+<code class="docutils literal notranslate"><span class="pre">peresvet_method_folder_update</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_method_folder_delete</span></code> —
+папки каталога <code class="docutils literal notranslate"><span class="pre">/v1/methods/folders</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_method_description_import</span></code> — YAML-описание каталога
+(<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/description</span></code>, пробный вызов при <code class="docutils literal notranslate"><span class="pre">probe=true</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">peresvet_schedule_create</span></code></p></li>
+</ul>
+<p>Камера (тег <code class="docutils literal notranslate"><span class="pre">prsValueTypeCode=6</span></code>):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_ptz</span></code> — <code class="docutils literal notranslate"><span class="pre">GET/POST</span> <span class="pre">/v1/ptz/</span></code> (<code class="docutils literal notranslate"><span class="pre">status</span></code>, <code class="docutils literal notranslate"><span class="pre">move</span></code>, <code class="docutils literal notranslate"><span class="pre">step</span></code>,
+<code class="docutils literal notranslate"><span class="pre">pulse</span></code>, <code class="docutils literal notranslate"><span class="pre">stop</span></code>, <code class="docutils literal notranslate"><span class="pre">home</span></code>, <code class="docutils literal notranslate"><span class="pre">preset</span></code>, <code class="docutils literal notranslate"><span class="pre">image</span></code>, <code class="docutils literal notranslate"><span class="pre">image_set</span></code>).
+Живой поток, снимок и фрагмент остаются бинарным <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/</span></code> и
+в JSON-инструмент чтения данных не заворачиваются.</p></li>
+</ul>
+<p>Журнал сервисов платформы:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_services</span></code> — очереди RabbitMQ</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_service_log_tail</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_connector_service_log_clear</span></code></p></li>
 </ul>
 <p>Интеграционные хранилища (v2, при <code class="docutils literal notranslate"><span class="pre">MCP_PERESVET_ENABLE_V2</span></code> / <code class="docutils literal notranslate"><span class="pre">PRS_ENABLE_V2</span></code>):</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_datastorages_v2_read</span></code> / <code class="docutils literal notranslate"><span class="pre">create</span></code> / <code class="docutils literal notranslate"><span class="pre">update</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_datastorages_v2_read</span></code> / <code class="docutils literal notranslate"><span class="pre">create</span></code> / <code class="docutils literal notranslate"><span class="pre">update</span></code> / <code class="docutils literal notranslate"><span class="pre">delete</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">peresvet_integrational_datastorage_create</span></code> / <code class="docutils literal notranslate"><span class="pre">update</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">peresvet_integrational_tag_operations_update</span></code></p></li>
 </ul>
