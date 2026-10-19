@@ -19,9 +19,14 @@ from .payloads import (
     crud_query_to_params,
     extract_created_id,
     linked_tag_payload,
+    method_description_payload,
+    method_folder_payload,
+    method_folder_query_to_params,
     method_parameter_payload,
     prepare_data_query,
+    ptz_command_payload,
     schedule_create_payload,
+    service_log_params,
 )
 
 
@@ -310,7 +315,7 @@ async def peresvet_tag_create(
     Wraps `POST /v1/tags/`.
 
     - `parent_id`: UUID of parent node (required for correct hierarchy).
-    - `value_type_code`: 0 int | 1 float | 2 string | 3 discrete | 4 json | 5 table.
+    - `value_type_code`: 0 int | 1 float | 2 string | 3 discrete | 4 json | 5 table | 6 video stream.
     """
     attributes: dict[str, Any] = {"cn": cn, "prsValueTypeCode": value_type_code}
     if description is not None:
@@ -587,6 +592,136 @@ async def peresvet_method_copy(*, source_id: str, parent_id: str) -> dict[str, A
 
 
 @mcp.tool
+async def peresvet_method_folder_create(
+    *,
+    cn: str,
+    parent_id: str | None = None,
+    description: str | None = None,
+    attrs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Create a folder in the shared method catalog.
+
+    Wraps `POST /v1/methods/folders`.
+
+    Omit `parent_id` to create the folder under the catalog root (`cn=methods,cn=prs`).
+    Pass another folder id to nest it. Deleting a folder removes nested folders and methods.
+    A folder that still has catalog methods referenced by `prsCatalogMethodId` returns 409.
+    """
+    return await _request(
+        "POST",
+        "/v1/methods/folders",
+        json_body=method_folder_payload(
+            cn=cn,
+            parent_id=parent_id,
+            description=description,
+            attrs=attrs,
+        ),
+    )
+
+
+@mcp.tool
+async def peresvet_method_folders_list(
+    *,
+    base: str | None = None,
+    scope: int = 1,
+    folder_id: str | list[str] | None = None,
+    attributes: list[str] | None = None,
+    filter: dict[str, list[Any]] | None = None,
+) -> dict[str, Any]:
+    """List method-catalog folders.
+
+    Wraps `GET /v1/methods/folders`.
+
+    - `base`: catalog root or a folder id. Search starts at the catalog root when omitted.
+    - `scope`: 0 this node, 1 direct children, 2 subtree.
+    """
+    query: dict[str, Any] = {"scope": scope}
+    if base is not None:
+        query["base"] = base
+    if folder_id is not None:
+        query["id"] = folder_id
+    if attributes is not None:
+        query["attributes"] = attributes
+    if filter is not None:
+        query["filter"] = filter
+    return await _request(
+        "GET",
+        "/v1/methods/folders",
+        params=method_folder_query_to_params(query),
+    )
+
+
+@mcp.tool
+async def peresvet_method_folder_update(
+    *,
+    folder_id: str,
+    cn: str | None = None,
+    description: str | None = None,
+    parent_id: str | None = None,
+    attrs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Update a method-catalog folder.
+
+    Wraps `PUT /v1/methods/folders`.
+    """
+    return await _request(
+        "PUT",
+        "/v1/methods/folders",
+        json_body=method_folder_payload(
+            folder_id=folder_id,
+            cn=cn,
+            parent_id=parent_id,
+            description=description,
+            attrs=attrs,
+        ),
+    )
+
+
+@mcp.tool
+async def peresvet_method_folder_delete(*, folder_id: str | list[str]) -> dict[str, Any]:
+    """Delete method-catalog folders and their nested methods.
+
+    Wraps `DELETE /v1/methods/folders`. Returns 409 when a nested catalog method
+    is still referenced by a tag or alert instance.
+    """
+    return await _request(
+        "DELETE",
+        "/v1/methods/folders",
+        json_body={"id": folder_id},
+    )
+
+
+@mcp.tool
+async def peresvet_method_description_import(
+    *,
+    yaml_text: str,
+    parent_id: str | None = None,
+    probe: bool = False,
+) -> dict[str, Any]:
+    """Import catalog folders and methods from a YAML description.
+
+    Wraps `POST /v1/methods/description`.
+
+    The document has `folders` and `methods`. Each method needs `address`
+    (or `prsMethodAddress`) and parameters with `cn`, `index` and `type`
+    (`int`, `float`, `string`, `json`, or codes 1–4). An existing
+    `prsMethodAddress` is not created again.
+
+    `parent_id` is a catalog folder. Empty, omitted, or `"methods"` means the catalog root.
+    `probe=true` runs a trial call for every method and returns the results in `checks`.
+    """
+    return await _request(
+        "POST",
+        "/v1/methods/description",
+        json_body=method_description_payload(
+            yaml_text=yaml_text,
+            parent_id=parent_id,
+            probe=probe,
+        ),
+    )
+
+
+@mcp.tool
 async def peresvet_object_copy(
     *,
     source_id: str,
@@ -857,6 +992,51 @@ async def peresvet_connector_command_output_tail(*, connector_id: str) -> dict[s
 
 
 @mcp.tool
+async def peresvet_connector_services() -> dict[str, Any]:
+    """List platform services registered in RabbitMQ as consume queues.
+
+    Wraps `GET /v1/connectors_app/services`.
+    Use the returned names with `peresvet_connector_service_log_tail`.
+    """
+    return await _request("GET", "/v1/connectors_app/services")
+
+
+@mcp.tool
+async def peresvet_connector_service_log_tail(
+    *,
+    services: list[str] | None = None,
+    limit: int = 400,
+    clear: bool = False,
+) -> dict[str, Any]:
+    """Read the in-memory platform log filtered by service name.
+
+    Wraps `GET /v1/connectors_app/service_log_tail`.
+
+    - `services`: queue names from `peresvet_connector_services`. Empty means no service filter.
+    - `limit`: last lines per service, 1–2000.
+    - `clear=true`: drop the buffer and return an empty result.
+    """
+    return await _request(
+        "GET",
+        "/v1/connectors_app/service_log_tail",
+        params=service_log_params(services, limit=limit, clear=clear),
+    )
+
+
+@mcp.tool
+async def peresvet_connector_service_log_clear(*, services: list[str] | None = None) -> dict[str, Any]:
+    """Clear the in-memory platform log buffer for the given services.
+
+    Wraps `DELETE /v1/connectors_app/service_log_tail`.
+    """
+    return await _request(
+        "DELETE",
+        "/v1/connectors_app/service_log_tail",
+        params=service_log_params(services),
+    )
+
+
+@mcp.tool
 async def peresvet_schedule_create(
     *,
     cn: str | None = None,
@@ -908,6 +1088,11 @@ async def peresvet_data_get(query: dict[str, Any] | None = None) -> dict[str, An
       part of the virtual method `clientRequest` for `clientJsonata` parameters.
       Example: `{"tagId": "...", "calendarTagId": "...", "finish": "..."}`.
 
+    A video-stream tag (`prsValueTypeCode=6`) does not return `[x, y, q]`.
+    The same URL streams MJPEG, a JPEG snapshot, or an MP4 fragment.
+    This JSON tool is for historian, virtual and integrational values.
+    Camera motion uses `peresvet_ptz`.
+
     Advanced options for integrational tabular tags:
     - `query.params` (dict): extra options forwarded to `/v1/data`.
       Example: `{"operation": "selectByCalendar", "allRecordsAsValue": false}`.
@@ -915,6 +1100,54 @@ async def peresvet_data_get(query: dict[str, Any] | None = None) -> dict[str, An
       `query.params.allRecordsAsValue`.
     """
     return await _request("GET", "/v1/data/", params=prepare_data_query(query))
+
+
+@mcp.tool
+async def peresvet_ptz(
+    *,
+    tag_id: str,
+    action: str = "status",
+    pan: float | None = None,
+    tilt: float | None = None,
+    zoom: float | None = None,
+    token: str | None = None,
+    image: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Control the camera bound to a video-stream tag.
+
+    `tag_id` is the tag with `prsValueTypeCode=6`.
+    `action=status` uses `GET /v1/ptz/`. Every other action uses `POST /v1/ptz/`.
+
+    Actions:
+    - `status`: profile, pan, tilt, zoom and presets.
+    - `move`: continuous pan/tilt/zoom in [-1, 1] until `stop` or an 8 second timeout.
+    - `step`: one relative shift with the same three fields.
+    - `pulse`: one zoom step; the sign of `zoom` picks the direction.
+    - `stop`: stop pan and tilt.
+    - `home`: undo moves made since the capture service started, then go home.
+    - `preset`: go to `token`.
+    - `image`: current image settings and allowed values.
+    - `image_set`: write fields from `image` (`brightness`, `contrast`, `saturation`,
+      `sharpness`, `backlight`, `wideDynamicRange`, `irCut`, `whiteBalance`).
+
+    Errors use `error.code` and `error.message`: 422 unknown tag, 409 disabled tag,
+    424 tag without a camera, 502 camera rejected the command.
+    """
+    if action == "status":
+        return await _request("GET", "/v1/ptz/", params=[("tagId", tag_id), ("action", "status")])
+    return await _request(
+        "POST",
+        "/v1/ptz/",
+        json_body=ptz_command_payload(
+            tag_id=tag_id,
+            action=action,
+            pan=pan,
+            tilt=tilt,
+            zoom=zoom,
+            token=token,
+            image=image,
+        ),
+    )
 
 
 if ENABLE_V2:
@@ -1063,6 +1296,15 @@ if ENABLE_V2:
             "linkedTags": [linked_tag_payload(link)],
         }
         return await _request("PUT", "/v2/dataStorages/", json_body=payload)
+
+    @mcp.tool
+    async def peresvet_datastorages_v2_delete(*, datastorage_id: str | list[str]) -> dict[str, Any]:
+        """Delete one or more dataStorages via DELETE `/v2/dataStorages/`."""
+        return await _request(
+            "DELETE",
+            "/v2/dataStorages/",
+            json_body={"id": datastorage_id},
+        )
 
 
 @mcp.tool

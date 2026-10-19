@@ -10,8 +10,13 @@ from src.mcp_server.payloads import (
     extract_created_id,
     linked_tag_payload,
     method_parameter_payload,
+    method_description_payload,
+    method_folder_payload,
+    method_folder_query_to_params,
     prepare_data_query,
+    ptz_command_payload,
     schedule_create_payload,
+    service_log_params,
 )
 
 
@@ -157,3 +162,30 @@ def test_extract_created_id_and_auth_headers():
     assert auth_headers("") == {}
     assert auth_headers("tok") == {"Authorization": "Bearer tok"}
     assert auth_headers("Bearer tok") == {"Authorization": "Bearer tok"}
+
+
+def test_method_catalog_and_ptz_payloads():
+    folder = method_folder_payload(cn="stdlib", description="Арифметика")
+    assert folder == {"attributes": {"cn": "stdlib", "description": "Арифметика"}}
+    nested = method_folder_payload(folder_id="f1", parent_id="p1", cn="inner")
+    assert nested["id"] == "f1"
+    assert nested["parentId"] == "p1"
+    params = dict(method_folder_query_to_params({"base": "root", "scope": 2, "filter": {"cn": ["stdlib"]}}))
+    assert params["base"] == "root"
+    assert params["scope"] == "2"
+    assert '"cn"' in params["filter"]
+    imported = method_description_payload(yaml_text="folders: []", parent_id="methods", probe=True)
+    assert imported == {"yaml": "folders: []", "probe": True}
+    rooted = method_description_payload(yaml_text="methods: []", parent_id="folder-1")
+    assert rooted["parentId"] == "folder-1"
+    assert rooted["probe"] is False
+    move = ptz_command_payload(tag_id="tag-1", action="move", pan=0.5, tilt=-1, zoom=0)
+    assert move == {"tagId": "tag-1", "action": "move", "pan": 0.5, "tilt": -1, "zoom": 0}
+    image = ptz_command_payload(
+        tag_id="tag-1",
+        action="image_set",
+        image={"brightness": 40, "tagId": "ignored", "irCut": None},
+    )
+    assert image == {"tagId": "tag-1", "action": "image_set", "brightness": 40}
+    log_params = service_log_params(["methods_app", "tags_app"], limit=20, clear=False)
+    assert log_params == [("service", "methods_app"), ("service", "tags_app"), ("limit", "20"), ("clear", "false")]

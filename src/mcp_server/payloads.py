@@ -397,6 +397,101 @@ def connector_update_payload(
     return payload
 
 
+def method_folder_query_to_params(query: dict[str, Any]) -> list[tuple[str, str]]:
+    """Query string for `GET /v1/methods/folders` (no deref/hierarchy flags)."""
+    params: list[tuple[str, str]] = []
+    if query.get("id") is not None:
+        add_list(params, "id", query["id"])
+    if query.get("base") is not None:
+        params.append(("base", str(query["base"])))
+    if query.get("scope") is not None:
+        params.append(("scope", str(query["scope"])))
+    if query.get("attributes") is not None:
+        add_list(params, "attributes", query["attributes"])
+    if query.get("filter") is not None:
+        params.append(("filter", json.dumps(query["filter"], ensure_ascii=False)))
+    return params
+
+
+def method_folder_payload(
+    *,
+    cn: str | None = None,
+    parent_id: str | None = None,
+    description: str | None = None,
+    folder_id: str | None = None,
+    attrs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    attributes: dict[str, Any] = {}
+    if cn is not None:
+        attributes["cn"] = cn
+    if description is not None:
+        attributes["description"] = description
+    if attrs:
+        attributes.update(attrs)
+    body: dict[str, Any] = {}
+    if folder_id is not None:
+        body["id"] = folder_id
+    if parent_id is not None:
+        body["parentId"] = parent_id
+    if attributes:
+        body["attributes"] = attributes
+    return body
+
+
+def method_description_payload(
+    *,
+    yaml_text: str,
+    parent_id: str | None = None,
+    probe: bool = False,
+) -> dict[str, Any]:
+    body: dict[str, Any] = {"yaml": yaml_text, "probe": probe}
+    if parent_id not in (None, "", "methods"):
+        body["parentId"] = parent_id
+    return body
+
+
+def ptz_command_payload(
+    *,
+    tag_id: str,
+    action: str = "status",
+    pan: float | None = None,
+    tilt: float | None = None,
+    zoom: float | None = None,
+    token: str | None = None,
+    image: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    body: dict[str, Any] = {"tagId": tag_id, "action": action}
+    if pan is not None:
+        body["pan"] = pan
+    if tilt is not None:
+        body["tilt"] = tilt
+    if zoom is not None:
+        body["zoom"] = zoom
+    if token is not None:
+        body["token"] = token
+    if image:
+        for key, value in image.items():
+            if key in {"tagId", "action"} or value is None:
+                continue
+            body[key] = value
+    return body
+
+
+def service_log_params(
+    services: list[str] | None = None,
+    *,
+    limit: int | None = None,
+    clear: bool | None = None,
+) -> list[tuple[str, str]]:
+    params: list[tuple[str, str]] = []
+    add_list(params, "service", services)
+    if limit is not None:
+        params.append(("limit", str(limit)))
+    if clear is not None:
+        params.append(("clear", bool_str(clear)))
+    return params
+
+
 def auth_headers(bearer_token: str | None) -> dict[str, str]:
     token = (bearer_token or "").strip()
     if not token:
