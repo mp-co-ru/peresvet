@@ -226,15 +226,22 @@ def _format_fps(fps: float) -> str:
     return f"{fps:g}"
 
 
-def archive_video_filter(camera: CameraConfig) -> str | None:
-    """Фильтр архива. Пусто — в файл пишется размер и частота камеры."""
-    parts: list[str] = []
+# Время прихода кадра в сервис, в секундах шкалы фильтра.
+# RTCTIME — часы машины, не метка RTP. У H.264 шкала RTP всегда 90 кГц,
+# и камера с шагом в один тик выглядит как 90 000 кадров в секунду.
+_ARRIVAL_PTS = "setpts=(RTCTIME-RTCSTART)/(1000000*TB)"
+# Пакеты одного кадра часто приходят пачкой. Ближе 20 мс — тот же кадр.
+_SAME_FRAME = "select=isnan(prev_selected_t)+gte(t-prev_selected_t\\,0.02)"
+_PREVIEW_VF = f"{_ARRIVAL_PTS},{_SAME_FRAME},fps=8,scale=960:-2"
+
+
+def archive_video_filter(camera: CameraConfig) -> str:
+    """Архив: метка — время прихода кадра, затем размер и частота из коннектора."""
+    parts = [_ARRIVAL_PTS, _SAME_FRAME]
     if camera.archive_fps is not None:
         parts.append(f"fps={_format_fps(camera.archive_fps)}")
     if camera.archive_width is not None:
         parts.append(f"scale={camera.archive_width}:-2")
-    if not parts:
-        return None
     return ",".join(parts)
 
 
@@ -352,11 +359,8 @@ def session_ffmpeg_args(
     pattern = str(directory / "%s.ts")
     archive_encode = [
         "-map", "0:v:0", "-an",
-    ]
-    video_filter = archive_video_filter(camera)
-    if video_filter:
-        archive_encode.extend(["-vf", video_filter])
-    archive_encode.extend([
+        "-vf", archive_video_filter(camera),
+        "-fps_mode", "passthrough",
         "-c:v", "libx264", "-preset", "ultrafast", "-tune", "zerolatency", "-pix_fmt", "yuv420p",
         "-f", "segment",
         "-segment_time", str(segment_seconds_value),
@@ -364,7 +368,7 @@ def session_ffmpeg_args(
         "-reset_timestamps", "1",
         "-strftime", "1",
         pattern,
-    ])
+    ]
     args = [
         ffmpeg or ffmpeg_bin(),
         "-hide_banner",
@@ -372,17 +376,17 @@ def session_ffmpeg_args(
         "-rtsp_transport", camera.transport,
         "-timeout", "8000000",
         "-use_wallclock_as_timestamps", "1",
-        "-fflags", "+genpts",
         "-i", camera.rtsp_url,
         *archive_encode,
         "-map", "0:v:0", "-an",
-        "-vf", "fps=8,scale=960:-2",
+        "-vf", _PREVIEW_VF,
+        "-fps_mode", "passthrough",
         "-c:v", "mjpeg", "-q:v", "8",
         "-f", "mpjpeg",
         "pipe:1",
     ]
     if audio_target is not None:
-        preview = args.index("fps=8,scale=960:-2")
+        preview = args.index(_PREVIEW_VF)
         insert_at = max(index for index, item in enumerate(args[:preview]) if item == "-map")
         args[insert_at:insert_at] = session_audio_args(audio_target)
     return args
