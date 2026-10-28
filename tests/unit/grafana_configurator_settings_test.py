@@ -36,6 +36,9 @@ def test_configurator_settings_dialog_contract():
     assert "Привязка тегов и тревог к хранилищу по умолчанию при создании" in dialog
     assert "Сортировка узлов по алфавиту" in dialog
     assert dialog.index("chk-autoLinkTagDefault") < dialog.index("chk-sortNodesAlphabetically")
+    assert 'id="input-prsFontSize"' in dialog
+    assert "Размер шрифта" in dialog
+    assert dialog.index("chk-sortNodesAlphabetically") < dialog.index("input-prsFontSize")
 
     assert ".prs-tree-header{display:flex" in css
     assert ".prs-settings-btn{margin-left:auto" in css
@@ -52,6 +55,28 @@ def test_configurator_settings_dialog_contract():
     assert "data-prs-platform-order" in javascript
     assert "prsLoadedGroup&&prsNodesSortedByName()&&sortList(prsLoadedGroup)" in javascript
     assert "prsNodesSortedByName()&&sortList(groupItems)" in javascript
+    assert "prs.configurator.fontSize" in javascript
+    assert "prsFontBasePx=function(raw)" in javascript
+    assert "prsApplyFontBase=function(raw,persist)" in javascript
+    assert '__prsConfiguratorGetEl("input-prsFontSize")' in javascript
+    assert "--prs-font-base:16px" in css
+    assert ".prs-split-root{--prs-font-base:16px;font-size:var(--prs-font-base)}" in css
+    assert "font-size:calc(.8125 * var(--prs-font-base))" in css
+    assert "font:400 calc(.8125 * var(--prs-font-base))/1.45" in css
+    assert "font-size:11px" not in html
+    assert "font-size:.875rem" not in css
+
+
+def test_configurator_connector_binding_labels():
+    html, _css, javascript = _parts()
+    pane_at = html.index('id="prs-tab-pane-connector"')
+    pane = html[pane_at : pane_at + 1800]
+    assert ">Описание <" in pane
+    assert ">Конфигурация</label>" in pane
+    assert "Описание привязки" not in html
+    assert "Конфигурация привязки" not in html
+    assert "Конфигурация привязки" not in javascript
+    assert '"Конфигурация: "' in javascript
 
 
 def test_configurator_settings_sort_behavior():
@@ -62,6 +87,22 @@ def test_configurator_settings_sort_behavior():
         [
             node,
             str(ROOT / "tests/unit/grafana_configurator_settings_node_test.js"),
+            str(DASHBOARD_PATH),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_configurator_font_base_behavior():
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node.js is not installed")
+    subprocess.run(
+        [
+            node,
+            str(ROOT / "tests/unit/grafana_configurator_font_base_node_test.js"),
             str(DASHBOARD_PATH),
         ],
         check=True,
