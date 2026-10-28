@@ -14,6 +14,15 @@ import aio_pika
 import aio_pika.abc
 sys.path.append(".")
 
+from src.services.connectors.app.connector_config_example import (
+    CONFIG_EXAMPLE_ACTION,
+    CONFIG_EXAMPLE_TIMEOUT_SEC,
+    config_example_cache_key,
+    connector_uuid,
+    normalize_config_example,
+    public_config_example,
+    unwrap_redis_json,
+)
 from src.services.connectors.app.connectors_mqtt_app_settings import ConnectorsMQTTAppSettings
 from src.common.app_svc import AppSvc
 from src.common import hierarchy
@@ -175,6 +184,10 @@ class ConnectorsMQTTApp(AppSvc):
         # вывод удалённых команд (prsConnector.command_output), отдельно от log_line
         self._connector_command_output_buffer_max: int = 200
         self._connector_command_output_lines: dict[str, deque[dict]] = {}
+        # пример конфигурации, который коннектор прислал для формы свойств
+        self._config_examples: dict[str, dict] = {}
+        self._config_example_waiters: dict[str, list[asyncio.Future]] = {}
+        self._config_example_timeout_sec: float = CONFIG_EXAMPLE_TIMEOUT_SEC
 
     def append_connector_log_line(
         self, conn_id: str, *, level: str, message: str, ts: int | None = None
@@ -192,6 +205,180 @@ class ConnectorsMQTTApp(AppSvc):
             conn_id, deque(maxlen=self._connector_command_output_buffer_max)
         )
         buf.append(entry)
+
+    def _config_example_state(self) -> tuple[dict[str, dict], dict[str, list[asyncio.Future]]]:
+        examples = getattr(self, "_config_examples", None)
+        waiters = getattr(self, "_config_example_waiters", None)
+        if examples is None:
+            examples = {}
+            self._config_examples = examples
+        if waiters is None:
+            waiters = {}
+            self._config_example_waiters = waiters
+        return examples, waiters
+
+    def _config_example_cache_key(self, conn_id: str) -> str:
+        svc_name = getattr(getattr(self, "_config", None), "svc_name", "connectors_mqtt_app")
+        return config_example_cache_key(conn_id, svc_name)
+
+    async def _read_config_example(self, conn_id: str) -> dict | None:
+        examples, _waiters = self._config_example_state()
+        cached = examples.get(conn_id)
+        if cached:
+            return cached
+        cache = getattr(self, "_cache", None)
+        if cache is None:
+            return None
+        try:
+            async with cache.get_redis() as client:
+                raw = unwrap_redis_json(
+                    await client.json().get(self._config_example_cache_key(conn_id))
+                )
+        except Exception as ex:
+            self._logger.warning(
+                f"{self._config.svc_name} :: Не удалось прочитать пример конфигурации "
+                f"коннектора {conn_id} из кэша: {ex}."
+            )
+            return None
+        if not isinstance(raw, dict) or not raw.get("fields"):
+            return None
+        examples[conn_id] = raw
+        return raw
+
+    async def _store_config_example(self, conn_id: str, example: dict) -> dict:
+        stored = {
+            "id": conn_id,
+            "fields": example["fields"],
+            "example": example.get("example"),
+            "receivedAt": int(t.now_int()),
+        }
+        examples, _waiters = self._config_example_state()
+        examples[conn_id] = stored
+        cache = getattr(self, "_cache", None)
+        if cache is None:
+            return stored
+        try:
+            async with cache.get_redis() as client:
+                await client.json().set(
+                    self._config_example_cache_key(conn_id), "$", stored
+                )
+        except Exception as ex:
+            self._logger.warning(
+                f"{self._config.svc_name} :: Не удалось записать пример конфигурации "
+                f"коннектора {conn_id} в кэш: {ex}."
+            )
+        return stored
+
+    async def _forget_config_example(self, conn_id: str) -> None:
+        examples, waiters = self._config_example_state()
+        examples.pop(conn_id, None)
+        for fut in waiters.pop(conn_id, []):
+            if not fut.done():
+                fut.set_result(None)
+        cache = getattr(self, "_cache", None)
+        if cache is None:
+            return
+        try:
+            async with cache.get_redis() as client:
+                await client.json().delete(self._config_example_cache_key(conn_id))
+        except Exception as ex:
+            self._logger.warning(
+                f"{self._config.svc_name} :: Не удалось удалить пример конфигурации "
+                f"коннектора {conn_id} из кэша: {ex}."
+            )
+
+    async def accept_config_example(self, mes: dict) -> None:
+        """Принять пример конфигурации от коннектора и положить его в кэш."""
+        data = mes.get("data") if isinstance(mes, dict) else None
+        example = normalize_config_example(data)
+        if example is None:
+            conn_id = data.get("id") if isinstance(data, dict) else "?"
+            self._logger.warning(
+                f"{self._config.svc_name} :: Коннектор {conn_id} прислал неразборчивый "
+                f"пример конфигурации, кэш не обновлён."
+            )
+            return
+        conn_id = example["id"]
+        stored = await self._store_config_example(conn_id, example)
+        self._logger.info(
+            f"{self._config.svc_name} :: Сохранён пример конфигурации коннектора {conn_id}: "
+            f"{len(stored['fields'])} полей."
+        )
+        _examples, waiters = self._config_example_state()
+        for fut in list(waiters.get(conn_id, [])):
+            if not fut.done():
+                fut.set_result(stored)
+
+    async def request_config_example(self, conn_id: str) -> dict:
+        """Запросить свежий пример у коннектора. Если его нет на связи — отдать кэш."""
+        normalized = connector_uuid(conn_id)
+        if normalized is None:
+            return public_config_example(str(conn_id or ""), None, "none", False)
+        conn_id = normalized
+        checker = getattr(self, "_is_camera", None)
+        if checker is not None:
+            try:
+                if await checker(conn_id):
+                    return public_config_example(conn_id, None, "none", False)
+            except Exception as ex:
+                self._logger.warning(
+                    f"{self._config.svc_name} :: Не удалось проверить, камера ли "
+                    f"коннектор {conn_id}: {ex}."
+                )
+        available = conn_id in getattr(self, "_connected_connectors", set())
+        if not available:
+            cached = await self._read_config_example(conn_id)
+            return public_config_example(
+                conn_id, cached, "cache" if cached else "none", False
+            )
+
+        _examples, waiters = self._config_example_state()
+        loop = asyncio.get_running_loop()
+        fut: asyncio.Future = loop.create_future()
+        bucket = waiters.setdefault(conn_id, [])
+        bucket.append(fut)
+        timeout = float(getattr(self, "_config_example_timeout_sec", CONFIG_EXAMPLE_TIMEOUT_SEC))
+        stored = None
+        try:
+            if len(bucket) == 1:
+                posted = await self._post_message(
+                    mes={"action": CONFIG_EXAMPLE_ACTION, "data": {"id": conn_id}},
+                    routing_key=f"prs2conn.{conn_id}",
+                )
+                if posted:
+                    self._logger.info(
+                        f"{self._config.svc_name} :: Коннектору {conn_id} послан запрос "
+                        f"примера конфигурации."
+                    )
+                else:
+                    self._logger.warning(
+                        f"{self._config.svc_name} :: Запрос примера конфигурации коннектору "
+                        f"{conn_id} не доставлен в брокер."
+                    )
+                if not posted:
+                    for item in list(bucket):
+                        if not item.done():
+                            item.set_result(None)
+            try:
+                stored = await asyncio.wait_for(fut, timeout)
+            except asyncio.TimeoutError:
+                stored = None
+        finally:
+            if fut in bucket:
+                bucket.remove(fut)
+            if not bucket:
+                waiters.pop(conn_id, None)
+        if stored:
+            return public_config_example(conn_id, stored, "connector", True)
+        cached = await self._read_config_example(conn_id)
+        if stored is None and cached:
+            self._logger.info(
+                f"{self._config.svc_name} :: Пример конфигурации коннектора {conn_id} "
+                f"взят из кэша: свежий ответ не получен."
+            )
+        return public_config_example(
+            conn_id, cached, "cache" if cached else "none", True
+        )
 
     def _replace_connector_tag_cache(self, conn_id: str, tag_ids: Iterable[str]) -> None:
         self._connector_tag_ids[conn_id] = set(tag_ids)
@@ -629,6 +816,10 @@ class ConnectorsMQTTApp(AppSvc):
             )
             return {}
 
+        if mes.get("action") == CONFIG_EXAMPLE_ACTION:
+            await self.accept_config_example(mes)
+            return {}
+
         conn_id = mes["data"]["id"]
         res = await self._get_connector_data(conn_id=conn_id)
         if not res:
@@ -908,6 +1099,7 @@ class ConnectorsMQTTApp(AppSvc):
         self._mqtt_broker_conn_by_connector.pop(deleted_conn_id, None)
         self._connector_log_lines.pop(deleted_conn_id, None)
         self._connector_command_output_lines.pop(deleted_conn_id, None)
+        await self._forget_config_example(deleted_conn_id)
         payload = {
             "action": "prsConnector.deleted",
             "data": {

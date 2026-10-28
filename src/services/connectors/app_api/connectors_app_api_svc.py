@@ -239,6 +239,34 @@ async def connector_link_status(
     return {"id": id, "mqttConnected": connected}
 
 
+@router.get("/config_example", status_code=200)
+async def connector_config_example(
+    id: str = Query(..., description="Идентификатор коннектора (UUID)"),
+):
+    """Пример конфигурации коннектора для формы свойств.
+
+    Если коннектор на связи, платформа публикует в ``prs2conn/<id>`` запрос
+    ``prsConnector.config_example`` и ждёт ответ в ``conn2prs/<id>``.
+    Ответ сохраняется в кэше. Если коннектор не на связи или не ответил,
+    возвращается последний сохранённый пример: форму можно заполнить и без него.
+
+    **Ответ:**
+
+      * **fields** — список полей (``key``, ``name``, ``description``, ``type``,
+        ``example``, ``default``, ``enum``). ``default`` — значение, которым
+        коннектор пользуется, если ключа нет в сохранённой конфигурации.
+        Пустой список значит, что примера нет.
+      * **example** — образец ``prsJsonConfigString`` целиком либо ``null``.
+        В конфигурацию узла он не записывается.
+      * **source** — ``connector``, ``cache`` или ``none``.
+      * **connectorAvailable** — есть ли сейчас MQTT-сессия.
+      * **receivedAt** — метка времени примера в микросекундах, либо ``null``.
+    """
+    valid_uuid(id)
+    await authorize_action("prsConnector.config_example_read", resource={"id": id})
+    return await connectors_mqtt_app.request_config_example(id)
+
+
 @router.get("/log_tail", status_code=200)
 async def connector_log_tail(
     id: str = Query(..., description="Идентификатор коннектора (UUID)"),

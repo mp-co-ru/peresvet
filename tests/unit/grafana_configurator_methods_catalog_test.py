@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261019-api-origin-v1"
+CODE_VERSION = "20261024-connector-config-tip-v1"
 
 
 def _parts():

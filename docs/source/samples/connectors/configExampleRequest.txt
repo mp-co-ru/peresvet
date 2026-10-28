@@ -1,0 +1,6 @@
+{
+  "action": "prsConnector.config_example",
+  "data": {
+    "id": "b61a2360-cc05-103e-9308-555c1a8a1358"
+  }
+}

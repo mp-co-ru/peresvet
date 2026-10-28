@@ -1,0 +1,80 @@
+{
+  "action": "prsConnector.config_example",
+  "data": {
+    "id": "b61a2360-cc05-103e-9308-555c1a8a1358",
+    "fields": [
+      {
+        "key": "source",
+        "name": "Источник",
+        "description": "Как подключиться к брокеру Zigbee2MQTT.",
+        "type": "object"
+      },
+      {
+        "key": "source.hostTopic",
+        "name": "Корневой топик",
+        "description": "Топик MQTT, в котором Zigbee2MQTT публикует устройства.",
+        "type": "string",
+        "example": "zigbee2mqtt",
+        "default": "zigbee2mqtt"
+      },
+      {
+        "key": "source.createDevices",
+        "name": "Создавать устройства",
+        "description": "Создавать узлы платформы для новых устройств Zigbee.",
+        "type": "boolean",
+        "example": true
+      },
+      {
+        "key": "source.checkDeviceOnStart",
+        "name": "Проверять при старте",
+        "description": "При запуске сверять список устройств с брокером.",
+        "type": "boolean",
+        "example": true
+      },
+      {
+        "key": "source.parentId",
+        "name": "Родительский узел",
+        "description": "Идентификатор объекта, под которым создаются устройства. Пустая строка — не задан.",
+        "type": "string",
+        "example": ""
+      },
+      {
+        "key": "log",
+        "name": "Журнал",
+        "description": "Файл журнала на машине коннектора.",
+        "type": "object"
+      },
+      {
+        "key": "log.level",
+        "name": "Уровень журнала",
+        "description": "Минимальный уровень строк, которые коннектор пишет в файл журнала.",
+        "type": "string",
+        "enum": ["DEBUG", "INFO", "WARNING", "ERROR"],
+        "example": "INFO",
+        "default": "INFO"
+      },
+      {
+        "key": "log.fileName",
+        "name": "Файл журнала",
+        "description": "Путь к файлу журнала на машине коннектора.",
+        "type": "string",
+        "example": "logs/prs_connector_b61a2360-cc05-103e-9308-555c1a8a1358.log",
+        "default": "logs/prs_connector_b61a2360-cc05-103e-9308-555c1a8a1358.log"
+      }
+    ],
+    "example": {
+      "source": {
+        "hostTopic": "zigbee2mqtt",
+        "createDevices": true,
+        "checkDeviceOnStart": true,
+        "parentId": ""
+      },
+      "log": {
+        "level": "INFO",
+        "fileName": "logs/prs_connector_b61a2360-cc05-103e-9308-555c1a8a1358.log",
+        "maxBytes": 10485760,
+        "backupCount": 10
+      }
+    }
+  }
+}
