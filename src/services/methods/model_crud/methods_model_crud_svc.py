@@ -68,7 +68,10 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
         )
 
     async def _is_method_folder(self, node_id: str | None) -> bool:
-        """Папка каталога — prsModelNode под cn=methods, не внутри метода."""
+        """Папка каталога — prsFolder под cn=methods.
+
+        Старые папки prsModelNode ещё узнаются, пока сервис их не переписал.
+        """
         root_id = self._config.hierarchy.get("node_id")
         if not node_id or not root_id or node_id == root_id:
             return False
@@ -78,7 +81,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
                 node_class = await self._hierarchy.get_node_class(current)
             except Exception:
                 return False
-            if node_class != "prsModelNode":
+            if node_class not in ("prsFolder", "prsModelNode"):
                 return False
             try:
                 parent_id, _ = await self._hierarchy.get_parent(current)
@@ -107,7 +110,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             return "unknown"
         if node_class in ("prsTag", "prsAlert"):
             return "instance"
-        if node_class == "prsModelNode" and await self._is_method_folder(node_id):
+        if node_class in ("prsFolder", "prsModelNode") and await self._is_method_folder(node_id):
             return "catalog"
         return "other"
 
@@ -171,12 +174,27 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
     async def _create(self, mes: dict, routing_key: str | None = None) -> dict:
         if mes is None:
             mes = {}
+        if mes.get("folder"):
+            return await self._folder_create(mes, routing_key)
         err = await self._prepare_method_write(mes, creating=True)
         if err:
             return err
         return await super()._create(mes, routing_key)
 
+    async def _node_is_catalog_folder(self, node_id: str | None) -> bool:
+        if not node_id:
+            return False
+        try:
+            node_class = await self._hierarchy.get_node_class(node_id)
+        except Exception:
+            return False
+        if node_class == "prsFolder":
+            return await self._user_folder_allowed(node_id) or await self._is_method_folder(node_id)
+        return node_class == "prsModelNode" and await self._is_method_folder(node_id)
+
     async def _update(self, mes: dict, routing_key: str | None = None) -> dict:
+        if await self._node_is_catalog_folder((mes or {}).get("id")):
+            return await self._folder_update(mes, routing_key)
         err = await self._prepare_method_write(mes, creating=False)
         if err:
             return err
@@ -214,13 +232,13 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             {
                 "base": parent_id,
                 "scope": hierarchy.CN_SCOPE_ONELEVEL,
-                "filter": {"cn": [folder["cn"]], "objectClass": ["prsModelNode"]},
+                "filter": {"cn": [folder["cn"]], "objectClass": ["prsFolder"]},
                 "attributes": ["cn", "objectClass"],
             }
         )
         for row in rows or []:
             classes = _stored_object_classes(row[2])
-            if "prsModelNode" in classes and "prsMethod" not in classes:
+            if "prsFolder" in classes or ("prsModelNode" in classes and "prsMethod" not in classes):
                 return row[0], "exists", ""
         attributes = {"cn": folder["cn"]}
         if folder.get("description"):
@@ -287,7 +305,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             return catalog_error(422, "Папку методов можно создать только в каталоге методов.")
         attrs = dict((mes or {}).get("attributes") or {})
         attrs.pop("objectClass", None)
-        attrs["objectClass"] = ["prsModelNode"]
+        attrs["objectClass"] = ["prsFolder"]
         if "prsActive" not in attrs:
             attrs["prsActive"] = True
         new_id = await self._hierarchy.add(parent_id, attrs)
@@ -303,7 +321,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
         normalized_filter = {}
         for key, item in raw_filter.items():
             normalized_filter[key] = item if isinstance(item, list) else [item]
-        normalized_filter["objectClass"] = ["prsModelNode"]
+        normalized_filter["objectClass"] = ["prsFolder"]
         payload["filter"] = normalized_filter
         if not payload.get("base") and not payload.get("id"):
             payload["base"] = self._config.hierarchy.get("node_id")
@@ -316,12 +334,10 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             items = await self._hierarchy.search(payload)
         except Exception as ex:
             return catalog_error(422, str(ex))
-        # OpenLDAP считает prsMethod совпадением objectClass=prsModelNode.
-        # В папках оставляем только узлы, у которых класс ровно prsModelNode.
         data = []
         for item in items or []:
-            classes = [name for name in _stored_object_classes(item[2]) if name != "top"]
-            if classes != ["prsModelNode"]:
+            classes = _stored_object_classes(item[2])
+            if "prsFolder" not in classes:
                 continue
             data.append({"id": item[0], "attributes": item[2]})
         return {"data": data}
@@ -334,7 +350,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             node_class = await self._hierarchy.get_node_class(folder_id)
         except Exception:
             return catalog_error(422, f"Папка {folder_id} не найдена.")
-        if node_class != "prsModelNode" or not await self._is_method_folder(folder_id):
+        if not await self._node_is_catalog_folder(folder_id):
             return catalog_error(422, f"Узел {folder_id} не является папкой методов.")
         new_parent = mes.get("parentId")
         if new_parent and not await self._folder_parent_ok(new_parent):
@@ -369,7 +385,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
                 node_class = await self._hierarchy.get_node_class(folder_id)
             except Exception:
                 return catalog_error(422, f"Папка {folder_id} не найдена.")
-            if node_class != "prsModelNode" or not await self._is_method_folder(folder_id):
+            if not await self._node_is_catalog_folder(folder_id):
                 return catalog_error(422, f"Узел {folder_id} не является папкой методов.")
             for method_id in await self._descendant_method_ids(folder_id):
                 if await self._method_is_referenced(method_id):
@@ -778,6 +794,8 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
     async def _delete(self, mes: dict, routing_key: str = None) -> dict:
         raw_ids = mes.get("id")
         method_ids = raw_ids if isinstance(raw_ids, list) else [raw_ids]
+        if method_ids and await self._node_is_catalog_folder(method_ids[0]):
+            return await self._folder_delete(mes, routing_key)
         for method_id in method_ids:
             if method_id and await self._method_is_referenced(method_id):
                 return {
@@ -791,8 +809,31 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
         await self._delete_method_cache(mes['id'])
         return await super()._delete(mes)
 
+    async def _rewrite_legacy_method_folders(self) -> None:
+        """Старые папки каталога были prsModelNode. Приводим их к prsFolder."""
+        root_id = self._config.hierarchy.get("node_id")
+        if not root_id:
+            return
+        rows = await self._hierarchy.search({
+            "base": root_id,
+            "scope": hierarchy.CN_SCOPE_SUBTREE,
+            "filter": {"objectClass": ["prsModelNode"]},
+            "attributes": ["cn", "objectClass"],
+            "deref": False,
+        })
+        for row in rows or []:
+            if row[0] == root_id or not await self._is_method_folder(row[0]):
+                continue
+            if "prsFolder" in _stored_object_classes(row[2]):
+                continue
+            await self._hierarchy.modify(row[0], {"objectClass": ["prsFolder"]})
+
     async def on_startup(self) -> None:
         await super().on_startup()
+        try:
+            await self._rewrite_legacy_method_folders()
+        except Exception as ex:
+            self._logger.error(f"{self._config.svc_name} :: Старые папки методов не переписаны: {ex}")
         try:
             await seed_method_packages(
                 self._hierarchy,

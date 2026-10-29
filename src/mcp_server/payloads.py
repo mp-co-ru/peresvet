@@ -398,7 +398,7 @@ def connector_update_payload(
 
 
 def user_folder_query_to_params(query: dict[str, Any]) -> list[tuple[str, str]]:
-    """Query string for `GET /v1/folders`."""
+    """Query string for listing ``prsFolder`` via the branch entity API."""
     params: list[tuple[str, str]] = []
     if query.get("id") is not None:
         add_list(params, "id", query["id"])

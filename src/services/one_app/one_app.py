@@ -139,7 +139,6 @@ from src.services.objects.api_crud.objects_api_crud_svc \
     import (
         app as objects_api_crud,
         router as objects_api_crud_router,
-        folders_router,
     )
 
 # objects_model_crud
@@ -258,7 +257,6 @@ api_router.include_router(router=methods_api_crud_router)
 # objects ---------------------------------------------------------------------
 # objects_api_crud
 api_router.include_router(router=objects_api_crud_router)
-api_router.include_router(router=folders_router)
 # -----------------------------------------------------------------------------
 
 # schedules ---------------------------------------------------------------------

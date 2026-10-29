@@ -7,6 +7,7 @@ import json
 from uuid import uuid4, UUID
 
 import ldap
+import ldap.filter
 import ldap.modlist
 import ldap.dn
 import ldapurl

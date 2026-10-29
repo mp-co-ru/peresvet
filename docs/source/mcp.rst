@@ -72,7 +72,7 @@ MCP **не** входит в ``./run_one_app.sh``. После старта пл�
   Формат дерева ``apply_hierarchy`` не меняется.
 * ``peresvet_folder_create`` / ``peresvet_folders_list`` /
   ``peresvet_folder_update`` / ``peresvet_folder_delete`` —
-  пользовательские папки ``prsFolder`` (``/v1/folders``).
+  пользовательские папки ``prsFolder`` (``POST /v1/<ветка>/`` с ``"folder": true``).
   Это не папки каталога методов.
 * ``peresvet_crud_read`` / ``create`` / ``update`` / ``delete`` — низкоуровневый
   доступ к ``objects``, ``tags``, ``alerts``, ``methods``, ``connectors``,
@@ -104,7 +104,7 @@ MCP **не** входит в ``./run_one_app.sh``. После старта пл�
 * ``peresvet_method_create`` / ``peresvet_virtual_method_create``
 * ``peresvet_method_folder_create`` / ``peresvet_method_folders_list`` /
   ``peresvet_method_folder_update`` / ``peresvet_method_folder_delete`` —
-  папки каталога ``/v1/methods/folders`` (класс ``prsModelNode``,
+  папки каталога методов (``POST /v1/methods/`` с ``"folder": true``, класс ``prsFolder``,
   не путать с ``peresvet_folder_*``)
 * ``peresvet_method_description_import`` — YAML-описание каталога
   (``POST /v1/methods/description``, пробный вызов при ``probe=true``)

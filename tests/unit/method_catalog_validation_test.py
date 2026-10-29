@@ -168,7 +168,7 @@ def test_delete_referenced_catalog_method_returns_409_and_folder_crud():
     created = asyncio.run(MethodsModelCRUD._folder_create(svc, {"attributes": {"cn": "stdlib"}}))
     assert created["id"] == "folder-new"
     assert hierarchy.added[0][0] == "root"
-    assert hierarchy.added[0][1]["objectClass"] == ["prsModelNode"]
+    assert hierarchy.added[0][1]["objectClass"] == ["prsFolder"]
     rejected = asyncio.run(MethodsModelCRUD._folder_create(svc, {"parentId": "tag-1", "attributes": {"cn": "x"}}))
     assert rejected["error"]["code"] == 422
 
@@ -176,10 +176,10 @@ def test_delete_referenced_catalog_method_returns_409_and_folder_crud():
 def test_folder_read_drops_method_subclass_matches():
     class Hierarchy:
         async def search(self, payload):
-            assert payload["filter"]["objectClass"] == ["prsModelNode"]
+            assert payload["filter"]["objectClass"] == ["prsFolder"]
             assert "objectClass" in payload["attributes"]
             return [
-                ("stdlib", None, {"cn": ["stdlib"], "objectClass": ["prsModelNode"]}),
+                ("stdlib", None, {"cn": ["stdlib"], "objectClass": ["prsFolder"]}),
                 ("add", None, {"cn": ["add"], "objectClass": ["prsMethod"]}),
             ]
 

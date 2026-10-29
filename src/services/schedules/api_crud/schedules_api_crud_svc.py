@@ -201,6 +201,9 @@ async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends
             :request: ../../../../docs/source/samples/schedules/addScheduleIn.txt
             :response: ../../../../docs/source/samples/schedules/addScheduleOut.txt
 
+        * **parentId** (str) - id пользовательской папки ``prsFolder`` в ветке
+          расписаний. Если поле пустое, расписание создаётся в корне ``schedules``.
+
         * **attributes** (dict) - словарь с параметрами для создания расписания.
 
           * **cn** (str) - имя расписания; Необязательный атрибут;

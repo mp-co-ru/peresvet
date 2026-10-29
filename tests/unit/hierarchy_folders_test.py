@@ -14,14 +14,13 @@ from types import SimpleNamespace
 import ldap
 
 from src.common.hierarchy import CN_SCOPE_ONELEVEL, Hierarchy
-from src.common.hierarchy_folders import node_class_from_object_classes
+from src.common.hierarchy_folders import folder_ldap_attributes, node_class_from_object_classes
 from src.common.model_crud_svc import ModelCRUDSvc
 from src.services.alerts.model_crud.alerts_model_crud_settings import AlertsModelCRUDSettings
 from src.services.connectors.model_crud.connectors_model_crud_settings import ConnectorsModelCRUDSettings
 from src.services.dataStorages.model_crud.dataStorages_model_crud_settings import (
     DataStoragesModelCRUDSettings,
 )
-from src.services.objects.api_crud.objects_api_crud_svc import FolderUpdate
 from src.services.objects.model_crud.objects_model_crud_settings import ObjectsModelCRUDSettings
 from src.services.objects.model_crud.objects_model_crud_svc import ObjectsModelCRUD
 from src.services.schedules.model_crud.schedules_model_crud_settings import SchedulesModelCRUDSettings
@@ -214,6 +213,24 @@ def test_parent_class_lists_allow_folders_only_for_folder_services():
     assert "prsFolder" not in _classes_text(AlertsModelCRUDSettings().hierarchy["parent_classes"])
 
 
+def test_entity_create_flag_makes_a_folder_and_stays_off_by_default():
+    mem = _tree()
+    svc = _svc(mem)
+    created = asyncio.run(svc._create({
+        "folder": True,
+        "parentId": "objects",
+        "attributes": {"cn": "Цех", "prsJsonConfigString": "{}"},
+    }))
+    assert created["id"] == "new-Цех"
+    assert mem.added[-1][1]["objectClass"] == ["prsFolder"]
+    assert "prsJsonConfigString" not in mem.added[-1][1]
+    rejected = asyncio.run(svc._create_user_folder({
+        "parentId": "tags",
+        "attributes": {"cn": "Чужая"},
+    }))
+    assert rejected["error"]["code"] == 422
+
+
 def test_folder_context_nesting_and_forbidden_parents():
     mem = _tree()
     svc = _svc(mem)
@@ -392,10 +409,9 @@ def test_folder_delete_emits_deleted_for_nested_tag():
 
 
 def test_folder_update_does_not_invent_active_flag():
-    body = FolderUpdate.model_validate(
-        {"id": "11111111-1111-1111-1111-111111111111", "attributes": {"cn": "Цех"}}
-    ).model_dump(exclude_unset=True)
-    assert body["attributes"] == {"cn": "Цех"}
+    attrs = folder_ldap_attributes({"cn": "Цех"}, creating=False)
+    assert attrs == {"cn": "Цех"}
+    assert "prsActive" not in attrs
 
 
 def test_configurator_folder_menu_version_and_sort():
@@ -406,7 +422,10 @@ def test_configurator_folder_menu_version_and_sort():
     assert '["userFolders","fa-folder","Новая папка"]' in javascript
     assert 'case"prsFolder":a(prsUserFolderMenuItems(e))' in javascript
     assert 'case"prsModelNode":a(["methodFolders","catalogMethods","methodDescription","__active__","__delete__"])' in javascript
-    assert 'prsFolder:"/v1/folders"' in javascript
+    assert "folder:!0" in javascript
+    assert "function prsFolderEntityPath" in javascript
+    assert 'prsFolder:"/v1/folders"' not in javascript
+    assert "/v1/folders?" not in javascript
     assert 'return"prsFolder"===t?-1:"prsObject"===t?0:' in javascript
     assert "function prsCreateUserFolder" in javascript
     assert "function prsNextFolderName" in javascript
@@ -418,8 +437,8 @@ def test_configurator_folder_menu_version_and_sort():
     text = (ROOT / "config/nginx/peresvet/locations/peresvet.locations.conf.template").read_text(
         encoding="utf-8"
     )
-    assert "location = /v1/folders {" in text
-    assert "location = /v1/folders/ {" in text
+    assert "location = /v1/folders {" not in text
+    assert "location = /v1/folders/ {" not in text
 
 
 def test_folder_named_like_root_under_methods_is_rejected():

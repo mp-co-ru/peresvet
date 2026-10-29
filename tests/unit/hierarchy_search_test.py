@@ -1,8 +1,15 @@
 import asyncio
+from pathlib import Path
 from types import SimpleNamespace
 from uuid import uuid4
 
 from src.common.hierarchy import Hierarchy, CN_SCOPE_SUBTREE, encode_ldap_add_attributes, omit_empty_ldap_description
+
+
+def test_hierarchy_imports_ldap_filter_submodule():
+    """Поиск по id вызывает ldap.filter. Подмодуль не появляется сам: без импорта видео отдаёт 500."""
+    source = Path(__file__).resolve().parents[2].joinpath("src/common/hierarchy.py").read_text(encoding="utf-8")
+    assert "import ldap.filter" in source
 
 
 def test_uuid_and_get_node_dn_without_id():
@@ -72,6 +79,11 @@ def test_search_by_ids_and_filter_with_mocked_ldap():
     assert rows[0][2]["cn"] == ["pump"]
     assert "prsIndex" not in rows[0][2]
     assert "entryUUID=" in conn.last["filterstr"]
+
+    hostile = uid + ")(objectClass=*"
+    asyncio.run(h.search({"id": hostile}))
+    assert f"(entryUUID={uid}\\29\\28objectClass=\\2a)" in conn.last["filterstr"]
+    assert "(objectClass=*)" not in conn.last["filterstr"]
 
     rows2 = asyncio.run(
         h.search(

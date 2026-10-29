@@ -1,14 +1,14 @@
 """Пользовательские папки иерархии (класс prsFolder).
 
-Папка не является prsModelNode: этот класс уже занят служебными корнями,
-узлом cn=system и папками каталога методов. Формула parentId для
-prsModelNode здесь не меняется.
+Папка не является prsModelNode: этот класс занят служебными корнями
+и узлом cn=system. Формула parentId для prsModelNode здесь не меняется.
+Папка каталога методов — тот же prsFolder, что и в остальных ветках.
 """
 from __future__ import annotations
 
 from typing import Any
 
-ROOT_NAMES = ("objects", "tags", "connectors", "schedules", "dataStorages")
+ROOT_NAMES = ("objects", "tags", "connectors", "schedules", "dataStorages", "methods")
 
 _FILTER_META = set("()\\*\x00,=<>")
 
@@ -19,6 +19,7 @@ CONTEXT_CHILD_CLASSES = {
     "connectors": frozenset({"prsFolder", "prsConnector"}),
     "schedules": frozenset({"prsFolder", "prsSchedule"}),
     "dataStorages": frozenset({"prsFolder", "prsDataStorage"}),
+    "methods": frozenset({"prsFolder", "prsMethod"}),
 }
 
 # Класс -> его SUP. Нужен, чтобы выбрать структурный класс, а не prsModelNode,
@@ -170,10 +171,10 @@ async def _node_cn(hierarchy, node_id: str) -> str:
 
 
 async def root_context(hierarchy, node_id: str | None) -> str | None:
-    """Контекст ветки: objects, tags, connectors, schedules или dataStorages.
+    """Контекст ветки: objects, tags, connectors, schedules, dataStorages или methods.
 
-    None, если узел лежит под запрещённым родителем (cn=system, каталог
-    методов, тег, тревога, метод, привязка).
+    None, если узел лежит под запрещённым родителем (cn=system, тег, тревога,
+    метод, привязка).
     """
     current = node_id
     seen: set[str] = set()
@@ -218,8 +219,6 @@ async def resolve_folder_parent_id(hierarchy, parent_ref: str | None) -> tuple[s
     """Имя корня или UUID -> id узла. Второе значение — текст ошибки."""
     if parent_ref in (None, ""):
         return None, "Укажите родителя папки."
-    if parent_ref == "methods":
-        return None, "Папку нельзя создать в каталоге методов."
     if parent_ref in ROOT_NAMES:
         node_id = await hierarchy.get_node_id(f"cn={parent_ref},cn=prs")
         if not node_id:

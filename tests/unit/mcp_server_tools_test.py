@@ -136,14 +136,22 @@ def test_mcp_tools_call_http_layer():
     assert catalog_calls
     assert catalog_calls[0][3]["attributes"]["prsCatalogMethodId"] == "cat-1"
     assert catalog_calls[0][3]["attributes"]["prsMethodAddress"] == "placeholder"
-    folder_create = next(item for item in captured if item[1] == "/v1/methods/folders" and item[0] == "POST")
+    folder_create = next(
+        item for item in captured
+        if item[1] == "/v1/methods/" and item[0] == "POST" and item[3] and item[3].get("folder") is True
+    )
     assert folder_create[3]["attributes"]["cn"] == "stdlib"
-    user_folder = next(item for item in captured if item[1] == "/v1/folders" and item[0] == "POST")
-    assert user_folder[3]["parentId"] == "objects"
+    user_folder = next(item for item in captured if item[1] == "/v1/objects/" and item[0] == "POST" and item[3].get("folder") is True)
+    assert "parentId" not in user_folder[3]
     assert user_folder[3]["attributes"]["cn"] == "Цех"
-    user_folder_list = next(item for item in captured if item[1] == "/v1/folders" and item[0] == "GET")
-    assert ("base", "objects") in user_folder_list[2]
-    user_folder_move = next(item for item in captured if item[1] == "/v1/folders" and item[0] == "PUT")
+    user_folder_list = next(
+        item for item in captured
+        if item[1] == "/v1/objects/" and item[0] == "GET" and item[2] and ("base", "objects") in item[2]
+    )
+    user_folder_move = next(
+        item for item in captured
+        if item[1] == "/v1/objects/" and item[0] == "PUT" and item[3] and item[3].get("id") == "folder-1"
+    )
     assert user_folder_move[3]["id"] == "folder-1"
     assert user_folder_move[3]["parentId"] == "obj-1"
     description = next(item for item in captured if item[1] == "/v1/methods/description")

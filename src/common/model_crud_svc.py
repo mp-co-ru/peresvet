@@ -207,6 +207,8 @@ class ModelCRUDSvc(Svc):
             return res_response
 
         node_class = await self._hierarchy.get_node_class(id)
+        if node_class == "prsFolder":
+            return await self._update_user_folder(mes)
         if node_class != self._config.hierarchy["class"]:
             err_mes = f"Узел {id} имеет необрабатываемый класс {node_class}."
             self._logger.error(f"{self._config.svc_name} :: {err_mes}")
@@ -362,6 +364,11 @@ class ModelCRUDSvc(Svc):
                 return res_response
 
             node_class = await self._hierarchy.get_node_class(id)
+            if node_class == "prsFolder":
+                folder_result = await self._delete_user_folder({"id": id})
+                if isinstance(folder_result, dict) and folder_result.get("error"):
+                    return folder_result
+                continue
             if node_class != self._config.hierarchy["class"]:
                 err_mes = f"Узел {id} имеет необрабатываемый класс {node_class}."
                 self._logger.error(f"{self._config.svc_name} :: {err_mes}")
@@ -602,8 +609,11 @@ class ModelCRUDSvc(Svc):
         if mes_data["base"]:
             try:
                 UUID(mes_data["base"])
-            except Exception as ex:
-                node_id = await self._hierarchy.get_node_id(mes_data["base"])
+            except Exception:
+                base_name = mes_data["base"]
+                if base_name in ("objects", "tags", "connectors", "schedules", "dataStorages", "methods"):
+                    base_name = f"cn={base_name},cn=prs"
+                node_id = await self._hierarchy.get_node_id(base_name)
                 if node_id:
                     mes_data["base"] = node_id
                 else:
@@ -708,6 +718,10 @@ class ModelCRUDSvc(Svc):
 
         if mes is None:
             mes = {}
+        else:
+            mes = dict(mes)
+        if mes.pop("folder", False):
+            return await self._create_user_folder(mes)
         parent_node = mes.get("parentId")
         parent_node = (self._config.hierarchy["node_id"], parent_node)[bool(parent_node)]
         if not parent_node:
@@ -823,6 +837,194 @@ class ModelCRUDSvc(Svc):
 
             new_id (str): id уже созданного узла
         """
+
+    def _folder_error(self, code: int, message: str) -> dict:
+        return {"id": None, "error": {"code": code, "message": message}}
+
+    async def _user_folder_allowed(self, node_id: str) -> bool:
+        """Папка этой сущности допустима только в её ветке."""
+        entity = self._config.hierarchy.get("class")
+        if entity not in {"prsObject", "prsTag", "prsConnector", "prsSchedule", "prsDataStorage", "prsMethod"}:
+            return False
+        from src.common.hierarchy_folders import CONTEXT_CHILD_CLASSES, root_context
+
+        context = await root_context(self._hierarchy, node_id)
+        return entity in CONTEXT_CHILD_CLASSES.get(context or "", ())
+
+    async def _create_user_folder(self, mes: dict) -> dict:
+        """Создаёт ``prsFolder`` вместо экземпляра сущности.
+
+        Пустой ``parentId`` — корень этого сервиса, как у обычного создания.
+        """
+        import ldap
+
+        from src.common.hierarchy_folders import (
+            folder_ldap_attributes,
+            folder_name_error,
+            folder_parent_allowed,
+            resolve_folder_parent_id,
+        )
+
+        if self._config.hierarchy.get("class") not in {
+            "prsObject", "prsTag", "prsConnector", "prsSchedule", "prsDataStorage", "prsMethod",
+        }:
+            return self._folder_error(422, "Эта сущность не создаёт папки.")
+        parent_ref = (mes or {}).get("parentId") or self._config.hierarchy.get("node_id")
+        parent_id, err = await resolve_folder_parent_id(self._hierarchy, parent_ref)
+        if err:
+            return self._folder_error(422, err)
+        if not await folder_parent_allowed(self._hierarchy, parent_id):
+            return self._folder_error(422, "Папку нельзя создать в этом узле.")
+        if not await self._user_folder_allowed(parent_id):
+            return self._folder_error(422, "Папку этой сущности нельзя создать в этой ветке.")
+        attrs = folder_ldap_attributes((mes or {}).get("attributes"), creating=True)
+        if not attrs.get("cn"):
+            return self._folder_error(422, "Укажите имя папки (cn).")
+        name_error = folder_name_error(attrs.get("cn"))
+        if name_error:
+            return self._folder_error(422, name_error)
+        try:
+            new_id = await self._hierarchy.add(parent_id, attrs)
+        except ldap.ALREADY_EXISTS:
+            return self._folder_error(422, "Узел с таким именем уже есть на этом уровне.")
+        if not new_id:
+            return self._folder_error(422, "Узел с таким именем уже есть на этом уровне.")
+        self._logger.info(f"{self._config.svc_name} :: Создана папка {new_id}.")
+        return {"id": new_id}
+
+    async def _update_user_folder(self, mes: dict) -> dict:
+        import ldap
+
+        from src.common.hierarchy_folders import (
+            folder_ldap_attributes,
+            folder_move_error,
+            folder_name_error,
+            resolve_folder_parent_id,
+        )
+
+        folder_id = (mes or {}).get("id")
+        if not folder_id:
+            return self._folder_error(422, "Не указана папка.")
+        if not await self._user_folder_allowed(folder_id):
+            return self._folder_error(422, "Папка принадлежит другой ветке.")
+        new_parent = mes.get("parentId")
+        if new_parent:
+            new_parent, err = await resolve_folder_parent_id(self._hierarchy, new_parent)
+            if err:
+                return self._folder_error(422, err)
+            message = await folder_move_error(self._hierarchy, folder_id, new_parent)
+            if message:
+                return self._folder_error(422, message)
+            if not await self._user_folder_allowed(new_parent):
+                return self._folder_error(422, "Папку нельзя перенести в эту ветку.")
+        attrs = folder_ldap_attributes(mes.get("attributes"), creating=False)
+        name_error = folder_name_error(attrs.get("cn"))
+        if name_error:
+            return self._folder_error(422, name_error)
+        try:
+            if attrs:
+                await self._hierarchy.modify(folder_id, attrs)
+            if new_parent:
+                current_parent, _ = await self._hierarchy.get_parent(folder_id)
+                if current_parent != new_parent:
+                    await self._hierarchy.move(folder_id, new_parent)
+        except ldap.ALREADY_EXISTS:
+            return self._folder_error(422, "Узел с таким именем уже есть на этом уровне.")
+        return {}
+
+    async def _user_folder_may_delete(self, folder_id: str) -> dict | None:
+        rows = await self._hierarchy.search(
+            {
+                "base": folder_id,
+                "scope": CN_SCOPE_SUBTREE,
+                "filter": {"cn": ["*"]},
+                "attributes": ["objectClass"],
+                "deref": False,
+            }
+        )
+        from src.common.hierarchy_folders import ENTITY_DELETE_ROUTING
+
+        for row in rows or []:
+            child_id = row[0]
+            if child_id == folder_id:
+                continue
+            child_class = node_class_from_object_classes((row[2] or {}).get("objectClass"))
+            if child_class in ("prsFolder", "prsModelNode", "alias", "extensibleObject", "top", ""):
+                continue
+            if child_class not in ENTITY_DELETE_ROUTING:
+                return self._folder_error(422, f"В папке узел недопустимого класса {child_class}.")
+            result = await self._post_message(
+                mes={"id": child_id},
+                reply=True,
+                routing_key=f"{child_class}.model.may_delete.{child_id}",
+            )
+            if result is None:
+                continue
+            if isinstance(result, dict) and result.get("error"):
+                return result
+            if isinstance(result, dict) and not result.get("response", True):
+                message = result.get("message") or f"Нельзя удалить вложенный узел {child_id}."
+                return self._folder_error(422, message)
+        return None
+
+    async def _delete_user_folder_node(self, folder_id: str) -> dict | None:
+        from src.common.hierarchy_folders import ENTITY_DELETE_ROUTING
+
+        rows = await self._hierarchy.search(
+            {
+                "base": folder_id,
+                "scope": CN_SCOPE_ONELEVEL,
+                "filter": {"cn": ["*"]},
+                "attributes": ["cn"],
+                "deref": False,
+            }
+        )
+        children = [row[0] for row in rows or [] if row[0] != folder_id]
+        for child_id in children:
+            try:
+                child_class = await self._hierarchy.get_node_class(child_id)
+            except Exception:
+                return self._folder_error(422, f"Вложенный узел {child_id} не найден.")
+            if child_class == "prsFolder":
+                nested = await self._delete_user_folder_node(child_id)
+                if nested:
+                    return nested
+                continue
+            routing = ENTITY_DELETE_ROUTING.get(child_class)
+            if routing:
+                result = await self._post_message(
+                    mes={"id": child_id},
+                    reply=True,
+                    routing_key=f"{routing}.{child_id}",
+                )
+                if result is None:
+                    return self._folder_error(422, f"Не удалось удалить вложенный узел {child_id}.")
+                if isinstance(result, dict) and result.get("error"):
+                    return result
+                continue
+            if child_class in ("prsModelNode", "alias", "extensibleObject"):
+                await self._hierarchy.delete(child_id)
+                continue
+            return self._folder_error(422, f"В папке узел недопустимого класса {child_class}.")
+        await self._hierarchy.delete(folder_id)
+        return None
+
+    async def _delete_user_folder(self, mes: dict) -> dict:
+        raw_ids = (mes or {}).get("id")
+        folder_ids = raw_ids if isinstance(raw_ids, list) else [raw_ids]
+        for folder_id in folder_ids:
+            if not folder_id:
+                return self._folder_error(422, "Не указана папка.")
+            if not await self._user_folder_allowed(folder_id):
+                return self._folder_error(422, "Папка принадлежит другой ветке.")
+            failed = await self._user_folder_may_delete(folder_id)
+            if failed:
+                return failed
+            failed = await self._delete_user_folder_node(folder_id)
+            if failed:
+                return failed
+            self._logger.info(f"{self._config.svc_name} :: Папка {folder_id} удалена.")
+        return {}
 
     async def _check_parent_class(self, parent_id: str) -> bool:
         """Метод проверки того, что класс родительского узла
