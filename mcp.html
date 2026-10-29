@@ -170,7 +170,14 @@
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">peresvet_objects_list</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_objects_tree</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_object_create</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">peresvet_tags_list</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_tags_tree</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_tag_create</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_apply_hierarchy</span></code> — безопасное создание дерева объектов и тегов</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_apply_hierarchy</span></code> — безопасное создание дерева объектов и тегов.
+<code class="docutils literal notranslate"><span class="pre">root_parent_id</span></code> и <code class="docutils literal notranslate"><span class="pre">parent_id</span></code> у <code class="docutils literal notranslate"><span class="pre">peresvet_object_create</span></code> /
+<code class="docutils literal notranslate"><span class="pre">peresvet_tag_create</span></code> могут быть id пользовательской папки.
+Формат дерева <code class="docutils literal notranslate"><span class="pre">apply_hierarchy</span></code> не меняется.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_folder_create</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_folders_list</span></code> /
+<code class="docutils literal notranslate"><span class="pre">peresvet_folder_update</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_folder_delete</span></code> —
+пользовательские папки <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> (<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/&lt;ветка&gt;/</span></code> с <code class="docutils literal notranslate"><span class="pre">&quot;folder&quot;:</span> <span class="pre">true</span></code>).
+Это не папки каталога методов.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">peresvet_crud_read</span></code> / <code class="docutils literal notranslate"><span class="pre">create</span></code> / <code class="docutils literal notranslate"><span class="pre">update</span></code> / <code class="docutils literal notranslate"><span class="pre">delete</span></code> — низкоуровневый
 доступ к <code class="docutils literal notranslate"><span class="pre">objects</span></code>, <code class="docutils literal notranslate"><span class="pre">tags</span></code>, <code class="docutils literal notranslate"><span class="pre">alerts</span></code>, <code class="docutils literal notranslate"><span class="pre">methods</span></code>, <code class="docutils literal notranslate"><span class="pre">connectors</span></code>,
 <code class="docutils literal notranslate"><span class="pre">schedules</span></code>, <code class="docutils literal notranslate"><span class="pre">dataStorages</span></code></p></li>
@@ -201,7 +208,8 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">peresvet_method_create</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_virtual_method_create</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">peresvet_method_folder_create</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_method_folders_list</span></code> /
 <code class="docutils literal notranslate"><span class="pre">peresvet_method_folder_update</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_method_folder_delete</span></code> —
-папки каталога <code class="docutils literal notranslate"><span class="pre">/v1/methods/folders</span></code></p></li>
+папки каталога методов (<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/</span></code> с <code class="docutils literal notranslate"><span class="pre">&quot;folder&quot;:</span> <span class="pre">true</span></code>, класс <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code>,
+не путать с <code class="docutils literal notranslate"><span class="pre">peresvet_folder_*</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">peresvet_method_description_import</span></code> — YAML-описание каталога
 (<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/description</span></code>, пробный вызов при <code class="docutils literal notranslate"><span class="pre">probe=true</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">peresvet_schedule_create</span></code></p></li>

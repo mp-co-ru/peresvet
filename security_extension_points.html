@@ -206,6 +206,14 @@ error payload с кодом <code class="docutils literal notranslate"><span cla
 <code class="docutils literal notranslate"><span class="pre">prsTag.delete</span></code>;</p></li>
 <li><p>аналогично для <code class="docutils literal notranslate"><span class="pre">prsAlert</span></code>, <code class="docutils literal notranslate"><span class="pre">prsMethod</span></code>, <code class="docutils literal notranslate"><span class="pre">prsConnector</span></code>,
 <code class="docutils literal notranslate"><span class="pre">prsDataStorage</span></code>, <code class="docutils literal notranslate"><span class="pre">prsSchedule</span></code>.</p></li>
+<li><p>Создание пользовательской папки — то же действие, что создание
+сущности ветки (<code class="docutils literal notranslate"><span class="pre">prsObject.create</span></code>, <code class="docutils literal notranslate"><span class="pre">prsTag.create</span></code> и остальные),
+запрос с <code class="docutils literal notranslate"><span class="pre">&quot;folder&quot;:</span> <span class="pre">true</span></code>. Отдельного <code class="docutils literal notranslate"><span class="pre">/v1/folders</span></code> нет.
+Удаление папки идёт действием удаления этой сущности и разрешает удалить папку вместе
+с содержимым: вложенные сущности уходят тем же каскадом, что и при
+удалении родительского объекта, без отдельного <code class="docutils literal notranslate"><span class="pre">prsTag.delete</span></code>
+на каждый узел. Каталог методов по-прежнему использует
+<code class="docutils literal notranslate"><span class="pre">prsMethod.create|read|update|delete</span></code>.</p></li>
 <li><p>copy-операции используют действия вида <code class="docutils literal notranslate"><span class="pre">prsObject.copy</span></code>,
 <code class="docutils literal notranslate"><span class="pre">prsTag.copy</span></code>, <code class="docutils literal notranslate"><span class="pre">prsAlert.copy</span></code>, <code class="docutils literal notranslate"><span class="pre">prsMethod.copy</span></code>,
 <code class="docutils literal notranslate"><span class="pre">prsConnector.copy</span></code>.</p></li>

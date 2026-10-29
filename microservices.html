@@ -637,9 +637,9 @@
 <h3>Каталог методов<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
 <p>Рядом с локальными методами тега и тревоги есть общий каталог.
 При старте <code class="docutils literal notranslate"><span class="pre">methods_model_crud</span></code> создаёт узел <code class="docutils literal notranslate"><span class="pre">cn=methods,cn=prs</span></code>.
-В каталоге лежат папки <code class="docutils literal notranslate"><span class="pre">prsModelNode</span></code> и определения <code class="docutils literal notranslate"><span class="pre">prsMethod</span></code>.</p>
-<p>Папки создаются, читаются, изменяются и удаляются командами
-<code class="docutils literal notranslate"><span class="pre">/v1/methods/folders</span></code>. Отдельного сервиса папок нет.
+В каталоге лежат папки <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> и определения <code class="docutils literal notranslate"><span class="pre">prsMethod</span></code>.</p>
+<p>Папка создаётся тем же запросом, что и метод, с <code class="docutils literal notranslate"><span class="pre">&quot;folder&quot;:</span> <span class="pre">true</span></code>.
+Отдельного адреса <code class="docutils literal notranslate"><span class="pre">/v1/methods/folders</span></code> нет.
 Удаление папки само убирает вложенные папки и методы.
 Если на метод каталога ссылается экземпляр (атрибут <code class="docutils literal notranslate"><span class="pre">prsCatalogMethodId</span></code>),
 удаление такого метода или папки, в которой он лежит, возвращает <code class="docutils literal notranslate"><span class="pre">409</span></code>.</p>
@@ -652,8 +652,8 @@
 <code class="docutils literal notranslate"><span class="pre">prsValueTypeCode</span></code> (<code class="docutils literal notranslate"><span class="pre">1</span></code> целый, <code class="docutils literal notranslate"><span class="pre">2</span></code> вещественный, <code class="docutils literal notranslate"><span class="pre">3</span></code> строка, <code class="docutils literal notranslate"><span class="pre">4</span></code> json);</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">parameterCount</span></code> считается при чтении и в LDAP не хранится.</p></li>
 </ul>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="err">POST</span><span class="w"> </span><span class="err">/v</span><span class="mi">1</span><span class="err">/me</span><span class="kc">t</span><span class="err">hods/</span><span class="kc">f</span><span class="err">olders</span>
-<span class="p">{</span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stdlib&quot;</span><span class="p">}}</span>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="err">POST</span><span class="w"> </span><span class="err">/v</span><span class="mi">1</span><span class="err">/me</span><span class="kc">t</span><span class="err">hods/</span>
+<span class="p">{</span><span class="nt">&quot;folder&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stdlib&quot;</span><span class="p">}}</span>
 </pre></div>
 </div>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="err">POST</span><span class="w"> </span><span class="err">/v</span><span class="mi">1</span><span class="err">/me</span><span class="kc">t</span><span class="err">hods/</span>
@@ -730,7 +730,7 @@
 у него свой <code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code>, инициаторы и параметры.
 Рядом с этим в модели есть общий каталог <code class="docutils literal notranslate"><span class="pre">cn=methods,cn=prs</span></code>.
 В конфигураторе это папка «Методы». Внутри неё методы раскладываются
-по папкам <code class="docutils literal notranslate"><span class="pre">prsModelNode</span></code> (<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/folders</span></code>).</p>
+по папкам <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> (<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/</span></code> с <code class="docutils literal notranslate"><span class="pre">&quot;folder&quot;:</span> <span class="pre">true</span></code>).</p>
 <p>Определение в каталоге задаёт адрес <code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code> и параметры
 с <code class="docutils literal notranslate"><span class="pre">prsIndex</span></code> и <code class="docutils literal notranslate"><span class="pre">prsValueTypeCode</span></code> (<code class="docutils literal notranslate"><span class="pre">1</span></code> целый, <code class="docutils literal notranslate"><span class="pre">2</span></code> вещественный,
 <code class="docutils literal notranslate"><span class="pre">3</span></code> строка, <code class="docutils literal notranslate"><span class="pre">4</span></code> json). Инициаторы у определения не задаются,

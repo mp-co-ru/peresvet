@@ -24,7 +24,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
-    <link rel="next" title="Коннекторы" href="connectors.html" />
+    <link rel="next" title="Папки" href="folders.html" />
     <link rel="prev" title="Теги" href="tags.html" /> 
 </head>
 
@@ -82,6 +82,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#objects_api_crud_svc.update"><code class="docutils literal notranslate"><span class="pre">update()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
 <li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
 <li class="toctree-l3"><a class="reference internal" href="connectors.html#id2">Коды качества</a></li>
 <li class="toctree-l3"><a class="reference internal" href="connectors.html#last-will-and-testament-lwt">Last Will and Testament (LWT)</a></li>
@@ -195,6 +196,11 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 </div>
 </div>
 <ul class="simple">
+<li><p><strong>folder</strong> (bool) - если <code class="docutils literal notranslate"><span class="pre">true</span></code>, создаётся папка <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code>,
+а не объект. По умолчанию <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
+<li><p><strong>parentId</strong> (str) - id родителя. Если поле пустое, узел создаётся
+в корне <code class="docutils literal notranslate"><span class="pre">objects</span></code>. Родителем может быть другой объект или
+пользовательская папка <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> ветки объектов.</p></li>
 <li><p><strong>attributes</strong> (dict) - словарь с параметрами для создания обьекта.</p>
 <ul>
 <li><p><strong>cn</strong> (str) - имя обьекта; Обязательный атрибут.</p></li>
@@ -359,6 +365,9 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 <p>1 - поиск среди непосредственных потомков указанного в <code class="docutils literal notranslate"><span class="pre">base</span></code> узла</p>
 <p>2 - поиск по всему дереву, начиная с указанного в <code class="docutils literal notranslate"><span class="pre">base</span></code> узла.</p>
 </li>
+<li><p><strong>hierarchy</strong> (bool) - если true, обход спускается внутрь
+пользовательских папок <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code>. При <code class="docutils literal notranslate"><span class="pre">scope=1</span></code> без этого флага
+папка и то, что лежит в ней, в ответ не попадают.</p></li>
 <li><p><strong>filter</strong> (dict) - Словарь из атрибутов и их значений, из которых
 формируется фильтр для поиска. Необязательный атрибут.</p></li>
 </ul>
@@ -456,7 +465,7 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
         <a href="tags.html" class="btn btn-neutral float-left" title="Теги" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
-        <a href="connectors.html" class="btn btn-neutral float-right" title="Коннекторы" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="folders.html" class="btn btn-neutral float-right" title="Папки" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

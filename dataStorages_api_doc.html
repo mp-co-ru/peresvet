@@ -74,11 +74,13 @@
 <li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
 <li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
 <li class="toctree-l3"><a class="reference internal" href="objects.html">Обьекты</a></li>
+<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
 <li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
 <li class="toctree-l3"><a class="reference internal" href="connectors.html#id2">Коды качества</a></li>
 <li class="toctree-l3"><a class="reference internal" href="connectors.html#last-will-and-testament-lwt">Last Will and Testament (LWT)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="connectors.html#id3">Удалённые команды коннектору</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Хранилища данных</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#dataStorages_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#dataStorages_api_crud_svc.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
 </ul>
 </li>
@@ -121,6 +123,16 @@
 <span id="id1"></span><h1>Хранилища данных<a class="headerlink" href="#module-dataStorages_api_crud_svc" title="Link to this heading"></a></h1>
 <p>Модуль содержит примеры запросов и ответов на них, параметров которые могут входить в
 запрос, в сервисе dataStorages.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="dataStorages_api_crud_svc.create">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dataStorages_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(ErrorHandler)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dataStorages_api_crud_svc.create" title="Link to this definition"></a></dt>
+<dd><p>Метод добавляет хранилище данных.</p>
+<ul class="simple">
+<li><p><strong>parentId</strong> (str) - id пользовательской папки <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> в ветке
+хранилищ. Если поле пустое, хранилище создаётся в корне <code class="docutils literal notranslate"><span class="pre">dataStorages</span></code>.</p></li>
+</ul>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="dataStorages_api_crud_svc.delete">
 <em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dataStorages_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NodeDelete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(ErrorHandler)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dataStorages_api_crud_svc.delete" title="Link to this definition"></a></dt>

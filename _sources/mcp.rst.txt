@@ -66,7 +66,14 @@ MCP **не** входит в ``./run_one_app.sh``. После старта пл�
 
 * ``peresvet_objects_list`` / ``peresvet_objects_tree`` / ``peresvet_object_create``
 * ``peresvet_tags_list`` / ``peresvet_tags_tree`` / ``peresvet_tag_create``
-* ``peresvet_apply_hierarchy`` — безопасное создание дерева объектов и тегов
+* ``peresvet_apply_hierarchy`` — безопасное создание дерева объектов и тегов.
+  ``root_parent_id`` и ``parent_id`` у ``peresvet_object_create`` /
+  ``peresvet_tag_create`` могут быть id пользовательской папки.
+  Формат дерева ``apply_hierarchy`` не меняется.
+* ``peresvet_folder_create`` / ``peresvet_folders_list`` /
+  ``peresvet_folder_update`` / ``peresvet_folder_delete`` —
+  пользовательские папки ``prsFolder`` (``POST /v1/<ветка>/`` с ``"folder": true``).
+  Это не папки каталога методов.
 * ``peresvet_crud_read`` / ``create`` / ``update`` / ``delete`` — низкоуровневый
   доступ к ``objects``, ``tags``, ``alerts``, ``methods``, ``connectors``,
   ``schedules``, ``dataStorages``
@@ -97,7 +104,8 @@ MCP **не** входит в ``./run_one_app.sh``. После старта пл�
 * ``peresvet_method_create`` / ``peresvet_virtual_method_create``
 * ``peresvet_method_folder_create`` / ``peresvet_method_folders_list`` /
   ``peresvet_method_folder_update`` / ``peresvet_method_folder_delete`` —
-  папки каталога ``/v1/methods/folders``
+  папки каталога методов (``POST /v1/methods/`` с ``"folder": true``, класс ``prsFolder``,
+  не путать с ``peresvet_folder_*``)
 * ``peresvet_method_description_import`` — YAML-описание каталога
   (``POST /v1/methods/description``, пробный вызов при ``probe=true``)
 * ``peresvet_schedule_create``

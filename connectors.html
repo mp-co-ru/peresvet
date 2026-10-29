@@ -25,7 +25,7 @@
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
     <link rel="next" title="Хранилища данных" href="dataStorages_api_doc.html" />
-    <link rel="prev" title="Обьекты" href="objects.html" /> 
+    <link rel="prev" title="Папки" href="folders.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -74,6 +74,7 @@
 <li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
 <li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
 <li class="toctree-l3"><a class="reference internal" href="objects.html">Обьекты</a></li>
+<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Коннекторы</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#mqtt">Связь по MQTT и коды качества тегов</a></li>
 </ul>
@@ -327,6 +328,8 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 </div>
 </div>
 <ul class="simple">
+<li><p><strong>parentId</strong> (str) - id пользовательской папки <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> в ветке
+коннекторов. Если поле пустое, коннектор создаётся в корне <code class="docutils literal notranslate"><span class="pre">connectors</span></code>.</p></li>
 <li><p><strong>attributes</strong> (dict) - словарь с параметрами для создания коннектора.
 Обязательный параметр.</p>
 <ul>
@@ -627,7 +630,7 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
-        <a href="objects.html" class="btn btn-neutral float-left" title="Обьекты" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="folders.html" class="btn btn-neutral float-left" title="Папки" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
         <a href="dataStorages_api_doc.html" class="btn btn-neutral float-right" title="Хранилища данных" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

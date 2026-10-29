@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Папки &mdash; документация МПК-Пересвет 0.4</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/sphinxcontrib-httpexample.css" type="text/css" />
+      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=11064190"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/sphinxcontrib-httpexample.js"></script>
+        <script src="_static/translations.js?v=29b1f277"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Коннекторы" href="connectors.html" />
+    <link rel="prev" title="Обьекты" href="objects.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Логотип"/>
+          </a>
+              <div class="version">
+                0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="description.html">Описание</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terms.html">Терминология</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка и запуск</a></li>
+<li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Примеры работы с платформой</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_extension_points.html">Точки расширения безопасности</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка безопасности платной редакции</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api.html#id2">Правила API</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="api.html#id3">Модули</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
+<li class="toctree-l3"><a class="reference internal" href="objects.html">Обьекты</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Папки</a></li>
+<li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
+<li class="toctree-l3"><a class="reference internal" href="connectors.html#id2">Коды качества</a></li>
+<li class="toctree-l3"><a class="reference internal" href="connectors.html#last-will-and-testament-lwt">Last Will and Testament (LWT)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="connectors.html#id3">Удалённые команды коннектору</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a></li>
+<li class="toctree-l3"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="schedules.html">Расписания</a></li>
+<li class="toctree-l3"><a class="reference internal" href="methods_api_doc.html">Методы</a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_api.html">Запись/получение данных</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">МПК-Пересвет</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">API Платформы Пересвет</a></li>
+      <li class="breadcrumb-item active">Папки</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/folders.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="id1">
+<h1>Папки<a class="headerlink" href="#id1" title="Link to this heading"></a></h1>
+<p>Пользовательская папка — класс <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code>. Отдельного ресурса
+<code class="docutils literal notranslate"><span class="pre">/v1/folders</span></code> нет. Папка создаётся запросом создания той сущности,
+в чьей ветке она лежит. Поле <code class="docutils literal notranslate"><span class="pre">folder</span></code> по умолчанию <code class="docutils literal notranslate"><span class="pre">false</span></code>:
+без него запрос создаёт обычный узел.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="err">POST</span><span class="w"> </span><span class="err">/v</span><span class="mi">1</span><span class="err">/objec</span><span class="kc">ts</span><span class="err">/</span>
+<span class="p">{</span><span class="nt">&quot;folder&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Режимы работы&quot;</span><span class="p">}}</span>
+</pre></div>
+</div>
+<p>Пустой <code class="docutils literal notranslate"><span class="pre">parentId</span></code> — корень этого сервиса, как при создании объекта или тега.
+Чтобы положить папку внутрь объекта или другой папки, передайте их id.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="err">POST</span><span class="w"> </span><span class="err">/v</span><span class="mi">1</span><span class="err">/</span><span class="kc">ta</span><span class="err">gs/</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;folder&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;parentId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;id объекта или папки&gt;&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Счётчики&quot;</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Какая команда какую папку создаёт:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Запрос</p></th>
+<th class="head"><p>Где появляется папка</p></th>
+<th class="head"><p>Что можно положить внутрь</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/objects/</span></code></p></td>
+<td><p>ветка объектов</p></td>
+<td><p>папка, объект, тег</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/tags/</span></code></p></td>
+<td><p>ветка тегов или объект</p></td>
+<td><p>папка, тег</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/connectors/</span></code></p></td>
+<td><p>ветка коннекторов</p></td>
+<td><p>папка, коннектор</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/schedules/</span></code></p></td>
+<td><p>ветка расписаний</p></td>
+<td><p>папка, расписание</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/dataStorages/</span></code></p></td>
+<td><p>ветка хранилищ</p></td>
+<td><p>папка, хранилище</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/</span></code></p></td>
+<td><p>каталог методов</p></td>
+<td><p>папка, метод каталога</p></td>
+</tr>
+</tbody>
+</table>
+<p>Тревога этим флагом папку не создаёт: запрос возвращает <code class="docutils literal notranslate"><span class="pre">422</span></code>.
+Каталог методов использует тот же флаг:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="err">POST</span><span class="w"> </span><span class="err">/v</span><span class="mi">1</span><span class="err">/me</span><span class="kc">t</span><span class="err">hods/</span>
+<span class="p">{</span><span class="nt">&quot;folder&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stdlib&quot;</span><span class="p">}}</span>
+</pre></div>
+</div>
+<p>Имя <code class="docutils literal notranslate"><span class="pre">system</span></code> зарезервировано. В LDAP сохраняются <code class="docutils literal notranslate"><span class="pre">cn</span></code>, <code class="docutils literal notranslate"><span class="pre">description</span></code>,
+<code class="docutils literal notranslate"><span class="pre">prsActive</span></code> и <code class="docutils literal notranslate"><span class="pre">prsIndex</span></code>.</p>
+<p>Чтение папок — тот же <code class="docutils literal notranslate"><span class="pre">GET</span></code> сущности с фильтром <code class="docutils literal notranslate"><span class="pre">objectClass=prsFolder</span></code>.
+Имя корня (<code class="docutils literal notranslate"><span class="pre">objects</span></code>, <code class="docutils literal notranslate"><span class="pre">tags</span></code>, <code class="docutils literal notranslate"><span class="pre">connectors</span></code>, <code class="docutils literal notranslate"><span class="pre">schedules</span></code>,
+<code class="docutils literal notranslate"><span class="pre">dataStorages</span></code>, <code class="docutils literal notranslate"><span class="pre">methods</span></code>) допустимо в <code class="docutils literal notranslate"><span class="pre">base</span></code>. Тег внутри папки при <code class="docutils literal notranslate"><span class="pre">scope=1</span></code>
+не виден: его возвращает <code class="docutils literal notranslate"><span class="pre">scope=2</span></code>.</p>
+<p>Изменение и удаление — <code class="docutils literal notranslate"><span class="pre">PUT</span></code> и <code class="docutils literal notranslate"><span class="pre">DELETE</span></code> той же сущности с id папки.
+Удаление снимает содержимое тем же каскадом, что удаление объекта.
+Перенос в другую ветку и в собственное поддерево отклоняется.</p>
+<p>Право на создание, изменение и удаление — право этой сущности
+(<code class="docutils literal notranslate"><span class="pre">prsObject.create</span></code> и остальные). Отдельного действия <code class="docutils literal notranslate"><span class="pre">prsFolder.*</span></code>
+для HTTP нет.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="objects.html" class="btn btn-neutral float-left" title="Обьекты" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="connectors.html" class="btn btn-neutral float-right" title="Коннекторы" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права 2026, ООО Матч Поинт Консалтинг. </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

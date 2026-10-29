@@ -81,6 +81,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="objects.html">Обьекты</a></li>
+<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
 <li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
 <li class="toctree-l3"><a class="reference internal" href="connectors.html#id2">Коды качества</a></li>
 <li class="toctree-l3"><a class="reference internal" href="connectors.html#last-will-and-testament-lwt">Last Will and Testament (LWT)</a></li>
@@ -195,6 +196,10 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 </div>
 </div>
 <ul class="simple">
+<li><p><strong>folder</strong> (bool) - если <code class="docutils literal notranslate"><span class="pre">true</span></code>, создаётся папка <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code>,
+а не тег. По умолчанию <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
+<li><p><strong>parentId</strong> (str) - id объекта или пользовательской папки <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code>
+в ветке объектов или тегов. Если поле пустое, узел создаётся в корне <code class="docutils literal notranslate"><span class="pre">tags</span></code>.</p></li>
 <li><p><strong>attributes</strong> (dict) - словарь с параметрами для создания тега.</p>
 <ul>
 <li><p><strong>cn</strong> (str) - имя тега. Необязательный атрибут.</p></li>
@@ -361,8 +366,11 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 <li><p><strong>scope</strong> (int) - Масштаб поиска. По умолчанию 1. Необязательный аттрибут.</p>
 <p>0 - получение данных по указанному в ключе <code class="docutils literal notranslate"><span class="pre">base</span></code> узлу</p>
 <p>1 - поиск среди непосредственных потомков указанного в <code class="docutils literal notranslate"><span class="pre">base</span></code> узла</p>
-<p>2 - поиск по всему дереву, начиная с указанного в <code class="docutils literal notranslate"><span class="pre">base</span></code> узла.</p>
+<p>2 - поиск по всему дереву, начиная с указанного в <code class="docutils literal notranslate"><span class="pre">base</span></code> узла.
+Тег внутри пользовательской папки <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> возвращается при <code class="docutils literal notranslate"><span class="pre">scope=2</span></code>.
+При <code class="docutils literal notranslate"><span class="pre">scope=1</span></code> видны только непосредственные потомки <code class="docutils literal notranslate"><span class="pre">base</span></code>.</p>
 </li>
+<li><p><strong>hierarchy</strong> (bool) - если true, обход спускается внутрь <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code>.</p></li>
 <li><p><strong>filter</strong> (dict) - Словарь из атрибутов и их значений, из которых
 формируется фильтр для поиска. Необязательный аттрибут.</p></li>
 </ul>

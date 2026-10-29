@@ -263,6 +263,19 @@
 <p>Базовый узел в иерархии. Каждый узел сущности <code class="docutils literal notranslate"><span class="pre">objects</span></code> может иметь
 любое количество дочерних узлов этой же сущности. Таким образом обеспечивается
 возможность создания иерархии объектов любой сложности.</p>
+<p>Пользовательские папки — отдельный структурный класс <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code>
+(не <code class="docutils literal notranslate"><span class="pre">prsModelNode</span></code>). Их создают в корнях <code class="docutils literal notranslate"><span class="pre">objects</span></code>, <code class="docutils literal notranslate"><span class="pre">tags</span></code>,
+<code class="docutils literal notranslate"><span class="pre">connectors</span></code>, <code class="docutils literal notranslate"><span class="pre">schedules</span></code>, <code class="docutils literal notranslate"><span class="pre">dataStorages</span></code>, внутри объекта и внутри
+другой такой папки. Вложенная папка наследует контекст корня: в ветке
+объектов это папки, объекты и теги; в корне тегов — папки и теги; в остальных
+корнях — папки и сущность этого корня. Отдельного <code class="docutils literal notranslate"><span class="pre">/v1/folders</span></code> нет:
+папка создаётся <code class="docutils literal notranslate"><span class="pre">POST</span></code> этой сущности с <code class="docutils literal notranslate"><span class="pre">&quot;folder&quot;:</span> <span class="pre">true</span></code> (по умолчанию
+<code class="docutils literal notranslate"><span class="pre">false</span></code>). Удаление папки
+удаляет и её содержимое тем же каскадом, что удаление объекта. Дерево без папок
+не меняется: те же родители, <code class="docutils literal notranslate"><span class="pre">parentId=null</span></code> у узла прямо под служебным
+корнем <code class="docutils literal notranslate"><span class="pre">prsModelNode</span></code>, поиск, realtime, история, тревоги, методы, привязки
+коннекторов, хранилища и расписания. Папка каталога методов — тот же
+<code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> и тот же флаг <code class="docutils literal notranslate"><span class="pre">folder</span></code> у <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/</span></code>.</p>
 </section>
 <section id="id7">
 <h4>Теги<a class="headerlink" href="#id7" title="Link to this heading"></a></h4>

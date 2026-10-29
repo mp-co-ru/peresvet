@@ -74,6 +74,7 @@
 <li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
 <li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
 <li class="toctree-l3"><a class="reference internal" href="objects.html">Обьекты</a></li>
+<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
 <li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
 <li class="toctree-l3"><a class="reference internal" href="connectors.html#id2">Коды качества</a></li>
 <li class="toctree-l3"><a class="reference internal" href="connectors.html#last-will-and-testament-lwt">Last Will and Testament (LWT)</a></li>
@@ -182,6 +183,8 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 </div>
 </div>
 <ul class="simple">
+<li><p><strong>parentId</strong> (str) - id пользовательской папки <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> в ветке
+расписаний. Если поле пустое, расписание создаётся в корне <code class="docutils literal notranslate"><span class="pre">schedules</span></code>.</p></li>
 <li><p><strong>attributes</strong> (dict) - словарь с параметрами для создания расписания.</p>
 <ul>
 <li><p><strong>cn</strong> (str) - имя расписания; Необязательный атрибут;</p></li>
