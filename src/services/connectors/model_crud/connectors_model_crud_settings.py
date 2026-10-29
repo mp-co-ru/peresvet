@@ -10,7 +10,7 @@ class ConnectorsModelCRUDSettings(ModelCRUDSettings):
         #: класс экзмепляров сущности в иерархии
         "class": "prsConnector",
         #: список через запятую родительских классов
-        "parent_classes": "",
+        "parent_classes": "prsFolder",
         #: флаг создания узла ``cn=system`` внутри узла экземпляра сущности
         "create_sys_node": True,
         "child_classes": ["prsConnectorTagData"]

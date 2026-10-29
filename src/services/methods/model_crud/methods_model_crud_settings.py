@@ -11,7 +11,7 @@ class MethodsModelCRUDSettings(ModelCRUDSettings):
         #: класс экзмепляров сущности в иерархии
         "class": "prsMethod",
         #: список через запятую родительских классов
-        "parent_classes": "prsTag,prsAlert",
+        "parent_classes": "prsTag,prsAlert,prsFolder",
         #: флаг создания узла ``cn=system`` внутри узла экземпляра сущности
         "create_sys_node": True
     }    

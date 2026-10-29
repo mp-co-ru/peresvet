@@ -1,0 +1,17 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+
+{
+    "data": [
+        {
+            "id": "folder id",
+            "dn": "cn=Режимы работы,cn=objects,cn=prs",
+            "attributes": {
+                "cn": ["Режимы работы"],
+                "objectClass": ["prsFolder"]
+            },
+            "parentId": null
+        }
+    ]
+}

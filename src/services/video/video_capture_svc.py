@@ -207,7 +207,7 @@ class VideoCapture(AppSvc):
         else:
             found = await self._hierarchy.search({
                 "base": "cn=connectors,cn=prs",
-                "scope": hierarchy.CN_SCOPE_ONELEVEL,
+                "scope": hierarchy.CN_SCOPE_SUBTREE,
                 "filter": {"objectClass": ["prsConnector"]},
                 "attributes": ["prsActive", "prsJsonConfigString"],
             })

@@ -420,7 +420,7 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
         items = await self._hierarchy.search(
             payload={
                 "base": ds_root_id,
-                "scope": CN_SCOPE_ONELEVEL,
+                "scope": CN_SCOPE_SUBTREE,
                 "filter": {
                     "objectClass": ["prsDataStorage"],
                     "prsEntityTypeCode": [self._config.datastorage_type],

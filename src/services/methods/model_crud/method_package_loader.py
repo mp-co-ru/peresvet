@@ -88,11 +88,13 @@ async def _ensure_folder(hierarchy, parent_id: str, folder: dict) -> str | None:
     cn = str(folder.get("cn") or "").strip()
     if not cn:
         return parent_id
-    existing = await _find_child(hierarchy, parent_id, object_class="prsModelNode", cn=cn)
+    existing = await _find_child(hierarchy, parent_id, object_class="prsFolder", cn=cn)
+    if not existing:
+        existing = await _find_child(hierarchy, parent_id, object_class="prsModelNode", cn=cn)
     if existing:
         return existing
     attrs = {
-        "objectClass": ["prsModelNode"],
+        "objectClass": ["prsFolder"],
         "cn": cn,
         "prsActive": True,
     }

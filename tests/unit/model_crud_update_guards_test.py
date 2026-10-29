@@ -30,6 +30,31 @@ def test_model_crud_update_rejects_missing_and_wrong_class():
     assert "необрабатываемый класс" in wrong["error"]["message"]
 
 
+def test_update_rejects_parent_of_wrong_class():
+    svc = object.__new__(ModelCRUDSvc)
+    svc._config = SimpleNamespace(
+        svc_name="tags_model_crud",
+        hierarchy={
+            "class": "prsTag",
+            "node_id": "tags-root",
+            "parent_classes": ["prsObject", "prsFolder"],
+        },
+    )
+    svc._logger = _Logger()
+
+    async def exists(_node_id):
+        return True
+
+    svc._hierarchy = SimpleNamespace(
+        does_node_exist=exists,
+        get_node_class=AsyncMock(side_effect=lambda node_id: "prsTag" if node_id == "tag-1" else "prsConnector"),
+        search=AsyncMock(return_value=[]),
+    )
+    rejected = asyncio.run(svc._update({"id": "tag-1", "parentId": "connector-1"}))
+    assert rejected["error"]["code"] == 422
+    assert "родитель" in rejected["error"]["message"]
+
+
 def test_objects_copy_subtree_requires_ids_and_delegates():
     svc = object.__new__(ObjectsModelCRUD)
     svc._hierarchy = object()

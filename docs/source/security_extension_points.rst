@@ -126,6 +126,14 @@ RPC-ответы также проходят через extension points:
   ``prsTag.delete``;
 * аналогично для ``prsAlert``, ``prsMethod``, ``prsConnector``,
   ``prsDataStorage``, ``prsSchedule``.
+* Создание пользовательской папки — то же действие, что создание
+  сущности ветки (``prsObject.create``, ``prsTag.create`` и остальные),
+  запрос с ``"folder": true``. Отдельного ``/v1/folders`` нет.
+  Удаление папки идёт действием удаления этой сущности и разрешает удалить папку вместе
+  с содержимым: вложенные сущности уходят тем же каскадом, что и при
+  удалении родительского объекта, без отдельного ``prsTag.delete``
+  на каждый узел. Каталог методов по-прежнему использует
+  ``prsMethod.create|read|update|delete``.
 * copy-операции используют действия вида ``prsObject.copy``,
   ``prsTag.copy``, ``prsAlert.copy``, ``prsMethod.copy``,
   ``prsConnector.copy``.

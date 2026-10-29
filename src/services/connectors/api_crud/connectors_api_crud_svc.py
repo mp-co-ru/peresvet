@@ -191,6 +191,9 @@ async def create(payload: dict | None = None, error_handler: svc.ErrorHandler = 
             :request: ../../../../docs/source/samples/connectors/addConnectorIn.txt
             :response: ../../../../docs/source/samples/connectors/addConnectorOut.txt
 
+        * **parentId** (str) - id пользовательской папки ``prsFolder`` в ветке
+          коннекторов. Если поле пустое, коннектор создаётся в корне ``connectors``.
+
         * **attributes** (dict) - словарь с параметрами для создания коннектора.
           Обязательный параметр.
 

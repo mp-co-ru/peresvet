@@ -17,14 +17,20 @@ def test_object_tree_dnd_dashboard_contract():
 
     assert dashboard["uid"] == "ddy59kw4v5ssgc"
     assert (
-        'prsConfiguratorCodeVersion="20261018-method-description-v3"' in javascript
+        'prsConfiguratorCodeVersion="20261029-user-folders-v1"' in javascript
     )
     for required_fragment in (
         "prsBindAllObjectTreeDnd",
         "prsTreeBindObjectDnd",
         "prsTreeMoveObjectRows",
+        's&&!l?(s.removeAttribute("data-prs-chevron-placeholder"),s.setAttribute("data-prs-tree-chevron","1")',
+        "prsPruneTreeChevronRow(t)",
         "prsTreeMultiHandleClick",
         "prsTreeDraggedTopRows",
+        "prsTreeDragAutoScroll",
+        "prsTreeDragScrollFromPointer",
+        't.addEventListener("dragover",prsTreeDragScrollFromPointer)',
+        "window.__prsTreeDragScrollTimer=setInterval",
         "prsTreeClearObjectMultiSelect",
         'objectClass="prsObject"',
         "parentId:t.id",
@@ -33,7 +39,7 @@ def test_object_tree_dnd_dashboard_contract():
         'var s=e.querySelector(":scope > .prs-tree-label");s?e.insertBefore(a,s):n.insertAdjacentElement("afterend",a)',
         ':scope > .prs-node-actions > .prs-tree-active-btn',
         '"prsTag"===r&&"tags"!==n',
-        'Ce[e.getAttribute("objectClass")]',
+        'prsClassApi(e.getAttribute("objectClass"),e)',
         "prsTreeSetNodeTitle",
         '[objectClass="prsTag"]',
     ):

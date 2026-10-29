@@ -112,6 +112,10 @@ def test_segments_cover_moment_and_period(tmp_path):
     assert segment_at(segments, 90_000_000) is None
 
 
+def _preview_at(args):
+    return next(index for index, item in enumerate(args) if "fps=8,scale=960:-2" in item)
+
+
 def test_session_ffmpeg_uses_one_rtsp_input(tmp_path):
     camera = parse_camera_config({"rtspUrl": CAMERA_URL})
     args = session_ffmpeg_args(camera, tmp_path, 10, ffmpeg="ffmpeg")
@@ -120,14 +124,19 @@ def test_session_ffmpeg_uses_one_rtsp_input(tmp_path):
     assert args.count("-i") == 1
     assert "mpjpeg" in args
     assert "segment" in args
-    assert "+genpts" in args
+    assert "+genpts" not in args
+    assert "-use_wallclock_as_timestamps" in args
     assert "libx264" in args
     assert "copy" not in args
-    assert "fps=8,scale=960:-2" in args
-    preview = args.index("fps=8,scale=960:-2")
+    preview = _preview_at(args)
+    preview_filter = args[preview]
+    assert preview_filter.endswith("fps=8,scale=960:-2")
+    assert "setpts=(RTCTIME-RTCSTART)/(1000000*TB)" in preview_filter
     archive = args[:preview]
     assert "scale=" not in " ".join(archive)
     assert "fps=" not in " ".join(archive)
+    assert archive.count("-fps_mode") == 1
+    assert args[preview + 1:preview + 3] == ["-fps_mode", "passthrough"]
     assert args[-1] == "pipe:1"
     assert "libmp3lame" not in args
     target = "tcp://127.0.0.1:9"
@@ -136,7 +145,7 @@ def test_session_ffmpeg_uses_one_rtsp_input(tmp_path):
     )
     assert target in with_audio
     assert "libmp3lame" in with_audio
-    assert with_audio.index(target) < with_audio.index("fps=8,scale=960:-2")
+    assert with_audio.index(target) < _preview_at(with_audio)
     assert with_audio[-1] == "pipe:1"
     assert with_audio.count("-i") == 1
     assert str(tmp_path / "%s.ts") in args
@@ -161,9 +170,12 @@ def test_archive_size_and_rate_come_from_the_connector(tmp_path):
     assert camera.archive_width == 640
     assert camera.archive_fps == 12
     args = session_ffmpeg_args(camera, tmp_path, 10, ffmpeg="ffmpeg")
-    preview = args.index("fps=8,scale=960:-2")
+    preview = _preview_at(args)
     assert args[args.index("-vf")] == "-vf"
-    assert "fps=12,scale=640:-2" in args[:preview]
+    archive_filter = args[args.index("-vf") + 1]
+    assert archive_filter.endswith("fps=12,scale=640:-2")
+    assert "setpts=(RTCTIME-RTCSTART)/(1000000*TB)" in archive_filter
+    assert preview > args.index("-vf")
     native = parse_camera_config({"rtspUrl": CAMERA_URL})
     assert native.archive_width is None
     assert native.archive_fps is None
