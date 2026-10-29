@@ -8,7 +8,7 @@ class DataStoragesModelCRUDV2Settings(ModelCRUDSettings):
     hierarchy: dict = {
         "node": "dataStorages",
         "class": "prsDataStorage",
-        "parent_classes": "",
+        "parent_classes": "prsFolder",
         "child_classes": [
             "prsDatastorageTagData",
             "prsDatastorageTagOperation",

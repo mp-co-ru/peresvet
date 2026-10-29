@@ -277,7 +277,7 @@ class ConnectorsMQTTApp(AppSvc):
         if not self._config.nodes: # type: ignore
             payload = {
                 "base": "cn=connectors,cn=prs",
-                "scope": hierarchy.CN_SCOPE_ONELEVEL,
+                "scope": hierarchy.CN_SCOPE_SUBTREE,
                 "filter": {"objectClass": ["prsConnector"]}
             }
             res = await self._hierarchy.search(payload)
@@ -290,7 +290,11 @@ class ConnectorsMQTTApp(AppSvc):
 
         result = []
         for conn_id in connectors:
-            payload = {"base": conn_id, "filter": {"cn": [tag_id]}}
+            payload = {
+                "base": conn_id,
+                "scope": hierarchy.CN_SCOPE_SUBTREE,
+                "filter": {"cn": [tag_id], "objectClass": ["prsConnectorTagData"]},
+            }
             res = await self._hierarchy.search(payload)
             if res:
                 result.append(conn_id)

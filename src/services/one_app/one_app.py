@@ -138,7 +138,7 @@ from src.services.methods.app.methods_app_svc \
 from src.services.objects.api_crud.objects_api_crud_svc \
     import (
         app as objects_api_crud,
-        router as objects_api_crud_router
+        router as objects_api_crud_router,
     )
 
 # objects_model_crud

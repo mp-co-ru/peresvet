@@ -11,7 +11,7 @@ class ObjectsModelCRUDSettings(ModelCRUDSettings):
         #: класс экзмепляров сущности в иерархии
         "class": "prsObject",
         #: список через запятую родительских классов
-        "parent_classes": "prsObject",
+        "parent_classes": "prsObject,prsFolder",
         #: флаг создания узла ``cn=system`` внутри узла экземпляра сущности
         "create_sys_node": True
     }

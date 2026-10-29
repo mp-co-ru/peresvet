@@ -15,6 +15,7 @@ from src.common import api_crud_svc as svc
 from src.common.authorization import authorize_action
 from src.services.objects.api_crud.objects_api_crud_settings import ObjectsAPICRUDSettings
 
+
 class ObjectCreateAttributes(svc.NodeAttributes):
     pass
 
@@ -94,6 +95,12 @@ async def create(payload: dict = None, error_handler: svc.ErrorHandler = Depends
         .. http:example::
             :request: ../../../../docs/source/samples/objects/addObjectIn.txt
             :response: ../../../../docs/source/samples/objects/addObjectOut.txt
+
+        * **folder** (bool) - если ``true``, создаётся папка ``prsFolder``,
+          а не объект. По умолчанию ``false``.
+        * **parentId** (str) - id родителя. Если поле пустое, узел создаётся
+          в корне ``objects``. Родителем может быть другой объект или
+          пользовательская папка ``prsFolder`` ветки объектов.
 
         * **attributes** (dict) - словарь с параметрами для создания обьекта.
 
@@ -222,6 +229,9 @@ async def read(
           0 - получение данных по указанному в ключе ``base`` узлу \n
           1 - поиск среди непосредственных потомков указанного в ``base`` узла\n
           2 - поиск по всему дереву, начиная с указанного в ``base`` узла.
+        * **hierarchy** (bool) - если true, обход спускается внутрь
+          пользовательских папок ``prsFolder``. При ``scope=1`` без этого флага
+          папка и то, что лежит в ней, в ответ не попадают.
         * **filter** (dict) - Словарь из атрибутов и их значений, из которых
           формируется фильтр для поиска. Необязательный атрибут.
 

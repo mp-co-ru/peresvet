@@ -14,3 +14,4 @@ alwaysApply: true
 - When changing shared models, settings, RPC behavior or cache behavior, identify affected services.
 - Prefer existing patterns in nearby services over new abstractions.
 - Document compatibility risks in the PR summary.
+- Однотипные сущности оформляй одним и тем же способом. Папка иерархии — класс `prsFolder` и поле `folder: true` в `POST` той сущности, в чьей ветке она лежит (`/v1/objects/`, `/v1/tags/`, `/v1/connectors/`, `/v1/schedules/`, `/v1/dataStorages/`, `/v1/methods/`). Отдельный ресурс `/folders` для папок не добавляй. Служебный класс `prsModelNode` оставляй корням сервисов и узлу `cn=system`.

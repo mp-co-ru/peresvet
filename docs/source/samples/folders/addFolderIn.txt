@@ -1,0 +1,15 @@
+POST /v1/folders HTTP/1.1
+Host: localhost
+Accept: application/json
+Content-Type: application/json
+Authorization: No Auth
+
+{
+    "parentId": "objects",
+    "attributes": {
+        "cn": "Режимы работы",
+        "description": "Группа тегов линии",
+        "prsActive": true,
+        "prsIndex": 1
+    }
+}

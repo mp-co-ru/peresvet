@@ -77,6 +77,7 @@ API Платформы Пересвет
    Тревоги<alerts>
    Теги<tags>
    Обьекты<objects>
+   Папки<folders>
    Коннекторы<connectors>
    Хранилища данных<dataStorages_api_doc>
    Интеграционные хранилища (v2)<integrational_v2>

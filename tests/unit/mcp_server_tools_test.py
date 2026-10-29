@@ -93,6 +93,10 @@ def test_mcp_tools_call_http_layer():
             await _unwrap(mcp_server.peresvet_method_folders_list)(base="root", scope=2, filter={"cn": ["stdlib"]})
             await _unwrap(mcp_server.peresvet_method_folder_update)(folder_id="f1", cn="renamed")
             await _unwrap(mcp_server.peresvet_method_folder_delete)(folder_id=["f1"])
+            await _unwrap(mcp_server.peresvet_folder_create)(cn="Цех", parent_id="objects", description="группа")
+            await _unwrap(mcp_server.peresvet_folders_list)(base="objects", scope=2, get_parent=True)
+            await _unwrap(mcp_server.peresvet_folder_update)(folder_id="folder-1", cn="Участок", parent_id="obj-1")
+            await _unwrap(mcp_server.peresvet_folder_delete)(folder_id="folder-1")
             await _unwrap(mcp_server.peresvet_method_description_import)(
                 yaml_text="folders: []",
                 parent_id="methods",
@@ -132,8 +136,24 @@ def test_mcp_tools_call_http_layer():
     assert catalog_calls
     assert catalog_calls[0][3]["attributes"]["prsCatalogMethodId"] == "cat-1"
     assert catalog_calls[0][3]["attributes"]["prsMethodAddress"] == "placeholder"
-    folder_create = next(item for item in captured if item[1] == "/v1/methods/folders" and item[0] == "POST")
+    folder_create = next(
+        item for item in captured
+        if item[1] == "/v1/methods/" and item[0] == "POST" and item[3] and item[3].get("folder") is True
+    )
     assert folder_create[3]["attributes"]["cn"] == "stdlib"
+    user_folder = next(item for item in captured if item[1] == "/v1/objects/" and item[0] == "POST" and item[3].get("folder") is True)
+    assert "parentId" not in user_folder[3]
+    assert user_folder[3]["attributes"]["cn"] == "Цех"
+    user_folder_list = next(
+        item for item in captured
+        if item[1] == "/v1/objects/" and item[0] == "GET" and item[2] and ("base", "objects") in item[2]
+    )
+    user_folder_move = next(
+        item for item in captured
+        if item[1] == "/v1/objects/" and item[0] == "PUT" and item[3] and item[3].get("id") == "folder-1"
+    )
+    assert user_folder_move[3]["id"] == "folder-1"
+    assert user_folder_move[3]["parentId"] == "obj-1"
     description = next(item for item in captured if item[1] == "/v1/methods/description")
     assert description[3] == {"yaml": "folders: []", "probe": True}
     assert "parentId" not in description[3]

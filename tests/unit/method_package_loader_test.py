@@ -62,7 +62,7 @@ def test_stdlib_package_seeds_folder_and_four_methods_once(monkeypatch, tmp_path
     assert created == 4
     folders = [
         node for node in hierarchy.nodes.values()
-        if node["parent"] == "methods-root" and node["attrs"].get("objectClass") == ["prsModelNode"]
+        if node["parent"] == "methods-root" and node["attrs"].get("objectClass") == ["prsFolder"]
     ]
     assert folders and folders[0]["attrs"]["cn"] == ["stdlib"]
     addresses = sorted(

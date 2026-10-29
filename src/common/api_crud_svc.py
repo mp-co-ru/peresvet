@@ -177,6 +177,15 @@ class NodeCreate(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
 
+    folder: bool = Field(
+        False,
+        title="Создать папку вместо экземпляра сущности",
+        description=(
+            "Если true, в той же ветке создаётся пользовательская папка "
+            "``prsFolder``, а не экземпляр этой сущности. "
+            "По умолчанию false: запрос создаёт обычный узел."
+        ),
+    )
     parentId: str | None = Field(None, title="Id родительского узла",
         description=(
             "Идентификатор родительского узла. "

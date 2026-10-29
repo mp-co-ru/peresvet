@@ -22,6 +22,8 @@ from .payloads import (
     method_description_payload,
     method_folder_payload,
     method_folder_query_to_params,
+    user_folder_payload,
+    user_folder_query_to_params,
     method_parameter_payload,
     prepare_data_query,
     ptz_command_payload,
@@ -234,8 +236,8 @@ async def peresvet_object_create(
     This wraps `POST /v1/objects/`.
 
     - `cn`: object name (required).
-    - `parent_id`: UUID of parent node. If omitted, object is created under the entity's base node.
-      This is the crucial field for building a tree (otherwise you'll get a "flat" list at root).
+    - `parent_id`: UUID of a parent object or user folder (`prsFolder`). If omitted, the object is created under the objects root.
+      A folder id is accepted. This is the crucial field for building a tree (otherwise you'll get a "flat" list at root).
     - `attrs`: extra node attributes (e.g. `prsActive`, `prsDefault`, `prsIndex`, `prsJsonConfigString`, ...).
     """
     attributes: dict[str, Any] = {"cn": cn}
@@ -310,11 +312,11 @@ async def peresvet_tag_create(
     measure_units: str | None = None,
     attrs: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Create a tag under an object node.
+    """Create a tag under an object or a user folder.
 
     Wraps `POST /v1/tags/`.
 
-    - `parent_id`: UUID of parent node (required for correct hierarchy).
+    - `parent_id`: UUID of a parent object or user folder (`prsFolder`) in the objects or tags branch.
     - `value_type_code`: 0 int | 1 float | 2 string | 3 discrete | 4 json | 5 table | 6 video stream.
     """
     attributes: dict[str, Any] = {"cn": cn, "prsValueTypeCode": value_type_code}
@@ -353,7 +355,9 @@ async def peresvet_apply_hierarchy(
 
     Behavior:
     - Objects are created under `root_parent_id` (and then under created parents).
+      `root_parent_id` may be a user folder id (`prsFolder`) in the objects branch.
     - Tags are created under the object they belong to (using tag `parentId`).
+      The payload shape is unchanged.
     - If `idempotent=true`, the tool tries to re-use existing children with the same `cn`
       under the same parent (scope=1) instead of creating duplicates.
     """
@@ -601,22 +605,20 @@ async def peresvet_method_folder_create(
 ) -> dict[str, Any]:
     """Create a folder in the shared method catalog.
 
-    Wraps `POST /v1/methods/folders`.
+    `POST /v1/methods/` with `"folder": true`, the same flag as the other entities.
 
     Omit `parent_id` to create the folder under the catalog root (`cn=methods,cn=prs`).
     Pass another folder id to nest it. Deleting a folder removes nested folders and methods.
     A folder that still has catalog methods referenced by `prsCatalogMethodId` returns 409.
     """
-    return await _request(
-        "POST",
-        "/v1/methods/folders",
-        json_body=method_folder_payload(
-            cn=cn,
-            parent_id=parent_id,
-            description=description,
-            attrs=attrs,
-        ),
+    body = method_folder_payload(
+        cn=cn,
+        parent_id=parent_id,
+        description=description,
+        attrs=attrs,
     )
+    body["folder"] = True
+    return await _request("POST", "/v1/methods/", json_body=body)
 
 
 @mcp.tool
@@ -628,14 +630,14 @@ async def peresvet_method_folders_list(
     attributes: list[str] | None = None,
     filter: dict[str, list[Any]] | None = None,
 ) -> dict[str, Any]:
-    """List method-catalog folders.
+    """List method-catalog folders (`prsFolder`).
 
-    Wraps `GET /v1/methods/folders`.
+    `GET /v1/methods/` with `objectClass=prsFolder`.
 
     - `base`: catalog root or a folder id. Search starts at the catalog root when omitted.
     - `scope`: 0 this node, 1 direct children, 2 subtree.
     """
-    query: dict[str, Any] = {"scope": scope}
+    query: dict[str, Any] = {"scope": scope, "filter": {"objectClass": ["prsFolder"]}}
     if base is not None:
         query["base"] = base
     if folder_id is not None:
@@ -643,10 +645,12 @@ async def peresvet_method_folders_list(
     if attributes is not None:
         query["attributes"] = attributes
     if filter is not None:
-        query["filter"] = filter
+        merged = dict(query["filter"])
+        merged.update(filter)
+        query["filter"] = merged
     return await _request(
         "GET",
-        "/v1/methods/folders",
+        "/v1/methods/",
         params=method_folder_query_to_params(query),
     )
 
@@ -662,11 +666,11 @@ async def peresvet_method_folder_update(
 ) -> dict[str, Any]:
     """Update a method-catalog folder.
 
-    Wraps `PUT /v1/methods/folders`.
+    `PUT /v1/methods/` with the folder id.
     """
     return await _request(
         "PUT",
-        "/v1/methods/folders",
+        "/v1/methods/",
         json_body=method_folder_payload(
             folder_id=folder_id,
             cn=cn,
@@ -681,12 +685,126 @@ async def peresvet_method_folder_update(
 async def peresvet_method_folder_delete(*, folder_id: str | list[str]) -> dict[str, Any]:
     """Delete method-catalog folders and their nested methods.
 
-    Wraps `DELETE /v1/methods/folders`. Returns 409 when a nested catalog method
-    is still referenced by a tag or alert instance.
+    `DELETE /v1/methods/` with the folder id. Returns 409 when a nested catalog
+    method is still referenced by a tag or alert instance.
     """
     return await _request(
         "DELETE",
-        "/v1/methods/folders",
+        "/v1/methods/",
+        json_body={"id": folder_id},
+    )
+
+
+@mcp.tool
+async def peresvet_folder_create(
+    *,
+    cn: str,
+    parent_id: str,
+    description: str | None = None,
+    attrs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Create a user folder (`prsFolder`) with the entity create flag.
+
+    `POST /v1/<branch>/` and `"folder": true`. A method-catalog folder uses
+    the same flag on `POST /v1/methods/`.
+
+    `parent_id` is a root name (`objects`, `tags`, `connectors`, `schedules`,
+    `dataStorages`) or a UUID in that branch. A root name omits `parentId`:
+    the folder is created in the service root. The name `methods` is rejected.
+    """
+    branch = parent_id if parent_id in {
+        "objects", "tags", "connectors", "schedules", "dataStorages",
+    } else "objects"
+    body = user_folder_payload(
+        cn=cn,
+        parent_id=None if branch == parent_id else parent_id,
+        description=description,
+        attrs=attrs,
+    )
+    body["folder"] = True
+    return await _request("POST", f"/v1/{branch}/", json_body=body)
+
+
+@mcp.tool
+async def peresvet_folders_list(
+    *,
+    base: str | None = None,
+    scope: int = 1,
+    folder_id: str | list[str] | None = None,
+    attributes: list[str] | None = None,
+    filter: dict[str, list[Any]] | None = None,
+    get_parent: bool = False,
+) -> dict[str, Any]:
+    """List user folders (`prsFolder` only) through the branch entity API.
+
+    `GET /v1/<branch>/` with `objectClass=prsFolder`.
+
+    - `base`: UUID or a root name (`objects`, `tags`, `connectors`, `schedules`, `dataStorages`).
+    - `scope`: 0 this node, 1 direct children, 2 subtree.
+    """
+    query: dict[str, Any] = {
+        "scope": scope,
+        "getParent": get_parent,
+        "filter": {"objectClass": ["prsFolder"]},
+    }
+    if base is not None:
+        query["base"] = base
+    if folder_id is not None:
+        query["id"] = folder_id
+    if attributes is not None:
+        query["attributes"] = attributes
+    if filter is not None:
+        query["filter"] = filter
+    branch = base if base in {
+        "objects", "tags", "connectors", "schedules", "dataStorages",
+    } else "objects"
+    return await _request(
+        "GET",
+        f"/v1/{branch}/",
+        params=user_folder_query_to_params(query),
+    )
+
+
+@mcp.tool
+async def peresvet_folder_update(
+    *,
+    folder_id: str,
+    cn: str | None = None,
+    description: str | None = None,
+    parent_id: str | None = None,
+    attrs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Rename or move a user folder.
+
+    `PUT /v1/objects/` by default. The objects service accepts a folder only
+    in the objects branch; pass a folder of another branch through that
+    branch's update (`PUT /v1/tags/` and the others) with the folder id.
+    Move rejects cycles and a parent in another branch.
+    """
+    return await _request(
+        "PUT",
+        "/v1/objects/",
+        json_body=user_folder_payload(
+            folder_id=folder_id,
+            cn=cn,
+            parent_id=parent_id,
+            description=description,
+            attrs=attrs,
+        ),
+    )
+
+
+@mcp.tool
+async def peresvet_folder_delete(*, folder_id: str | list[str]) -> dict[str, Any]:
+    """Delete a user folder after deleting nested entities.
+
+    `DELETE /v1/objects/` for a folder in the objects branch. Nested tags,
+    objects and other entities are deleted through their own APIs, so
+    `deleted` events still fire.
+    """
+    return await _request(
+        "DELETE",
+        "/v1/objects/",
         json_body={"id": folder_id},
     )
 

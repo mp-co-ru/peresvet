@@ -228,6 +228,12 @@ async def read_v2(
 
 @router_v2.post("/", response_model=svc.NodeCreateResult, status_code=201)
 async def create_v2(payload: dict | None = None, error_handler: svc.ErrorHandler = Depends()):
+    """
+    Метод добавляет хранилище данных (API v2).
+
+    * **parentId** (str) - id пользовательской папки ``prsFolder`` в ветке
+      хранилищ. Если поле пустое, хранилище создаётся в корне ``dataStorages``.
+    """
     if payload is None:
         payload = {}
     try:

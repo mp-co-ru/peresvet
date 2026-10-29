@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261019-api-origin-v1"
+CODE_VERSION = "20261029-user-folders-v1"
 
 
 def _parts():
@@ -55,13 +55,14 @@ def test_methods_catalog_root_and_menus():
     assert 'prs-method-description-probe").addEventListener' not in javascript
     assert "/v1/methods/description" in javascript
     expand_at = javascript.find('if("prsMethodsRoot"===r||"prsModelNode"===r)')
-    gate_at = javascript.find('let p=Ce[r];if(!p)return;')
+    gate_at = javascript.find('let p=prsClassApi(r,t);if(!p)return;')
     assert expand_at != -1 and gate_at != -1 and expand_at < gate_at
-    assert 'case"prsTag":a("tags"===n?["tags"]:["__copy__","__active__","__delete__","alerts","methods"]);' in javascript
+    assert 'case"prsTag":a("tags"===n?["userFolders","tags"]:["__copy__","__active__","__delete__","alerts","methods"]);' in javascript
     assert 'case"prsAlert":a(["__copy__","methods","__active__","__delete__"]);' in javascript
     assert "prsSyncMethodCatalogForm" in javascript
     assert "prs.catalog.new" in javascript
-    assert "/v1/methods/folders" in javascript
+    assert "/v1/methods/folders" not in javascript
+    assert "prsCreateMethodFolder(row){prsCreateUserFolder(row)}" in javascript
     assert 'if("prsModelNode"===fallback&&"prsMethod"===oc)return' in javascript
     assert 'id="prs-catalog-method-dialog"' not in html
     assert 'id="input-prsCatalogMethodId"' in html

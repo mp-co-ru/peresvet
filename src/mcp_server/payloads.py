@@ -397,6 +397,49 @@ def connector_update_payload(
     return payload
 
 
+def user_folder_query_to_params(query: dict[str, Any]) -> list[tuple[str, str]]:
+    """Query string for listing ``prsFolder`` via the branch entity API."""
+    params: list[tuple[str, str]] = []
+    if query.get("id") is not None:
+        add_list(params, "id", query["id"])
+    if query.get("base") is not None:
+        params.append(("base", str(query["base"])))
+    if query.get("scope") is not None:
+        params.append(("scope", str(query["scope"])))
+    if query.get("getParent") is not None:
+        params.append(("getParent", "true" if query["getParent"] else "false"))
+    if query.get("attributes") is not None:
+        add_list(params, "attributes", query["attributes"])
+    if query.get("filter") is not None:
+        params.append(("filter", json.dumps(query["filter"], ensure_ascii=False)))
+    return params
+
+
+def user_folder_payload(
+    *,
+    cn: str | None = None,
+    parent_id: str | None = None,
+    description: str | None = None,
+    folder_id: str | None = None,
+    attrs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    attributes: dict[str, Any] = {}
+    if cn is not None:
+        attributes["cn"] = cn
+    if description is not None:
+        attributes["description"] = description
+    if attrs:
+        attributes.update(attrs)
+    body: dict[str, Any] = {}
+    if folder_id is not None:
+        body["id"] = folder_id
+    if parent_id is not None:
+        body["parentId"] = parent_id
+    if attributes:
+        body["attributes"] = attributes
+    return body
+
+
 def method_folder_query_to_params(query: dict[str, Any]) -> list[tuple[str, str]]:
     """Query string for `GET /v1/methods/folders` (no deref/hierarchy flags)."""
     params: list[tuple[str, str]] = []
