@@ -22,6 +22,8 @@ from .payloads import (
     method_description_payload,
     method_folder_payload,
     method_folder_query_to_params,
+    user_folder_payload,
+    user_folder_query_to_params,
     method_parameter_payload,
     prepare_data_query,
     ptz_command_payload,
@@ -234,8 +236,8 @@ async def peresvet_object_create(
     This wraps `POST /v1/objects/`.
 
     - `cn`: object name (required).
-    - `parent_id`: UUID of parent node. If omitted, object is created under the entity's base node.
-      This is the crucial field for building a tree (otherwise you'll get a "flat" list at root).
+    - `parent_id`: UUID of a parent object or user folder (`prsFolder`). If omitted, the object is created under the objects root.
+      A folder id is accepted. This is the crucial field for building a tree (otherwise you'll get a "flat" list at root).
     - `attrs`: extra node attributes (e.g. `prsActive`, `prsDefault`, `prsIndex`, `prsJsonConfigString`, ...).
     """
     attributes: dict[str, Any] = {"cn": cn}
@@ -310,11 +312,11 @@ async def peresvet_tag_create(
     measure_units: str | None = None,
     attrs: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Create a tag under an object node.
+    """Create a tag under an object or a user folder.
 
     Wraps `POST /v1/tags/`.
 
-    - `parent_id`: UUID of parent node (required for correct hierarchy).
+    - `parent_id`: UUID of a parent object or user folder (`prsFolder`) in the objects or tags branch.
     - `value_type_code`: 0 int | 1 float | 2 string | 3 discrete | 4 json | 5 table | 6 video stream.
     """
     attributes: dict[str, Any] = {"cn": cn, "prsValueTypeCode": value_type_code}
@@ -353,7 +355,9 @@ async def peresvet_apply_hierarchy(
 
     Behavior:
     - Objects are created under `root_parent_id` (and then under created parents).
+      `root_parent_id` may be a user folder id (`prsFolder`) in the objects branch.
     - Tags are created under the object they belong to (using tag `parentId`).
+      The payload shape is unchanged.
     - If `idempotent=true`, the tool tries to re-use existing children with the same `cn`
       under the same parent (scope=1) instead of creating duplicates.
     """
@@ -687,6 +691,108 @@ async def peresvet_method_folder_delete(*, folder_id: str | list[str]) -> dict[s
     return await _request(
         "DELETE",
         "/v1/methods/folders",
+        json_body={"id": folder_id},
+    )
+
+
+@mcp.tool
+async def peresvet_folder_create(
+    *,
+    cn: str,
+    parent_id: str,
+    description: str | None = None,
+    attrs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Create a user folder (`prsFolder`).
+
+    Wraps `POST /v1/folders`. This is not a method-catalog folder
+    (`POST /v1/methods/folders` stays on `prsModelNode`).
+
+    `parent_id` is a UUID or a root name: `objects`, `tags`, `connectors`,
+    `schedules`, `dataStorages`. The name `methods` is rejected.
+    """
+    return await _request(
+        "POST",
+        "/v1/folders",
+        json_body=user_folder_payload(
+            cn=cn,
+            parent_id=parent_id,
+            description=description,
+            attrs=attrs,
+        ),
+    )
+
+
+@mcp.tool
+async def peresvet_folders_list(
+    *,
+    base: str | None = None,
+    scope: int = 1,
+    folder_id: str | list[str] | None = None,
+    attributes: list[str] | None = None,
+    filter: dict[str, list[Any]] | None = None,
+    get_parent: bool = False,
+) -> dict[str, Any]:
+    """List user folders (`prsFolder` only).
+
+    Wraps `GET /v1/folders`.
+
+    - `base`: UUID or a root name (`objects`, `tags`, `connectors`, `schedules`, `dataStorages`).
+    - `scope`: 0 this node, 1 direct children, 2 subtree.
+    """
+    query: dict[str, Any] = {"scope": scope, "getParent": get_parent}
+    if base is not None:
+        query["base"] = base
+    if folder_id is not None:
+        query["id"] = folder_id
+    if attributes is not None:
+        query["attributes"] = attributes
+    if filter is not None:
+        query["filter"] = filter
+    return await _request(
+        "GET",
+        "/v1/folders",
+        params=user_folder_query_to_params(query),
+    )
+
+
+@mcp.tool
+async def peresvet_folder_update(
+    *,
+    folder_id: str,
+    cn: str | None = None,
+    description: str | None = None,
+    parent_id: str | None = None,
+    attrs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Rename or move a user folder.
+
+    Wraps `PUT /v1/folders`. Move rejects cycles and a parent whose context
+    does not allow the folder.
+    """
+    return await _request(
+        "PUT",
+        "/v1/folders",
+        json_body=user_folder_payload(
+            folder_id=folder_id,
+            cn=cn,
+            parent_id=parent_id,
+            description=description,
+            attrs=attrs,
+        ),
+    )
+
+
+@mcp.tool
+async def peresvet_folder_delete(*, folder_id: str | list[str]) -> dict[str, Any]:
+    """Delete a user folder after deleting nested entities.
+
+    Wraps `DELETE /v1/folders`. Nested tags, objects and other entities are
+    deleted through their own APIs, so `deleted` events still fire.
+    """
+    return await _request(
+        "DELETE",
+        "/v1/folders",
         json_body={"id": folder_id},
     )
 

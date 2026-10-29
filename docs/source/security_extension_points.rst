@@ -126,6 +126,10 @@ RPC-ответы также проходят через extension points:
   ``prsTag.delete``;
 * аналогично для ``prsAlert``, ``prsMethod``, ``prsConnector``,
   ``prsDataStorage``, ``prsSchedule``.
+* ``prsFolder.create`` / ``prsFolder.read`` / ``prsFolder.update`` /
+  ``prsFolder.delete`` — пользовательские папки иерархии
+  (``/v1/folders``). Каталог методов по-прежнему использует
+  ``prsMethod.create|read|update|delete``.
 * copy-операции используют действия вида ``prsObject.copy``,
   ``prsTag.copy``, ``prsAlert.copy``, ``prsMethod.copy``,
   ``prsConnector.copy``.

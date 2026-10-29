@@ -350,3 +350,10 @@ objectClass ( 1.3.6.1.4.1.58316.2.4.21
 	NAME 'prsDatastorageTagOperationParameter'
 	DESC 'параметр операции, дочерний к prsDatastorageTagOperation'
 	SUP prsModelNode STRUCTURAL)
+
+# Пользовательская папка. Не prsModelNode: тот класс — служебные корни,
+# cn=system и папки каталога методов. Обязателен только унаследованный cn.
+objectClass ( 1.3.6.1.4.1.58316.2.4.22
+	NAME 'prsFolder'
+	DESC 'пользовательская папка иерархии'
+	SUP prsModelNode STRUCTURAL)

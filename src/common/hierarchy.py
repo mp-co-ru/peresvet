@@ -552,7 +552,7 @@ class Hierarchy:
             ValueError: в случае отсутствия узла генерирует исключение
 
         Returns:
-            str: значение атрибута objectClass (одно значение, исключая ``top``)
+            str: структурный класс узла (не SUP и не ``top``)
         """
         with self._cm.connection() as conn:
             res = conn.search_s(base=self._base_dn, scope=CN_SCOPE_SUBTREE,
@@ -561,11 +561,10 @@ class Hierarchy:
                 raise ValueError(f"Узел {node} не найден.")
 
             obj_classes = res[0][1]["objectClass"]
-            try:
-                obj_classes.remove(b'top')
-            except:
-                pass
-            return obj_classes[0].decode()
+            # Ленивый импорт: hierarchy_folders сам импортирует константы scope.
+            from src.common.hierarchy_folders import node_class_from_object_classes
+
+            return node_class_from_object_classes(obj_classes)
 
     async def get_node_id(self, node_dn: str) -> str:
         with self._cm.connection() as conn:

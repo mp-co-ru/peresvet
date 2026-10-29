@@ -277,7 +277,7 @@ class ConnectorsMQTTApp(AppSvc):
         if not self._config.nodes: # type: ignore
             payload = {
                 "base": "cn=connectors,cn=prs",
-                "scope": hierarchy.CN_SCOPE_ONELEVEL,
+                "scope": hierarchy.CN_SCOPE_SUBTREE,
                 "filter": {"objectClass": ["prsConnector"]}
             }
             res = await self._hierarchy.search(payload)

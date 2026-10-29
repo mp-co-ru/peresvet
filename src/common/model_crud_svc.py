@@ -221,7 +221,7 @@ class ModelCRUDSvc(Svc):
 
         new_parent = mes.get("parentId")
         if new_parent:
-            if not self._hierarchy.does_node_exist(new_parent):
+            if not await self._hierarchy.does_node_exist(new_parent):
                 err_mes = f"Указанный в качестве нового родителя узел {new_parent} не существует."
                 self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                 res_response = {
@@ -232,7 +232,7 @@ class ModelCRUDSvc(Svc):
                 }
                 return res_response
 
-            if not self._check_parent_class(new_parent):
+            if not await self._check_parent_class(new_parent):
                 err_mes = "Неправильный класс нового родительского узла."
                 self._logger.error(f"{self._config.svc_name} :: {err_mes}")
                 res_response = {
@@ -640,6 +640,11 @@ class ModelCRUDSvc(Svc):
                     "attributes": item[2]
                 })
         else:
+            # Папка — другой класс. Без неё обход hierarchy=true не заходит
+            # внутрь prsFolder и теряет вложенные узлы. Без папок набор тот же.
+            classes = list(mes_data["filter"].get("objectClass") or [])
+            if "prsFolder" not in classes:
+                mes_data["filter"]["objectClass"] = classes + ["prsFolder"]
             mes_data["scope"] = CN_SCOPE_ONELEVEL
             # For hierarchy mode we must not dereference aliases: it can jump outside the subtree
             # and create cycles (e.g. alias->target->...->alias).
@@ -835,11 +840,21 @@ class ModelCRUDSvc(Svc):
         if self._config.hierarchy["node_id"] == parent_id:
             return True
 
-        if self._config.hierarchy["parent_classes"]:
-            node_class = await self._hierarchy.get_node_class(parent_id)
-            if (node_class in
-                self._config.hierarchy["parent_classes"]):
-                return True
+        parent_classes = self._config.hierarchy.get("parent_classes") or []
+        if not parent_classes:
+            return False
+
+        node_class = await self._hierarchy.get_node_class(parent_id)
+        if node_class == "prsFolder":
+            if "prsFolder" not in parent_classes:
+                return False
+            from src.common.hierarchy_folders import folder_accepts_child
+
+            return await folder_accepts_child(
+                self._hierarchy, parent_id, self._config.hierarchy["class"]
+            )
+        if node_class in parent_classes:
+            return True
 
         return False
 

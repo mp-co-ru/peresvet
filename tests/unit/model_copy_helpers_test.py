@@ -2,7 +2,9 @@ import asyncio
 from types import SimpleNamespace
 from uuid import uuid4
 
+from src.common.hierarchy import CN_SCOPE_SUBTREE
 from src.common.model_copy import (
+    COPY_ENTITY_CLASSES,
     _ldap_row_to_flat_payload,
     _list_data_storage_node_ids,
     _remap_link_operations,
@@ -107,12 +109,7 @@ def test_uniquify_cn_and_order_and_collect():
 
         async def search(self, payload):
             self.calls += 1
-            if payload.get("filter", {}).get("objectClass") == [
-                "prsObject",
-                "prsTag",
-                "prsAlert",
-                "prsMethod",
-            ]:
+            if payload.get("filter", {}).get("objectClass") == list(COPY_ENTITY_CLASSES):
                 return [(ROOT, None, {"cn": ["root"]}), (CHILD, None, {"cn": ["child"]})]
             if self.calls == 1:
                 return [("exists", None, {})]
@@ -158,13 +155,9 @@ def test_list_ds_ids_and_copy_object_tree():
 
         async def search(self, payload):
             if payload.get("base") == "ds-root":
+                assert payload.get("scope") == CN_SCOPE_SUBTREE
                 return [("ds1", None, {"cn": ["ds"]})]
-            if payload.get("filter", {}).get("objectClass") == [
-                "prsObject",
-                "prsTag",
-                "prsAlert",
-                "prsMethod",
-            ]:
+            if payload.get("filter", {}).get("objectClass") == list(COPY_ENTITY_CLASSES):
                 return [
                     (ROOT, None, {"cn": ["obj"], "prsActive": ["TRUE"]}),
                     (CHILD, None, {"cn": ["tag"], "prsActive": ["TRUE"], "prsValueTypeCode": ["1"]}),
@@ -257,6 +250,57 @@ def test_copy_single_method_and_wrong_class():
         )
     )
     assert copied_to_folder == {"id": "copied"}
+
+
+def test_copy_object_recreates_intermediate_folder_and_keeps_plain_order():
+    folder = "33333333-3333-3333-3333-333333333333"
+    classes = {ROOT: "prsObject", folder: "prsFolder", CHILD: "prsTag"}
+    parents = {ROOT: "outside", folder: ROOT, CHILD: folder}
+
+    class H:
+        async def get_node_id(self, dn):
+            return None
+
+        async def get_node_class(self, nid):
+            return classes[nid]
+
+        async def get_parent(self, nid):
+            return parents[nid], None
+
+        async def get_node_dn(self, nid):
+            return f"cn={nid}"
+
+        async def search(self, payload):
+            if payload.get("filter", {}).get("objectClass") == list(COPY_ENTITY_CLASSES):
+                return [
+                    (ROOT, None, {"cn": ["obj"], "prsActive": ["TRUE"]}),
+                    (folder, None, {"cn": ["group"], "prsActive": ["TRUE"]}),
+                    (CHILD, None, {"cn": ["tag"], "prsActive": ["TRUE"], "prsValueTypeCode": ["1"]}),
+                ]
+            return []
+
+    created = []
+
+    async def post_message(*, mes, reply, routing_key):
+        created.append((routing_key, mes["parentId"], mes["attributes"]["cn"]))
+        return {"id": f"new-{mes['attributes']['cn']}"}
+
+    result = asyncio.run(
+        copy_subtree_rooted_at(
+            H(),
+            post_message,
+            root_source_id=ROOT,
+            expected_root_class="prsObject",
+            new_parent_id="new-parent",
+            new_root_cn="obj-copy",
+        )
+    )
+    assert result["id"] == "new-obj-copy"
+    assert created == [
+        ("prsObject.api_crud.create", "new-parent", "obj-copy"),
+        ("prsFolder.api_crud.create", "new-obj-copy", "group"),
+        ("prsTag.api_crud.create", "new-group", "tag"),
+    ]
 
 
 def test_copy_subtree_wrong_class():

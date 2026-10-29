@@ -199,7 +199,7 @@ async def active_video_tag_linked(hierarchy_api, connector_id: str) -> bool:
 async def _camera_for_tag(hierarchy_api, tag_id: str) -> tuple[str | None, CameraConfig | None, VideoFailure | None]:
     connectors = await hierarchy_api.search({
         "base": "cn=connectors,cn=prs",
-        "scope": hierarchy.CN_SCOPE_ONELEVEL,
+        "scope": hierarchy.CN_SCOPE_SUBTREE,
         "filter": {"objectClass": ["prsConnector"]},
         "attributes": ["prsEntityTypeCode", "prsActive", "prsJsonConfigString"],
     })

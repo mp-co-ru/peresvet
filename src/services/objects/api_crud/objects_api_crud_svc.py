@@ -330,3 +330,106 @@ async def delete(payload: ObjectRead, error_handler: svc.ErrorHandler = Depends(
     return res
 
 app.include_router(router, tags=["objects"])
+
+
+class FolderCreate(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
+    parentId: str | None = Field(None, title="Родитель: корень ветки, объект или папка")
+    attributes: svc.NodeAttributes = Field(default_factory=svc.NodeAttributes)
+
+
+class FolderUpdate(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
+    id: str = Field(title="Идентификатор папки")
+    parentId: str | None = Field(None, title="Новый родитель")
+    attributes: svc.NodeAttributes | None = None
+
+    @field_validator("id")
+    @classmethod
+    def _folder_id(cls, v: str) -> str:
+        return svc.valid_uuid(v)
+
+
+folders_router = APIRouter(prefix=f"{settings.api_version}")
+
+
+@folders_router.post("/folders", response_model=svc.NodeCreateResult, status_code=201)
+async def create_folder(payload: FolderCreate, error_handler: svc.ErrorHandler = Depends()):
+    body = payload.model_dump(exclude_none=True)
+    await authorize_action(
+        "prsFolder.create",
+        resource={"parentId": body.get("parentId")},
+        payload=body,
+    )
+    res = await app._post_message(mes=body, reply=True, routing_key="prsFolder.api_crud.create")
+    await error_handler.handle_error(res)
+    return res
+
+
+@folders_router.get("/folders", status_code=200)
+async def read_folders(
+    id: list[str] | None = Query(None),
+    base: str | None = None,
+    scope: int = 1,
+    attributes: list[str] | None = Query(None),
+    filter: str | None = None,
+    getParent: bool = False,
+    error_handler: svc.ErrorHandler = Depends(),
+):
+    body: dict = {"scope": scope, "getParent": getParent}
+    if id is not None:
+        body["id"] = id
+    if base is not None:
+        body["base"] = base
+    if attributes is not None:
+        body["attributes"] = attributes
+    if filter is not None:
+        try:
+            body["filter"] = json.loads(filter)
+        except Exception as ex:
+            res = {"error": {"code": 422, "message": f"Некорректный filter: {ex}"}}
+            await error_handler.handle_error(res)
+    await authorize_action(
+        "prsFolder.read",
+        resource={"base": base, "ids": id},
+        payload=body,
+    )
+    res = await app._post_message(mes=body, reply=True, routing_key="prsFolder.api_crud.read")
+    await error_handler.handle_error(res)
+    return res
+
+
+@folders_router.put("/folders", status_code=202)
+async def update_folder(payload: dict, error_handler: svc.ErrorHandler = Depends()):
+    try:
+        validated = FolderUpdate.model_validate(payload)
+    except Exception as ex:
+        res = {"error": {"code": 422, "message": f"Несоответствие входных данных: {ex}"}}
+        await error_handler.handle_error(res)
+    body = validated.model_dump(exclude_unset=True)
+    await authorize_action(
+        "prsFolder.update",
+        resource={"id": body.get("id"), "parentId": body.get("parentId")},
+        payload=body,
+    )
+    res = await app._post_message(mes=body, reply=True, routing_key="prsFolder.api_crud.update")
+    await error_handler.handle_error(res)
+    return res
+
+
+@folders_router.delete("/folders", status_code=202)
+async def delete_folder(payload: svc.NodeDelete, error_handler: svc.ErrorHandler = Depends()):
+    body = payload.model_dump()
+    await authorize_action(
+        "prsFolder.delete",
+        resource={"ids": body.get("id")},
+        payload=body,
+    )
+    res = await app._post_message(mes=body, reply=True, routing_key="prsFolder.api_crud.delete")
+    await error_handler.handle_error(res)
+    return res
+
+
+app.include_router(folders_router, tags=["folders"])

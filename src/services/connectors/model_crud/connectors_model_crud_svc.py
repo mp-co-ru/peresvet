@@ -116,7 +116,7 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
     async def _find_connector_by_tag(self, tag_id: str) -> list[str]:
         payload = {
             "base": "cn=connectors,cn=prs",
-            "scope": hierarchy.CN_SCOPE_ONELEVEL,
+            "scope": hierarchy.CN_SCOPE_SUBTREE,
             "filter": {"objectClass": ["prsConnector"]}
         }
         res = await self._hierarchy.search(payload)

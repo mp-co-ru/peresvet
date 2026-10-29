@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261019-api-origin-v1"
+CODE_VERSION = "20261029-user-folders-v1"
 
 
 def _on_render() -> str:
@@ -21,4 +21,4 @@ def test_api_urls_keep_the_page_origin():
     assert "${window.location.protocol}//${window.location.hostname}" not in javascript
     assert 'addNodeToHierarchy=e=>{url=window.location.origin+"/v1/"+e+"/"' in javascript
     assert 'Откройте https://"+window.location.host+"/grafana/' in javascript
-    assert javascript.count("window.location.origin") == 51
+    assert javascript.count("window.location.origin") == 54

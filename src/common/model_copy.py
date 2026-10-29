@@ -17,7 +17,7 @@ from src.common.hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
 
 _logger = logging.getLogger(__name__)
 
-COPY_ENTITY_CLASSES = ("prsObject", "prsTag", "prsAlert", "prsMethod")
+COPY_ENTITY_CLASSES = ("prsObject", "prsTag", "prsAlert", "prsMethod", "prsFolder")
 
 ENTITY_ALLOWED_ATTRS: dict[str, frozenset[str]] = {
     "prsObject": frozenset(
@@ -74,6 +74,7 @@ ENTITY_ALLOWED_ATTRS: dict[str, frozenset[str]] = {
             "prsCatalogMethodId",
         }
     ),
+    "prsFolder": frozenset({"cn", "description", "prsActive", "prsIndex"}),
     "prsMethodParameter": frozenset(
         {
             "cn",
@@ -344,6 +345,7 @@ async def copy_nodes_via_amqp(
         "prsTag": "prsTag.api_crud.create",
         "prsAlert": "prsAlert.api_crud.create",
         "prsMethod": "prsMethod.api_crud.create",
+        "prsFolder": "prsFolder.api_crud.create",
     }
 
     for nid, oc, raw_attrs in ordered_nodes:
@@ -544,7 +546,7 @@ async def _list_data_storage_node_ids(hierarchy) -> list[str]:
     rows = await hierarchy.search(
         {
             "base": ds_root,
-            "scope": CN_SCOPE_ONELEVEL,
+            "scope": CN_SCOPE_SUBTREE,
             "filter": {"objectClass": ["prsDataStorage"]},
             "attributes": ["cn"],
             "deref": False,
