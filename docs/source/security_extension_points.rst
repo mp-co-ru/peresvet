@@ -128,7 +128,10 @@ RPC-ответы также проходят через extension points:
   ``prsDataStorage``, ``prsSchedule``.
 * ``prsFolder.create`` / ``prsFolder.read`` / ``prsFolder.update`` /
   ``prsFolder.delete`` — пользовательские папки иерархии
-  (``/v1/folders``). Каталог методов по-прежнему использует
+  (``/v1/folders``). Это действие разрешает удалить папку вместе
+  с содержимым: вложенные сущности уходят тем же каскадом, что и при
+  удалении родительского объекта, без отдельного ``prsTag.delete``
+  на каждый узел. Каталог методов по-прежнему использует
   ``prsMethod.create|read|update|delete``.
 * copy-операции используют действия вида ``prsObject.copy``,
   ``prsTag.copy``, ``prsAlert.copy``, ``prsMethod.copy``,

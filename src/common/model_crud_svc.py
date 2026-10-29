@@ -13,6 +13,7 @@ from uuid import UUID
 sys.path.append(".")
 
 from src.common.hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
+from src.common.hierarchy_folders import node_class_from_object_classes
 from src.common.svc import Svc
 from src.common.model_crud_settings import ModelCRUDSettings
 
@@ -220,6 +221,14 @@ class ModelCRUDSvc(Svc):
         self._logger.debug(f"Обновление узла {id}...")
 
         new_parent = mes.get("parentId")
+        if new_parent in ("objects", "tags", "connectors", "schedules", "dataStorages"):
+            from src.common.hierarchy_folders import resolve_folder_parent_id
+
+            resolved, resolve_error = await resolve_folder_parent_id(self._hierarchy, new_parent)
+            if resolve_error:
+                self._logger.error(f"{self._config.svc_name} :: {resolve_error}")
+                return {"error": {"code": 422, "message": resolve_error}}
+            new_parent = resolved
         if new_parent:
             if not await self._hierarchy.does_node_exist(new_parent):
                 err_mes = f"Указанный в качестве нового родителя узел {new_parent} не существует."
@@ -409,7 +418,7 @@ class ModelCRUDSvc(Svc):
                     # пропустим самого себя
                     continue
 
-                objectClass = item[2]["objectClass"][0]
+                objectClass = node_class_from_object_classes(item[2].get("objectClass"))
                 if not (objectClass in unnotified_classes):
                     children.append({
                         "id": item[0],

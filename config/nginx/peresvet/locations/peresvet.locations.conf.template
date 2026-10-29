@@ -155,6 +155,30 @@ location = /v1/objects/ {
     proxy_pass http://objects_api_crud;
 }
 
+location = /v1/folders {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
+    proxy_pass http://objects_api_crud;
+}
+
+location = /v1/folders/ {
+    # add proxy cors
+    add_header Access-Control-Allow-Headers '*' always;
+    add_header Access-Control-Allow-Methods '*' always;
+    add_header Access-Control-Allow-Origin  '*' always;
+
+    if ($request_method = "OPTIONS") {
+      return 204;
+    }
+    proxy_pass http://objects_api_crud;
+}
+
 location = /v1/schedules/ {
     # add proxy cors
     add_header Access-Control-Allow-Headers '*' always;

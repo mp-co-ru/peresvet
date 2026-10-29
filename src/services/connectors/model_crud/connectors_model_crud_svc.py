@@ -127,7 +127,11 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         result = []
         for conn_id in connectors:
-            payload = {"base": conn_id, "filter": {"cn": [tag_id]}}
+            payload = {
+                "base": conn_id,
+                "scope": hierarchy.CN_SCOPE_SUBTREE,
+                "filter": {"cn": [tag_id], "objectClass": ["prsConnectorTagData"]},
+            }
             res = await self._hierarchy.search(payload)
             if res:
                 result.append(conn_id)
@@ -239,8 +243,10 @@ class ConnectorsModelCRUD(model_crud_svc.ModelCRUDSvc):
     async def _unlink_tag(self, conn_id: str, tag_id: str) -> None:
         payload = {
             "base": conn_id,
+            "scope": hierarchy.CN_SCOPE_SUBTREE,
             "filter": {
-                "cn": [tag_id]
+                "cn": [tag_id],
+                "objectClass": ["prsConnectorTagData"],
             }
         }
         res = await self._hierarchy.search(payload=payload)

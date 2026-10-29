@@ -206,7 +206,7 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             {
                 "base": self._config.hierarchy["node_id"],
                 "filter": {"objectClass": ["prsDataStorage"], "prsDefault": ["TRUE"]},
-                "scope": hierarchy.CN_SCOPE_ONELEVEL,
+                "scope": hierarchy.CN_SCOPE_SUBTREE,
             }
         )
 

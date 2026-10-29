@@ -10,6 +10,8 @@ from typing import Any
 
 ROOT_NAMES = ("objects", "tags", "connectors", "schedules", "dataStorages")
 
+_FILTER_META = set("()\\*\x00,=<>")
+
 # Какие классы допустимы внутри папки данного корня.
 CONTEXT_CHILD_CLASSES = {
     "objects": frozenset({"prsFolder", "prsObject", "prsTag"}),
@@ -105,6 +107,21 @@ def node_class_from_object_classes(object_classes) -> str:
     return (specific or without_top)[0]
 
 
+def folder_name_error(cn: str | None) -> str | None:
+    """Имя ``system`` занято служебным узлом и не годится для папки."""
+    if str(cn or "").strip() == "system":
+        return "Имя system зарезервировано."
+    return None
+
+
+def node_ref_error(node_ref: str | None) -> str | None:
+    """Ссылка на узел — GUID или короткое имя, не DN и не кусок LDAP-фильтра."""
+    text = str(node_ref or "")
+    if not text or any(char in text for char in _FILTER_META):
+        return "Некорректный идентификатор узла."
+    return None
+
+
 def folder_ldap_attributes(raw: dict | None, *, creating: bool) -> dict:
     """Атрибуты папки для LDAP. objectClass выставляется только при создании."""
     source = dict(raw or {})
@@ -172,7 +189,15 @@ async def root_context(hierarchy, node_id: str | None) -> str | None:
         if cn == "system":
             return None
         if node_class == "prsModelNode":
-            if cn in CONTEXT_CHILD_CLASSES:
+            if cn not in CONTEXT_CHILD_CLASSES:
+                return None
+            # Корнем ветки считается только прямой потомок cn=prs.
+            # Одноимённый prsModelNode в каталоге методов корнем не является.
+            try:
+                parent_id, _ = await hierarchy.get_parent(current)
+            except Exception:
+                return None
+            if await _node_cn(hierarchy, parent_id) == "prs":
                 return cn
             return None
         if node_class == "prsObject":
@@ -200,6 +225,9 @@ async def resolve_folder_parent_id(hierarchy, parent_ref: str | None) -> tuple[s
         if not node_id:
             return None, f"Корень {parent_ref} не найден."
         return node_id, None
+    ref_error = node_ref_error(str(parent_ref))
+    if ref_error:
+        return None, ref_error
     return str(parent_ref), None
 
 

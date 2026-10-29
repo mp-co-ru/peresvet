@@ -290,7 +290,11 @@ class ConnectorsMQTTApp(AppSvc):
 
         result = []
         for conn_id in connectors:
-            payload = {"base": conn_id, "filter": {"cn": [tag_id]}}
+            payload = {
+                "base": conn_id,
+                "scope": hierarchy.CN_SCOPE_SUBTREE,
+                "filter": {"cn": [tag_id], "objectClass": ["prsConnectorTagData"]},
+            }
             res = await self._hierarchy.search(payload)
             if res:
                 result.append(conn_id)

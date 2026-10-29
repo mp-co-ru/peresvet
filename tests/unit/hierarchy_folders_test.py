@@ -409,5 +409,145 @@ def test_configurator_folder_menu_version_and_sort():
     assert 'prsFolder:"/v1/folders"' in javascript
     assert 'return"prsFolder"===t?-1:"prsObject"===t?0:' in javascript
     assert "function prsCreateUserFolder" in javascript
+    assert "function prsNextFolderName" in javascript
+    assert "function prsPullFoldersFirst" in javascript
+    assert "prsNodesSortedByName()?sortList(group):prsPullFoldersFirst(group)" in javascript
+    assert '"objects"!==e.id&&prsTreeBindObjectDnd(e)' not in javascript
     assert 'prsFolder:"Папка"' in javascript
     assert "prsTreeRowDropTarget" in javascript
+    text = (ROOT / "config/nginx/peresvet/locations/peresvet.locations.conf.template").read_text(
+        encoding="utf-8"
+    )
+    assert "location = /v1/folders {" in text
+    assert "location = /v1/folders/ {" in text
+
+
+def test_folder_named_like_root_under_methods_is_rejected():
+    mem = _tree()
+    mem.put("fake-objects", "stdlib", "prsModelNode", "objects")
+    created = asyncio.run(
+        _svc(mem)._folder_create({"parentId": "fake-objects", "attributes": {"cn": "x"}})
+    )
+    assert created["error"]["code"] == 422
+
+
+def test_folder_name_system_and_filter_injection_are_rejected():
+    mem = _tree()
+    svc = _svc(mem)
+    reserved = asyncio.run(svc._folder_create({"parentId": "objects", "attributes": {"cn": "system"}}))
+    assert reserved["error"]["code"] == 422
+    injected = asyncio.run(
+        svc._folder_create({"parentId": "x)(objectClass=*", "attributes": {"cn": "Цех"}})
+    )
+    assert injected["error"]["code"] == 422
+    assert "new-Цех" not in mem.nodes
+
+
+def test_folder_delete_stops_when_a_later_child_vetoes():
+    mem = _tree()
+    mem.put("folder-a", "objects", "prsFolder", "a")
+    mem.put("tag-one", "folder-a", "prsTag", "one")
+    mem.put("tag-two", "folder-a", "prsTag", "two")
+    deleted = []
+    svc = _svc(mem)
+
+    async def post_message(mes, reply=False, routing_key=None):
+        if routing_key == "prsTag.model.may_delete.tag-two":
+            return {"response": False, "message": "тег занят"}
+        if routing_key and ".model.may_delete." in routing_key:
+            return {"response": True}
+        if routing_key and routing_key.startswith("prsTag.api_crud.delete"):
+            deleted.append(mes["id"])
+        return {}
+
+    svc._post_message = post_message
+    result = asyncio.run(svc._folder_delete({"id": "folder-a"}))
+    assert result["error"]["code"] == 422
+    assert deleted == []
+    assert mem.deleted == []
+    assert "tag-one" in mem.nodes
+
+
+def test_delete_notifies_specific_class_when_superior_comes_first():
+    published = []
+    svc = object.__new__(ModelCRUDSvc)
+    svc._logger = _Logger()
+    svc._config = SimpleNamespace(
+        svc_name="tags_model_crud",
+        hierarchy={"class": "prsTag", "child_classes": []},
+    )
+
+    class Hierarchy:
+        async def does_node_exist(self, node_id):
+            return True
+
+        async def get_node_class(self, node_id):
+            return "prsTag"
+
+        async def get_parent(self, node_id):
+            return "obj-1", None
+
+        async def search(self, payload):
+            return [("alert-1", "cn=alarm", {"objectClass": ["top", "prsModelNode", "prsAlert"]})]
+
+        async def delete(self, node_id):
+            return None
+
+    svc._hierarchy = Hierarchy()
+
+    async def post_message(mes, reply=False, routing_key=None):
+        published.append(routing_key)
+        return {"response": True}
+
+    svc._post_message = post_message
+    result = asyncio.run(svc._delete({"id": "tag-1"}))
+    assert result == {}
+    assert "prsAlert.model.may_delete.alert-1" in published
+    assert not any(key and key.startswith("top.") for key in published)
+
+
+def test_connector_tag_lookup_requires_link_class():
+    from src.services.connectors.app.connectors_mqtt_app_svc import ConnectorsMQTTApp
+    from src.services.connectors.model_crud.connectors_model_crud_svc import ConnectorsModelCRUD
+
+    calls = []
+
+    class Hierarchy:
+        async def search(self, payload):
+            calls.append(payload)
+            if payload.get("filter", {}).get("objectClass") == ["prsConnector"]:
+                return [("conn-1", "", {})]
+            return []
+
+    mqtt = object.__new__(ConnectorsMQTTApp)
+    mqtt._config = SimpleNamespace(nodes=None)
+    mqtt._hierarchy = Hierarchy()
+    asyncio.run(mqtt._find_connector_by_tag("tag-1"))
+    link_filters = [item["filter"] for item in calls if item.get("base") == "conn-1"]
+    assert link_filters == [{"cn": ["tag-1"], "objectClass": ["prsConnectorTagData"]}]
+
+    calls.clear()
+    model = object.__new__(ConnectorsModelCRUD)
+    model._hierarchy = Hierarchy()
+    asyncio.run(model._find_connector_by_tag("tag-1"))
+    link_filters = [item["filter"] for item in calls if item.get("base") == "conn-1"]
+    assert link_filters == [{"cn": ["tag-1"], "objectClass": ["prsConnectorTagData"]}]
+
+
+def test_default_datastorage_is_found_inside_a_folder():
+    from src.common.hierarchy import CN_SCOPE_SUBTREE
+    from src.services.dataStorages.model_crud.dataStorages_model_crud_svc import DataStoragesModelCRUD
+
+    seen = {}
+
+    class Hierarchy:
+        async def search(self, payload):
+            seen.update(payload)
+            return [("ds-1", "", {})]
+
+    svc = object.__new__(DataStoragesModelCRUD)
+    svc._hierarchy = Hierarchy()
+    svc._config = SimpleNamespace(hierarchy={"node_id": "dataStorages"})
+    assert asyncio.run(svc._get_default_datastorage_id()) == "ds-1"
+    assert seen["scope"] == CN_SCOPE_SUBTREE
+    assert seen["filter"]["objectClass"] == ["prsDataStorage"]

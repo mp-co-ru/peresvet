@@ -13,7 +13,18 @@ sys.path.append(".")
 
 from src.common import api_crud_svc as svc
 from src.common.authorization import authorize_action
+from src.common.hierarchy_folders import ROOT_NAMES
 from src.services.objects.api_crud.objects_api_crud_settings import ObjectsAPICRUDSettings
+
+_FOLDER_FILTER_KEYS = {"cn", "description", "prsActive", "prsIndex"}
+
+
+def _folder_parent_ref(value: str | None) -> str | None:
+    if value in (None, ""):
+        return value
+    if value in ROOT_NAMES:
+        return value
+    return svc.valid_uuid(value)
 
 class ObjectCreateAttributes(svc.NodeAttributes):
     pass
@@ -338,6 +349,11 @@ class FolderCreate(BaseModel):
     parentId: str | None = Field(None, title="Родитель: корень ветки, объект или папка")
     attributes: svc.NodeAttributes = Field(default_factory=svc.NodeAttributes)
 
+    @field_validator("parentId")
+    @classmethod
+    def _folder_parent(cls, value: str | None) -> str | None:
+        return _folder_parent_ref(value)
+
 
 class FolderUpdate(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
@@ -350,6 +366,11 @@ class FolderUpdate(BaseModel):
     @classmethod
     def _folder_id(cls, v: str) -> str:
         return svc.valid_uuid(v)
+
+    @field_validator("parentId")
+    @classmethod
+    def _folder_parent(cls, value: str | None) -> str | None:
+        return _folder_parent_ref(value)
 
 
 folders_router = APIRouter(prefix=f"{settings.api_version}")
@@ -380,17 +401,32 @@ async def read_folders(
 ):
     body: dict = {"scope": scope, "getParent": getParent}
     if id is not None:
+        try:
+            id = svc.valid_uuid_for_read(id)
+        except ValueError as ex:
+            await error_handler.handle_error({"error": {"code": 422, "message": str(ex)}})
         body["id"] = id
     if base is not None:
+        if base not in ROOT_NAMES and base != "prs":
+            try:
+                base = svc.valid_uuid(base)
+            except ValueError as ex:
+                await error_handler.handle_error({"error": {"code": 422, "message": str(ex)}})
         body["base"] = base
-    if attributes is not None:
-        body["attributes"] = attributes
     if filter is not None:
         try:
-            body["filter"] = json.loads(filter)
-        except Exception as ex:
-            res = {"error": {"code": 422, "message": f"Некорректный filter: {ex}"}}
-            await error_handler.handle_error(res)
+            parsed_filter = json.loads(filter)
+        except Exception:
+            await error_handler.handle_error(
+                {"error": {"code": 422, "message": "Некорректный filter."}}
+            )
+        if not isinstance(parsed_filter, dict) or any(key not in _FOLDER_FILTER_KEYS for key in parsed_filter):
+            await error_handler.handle_error(
+                {"error": {"code": 422, "message": "Недопустимое поле фильтра."}}
+            )
+        body["filter"] = parsed_filter
+    if attributes is not None:
+        body["attributes"] = attributes
     await authorize_action(
         "prsFolder.read",
         resource={"base": base, "ids": id},

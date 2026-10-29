@@ -273,8 +273,10 @@ class Hierarchy:
             if isinstance(ids, str):
                 ids = [ids]
             if ids:
-                #filterstr = Hierarchy.__form_filterstr({"entryUUID": ids})
-                filterstr = '(|(entryUUID=' + ')(entryUUID='.join(ids) + '))'
+                # Значение entryUUID подставляется в фильтр. Экранирование
+                # не меняет обычный GUID и не даёт закрыть скобку фильтра.
+                safe_ids = [ldap.filter.escape_filter_chars(str(item)) for item in ids]
+                filterstr = '(|(entryUUID=' + ')(entryUUID='.join(safe_ids) + '))'
                 node = self._base_dn
                 scope = CN_SCOPE_SUBTREE
             else:
