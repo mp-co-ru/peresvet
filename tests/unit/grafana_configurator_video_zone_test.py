@@ -33,6 +33,7 @@ const window = {prsVideoZonePoints: []};
 function prsVideoZoneStatus() {}
 function prsVideoZonePaint() {}
 eval(grab("prsVideoZoneUserPoint"));
+eval(grab("prsVideoZoneEventPoint"));
 eval(grab("prsVideoZoneEdgeHit"));
 eval(grab("prsVideoZoneAddPoint"));
 eval(grab("prsVideoZoneDot"));
@@ -48,8 +49,39 @@ if (Math.abs(inserted[0] - 0.5) > 0.02 || Math.abs(inserted[1]) > 0.02) {
   throw new Error("inserted off the edge: " + JSON.stringify(window.prsVideoZonePoints));
 }
 prsVideoZoneAddPoint(svg, [0.5, 0.5]);
-if (window.prsVideoZonePoints.length !== 6 || Math.abs(window.prsVideoZonePoints[5][0] - 0.5) > 0.001) {
-  throw new Error("interior click should append: " + JSON.stringify(window.prsVideoZonePoints));
+if (window.prsVideoZonePoints.length !== 5) {
+  throw new Error("interior click must not add a vertex: " + JSON.stringify(window.prsVideoZonePoints));
+}
+const wide = {
+  getBoundingClientRect: () => ({left: 0, top: 0, width: 800, height: 450}),
+  getScreenCTM: () => {
+    const scale = 450;
+    const ox = (800 - scale) / 2;
+    const forward = {a: scale, b: 0, c: 0, d: scale, e: ox, f: 0};
+    forward.inverse = () => ({a: 1 / scale, b: 0, c: 0, d: 1 / scale, e: -ox / scale, f: 0});
+    return forward;
+  },
+  createSVGPoint() {
+    return {
+      x: 0,
+      y: 0,
+      matrixTransform(mat) {
+        return {x: mat.a * this.x + mat.c * this.y + mat.e, y: mat.b * this.x + mat.d * this.y + mat.f};
+      }
+    };
+  }
+};
+const rightClick = prsVideoZoneEventPoint(wide, {clientX: 800, clientY: 225});
+if (!rightClick || Math.abs(rightClick[0] - 1) > 0.02 || Math.abs(rightClick[1] - 0.5) > 0.02) {
+  throw new Error("right side of the frame mapped to " + JSON.stringify(rightClick));
+}
+window.prsVideoZonePoints = [[0.13, 0.32], [0.28, 0.32], [0.44, 0.82], [0.43, 0.98], [0.22, 0.98], [0.14, 0.59], [0.13, 0.46]];
+const midX = (0.28 + 0.44) / 2;
+const midY = (0.32 + 0.82) / 2;
+prsVideoZoneAddPoint(wide, prsVideoZoneEventPoint(wide, {clientX: midX * 800, clientY: midY * 450}));
+const onRight = window.prsVideoZonePoints[2];
+if (!onRight || onRight[0] < 0.3 || Math.abs(onRight[1] - midY) > 0.04) {
+  throw new Error("right-edge click inserted on the wrong side: " + JSON.stringify(window.prsVideoZonePoints));
 }
 const dot = prsVideoZoneDot(svg, 2, 0.2, 0.3, 3, false);
 if (!dot.startsWith("<ellipse") || !dot.includes('rx="0.01500"') || !dot.includes('ry="0.03000"') || !dot.includes('fill="#ffd24a"')) {
@@ -109,9 +141,16 @@ def _parts():
 def test_video_zone_edit_contract():
     html, css, javascript = _parts()
     assert 'id="button-prsVideoZoneNew"' in html
+    assert ">Добавить зону<" in html
+    assert ">Удалить зону<" in html
+    assert "prsVideoZoneHitLines=function" in javascript
+    assert "prsVideoZoneInsertOnEdge=function" in javascript
+    assert 'Кликните по зоне, которую нужно удалить.' in javascript
     assert "prsVideoZoneRead=function" in javascript
     assert "prsVideoZonePayload=function" in javascript
     assert "prsVideoZoneAddPoint(draft,pt)" in javascript
+    assert 'if(prsPrevNodeId&&prsPrevNodeId!==t&&"function"==typeof prsHideVideoTagPreview)prsHideVideoTagPreview()' in javascript
+    assert 'el.src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"' in javascript
     assert "prsVideoZoneDot(draft,i,pts[i][0],pts[i][1],9,!0)" in javascript
     assert "prsVideoZoneDot(draft,i,pts[i][0],pts[i][1],4,!1)" in javascript
     assert 'r="0.012"' not in javascript
