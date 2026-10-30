@@ -15,6 +15,7 @@ from src.services.video.camera import (
     segment_seconds,
     session_ffmpeg_args,
 )
+from src.services.video.platform_log import note as note_platform_log
 from src.services.video.presence import drop_camera_presence, hold_camera_presence
 
 logger = logging.getLogger("video")
@@ -76,6 +77,7 @@ class CameraSession:
             self.connector_id,
             self.camera.log_target,
         )
+        note_platform_log(self.connector_id, "INFO", f"RTSP {self.camera.log_target}")
         await self._open_process()
         self._pump_task = asyncio.create_task(self._pump())
         try:
@@ -197,7 +199,11 @@ class CameraSession:
                     "Камера %s: в RTSP нет звука, сеанс только с картинкой",
                     self.connector_id,
                 )
+                note_platform_log(
+                    self.connector_id, "INFO", "В RTSP нет звука, сеанс только с картинкой.",
+                )
             logger.warning("Камера %s: поток прервался, перезапуск", self.connector_id)
+            note_platform_log(self.connector_id, "WARNING", "Поток прервался, перезапуск.")
             await asyncio.sleep(1)
             if self._stopped:
                 return False
@@ -208,6 +214,11 @@ class CameraSession:
                 "Камера %s не перезапустилась: %s",
                 self.camera.log_target,
                 redact_rtsp(str(ex)),
+            )
+            note_platform_log(
+                self.connector_id,
+                "WARNING",
+                f"Сеанс не перезапустился: {redact_rtsp(str(ex))}",
             )
             return False
         finally:
@@ -371,6 +382,11 @@ def sync_session(connector_id: str, camera: CameraConfig, directory: Path | None
                 connector_id,
                 camera.retention_hours,
             )
+            note_platform_log(
+                connector_id,
+                "INFO",
+                f"Срок хранения {camera.retention_hours:g} ч.",
+            )
             prune_archive(directory, keep_seconds=keep_seconds)
             return "retention"
         prune_archive(directory, keep_seconds=keep_seconds)
@@ -399,6 +415,11 @@ def ensure_session(connector_id: str, camera: CameraConfig, directory: Path | No
                 "Камера %s не открылась: %s",
                 camera.log_target,
                 redact_rtsp(str(ex)),
+            )
+            note_platform_log(
+                connector_id,
+                "WARNING",
+                f"Сеанс не открылся: {redact_rtsp(str(ex))}",
             )
 
     asyncio.create_task(_open())

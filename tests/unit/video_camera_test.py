@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from dataclasses import replace
 from types import SimpleNamespace
 
 from pathlib import Path
@@ -77,8 +78,8 @@ def test_parse_camera_accepts_working_rtsp_and_hides_password():
     })
     assert camera.transport == "tcp"
     assert camera.rtsp_url == CAMERA_URL
-    assert camera.archive_path == Path("/var/lib/peresvet/video/cam-1")
-    assert camera.retention_hours == 12
+    assert camera.archive_path is None
+    assert camera.retention_hours == 24
     assert camera.log_target == "rtsp://192.168.1.72:554/live/ch00_0"
     secret = parse_camera_config({
         "rtspUrl": "rtsp://user:secret@192.168.1.72:554/live/ch00_0",
@@ -89,10 +90,115 @@ def test_parse_camera_accepts_working_rtsp_and_hides_password():
     assert "secret" not in redact_rtsp("ffmpeg error rtsp://user:secret@host/live")
     with pytest.raises(ValueError):
         parse_camera_config({"rtspUrl": "http://192.168.1.72/snap.jpg"})
-    with pytest.raises(ValueError):
-        parse_camera_config({"rtspUrl": CAMERA_URL, "archivePath": "relative/cam"})
-    with pytest.raises(ValueError):
-        parse_camera_config({"rtspUrl": CAMERA_URL, "retentionHours": 0})
+    ignored = parse_camera_config({
+        "rtspUrl": CAMERA_URL,
+        "archivePath": "relative/cam",
+        "retentionHours": 0,
+    })
+    assert ignored.archive_path is None
+    assert ignored.log_to_platform is False
+    assert ignored.archive_fps is None
+
+
+def test_camera_source_and_log_follow_the_connector_shape():
+    from src.services.video.camera import config_is_camera
+
+    raw = {
+        "source": {
+            "rtspUrl": CAMERA_URL,
+            "rtspTransport": "udp",
+            "archiveWidth": 640,
+            "archiveFps": None,
+            "onvifPort": 80,
+        },
+        "log": {"sendToPlatform": True, "level": "WARNING"},
+    }
+    assert config_is_camera(raw) is True
+    camera = parse_camera_config(raw)
+    assert camera.transport == "udp"
+    assert camera.archive_width == 640
+    assert camera.archive_fps is None
+    assert camera.onvif_port == 80
+    assert camera.log_to_platform is True
+    assert camera.log_level == "WARNING"
+    assert camera.log_file_name == ""
+    assert camera.log_max_bytes == 10 * 1024 * 1024
+    assert camera.log_backup_count == 10
+    full = parse_camera_config({
+        "source": {"rtspUrl": CAMERA_URL},
+        "log": {
+            "level": "DEBUG",
+            "fileName": "logs/prs_connector_{id}.log",
+            "maxBytes": 2048,
+            "backupCount": 3,
+            "sendToPlatform": True,
+        },
+    })
+    assert full.log_file_name == "logs/prs_connector_{id}.log"
+    assert full.log_max_bytes == 2048
+    assert full.log_backup_count == 3
+    broken = parse_camera_config({
+        "source": {"rtspUrl": CAMERA_URL},
+        "log": {"sendToPlatform": False, "level": "NOISE", "maxBytes": 0},
+    })
+    assert broken.log_level == "INFO"
+    assert broken.log_max_bytes == 10 * 1024 * 1024
+
+
+def test_platform_log_follows_the_connector_log_keys(tmp_path):
+    from src.services.video import platform_log
+
+    sent = []
+    log_file = tmp_path / "prs_connector_cam-1.log"
+
+    async def post_message(mes, reply=False, routing_key=None):
+        sent.append((routing_key, mes))
+        return True
+
+    platform_log.reset_for_tests()
+    platform_log.bind(post_message)
+    platform_log.configure(
+        "cam-1",
+        send=False,
+        level="INFO",
+        file_name=str(log_file),
+        max_bytes=10 * 1024 * 1024,
+        backup_count=2,
+    )
+
+    async def run():
+        platform_log.note("cam-1", "INFO", "тихо")
+        await asyncio.sleep(0)
+        platform_log.command("cam-1", True)
+        platform_log.note("cam-1", "INFO", "rtsp://user:secret@192.168.1.72/live")
+        named = tmp_path / "nested" / "prs_connector_{id}.log"
+        platform_log.configure(
+            "cam-1",
+            send=True,
+            level="WARNING",
+            file_name=str(named),
+            max_bytes=4096,
+            backup_count=1,
+        )
+        platform_log.note("cam-1", "INFO", "ниже уровня")
+        platform_log.note("cam-1", "WARNING", "поток прервался")
+        await asyncio.sleep(0)
+
+    try:
+        asyncio.run(run())
+        assert [item[0] for item in sent] == ["conn2prs.cam-1", "conn2prs.cam-1"]
+        first = sent[0][1]["data"]["message"]
+        assert "secret" not in first
+        assert "192.168.1.72" in first
+        assert sent[0][1]["action"] == "prsConnector.log_line"
+        assert "поток прервался" in sent[1][1]["data"]["message"]
+        assert "тихо" in log_file.read_text(encoding="utf-8")
+        written = tmp_path / "nested" / "prs_connector_cam-1.log"
+        body = written.read_text(encoding="utf-8")
+        assert "поток прервался" in body
+        assert "ниже уровня" not in body
+    finally:
+        platform_log.reset_for_tests()
 
 
 def test_segments_cover_moment_and_period(tmp_path):
@@ -186,10 +292,11 @@ def test_archive_size_and_rate_come_from_the_connector(tmp_path):
 
 
 class _Hierarchy:
-    def __init__(self, by_id, connectors, links):
+    def __init__(self, by_id, connectors, links, storages=None):
         self.by_id = by_id
         self.connectors = connectors
         self.links = links
+        self.storages = storages or []
 
     async def search(self, payload):
         if payload.get("id"):
@@ -199,6 +306,8 @@ class _Hierarchy:
             return self.by_id.get(tag_id, [])
         if payload.get("base") == "cn=connectors,cn=prs":
             return self.connectors
+        if payload.get("base") == "cn=dataStorages,cn=prs":
+            return self.storages
         return self.links.get(payload.get("base"), [])
 
 
@@ -304,20 +413,51 @@ def test_two_tags_are_rejected_when_one_is_video():
     assert response.status_code == 422
 
 
+def _video_storage():
+    return [(
+        "ds-video",
+        "dn",
+        {
+            "prsEntityTypeCode": ["3"],
+            "prsActive": ["TRUE"],
+            "prsJsonConfigString": ['{"archivePath": "/var/lib/peresvet/video", "retentionHours": 6}'],
+        },
+    )]
+
+
 def test_bound_camera_snapshot_mode_is_resolved():
     hierarchy = _Hierarchy(
         {TAG: _video_tag()},
         _camera_connector(),
-        {CONN: [(TAG, "dn", {"cn": [TAG]})]},
+        {
+            CONN: [(TAG, "dn", {"cn": [TAG]})],
+            "ds-video": [("store-link", "dn", {"cn": [TAG]})],
+        },
+        _video_storage(),
     )
     payload = DataGet.model_validate({"tagId": TAG, "finish": 5_000_000})
     binding = asyncio.run(resolve_video_get(hierarchy, payload))
     assert binding.mode == "snapshot"
     assert binding.connector_id == CONN
     assert binding.camera.rtsp_url == CAMERA_URL
+    assert binding.camera.retention_hours == 6
+    assert binding.camera.segment_dir(CONN) == Path("/var/lib/peresvet/video") / CONN
     assert binding.finish_us == 5_000_000
     live = DataGet.model_validate({"tagId": TAG})
     assert asyncio.run(resolve_video_get(hierarchy, live)).mode == "live"
+
+
+def test_video_tag_without_storage_returns_424():
+    hierarchy = _Hierarchy(
+        {TAG: _video_tag()},
+        _camera_connector(),
+        {CONN: [(TAG, "dn", {"cn": [TAG]})]},
+    )
+    payload = DataGet.model_validate({"tagId": TAG, "finish": 5_000_000})
+    response = asyncio.run(maybe_video_data_response(_app(hierarchy), payload))
+    assert isinstance(response, JSONResponse)
+    assert response.status_code == 424
+    assert "хранилищу видео" in response.body.decode()
 
 
 def test_archive_config_uses_storage_json_and_rejects_bad_values(monkeypatch):
@@ -327,7 +467,7 @@ def test_archive_config_uses_storage_json_and_rejects_bad_values(monkeypatch):
     monkeypatch.setenv("VIDEO_ARCHIVE_HOURS", "24")
     reset_archive_config()
     cfg = parse_archive_config({
-        "path": "/var/lib/peresvet/video",
+        "archivePath": "/var/lib/peresvet/video",
         "retentionHours": 48,
         "segmentSeconds": 5,
     })
@@ -372,7 +512,11 @@ def test_platform_proxies_video_tag_to_the_delivery_base_url(monkeypatch):
     hierarchy = _Hierarchy(
         {TAG: _video_tag()},
         _camera_connector(),
-        {CONN: [(TAG, "dn", {"cn": [TAG]})]},
+        {
+            CONN: [(TAG, "dn", {"cn": [TAG]})],
+            "ds-video": [("store-link", "dn", {"cn": [TAG]})],
+        },
+        _video_storage(),
     )
     called = {}
 
@@ -403,7 +547,7 @@ def test_platform_proxies_video_tag_to_the_delivery_base_url(monkeypatch):
     assert response.status_code == 200
 
 
-def test_connector_attributes_reject_inactive_and_keep_retention():
+def test_connector_attributes_reject_inactive_camera():
     from src.services.video.camera import camera_from_connector_attributes
 
     camera = camera_from_connector_attributes({
@@ -415,7 +559,8 @@ def test_connector_attributes_reject_inactive_and_keep_retention():
         })],
     })
     assert camera is not None
-    assert camera.retention_hours == 4
+    assert camera.archive_path is None
+    assert camera.retention_hours == 24
     assert camera_from_connector_attributes({
         "prsActive": ["FALSE"],
         "prsJsonConfigString": ['{"rtspUrl": "rtsp://192.168.1.72/live"}'],
@@ -431,11 +576,8 @@ def test_retention_change_prunes_without_second_rtsp(monkeypatch, tmp_path):
     from src.services.video.runtime import CameraSession
 
     archive = tmp_path / "rear-cam"
-    old = parse_camera_config({
-        "rtspUrl": CAMERA_URL,
-        "archivePath": str(archive),
-        "retentionHours": 24,
-    })
+    base = parse_camera_config({"rtspUrl": CAMERA_URL})
+    old = replace(base, archive_path=archive, retention_hours=24)
     session = CameraSession(CONN, old, old.segment_dir(CONN))
     session._proc = SimpleNamespace(returncode=None)
     runtime._sessions[CONN] = session
@@ -448,11 +590,7 @@ def test_retention_change_prunes_without_second_rtsp(monkeypatch, tmp_path):
         lambda directory, keep_seconds, now_sec=None: pruned.append(keep_seconds),
     )
     try:
-        newer = parse_camera_config({
-            "rtspUrl": CAMERA_URL,
-            "archivePath": str(archive),
-            "retentionHours": 4,
-        })
+        newer = replace(base, archive_path=archive, retention_hours=4)
         assert runtime.sync_session(CONN, newer) == "retention"
         assert session.camera.retention_hours == 4
         assert pruned == [4 * 3600]
@@ -523,29 +661,38 @@ def test_connector_updated_message_applies_retention(monkeypatch):
     synced = []
 
     async def search(payload):
-        assert payload["id"] == [CONN]
-        return [(
-            CONN,
-            "dn",
-            {
-                "prsActive": ["TRUE"],
-                "prsJsonConfigString": [json.dumps({
-                    "rtspUrl": CAMERA_URL,
-                    "archivePath": "/var/lib/peresvet/video/rear-cam",
-                    "retentionHours": 4,
-                })],
-            },
-        )]
+        if payload.get("id") in ([CONN], CONN):
+            return [(
+                CONN,
+                "dn",
+                {
+                    "prsActive": ["TRUE"],
+                    "prsJsonConfigString": [json.dumps({"rtspUrl": CAMERA_URL})],
+                },
+            )]
+        if payload.get("base") == CONN:
+            return [("link", "dn", {"cn": [TAG]})]
+        if payload.get("id") in ([TAG], TAG):
+            return [(TAG, "dn", {"prsValueTypeCode": ["6"], "prsActive": ["TRUE"]})]
+        if payload.get("base") == "cn=dataStorages,cn=prs":
+            return [(
+                "ds-video",
+                "dn",
+                {
+                    "prsEntityTypeCode": ["3"],
+                    "prsActive": ["TRUE"],
+                    "prsJsonConfigString": ['{"archivePath": "/var/lib/peresvet/video", "retentionHours": 4}'],
+                },
+            )]
+        if payload.get("base") == "ds-video":
+            return [("store-link", "dn", {"cn": [TAG]})]
+        return []
 
     def sync_session(conn_id, camera, directory=None):
         synced.append((conn_id, camera.retention_hours))
         return "retention"
 
-    async def active_tag(_hierarchy, connector_id):
-        return True
-
     monkeypatch.setattr(video_app_svc, "sync_session", sync_session)
-    monkeypatch.setattr(video_app_svc, "active_video_tag_linked", active_tag)
     svc = SimpleNamespace(
         _hierarchy=SimpleNamespace(search=search),
         _config=SimpleNamespace(svc_name="video_capture", nodes=[]),

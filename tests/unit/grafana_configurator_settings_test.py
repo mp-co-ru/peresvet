@@ -8,7 +8,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261029-user-folders-v1"
+CODE_VERSION = "20261030-font-apply-v1"
 
 
 def _parts():
@@ -58,6 +58,8 @@ def test_configurator_settings_dialog_contract():
     assert "prs.configurator.fontSize" in javascript
     assert "prsFontBasePx=function(raw)" in javascript
     assert "prsApplyFontBase=function(raw,persist)" in javascript
+    assert 't.querySelectorAll(".prs-split-root").forEach(add)' in javascript
+    assert 'node.style.setProperty("--prs-font-base",px)' in javascript
     assert '__prsConfiguratorGetEl("input-prsFontSize")' in javascript
     assert "--prs-font-base:16px" in css
     assert ".prs-split-root{--prs-font-base:16px;font-size:var(--prs-font-base)}" in css
@@ -67,9 +69,23 @@ def test_configurator_settings_dialog_contract():
     assert "font-size:.875rem" not in css
 
 
+def _tab_content_depth(html: str, marker: str) -> int:
+    import re
+
+    start = html.index('<div class="tab-content" id="prs-form-tab-content">')
+    at = html.index(marker)
+    depth = 0
+    for match in re.finditer(r"<div\b[^>]*>|</div>", html[start:at]):
+        depth += -1 if match.group(0).startswith("</") else 1
+    return depth
+
+
 def test_configurator_connector_binding_labels():
     html, _css, javascript = _parts()
     pane_at = html.index('id="prs-tab-pane-connector"')
+    # Вкладка «Коннектор» лежит внутри переключателя вкладок, а не под «Свойствами».
+    assert _tab_content_depth(html, 'id="prs-tab-pane-connector"') == 1
+    assert _tab_content_depth(html, 'id="prs-storage-alert-only"') == 2
     pane = html[pane_at : pane_at + 1800]
     assert ">Описание <" in pane
     assert ">Конфигурация</label>" in pane

@@ -97,3 +97,5 @@ def test_public_talk_route_is_proxied_with_buffering_off():
     assert "proxy_request_buffering off" in block
     assert "proxy_buffering off" in block
     assert "proxy_pass http://tags_app_api" in block
+    assert "location = /v1/vision/overlay" in text
+    assert "proxy_pass http://prs-methods-video:8093/api/overlay" in text

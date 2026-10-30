@@ -1,7 +1,8 @@
 """Настройки видеоархива: путь, срок хранения, длина сегмента.
 
-Значения приходят из хранилища типа 3 (``prsEntityTypeCode``).
-Если узла нет, берутся переменные окружения видеосервера.
+Значения приходят из хранилища видео (``prsEntityTypeCode`` = 3).
+Ключ пути — ``archivePath`` или ``path``. Если узла нет, берутся
+переменные окружения видеосервера.
 """
 
 from __future__ import annotations
@@ -76,7 +77,7 @@ def parse_archive_config(raw: Any) -> ArchiveConfig:
     if not isinstance(raw, dict):
         raise ValueError("Конфигурация видеоархива должна быть объектом JSON.")
 
-    path_raw = raw.get("path")
+    path_raw = raw.get("archivePath") or raw.get("path")
     if path_raw:
         path = Path(str(path_raw)).expanduser()
         if not path.is_absolute():

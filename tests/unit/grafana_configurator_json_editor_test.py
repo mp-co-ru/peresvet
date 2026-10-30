@@ -8,7 +8,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261029-user-folders-v1"
+CODE_VERSION = "20261030-font-apply-v1"
 
 
 def _parts():
@@ -24,6 +24,8 @@ def test_configurator_json_editor_contract():
 
     assert f'prsConfiguratorCodeVersion="{CODE_VERSION}"' in javascript
     assert 'id="prs-json-editor-node"' in field
+    assert 'id="prs-json-editor-resize"' in html
+    assert 'title="Изменить размер"' in html
     assert 'id="btn-prsJsonFormat"' in field
     assert 'title="Форматировать"' in field
     assert ">Форматировать<" not in field
@@ -39,6 +41,9 @@ def test_configurator_json_editor_contract():
     assert 'class="form-control prs-mono" id="input-prsJsonConfigString"' not in html
 
     assert ".prs-json-editor-code{display:flex;align-items:stretch;height:16rem" in css
+    assert ".prs-json-editor-resize{position:absolute;right:1px;bottom:1px" in css
+    assert "cursor:ns-resize" in css
+    assert "prsJsonEditorBindResize=function" in javascript
     assert ".prs-json-editor-input{position:relative" in css
     assert "color:#243236;-webkit-text-fill-color:#243236" in css
     assert ".prs-json-editor-highlight{display:none}" in css
@@ -55,6 +60,9 @@ def test_configurator_json_editor_contract():
     assert "prsJsonEditorPlaceGutter=function" in javascript
     assert "if(prsJsonEditorBlockSave())return;" in javascript
     assert "window.prsJsonEditorOnInput=function" in javascript
+    tag_fields = javascript.split("prsTag:{visible:[", 1)[1].split("],hidden:[", 1)
+    assert '"div-prsJsonConfigString"' in tag_fields[0]
+    assert '"div-prsJsonConfigString"' not in tag_fields[1].split("]", 1)[0]
 
 
 def test_configurator_json_editor_behavior():

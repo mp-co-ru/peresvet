@@ -17,7 +17,7 @@ def test_object_tree_dnd_dashboard_contract():
 
     assert dashboard["uid"] == "ddy59kw4v5ssgc"
     assert (
-        'prsConfiguratorCodeVersion="20261029-user-folders-v1"' in javascript
+        'prsConfiguratorCodeVersion="20261030-font-apply-v1"' in javascript
     )
     for required_fragment in (
         "prsBindAllObjectTreeDnd",
@@ -64,7 +64,8 @@ def test_object_tree_dnd_dashboard_contract():
     assert (
         '["__copy__","fa-clone","Копировать"],["__sep__","after-copy"],'
         '["__active__","fa-pause","Приостановить узел"],'
-        '["__sep__","after-active"],["__delete__","fa-trash-can","Удалить узел"]'
+        '["__sep__","after-active"],["__goto_tag__","fa-arrow-right","Перейти к тегу"],'
+        '["__unlink_tag__","fa-trash-can","Удалить"],["__delete__","fa-trash-can","Удалить узел"]'
         in javascript
     )
     assert "prsConfirmAction" in javascript

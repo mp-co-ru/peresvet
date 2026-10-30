@@ -37,7 +37,7 @@ def test_csv_export_dashboard_contract():
     assert "sheetjs" not in javascript.lower()
 
     for required_fragment in (
-        'prsConfiguratorCodeVersion="20261029-user-folders-v1"',
+        'prsConfiguratorCodeVersion="20261030-font-apply-v1"',
         "prsTagDataExportSnapshot",
         "prsBuildTagDataCsv",
         "prsExportTagDataCsv",
@@ -62,8 +62,18 @@ def test_csv_export_dashboard_contract():
     assert 'id="input-prsCameraRtsp"' not in html
     assert 'id="div-videoTagPreview"' in html
     assert "prsShowVideoTagPreview" in javascript
+    assert "prsVideoRecognitionWatch" in javascript
+    assert "prsBindVideoZone" in javascript
+    assert "prsVideoZonePersist" in javascript
+    assert 'id="button-prsVideoZone"' in html
+    assert '"zone":zone' in javascript or "config.zone=zone" in javascript
+    assert "prsStopVideoRecognition" in javascript
+    assert "/v1/vision/overlay?tagId=" in javascript
     assert 'id="prs-video-preview-stage"' in html
-    assert "Без start и finish — живой поток" in html
+    assert "Без start и finish — живой поток" not in html
+    assert "prsVideoZoneRefreshSaved" in javascript
+    assert 'data-i="' in javascript
+    assert 'width="0.992"' not in javascript
     assert "prsSyncVideoTagDataChrome" in javascript
     assert "prsSetVideoPlayButton" in javascript
     assert "prsTagDataPlayClick" in javascript

@@ -148,7 +148,8 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
                 await self._unlink_alert({"alertId": alert_id, "dataStorageId": ds_id})
 
     async def _unlink_tag(self, item: dict, routing_key: str | None = None) -> None:
-        res = await self._post_message(
+        video_link = await self._video_storage_link(item["dataStorageId"])
+        res = {} if video_link is not None and not video_link.get("error") else await self._post_message(
             mes=item, routing_key=f"{self._config.hierarchy['class']}.model.unlink_tag.{item['dataStorageId']}"
         )
         if res is None:
@@ -214,6 +215,52 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
             return items[0][0]
         return None
 
+    async def _tag_is_video_stream(self, tag_id: str) -> bool:
+        rows = await self._hierarchy.search({
+            "id": tag_id,
+            "attributes": ["prsValueTypeCode"],
+        })
+        if not rows:
+            return False
+        raw = rows[0][2].get("prsValueTypeCode", ["0"])
+        if isinstance(raw, list):
+            raw = raw[0] if raw else 0
+        try:
+            return int(raw) == 6
+        except (TypeError, ValueError):
+            return False
+
+    async def _video_storage_link(self, ds_id: str) -> dict | None:
+        """Ответ привязки для хранилища видео. None — это не видеоархив.
+
+        У видеопотока нет таблицы в PostgreSQL. Каталог и срок лежат
+        в конфигурации хранилища, привязка тега только отмечает,
+        что этот архив его обслуживает.
+        """
+        rows = await self._hierarchy.search({
+            "id": ds_id,
+            "attributes": ["prsEntityTypeCode", "prsJsonConfigString"],
+        })
+        if not rows:
+            return None
+        raw = rows[0][2].get("prsEntityTypeCode", ["0"])
+        if isinstance(raw, list):
+            raw = raw[0] if raw else 0
+        try:
+            code = int(raw)
+        except (TypeError, ValueError):
+            return None
+        if code != 3:
+            return None
+        from src.services.video.archive_config import parse_archive_config
+        from src.services.video.storage import _json_config
+
+        try:
+            archive = parse_archive_config(_json_config(rows[0][2]))
+        except (ValueError, TypeError) as ex:
+            return {"error": str(ex)}
+        return {"prsStore": {"directory": str(archive.path), "retentionHours": archive.retention_hours}}
+
     async def _link_tag(self, payload: dict, routing_key: str | None = None) -> None:
         if not payload.get("dataStorageId"):
             datastorage_id = await self._get_default_datastorage_id()
@@ -226,7 +273,19 @@ class DataStoragesModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         datastorage_id = payload["dataStorageId"]
 
-        res = await self._post_message(
+        video_link = await self._video_storage_link(datastorage_id)
+        if video_link is not None and video_link.get("error"):
+            self._logger.error(
+                f"{self._config.svc_name} :: Хранилище видео {datastorage_id}: {video_link['error']}"
+            )
+            return
+        if video_link is None and await self._tag_is_video_stream(payload["tagId"]):
+            self._logger.info(
+                f"{self._config.svc_name} :: Тег видеопотока {payload['tagId']} "
+                f"не привязывается к хранилищу истории {datastorage_id}."
+            )
+            return
+        res = video_link if video_link is not None else await self._post_message(
             mes=payload,
             reply=True,
             routing_key=f"{self._config.hierarchy['class']}.model.link_tag.{datastorage_id}",

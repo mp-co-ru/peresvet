@@ -32,6 +32,22 @@ HTTP_METHODS = frozenset({"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"})
 HTTP_MAX_BYTES = 1_000_000
 
 
+def single_parameter_tag_id(cfg: dict) -> str | None:
+    """Один tagId у запроса «данные тега». Литерал и привязка другого вида — None."""
+    if not isinstance(cfg, dict):
+        return None
+    if "binding" in cfg and cfg.get("binding") != "tag":
+        return None
+    raw = cfg.get("tagId")
+    if isinstance(raw, list):
+        if len(raw) != 1:
+            return None
+        raw = raw[0]
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip()
+    return None
+
+
 def parse_parameter_config(raw: Any) -> dict:
     if isinstance(raw, dict):
         return raw

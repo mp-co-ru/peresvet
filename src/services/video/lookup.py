@@ -16,6 +16,7 @@ from src.services.video.camera import (
     parse_camera_config,
     video_get_mode,
 )
+from src.services.video.storage import VideoStorageError, camera_with_storage, video_storage_for_tag
 
 
 @dataclass(frozen=True)
@@ -163,8 +164,8 @@ async def connector_id_for_tag(hierarchy_api, tag_id: str) -> str | None:
     return connector_id
 
 
-async def active_video_tag_linked(hierarchy_api, connector_id: str) -> bool:
-    """Сеанс камеры нужен, пока к ней привязан хотя бы один включённый тег типа 6."""
+async def camera_for_session(hierarchy_api, connector_id: str, camera: CameraConfig) -> CameraConfig | None:
+    """Камера с каталогом архива из хранилища видео, если такой тег есть."""
     links = await hierarchy_api.search({
         "base": connector_id,
         "scope": hierarchy.CN_SCOPE_SUBTREE,
@@ -191,8 +192,51 @@ async def active_video_tag_linked(hierarchy_api, connector_id: str) -> bool:
             continue
         if value_type != int(CNTagValueTypes.CN_VIDEO):
             continue
-        if _flag(tag_attrs, "prsActive", default=True):
-            return True
+        if not _flag(tag_attrs, "prsActive", default=True):
+            continue
+        try:
+            _ds_id, archive = await video_storage_for_tag(hierarchy_api, tag_id)
+        except VideoStorageError:
+            continue
+        return camera_with_storage(camera, archive, connector_id)
+    return None
+
+
+async def active_video_tag_linked(hierarchy_api, connector_id: str) -> bool:
+    """Сеанс нужен, пока есть включённый тег типа 6 с хранилищем видео."""
+    links = await hierarchy_api.search({
+        "base": connector_id,
+        "scope": hierarchy.CN_SCOPE_SUBTREE,
+        "filter": {"objectClass": ["prsConnectorTagData"]},
+        "attributes": ["cn"],
+    })
+    for _link_id, _, attrs in links or []:
+        tag_id = _first(attrs, "cn")
+        if tag_id is None:
+            continue
+        if isinstance(tag_id, bytes):
+            tag_id = tag_id.decode("utf-8", errors="replace")
+        tag_id = str(tag_id)
+        tag = await hierarchy_api.search({
+            "id": tag_id,
+            "attributes": ["prsValueTypeCode", "prsActive"],
+        })
+        if not tag:
+            continue
+        tag_attrs = tag[0][2]
+        try:
+            value_type = int(_first(tag_attrs, "prsValueTypeCode"))
+        except (TypeError, ValueError):
+            continue
+        if value_type != int(CNTagValueTypes.CN_VIDEO):
+            continue
+        if not _flag(tag_attrs, "prsActive", default=True):
+            continue
+        try:
+            await video_storage_for_tag(hierarchy_api, tag_id)
+        except VideoStorageError:
+            continue
+        return True
     return False
 
 
@@ -223,7 +267,11 @@ async def _camera_for_tag(hierarchy_api, tag_id: str) -> tuple[str | None, Camer
             camera = parse_camera_config(_json_config(attrs))
         except (ValueError, json.JSONDecodeError) as ex:
             return None, None, VideoFailure(422, str(ex))
-        return conn_id, camera, None
+        try:
+            _ds_id, archive = await video_storage_for_tag(hierarchy_api, tag_id)
+        except VideoStorageError as ex:
+            return None, None, VideoFailure(ex.code, ex.message)
+        return conn_id, camera_with_storage(camera, archive, conn_id), None
     return None, None, VideoFailure(
         424,
         "Тег видеопотока не привязан к активному коннектору-камере.",

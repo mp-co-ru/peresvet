@@ -309,6 +309,13 @@ location /grafana/ {
     proxy_temp_file_write_size 64k;
 }
 
+# Рамки и зона распознавания. Процесс prs-methods-video в сети compose.
+location = /v1/vision/overlay {
+    proxy_set_header Host $host;
+    proxy_read_timeout 5s;
+    proxy_pass http://prs-methods-video:8093/api/overlay;
+}
+
 # Proxy Grafana Live WebSocket connections.
 location /grafana/api/live/ {
     #rewrite  ^/grafana/?(.*)  /$1 break;

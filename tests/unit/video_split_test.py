@@ -44,10 +44,11 @@ class _Channel:
 
 
 class _Hierarchy:
-    def __init__(self, by_id, connectors, links):
+    def __init__(self, by_id, connectors, links, storages=None):
         self.by_id = by_id
         self.connectors = connectors
         self.links = links
+        self.storages = storages or []
 
     async def search(self, payload):
         if payload.get("id"):
@@ -57,6 +58,8 @@ class _Hierarchy:
             return self.by_id.get(tag_id, [])
         if payload.get("base") == "cn=connectors,cn=prs":
             return self.connectors
+        if payload.get("base") == "cn=dataStorages,cn=prs":
+            return self.storages
         return self.links.get(payload.get("base"), [])
 
 
@@ -80,7 +83,19 @@ def _bound():
     return _Hierarchy(
         {TAG: _video_tag()},
         _camera_connector(),
-        {CONN: [(TAG, "dn", {"cn": [TAG]})]},
+        {
+            CONN: [(TAG, "dn", {"cn": [TAG]})],
+            "ds-video": [("store-link", "dn", {"cn": [TAG]})],
+        },
+        [(
+            "ds-video",
+            "dn",
+            {
+                "prsEntityTypeCode": ["3"],
+                "prsActive": ["TRUE"],
+                "prsJsonConfigString": ['{"archivePath": "/var/lib/peresvet/video", "retentionHours": 24}'],
+            },
+        )],
     )
 
 
@@ -147,13 +162,13 @@ def test_capture_scan_starts_only_listed_cameras_and_stops_the_rest(monkeypatch)
         stopped.append(conn_id)
         return True
 
-    async def active_tag(_hierarchy, connector_id):
-        return True
+    async def stored_camera(_hierarchy, conn_id, camera):
+        return camera
 
     monkeypatch.setattr(video_capture_svc, "sync_session", sync_session)
     monkeypatch.setattr(video_capture_svc, "stop_session", stop_session)
     monkeypatch.setattr(video_capture_svc, "tracked_session_ids", lambda: [CONN, OTHER])
-    monkeypatch.setattr(video_capture_svc, "active_video_tag_linked", active_tag)
+    monkeypatch.setattr(video_capture_svc, "camera_for_session", stored_camera)
     svc = SimpleNamespace(
         _hierarchy=SimpleNamespace(search=search),
         _config=SimpleNamespace(nodes=[CONN], svc_name="video_capture"),
@@ -193,6 +208,21 @@ class _TagGateHierarchy:
             if self.active is None:
                 return []
             return [(TAG, "dn", {"prsValueTypeCode": ["6"], "prsActive": [self.active]})]
+        if payload.get("base") == "cn=dataStorages,cn=prs":
+            return [(
+                "ds-video",
+                "dn",
+                {
+                    "prsEntityTypeCode": ["3"],
+                    "prsActive": ["TRUE"],
+                    "prsJsonConfigString": ['{"archivePath": "/var/lib/peresvet/video", "retentionHours": 24}'],
+                },
+            )]
+        if (
+            payload.get("base") == "ds-video"
+            and payload.get("filter", {}).get("objectClass") == ["prsDatastorageTagData"]
+        ):
+            return [("store-link", "dn", {"cn": [TAG]})]
         return []
 
 
