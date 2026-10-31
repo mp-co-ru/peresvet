@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261030-font-apply-v1"
+CODE_VERSION = "20261031-tree-load-once-v1"
 
 
 def _parts():
@@ -49,14 +49,27 @@ def test_methods_catalog_root_and_menus():
     assert "Проверить методы" in html
     assert 'aria-label="Загрузить"' in html
     assert "prs-method-description-help" in html
+    assert 'accept=".yaml,.yml,.json,application/yaml,text/yaml,application/json"' in html
+    assert 'class="prs-method-description-pick"' in html
+    assert 'for="prs-method-description-file"' in html
+    assert 'id="prs-method-description-name"' in html
+    assert "prsShowMethodDescriptionName" in javascript
+    assert 'name.endsWith(".json")' in javascript
+    assert "Выберите файл YAML или JSON." in javascript
     css = json.loads(DASHBOARD_PATH.read_text(encoding="utf-8"))["panels"][0]["options"]["css"]
     assert "#prs-method-description-dialog{white-space:normal}" in css
     assert 'id="prs-method-description-load"' in html
     assert 'prs-method-description-probe").addEventListener' not in javascript
-    assert "/v1/methods/description" in javascript
+    assert "/v1/methods/description" not in javascript
+    assert "prsParseMethodDescription=function" in javascript
+    assert "prsImportMethodDescription=function" in javascript
+    assert 'return prsPostJson(window.location.origin+"/v1/methods/",body)' in javascript
+    assert "folder:!0" in javascript
+    assert 'data={error:{message:"Ответ сервера "+resp.status}}' in javascript
     expand_at = javascript.find('if("prsMethodsRoot"===r||"prsModelNode"===r)')
     gate_at = javascript.find('let p=prsClassApi(r,t);if(!p)return;')
     assert expand_at != -1 and gate_at != -1 and expand_at < gate_at
+    assert 'return qsF.append("filter",JSON.stringify({objectClass:["prsFolder"]})),fetch(' in javascript[expand_at:gate_at]
     assert 'case"prsTag":a("tags"===n?["userFolders","tags"]:["__copy__","__active__","__delete__","alerts","methods"]);' in javascript
     assert 'case"prsAlert":a(["__copy__","methods","__active__","__delete__"]);' in javascript
     assert "prsSyncMethodCatalogForm" in javascript
@@ -94,3 +107,49 @@ def test_methods_catalog_root_and_menus():
     assert ".prs-method-mode-instance .prs-method-param-add-wrap" in css
     assert "prs-catalog-vtype" in html
     assert "Целый" in html
+
+
+def test_method_description_yaml_is_parsed_in_the_configurator():
+    import shutil
+    import subprocess
+
+    node = shutil.which("node")
+    assert node
+    _html, javascript = _parts()
+    start = javascript.find("prsParseMethodDescription=function")
+    assert start > 0
+    depth = 0
+    end = start
+    for index, char in enumerate(javascript[start:], start):
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                end = index + 1
+                break
+    script = javascript[start:end] + r"""
+const text = `
+folders:
+  - cn: Видео
+    methods:
+      - cn: person_in_zone
+        address: prs.vision.person_in_zone
+        description: |
+          Первая строка
+          Вторая строка
+        parameters:
+          - cn: zone
+            index: 2
+            prsValueTypeCode: 4
+`;
+const tree = prsParseMethodDescription(text);
+if (tree.folders[0].cn !== "Видео") throw new Error("folder");
+const method = tree.folders[0].methods[0];
+if (method.address !== "prs.vision.person_in_zone") throw new Error("address");
+if (method.parameters[0].prsValueTypeCode !== 4) throw new Error("type");
+if (!String(method.description).includes("Вторая строка")) throw new Error("description");
+console.log("ok");
+"""
+    completed = subprocess.run([node, "-e", script], check=False, capture_output=True, text=True)
+    assert completed.returncode == 0, completed.stderr

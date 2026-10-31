@@ -7,6 +7,7 @@ from src.common import model_crud_svc
 from src.common import hierarchy
 from src.common import model_copy
 from src.common.hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
+from src.common.hierarchy_folders import node_class_from_object_classes
 from src.services.methods.method_catalog import (
     catalog_id_from_message,
     error as catalog_error,
@@ -175,7 +176,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
         if mes is None:
             mes = {}
         if mes.get("folder"):
-            return await self._folder_create(mes, routing_key)
+            return await super()._create(mes, routing_key)
         err = await self._prepare_method_write(mes, creating=True)
         if err:
             return err
@@ -300,18 +301,9 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             return catalog_error(422, f"Описание не загружено: {ex}")
 
     async def _folder_create(self, mes: dict, routing_key: str | None = None) -> dict:
-        parent_id = (mes or {}).get("parentId") or self._config.hierarchy.get("node_id")
-        if not await self._folder_parent_ok(parent_id):
-            return catalog_error(422, "Папку методов можно создать только в каталоге методов.")
-        attrs = dict((mes or {}).get("attributes") or {})
-        attrs.pop("objectClass", None)
-        attrs["objectClass"] = ["prsFolder"]
-        if "prsActive" not in attrs:
-            attrs["prsActive"] = True
-        new_id = await self._hierarchy.add(parent_id, attrs)
-        if not new_id:
-            return catalog_error(422, "Папка методов не создана.")
-        return {"id": new_id}
+        body = dict(mes or {})
+        body["folder"] = True
+        return await self._create(body, routing_key)
 
     async def _folder_read(self, mes: dict, routing_key: str | None = None) -> dict:
         payload = dict(mes or {})
@@ -703,8 +695,13 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         for method_item in search_result["data"]:
             new_method_item = copy.deepcopy(method_item)
-            object_class = ldap_first(new_method_item.get("attributes"), "objectClass", "")
-            if object_class == "prsModelNode":
+            attributes = new_method_item.get("attributes") or {}
+            object_class = node_class_from_object_classes(attributes.get("objectClass"))
+            if object_class != "prsMethod":
+                if object_class and isinstance(attributes, dict):
+                    current = list(attributes.get("objectClass") or [])
+                    attributes["objectClass"] = [object_class, *[name for name in current if name != object_class]]
+                    new_method_item["attributes"] = attributes
                 new_result["data"].append(new_method_item)
                 continue
             new_method_item["initiatedBy"] = []

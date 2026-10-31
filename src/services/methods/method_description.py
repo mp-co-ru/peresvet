@@ -1,10 +1,12 @@
-"""Разбор YAML-описания каталога методов.
+"""Разбор описания каталога методов: YAML или JSON-манифест.
 
 Файл задаёт папки и методы. Методы можно вкладывать в папки.
+Манифест ``{"folder": {...}, "methods": [...]}`` кладёт методы в эту папку.
 Пробный вызов берёт список ``probe``, а если его нет — значения по типу параметра.
 """
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from src.services.methods.method_catalog import VALUE_TYPE_CODES, as_int
@@ -124,25 +126,47 @@ def _folder(raw: Any, path: str) -> dict:
     }
 
 
-def parse_method_description(text: str) -> dict:
-    """Возвращает дерево ``{methods, folders}``."""
-    if not str(text or "").strip():
-        raise ValueError("Файл описания пуст.")
+def _load_description(text: str) -> Any:
+    stripped = text.lstrip()
+    if stripped[:1] in "{[":
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError as ex:
+            raise ValueError(f"Файл описания не является JSON: {ex}") from ex
     try:
         import yaml
     except ImportError as ex:
         raise ValueError("Разбор YAML недоступен: не установлен пакет PyYAML.") from ex
     try:
-        loaded = yaml.safe_load(text)
+        return yaml.safe_load(text)
     except yaml.YAMLError as ex:
         raise ValueError(f"Файл описания не является YAML: {ex}") from ex
+
+
+def _manifest_tree(loaded: dict) -> dict:
+    """Манифест пакета: методы лежат в папке ``folder``, а не в корне каталога."""
+    folder = dict(loaded["folder"])
+    if not folder.get("methods"):
+        folder["methods"] = loaded.get("methods") or []
+    folders = [folder]
+    folders.extend(loaded.get("folders") or [])
+    return {"methods": [], "folders": folders}
+
+
+def parse_method_description(text: str) -> dict:
+    """Возвращает дерево ``{methods, folders}``."""
+    if not str(text or "").strip():
+        raise ValueError("Файл описания пуст.")
+    loaded = _load_description(text)
     if loaded is None:
         raise ValueError("Файл описания пуст.")
     if isinstance(loaded, list):
         loaded = {"methods": loaded}
     if not isinstance(loaded, dict):
         raise ValueError("Корень описания должен быть объектом или списком методов.")
-    if "methods" not in loaded and "folders" not in loaded:
+    if isinstance(loaded.get("folder"), dict):
+        loaded = _manifest_tree(loaded)
+    elif "methods" not in loaded and "folders" not in loaded:
         if loaded.get("prsMethodAddress") or loaded.get("address"):
             loaded = {"methods": [loaded]}
         else:

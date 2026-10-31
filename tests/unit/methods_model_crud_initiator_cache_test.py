@@ -15,6 +15,9 @@ class _Logger:
     def warning(self, msg, *args, **kwargs):
         self.warnings.append(msg)
 
+    def info(self, *args, **kwargs):
+        pass
+
     def error(self, msg, *args, **kwargs):
         self.errors.append(msg)
 
