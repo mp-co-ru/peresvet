@@ -173,8 +173,11 @@ DISCONNECT, обрыв TCP, таймаут keepalive, закрытие со ст
 пока сессия считается онлайн, код 101 не дублирует. Потеря связи (100, в т.ч. LWT) снимает
 сессию, следующий <code class="docutils literal notranslate"><span class="pre">getConfig</span></code> снова пишет 101.</p></li>
 </ul>
-<p>Камера (коннектор с ключом <code class="docutils literal notranslate"><span class="pre">rtspUrl</span></code> в <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code>) в эту схему
-кодов не входит. Видеосервер сам открывает MQTT-сессию с ClientId, равным
+<p>Камера (коннектор с ключом <code class="docutils literal notranslate"><span class="pre">rtspUrl</span></code> в <code class="docutils literal notranslate"><span class="pre">source</span></code> или в корне
+<code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code>) в эту схему кодов не входит.
+Журнал у неё тот же, что у остальных коннекторов: <code class="docutils literal notranslate"><span class="pre">log.sendToPlatform</span></code>
+и сообщение <code class="docutils literal notranslate"><span class="pre">prsConnector.log_line</span></code>. Видеосервер сам открывает MQTT-сессию
+с ClientId, равным
 id коннектора, пока держит сеанс RTSP, и закрывает её вместе с сеансом.
 По <code class="docutils literal notranslate"><span class="pre">connection.created</span></code> и <code class="docutils literal notranslate"><span class="pre">connection.closed</span></code> такой сессии платформа
 только красит индикатор связи. Коды 100 и 101 в теги камеры не пишутся,

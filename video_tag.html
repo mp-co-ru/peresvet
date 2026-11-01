@@ -118,30 +118,58 @@
 Ниже — контракт чтения, архива и управления.</p>
 <p>Тег с <code class="docutils literal notranslate"><span class="pre">prsValueTypeCode</span> <span class="pre">=</span> <span class="pre">6</span></code> — окно в камеру, а не ряд чисел.
 Кадры не пишутся в RabbitMQ, VictoriaMetrics и PostgreSQL.
-Камера заводится как обычный коннектор: адрес потока, каталог архива
-и срок хранения лежат ключами в уже существующем атрибуте <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code>.
+Камера заводится как коннектор с адресом потока. Каталог архива и срок
+хранения задаются у хранилища данных типа <code class="docutils literal notranslate"><span class="pre">3</span></code> (<code class="docutils literal notranslate"><span class="pre">archivePath</span></code>,
+<code class="docutils literal notranslate"><span class="pre">retentionHours</span></code>). Тег привязывают и к коннектору, и к этому хранилищу.
 Новых атрибутов LDAP для этого нет.</p>
 <p>Пример конфигурации коннектора:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;rtspUrl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;rtsp://192.168.1.72:554/live/ch00_0&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;rtspTransport&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tcp&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;archivePath&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/var/lib/peresvet/video/rear-cam&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;retentionHours&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;archiveWidth&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;archiveFps&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;onvifPort&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8899</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;onvifUser&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;onvifPassword&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">  </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;rtspUrl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;rtsp://192.168.1.72:554/live/ch00_0&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;rtspTransport&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tcp&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;archiveWidth&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;archiveFps&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;onvifPort&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8899</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;onvifUser&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;onvifPassword&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;log&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;level&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;fileName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;logs/prs_connector_{id}.log&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;maxBytes&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10485760</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;backupCount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;sendToPlatform&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">rtspUrl</span></code> обязателен и должен быть адресом <code class="docutils literal notranslate"><span class="pre">rtsp://</span></code> или <code class="docutils literal notranslate"><span class="pre">rtsps://</span></code>.
-Наличие этого ключа и делает коннектор камерой.
-<code class="docutils literal notranslate"><span class="pre">archivePath</span></code> — абсолютный путь. В контейнере подхвата <code class="docutils literal notranslate"><span class="pre">prs-video-capture</span></code>
-смонтирован том <code class="docutils literal notranslate"><span class="pre">/var/lib/peresvet/video</span></code>; каталог вне этого тома не переживёт
-перезапуск контейнера. Если ключ опущен, архив пишется в
-<code class="docutils literal notranslate"><span class="pre">{VIDEO_ARCHIVE_DIR}/{id</span> <span class="pre">коннектора}</span></code>.
-<code class="docutils literal notranslate"><span class="pre">retentionHours</span></code> — срок хранения в часах; если ключ опущен, берётся 24.
+<p>Зоны распознавания человека задаются на этом же экране, поверх картинки.
+Кнопка <strong>Зона</strong> включает правку. Углы новой зоны ставятся кликами по картинке.
+Клик по жёлтой линии добавляет вершину на эту линию. <strong>Добавить зону</strong>
+заканчивает текущий многоугольник и начинает следующий. <strong>Удалить зону</strong>
+убирает зону, которая сейчас редактируется: чтобы выбрать другую, кликните по ней.
+Контур не выходит за границы картинки.
+Справа снизу у блока видео есть ручка: потяните её, чтобы изменить размер.
+<strong>Записать</strong> сохраняет зоны в <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> тега ключом <code class="docutils literal notranslate"><span class="pre">zone</span></code>.
+Каждая координата — доля кадра от 0 до 1, ноль слева и сверху. <code class="docutils literal notranslate"><span class="pre">zones</span></code> —
+массив многоугольников, каждый многоугольник сам массив точек <code class="docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y]</span></code>.
+Пустой <code class="docutils literal notranslate"><span class="pre">zones</span></code> означает весь кадр. <strong>Весь кадр</strong> как раз записывает пустой
+список.
+Человек считается в зоне, если его рамка пересекает любой из многоугольников.
+Метод «Человек в зоне» попадает в каталог «Методы» командой «Загрузка описания»
+из <code class="docutils literal notranslate"><span class="pre">methodDescription.yaml</span></code> проекта видеометодов. На теге хранится ссылка на него. Многоугольники метод не хранит: параметр <code class="docutils literal notranslate"><span class="pre">zone</span></code> —
+запрос к платформе <code class="docutils literal notranslate"><span class="pre">prsTag.api_crud.read.*</span></code> за атрибутом
+<code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> этого тега, а JSONata
+<code class="docutils literal notranslate"><span class="pre">$eval(data[0].attributes.prsJsonConfigString[0]).zone</span></code> отдаёт в метод
+только ключ <code class="docutils literal notranslate"><span class="pre">zone</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">source.rtspUrl</span></code> обязателен и должен быть адресом <code class="docutils literal notranslate"><span class="pre">rtsp://</span></code> или <code class="docutils literal notranslate"><span class="pre">rtsps://</span></code>.
+Наличие этого ключа и делает коннектор камерой. Тот же ключ в корне JSON
+тоже принимается. Ключ <code class="docutils literal notranslate"><span class="pre">log</span></code> совпадает с журналом коннектора:
+<code class="docutils literal notranslate"><span class="pre">level</span></code>, <code class="docutils literal notranslate"><span class="pre">fileName</span></code>, <code class="docutils literal notranslate"><span class="pre">maxBytes</span></code>, <code class="docutils literal notranslate"><span class="pre">backupCount</span></code> и флажок
+<code class="docutils literal notranslate"><span class="pre">sendToPlatform</span></code>.
+Архив пишется в <code class="docutils literal notranslate"><span class="pre">&lt;archivePath</span> <span class="pre">хранилища&gt;/&lt;id</span> <span class="pre">коннектора&gt;</span></code>.
+Каталог вне тома <code class="docutils literal notranslate"><span class="pre">/var/lib/peresvet/video</span></code> пропадёт вместе с контейнером.
+<code class="docutils literal notranslate"><span class="pre">retentionHours</span></code> у хранилища — срок хранения в часах; если ключ опущен, берётся 24.
 <code class="docutils literal notranslate"><span class="pre">archiveWidth</span></code> — ширина картинки архива в пикселях, чётное число.
 Высота подстраивается под пропорции кадра. <code class="docutils literal notranslate"><span class="pre">null</span></code> или пустое значение
 означает ширину, которую отдаёт камера.

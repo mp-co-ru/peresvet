@@ -281,7 +281,9 @@
 <p>Рядом с локальными методами тега и тревоги есть общий каталог.
 При старте <code class="docutils literal notranslate"><span class="pre">methods_model_crud</span></code> создаёт узел <code class="docutils literal notranslate"><span class="pre">cn=methods,cn=prs</span></code>.
 В каталоге лежат папки <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> и определения <code class="docutils literal notranslate"><span class="pre">prsMethod</span></code>.</p>
-<p>Папка создаётся тем же запросом, что и метод, с <code class="docutils literal notranslate"><span class="pre">&quot;folder&quot;:</span> <span class="pre">true</span></code>.
+<p>Папка создаётся тем же базовым <code class="docutils literal notranslate"><span class="pre">POST</span></code>, что и у остальных сущностей.
+Поле <code class="docutils literal notranslate"><span class="pre">folder</span></code> задано в <code class="docutils literal notranslate"><span class="pre">NodeCreate</span></code> (<code class="docutils literal notranslate"><span class="pre">api_crud</span></code>) и обрабатывается
+<code class="docutils literal notranslate"><span class="pre">model_crud</span></code>: при <code class="docutils literal notranslate"><span class="pre">true</span></code> создаётся <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code>, а не метод.
 Отдельного адреса <code class="docutils literal notranslate"><span class="pre">/v1/methods/folders</span></code> нет.
 Удаление папки само убирает вложенные папки и методы.
 Если на метод каталога ссылается экземпляр (атрибут <code class="docutils literal notranslate"><span class="pre">prsCatalogMethodId</span></code>),
@@ -336,17 +338,16 @@
 типов <code class="docutils literal notranslate"><span class="pre">1</span></code> и <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p>
 <p>Копирование экземпляра и копирование определения внутри каталога работают.
 Копирование определения каталога в тег или тревогу возвращает <code class="docutils literal notranslate"><span class="pre">422</span></code>.</p>
-<p>Описание каталога можно загрузить из YAML. В меню папки «Методы»
-и вложенной папки есть команда «Загрузка описания». Файл содержит
-<code class="docutils literal notranslate"><span class="pre">folders</span></code> и <code class="docutils literal notranslate"><span class="pre">methods</span></code>. У метода обязателен адрес (<code class="docutils literal notranslate"><span class="pre">address</span></code> или
-<code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code>), параметры задаются полями <code class="docutils literal notranslate"><span class="pre">cn</span></code>, <code class="docutils literal notranslate"><span class="pre">index</span></code> и
-<code class="docutils literal notranslate"><span class="pre">type</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">string</span></code>, <code class="docutils literal notranslate"><span class="pre">json</span></code> или код <code class="docutils literal notranslate"><span class="pre">1</span></code>–<code class="docutils literal notranslate"><span class="pre">4</span></code>).
-Необязательный список <code class="docutils literal notranslate"><span class="pre">probe</span></code> — аргументы пробного вызова. Пример:
-<code class="docutils literal notranslate"><span class="pre">docs/source/samples/methods/methodDescription.yaml</span></code>.</p>
-<p>Иконка загрузки создаёт отсутствующие папки и методы. Уже существующий
-<code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code> повторно не создаётся. Флажок «Проверить методы»
-включает пробный вызов каждого метода при этой загрузке.
-В диалоге появляется список: что создано и чем закончилась проверка.</p>
+<p>Описание каталога загружается командой «Загрузка описания» в меню папки
+«Методы» и вложенной папки. Конфигуратор сам читает файл YAML
+(<code class="docutils literal notranslate"><span class="pre">folders</span></code> и <code class="docutils literal notranslate"><span class="pre">methods</span></code>) и создаёт узлы обычным <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/</span></code>:
+папка — с <code class="docutils literal notranslate"><span class="pre">&quot;folder&quot;:</span> <span class="pre">true</span></code>, метод — с адресом и параметрами.
+У метода обязателен адрес (<code class="docutils literal notranslate"><span class="pre">address</span></code> или <code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code>),
+параметры задаются полями <code class="docutils literal notranslate"><span class="pre">cn</span></code>, <code class="docutils literal notranslate"><span class="pre">index</span></code> и <code class="docutils literal notranslate"><span class="pre">type</span></code>
+(<code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">string</span></code>, <code class="docutils literal notranslate"><span class="pre">json</span></code> или код <code class="docutils literal notranslate"><span class="pre">1</span></code>–<code class="docutils literal notranslate"><span class="pre">4</span></code>).
+Пример: <code class="docutils literal notranslate"><span class="pre">docs/source/samples/methods/methodDescription.yaml</span></code>.</p>
+<p>Уже существующий <code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code> повторно не создаётся.
+В диалоге появляется список: какая папка и какой метод созданы.</p>
 <p>Пакеты методов лежат в <code class="docutils literal notranslate"><span class="pre">methods/packages/&lt;id&gt;/</span></code>: <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> и
 <code class="docutils literal notranslate"><span class="pre">worker.py</span></code>. Сервис methods читает только JSON и создаёт отсутствующие
 методы по <code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code>. Python пакета не импортируется.
