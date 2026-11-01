@@ -98,6 +98,12 @@ location = /v1/talk/ {
     proxy_pass $proto://${NGINX_HOST}:8000;
 }
 
+location = /v1/vision/overlay {
+    proxy_set_header Host $host;
+    proxy_read_timeout 5s;
+    proxy_pass http://prs-methods-video:8093/api/overlay;
+}
+
 location /grafana/ {
     #rewrite  ^/grafana/(.*)  /$1 break;
     proxy_pass $proto://${NGINX_HOST}:3000/;

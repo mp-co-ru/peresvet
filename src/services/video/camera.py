@@ -23,13 +23,14 @@ _RTSP_USERINFO_RE = re.compile(r"(rtsps?://)([^/\s@]+)@")
 
 
 KEY_RTSP = "rtspUrl"
-KEY_ARCHIVE = "archivePath"
-KEY_RETENTION = "retentionHours"
 KEY_ARCHIVE_WIDTH = "archiveWidth"
 KEY_ARCHIVE_FPS = "archiveFps"
 KEY_ONVIF_PORT = "onvifPort"
 KEY_ONVIF_USER = "onvifUser"
 KEY_ONVIF_PASSWORD = "onvifPassword"
+_LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")
+LOG_MAX_BYTES = 10 * 1024 * 1024
+LOG_BACKUP_COUNT = 10
 
 
 def _config_dict(raw: Any) -> dict:
@@ -47,13 +48,24 @@ def _pick(raw: dict, *keys: str) -> Any:
     return None
 
 
+def camera_source(raw: dict) -> dict:
+    """Параметры потока. Как у остальных коннекторов, они лежат в ``source``.
+
+    Плоский JSON, где ``rtspUrl`` стоит в корне, тоже принимается.
+    """
+    source = raw.get("source")
+    if isinstance(source, dict) and _pick(source, KEY_RTSP) is not None:
+        return source
+    return raw
+
+
 def config_is_camera(raw: Any) -> bool:
-    """Камера — коннектор, в чьём prsJsonConfigString есть ключ rtspUrl."""
+    """Камера — коннектор, в чьём ``source`` (или в корне JSON) есть ``rtspUrl``."""
     try:
         data = _config_dict(raw)
     except (ValueError, json.JSONDecodeError, TypeError):
         return False
-    return _pick(data, KEY_RTSP) is not None
+    return _pick(camera_source(data), KEY_RTSP) is not None
 
 
 def is_camera_connector(entity_type_code: Any) -> bool:
@@ -83,6 +95,11 @@ class CameraConfig:
     onvif_port: int = 8899
     onvif_user: str | None = None
     onvif_password: str | None = None
+    log_to_platform: bool = False
+    log_level: str = "INFO"
+    log_file_name: str = ""
+    log_max_bytes: int = LOG_MAX_BYTES
+    log_backup_count: int = LOG_BACKUP_COUNT
 
     @property
     def onvif_host(self) -> str:
@@ -116,7 +133,8 @@ def camera_from_connector_attributes(attrs: dict) -> CameraConfig | None:
     """Активная камера по атрибутам узла коннектора.
 
     ``None`` — коннектор выключен или в конфигурации нет ``rtspUrl``.
-    ``ValueError`` — JSON или путь архива нельзя применить.
+    ``ValueError`` — JSON камеры нельзя применить.
+    Путь архива и срок хранения здесь не читаются: они лежат в хранилище видео.
     """
     active = _ldap_value(attrs, "prsActive")
     if active is not None and str(active).upper() != "TRUE":
@@ -129,40 +147,66 @@ def camera_from_connector_attributes(attrs: dict) -> CameraConfig | None:
     return parse_camera_config(raw or {})
 
 
+def _log_int(value: Any, default: int, *, minimum: int) -> int:
+    if isinstance(value, bool) or value is None or value == "":
+        return default
+    try:
+        number = int(value)
+    except (TypeError, ValueError):
+        return default
+    if number < minimum:
+        return default
+    return number
+
+
+def _log_settings(raw: dict) -> tuple[bool, str, str, int, int]:
+    """Ключ ``log`` как в prs-connector-core: уровень, файл, размер, копии, флажок."""
+    log = raw.get("log")
+    if not isinstance(log, dict):
+        log = {}
+    level = str(log.get("level") or "INFO").strip().upper()
+    if level not in _LOG_LEVELS:
+        level = "INFO"
+    file_name = log.get("fileName")
+    if not isinstance(file_name, str):
+        file_name = ""
+    return (
+        bool(log.get("sendToPlatform")),
+        level,
+        file_name.strip(),
+        _log_int(log.get("maxBytes"), LOG_MAX_BYTES, minimum=1),
+        _log_int(log.get("backupCount"), LOG_BACKUP_COUNT, minimum=0),
+    )
+
+
 def parse_camera_config(raw: Any) -> CameraConfig:
     raw = _config_dict(raw)
-    url = str(_pick(raw, KEY_RTSP) or "").strip()
+    source = camera_source(raw)
+    url = str(_pick(source, KEY_RTSP) or "").strip()
     parts = urlsplit(url)
     if parts.scheme not in ("rtsp", "rtsps") or not parts.hostname:
         raise ValueError(
             "В prsJsonConfigString нужен ключ rtspUrl вида rtsp://хост/путь."
         )
-    transport = str(raw.get("rtspTransport") or "tcp").strip().lower()
+    transport = str(source.get("rtspTransport") or "tcp").strip().lower()
     if transport not in ("tcp", "udp"):
         transport = "tcp"
-    archive_path = None
-    path_raw = str(_pick(raw, KEY_ARCHIVE) or "").strip()
-    if path_raw:
-        archive_path = Path(path_raw).expanduser()
-        if not archive_path.is_absolute():
-            raise ValueError("Ключ archivePath должен быть абсолютным путём.")
-        archive_path = archive_path.resolve()
-    retention = 24.0
-    retention_raw = _pick(raw, KEY_RETENTION)
-    if retention_raw is not None:
-        retention = float(retention_raw)
-    if retention <= 0:
-        raise ValueError("Ключ retentionHours должен быть больше нуля.")
+    send_log, log_level, log_file_name, log_max_bytes, log_backup_count = _log_settings(raw)
     return CameraConfig(
         rtsp_url=url,
         transport=transport,
-        archive_path=archive_path,
-        retention_hours=retention,
-        archive_width=_optional_even_width(raw),
-        archive_fps=_optional_fps(raw),
-        onvif_port=_onvif_port(raw),
-        onvif_user=_optional_text(raw, KEY_ONVIF_USER),
-        onvif_password=_optional_text(raw, KEY_ONVIF_PASSWORD),
+        archive_path=None,
+        retention_hours=24.0,
+        archive_width=_optional_even_width(source),
+        archive_fps=_optional_fps(source),
+        onvif_port=_onvif_port(source),
+        onvif_user=_optional_text(source, KEY_ONVIF_USER),
+        onvif_password=_optional_text(source, KEY_ONVIF_PASSWORD),
+        log_to_platform=send_log,
+        log_level=log_level,
+        log_file_name=log_file_name,
+        log_max_bytes=log_max_bytes,
+        log_backup_count=log_backup_count,
     )
 
 

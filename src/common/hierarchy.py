@@ -68,6 +68,24 @@ def omit_empty_ldap_description(attrs: dict) -> dict:
     return attrs
 
 
+def dedupe_ldap_search_hits(result: list) -> list:
+    """Оставляет первое вхождение каждого entryUUID.
+
+    Поиск с разыменованием алиасов может вернуть один и тот же узел дважды:
+    саму запись и цель алиаса. Список конфигуратора использует id как ключ
+    строки, повтор показывает дубль.
+    """
+    seen: set[str] = set()
+    unique: list = []
+    for item in result:
+        node_id = item[0]
+        if node_id in seen:
+            continue
+        seen.add(node_id)
+        unique.append(item)
+    return unique
+
+
 class Hierarchy:
     """Класс для работы с иерархической моделью.
 
@@ -349,7 +367,7 @@ class Hierarchy:
             if not ids:
                 conn.deref = old_deref
 
-        return result
+        return dedupe_ldap_search_hits(result)
 
     async def add(self, base: str | None = None, attribute_values: dict | None = None) -> str:
         """Добавление узла в иерархию.

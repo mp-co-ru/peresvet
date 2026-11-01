@@ -19,8 +19,13 @@ from src.common.app_svc import AppSvc
 from src.common.consts import CNTagValueTypes
 from src.services.video.camera import camera_from_connector_attributes
 from src.services.video.locate import CAPTURE_LOOKUP, bind_keys
-from src.services.video.lookup import active_video_tag_linked, connector_id_for_tag
+from src.services.video.lookup import camera_for_session, connector_id_for_tag
 from src.services.video.ownership import http_base, serves
+from src.services.video.platform_log import bind as bind_platform_log
+from src.services.video.platform_log import clear as clear_platform_log
+from src.services.video.platform_log import command as command_platform_log
+from src.services.video.platform_log import configure as configure_platform_log
+from src.services.video.platform_log import note as note_platform_log
 from src.services.video.presence import configure_presence
 from src.services.video.runtime import (
     stop_all_sessions,
@@ -42,8 +47,10 @@ class VideoCapture(AppSvc):
         # Уведомления, не голос may_*: иначе подхват участвовал бы в правке тега.
         self._handlers["prsTag.model.updated.*"] = self._tag_updated
         self._handlers["prsTag.model.deleted.*"] = self._tag_deleted
+        self._handlers["prsConnector.app_api.command.*"] = self._command
 
     async def on_startup(self) -> None:
+        bind_platform_log(self._post_message)
         broker = self._config.broker or {}
         configure_presence(broker.get("amqp_url", ""))
         await super().on_startup()
@@ -137,8 +144,20 @@ class VideoCapture(AppSvc):
             return
         await self._apply_connector(connector_id)
 
+    async def _command(self, mes: dict, routing_key: str | None = None):
+        conn_id = str((mes or {}).get("id") or "")
+        command = (mes or {}).get("command") or {}
+        if not conn_id or "logToPlatform" not in command:
+            return {}
+        if not serves(self._config.nodes, conn_id):
+            return {}
+        command_platform_log(conn_id, bool(command.get("logToPlatform")))
+        return {}
+
     async def _deleted(self, mes: dict, routing_key: str | None = None):
         conn_id = str((mes or {}).get("id") or "")
+        if conn_id:
+            clear_platform_log(conn_id)
         if conn_id and await stop_session(conn_id):
             self._logger.info(
                 f"{self._config.svc_name} :: Камера {conn_id}: сеанс остановлен, коннектор удалён."
@@ -170,22 +189,35 @@ class VideoCapture(AppSvc):
             )
             return
         if camera is None:
+            configure_platform_log(conn_id, send=False, level="INFO")
             if await stop_session(conn_id):
                 self._logger.info(
                     f"{self._config.svc_name} :: Камера {conn_id}: сеанс остановлен."
                 )
+                note_platform_log(conn_id, "INFO", "Сеанс остановлен.")
             return
-        if not await active_video_tag_linked(self._hierarchy, conn_id):
+        configure_platform_log(
+            conn_id,
+            send=camera.log_to_platform,
+            level=camera.log_level,
+            file_name=camera.log_file_name,
+            max_bytes=camera.log_max_bytes,
+            backup_count=camera.log_backup_count,
+        )
+        stored = await camera_for_session(self._hierarchy, conn_id, camera)
+        if stored is None:
             if await stop_session(conn_id):
                 self._logger.info(
-                    f"{self._config.svc_name} :: Камера {conn_id}: сеанс остановлен, нет активного тега видеопотока."
+                    f"{self._config.svc_name} :: Камера {conn_id}: сеанс остановлен, нет хранилища видео."
                 )
+            note_platform_log(conn_id, "WARNING", "Нет хранилища видео, сеанс остановлен.")
             return
-        outcome = sync_session(conn_id, camera)
+        outcome = sync_session(conn_id, stored)
         if outcome == "restart":
             self._logger.info(
                 f"{self._config.svc_name} :: Камера {conn_id}: сеанс по новой конфигурации."
             )
+            note_platform_log(conn_id, "INFO", "Сеанс открыт по новой конфигурации.")
 
     async def _scan_loop(self) -> None:
         while True:
@@ -224,10 +256,19 @@ class VideoCapture(AppSvc):
                 continue
             if camera is None:
                 continue
-            if not await active_video_tag_linked(self._hierarchy, conn_id):
+            configure_platform_log(
+                conn_id,
+                send=camera.log_to_platform,
+                level=camera.log_level,
+                file_name=camera.log_file_name,
+                max_bytes=camera.log_max_bytes,
+                backup_count=camera.log_backup_count,
+            )
+            stored = await camera_for_session(self._hierarchy, conn_id, camera)
+            if stored is None:
                 continue
             seen.add(conn_id)
-            sync_session(conn_id, camera)
+            sync_session(conn_id, stored)
         for conn_id in tracked_session_ids():
             if conn_id not in seen:
                 await stop_session(conn_id)

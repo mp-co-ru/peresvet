@@ -41,6 +41,37 @@ def test_resolve_routing_key_and_jsonata():
     post.assert_awaited()
 
 
+def test_video_zone_platform_request_returns_the_zone_key():
+    stored = json.dumps({
+        "zone": {
+            "zones": [[[0.1, 0.2], [0.4, 0.2], [0.4, 0.6]]],
+        }
+    })
+    post = AsyncMock(return_value={
+        "data": [{
+            "id": "video-tag",
+            "attributes": {"prsJsonConfigString": [stored]},
+        }]
+    })
+    val = asyncio.run(
+        resolve_parameter_value(
+            {
+                "routingKey": "prsTag.api_crud.read.*",
+                "message": {"id": ["video-tag"], "attributes": ["prsJsonConfigString"]},
+                "responseJsonata": "$eval(data[0].attributes.prsJsonConfigString[0]).zone",
+            },
+            post_message=post,
+            client_request=None,
+            initiator_finish=1,
+            initiator_point=None,
+        )
+    )
+    assert val["zones"][0][0] == [0.1, 0.2]
+    assert "fullFrame" not in val
+    assert "space" not in val
+    assert post.await_args.kwargs["routing_key"] == "prsTag.api_crud.read.*"
+
+
 def test_resolve_legacy_tag_and_client_context():
     post = AsyncMock(return_value={"y": 1})
     val = asyncio.run(

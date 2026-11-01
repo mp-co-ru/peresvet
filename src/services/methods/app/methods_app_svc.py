@@ -18,7 +18,11 @@ from src.common.app_svc import AppSvc
 from src.common.hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
 from src.common.amqp_rpc import NO_AMQP_RPC_REPLY
 from src.services.methods.app.methods_app_settings import MethodsAppSettings
-from src.services.methods.app.method_param_resolve import parse_parameter_config, resolve_parameter_value
+from src.services.methods.app.method_param_resolve import (
+    parse_parameter_config,
+    resolve_parameter_value,
+    single_parameter_tag_id,
+)
 from src.services.methods.method_catalog import (
     as_int,
     catalog_call_error,
@@ -354,6 +358,29 @@ class MethodsApp(AppSvc):
             "catalogParameters": catalog_parameters,
         }
 
+    async def _video_stream_argument(self, cfg: dict) -> dict | None:
+        """Тег видеопотока не читается через data_get: в метод уходит его id.
+
+        История такого тега не ведётся, а кадр в брокер не кладётся.
+        Метод сам забирает снимок по этому id.
+        """
+        tag_id = single_parameter_tag_id(cfg)
+        if not tag_id:
+            return None
+        rows = await self._hierarchy.search({"id": tag_id, "attributes": ["prsValueTypeCode"]})
+        if not rows:
+            return None
+        raw = rows[0][2].get("prsValueTypeCode", ["0"])
+        if isinstance(raw, list):
+            raw = raw[0] if raw else 0
+        try:
+            code = int(raw)
+        except (TypeError, ValueError):
+            return None
+        if code != 6:
+            return None
+        return {"tagId": tag_id}
+
     async def _calc_tag(self, tag_id: str, method_id: str, parameters: dict, data: list[int | None]) -> None:
 
         self._logger.debug(f"calc_tag. tag_id: {tag_id}; method_id: {method_id}; parameters: {parameters}; data: {data}")
@@ -369,15 +396,19 @@ class MethodsApp(AppSvc):
         for parameter in parameters:
             cfg = parse_parameter_config(parameter[2]["prsJsonConfigString"][0])
             self._logger.debug(f"param cfg: {cfg}")
-            param_data = await resolve_parameter_value(
-                cfg,
-                post_message=self._post_message,
-                client_request=None,
-                initiator_finish=data[0],
-                initiator_point=data,
-                virtual_resolution_tag_id=tag_id,
-                lookup_constant=self._lookup_constant,
-            )
+            video_tag = await self._video_stream_argument(cfg)
+            if video_tag is not None:
+                param_data = video_tag
+            else:
+                param_data = await resolve_parameter_value(
+                    cfg,
+                    post_message=self._post_message,
+                    client_request=None,
+                    initiator_finish=data[0],
+                    initiator_point=data,
+                    virtual_resolution_tag_id=tag_id,
+                    lookup_constant=self._lookup_constant,
+                )
             if parameter[2]["prsIndex"][0] is None:
                 index = None
             else:

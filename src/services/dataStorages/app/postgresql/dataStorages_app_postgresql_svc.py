@@ -556,7 +556,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         payload = {
             "base": ds_id,
             "filter": {
-                "objectClass": ["prsDatastorageAlertData"],
+                "objectClass": ["prsDatastorageTagData"],
                 "cn": [tag_id]
             },
             "attributes": ["prsStore"]
@@ -582,6 +582,9 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             await self._bind_tag(tag_id, False)
 
         self._logger.info(f"{self._config.svc_name} :: Тег {tag_id} отвязан от хранилища {ds_id}.")
+        # Пустой dict, не None: иначе model_crud считает, что обработчика нет,
+        # и не удаляет узел привязки в LDAP.
+        return {}
 
     async def _read_data(self, tag_id: str, start: int, finish: int,
         order: int, count: int, one_before: bool, one_after: bool, value: Any = None):

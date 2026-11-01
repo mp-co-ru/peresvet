@@ -536,7 +536,19 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
 
         datastorage_id = payload["dataStorageId"]
 
-        res = await self._post_message(
+        video_link = await self._video_storage_link(datastorage_id)
+        if video_link is not None and video_link.get("error"):
+            self._logger.error(
+                f"{self._config.svc_name} :: Хранилище видео {datastorage_id}: {video_link['error']}"
+            )
+            return
+        if video_link is None and await self._tag_is_video_stream(payload["tagId"]):
+            self._logger.info(
+                f"{self._config.svc_name} :: Тег видеопотока {payload['tagId']} "
+                f"не привязывается к хранилищу истории {datastorage_id}."
+            )
+            return
+        res = video_link if video_link is not None else await self._post_message(
             mes=payload,
             reply=True,
             routing_key=f"{self._config.hierarchy['class']}.model.link_tag.{datastorage_id}",

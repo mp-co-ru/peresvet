@@ -161,6 +161,8 @@ async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
             :request: ../../../../docs/source/samples/methods/addMethodIn.txt
             :response: ../../../../docs/source/samples/methods/addMethodOut.txt
 
+        * **folder** (bool) - поле базового POST. Если ``true``, создаётся
+          папка ``prsFolder``, а не метод. По умолчанию ``false``.
         * **parentId** (str) - Id родительского узла. Обязательное поле.
         * **initiatedBy** (str | list[str]) - Список id экземпляров сущностей,
           инициирующих вычисление тега. Необязательный атрибут.

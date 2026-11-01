@@ -14,6 +14,8 @@ import logging
 import os
 from urllib.parse import unquote, urlsplit
 
+from src.services.video.platform_log import note as note_platform_log
+
 logger = logging.getLogger("video")
 
 _settings: tuple[str, int, str, str] | None = None
@@ -87,6 +89,7 @@ async def _presence_loop(connector_id: str, stop: asyncio.Event) -> None:
             raise
         except Exception as ex:
             logger.warning("Камера %s: MQTT-сессия не открылась: %s", connector_id, ex)
+            note_platform_log(connector_id, "WARNING", "Индикатор связи не открылся.")
         if stop.is_set():
             return
         try:
@@ -107,6 +110,7 @@ async def _one_session(connector_id: str, stop: asyncio.Event) -> None:
         if packet_type != 0x20 or len(body) < 2 or body[1] != 0:
             raise RuntimeError(f"брокер отклонил CONNECT, код {body[1] if len(body) > 1 else packet_type}")
         logger.info("Камера %s: MQTT-сессия на брокере", connector_id)
+        note_platform_log(connector_id, "INFO", "Индикатор связи на брокере.")
         reader_task = asyncio.create_task(_drain_broker(reader, stop))
         try:
             while not stop.is_set() and not reader_task.done():

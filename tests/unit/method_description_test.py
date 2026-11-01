@@ -56,6 +56,34 @@ def test_parse_method_description_tree_and_default_probe():
     assert tree["methods"][0]["probe"] == []
 
 
+def test_parse_json_manifest_puts_methods_into_its_folder():
+    text = """
+    {
+      "id": "video",
+      "license": {"mode": "none"},
+      "folder": {"cn": "Видео", "description": "Методы видео"},
+      "methods": [
+        {
+          "cn": "person_in_zone",
+          "prsMethodAddress": "prs.vision.person_in_zone",
+          "description": "Человек в зоне",
+          "parameters": [
+            {"cn": "source", "prsIndex": 1, "prsValueTypeCode": 4},
+            {"cn": "zone", "prsIndex": 2, "prsValueTypeCode": 4}
+          ]
+        }
+      ]
+    }
+    """
+    tree = parse_method_description(text)
+    assert tree["methods"] == []
+    assert tree["folders"][0]["cn"] == "Видео"
+    method = tree["folders"][0]["methods"][0]
+    assert method["prsMethodAddress"] == "prs.vision.person_in_zone"
+    assert method["parameters"][1]["prsValueTypeCode"] == 4
+    assert method["probe"] == [{}, {}]
+
+
 def test_parse_method_description_rejects_empty_and_unknown_type():
     with pytest.raises(ValueError, match="пуст"):
         parse_method_description("   ")
