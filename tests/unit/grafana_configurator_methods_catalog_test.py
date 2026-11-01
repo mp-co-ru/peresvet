@@ -70,6 +70,9 @@ def test_methods_catalog_root_and_menus():
     gate_at = javascript.find('let p=prsClassApi(r,t);if(!p)return;')
     assert expand_at != -1 and gate_at != -1 and expand_at < gate_at
     assert 'return qsF.append("filter",JSON.stringify({objectClass:["prsFolder"]})),fetch(' in javascript[expand_at:gate_at]
+    assert 'else if("methods"===prsFolderCtx)prsFolderJobs.push(prsFolderFetch("/v1/methods/","prsMethod"))' in javascript
+    assert '"prsMethod"!==oc)return' in javascript
+    assert 'case"prsMethod":node.icon="fa-solid fa-file-code prsMethod"' in javascript
     assert 'case"prsTag":a("tags"===n?["userFolders","tags"]:["__copy__","__active__","__delete__","alerts","methods"]);' in javascript
     assert 'case"prsAlert":a(["__copy__","methods","__active__","__delete__"]);' in javascript
     assert "prsSyncMethodCatalogForm" in javascript
