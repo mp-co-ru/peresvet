@@ -19,6 +19,8 @@ class ArchiveConfig:
     retention_hours: float
     segment_seconds: int
     max_fragment_seconds: int
+    archive_width: int | None = None
+    archive_fps: float | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -26,6 +28,8 @@ class ArchiveConfig:
             "retentionHours": self.retention_hours,
             "segmentSeconds": self.segment_seconds,
             "maxFragmentSeconds": self.max_fragment_seconds,
+            "archiveWidth": self.archive_width,
+            "archiveFps": self.archive_fps,
         }
 
 
@@ -64,6 +68,37 @@ def default_archive_config() -> ArchiveConfig:
         segment_seconds=max(2, _env_segment_seconds()),
         max_fragment_seconds=max(1, _env_max_fragment_seconds()),
     )
+
+
+def _optional_even_width(raw: dict) -> int | None:
+    value = raw.get("archiveWidth")
+    if value is None or value == "":
+        return None
+    if isinstance(value, bool):
+        raise ValueError("Ключ archiveWidth должен быть чётной шириной в пикселях.")
+    try:
+        number = float(value)
+    except (TypeError, ValueError) as ex:
+        raise ValueError("Ключ archiveWidth должен быть чётной шириной в пикселях.") from ex
+    width = int(number)
+    if width != number or width < 2 or width % 2:
+        raise ValueError("Ключ archiveWidth должен быть чётной шириной в пикселях.")
+    return width
+
+
+def _optional_fps(raw: dict) -> float | None:
+    value = raw.get("archiveFps")
+    if value is None or value == "":
+        return None
+    if isinstance(value, bool):
+        raise ValueError("Ключ archiveFps должен быть больше нуля.")
+    try:
+        fps = float(value)
+    except (TypeError, ValueError) as ex:
+        raise ValueError("Ключ archiveFps должен быть больше нуля.") from ex
+    if fps <= 0:
+        raise ValueError("Ключ archiveFps должен быть больше нуля.")
+    return fps
 
 
 def parse_archive_config(raw: Any) -> ArchiveConfig:
@@ -109,6 +144,8 @@ def parse_archive_config(raw: Any) -> ArchiveConfig:
         retention_hours=hours,
         segment_seconds=segment,
         max_fragment_seconds=limit,
+        archive_width=_optional_even_width(raw),
+        archive_fps=_optional_fps(raw),
     )
 
 

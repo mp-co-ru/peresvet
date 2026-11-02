@@ -66,7 +66,8 @@ def test_csv_export_dashboard_contract():
     assert "prsBindVideoZone" in javascript
     assert "prsVideoZonePersist" in javascript
     assert 'id="button-prsVideoZone"' in html
-    assert '"zone":zone' in javascript or "config.zone=zone" in javascript
+    assert "config.zones=Array.isArray(zone.zones)?zone.zones:[]" in javascript
+    assert "delete config.zone" in javascript
     assert "prsStopVideoRecognition" in javascript
     assert "/v1/vision/overlay?tagId=" in javascript
     assert 'id="prs-video-preview-stage"' in html

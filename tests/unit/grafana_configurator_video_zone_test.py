@@ -140,16 +140,21 @@ def _parts():
 
 def test_video_zone_edit_contract():
     html, css, javascript = _parts()
-    assert 'id="button-prsVideoZoneNew"' in html
-    assert ">Добавить зону<" in html
+    assert 'id="button-prsVideoZoneNew"' not in html
+    assert "Добавить зону" not in html
     assert ">Удалить зону<" in html
     assert "prsVideoZoneHitLines=function" in javascript
     assert "prsVideoZoneInsertOnEdge=function" in javascript
-    assert 'Кликните по зоне, которую нужно удалить.' in javascript
+    assert "prsVideoZoneFlash=function" in javascript
+    assert "prs-video-zone-hit" in css
+    assert "Зона удалена." in javascript
+    assert "Показана первая из записанных." in javascript
+    assert 'Кликните по зоне, которую нужно удалить.' not in javascript
     assert "prsVideoZoneRead=function" in javascript
     assert "prsVideoZonePayload=function" in javascript
     assert "prsVideoZoneAddPoint(draft,pt)" in javascript
-    assert 'if(prsPrevNodeId&&prsPrevNodeId!==t&&"function"==typeof prsHideVideoTagPreview)prsHideVideoTagPreview()' in javascript
+    assert 'window.prsLoadedValueType="";"function"==typeof prsHideVideoTagPreview&&prsHideVideoTagPreview()' in javascript
+    assert "prsLoadedValueType" in javascript
     assert 'el.src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"' in javascript
     assert "prsVideoZoneDot(draft,i,pts[i][0],pts[i][1],9,!0)" in javascript
     assert "prsVideoZoneDot(draft,i,pts[i][0],pts[i][1],4,!1)" in javascript

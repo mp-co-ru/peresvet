@@ -116,7 +116,7 @@ def test_camera_source_and_log_follow_the_connector_shape():
     assert config_is_camera(raw) is True
     camera = parse_camera_config(raw)
     assert camera.transport == "udp"
-    assert camera.archive_width == 640
+    assert camera.archive_width is None
     assert camera.archive_fps is None
     assert camera.onvif_port == 80
     assert camera.log_to_platform is True
@@ -201,6 +201,22 @@ def test_platform_log_follows_the_connector_log_keys(tmp_path):
         platform_log.reset_for_tests()
 
 
+def test_jpeg_pipe_is_split_into_whole_frames():
+    from src.services.video.runtime import mjpeg_part, pop_jpegs
+
+    buffer = bytearray()
+    first = b"\xff\xd8" + b"a" * 10 + b"\xff\xd9"
+    second = b"\xff\xd8" + b"b" * 4 + b"\xff\xd9"
+    assert pop_jpegs(buffer, b"junk") == []
+    assert pop_jpegs(buffer, first[:8]) == []
+    assert pop_jpegs(buffer, first[8:] + second) == [first, second]
+    assert buffer == bytearray()
+    part = mjpeg_part(first)
+    assert part.startswith(b"--ffmpeg\r\nContent-Type: image/jpeg\r\n")
+    assert f"Content-Length: {len(first)}".encode() in part
+    assert part.endswith(first + b"\r\n")
+
+
 def test_segments_cover_moment_and_period(tmp_path):
     (tmp_path / "100.ts").write_bytes(b"a")
     (tmp_path / "110.ts").write_bytes(b"b")
@@ -219,7 +235,7 @@ def test_segments_cover_moment_and_period(tmp_path):
 
 
 def _preview_at(args):
-    return next(index for index, item in enumerate(args) if "fps=8,scale=960:-2" in item)
+    return next(index for index, item in enumerate(args) if "fps=15,scale=960:-2" in item)
 
 
 def test_session_ffmpeg_uses_one_rtsp_input(tmp_path):
@@ -228,22 +244,25 @@ def test_session_ffmpeg_uses_one_rtsp_input(tmp_path):
     assert args[args.index("-rtsp_transport") + 1] == "tcp"
     assert args.count(CAMERA_URL) == 1
     assert args.count("-i") == 1
-    assert "mpjpeg" in args
+    assert "mpjpeg" not in args
+    assert "image2pipe" not in args
     assert "segment" in args
     assert "+genpts" not in args
     assert "-use_wallclock_as_timestamps" in args
-    assert "libx264" in args
-    assert "copy" not in args
+    assert args.count("libx264") == 1
+    assert "copy" in args
     preview = _preview_at(args)
     preview_filter = args[preview]
-    assert preview_filter.endswith("fps=8,scale=960:-2")
+    assert preview_filter.endswith("fps=15,scale=960:-2")
     assert "setpts=(RTCTIME-RTCSTART)/(1000000*TB)" in preview_filter
     archive = args[:preview]
     assert "scale=" not in " ".join(archive)
     assert "fps=" not in " ".join(archive)
-    assert archive.count("-fps_mode") == 1
-    assert args[preview + 1:preview + 3] == ["-fps_mode", "passthrough"]
-    assert args[-1] == "pipe:1"
+    assert "-fps_mode" not in archive
+    assert "libx264" not in archive
+    assert args[preview + 1:preview + 3] == ["-c:v", "libx264"]
+    assert "pipe:1" in args
+    assert args[-1].endswith("preview.jpg")
     assert "libmp3lame" not in args
     target = "tcp://127.0.0.1:9"
     with_audio = session_ffmpeg_args(
@@ -252,7 +271,8 @@ def test_session_ffmpeg_uses_one_rtsp_input(tmp_path):
     assert target in with_audio
     assert "libmp3lame" in with_audio
     assert with_audio.index(target) < _preview_at(with_audio)
-    assert with_audio[-1] == "pipe:1"
+    assert "pipe:1" in with_audio
+    assert with_audio[-1].endswith("preview.jpg")
     assert with_audio.count("-i") == 1
     assert str(tmp_path / "%s.ts") in args
     concat = tmp_path / "list.txt"
@@ -267,12 +287,19 @@ def test_session_ffmpeg_uses_one_rtsp_input(tmp_path):
     assert "yuvj420p" in shot
 
 
-def test_archive_size_and_rate_come_from_the_connector(tmp_path):
-    camera = parse_camera_config({
-        "rtspUrl": CAMERA_URL,
+def test_archive_size_and_rate_come_from_the_storage(tmp_path):
+    from src.services.video.archive_config import parse_archive_config
+    from src.services.video.storage import camera_with_storage
+
+    camera = parse_camera_config({"rtspUrl": CAMERA_URL, "archiveWidth": 640, "archiveFps": 12})
+    assert camera.archive_width is None
+    assert camera.archive_fps is None
+    archive = parse_archive_config({
+        "archivePath": "/var/lib/peresvet/video",
         "archiveWidth": 640,
         "archiveFps": 12,
     })
+    camera = camera_with_storage(camera, archive, "conn-1")
     assert camera.archive_width == 640
     assert camera.archive_fps == 12
     args = session_ffmpeg_args(camera, tmp_path, 10, ffmpeg="ffmpeg")
@@ -286,9 +313,9 @@ def test_archive_size_and_rate_come_from_the_connector(tmp_path):
     assert native.archive_width is None
     assert native.archive_fps is None
     with pytest.raises(ValueError):
-        parse_camera_config({"rtspUrl": CAMERA_URL, "archiveWidth": 641})
+        parse_archive_config({"archiveWidth": 641})
     with pytest.raises(ValueError):
-        parse_camera_config({"rtspUrl": CAMERA_URL, "archiveFps": 0})
+        parse_archive_config({"archiveFps": 0})
 
 
 class _Hierarchy:
@@ -474,6 +501,10 @@ def test_archive_config_uses_storage_json_and_rejects_bad_values(monkeypatch):
     assert str(cfg.path) == "/var/lib/peresvet/video"
     assert cfg.retention_hours == 48
     assert cfg.segment_seconds == 5
+    assert cfg.archive_width is None
+    sized = parse_archive_config({"archiveWidth": 640, "archiveFps": 8})
+    assert sized.archive_width == 640
+    assert sized.archive_fps == 8
     with pytest.raises(ValueError):
         parse_archive_config({"path": "relative/video", "retentionHours": 1})
     with pytest.raises(ValueError):
@@ -571,6 +602,41 @@ def test_connector_attributes_reject_inactive_camera():
     }) is None
 
 
+def test_unsized_request_keeps_the_sized_session(tmp_path):
+    from src.services.video import runtime
+    from src.services.video.runtime import CameraSession
+
+    archive = tmp_path / "rear-cam"
+    sized = replace(
+        parse_camera_config({"rtspUrl": CAMERA_URL}),
+        archive_path=archive,
+        archive_width=640,
+        retention_hours=24,
+    )
+    session = CameraSession(CONN, sized, sized.segment_dir(CONN))
+    session._proc = SimpleNamespace(returncode=None)
+    runtime._sessions[CONN] = session
+    bare = parse_camera_config({"rtspUrl": CAMERA_URL})
+    try:
+        again = asyncio.run(runtime.get_session(CONN, bare, archive))
+        assert again is session
+        assert session.camera.archive_width == 640
+    finally:
+        runtime._sessions.pop(CONN, None)
+
+
+def test_camera_without_audio_starts_picture_only():
+    from src.services.video import runtime
+    from src.services.video.runtime import CameraSession
+
+    runtime._silent_cameras.add(CONN)
+    try:
+        session = CameraSession(CONN, parse_camera_config({"rtspUrl": CAMERA_URL}), Path("video"))
+        assert session._want_audio is False
+    finally:
+        runtime._silent_cameras.discard(CONN)
+
+
 def test_retention_change_prunes_without_second_rtsp(monkeypatch, tmp_path):
     from src.services.video import runtime
     from src.services.video.runtime import CameraSession
@@ -623,17 +689,47 @@ def test_stream_change_reopens_session(monkeypatch, tmp_path):
         assert runtime.sync_session(CONN, moved) == "restart"
         assert opened == [CONN]
         opened.clear()
-        narrower = parse_camera_config({
-            "rtspUrl": CAMERA_URL,
-            "archivePath": str(archive),
-            "retentionHours": 4,
-            "archiveWidth": 640,
-            "archiveFps": 10,
-        })
+        narrower = replace(
+            parse_camera_config({"rtspUrl": CAMERA_URL}),
+            archive_width=640,
+            archive_fps=10,
+        )
         assert runtime.sync_session(CONN, narrower) == "restart"
         assert opened == [CONN]
     finally:
         runtime._sessions.pop(CONN, None)
+
+
+def test_second_open_waits_until_the_first_finishes(monkeypatch, tmp_path):
+    from src.services.video import runtime
+
+    started = []
+    release = asyncio.Event()
+
+    async def get_session(connector_id, camera, directory=None):
+        started.append(camera.archive_width)
+        await release.wait()
+
+    monkeypatch.setattr(runtime, "get_session", get_session)
+    camera = parse_camera_config({"rtspUrl": CAMERA_URL})
+    runtime._opening.discard(CONN)
+    runtime._pending.pop(CONN, None)
+
+    async def go():
+        runtime.ensure_session(CONN, camera, tmp_path)
+        runtime.ensure_session(CONN, replace(camera, archive_width=640), tmp_path)
+        await asyncio.sleep(0)
+        assert started == [None]
+        release.set()
+        for _ in range(5):
+            await asyncio.sleep(0)
+        assert started == [None, 640]
+
+    try:
+        asyncio.run(go())
+    finally:
+        runtime._opening.discard(CONN)
+        runtime._pending.pop(CONN, None)
 
 
 def test_video_capture_subscribes_to_connector_changes():
@@ -649,6 +745,8 @@ def test_video_capture_subscribes_to_connector_changes():
     assert app._handlers["prsConnector.model.created"].__func__ is VideoCapture._created
     assert app._handlers["prsConnector.model.updated.*"].__func__ is VideoCapture._updated
     assert app._handlers["prsConnector.model.deleted.*"].__func__ is VideoCapture._deleted
+    assert app._handlers["prsDataStorage.model.updated.*"].__func__ is VideoCapture._storage_changed
+    assert app._handlers["prsDataStorage.model.deleted.*"].__func__ is VideoCapture._storage_deleted
     assert app._handlers["video.capture.lookup.*"].__func__ is VideoCapture._lookup
     result = asyncio.run(app._may_update({"id": CONN}))
     assert result == {"response": True}

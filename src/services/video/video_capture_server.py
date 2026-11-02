@@ -14,15 +14,22 @@ sys.path.append(".")
 from src.services.video.capture_http import (
     capture_audio,
     capture_fragment,
+    capture_frame,
     capture_live,
     capture_ptz,
     capture_snapshot,
     capture_talk,
+    capture_webrtc,
 )
 from src.services.video.ptz_http import read_json_body
 from src.services.video.video_capture_svc import app
 
 router = APIRouter()
+
+
+@router.post("/internal/video/{connector_id}/webrtc")
+async def webrtc(connector_id: str, request: Request):
+    return await capture_webrtc(app, connector_id, await read_json_body(request))
 
 
 @router.get("/internal/video/{connector_id}/live")
@@ -33,6 +40,11 @@ async def live(connector_id: str, request: Request):
 @router.get("/internal/video/{connector_id}/audio")
 async def audio(connector_id: str, request: Request):
     return await capture_audio(app, connector_id, request)
+
+
+@router.get("/internal/video/{connector_id}/frame")
+async def frame(connector_id: str):
+    return await capture_frame(app, connector_id)
 
 
 @router.get("/internal/video/{connector_id}/snapshot")

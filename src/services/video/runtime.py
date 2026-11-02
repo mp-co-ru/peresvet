@@ -1,4 +1,9 @@
-"""Один процесс ffmpeg на камеру: архив сегментов и раздача живого MJPEG."""
+"""Один процесс ffmpeg на камеру.
+
+Архив — копия потока камеры, если хранилище не задало размер или частоту.
+Живой WebRTC берёт один H.264 из этого же процесса. Распознавание читает
+редкий JPEG ``preview.jpg``. Второй сеанс RTSP для кадра не открывается.
+"""
 
 from __future__ import annotations
 
@@ -6,6 +11,7 @@ import asyncio
 import logging
 import socket
 import time
+from dataclasses import replace
 from pathlib import Path
 
 from src.services.video.camera import (
@@ -19,6 +25,39 @@ from src.services.video.platform_log import note as note_platform_log
 from src.services.video.presence import drop_camera_presence, hold_camera_presence
 
 logger = logging.getLogger("video")
+
+_JPEG_START = b"\xff\xd8"
+_JPEG_END = b"\xff\xd9"
+
+
+def pop_jpegs(buffer: bytearray, chunk: bytes) -> list[bytes]:
+    """Достаёт целые JPEG из потока image2pipe. Неполный хвост остаётся в buffer."""
+    buffer.extend(chunk)
+    frames: list[bytes] = []
+    while True:
+        start = buffer.find(_JPEG_START)
+        if start < 0:
+            if len(buffer) > 1:
+                del buffer[:-1]
+            break
+        if start:
+            del buffer[:start]
+        end = buffer.find(_JPEG_END, 2)
+        if end < 0:
+            break
+        frames.append(bytes(buffer[: end + 2]))
+        del buffer[: end + 2]
+    return frames
+
+
+def mjpeg_part(jpeg: bytes) -> bytes:
+    """Один кадр в том виде, который браузер читает из multipart/x-mixed-replace."""
+    header = (
+        b"--ffmpeg\r\nContent-Type: image/jpeg\r\nContent-Length: "
+        + str(len(jpeg)).encode("ascii")
+        + b"\r\n\r\n"
+    )
+    return header + jpeg + b"\r\n"
 
 
 class VideoRuntimeError(Exception):
@@ -49,14 +88,19 @@ class CameraSession:
         self.subscribers: list[asyncio.Queue] = []
         self.audio_subscribers: list[asyncio.Queue] = []
         self.ready = asyncio.Event()
+        self.latest_jpeg: bytes | None = None
+        self._latest_jpeg_at = 0.0
+        self._jpeg_buffer = bytearray()
+        self._h264_buffer = bytearray()
         self._proc: asyncio.subprocess.Process | None = None
         self._pump_task: asyncio.Task | None = None
         self._audio_task: asyncio.Task | None = None
         self._stderr_task: asyncio.Task | None = None
         self._stderr_lines: list[str] = []
-        self._want_audio = True
+        self._want_audio = connector_id not in _silent_cameras
         self._stopped = False
         self._restarting = False
+        self._prune_task: asyncio.Task | None = None
 
     @property
     def url(self) -> str:
@@ -79,6 +123,7 @@ class CameraSession:
         )
         note_platform_log(self.connector_id, "INFO", f"RTSP {self.camera.log_target}")
         await self._open_process()
+        self._prune_task = asyncio.create_task(self._prune_expired())
         self._pump_task = asyncio.create_task(self._pump())
         try:
             await asyncio.wait_for(self.ready.wait(), timeout=20)
@@ -88,6 +133,17 @@ class CameraSession:
                 f"Камера {self.camera.log_target} не прислала кадр за 20 с."
             ) from ex
         hold_camera_presence(self.connector_id)
+
+    async def _prune_expired(self) -> None:
+        """Удаляет фрагменты старше уже применённого срока. Настройки не перечитывает."""
+        while not self._stopped:
+            try:
+                await asyncio.sleep(20)
+            except asyncio.CancelledError:
+                return
+            if self._stopped:
+                return
+            prune_archive(self.directory, keep_seconds=int(self.camera.retention_hours * 3600))
 
     async def stop(self) -> None:
         self._stopped = True
@@ -100,13 +156,30 @@ class CameraSession:
                 await proc.wait()
             except ProcessLookupError:
                 pass
-        for task in (self._pump_task, self._audio_task, self._stderr_task):
+        for task in (self._prune_task, self._pump_task, self._audio_task, self._stderr_task):
             if task is not None and not task.done():
                 task.cancel()
         for queue in list(self.subscribers):
             queue.put_nowait(None)
         self.subscribers.clear()
         self._end_audio()
+
+    def fresh_jpeg(self, max_age: float = 3.0) -> bytes | None:
+        """Последний кадр распознавания, если он не старше max_age секунд."""
+        path = self.directory / "preview.jpg"
+        try:
+            if time.time() - path.stat().st_mtime <= max_age:
+                data = path.read_bytes()
+                if data.startswith(b"\xff\xd8"):
+                    return data
+        except OSError:
+            pass
+        jpeg = self.latest_jpeg
+        if not jpeg:
+            return None
+        if time.monotonic() - self._latest_jpeg_at > max_age:
+            return None
+        return jpeg
 
     def subscribe(self) -> asyncio.Queue:
         queue: asyncio.Queue = asyncio.Queue(maxsize=8)
@@ -169,6 +242,8 @@ class CameraSession:
             ffmpeg_bin(),
             audio_target=audio_target,
         )
+        self._jpeg_buffer.clear()
+        self._h264_buffer.clear()
         self._proc = await asyncio.create_subprocess_exec(
             *args,
             stdout=asyncio.subprocess.PIPE,
@@ -194,6 +269,7 @@ class CameraSession:
                     pass
             if self._stderr_says_no_audio():
                 self._want_audio = False
+                _silent_cameras.add(self.connector_id)
                 self._end_audio()
                 logger.info(
                     "Камера %s: в RTSP нет звука, сеанс только с картинкой",
@@ -234,8 +310,12 @@ class CameraSession:
                     chunk = await proc.stdout.read(65536)
                     if not chunk:
                         break
-                    self.ready.set()
-                    self._broadcast(chunk)
+                    from src.services.video.annexb import pop_access_units
+                    from src.services.video.webrtc_fanout import publish_access_unit
+
+                    for unit in pop_access_units(self._h264_buffer, chunk):
+                        self.ready.set()
+                        publish_access_unit(self.connector_id, unit)
                 if self._stopped:
                     break
                 await asyncio.sleep(0.1)
@@ -313,6 +393,10 @@ class CameraSession:
 
 _sessions: dict[str, CameraSession] = {}
 _locks: dict[str, asyncio.Lock] = {}
+_opening: set[str] = set()
+_pending: dict[str, tuple[CameraConfig, Path]] = {}
+# Камеры без звука. Новый сеанс не повторяет попытку mp3: она рвёт ffmpeg.
+_silent_cameras: set[str] = set()
 
 
 def _lock_for(connector_id: str) -> asyncio.Lock:
@@ -323,30 +407,65 @@ def _lock_for(connector_id: str) -> asyncio.Lock:
     return lock
 
 
+def _same_dir(left: Path, right: Path) -> bool:
+    if left == right:
+        return True
+    try:
+        return left.resolve() == right.resolve()
+    except OSError:
+        return False
+
+
+def _size_fits(current: int | float | None, incoming: int | float | None) -> bool:
+    """Запрос без размера не сбрасывает уже открытый сеанс с размером."""
+    return incoming is None or current == incoming
+
+
 def _same_capture(current: CameraSession, camera: CameraConfig, directory: Path) -> bool:
     """Тот же RTSP и та же картинка архива. Срок хранения сюда не входит."""
     stored = current.camera
     return (
         current.url == camera.rtsp_url
         and stored.transport == camera.transport
-        and current.directory == directory
-        and stored.archive_width == camera.archive_width
-        and stored.archive_fps == camera.archive_fps
+        and _same_dir(current.directory, directory)
+        and _size_fits(stored.archive_width, camera.archive_width)
+        and _size_fits(stored.archive_fps, camera.archive_fps)
     )
+
+
+def _restart_reason(current: CameraSession, camera: CameraConfig, directory: Path) -> str:
+    if not current.alive():
+        return "сеанс не жив"
+    stored = current.camera
+    parts: list[str] = []
+    if current.url != camera.rtsp_url:
+        parts.append("адрес")
+    if stored.transport != camera.transport:
+        parts.append(f"транспорт {stored.transport} -> {camera.transport}")
+    if not _same_dir(current.directory, directory):
+        parts.append("каталог")
+    if not _size_fits(stored.archive_width, camera.archive_width):
+        parts.append(f"ширина {stored.archive_width} -> {camera.archive_width}")
+    if not _size_fits(stored.archive_fps, camera.archive_fps):
+        parts.append(f"частота {stored.archive_fps} -> {camera.archive_fps}")
+    return ", ".join(parts) or "конфигурация"
 
 
 async def get_session(connector_id: str, camera: CameraConfig, directory: Path | None = None) -> CameraSession:
     directory = directory or camera.segment_dir(connector_id)
     async with _lock_for(connector_id):
         current = _sessions.get(connector_id)
-        if (
-            current is not None
-            and _same_capture(current, camera, directory)
-            and current.camera.retention_hours == camera.retention_hours
-            and current.alive()
-        ):
+        if current is not None and current.alive() and _same_capture(current, camera, directory):
+            if current.camera.retention_hours != camera.retention_hours:
+                current.camera = replace(current.camera, retention_hours=camera.retention_hours)
+                prune_archive(directory, keep_seconds=int(camera.retention_hours * 3600))
             return current
         if current is not None:
+            logger.warning(
+                "Камера %s: новый сеанс, %s",
+                connector_id,
+                _restart_reason(current, camera, directory),
+            )
             await current.stop()
         session = CameraSession(connector_id, camera, directory)
         try:
@@ -405,7 +524,12 @@ def ensure_session(connector_id: str, camera: CameraConfig, directory: Path | No
         and current.camera.retention_hours == camera.retention_hours
         and current.alive()
     ):
+        _pending.pop(connector_id, None)
         return
+    if connector_id in _opening:
+        _pending[connector_id] = (camera, directory)
+        return
+    _opening.add(connector_id)
 
     async def _open() -> None:
         try:
@@ -421,6 +545,11 @@ def ensure_session(connector_id: str, camera: CameraConfig, directory: Path | No
                 "WARNING",
                 f"Сеанс не открылся: {redact_rtsp(str(ex))}",
             )
+        finally:
+            _opening.discard(connector_id)
+            nxt = _pending.pop(connector_id, None)
+            if nxt is not None:
+                ensure_session(connector_id, nxt[0], nxt[1])
 
     asyncio.create_task(_open())
 
