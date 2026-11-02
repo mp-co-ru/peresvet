@@ -145,8 +145,11 @@
 на одну камеру откроют два сеанса RTSP. Два процесса с одним и тем же
 первым id в <code class="docutils literal notranslate"><span class="pre">nodes</span></code> делят одну очередь брокера.</p>
 <p>При непустом <code class="docutils literal notranslate"><span class="pre">nodes</span></code> базовый <code class="docutils literal notranslate"><span class="pre">AppSvc</span></code> не подписывает подхват на
-создание коннектора. Обход каталога раз в 20 секунд подхватывает камеру,
-которая появилась после старта, и смотрит только id из списка.</p>
+создание коннектора. Подхват подписывается на <code class="docutils literal notranslate"><span class="pre">prsConnector.model.created</span></code>
+сам и оставляет только камеры из списка. Правка хранилища видео приходит
+сообщением <code class="docutils literal notranslate"><span class="pre">prsDataStorage.model.created</span></code>, <code class="docutils literal notranslate"><span class="pre">updated.&lt;id&gt;</span></code> или
+<code class="docutils literal notranslate"><span class="pre">deleted.&lt;id&gt;</span></code> и применяется сразу. При старте подхват один раз читает
+уже существующие камеры: брокер не повторяет старые события.</p>
 <p>Контракт <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/</span></code> и <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/ptz/</span></code> разобран в <a class="reference internal" href="video_tag.html#video-tag"><span class="std std-ref">Видеопоток (тег типа 6)</span></a>.
 Здесь — порядок действий в <a class="reference internal" href="configurator/configurator.html#configurator"><span class="std std-ref">конфигураторе</span></a>.</p>
 </section>
@@ -172,8 +175,6 @@
 <span class="w">  </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;rtspUrl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;rtsp://192.168.1.72:554/live/ch00_0&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;rtspTransport&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tcp&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;archiveWidth&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;archiveFps&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;onvifPort&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8899</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;onvifUser&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;onvifPassword&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
@@ -249,14 +250,6 @@
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rtspTransport</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">tcp</span></code> или <code class="docutils literal notranslate"><span class="pre">udp</span></code>. Если ключ опущен — TCP.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">archiveWidth</span></code></p></td>
-<td><p>Ширина картинки архива в пикселях, чётное число.
-Высота подстраивается под кадр. <code class="docutils literal notranslate"><span class="pre">null</span></code> — ширина камеры.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">archiveFps</span></code></p></td>
-<td><p>Частота кадров архива. <code class="docutils literal notranslate"><span class="pre">null</span></code> или ключ без значения — частота камеры,
-архив не пересчитывается. Число больше нуля задаёт частоту явно.</p></td>
-</tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">onvifPort</span></code></p></td>
 <td><p>Порт OnVif, от 1 до 65535. По умолчанию 8899.</p></td>
 </tr>
@@ -270,7 +263,7 @@
 </table>
 <p>Сохранение коннектора публикует в брокер сообщение
 <code class="docutils literal notranslate"><span class="pre">prsConnector.model.updated.&lt;id&gt;</span></code>. Видеосервер заново читает конфигурацию.
-Новый адрес, транспорт, ширина или частота открывают сеанс заново.</p>
+Новый адрес или транспорт открывают сеанс заново.</p>
 </section>
 <section id="id5">
 <h2>Хранилище видео<a class="headerlink" href="#id5" title="Link to this heading"></a></h2>
@@ -278,19 +271,28 @@
 а не у коннектора. Коннектор только поставляет поток.</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;archivePath&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/var/lib/peresvet/video&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;retentionHours&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span>
+<span class="w">  </span><span class="nt">&quot;retentionHours&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;archiveWidth&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;archiveFps&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">archivePath</span></code> — абсолютный каталог. Каждая камера пишется в подкаталог
 <code class="docutils literal notranslate"><span class="pre">&lt;archivePath&gt;/&lt;id</span> <span class="pre">коннектора&gt;</span></code>. Каталог вне тома
 <code class="docutils literal notranslate"><span class="pre">/var/lib/peresvet/video</span></code> пропадёт вместе с контейнером.
-<code class="docutils literal notranslate"><span class="pre">retentionHours</span></code> — срок хранения в часах. Если ключ опущен — 24.</p>
+<code class="docutils literal notranslate"><span class="pre">retentionHours</span></code> — срок хранения в часах. Если ключ опущен — 24.
+<code class="docutils literal notranslate"><span class="pre">archiveWidth</span></code> — ширина картинки архива в пикселях, чётное число.
+Высота подстраивается под кадр. <code class="docutils literal notranslate"><span class="pre">null</span></code> — ширина камеры, поток копируется.
+<code class="docutils literal notranslate"><span class="pre">archiveFps</span></code> — частота кадров архива. <code class="docutils literal notranslate"><span class="pre">null</span></code> — частота камеры.
+Число больше нуля задаёт частоту явно и включает кодирование архива.
+Сохранение хранилища публикует <code class="docutils literal notranslate"><span class="pre">prsDataStorage.model.updated.&lt;id&gt;</span></code>.
+Подхват по этому сообщению заново читает путь, срок, ширину и частоту.
+Новые ширина, частота или путь открывают сеанс заново. Новый срок
+удаляет лишние фрагменты и не переоткрывает поток.</p>
 <p>Тег видеопотока привязывают и к коннектору-камере, и к этому хранилищу.
 Пока такой пары нет, сеанс RTSP не открывается и клиент не получает кадр.
 Подхват забирает поток у коннектора и пишет архив. Отдача отвечает
-на чтение тега. Новый срок хранения применяется сразу: лишние фрагменты
-удаляются, поток при этом не переоткрывается.</p>
+на чтение тега.</p>
 <p>Пока сеанс RTSP жив, кружок у коннектора зелёный.
 Коды качества 100 и 101 в теги камеры не пишутся.</p>
 </section>
@@ -346,12 +348,17 @@
 как 90 000 кадров в секунду: архив раздувается, живой просмотр кадров
 почти не получает. Кадры ближе 20 мс считаются одним кадром и в запись
 не попадают.</p>
-<p>Для картинки в браузере подхват отдаёт MJPEG: 8 кадров в секунду
-и ширина 960 пикселей. Это ограничение просмотра, а не частота камеры.
-Картинка звук не несёт. Если в том же RTSP есть звук, конфигуратор
-включает его отдельным проигрывателем: к адресу чтения добавляется
-<code class="docutils literal notranslate"><span class="pre">audio=1</span></code>, ответ — <code class="docutils literal notranslate"><span class="pre">audio/mpeg</span></code>. Второй сеанс к камере не открывается.
-В архив звук не пишется: по умолчанию туда идёт кадр целиком, кодеком H.264.</p>
+<p>Для картинки в браузере подхват один раз кодирует H.264: 15 кадров в
+секунду и ширина 960 пикселей, профиль Baseline. Этот поток копируется
+всем зрителям по WebRTC, отдельного кодирования на каждого нет.
+Если сеанс уже идёт, новый зритель к нему подключается и камеру заново
+не открывает. У камеры без звуковой дорожки следующий сеанс звук не пробует.
+Сигналинг — <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/video/webrtc</span></code> через nginx. Кадры тоже идут в nginx,
+на порт <code class="docutils literal notranslate"><span class="pre">8189</span></code> (UDP и TCP), и он передаёт их подхвату. Картинка звук не несёт. Если в том
+же RTSP есть звук, конфигуратор включает его отдельным проигрывателем:
+к адресу чтения добавляется <code class="docutils literal notranslate"><span class="pre">audio=1</span></code>, ответ — <code class="docutils literal notranslate"><span class="pre">audio/mpeg</span></code>. Второй
+сеанс к камере не открывается. В архив звук не пишется: по умолчанию
+туда копируется поток камеры, без второго кодирования.</p>
 </section>
 <section id="id8">
 <h2>Поворот и параметры изображения<a class="headerlink" href="#id8" title="Link to this heading"></a></h2>
@@ -381,8 +388,9 @@
 например <code class="docutils literal notranslate"><span class="pre">1791117621.ts</span></code>. Номинальная длина фрагмента —
 <code class="docutils literal notranslate"><span class="pre">VIDEO_SEGMENT_SECONDS</span></code>, по умолчанию 10 секунд.
 Если сеанс перезапускался, промежуток между файлами бывает длиннее.</p>
-<p>Файлы старше <code class="docutils literal notranslate"><span class="pre">retentionHours</span></code> удаляются при сохранении коннектора
-и затем примерно раз в 20 секунд, пока сеанс жив.</p>
+<p>Файлы старше <code class="docutils literal notranslate"><span class="pre">retentionHours</span></code> удаляет сам открытый сеанс.
+Новый срок приходит сообщением <code class="docutils literal notranslate"><span class="pre">prsDataStorage.model.updated.&lt;id&gt;</span></code>
+и применяется сразу.</p>
 <p>Список фрагментов:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>prs-video-capture<span class="w"> </span>ls<span class="w"> </span>-lh<span class="w"> </span>/var/lib/peresvet/video/rear-cam
 </pre></div>

@@ -118,17 +118,16 @@
 Ниже — контракт чтения, архива и управления.</p>
 <p>Тег с <code class="docutils literal notranslate"><span class="pre">prsValueTypeCode</span> <span class="pre">=</span> <span class="pre">6</span></code> — окно в камеру, а не ряд чисел.
 Кадры не пишутся в RabbitMQ, VictoriaMetrics и PostgreSQL.
-Камера заводится как коннектор с адресом потока. Каталог архива и срок
-хранения задаются у хранилища данных типа <code class="docutils literal notranslate"><span class="pre">3</span></code> (<code class="docutils literal notranslate"><span class="pre">archivePath</span></code>,
-<code class="docutils literal notranslate"><span class="pre">retentionHours</span></code>). Тег привязывают и к коннектору, и к этому хранилищу.
+Камера заводится как коннектор с адресом потока. Каталог архива, срок
+хранения, ширина и частота кадров задаются у хранилища данных типа <code class="docutils literal notranslate"><span class="pre">3</span></code>
+(<code class="docutils literal notranslate"><span class="pre">archivePath</span></code>, <code class="docutils literal notranslate"><span class="pre">retentionHours</span></code>, <code class="docutils literal notranslate"><span class="pre">archiveWidth</span></code>, <code class="docutils literal notranslate"><span class="pre">archiveFps</span></code>).
+Тег привязывают и к коннектору, и к этому хранилищу.
 Новых атрибутов LDAP для этого нет.</p>
 <p>Пример конфигурации коннектора:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;rtspUrl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;rtsp://192.168.1.72:554/live/ch00_0&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;rtspTransport&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tcp&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;archiveWidth&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;archiveFps&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;onvifPort&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8899</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;onvifUser&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;onvifPassword&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
@@ -143,25 +142,38 @@
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Зоны распознавания человека задаются на этом же экране, поверх картинки.
-Кнопка <strong>Зона</strong> включает правку. Углы новой зоны ставятся кликами по картинке.
-Клик по жёлтой линии добавляет вершину на эту линию. <strong>Добавить зону</strong>
-заканчивает текущий многоугольник и начинает следующий. <strong>Удалить зону</strong>
-убирает зону, которая сейчас редактируется: чтобы выбрать другую, кликните по ней.
+<p>Зона распознавания человека задаётся на этом же экране, поверх картинки.
+Переход на тег другого типа сразу убирает блок видео, не дожидаясь
+ответа сервера.
+Сейчас на экране одна зона. Кнопка <strong>Зона</strong> включает правку и остаётся
+подсвеченной, пока правка включена. Остальные кнопки блока на мгновение
+загораются жёлтым, чтобы было видно нажатие. Углы ставятся кликами по картинке.
+Клик по жёлтой линии добавляет вершину на эту линию. <strong>Шаг назад</strong> снимает
+последнюю точку. <strong>Удалить зону</strong> убирает многоугольник.
 Контур не выходит за границы картинки.
 Справа снизу у блока видео есть ручка: потяните её, чтобы изменить размер.
-<strong>Записать</strong> сохраняет зоны в <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> тега ключом <code class="docutils literal notranslate"><span class="pre">zone</span></code>.
+<strong>Записать</strong> сохраняет зону в <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> тега ключом <code class="docutils literal notranslate"><span class="pre">zones</span></code>.
 Каждая координата — доля кадра от 0 до 1, ноль слева и сверху. <code class="docutils literal notranslate"><span class="pre">zones</span></code> —
-массив многоугольников, каждый многоугольник сам массив точек <code class="docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y]</span></code>.
-Пустой <code class="docutils literal notranslate"><span class="pre">zones</span></code> означает весь кадр. <strong>Весь кадр</strong> как раз записывает пустой
-список.
-Человек считается в зоне, если его рамка пересекает любой из многоугольников.
+массив многоугольников, каждый многоугольник сам массив точек <code class="docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y]</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;zones&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[[[</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="mf">0.8</span><span class="p">]]]}</span>
+</pre></div>
+</div>
+<p>Сейчас в массиве одна зона. Пустой <code class="docutils literal notranslate"><span class="pre">zones</span></code> означает весь кадр. <strong>Весь кадр</strong>
+как раз записывает пустой список. Если раньше было записано несколько
+многоугольников, на экране показывается первый, и следующая запись оставляет
+только его. Старый конверт <code class="docutils literal notranslate"><span class="pre">{&quot;zone&quot;:</span> <span class="pre">{&quot;zones&quot;:</span> <span class="pre">[...]}}</span></code> при чтении ещё
+понимается, а запись уже кладёт массив в корень.
+Человек ищется в прямоугольнике вокруг зоны: он равномерно увеличивается
+до входа сети 640×640, пропорции фигуры сохраняются. Края прямоугольника
+чуть шире многоугольника, чтобы человека на границе не разрезало.
+Человек считается в зоне, если его рамка пересекает этот многоугольник.
+Пустая зона по-прежнему означает весь кадр.
 Метод «Человек в зоне» попадает в каталог «Методы» командой «Загрузка описания»
 из <code class="docutils literal notranslate"><span class="pre">methodDescription.yaml</span></code> проекта видеометодов. На теге хранится ссылка на него. Многоугольники метод не хранит: параметр <code class="docutils literal notranslate"><span class="pre">zone</span></code> —
 запрос к платформе <code class="docutils literal notranslate"><span class="pre">prsTag.api_crud.read.*</span></code> за атрибутом
 <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> этого тега, а JSONata
-<code class="docutils literal notranslate"><span class="pre">$eval(data[0].attributes.prsJsonConfigString[0]).zone</span></code> отдаёт в метод
-только ключ <code class="docutils literal notranslate"><span class="pre">zone</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">$eval(data[0].attributes.prsJsonConfigString[0]).zones</span></code> отдаёт в метод
+массив <code class="docutils literal notranslate"><span class="pre">zones</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">source.rtspUrl</span></code> обязателен и должен быть адресом <code class="docutils literal notranslate"><span class="pre">rtsp://</span></code> или <code class="docutils literal notranslate"><span class="pre">rtsps://</span></code>.
 Наличие этого ключа и делает коннектор камерой. Тот же ключ в корне JSON
 тоже принимается. Ключ <code class="docutils literal notranslate"><span class="pre">log</span></code> совпадает с журналом коннектора:
@@ -170,11 +182,9 @@
 Архив пишется в <code class="docutils literal notranslate"><span class="pre">&lt;archivePath</span> <span class="pre">хранилища&gt;/&lt;id</span> <span class="pre">коннектора&gt;</span></code>.
 Каталог вне тома <code class="docutils literal notranslate"><span class="pre">/var/lib/peresvet/video</span></code> пропадёт вместе с контейнером.
 <code class="docutils literal notranslate"><span class="pre">retentionHours</span></code> у хранилища — срок хранения в часах; если ключ опущен, берётся 24.
-<code class="docutils literal notranslate"><span class="pre">archiveWidth</span></code> — ширина картинки архива в пикселях, чётное число.
-Высота подстраивается под пропорции кадра. <code class="docutils literal notranslate"><span class="pre">null</span></code> или пустое значение
-означает ширину, которую отдаёт камера.
-<code class="docutils literal notranslate"><span class="pre">archiveFps</span></code> — частота кадров архива. <code class="docutils literal notranslate"><span class="pre">null</span></code> или пустое значение
-означает частоту камеры.
+<code class="docutils literal notranslate"><span class="pre">archiveWidth</span></code> и <code class="docutils literal notranslate"><span class="pre">archiveFps</span></code> тоже у хранилища: ширина архива в пикселях
+(чётное число, высота подстраивается) и частота кадров.
+<code class="docutils literal notranslate"><span class="pre">null</span></code> или пустое значение означает ширину и частоту камеры, поток копируется.
 Пустые <code class="docutils literal notranslate"><span class="pre">onvifUser</span></code> и <code class="docutils literal notranslate"><span class="pre">onvifPassword</span></code> означают, что камера логин не требует.
 Транспорт по умолчанию TCP. Его можно задать ключом <code class="docutils literal notranslate"><span class="pre">rtspTransport</span></code>
 со значением <code class="docutils literal notranslate"><span class="pre">tcp</span></code> или <code class="docutils literal notranslate"><span class="pre">udp</span></code>.
@@ -226,19 +236,28 @@
 <h2>Чтение<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/?tagId=&lt;id&gt;</span></code> для такого тега отдаёт не JSON-точки, а медиа:</p>
 <ul class="simple">
-<li><p>без <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> — живой поток <code class="docutils literal notranslate"><span class="pre">multipart/x-mixed-replace</span></code> (MJPEG);</p></li>
+<li><p>без <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> — живой поток WebRTC (один H.264 на всех зрителей);</p></li>
 <li><p>только <code class="docutils literal notranslate"><span class="pre">finish</span></code> — снимок <code class="docutils literal notranslate"><span class="pre">image/jpeg</span></code> на этот момент;
 если фрагмента на это время нет, ответ <code class="docutils literal notranslate"><span class="pre">404</span></code> без картинки;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> — фрагмент <code class="docutils literal notranslate"><span class="pre">video/mp4</span></code> за период.</p></li>
 </ul>
 <p>Ключи <code class="docutils literal notranslate"><span class="pre">timeStep</span></code> и <code class="docutils literal notranslate"><span class="pre">count</span></code> для видеопотока пока не поддерживаются.
 На одну камеру держится один сеанс RTSP в контейнере подхвата
-<code class="docutils literal notranslate"><span class="pre">prs-video-capture</span></code>. Смотрящих может быть несколько: платформа
-проверяет право чтения тега, по RPC находит сервис отдачи и проксирует
-запрос по HTTP. Отдача так же находит подхват и забирает у него байты.
-В RabbitMQ уходит только идентификатор и базовый URL процесса, не кадры.</p>
-<p>В дашборде Grafana тот же URL можно поставить в <code class="docutils literal notranslate"><span class="pre">&lt;img&gt;</span></code> (живой поток и снимок)
-или в <code class="docutils literal notranslate"><span class="pre">&lt;video&gt;</span></code> (фрагмент).</p>
+<code class="docutils literal notranslate"><span class="pre">prs-video-capture</span></code>. Этот сеанс копирует поток камеры в архив, если
+хранилище не задало ширину или частоту, и один раз кодирует H.264 для
+живого просмотра. Смотрящих может быть несколько, картинка при этом
+не кодируется заново:
+платформа проверяет право чтения тега, по RPC находит сервис отдачи и
+проксирует запрос по HTTP. Отдача так же находит подхват и забирает у
+него байты. Клиент к камере не подключается. В RabbitMQ уходит только
+идентификатор и базовый URL процесса, не кадры. Распознавание берёт
+последний кадр этого сеанса (<code class="docutils literal notranslate"><span class="pre">/internal/video/&lt;id&gt;/frame</span></code>), а не
+открывает запись отдельным ffmpeg. Снимок на прошлый момент и фрагмент
+за период собираются из архива и могут занять время.</p>
+<p>В конфигураторе живой поток открывается в <code class="docutils literal notranslate"><span class="pre">&lt;video&gt;</span></code> через
+<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/video/webrtc</span></code>. Снимок по-прежнему <code class="docutils literal notranslate"><span class="pre">image/jpeg</span></code>, фрагмент —
+<code class="docutils literal notranslate"><span class="pre">&lt;video&gt;</span></code> с <code class="docutils literal notranslate"><span class="pre">video/mp4</span></code>. Кадры WebRTC идут в nginx на порт <code class="docutils literal notranslate"><span class="pre">8189</span></code>
+(UDP и TCP) того же хоста, с которого открыта страница.</p>
 <p>Метки <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> — микросекунды или дата ISO 8601.
 Для видеотега отсутствие обеих меток означает живой поток.
 У остальных тегов отсутствие метки по-прежнему означает «сейчас».</p>
@@ -274,11 +293,11 @@
 </section>
 <section id="html">
 <h2>Своя HTML-страница<a class="headerlink" href="#html" title="Link to this heading"></a></h2>
-<p>Если <code class="docutils literal notranslate"><span class="pre">tagId</span></code> известен заранее, живой поток ставится в <code class="docutils literal notranslate"><span class="pre">img</span></code>.
-Браузер показывает <code class="docutils literal notranslate"><span class="pre">multipart/x-mixed-replace</span></code> кадр за кадром и не ждёт
-конца ответа.</p>
-<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">img</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;cam&quot;</span> <span class="na">alt</span><span class="o">=</span><span class="s">&quot;Камера&quot;</span>
-     <span class="na">src</span><span class="o">=</span><span class="s">&quot;/v1/data/?tagId=67bde18c-5431-1041-925c-470278307e33&quot;</span><span class="p">&gt;</span>
+<p>Если <code class="docutils literal notranslate"><span class="pre">tagId</span></code> известен заранее, живой поток — это WebRTC.
+Браузер шлёт SDP на <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/video/webrtc</span></code> и принимает ответ в
+<code class="docutils literal notranslate"><span class="pre">RTCPeerConnection</span></code>. Снимок по <code class="docutils literal notranslate"><span class="pre">finish</span></code> по-прежнему можно поставить
+в <code class="docutils literal notranslate"><span class="pre">img</span></code>.</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">video</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;cam&quot;</span> <span class="na">autoplay</span> <span class="na">muted</span> <span class="na">playsinline</span><span class="p">&gt;&lt;/</span><span class="nt">video</span><span class="p">&gt;</span>
 <span class="p">&lt;</span><span class="nt">audio</span> <span class="na">autoplay</span>
        <span class="na">src</span><span class="o">=</span><span class="s">&quot;/v1/data/?tagId=67bde18c-5431-1041-925c-470278307e33&amp;amp;audio=1&quot;</span><span class="p">&gt;</span>
 <span class="p">&lt;/</span><span class="nt">audio</span><span class="p">&gt;</span>
@@ -334,13 +353,11 @@
 <section id="id6">
 <h2>Частота кадров просмотра<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
 <p>8 кадров в секунду — это не частота камеры. Для картинки в браузере
-подхват принудительно оставляет 8 кадров в секунду и ширину 960 пикселей
-(MJPEG). Так сервер с небольшим объёмом памяти успевает и показывать,
-и писать архив. Полный кадр камеры в двух кодированиях сразу на машине
-с 2 ГБ памяти процесс убивал.</p>
-<p>В архив по умолчанию пишется картинка камеры целиком: её ширина и её
-частота кадров, кодеком H.264 (preset <code class="docutils literal notranslate"><span class="pre">ultrafast</span></code>). Уменьшить архив
-можно ключами <code class="docutils literal notranslate"><span class="pre">archiveWidth</span></code> и <code class="docutils literal notranslate"><span class="pre">archiveFps</span></code> в конфигурации коннектора.
+подхват из того же сеанса отдаёт 8 кадров в секунду и ширину 960 пикселей
+(MJPEG). Этот поток один на камеру: его получают и зрители, и распознавание.</p>
+<p>В архив по умолчанию пишется копия потока камеры, без второго кодирования.
+Уменьшить архив можно ключами <code class="docutils literal notranslate"><span class="pre">archiveWidth</span></code> и <code class="docutils literal notranslate"><span class="pre">archiveFps</span></code> у хранилища
+видео: тогда архив кодируется отдельно.
 Битрейт архива от сюжета и от этих ключей зависит и заранее не фиксируется:
 его нужно померить по уже записанным файлам.</p>
 <p>Просмотр на диск не пишется. Один зритель при текущих настройках
@@ -355,7 +372,7 @@
 </div>
 <p>Множитель 0,44 — это перевод Мбит/с в гигабайты за час:
 <code class="docutils literal notranslate"><span class="pre">3600</span> <span class="pre">/</span> <span class="pre">8</span> <span class="pre">/</span> <span class="pre">1024</span></code>. На несколько камер результат умножается на их число.</p>
-<p>По камере с ключом <code class="docutils literal notranslate"><span class="pre">archiveWidth</span></code> 640 измеренный поток около 1,15 Мбит/с,
+<p>По хранилищу с ключом <code class="docutils literal notranslate"><span class="pre">archiveWidth</span></code> 640 измеренный поток около 1,15 Мбит/с,
 то есть около 492 МБ в час. При <code class="docutils literal notranslate"><span class="pre">retentionHours</span></code> 24 это около 12 ГБ
 на эту камеру. Пока сеанс перезапускается, в часе бывают пустые промежутки,
 и фактический объём чуть меньше расчётного.</p>
@@ -369,15 +386,14 @@
 <section id="id8">
 <h2>Архив на диске<a class="headerlink" href="#id8" title="Link to this heading"></a></h2>
 <p>Архив — это фрагменты MPEG-TS. Каталог берётся из <code class="docutils literal notranslate"><span class="pre">archivePath</span></code>
-коннектора. У камеры с путём <code class="docutils literal notranslate"><span class="pre">/var/lib/peresvet/video/rear-cam</span></code>
+хранилища. У камеры с путём <code class="docutils literal notranslate"><span class="pre">/var/lib/peresvet/video/rear-cam</span></code>
 файлы лежат там, внутри тома контейнера подхвата.
 Имя файла — время начала фрагмента в секундах Unix, например <code class="docutils literal notranslate"><span class="pre">1791117621.ts</span></code>.</p>
 <p>Номинальная длина фрагмента — <code class="docutils literal notranslate"><span class="pre">VIDEO_SEGMENT_SECONDS</span></code>, по умолчанию 10 секунд.
 Если сеанс с камерой перезапускался, промежуток между соседними файлами
-бывает длиннее. Файлы старше <code class="docutils literal notranslate"><span class="pre">retentionHours</span></code> удаляются, когда коннектор
-сохраняют, и затем примерно раз в 20 секунд, пока сеанс с камерой жив.
-Тот же 20-секундный обход заново читает конфигурацию камер из <code class="docutils literal notranslate"><span class="pre">nodes</span></code>
-(или всех камер, если список пуст), если сообщение брокера о правке не дошло.</p>
+бывает длиннее. Файлы старше <code class="docutils literal notranslate"><span class="pre">retentionHours</span></code> удаляет сам открытый сеанс.
+Новый срок, путь, ширина и частота приходят сообщением
+<code class="docutils literal notranslate"><span class="pre">prsDataStorage.model.updated.&lt;id&gt;</span></code> и применяются сразу.</p>
 <p>Список фрагментов:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>prs-video-capture<span class="w"> </span>ls<span class="w"> </span>-lh<span class="w"> </span>/var/lib/peresvet/video/rear-cam
 </pre></div>
@@ -396,10 +412,12 @@
 Голос на саму правку он отдаёт разрешающий: сохранить
 коннектор можно и пока подхват применяет новую конфигурацию.
 По сообщению сервер заново читает <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code>. Новый
-<code class="docutils literal notranslate"><span class="pre">rtspUrl</span></code>, <code class="docutils literal notranslate"><span class="pre">archivePath</span></code>, <code class="docutils literal notranslate"><span class="pre">rtspTransport</span></code>, <code class="docutils literal notranslate"><span class="pre">archiveWidth</span></code> или
-<code class="docutils literal notranslate"><span class="pre">archiveFps</span></code> открывают сеанс заново. Новый <code class="docutils literal notranslate"><span class="pre">retentionHours</span></code>
-применяется сразу: лишние фрагменты удаляются, а поток с камеры
-не переоткрывается.</p>
+<code class="docutils literal notranslate"><span class="pre">rtspUrl</span></code> или <code class="docutils literal notranslate"><span class="pre">rtspTransport</span></code> открывают сеанс заново.
+<code class="docutils literal notranslate"><span class="pre">archivePath</span></code>, <code class="docutils literal notranslate"><span class="pre">retentionHours</span></code>, <code class="docutils literal notranslate"><span class="pre">archiveWidth</span></code> и <code class="docutils literal notranslate"><span class="pre">archiveFps</span></code>
+читаются у хранилища видео. Их изменение публикует
+<code class="docutils literal notranslate"><span class="pre">prsDataStorage.model.updated.&lt;id&gt;</span></code>. Новый путь, ширина или частота
+открывают сеанс заново. Новый <code class="docutils literal notranslate"><span class="pre">retentionHours</span></code> применяется сразу:
+лишние фрагменты удаляются, а поток с камеры не переоткрывается.</p>
 </section>
 <section id="id10">
 <h2>Индикатор в дереве<a class="headerlink" href="#id10" title="Link to this heading"></a></h2>
