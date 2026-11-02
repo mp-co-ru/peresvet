@@ -1,15 +1,16 @@
 """Подхват: один RTSP-сеанс на камеру из списка ``nodes``.
 
 Подписка на ``prsConnector.model.*`` — общая для сервисов сущности.
+При непустом ``nodes`` базовый ``AppSvc`` не подписывает ``created``:
+подхват добавляет эту подписку сам и оставляет только камеры из списка.
+Правка хранилища видео приходит сообщением ``prsDataStorage.model.updated``.
 Голос ``may_*`` разрешает правку и не останавливает сеанс: иначе
-сохранение коннектора ждало бы камеру. Конфигурация применяется
-по ``updated``. Обход раз в 20 секунд закрывает дыру ``created``:
-при непустом ``nodes`` базовый ``AppSvc`` на создание не подписывается.
+сохранение коннектора ждало бы камеру. При старте каталог читается один раз:
+брокер не повторяет уже существующие камеры.
 """
 
 from __future__ import annotations
 
-import asyncio
 import sys
 
 sys.path.append(".")
@@ -33,20 +34,25 @@ from src.services.video.runtime import (
     sync_session,
     tracked_session_ids,
 )
+from src.services.video.storage import VIDEO_STORAGE_TYPE
 from src.services.video.video_capture_settings import VideoCaptureSettings
 
 
 class VideoCapture(AppSvc):
     def __init__(self, settings: VideoCaptureSettings, *args, **kwargs):
         super().__init__(settings, *args, **kwargs)
-        self._scan_task: asyncio.Task | None = None
 
     def _add_app_handlers(self):
         for key in bind_keys(CAPTURE_LOOKUP, self._config.nodes):
             self._handlers[key] = self._lookup
+        # Базовый AppSvc при непустом nodes на created не подписывается.
+        self._handlers["prsConnector.model.created"] = self._created
         # Уведомления, не голос may_*: иначе подхват участвовал бы в правке тега.
         self._handlers["prsTag.model.updated.*"] = self._tag_updated
         self._handlers["prsTag.model.deleted.*"] = self._tag_deleted
+        self._handlers["prsDataStorage.model.created"] = self._storage_changed
+        self._handlers["prsDataStorage.model.updated.*"] = self._storage_changed
+        self._handlers["prsDataStorage.model.deleted.*"] = self._storage_deleted
         self._handlers["prsConnector.app_api.command.*"] = self._command
 
     async def on_startup(self) -> None:
@@ -54,16 +60,18 @@ class VideoCapture(AppSvc):
         broker = self._config.broker or {}
         configure_presence(broker.get("amqp_url", ""))
         await super().on_startup()
-        self._scan_task = asyncio.create_task(self._scan_loop())
+        try:
+            from src.services.video.webrtc_fanout import ensure_fanout
+
+            await ensure_fanout()
+        except Exception as ex:
+            self._logger.warning(f"{self._config.svc_name} :: WebRTC: {ex}")
+        try:
+            await self._load_cameras()
+        except Exception as ex:
+            self._logger.warning(f"{self._config.svc_name} :: Ошибка чтения камер при старте: {ex}")
 
     async def on_shutdown(self) -> None:
-        if self._scan_task is not None:
-            self._scan_task.cancel()
-            try:
-                await self._scan_task
-            except asyncio.CancelledError:
-                pass
-            self._scan_task = None
         await stop_all_sessions()
         await super().on_shutdown()
 
@@ -219,17 +227,73 @@ class VideoCapture(AppSvc):
             )
             note_platform_log(conn_id, "INFO", "Сеанс открыт по новой конфигурации.")
 
-    async def _scan_loop(self) -> None:
-        while True:
-            try:
-                await self._scan_once()
-            except asyncio.CancelledError:
-                raise
-            except Exception as ex:
-                self._logger.warning(f"{self._config.svc_name} :: Ошибка обхода камер: {ex}")
-            await asyncio.sleep(20)
+    async def _storage_changed(self, mes: dict, routing_key: str | None = None):
+        return await self._apply_storage(str((mes or {}).get("id") or ""), deleted=False)
 
-    async def _scan_once(self) -> None:
+    async def _storage_deleted(self, mes: dict, routing_key: str | None = None):
+        return await self._apply_storage(str((mes or {}).get("id") or ""), deleted=True)
+
+    async def _apply_storage(self, ds_id: str, deleted: bool) -> dict:
+        if not ds_id:
+            return {"response": True}
+        try:
+            if not deleted and not await self._storage_is_video(ds_id):
+                return {"response": True}
+            connector_ids: list[str] = []
+            if not deleted:
+                connector_ids.extend(await self._connectors_using_storage(ds_id))
+            connector_ids.extend(tracked_session_ids())
+            seen: set[str] = set()
+            for conn_id in connector_ids:
+                if conn_id in seen or not serves(self._config.nodes, conn_id):
+                    continue
+                seen.add(conn_id)
+                await self._apply_connector(conn_id)
+        except Exception as ex:
+            self._logger.warning(
+                f"{self._config.svc_name} :: Хранилище {ds_id}: {ex}"
+            )
+        return {"response": True}
+
+    async def _storage_is_video(self, ds_id: str) -> bool:
+        found = await self._hierarchy.search({
+            "id": [ds_id],
+            "attributes": ["prsEntityTypeCode"],
+        })
+        if not found:
+            return False
+        raw = found[0][2].get("prsEntityTypeCode")
+        if isinstance(raw, (list, tuple)):
+            raw = raw[0] if raw else None
+        if isinstance(raw, bytes):
+            raw = raw.decode()
+        try:
+            return int(raw) == VIDEO_STORAGE_TYPE
+        except (TypeError, ValueError):
+            return False
+
+    async def _connectors_using_storage(self, ds_id: str) -> list[str]:
+        links = await self._hierarchy.search({
+            "base": ds_id,
+            "scope": hierarchy.CN_SCOPE_SUBTREE,
+            "filter": {"objectClass": ["prsDatastorageTagData"]},
+            "attributes": ["cn"],
+        })
+        connector_ids: list[str] = []
+        for _link_id, _, attrs in links or []:
+            tag_id = attrs.get("cn")
+            if isinstance(tag_id, (list, tuple)):
+                tag_id = tag_id[0] if tag_id else None
+            if isinstance(tag_id, bytes):
+                tag_id = tag_id.decode()
+            if not tag_id:
+                continue
+            conn_id = await connector_id_for_tag(self._hierarchy, str(tag_id))
+            if conn_id:
+                connector_ids.append(conn_id)
+        return connector_ids
+
+    async def _load_cameras(self) -> None:
         nodes = [str(item) for item in (self._config.nodes or []) if str(item)]
         if nodes:
             found = await self._hierarchy.search({

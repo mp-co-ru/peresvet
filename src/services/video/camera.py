@@ -23,8 +23,6 @@ _RTSP_USERINFO_RE = re.compile(r"(rtsps?://)([^/\s@]+)@")
 
 
 KEY_RTSP = "rtspUrl"
-KEY_ARCHIVE_WIDTH = "archiveWidth"
-KEY_ARCHIVE_FPS = "archiveFps"
 KEY_ONVIF_PORT = "onvifPort"
 KEY_ONVIF_USER = "onvifUser"
 KEY_ONVIF_PASSWORD = "onvifPassword"
@@ -134,7 +132,7 @@ def camera_from_connector_attributes(attrs: dict) -> CameraConfig | None:
 
     ``None`` — коннектор выключен или в конфигурации нет ``rtspUrl``.
     ``ValueError`` — JSON камеры нельзя применить.
-    Путь архива и срок хранения здесь не читаются: они лежат в хранилище видео.
+    Путь архива, срок хранения, ширина и частота лежат в хранилище видео.
     """
     active = _ldap_value(attrs, "prsActive")
     if active is not None and str(active).upper() != "TRUE":
@@ -197,8 +195,8 @@ def parse_camera_config(raw: Any) -> CameraConfig:
         transport=transport,
         archive_path=None,
         retention_hours=24.0,
-        archive_width=_optional_even_width(source),
-        archive_fps=_optional_fps(source),
+        archive_width=None,
+        archive_fps=None,
         onvif_port=_onvif_port(source),
         onvif_user=_optional_text(source, KEY_ONVIF_USER),
         onvif_password=_optional_text(source, KEY_ONVIF_PASSWORD),
@@ -233,37 +231,6 @@ def _onvif_port(raw: dict) -> int:
     return port
 
 
-def _optional_even_width(raw: dict) -> int | None:
-    value = _pick(raw, KEY_ARCHIVE_WIDTH)
-    if value is None:
-        return None
-    if isinstance(value, bool):
-        raise ValueError("Ключ archiveWidth должен быть чётной шириной в пикселях.")
-    try:
-        number = float(value)
-    except (TypeError, ValueError) as ex:
-        raise ValueError("Ключ archiveWidth должен быть чётной шириной в пикселях.") from ex
-    width = int(number)
-    if width != number or width < 2 or width % 2:
-        raise ValueError("Ключ archiveWidth должен быть чётной шириной в пикселях.")
-    return width
-
-
-def _optional_fps(raw: dict) -> float | None:
-    value = _pick(raw, KEY_ARCHIVE_FPS)
-    if value is None:
-        return None
-    if isinstance(value, bool):
-        raise ValueError("Ключ archiveFps должен быть больше нуля.")
-    try:
-        fps = float(value)
-    except (TypeError, ValueError) as ex:
-        raise ValueError("Ключ archiveFps должен быть больше нуля.") from ex
-    if fps <= 0:
-        raise ValueError("Ключ archiveFps должен быть больше нуля.")
-    return fps
-
-
 def _format_fps(fps: float) -> str:
     if fps == int(fps):
         return str(int(fps))
@@ -276,7 +243,11 @@ def _format_fps(fps: float) -> str:
 _ARRIVAL_PTS = "setpts=(RTCTIME-RTCSTART)/(1000000*TB)"
 # Пакеты одного кадра часто приходят пачкой. Ближе 20 мс — тот же кадр.
 _SAME_FRAME = "select=isnan(prev_selected_t)+gte(t-prev_selected_t\\,0.02)"
-_PREVIEW_VF = f"{_ARRIVAL_PTS},{_SAME_FRAME},fps=8,scale=960:-2"
+# Один H.264 для всех зрителей WebRTC. Архив этот поток не кодирует,
+# если у хранилища не заданы ширина и частота.
+_LIVE_VF = f"{_ARRIVAL_PTS},{_SAME_FRAME},fps=15,scale=960:-2"
+# Редкий JPEG только для распознавания. Зрителям он не отдаётся.
+_PREVIEW_VF = f"{_ARRIVAL_PTS},fps=2,scale=640:-2"
 
 
 def archive_video_filter(camera: CameraConfig) -> str:
@@ -392,6 +363,37 @@ def session_audio_args(target: str) -> list[str]:
     ]
 
 
+def _archive_needs_encode(camera: CameraConfig) -> bool:
+    """Размер или частота в коннекторе требуют отдельного кодирования архива."""
+    return camera.archive_width is not None or camera.archive_fps is not None
+
+
+def _archive_output(camera: CameraConfig, pattern: str, segment_seconds_value: int) -> list[str]:
+    if _archive_needs_encode(camera):
+        return [
+            "-map", "0:v:0", "-an",
+            "-vf", archive_video_filter(camera),
+            "-fps_mode", "passthrough",
+            "-c:v", "libx264", "-preset", "ultrafast", "-tune", "zerolatency", "-pix_fmt", "yuv420p",
+            "-f", "segment",
+            "-segment_time", str(segment_seconds_value),
+            "-segment_format", "mpegts",
+            "-reset_timestamps", "1",
+            "-strftime", "1",
+            pattern,
+        ]
+    return [
+        "-map", "0:v:0", "-an",
+        "-c:v", "copy",
+        "-f", "segment",
+        "-segment_time", str(segment_seconds_value),
+        "-segment_format", "mpegts",
+        "-reset_timestamps", "1",
+        "-strftime", "1",
+        pattern,
+    ]
+
+
 def session_ffmpeg_args(
     camera: CameraConfig,
     directory: Path,
@@ -401,37 +403,34 @@ def session_ffmpeg_args(
     audio_target: str | None = None,
 ) -> list[str]:
     pattern = str(directory / "%s.ts")
-    archive_encode = [
-        "-map", "0:v:0", "-an",
-        "-vf", archive_video_filter(camera),
-        "-fps_mode", "passthrough",
-        "-c:v", "libx264", "-preset", "ultrafast", "-tune", "zerolatency", "-pix_fmt", "yuv420p",
-        "-f", "segment",
-        "-segment_time", str(segment_seconds_value),
-        "-segment_format", "mpegts",
-        "-reset_timestamps", "1",
-        "-strftime", "1",
-        pattern,
-    ]
     args = [
         ffmpeg or ffmpeg_bin(),
+        "-y",
         "-hide_banner",
         "-loglevel", "error",
         "-rtsp_transport", camera.transport,
         "-timeout", "8000000",
         "-use_wallclock_as_timestamps", "1",
         "-i", camera.rtsp_url,
-        *archive_encode,
+        *_archive_output(camera, pattern, segment_seconds_value),
+        "-map", "0:v:0", "-an",
+        "-vf", _LIVE_VF,
+        "-c:v", "libx264", "-preset", "ultrafast", "-tune", "zerolatency",
+        "-profile:v", "baseline", "-level", "3.1", "-pix_fmt", "yuv420p",
+        "-g", "15", "-keyint_min", "15", "-bf", "0",
+        "-x264-params", "repeat-headers=1:aud=1",
+        "-fps_mode", "cfr",
+        "-f", "h264",
+        "pipe:1",
         "-map", "0:v:0", "-an",
         "-vf", _PREVIEW_VF,
-        "-fps_mode", "passthrough",
-        "-c:v", "mjpeg", "-q:v", "8",
-        "-f", "mpjpeg",
-        "pipe:1",
+        "-q:v", "8",
+        "-f", "image2", "-update", "1",
+        str(directory / "preview.jpg"),
     ]
     if audio_target is not None:
-        preview = args.index(_PREVIEW_VF)
-        insert_at = max(index for index, item in enumerate(args[:preview]) if item == "-map")
+        live = args.index(_LIVE_VF)
+        insert_at = max(index for index, item in enumerate(args[:live]) if item == "-map")
         args[insert_at:insert_at] = session_audio_args(audio_target)
     return args
 

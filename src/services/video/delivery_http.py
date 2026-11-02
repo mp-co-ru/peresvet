@@ -63,6 +63,43 @@ async def delivery_data_response(app, request: Request):
     )
 
 
+async def delivery_webrtc_response(app, request: Request):
+    body = await read_json_body(request)
+    tag_id = str(body.get("tagId") or request.query_params.get("tagId") or "").strip()
+    if not tag_id:
+        return error_response(422, "Нужен tagId тега видеопотока.")
+    if not serves(app._config.nodes, tag_id):
+        return error_response(404, _NOT_OURS)
+    try:
+        resolved = await resolve_video_get(
+            await hierarchy_api(app),
+            _live_payload(tag_id),
+        )
+    except Exception as ex:
+        app._logger.exception(f"{app._config.svc_name} :: ошибка поиска камеры: {ex}")
+        return error_response(500, "Не удалось найти камеру для тега.")
+    if resolved is None:
+        return error_response(422, "Видеосервер принимает только тег видеопотока.")
+    if isinstance(resolved, VideoFailure):
+        return error_response(resolved.code, resolved.message)
+    base = await locate_capture(app, resolved.connector_id)
+    if not base:
+        return error_response(503, missing_capture())
+    body["tagId"] = resolved.tag_id
+    body["connectorId"] = resolved.connector_id
+    return await proxy_json(
+        f"{base}/internal/video/{resolved.connector_id}/webrtc",
+        body,
+        timeout_total=25,
+    )
+
+
+def _live_payload(tag_id: str):
+    from src.services.tags.app_api.tags_app_api_svc import DataGet
+
+    return DataGet.model_validate({"tagId": [tag_id]})
+
+
 async def delivery_ptz_response(app, request: Request):
     body = await read_json_body(request)
     tag_id, command = command_from_request(request, body)

@@ -15,6 +15,26 @@ class _Logger:
         pass
 
 
+def test_read_by_id_does_not_require_base():
+    svc = object.__new__(ModelCRUDSvc)
+    svc._config = SimpleNamespace(
+        svc_name="tags_model_crud",
+        hierarchy={"class": "prsTag", "node_id": "tags-root", "node": "cn=tags,cn=prs"},
+    )
+    svc._logger = _Logger()
+    svc._hierarchy = SimpleNamespace(
+        search=AsyncMock(return_value=[("tag-1", "dn", {"prsJsonConfigString": ["{}"]})])
+    )
+
+    async def further(_mes, result):
+        return result
+
+    svc._further_read = further
+    result = asyncio.run(svc._read({"id": ["tag-1"], "attributes": ["prsJsonConfigString"]}))
+    assert result["data"][0]["id"] == "tag-1"
+    assert result["data"][0]["attributes"]["prsJsonConfigString"] == ["{}"]
+
+
 def test_model_crud_update_rejects_missing_and_wrong_class():
     svc = object.__new__(ModelCRUDSvc)
     svc._config = SimpleNamespace(svc_name="objects_model_crud", hierarchy={"class": "prsObject"})

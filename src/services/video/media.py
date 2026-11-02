@@ -1,7 +1,7 @@
 """Байты камеры: их отдаёт только тот процесс, который уже держит RTSP.
 
-Живой MJPEG и звук читаются из сеанса. Снимок и фрагмент собираются
-из файлов архива этого же сеанса, вторым подключением к камере это не является.
+Живой поток — WebRTC, отдельным запросом. Снимок на прошлый момент и
+фрагмент собираются из архива. Редкий JPEG сеанса нужен распознаванию.
 """
 
 from __future__ import annotations
@@ -44,26 +44,10 @@ def _camera_dir(binding: VideoBinding) -> Path:
     return binding.camera.segment_dir(binding.connector_id)
 
 
-async def live_response(binding: VideoBinding, request: Request | None) -> StreamingResponse:
-    session = await get_session(binding.connector_id, binding.camera, _camera_dir(binding))
-    queue = session.subscribe()
-
-    async def chunks():
-        try:
-            while True:
-                if request is not None and await request.is_disconnected():
-                    break
-                chunk = await queue.get()
-                if chunk is None:
-                    break
-                yield chunk
-        finally:
-            session.unsubscribe(queue)
-
-    return StreamingResponse(
-        chunks(),
-        media_type="multipart/x-mixed-replace; boundary=ffmpeg",
-    )
+async def live_response(binding: VideoBinding, request: Request | None) -> Response:
+    """Старый MJPEG больше не отдаётся: живой просмотр идёт через WebRTC."""
+    del binding, request
+    return error_response(404, "Живой поток открывается через WebRTC.")
 
 
 async def live_audio_response(binding: VideoBinding, request: Request | None) -> Response:
@@ -95,6 +79,10 @@ async def snapshot_response(binding: VideoBinding) -> Response:
     segments = list_segments(directory, segment_seconds_value=segment_seconds(), now_us=now_us)
     recent = abs(now_us - finish_us) <= live_snapshot_skew_us()
     if recent:
+        session = await get_session(binding.connector_id, binding.camera, directory)
+        jpeg = session.fresh_jpeg()
+        if jpeg:
+            return Response(content=jpeg, media_type="image/jpeg")
         jpeg = await _snapshot_recent(directory, segments)
     else:
         segment = segment_at(segments, finish_us)

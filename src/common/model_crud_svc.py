@@ -603,10 +603,10 @@ class ModelCRUDSvc(Svc):
         if mes_data["filter"].get("objectClass") is None:
             mes_data["filter"]["objectClass"] = [self._config.hierarchy["class"]]
 
-        if mes_data["base"] == "prs":
+        if mes_data.get("base") == "prs":
             mes_data["base"] = await self._hierarchy.get_node_id("cn=prs")
 
-        if mes_data["base"]:
+        if mes_data.get("base"):
             try:
                 UUID(mes_data["base"])
             except Exception:
@@ -645,6 +645,10 @@ class ModelCRUDSvc(Svc):
             # если в запросе одно из полей было не списком, то делаем его списком
             if type(item) is not list:
                 mes_data["filter"][key] = [mes_data["filter"][key]]
+
+        mes_data.setdefault("hierarchy", False)
+        mes_data.setdefault("scope", 1)
+        mes_data.setdefault("deref", True)
 
         if not mes_data["hierarchy"] or mes_data["scope"] < 2:
             try:

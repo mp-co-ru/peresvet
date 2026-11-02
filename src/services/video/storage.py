@@ -33,6 +33,8 @@ def camera_with_storage(camera: CameraConfig, archive: ArchiveConfig, connector_
         camera,
         archive_path=archive.path / connector_id,
         retention_hours=archive.retention_hours,
+        archive_width=archive.archive_width,
+        archive_fps=archive.archive_fps,
     )
 
 

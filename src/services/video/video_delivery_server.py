@@ -15,10 +15,16 @@ from src.services.video.delivery_http import (
     delivery_data_response,
     delivery_ptz_response,
     delivery_talk_response,
+    delivery_webrtc_response,
 )
 from src.services.video.video_delivery_svc import app
 
 router = APIRouter()
+
+
+@router.post("/v1/video/webrtc")
+async def video_webrtc(request: Request):
+    return await delivery_webrtc_response(app, request)
 
 
 @router.get("/v1/data/")
