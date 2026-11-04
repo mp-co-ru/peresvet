@@ -121,6 +121,40 @@ def test_catalog_call_checks_arity_and_numeric_codes():
     assert numeric_compatible(1, 2.0) is True
 
 
+def test_further_read_loads_parameters_when_object_class_is_not_in_attributes():
+    class Hierarchy:
+        async def get_node_class(self, node_id):
+            assert node_id == "method-1"
+            return "prsMethod"
+
+        async def get_node_dn(self, node_id):
+            assert node_id == "method-1"
+            return "cn=person_in_zone,cn=methods,cn=prs"
+
+        async def get_parent(self, node_id):
+            raise RuntimeError(node_id)
+
+        async def search(self, payload):
+            base = payload.get("base") or ""
+            if base.startswith("cn=initiatedBy,"):
+                return []
+            if base.startswith("cn=parameters,"):
+                return [(
+                    "param-1",
+                    "cn=zone,cn=parameters,cn=system,cn=person_in_zone,cn=methods,cn=prs",
+                    {"cn": ["zone"], "prsIndex": ["2"], "prsValueTypeCode": ["4"]},
+                )]
+            raise AssertionError(payload)
+
+    svc = _make_service(Hierarchy())
+    result = asyncio.run(MethodsModelCRUD._further_read(svc, {}, {
+        "data": [{"id": "method-1", "attributes": {"cn": ["person_in_zone"]}}]
+    }))
+    parameters = result["data"][0]["parameters"]
+    assert len(parameters) == 1
+    assert parameters[0]["attributes"]["cn"] == ["zone"]
+
+
 def test_further_read_returns_a_folder_without_looking_up_method_children():
     class Hierarchy:
         async def search(self, payload):
