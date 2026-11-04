@@ -1072,8 +1072,8 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 В конфигураторе это тот же пункт «Новый метод»: в свойствах выбирают
 вновь создаваемый метод или ссылку на каталог. У ссылки адрес
 не редактируется. Параметры приходят из метода каталога:
-число, имя и тип фиксированы. Индекс параметра совпадает с порядком
-закладок. Источник значения — данные тега, данные из запроса клиента,
+число, имя, описание и тип фиксированы. Индекс параметра совпадает с порядком
+закладок. Источник значения задаётся у ссылки — данные тега, данные из запроса клиента,
 запрос к платформе (<code class="docutils literal notranslate"><span class="pre">routingKey</span></code> и <code class="docutils literal notranslate"><span class="pre">message</span></code>) или внешний HTTP-запрос
 (<code class="docutils literal notranslate"><span class="pre">httpRequest</span></code>), как у локального метода.</p>
 <p>Экземпляр из каталога хранит <code class="docutils literal notranslate"><span class="pre">prsCatalogMethodId</span></code>, копирует
@@ -1126,9 +1126,11 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 Рядом с этим в модели есть общий каталог <code class="docutils literal notranslate"><span class="pre">cn=methods,cn=prs</span></code>.
 В конфигураторе это папка «Методы». Внутри неё методы раскладываются
 по папкам <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> (<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/</span></code> с <code class="docutils literal notranslate"><span class="pre">&quot;folder&quot;:</span> <span class="pre">true</span></code>).</p>
-<p>Определение в каталоге задаёт адрес <code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code> и параметры
-с <code class="docutils literal notranslate"><span class="pre">prsIndex</span></code> и <code class="docutils literal notranslate"><span class="pre">prsValueTypeCode</span></code> (<code class="docutils literal notranslate"><span class="pre">1</span></code> целый, <code class="docutils literal notranslate"><span class="pre">2</span></code> вещественный,
-<code class="docutils literal notranslate"><span class="pre">3</span></code> строка, <code class="docutils literal notranslate"><span class="pre">4</span></code> json). Инициаторы у определения не задаются,
+<p>Определение в каталоге задаёт адрес <code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code> и параметры:
+имя, описание, <code class="docutils literal notranslate"><span class="pre">prsIndex</span></code> и <code class="docutils literal notranslate"><span class="pre">prsValueTypeCode</span></code> (<code class="docutils literal notranslate"><span class="pre">1</span></code> целый,
+<code class="docutils literal notranslate"><span class="pre">2</span></code> вещественный, <code class="docutils literal notranslate"><span class="pre">3</span></code> строка, <code class="docutils literal notranslate"><span class="pre">4</span></code> json). Откуда брать значение
+параметра, в определении не хранится: это привязка ссылки в иерархии.
+Инициаторы у определения не задаются,
 <code class="docutils literal notranslate"><span class="pre">prsEntityTypeCode</span></code> каталога всегда <code class="docutils literal notranslate"><span class="pre">0</span></code>. Число параметров при чтении
 возвращается полем <code class="docutils literal notranslate"><span class="pre">parameterCount</span></code>.</p>
 <p>Экземпляр на теге или тревоге ссылается на каталог:</p>
