@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261031-tree-load-once-v1"
+CODE_VERSION = "20261102-catalog-params-read-v1"
 
 
 def _parts():
@@ -87,7 +87,12 @@ def test_methods_catalog_root_and_menus():
     storage_at = html.index('id="prs-storage-tag-only"')
     assert "div-catalogInstance" not in html[storage_at : storage_at + 500]
     assert html.index('id="div-catalogInstance"') < html.index('id="div-parameters"')
+    assert "function prsMethodIsCatalogNode" in javascript
+    assert 'prsMethodIsCatalogNode(node)||"prsModelNode"===poc' in javascript
+    assert 'if("catalog"!==prsMode)a.prsJsonConfigString=e' in javascript
+    assert '"input-parameter-description-"' in javascript
     assert "function prsLoadCatalogMethod" in javascript
+    assert '"/v1/methods/?id="+encodeURIComponent(id)+"&attributes=cn&attributes=description&attributes=prsMethodAddress&attributes=objectClass' in javascript
     assert "function prsSetMethodAddressLocked" in javascript
     assert "addr.readOnly=!0" in javascript
     bind_html = javascript.split("function prsBindFieldsHtml", 1)[1].split("function prsReadBindRow", 1)[0]
@@ -108,6 +113,8 @@ def test_methods_catalog_root_and_menus():
     assert "function prsMethodParamSourceOf" in javascript
     assert ".prs-method-mode-instance #div-parameters{display:none" not in css
     assert ".prs-method-mode-instance .prs-method-param-add-wrap" in css
+    assert ".prs-method-mode-catalog .prs-method-param-head-flags,.prs-method-mode-instance .prs-method-param-head-flags{flex-direction:column!important" in css
+    assert ".prs-method-mode-catalog .prs-method-param-head-flags>.prs-catalog-vtype" in css
     assert "prs-catalog-vtype" in html
     assert "Целый" in html
 
@@ -152,6 +159,50 @@ const method = tree.folders[0].methods[0];
 if (method.address !== "prs.vision.person_in_zone") throw new Error("address");
 if (method.parameters[0].prsValueTypeCode !== 4) throw new Error("type");
 if (!String(method.description).includes("Вторая строка")) throw new Error("description");
+console.log("ok");
+"""
+    completed = subprocess.run([node, "-e", script], check=False, capture_output=True, text=True)
+    assert completed.returncode == 0, completed.stderr
+
+
+def test_catalog_method_follows_methods_tree_not_only_direct_parent():
+    import shutil
+    import subprocess
+
+    node = shutil.which("node")
+    assert node
+    _html, javascript = _parts()
+    start = javascript.find("function prsMethodIsCatalogNode")
+    end = javascript.find("function prsTouchChanged", start)
+    assert start > 0 and end > start
+    script = javascript[start:end] + r"""
+function el(id, objectClass, parent) {
+  return {
+    id: id,
+    parentElement: parent || null,
+    getAttribute(name) {
+      if (name === "objectClass") return objectClass || "";
+      if (name === "role") return "treeitem";
+      return "";
+    },
+  };
+}
+const methods = el("methods", "prsMethodsRoot", null);
+const methodsGroup = { previousElementSibling: methods, getAttribute() { return ""; } };
+const folder = el("stdlib", "prsFolder", methodsGroup);
+const folderGroup = { previousElementSibling: folder, getAttribute() { return ""; } };
+const nested = el("add-in-folder", "prsMethod", folderGroup);
+const rootMethod = el("add", "prsMethod", methodsGroup);
+const tag = el("tag-1", "prsTag", null);
+const tagGroup = { previousElementSibling: tag, getAttribute() { return ""; } };
+const onTag = el("local", "prsMethod", tagGroup);
+const tagFolder = el("folder-on-tag", "prsFolder", tagGroup);
+const tagFolderGroup = { previousElementSibling: tagFolder, getAttribute() { return ""; } };
+const underTagFolder = el("m", "prsMethod", tagFolderGroup);
+if (!prsMethodIsCatalogNode(rootMethod)) throw new Error("root method");
+if (!prsMethodIsCatalogNode(nested)) throw new Error("folder method");
+if (prsMethodIsCatalogNode(onTag)) throw new Error("tag method");
+if (prsMethodIsCatalogNode(underTagFolder)) throw new Error("folder under tag");
 console.log("ok");
 """
     completed = subprocess.run([node, "-e", script], check=False, capture_output=True, text=True)

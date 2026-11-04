@@ -697,6 +697,13 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             new_method_item = copy.deepcopy(method_item)
             attributes = new_method_item.get("attributes") or {}
             object_class = node_class_from_object_classes(attributes.get("objectClass"))
+            # Список атрибутов по умолчанию — только cn. Тогда objectClass
+            # в ответе нет, и параметры метода не подгружались бы.
+            if not object_class:
+                try:
+                    object_class = await self._hierarchy.get_node_class(new_method_item["id"])
+                except Exception:
+                    object_class = ""
             if object_class != "prsMethod":
                 if object_class and isinstance(attributes, dict):
                     current = list(attributes.get("objectClass") or [])
