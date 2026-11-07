@@ -150,6 +150,41 @@ def test_type_icon_is_the_anchor_for_other_tree_icons():
     )
 
 
+def test_node_tooltip_is_description_and_errors_stay_on_icons():
+    _, javascript = _parts()
+
+    assert "function prsLdapDescription(attrs)" in javascript
+    assert '["cn","objectClass","prsIndex","prsDefault","description"]' in javascript
+    assert 'itemDiv.setAttribute("data-prs-description",String(t.description))' in javascript
+    assert 'e.getAttribute("data-prs-description")' in javascript
+    assert 'm?m+" · "+v' not in javascript
+    assert 'o.title="В поддереве есть неактивные узлы (или узел неактивен)"' in javascript
+    assert 's.title="Есть теги или тревоги без привязки к хранилищу"' in javascript
+    assert 'l.title="Есть теги без коннектора и дочернего метода — данные не поступают"' in javascript
+
+
+def test_tag_icon_color_follows_child_method_kind():
+    css, javascript = _parts()
+
+    assert 'r.append("attributes","prsEntityTypeCode")' in javascript
+    assert "var r={any:{},calc:{},virt:{}}" in javascript
+    assert "1===R(e)?r.virt[id]=!0:r.calc[id]=!0" in javascript
+    assert "tagCalcMethod:methodCalc,tagVirtMethod:methodVirt" in javascript
+    assert 't.classList.add("prs-tag-method-"+prsTagKind)' in javascript
+    assert "prs-tag-tree-unlinked>.item-icon{color:var(--ioterra-rust" not in css
+    assert "#tree .list-group-item.prsTag.prs-tag-method-plain>.item-icon{color:#0e9f4a!important}" in css
+    assert "#tree .list-group-item.prsTag.prs-tag-method-calc>.item-icon{color:#e06a00!important}" in css
+    assert "#tree .list-group-item.prsTag.prs-tag-method-virt>.item-icon{color:#9b2fd0!important}" in css
+    # Проблема самого тега — отдельный значок рядом с ярлыком, со своим тултипом.
+    assert "function prsTreeSetOwnMarks(item,marks)" in javascript
+    assert 'anchor=active||icon;anchor?anchor.insertAdjacentElement("afterend",box)' in javascript
+    assert "#tree .list-group-item[role=treeitem]>.prs-node-own-marks .prs-tree-rollup-dot{background:rgba(255,192,203,.72);" in css
+    assert 'prsOwnMarks.push({kind:"storage",title:"Нет привязки к хранилищу данных"})' in javascript
+    assert 'prsOwnMarks.push({kind:"nods",title:"Нет привязки к коннектору и нет дочернего метода — данные не поступают"})' in javascript
+    assert "prs-tag-tree-unlinked .prs-tree-label::before" not in css
+    assert 'e.insertBefore(i,menu||c||a)' in javascript
+
+
 def test_data_storage_group_stays_visible_after_expand():
     _, javascript = _parts()
 
