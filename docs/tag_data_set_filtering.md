@@ -49,8 +49,24 @@ Redis между запросами). Поле `data` приводится к с
 (WebSocket), `src/services/connectors/app/connectors_mqtt_app_svc.py` (запись
 качества в теги и т.п.).
 
+## Что гарантирует база
+
+Отбор в `TagsApp` не единственная проверка. При сбросе кэша в PostgreSQL те же
+правила применяются ко **всем** тегам, уже с учётом строк в таблице:
+
+* `prsUpdate = true` — на одну метку времени в таблице остаётся одно значение,
+  последнее в пачке. Повтор метки внутри пачки второй строкой не пишется.
+* `prsMaxLineDev > 0` — новое значение не встаёт рядом с таким же соседним
+  значением (порог и смена качества — как в `should_discard_data_point`).
+
+Запись одного тега в таблицу идёт в одной транзакции под замком этой таблицы,
+чтобы два одновременных сброса не вставили одну и ту же метку. Теги без этих
+флагов пишутся как раньше.
+
 ## Связанные файлы
 
 - `src/services/tags/app/tags_app_svc.py` — вызов фильтра и обновление Redis.
 - `src/common/tag_data_points.py` — нормализация точки и приведение `data` к списку.
+- `src/common/tag_max_line_dev.py` — `history_points_to_insert` при сбросе в PostgreSQL.
+- `src/services/dataStorages/app/postgresql/dataStorages_app_postgresql_svc.py` — запись истории.
 - Тесты: `tests/unit/test_tag_max_line_dev.py`, `tests/unit/test_tags_app_data_set_max_line_dev.py`.

@@ -1,4 +1,6 @@
 import json
+import shutil
+import subprocess
 from pathlib import Path
 
 
@@ -110,6 +112,77 @@ def test_data_storage_linked_tags_indent_past_the_storage_icon():
         "{padding-left:calc(.82em + 2px)!important}"
         in css
     )
+
+
+def test_type_icon_is_the_anchor_for_other_tree_icons():
+    css, javascript = _parts()
+
+    # Problem marks sit in the row, immediately before the node menu.
+    # They do not occupy space to the left of the type icon.
+    assert "prsTreePadToTypeIcon=function(pad,parentRight,childLeft,gap)" in javascript
+    assert "prsTreeRollupLeft=function" not in javascript
+    assert "prsTreeRestorePad=function" not in javascript
+    assert 'e.insertBefore(i,menu||c||a)' in javascript
+    assert 'item.insertBefore(strip,menu)' in javascript
+    assert "prsLayoutTreeFromTypeIcon=function(fromFrame)" in javascript
+    assert 'group.style.setProperty("padding-left",next+"px","important")' in javascript
+    assert "prsLayoutTreeFromTypeIcon()}" in javascript
+    assert "prsLayoutTreeFromTypeIcon()}}" in javascript
+    assert (
+        "#tree .list-group-item[role=treeitem]>.prs-tree-rollup-strip:not(.prs-tree-rollup-strip--spacer)"
+        "{position:static;margin:0 .2rem 0 .35rem;top:auto;left:auto;right:auto;transform:none;z-index:auto;flex:0 0 auto}"
+        in css
+    )
+    assert "#tree .list-group-item[role=treeitem]{overflow:visible}" in css
+    assert "#tree .list-group[role=group]{overflow:visible}" in css
+
+    node = shutil.which("node")
+    assert node, "Node.js is required to check type-icon anchor math"
+    subprocess.run(
+        [
+            node,
+            str(ROOT / "tests/unit/grafana_configurator_tree_icon_anchor_node_test.js"),
+            str(DASHBOARD_PATH),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_node_tooltip_is_description_and_errors_stay_on_icons():
+    _, javascript = _parts()
+
+    assert "function prsLdapDescription(attrs)" in javascript
+    assert '["cn","objectClass","prsIndex","prsDefault","description"]' in javascript
+    assert 'itemDiv.setAttribute("data-prs-description",String(t.description))' in javascript
+    assert 'e.getAttribute("data-prs-description")' in javascript
+    assert 'm?m+" · "+v' not in javascript
+    assert 'o.title="В поддереве есть неактивные узлы (или узел неактивен)"' in javascript
+    assert 's.title="Есть теги или тревоги без привязки к хранилищу"' in javascript
+    assert 'l.title="Есть теги без коннектора и дочернего метода — данные не поступают"' in javascript
+
+
+def test_tag_icon_color_follows_child_method_kind():
+    css, javascript = _parts()
+
+    assert 'r.append("attributes","prsEntityTypeCode")' in javascript
+    assert "var r={any:{},calc:{},virt:{}}" in javascript
+    assert "1===R(e)?r.virt[id]=!0:r.calc[id]=!0" in javascript
+    assert "tagCalcMethod:methodCalc,tagVirtMethod:methodVirt" in javascript
+    assert 't.classList.add("prs-tag-method-"+prsTagKind)' in javascript
+    assert "prs-tag-tree-unlinked>.item-icon{color:var(--ioterra-rust" not in css
+    assert "#tree .list-group-item.prsTag.prs-tag-method-plain>.item-icon{color:#0e9f4a!important}" in css
+    assert "#tree .list-group-item.prsTag.prs-tag-method-calc>.item-icon{color:#e06a00!important}" in css
+    assert "#tree .list-group-item.prsTag.prs-tag-method-virt>.item-icon{color:#9b2fd0!important}" in css
+    # Проблема самого тега — отдельный значок рядом с ярлыком, со своим тултипом.
+    assert "function prsTreeSetOwnMarks(item,marks)" in javascript
+    assert 'anchor=active||icon;anchor?anchor.insertAdjacentElement("afterend",box)' in javascript
+    assert "#tree .list-group-item[role=treeitem]>.prs-node-own-marks .prs-tree-rollup-dot{background:rgba(255,192,203,.72);" in css
+    assert 'prsOwnMarks.push({kind:"storage",title:"Нет привязки к хранилищу данных"})' in javascript
+    assert 'prsOwnMarks.push({kind:"nods",title:"Нет привязки к коннектору и нет дочернего метода — данные не поступают"})' in javascript
+    assert "prs-tag-tree-unlinked .prs-tree-label::before" not in css
+    assert 'e.insertBefore(i,menu||c||a)' in javascript
 
 
 def test_data_storage_group_stays_visible_after_expand():
