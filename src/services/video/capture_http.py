@@ -9,7 +9,7 @@ from starlette.responses import JSONResponse, Response
 
 from src.services.video.camera import camera_from_connector_attributes, max_fragment_seconds
 from src.services.video.errors import error_response
-from src.services.video.lookup import VideoBinding
+from src.services.video.lookup import VideoBinding, camera_for_session
 from src.services.video.media import (
     fragment_response,
     live_audio_response,
@@ -18,7 +18,7 @@ from src.services.video.media import (
 )
 from src.services.video.onvif_ptz import OnvifError, perform_ptz
 from src.services.video.ownership import serves
-from src.services.video.runtime import VideoRuntimeError
+from src.services.video.runtime import VideoRuntimeError, get_session
 from src.services.video.talk import (
     CameraTalk,
     CameraTalkError,
@@ -66,6 +66,44 @@ def _microseconds(raw: str | None) -> int | None:
     return int(raw)
 
 
+async def _session_camera(app, connector_id: str):
+    """Та же камера, с которой уже открыт сеанс: путь и размер архива из хранилища.
+
+    Без этого каждый просмотр сравнивает сеанс с «голой» камерой и
+    перезапускает ffmpeg. Первый кадр тогда приходится ждать заново.
+    """
+    camera = await _load_camera(app, connector_id)
+    if not hasattr(camera, "rtsp_url"):
+        return camera
+    stored = await camera_for_session(app._hierarchy, connector_id, camera)
+    if stored is None:
+        return error_response(424, "Тег видеопотока не привязан к хранилищу видео.")
+    return stored
+
+
+async def capture_webrtc(app, connector_id: str, body: dict):
+    from src.services.video.webrtc_fanout import answer_offer
+
+    camera = await _session_camera(app, connector_id)
+    if not hasattr(camera, "rtsp_url"):
+        return camera
+    sdp = str(body.get("sdp") or "")
+    if not sdp:
+        return error_response(422, "Нужен SDP offer.")
+    try:
+        await get_session(connector_id, camera, camera.segment_dir(connector_id))
+        answer = await answer_offer(
+            connector_id,
+            sdp,
+            str(body.get("advertiseHost") or ""),
+        )
+    except VideoRuntimeError as ex:
+        return error_response(503, ex.message)
+    except FileNotFoundError:
+        return error_response(503, "Не найден ffmpeg.")
+    return JSONResponse(answer)
+
+
 async def capture_live(app, connector_id: str, request: Request | None):
     camera = await _load_camera(app, connector_id)
     if not hasattr(camera, "rtsp_url"):
@@ -79,7 +117,7 @@ async def capture_live(app, connector_id: str, request: Request | None):
 
 
 async def capture_audio(app, connector_id: str, request: Request | None):
-    camera = await _load_camera(app, connector_id)
+    camera = await _session_camera(app, connector_id)
     if not hasattr(camera, "rtsp_url"):
         return camera
     try:
@@ -90,8 +128,25 @@ async def capture_audio(app, connector_id: str, request: Request | None):
         return error_response(503, "Не найден ffmpeg.")
 
 
+async def capture_frame(app, connector_id: str):
+    """Текущий кадр живого сеанса. Для распознавания, без второго ffmpeg."""
+    camera = await _session_camera(app, connector_id)
+    if not hasattr(camera, "rtsp_url"):
+        return camera
+    try:
+        session = await get_session(connector_id, camera)
+    except VideoRuntimeError as ex:
+        return error_response(502, ex.message)
+    except FileNotFoundError:
+        return error_response(503, "Не найден ffmpeg.")
+    jpeg = session.fresh_jpeg()
+    if not jpeg:
+        return error_response(502, "Камера ещё не записала кадр.")
+    return Response(content=jpeg, media_type="image/jpeg")
+
+
 async def capture_snapshot(app, connector_id: str, finish: str | None):
-    camera = await _load_camera(app, connector_id)
+    camera = await _session_camera(app, connector_id)
     if not hasattr(camera, "rtsp_url"):
         return camera
     try:
@@ -107,7 +162,7 @@ async def capture_snapshot(app, connector_id: str, finish: str | None):
 
 
 async def capture_fragment(app, connector_id: str, start: str | None, finish: str | None):
-    camera = await _load_camera(app, connector_id)
+    camera = await _session_camera(app, connector_id)
     if not hasattr(camera, "rtsp_url"):
         return camera
     try:

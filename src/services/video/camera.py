@@ -23,13 +23,12 @@ _RTSP_USERINFO_RE = re.compile(r"(rtsps?://)([^/\s@]+)@")
 
 
 KEY_RTSP = "rtspUrl"
-KEY_ARCHIVE = "archivePath"
-KEY_RETENTION = "retentionHours"
-KEY_ARCHIVE_WIDTH = "archiveWidth"
-KEY_ARCHIVE_FPS = "archiveFps"
 KEY_ONVIF_PORT = "onvifPort"
 KEY_ONVIF_USER = "onvifUser"
 KEY_ONVIF_PASSWORD = "onvifPassword"
+_LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")
+LOG_MAX_BYTES = 10 * 1024 * 1024
+LOG_BACKUP_COUNT = 10
 
 
 def _config_dict(raw: Any) -> dict:
@@ -47,13 +46,24 @@ def _pick(raw: dict, *keys: str) -> Any:
     return None
 
 
+def camera_source(raw: dict) -> dict:
+    """Параметры потока. Как у остальных коннекторов, они лежат в ``source``.
+
+    Плоский JSON, где ``rtspUrl`` стоит в корне, тоже принимается.
+    """
+    source = raw.get("source")
+    if isinstance(source, dict) and _pick(source, KEY_RTSP) is not None:
+        return source
+    return raw
+
+
 def config_is_camera(raw: Any) -> bool:
-    """Камера — коннектор, в чьём prsJsonConfigString есть ключ rtspUrl."""
+    """Камера — коннектор, в чьём ``source`` (или в корне JSON) есть ``rtspUrl``."""
     try:
         data = _config_dict(raw)
     except (ValueError, json.JSONDecodeError, TypeError):
         return False
-    return _pick(data, KEY_RTSP) is not None
+    return _pick(camera_source(data), KEY_RTSP) is not None
 
 
 def is_camera_connector(entity_type_code: Any) -> bool:
@@ -83,6 +93,11 @@ class CameraConfig:
     onvif_port: int = 8899
     onvif_user: str | None = None
     onvif_password: str | None = None
+    log_to_platform: bool = False
+    log_level: str = "INFO"
+    log_file_name: str = ""
+    log_max_bytes: int = LOG_MAX_BYTES
+    log_backup_count: int = LOG_BACKUP_COUNT
 
     @property
     def onvif_host(self) -> str:
@@ -116,7 +131,8 @@ def camera_from_connector_attributes(attrs: dict) -> CameraConfig | None:
     """Активная камера по атрибутам узла коннектора.
 
     ``None`` — коннектор выключен или в конфигурации нет ``rtspUrl``.
-    ``ValueError`` — JSON или путь архива нельзя применить.
+    ``ValueError`` — JSON камеры нельзя применить.
+    Путь архива, срок хранения, ширина и частота лежат в хранилище видео.
     """
     active = _ldap_value(attrs, "prsActive")
     if active is not None and str(active).upper() != "TRUE":
@@ -129,40 +145,66 @@ def camera_from_connector_attributes(attrs: dict) -> CameraConfig | None:
     return parse_camera_config(raw or {})
 
 
+def _log_int(value: Any, default: int, *, minimum: int) -> int:
+    if isinstance(value, bool) or value is None or value == "":
+        return default
+    try:
+        number = int(value)
+    except (TypeError, ValueError):
+        return default
+    if number < minimum:
+        return default
+    return number
+
+
+def _log_settings(raw: dict) -> tuple[bool, str, str, int, int]:
+    """Ключ ``log`` как в prs-connector-core: уровень, файл, размер, копии, флажок."""
+    log = raw.get("log")
+    if not isinstance(log, dict):
+        log = {}
+    level = str(log.get("level") or "INFO").strip().upper()
+    if level not in _LOG_LEVELS:
+        level = "INFO"
+    file_name = log.get("fileName")
+    if not isinstance(file_name, str):
+        file_name = ""
+    return (
+        bool(log.get("sendToPlatform")),
+        level,
+        file_name.strip(),
+        _log_int(log.get("maxBytes"), LOG_MAX_BYTES, minimum=1),
+        _log_int(log.get("backupCount"), LOG_BACKUP_COUNT, minimum=0),
+    )
+
+
 def parse_camera_config(raw: Any) -> CameraConfig:
     raw = _config_dict(raw)
-    url = str(_pick(raw, KEY_RTSP) or "").strip()
+    source = camera_source(raw)
+    url = str(_pick(source, KEY_RTSP) or "").strip()
     parts = urlsplit(url)
     if parts.scheme not in ("rtsp", "rtsps") or not parts.hostname:
         raise ValueError(
             "В prsJsonConfigString нужен ключ rtspUrl вида rtsp://хост/путь."
         )
-    transport = str(raw.get("rtspTransport") or "tcp").strip().lower()
+    transport = str(source.get("rtspTransport") or "tcp").strip().lower()
     if transport not in ("tcp", "udp"):
         transport = "tcp"
-    archive_path = None
-    path_raw = str(_pick(raw, KEY_ARCHIVE) or "").strip()
-    if path_raw:
-        archive_path = Path(path_raw).expanduser()
-        if not archive_path.is_absolute():
-            raise ValueError("Ключ archivePath должен быть абсолютным путём.")
-        archive_path = archive_path.resolve()
-    retention = 24.0
-    retention_raw = _pick(raw, KEY_RETENTION)
-    if retention_raw is not None:
-        retention = float(retention_raw)
-    if retention <= 0:
-        raise ValueError("Ключ retentionHours должен быть больше нуля.")
+    send_log, log_level, log_file_name, log_max_bytes, log_backup_count = _log_settings(raw)
     return CameraConfig(
         rtsp_url=url,
         transport=transport,
-        archive_path=archive_path,
-        retention_hours=retention,
-        archive_width=_optional_even_width(raw),
-        archive_fps=_optional_fps(raw),
-        onvif_port=_onvif_port(raw),
-        onvif_user=_optional_text(raw, KEY_ONVIF_USER),
-        onvif_password=_optional_text(raw, KEY_ONVIF_PASSWORD),
+        archive_path=None,
+        retention_hours=24.0,
+        archive_width=None,
+        archive_fps=None,
+        onvif_port=_onvif_port(source),
+        onvif_user=_optional_text(source, KEY_ONVIF_USER),
+        onvif_password=_optional_text(source, KEY_ONVIF_PASSWORD),
+        log_to_platform=send_log,
+        log_level=log_level,
+        log_file_name=log_file_name,
+        log_max_bytes=log_max_bytes,
+        log_backup_count=log_backup_count,
     )
 
 
@@ -189,37 +231,6 @@ def _onvif_port(raw: dict) -> int:
     return port
 
 
-def _optional_even_width(raw: dict) -> int | None:
-    value = _pick(raw, KEY_ARCHIVE_WIDTH)
-    if value is None:
-        return None
-    if isinstance(value, bool):
-        raise ValueError("Ключ archiveWidth должен быть чётной шириной в пикселях.")
-    try:
-        number = float(value)
-    except (TypeError, ValueError) as ex:
-        raise ValueError("Ключ archiveWidth должен быть чётной шириной в пикселях.") from ex
-    width = int(number)
-    if width != number or width < 2 or width % 2:
-        raise ValueError("Ключ archiveWidth должен быть чётной шириной в пикселях.")
-    return width
-
-
-def _optional_fps(raw: dict) -> float | None:
-    value = _pick(raw, KEY_ARCHIVE_FPS)
-    if value is None:
-        return None
-    if isinstance(value, bool):
-        raise ValueError("Ключ archiveFps должен быть больше нуля.")
-    try:
-        fps = float(value)
-    except (TypeError, ValueError) as ex:
-        raise ValueError("Ключ archiveFps должен быть больше нуля.") from ex
-    if fps <= 0:
-        raise ValueError("Ключ archiveFps должен быть больше нуля.")
-    return fps
-
-
 def _format_fps(fps: float) -> str:
     if fps == int(fps):
         return str(int(fps))
@@ -232,7 +243,11 @@ def _format_fps(fps: float) -> str:
 _ARRIVAL_PTS = "setpts=(RTCTIME-RTCSTART)/(1000000*TB)"
 # Пакеты одного кадра часто приходят пачкой. Ближе 20 мс — тот же кадр.
 _SAME_FRAME = "select=isnan(prev_selected_t)+gte(t-prev_selected_t\\,0.02)"
-_PREVIEW_VF = f"{_ARRIVAL_PTS},{_SAME_FRAME},fps=8,scale=960:-2"
+# Один H.264 для всех зрителей WebRTC. Архив этот поток не кодирует,
+# если у хранилища не заданы ширина и частота.
+_LIVE_VF = f"{_ARRIVAL_PTS},{_SAME_FRAME},fps=15,scale=960:-2"
+# Редкий JPEG только для распознавания. Зрителям он не отдаётся.
+_PREVIEW_VF = f"{_ARRIVAL_PTS},fps=2,scale=640:-2"
 
 
 def archive_video_filter(camera: CameraConfig) -> str:
@@ -348,6 +363,37 @@ def session_audio_args(target: str) -> list[str]:
     ]
 
 
+def _archive_needs_encode(camera: CameraConfig) -> bool:
+    """Размер или частота в коннекторе требуют отдельного кодирования архива."""
+    return camera.archive_width is not None or camera.archive_fps is not None
+
+
+def _archive_output(camera: CameraConfig, pattern: str, segment_seconds_value: int) -> list[str]:
+    if _archive_needs_encode(camera):
+        return [
+            "-map", "0:v:0", "-an",
+            "-vf", archive_video_filter(camera),
+            "-fps_mode", "passthrough",
+            "-c:v", "libx264", "-preset", "ultrafast", "-tune", "zerolatency", "-pix_fmt", "yuv420p",
+            "-f", "segment",
+            "-segment_time", str(segment_seconds_value),
+            "-segment_format", "mpegts",
+            "-reset_timestamps", "1",
+            "-strftime", "1",
+            pattern,
+        ]
+    return [
+        "-map", "0:v:0", "-an",
+        "-c:v", "copy",
+        "-f", "segment",
+        "-segment_time", str(segment_seconds_value),
+        "-segment_format", "mpegts",
+        "-reset_timestamps", "1",
+        "-strftime", "1",
+        pattern,
+    ]
+
+
 def session_ffmpeg_args(
     camera: CameraConfig,
     directory: Path,
@@ -357,37 +403,34 @@ def session_ffmpeg_args(
     audio_target: str | None = None,
 ) -> list[str]:
     pattern = str(directory / "%s.ts")
-    archive_encode = [
-        "-map", "0:v:0", "-an",
-        "-vf", archive_video_filter(camera),
-        "-fps_mode", "passthrough",
-        "-c:v", "libx264", "-preset", "ultrafast", "-tune", "zerolatency", "-pix_fmt", "yuv420p",
-        "-f", "segment",
-        "-segment_time", str(segment_seconds_value),
-        "-segment_format", "mpegts",
-        "-reset_timestamps", "1",
-        "-strftime", "1",
-        pattern,
-    ]
     args = [
         ffmpeg or ffmpeg_bin(),
+        "-y",
         "-hide_banner",
         "-loglevel", "error",
         "-rtsp_transport", camera.transport,
         "-timeout", "8000000",
         "-use_wallclock_as_timestamps", "1",
         "-i", camera.rtsp_url,
-        *archive_encode,
+        *_archive_output(camera, pattern, segment_seconds_value),
+        "-map", "0:v:0", "-an",
+        "-vf", _LIVE_VF,
+        "-c:v", "libx264", "-preset", "ultrafast", "-tune", "zerolatency",
+        "-profile:v", "baseline", "-level", "3.1", "-pix_fmt", "yuv420p",
+        "-g", "15", "-keyint_min", "15", "-bf", "0",
+        "-x264-params", "repeat-headers=1:aud=1",
+        "-fps_mode", "cfr",
+        "-f", "h264",
+        "pipe:1",
         "-map", "0:v:0", "-an",
         "-vf", _PREVIEW_VF,
-        "-fps_mode", "passthrough",
-        "-c:v", "mjpeg", "-q:v", "8",
-        "-f", "mpjpeg",
-        "pipe:1",
+        "-q:v", "8",
+        "-f", "image2", "-update", "1",
+        str(directory / "preview.jpg"),
     ]
     if audio_target is not None:
-        preview = args.index(_PREVIEW_VF)
-        insert_at = max(index for index, item in enumerate(args[:preview]) if item == "-map")
+        live = args.index(_LIVE_VF)
+        insert_at = max(index for index, item in enumerate(args[:live]) if item == "-map")
         args[insert_at:insert_at] = session_audio_args(audio_target)
     return args
 

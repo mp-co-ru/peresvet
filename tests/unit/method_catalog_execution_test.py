@@ -86,6 +86,33 @@ def test_catalog_arity_and_null_do_not_write_tag():
     with_null._post_message.assert_not_called()
 
 
+def test_video_tag_parameter_is_passed_as_tag_id_without_data_get():
+    svc = _svc()
+
+    async def search(payload):
+        if payload.get("id") == "inst":
+            return [("inst", None, {"prsMethodAddress": ["prs.vision.person_in_zone"]})]
+        if payload.get("id") == "video-tag":
+            return [("video-tag", None, {"prsValueTypeCode": ["6"]})]
+        return []
+
+    svc._hierarchy.search = search
+    svc._hierarchy.get_node_class = AsyncMock(return_value="prsMethod")
+    parameters = [(
+        "p1",
+        None,
+        {
+            "prsJsonConfigString": ['{"tagId": "video-tag", "actual": true}'],
+            "prsIndex": ["1"],
+            "cn": ["source"],
+        },
+    )]
+    asyncio.run(MethodsApp._calc_tag(svc, "tag-out", "inst", parameters, [10, None, None]))
+    assert svc._rpc_exchange.call.await_args.args[1:] == ({"tagId": "video-tag"},)
+    assert svc._post_message.await_count == 1
+    assert "data_set" in svc._post_message.await_args.kwargs["routing_key"]
+
+
 def test_worker_error_does_not_write_tag():
     svc = _svc()
     svc._rpc_exchange.call = AsyncMock(return_value={"error": "деление на ноль"})

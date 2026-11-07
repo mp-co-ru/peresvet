@@ -44,10 +44,11 @@ class _Channel:
 
 
 class _Hierarchy:
-    def __init__(self, by_id, connectors, links):
+    def __init__(self, by_id, connectors, links, storages=None):
         self.by_id = by_id
         self.connectors = connectors
         self.links = links
+        self.storages = storages or []
 
     async def search(self, payload):
         if payload.get("id"):
@@ -57,6 +58,8 @@ class _Hierarchy:
             return self.by_id.get(tag_id, [])
         if payload.get("base") == "cn=connectors,cn=prs":
             return self.connectors
+        if payload.get("base") == "cn=dataStorages,cn=prs":
+            return self.storages
         return self.links.get(payload.get("base"), [])
 
 
@@ -80,7 +83,19 @@ def _bound():
     return _Hierarchy(
         {TAG: _video_tag()},
         _camera_connector(),
-        {CONN: [(TAG, "dn", {"cn": [TAG]})]},
+        {
+            CONN: [(TAG, "dn", {"cn": [TAG]})],
+            "ds-video": [("store-link", "dn", {"cn": [TAG]})],
+        },
+        [(
+            "ds-video",
+            "dn",
+            {
+                "prsEntityTypeCode": ["3"],
+                "prsActive": ["TRUE"],
+                "prsJsonConfigString": ['{"archivePath": "/var/lib/peresvet/video", "retentionHours": 24}'],
+            },
+        )],
     )
 
 
@@ -97,7 +112,7 @@ def _request(path: str, query: str, method: str = "GET", body: bytes = b"") -> R
     }, receive)
 
 
-def test_capture_with_nodes_skips_created_and_names_the_queue_after_the_first_id():
+def test_capture_with_nodes_subscribes_to_created_and_storage():
     from src.services.video.video_capture_settings import VideoCaptureSettings
     from src.services.video.video_capture_svc import VideoCapture
 
@@ -105,7 +120,10 @@ def test_capture_with_nodes_skips_created_and_names_the_queue_after_the_first_id
     app._handlers = {}
     app._config = VideoCaptureSettings(nodes=[CONN, OTHER])
     AppSvc._set_handlers(app)
-    assert "prsConnector.model.created" not in app._handlers
+    assert app._handlers["prsConnector.model.created"].__func__ is VideoCapture._created
+    assert app._handlers["prsDataStorage.model.created"].__func__ is VideoCapture._storage_changed
+    assert app._handlers["prsDataStorage.model.updated.*"].__func__ is VideoCapture._storage_changed
+    assert app._handlers["prsDataStorage.model.deleted.*"].__func__ is VideoCapture._storage_deleted
     for event in ("may_update", "updating", "updated", "may_delete", "deleting", "deleted"):
         assert f"prsConnector.model.{event}.{CONN}" in app._handlers
         assert f"prsConnector.model.{event}.{OTHER}" in app._handlers
@@ -147,23 +165,70 @@ def test_capture_scan_starts_only_listed_cameras_and_stops_the_rest(monkeypatch)
         stopped.append(conn_id)
         return True
 
-    async def active_tag(_hierarchy, connector_id):
-        return True
+    async def stored_camera(_hierarchy, conn_id, camera):
+        return camera
 
     monkeypatch.setattr(video_capture_svc, "sync_session", sync_session)
     monkeypatch.setattr(video_capture_svc, "stop_session", stop_session)
     monkeypatch.setattr(video_capture_svc, "tracked_session_ids", lambda: [CONN, OTHER])
-    monkeypatch.setattr(video_capture_svc, "active_video_tag_linked", active_tag)
+    monkeypatch.setattr(video_capture_svc, "camera_for_session", stored_camera)
     svc = SimpleNamespace(
         _hierarchy=SimpleNamespace(search=search),
         _config=SimpleNamespace(nodes=[CONN], svc_name="video_capture"),
         _logger=_Logger(),
     )
-    asyncio.run(video_capture_svc.VideoCapture._scan_once(svc))
+    asyncio.run(video_capture_svc.VideoCapture._load_cameras(svc))
     assert searches[0]["id"] == [CONN]
     assert "base" not in searches[0]
     assert synced == [CONN]
     assert stopped == [OTHER]
+
+
+def test_video_storage_update_reapplies_linked_and_open_cameras(monkeypatch):
+    from src.services.video import video_capture_svc
+
+    applied = []
+    ds_id = "4500c712-726a-103e-9264-a5021ec2dae1"
+
+    async def search(payload):
+        if payload.get("id") == [ds_id]:
+            return [(ds_id, "dn", {"prsEntityTypeCode": ["3"]})]
+        if payload.get("base") == ds_id:
+            return [("link", "dn", {"cn": [TAG]})]
+        raise AssertionError(payload)
+
+    async def connector_id_for_tag(_hierarchy, tag_id):
+        assert tag_id == TAG
+        return CONN
+
+    async def apply_connector(conn_id):
+        applied.append(conn_id)
+
+    monkeypatch.setattr(video_capture_svc, "connector_id_for_tag", connector_id_for_tag)
+    monkeypatch.setattr(video_capture_svc, "tracked_session_ids", lambda: [OTHER])
+    svc = SimpleNamespace(
+        _hierarchy=SimpleNamespace(search=search),
+        _config=SimpleNamespace(nodes=[], svc_name="video_capture"),
+        _logger=_Logger(),
+    )
+    for name in ("_apply_storage", "_storage_is_video", "_connectors_using_storage"):
+        setattr(svc, name, getattr(video_capture_svc.VideoCapture, name).__get__(svc, SimpleNamespace))
+    svc._apply_connector = apply_connector
+    asyncio.run(video_capture_svc.VideoCapture._storage_changed(svc, {"id": ds_id}))
+    assert applied == [CONN, OTHER]
+
+    applied.clear()
+
+    async def history(payload):
+        assert payload.get("id") == [ds_id]
+        return [(ds_id, "dn", {"prsEntityTypeCode": ["1"]})]
+
+    svc._hierarchy = SimpleNamespace(search=history)
+    asyncio.run(video_capture_svc.VideoCapture._storage_changed(svc, {"id": ds_id}))
+    assert applied == []
+
+    asyncio.run(video_capture_svc.VideoCapture._storage_deleted(svc, {"id": ds_id}))
+    assert applied == [OTHER]
 
 
 def _camera_attrs():
@@ -193,6 +258,21 @@ class _TagGateHierarchy:
             if self.active is None:
                 return []
             return [(TAG, "dn", {"prsValueTypeCode": ["6"], "prsActive": [self.active]})]
+        if payload.get("base") == "cn=dataStorages,cn=prs":
+            return [(
+                "ds-video",
+                "dn",
+                {
+                    "prsEntityTypeCode": ["3"],
+                    "prsActive": ["TRUE"],
+                    "prsJsonConfigString": ['{"archivePath": "/var/lib/peresvet/video", "retentionHours": 24}'],
+                },
+            )]
+        if (
+            payload.get("base") == "ds-video"
+            and payload.get("filter", {}).get("objectClass") == ["prsDatastorageTagData"]
+        ):
+            return [("store-link", "dn", {"cn": [TAG]})]
         return []
 
 
@@ -255,7 +335,7 @@ def test_scan_skips_a_camera_without_an_active_video_tag(monkeypatch):
         _config=SimpleNamespace(nodes=[], svc_name="video_capture"),
         _logger=_Logger(),
     )
-    asyncio.run(video_capture_svc.VideoCapture._scan_once(svc))
+    asyncio.run(video_capture_svc.VideoCapture._load_cameras(svc))
     assert synced == []
     assert stopped == [CONN]
 
@@ -481,6 +561,10 @@ def test_video_bytes_are_not_configured_as_a_broker_url():
     assert "prs-video-capture" in compose
     assert "prs-video-delivery" in compose
     assert "ports:" not in compose
+    nginx_conf = (ROOT / "config/nginx/nginx.conf").read_text(encoding="utf-8")
+    assert "listen 8189;" in nginx_conf
+    assert "listen 8189 udp;" in nginx_conf
+    assert "proxy_pass video-capture:8189;" in nginx_conf
     assert "container_name: prs-video\n" not in restart
     assert "prs-video-capture" in restart
     assert "prs-video-delivery" in restart
@@ -495,5 +579,6 @@ def test_video_bytes_are_not_configured_as_a_broker_url():
     ).read_text(encoding="utf-8")
     assert "proxy_buffering off" in nginx
     assert "proxy_pass http://tags_app_api;" in nginx
+    assert "location = /v1/video/webrtc" in nginx
     assert "video-capture" not in upstreams
     assert "video-delivery" not in upstreams

@@ -121,6 +121,63 @@ def test_catalog_call_checks_arity_and_numeric_codes():
     assert numeric_compatible(1, 2.0) is True
 
 
+def test_further_read_loads_parameters_when_object_class_is_not_in_attributes():
+    class Hierarchy:
+        async def get_node_class(self, node_id):
+            assert node_id == "method-1"
+            return "prsMethod"
+
+        async def get_node_dn(self, node_id):
+            assert node_id == "method-1"
+            return "cn=person_in_zone,cn=methods,cn=prs"
+
+        async def get_parent(self, node_id):
+            raise RuntimeError(node_id)
+
+        async def search(self, payload):
+            base = payload.get("base") or ""
+            if base.startswith("cn=initiatedBy,"):
+                return []
+            if base.startswith("cn=parameters,"):
+                return [(
+                    "param-1",
+                    "cn=zone,cn=parameters,cn=system,cn=person_in_zone,cn=methods,cn=prs",
+                    {"cn": ["zone"], "prsIndex": ["2"], "prsValueTypeCode": ["4"]},
+                )]
+            raise AssertionError(payload)
+
+    svc = _make_service(Hierarchy())
+    result = asyncio.run(MethodsModelCRUD._further_read(svc, {}, {
+        "data": [{"id": "method-1", "attributes": {"cn": ["person_in_zone"]}}]
+    }))
+    parameters = result["data"][0]["parameters"]
+    assert len(parameters) == 1
+    assert parameters[0]["attributes"]["cn"] == ["zone"]
+
+
+def test_further_read_returns_a_folder_without_looking_up_method_children():
+    class Hierarchy:
+        async def search(self, payload):
+            raise AssertionError(payload)
+
+        async def get_node_dn(self, node_id):
+            raise AssertionError(node_id)
+
+    svc = _make_service(Hierarchy())
+    result = asyncio.run(MethodsModelCRUD._further_read(svc, {}, {
+        "data": [{
+            "id": "folder-1",
+            "attributes": {
+                "cn": ["stdlib"],
+                "objectClass": ["top", "prsModelNode", "prsFolder"],
+            },
+        }]
+    }))
+    assert result["data"][0]["id"] == "folder-1"
+    assert "initiatedBy" not in result["data"][0]
+    assert result["data"][0]["attributes"]["objectClass"][0] == "prsFolder"
+
+
 def test_delete_referenced_catalog_method_returns_409_and_folder_crud():
     class Hierarchy:
         def __init__(self):
@@ -128,6 +185,11 @@ def test_delete_referenced_catalog_method_returns_409_and_folder_crud():
             self.added = []
 
         async def search(self, payload):
+            node_id = payload.get("id")
+            if node_id == "root":
+                return [("root", None, {"cn": ["methods"]})]
+            if node_id == "prs-node":
+                return [("prs-node", None, {"cn": ["prs"]})]
             filt = payload.get("filter") or {}
             if filt.get("prsCatalogMethodId") == ["cat-1"]:
                 return [("inst", None, {"cn": ["use"]})]
@@ -139,6 +201,8 @@ def test_delete_referenced_catalog_method_returns_409_and_folder_crud():
             return {"cat-1": "prsMethod", "tag-1": "prsTag"}.get(node_id, "prsModelNode")
 
         async def get_parent(self, node_id):
+            if node_id == "root":
+                return "prs-node", None
             return "root", None
 
         async def add(self, parent, attrs):
@@ -169,6 +233,14 @@ def test_delete_referenced_catalog_method_returns_409_and_folder_crud():
     assert created["id"] == "folder-new"
     assert hierarchy.added[0][0] == "root"
     assert hierarchy.added[0][1]["objectClass"] == ["prsFolder"]
+    via_flag = asyncio.run(MethodsModelCRUD._create(svc, {
+        "folder": True,
+        "attributes": {"cn": "Видео", "description": "Методы видео"},
+    }))
+    assert via_flag["id"] == "folder-new"
+    assert hierarchy.added[-1][1]["cn"] == "Видео"
+    assert hierarchy.added[-1][1]["objectClass"] == ["prsFolder"]
+    assert "prsMethodAddress" not in hierarchy.added[-1][1]
     rejected = asyncio.run(MethodsModelCRUD._folder_create(svc, {"parentId": "tag-1", "attributes": {"cn": "x"}}))
     assert rejected["error"]["code"] == 422
 

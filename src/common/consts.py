@@ -7,6 +7,8 @@ class CNDataStorageTypes(IntEnum):
     CN_DS_INTEGRATIONAL_RELATIONAL : int = 2
     # backward compatibility alias
     CN_DS_INTEGRATIONAL_POSTGRESQL : int = 2
+    # Архив видеопотока: путь и срок хранения. Кадр забирается у коннектора-камеры.
+    CN_DS_VIDEO : int = 3
 
     @classmethod
     def get_supported(cls) -> list[int]:
@@ -14,6 +16,7 @@ class CNDataStorageTypes(IntEnum):
             cls.CN_DS_VICTORIAMETRICS,
             cls.CN_DS_POSTGRESQL,
             cls.CN_DS_INTEGRATIONAL_RELATIONAL,
+            cls.CN_DS_VIDEO,
         ]
 
 class CNHTTPExceptionCodes(IntEnum):

@@ -183,6 +183,90 @@ def filter_data_points_for_storage(
     return accepted, last_y, last_q
 
 
+def _as_xyq(point: Any) -> tuple[Any, Any, Any] | None:
+    if not isinstance(point, (list, tuple)) or len(point) < 1:
+        return None
+    y = point[1] if len(point) > 1 else None
+    q = point[2] if len(point) > 2 else None
+    return (point[0], y, q)
+
+
+def history_points_to_insert(
+    batch: list[Any],
+    existing: list[Any],
+    *,
+    update: bool,
+    value_type_code: int,
+    max_line_dev: float,
+) -> tuple[list[tuple[Any, Any, Any]], list[Any]]:
+    """Какие точки пачки писать в историю и какие метки при ``prsUpdate`` заменить.
+
+    ``existing`` — уже лежащие рядом строки ``(x, y, q)``: предшественник,
+    строки внутри интервала пачки и наследник. Для любого тега:
+
+    * ``update`` — на одну метку остаётся последнее значение пачки;
+    * ``max_line_dev > 0`` — новое значение не ставится в ряд с таким же
+      соседним (те же правила, что ``should_discard_data_point``, включая
+      смену качества).
+
+    Возвращает ``(точки к вставке, метки к удалению)``. Метки удаляются и
+    тогда, когда новое значение на них не проходит порог: старая строка этой
+    метки уже недействительна.
+    """
+    batch_pts = [point for raw in batch if (point := _as_xyq(raw)) is not None]
+    if update:
+        last_by_x: dict[Any, tuple[Any, Any, Any]] = {}
+        for point in batch_pts:
+            last_by_x[point[0]] = point
+        batch_pts = [last_by_x[x] for x in sorted(last_by_x)]
+        delete_xs = list(last_by_x)
+    else:
+        batch_pts = sorted(batch_pts, key=lambda point: point[0])
+        delete_xs = []
+
+    existing_pts = [point for raw in existing if (point := _as_xyq(raw)) is not None]
+    if delete_xs:
+        replace = set(delete_xs)
+        existing_pts = [point for point in existing_pts if point[0] not in replace]
+
+    events: list[tuple[str, tuple[Any, Any, Any]]] = [("old", point) for point in existing_pts]
+    events.extend(("new", point) for point in batch_pts)
+    events.sort(key=lambda item: (item[1][0], 0 if item[0] == "old" else 1))
+
+    apply_dev = max_line_dev > 0
+    kept: list[tuple[str, tuple[Any, Any, Any]]] = []
+    prev: tuple[Any, Any, Any] | None = None
+    for kind, point in events:
+        if kind == "old":
+            kept.append((kind, point))
+            prev = point
+            continue
+        if apply_dev and prev is not None and should_discard_data_point(
+            value_type_code, max_line_dev, prev[1], prev[2], point[1], point[2]
+        ):
+            continue
+        kept.append((kind, point))
+        prev = point
+
+    if apply_dev:
+        changed = True
+        while changed:
+            changed = False
+            reduced: list[tuple[str, tuple[Any, Any, Any]]] = []
+            for index, (kind, point) in enumerate(kept):
+                if kind == "new" and index + 1 < len(kept):
+                    nxt = kept[index + 1][1]
+                    if should_discard_data_point(
+                        value_type_code, max_line_dev, point[1], point[2], nxt[1], nxt[2]
+                    ):
+                        changed = True
+                        continue
+                reduced.append((kind, point))
+            kept = reduced
+
+    return [point for kind, point in kept if kind == "new"], delete_xs
+
+
 def filter_points_by_max_line_dev(
     points: list[Any],
     value_type_code: int,

@@ -643,6 +643,77 @@ def test_integrational_row_to_dict_casts_uuid_to_string():
     assert res["payload"]["line"] == "e4dde64c-ac3b-1040-80fb-611783a0dae3"
 
 
+def test_v2_link_tag_video_storage_does_not_call_the_storage_app():
+    """Хранилище видео не имеет приложения с пулом. Привязка пишется сразу в LDAP."""
+    dummy = types.SimpleNamespace()
+    add_calls: list[tuple[str, dict]] = []
+    posted = []
+
+    async def _post_message(*_args, **_kwargs):
+        posted.append(_kwargs.get("routing_key"))
+        return None
+
+    async def _search(payload: dict):
+        attrs = payload.get("attributes") or []
+        if payload.get("id") == "ds-video" and "prsEntityTypeCode" in attrs:
+            return [(
+                "ds-video",
+                None,
+                {
+                    "prsEntityTypeCode": ["3"],
+                    "prsJsonConfigString": ['{"archivePath": "/var/lib/peresvet/video", "retentionHours": 12}'],
+                },
+            )]
+        if payload.get("id") and attrs == ["prsValueTypeCode"]:
+            return [("tag-1", None, {"prsValueTypeCode": ["6"]})]
+        return []
+
+    async def _get_node_dn(_node_id: str):
+        return "cn=video,cn=dataStorages,cn=prs"
+
+    async def _get_node_id(dn: str):
+        if "tags" in dn:
+            return "tags-node-id"
+        if "system" in dn:
+            return "system-node-id"
+        return None
+
+    async def _add(base: str, attribute_values: dict):
+        add_calls.append((base, attribute_values))
+        return "new-link-id"
+
+    async def _add_alias(*_args, **_kwargs):
+        return None
+
+    dummy._post_message = _post_message
+    dummy._video_storage_link = types.MethodType(DataStoragesModelCRUD._video_storage_link, dummy)
+    dummy._hierarchy = types.SimpleNamespace(
+        search=_search,
+        get_node_dn=_get_node_dn,
+        get_node_id=_get_node_id,
+        add=_add,
+        add_alias=_add_alias,
+    )
+    dummy._config = types.SimpleNamespace(
+        hierarchy={"class": "prsDataStorage"},
+        svc_name="test",
+    )
+    dummy._logger = types.SimpleNamespace(error=lambda *a, **k: None, info=lambda *a, **k: None)
+
+    asyncio.run(
+        DataStoragesModelCRUDV2._link_tag(
+            dummy,
+            payload={"tagId": "tag-uuid-1", "dataStorageId": "ds-video"},
+        )
+    )
+
+    assert posted == []
+    create_call = next(c for c in add_calls if c[1].get("objectClass") == ["prsDatastorageTagData"])
+    assert create_call[1]["cn"] == "tag-uuid-1"
+    assert create_call[1]["prsStore"]["directory"] == "/var/lib/peresvet/video"
+    assert create_call[1]["prsStore"]["retentionHours"] == 12
+
+
 def test_v2_link_tag_omits_prsJsonConfigString_when_tag_type_5_and_no_config_in_request():
     """При привязке тега с prsValueTypeCode=5 без prsJsonConfigString в запросе атрибут не записывается."""
     dummy = types.SimpleNamespace()

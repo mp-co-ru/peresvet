@@ -10,6 +10,8 @@ services:
       ports:
         - ${NGINX_HTTP_PORT}:${NGINX_HTTP_PORT}
         - ${NGINX_HTTPS_PORT}:${NGINX_HTTPS_PORT}
+        - "8189:8189/tcp"
+        - "8189:8189/udp"
       environment:
         NGINX_HOST: ${NGINX_HOST}
         NGINX_HTTP_PORT: ${NGINX_HTTP_PORT}

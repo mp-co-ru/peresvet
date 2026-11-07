@@ -1,7 +1,8 @@
 """Настройки видеоархива: путь, срок хранения, длина сегмента.
 
-Значения приходят из хранилища типа 3 (``prsEntityTypeCode``).
-Если узла нет, берутся переменные окружения видеосервера.
+Значения приходят из хранилища видео (``prsEntityTypeCode`` = 3).
+Ключ пути — ``archivePath`` или ``path``. Если узла нет, берутся
+переменные окружения видеосервера.
 """
 
 from __future__ import annotations
@@ -18,6 +19,8 @@ class ArchiveConfig:
     retention_hours: float
     segment_seconds: int
     max_fragment_seconds: int
+    archive_width: int | None = None
+    archive_fps: float | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -25,6 +28,8 @@ class ArchiveConfig:
             "retentionHours": self.retention_hours,
             "segmentSeconds": self.segment_seconds,
             "maxFragmentSeconds": self.max_fragment_seconds,
+            "archiveWidth": self.archive_width,
+            "archiveFps": self.archive_fps,
         }
 
 
@@ -65,6 +70,37 @@ def default_archive_config() -> ArchiveConfig:
     )
 
 
+def _optional_even_width(raw: dict) -> int | None:
+    value = raw.get("archiveWidth")
+    if value is None or value == "":
+        return None
+    if isinstance(value, bool):
+        raise ValueError("Ключ archiveWidth должен быть чётной шириной в пикселях.")
+    try:
+        number = float(value)
+    except (TypeError, ValueError) as ex:
+        raise ValueError("Ключ archiveWidth должен быть чётной шириной в пикселях.") from ex
+    width = int(number)
+    if width != number or width < 2 or width % 2:
+        raise ValueError("Ключ archiveWidth должен быть чётной шириной в пикселях.")
+    return width
+
+
+def _optional_fps(raw: dict) -> float | None:
+    value = raw.get("archiveFps")
+    if value is None or value == "":
+        return None
+    if isinstance(value, bool):
+        raise ValueError("Ключ archiveFps должен быть больше нуля.")
+    try:
+        fps = float(value)
+    except (TypeError, ValueError) as ex:
+        raise ValueError("Ключ archiveFps должен быть больше нуля.") from ex
+    if fps <= 0:
+        raise ValueError("Ключ archiveFps должен быть больше нуля.")
+    return fps
+
+
 def parse_archive_config(raw: Any) -> ArchiveConfig:
     """Собрать настройки из JSON хранилища. Пустые поля дополняются окружением."""
     base = default_archive_config()
@@ -76,7 +112,7 @@ def parse_archive_config(raw: Any) -> ArchiveConfig:
     if not isinstance(raw, dict):
         raise ValueError("Конфигурация видеоархива должна быть объектом JSON.")
 
-    path_raw = raw.get("path")
+    path_raw = raw.get("archivePath") or raw.get("path")
     if path_raw:
         path = Path(str(path_raw)).expanduser()
         if not path.is_absolute():
@@ -108,6 +144,8 @@ def parse_archive_config(raw: Any) -> ArchiveConfig:
         retention_hours=hours,
         segment_seconds=segment,
         max_fragment_seconds=limit,
+        archive_width=_optional_even_width(raw),
+        archive_fps=_optional_fps(raw),
     )
 
 

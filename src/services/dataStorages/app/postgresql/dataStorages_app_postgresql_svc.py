@@ -16,6 +16,7 @@ sys.path.append(".")
 from src.services.dataStorages.app.postgresql.dataStorages_app_postgresql_settings import DataStoragesAppPostgreSQLSettings
 from src.services.dataStorages.app.dataStorages_app_base import DataStoragesAppBase
 import src.common.times as t
+from src.common.tag_max_line_dev import history_points_to_insert
 from src.common.consts import (
     CNTagValueTypes as TVT,
     Order
@@ -391,6 +392,38 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
     async def _reject_message(self, mes: dict) -> bool:
         return False
 
+    async def _neighbor_rows(self, conn, table: str, batch: list, value_type: int) -> list[tuple]:
+        """Строки таблицы рядом с пачкой: предшественник, пересечение и наследник.
+
+        Нужны, чтобы порог ``prsMaxLineDev`` сработал у любого тега относительно
+        уже записанной истории, а не только внутри одной пачки кэша.
+        """
+        marks = [item[0] for item in batch if isinstance(item, (list, tuple)) and item]
+        if not marks:
+            return []
+        sql = (
+            f'SELECT x, y, q FROM ('
+            f'(SELECT 0 AS part, x, y, q, id FROM "{table}" '
+            f'WHERE x < $1 ORDER BY x DESC, id DESC LIMIT 1) '
+            f'UNION ALL '
+            f'(SELECT 1 AS part, x, y, q, id FROM "{table}" '
+            f'WHERE x >= $1 AND x <= $2) '
+            f'UNION ALL '
+            f'(SELECT 2 AS part, x, y, q, id FROM "{table}" '
+            f'WHERE x > $2 ORDER BY x ASC, id ASC LIMIT 1)'
+            f') s ORDER BY part, x, id'
+        )
+        rows = []
+        for record in await conn.fetch(sql, min(marks), max(marks)):
+            value = record["y"]
+            if value_type == 4 and isinstance(value, str):
+                try:
+                    value = json.loads(value)
+                except json.JSONDecodeError:
+                    pass
+            rows.append((record["x"], value, record["q"]))
+        return rows
+
     async def _write_tag_data_to_db(
             self, tag_id: str) -> None :
 
@@ -411,6 +444,11 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                     self._logger.debug(f"Кэш данных тега {tag_id} пустой.")
                     return
 
+                prs_update = bool(tag_cache[0][0]["prsUpdate"])
+                max_dev = float(tag_cache[0][0].get("prsMaxLineDev") or 0)
+                value_type = tag_cache[0][0]["prsValueTypeCode"]
+                base_data = tag_cache[0][0]["data"]
+
                 for ds_id in tag_cache[0][0]["dss"].keys():
                     active = await r.json().get(
                         f"{ds_id}.{self._config.svc_name}", "prsActive"
@@ -428,25 +466,36 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
                     async with self._connection_pools[ds_id].acquire() as conn:
                         tag_tbl = tag_cache[0][0]["dss"][ds_id]["table"]
-
-                        data = tag_cache[0][0]["data"]
                         async with conn.transaction(isolation='read_committed'):
-                            if tag_cache[0][0]["prsUpdate"]:
-                                xs = [str(x) for x, _, _ in data]
-                                q = f'delete from "{tag_tbl}" where x in ({",".join(xs)}); '
-                                await conn.execute(q)
-                            if tag_cache[0][0]["prsValueTypeCode"] == 4:
-                                new_data = []
-                                for item in data:
-                                    new_data.append(
-                                        (item[0], json.dumps(item[1], ensure_ascii=False), item[2])
-                                    )
-                                data = new_data
-
-                            await conn.copy_records_to_table(
-                                tag_tbl,
-                                records=data,
-                                columns=('x', 'y', 'q'))
+                            if prs_update or max_dev > 0:
+                                await conn.execute(
+                                    "SELECT pg_advisory_xact_lock(hashtext($1)::bigint)",
+                                    tag_tbl,
+                                )
+                            if max_dev > 0:
+                                existing = await self._neighbor_rows(conn, tag_tbl, base_data, value_type)
+                            else:
+                                existing = []
+                            data, delete_xs = history_points_to_insert(
+                                base_data,
+                                existing,
+                                update=prs_update,
+                                value_type_code=value_type,
+                                max_line_dev=max_dev,
+                            )
+                            if delete_xs:
+                                xs = ",".join(str(x) for x in delete_xs)
+                                await conn.execute(f'delete from "{tag_tbl}" where x in ({xs})')
+                            if value_type == 4:
+                                data = [
+                                    (item[0], json.dumps(item[1], ensure_ascii=False), item[2])
+                                    for item in data
+                                ]
+                            if data:
+                                await conn.copy_records_to_table(
+                                    tag_tbl,
+                                    records=data,
+                                    columns=('x', 'y', 'q'))
                         self._logger.debug(f"В базу {ds_id} для тега {tag_id} записано {len(data)} точек.")
 
         except Exception as ex:
@@ -556,7 +605,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         payload = {
             "base": ds_id,
             "filter": {
-                "objectClass": ["prsDatastorageAlertData"],
+                "objectClass": ["prsDatastorageTagData"],
                 "cn": [tag_id]
             },
             "attributes": ["prsStore"]
@@ -582,6 +631,9 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             await self._bind_tag(tag_id, False)
 
         self._logger.info(f"{self._config.svc_name} :: Тег {tag_id} отвязан от хранилища {ds_id}.")
+        # Пустой dict, не None: иначе model_crud считает, что обработчика нет,
+        # и не удаляет узел привязки в LDAP.
+        return {}
 
     async def _read_data(self, tag_id: str, start: int, finish: int,
         order: int, count: int, one_before: bool, one_after: bool, value: Any = None):
