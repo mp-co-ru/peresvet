@@ -172,6 +172,8 @@ def test_video_zone_edit_contract():
     ]
     assert 'prsVideoZonePersist(prsVideoZonePayload(rest),"Зона удалена.")' in clear_handler
     assert "prsVideoZonePersist=function(zone,doneText)" in javascript
+    assert "prsJsonConfigString:stored" in javascript
+    assert 'savedEl.setAttribute("init-value",savedEl.value||stored)' in javascript
     assert "Показана первая из записанных." in javascript
     assert 'Кликните по зоне, которую нужно удалить.' not in javascript
     assert "prsVideoZoneRead=function" in javascript

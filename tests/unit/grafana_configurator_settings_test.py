@@ -87,7 +87,7 @@ def test_configurator_connector_binding_labels():
     assert _tab_content_depth(html, 'id="prs-tab-pane-connector"') == 1
     assert _tab_content_depth(html, 'id="prs-storage-alert-only"') == 2
     pane = html[pane_at : pane_at + 1800]
-    assert ">Описание <" in pane
+    assert 'prs-attr-name">Описание</span>' in pane
     assert ">Конфигурация</label>" in pane
     assert "Описание привязки" not in html
     assert "Конфигурация привязки" not in html

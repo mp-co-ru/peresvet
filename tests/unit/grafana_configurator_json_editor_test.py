@@ -20,7 +20,7 @@ def _parts():
 def test_configurator_json_editor_contract():
     html, css, javascript = _parts()
     field_at = html.index('id="div-prsJsonConfigString"')
-    field = html[field_at : field_at + 2200]
+    field = html[field_at : field_at + 4500]
 
     assert f'prsConfiguratorCodeVersion="{CODE_VERSION}"' in javascript
     assert 'id="prs-json-editor-node"' in field
