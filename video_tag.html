@@ -152,7 +152,8 @@
 последнюю точку. <strong>Удалить зону</strong> убирает многоугольник.
 Контур не выходит за границы картинки.
 Справа снизу у блока видео есть ручка: потяните её, чтобы изменить размер.
-<strong>Записать</strong> сохраняет зону в <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> тега ключом <code class="docutils literal notranslate"><span class="pre">zones</span></code>.
+<strong>Записать</strong> сразу сохраняет зону в иерархию, в <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> тега ключом <code class="docutils literal notranslate"><span class="pre">zones</span></code>.
+Отдельное сохранение на вкладке «Свойства» для этого не нужно.
 Каждая координата — доля кадра от 0 до 1, ноль слева и сверху. <code class="docutils literal notranslate"><span class="pre">zones</span></code> —
 массив многоугольников, каждый многоугольник сам массив точек <code class="docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y]</span></code>:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;zones&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[[[</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="mf">0.8</span><span class="p">]]]}</span>
