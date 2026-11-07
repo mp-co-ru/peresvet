@@ -98,6 +98,24 @@ const box = prsVideoMediaBox(media);
 if (Math.abs(box.left - 60) > 0.01 || Math.abs(box.top - 20) > 0.01 || Math.abs(box.width - 100) > 0.01 || Math.abs(box.height - 100) > 0.01) {
   throw new Error("content box " + JSON.stringify(box));
 }
+const styled = {
+  tagName: "VIDEO",
+  readyState: 2,
+  videoWidth: 320,
+  videoHeight: 180,
+  naturalWidth: 0,
+  naturalHeight: 0,
+  dataset: {},
+  style: {},
+  getBoundingClientRect: () => ({left: 0, top: 0, width: 800, height: 400})
+};
+const fitted = prsVideoMediaBox(styled);
+if (!fitted || Math.abs(fitted.width - 711.111) > 0.2 || Math.abs(fitted.height - 400) > 0.2 || Math.abs(fitted.left - 44.444) > 0.2) {
+  throw new Error("wide frame content box " + JSON.stringify(fitted));
+}
+if (styled.style.height || styled.style.aspectRatio || styled.style.alignSelf) {
+  throw new Error("media box resized the picture " + JSON.stringify(styled.style));
+}
 eval(grab("prsVideoZoneNorm"));
 eval(grab("prsVideoZoneRead"));
 eval(grab("prsVideoZoneInside"));
@@ -148,6 +166,12 @@ def test_video_zone_edit_contract():
     assert "prsVideoZoneFlash=function" in javascript
     assert "prs-video-zone-hit" in css
     assert "Зона удалена." in javascript
+    clear_handler = javascript[
+        javascript.index('button-prsVideoZoneClear");clearBtn') :
+        javascript.index('button-prsVideoZoneSave")')
+    ]
+    assert 'prsVideoZonePersist(prsVideoZonePayload(rest),"Зона удалена.")' in clear_handler
+    assert "prsVideoZonePersist=function(zone,doneText)" in javascript
     assert "Показана первая из записанных." in javascript
     assert 'Кликните по зоне, которую нужно удалить.' not in javascript
     assert "prsVideoZoneRead=function" in javascript
@@ -168,6 +192,18 @@ def test_video_zone_edit_contract():
     assert ".prs-video-zone-draft{position:absolute;z-index:4;cursor:crosshair;pointer-events:all;overflow:hidden}" in css
     assert 'id="button-prsVideoResize"' in html
     assert "prsBindVideoResize=function" in javascript
+    assert ".prs-video-preview-media{position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;object-fit:contain;background:#000}" in css
+    assert ".prs-video-preview-row{display:grid;grid-template-columns:11.2rem minmax(0,1fr);width:100%;align-items:stretch;background:#111;min-height:28rem}" in css
+    assert ".prs-video-preview-stage{position:absolute;inset:0;width:100%;height:100%;min-height:0;" in css
+    assert ".prs-video-preview-frame{position:relative;width:100%;min-width:0;max-width:none;min-height:28rem;height:100%;justify-self:stretch;" in css
+    assert "clip-path:inset(0)}.prs-video-resize" not in css
+    assert 'media.style.height="auto"' not in javascript
+    assert 'media.style.aspectRatio=nw' not in javascript
+    assert 'frame.style.removeProperty("width")' in javascript
+    assert 'frame.style.height=hOnly+"px"' in javascript
+    assert 'stage.style.width="100%"' in javascript
+    assert 'media.style.objectFit="contain"' in javascript
+    assert 'video.style.position="static"' in javascript
     assert 'data-zi="' in javascript
 
 

@@ -22,6 +22,7 @@ from src.common.hierarchy import (
 )
 import src.common.times as t
 from src.common.tag_data_points import tag_data_points_json_safe
+from src.common.tag_max_line_dev import parse_prs_max_line_dev_from_ldap_attrs
 from src.common.consts import (
     CNTagValueTypes as TVT,
     Order
@@ -1050,6 +1051,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             "prsActive": true,
             "prsUpdate": true,
             "prsValueTypeCode": 1,
+            "prsMaxLineDev": 0,
             "prsStep": false,
             "dss": {
                 "dsId1": {}, # prsStore
@@ -1071,6 +1073,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
                 "prsActive",
                 "prsUpdate",
                 "prsValueTypeCode",
+                "prsMaxLineDev",
                 "prsStep"
             ]
         }
@@ -1085,6 +1088,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             "prsActive": tag_attrs["prsActive"][0] == "TRUE",
             "prsUpdate": tag_attrs["prsUpdate"][0] == "TRUE",
             "prsValueTypeCode": int(tag_attrs["prsValueTypeCode"][0]),
+            "prsMaxLineDev": parse_prs_max_line_dev_from_ldap_attrs(tag_attrs),
             "prsStep": tag_attrs["prsStep"][0] == "TRUE",
             "dss": {},
             "data": []

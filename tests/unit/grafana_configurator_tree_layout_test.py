@@ -1,4 +1,6 @@
 import json
+import shutil
+import subprocess
 from pathlib import Path
 
 
@@ -109,6 +111,42 @@ def test_data_storage_linked_tags_indent_past_the_storage_icon():
         "#tree.bstreeview .list-group-item.prs-ds-linked[role=treeitem]"
         "{padding-left:calc(.82em + 2px)!important}"
         in css
+    )
+
+
+def test_type_icon_is_the_anchor_for_other_tree_icons():
+    css, javascript = _parts()
+
+    # Problem marks sit in the row, immediately before the node menu.
+    # They do not occupy space to the left of the type icon.
+    assert "prsTreePadToTypeIcon=function(pad,parentRight,childLeft,gap)" in javascript
+    assert "prsTreeRollupLeft=function" not in javascript
+    assert "prsTreeRestorePad=function" not in javascript
+    assert 'e.insertBefore(i,menu||c||a)' in javascript
+    assert 'item.insertBefore(strip,menu)' in javascript
+    assert "prsLayoutTreeFromTypeIcon=function(fromFrame)" in javascript
+    assert 'group.style.setProperty("padding-left",next+"px","important")' in javascript
+    assert "prsLayoutTreeFromTypeIcon()}" in javascript
+    assert "prsLayoutTreeFromTypeIcon()}}" in javascript
+    assert (
+        "#tree .list-group-item[role=treeitem]>.prs-tree-rollup-strip:not(.prs-tree-rollup-strip--spacer)"
+        "{position:static;margin:0 .2rem 0 .35rem;top:auto;left:auto;right:auto;transform:none;z-index:auto;flex:0 0 auto}"
+        in css
+    )
+    assert "#tree .list-group-item[role=treeitem]{overflow:visible}" in css
+    assert "#tree .list-group[role=group]{overflow:visible}" in css
+
+    node = shutil.which("node")
+    assert node, "Node.js is required to check type-icon anchor math"
+    subprocess.run(
+        [
+            node,
+            str(ROOT / "tests/unit/grafana_configurator_tree_icon_anchor_node_test.js"),
+            str(DASHBOARD_PATH),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
     )
 
 
