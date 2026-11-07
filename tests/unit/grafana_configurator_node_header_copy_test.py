@@ -94,6 +94,9 @@ def test_node_header_copy_buttons():
     assert "prsCopyField=function(id)" in javascript
     assert 'id="but-save" type="button" class="prs-icon-btn disabled"' in html
     assert 'id="but-reset" type="button" class="prs-icon-btn disabled"' in html
+    assert "#attributes-form .prs-form-actions .prs-icon-btn{width:3rem;height:3rem;border-radius:.55rem;border-width:2px;box-shadow:0 2px 6px rgba(35,48,52,.18)}" in css
+    assert "#attributes-form #but-save{background:#2c707f;border-color:#235a66;color:#fff}" in css
+    assert "#attributes-form #but-reset{background:#a34a28;border-color:#863c20;color:#fff}" in css
     assert 'aria-label="Записать"' in html
     assert 'aria-label="Сбросить"' in html
     assert ">Сохранить</button>" not in html
