@@ -64,8 +64,13 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#id6">Установка из исходников (для разработки)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id7">Сборка продуктового дистрибутива</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id8">Остановка платформы</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#optional-services">Дополнительные сервисы</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#optional-own-port">Свой порт</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nginx">Через nginx</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id9">Сборка продуктового дистрибутива</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id10">Остановка платформы</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a></li>
@@ -274,8 +279,119 @@ nginx:1.25.3-alpine-slim
 </li>
 </ol>
 </section>
-<section id="id7">
-<h2>Сборка продуктового дистрибутива<a class="headerlink" href="#id7" title="Link to this heading"></a></h2>
+<section id="optional-services">
+<span id="id7"></span><h2>Дополнительные сервисы<a class="headerlink" href="#optional-services" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">./run_one_app.sh</span></code> поднимает ядро: RabbitMQ, OpenLDAP, PostgreSQL,
+<code class="docutils literal notranslate"><span class="pre">one_app</span></code>, захват и отдачу видео, Grafana и nginx. Сервис, который стоит
+не у каждого заказчика, в эту команду и в архив <code class="docutils literal notranslate"><span class="pre">peresvet-product-*.tar.gz</span></code>
+не входит. Его ставят после того, как платформа уже запущена.</p>
+<p>Таких сервисов два типа, и запуск у них разный.</p>
+<ul class="simple">
+<li><p>Свой порт. Контейнер публикует порт на хост, клиент ходит на него
+напрямую. Nginx в этом не участвует.</p></li>
+<li><p>Через nginx. Снаружи порта нет, запрос приходит на 443 платформы,
+nginx передаёт его контейнеру в сети <code class="docutils literal notranslate"><span class="pre">peresvet</span></code>. Так работают
+MCP-серверы платформы и Grafana (<a class="reference internal" href="mcp.html"><span class="doc">MCP-сервер платформы</span></a>) и так подключается
+распознавание видео. Распознавание в стандартную поставку не входит:
+пока файла маршрута нет, <code class="docutils literal notranslate"><span class="pre">/v1/vision/overlay</span></code> отвечает 404.
+MCP-серверы в поставку входят, но по умолчанию не запускаются.</p></li>
+</ul>
+<section id="optional-own-port">
+<span id="id8"></span><h3>Свой порт<a class="headerlink" href="#optional-own-port" title="Link to this heading"></a></h3>
+<p>В compose-файле такого сервиса есть секция <code class="docutils literal notranslate"><span class="pre">ports:</span></code> и нет файла
+в <code class="docutils literal notranslate"><span class="pre">config/nginx/optional/</span></code>.</p>
+<ol class="arabic">
+<li><p>Файл сервиса лежит в <code class="docutils literal notranslate"><span class="pre">docker/compose/</span></code>. Команду выполняйте из корня
+поставки: имя проекта остаётся <code class="docutils literal notranslate"><span class="pre">compose</span></code>, контейнер попадает в сеть
+<code class="docutils literal notranslate"><span class="pre">peresvet</span></code>. Если в файле есть <code class="docutils literal notranslate"><span class="pre">depends_on:</span> <span class="pre">one_app</span></code>, добавьте
+в ту же команду <code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">docker/compose/docker-compose.one_app.yml</span></code>,
+иначе Compose не увидит зависимость. <code class="docutils literal notranslate"><span class="pre">up</span></code> вызывайте с именем
+сервиса, чтобы не пересоздавать ядро:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>--env-file<span class="w"> </span>docker/compose/.cont_one_app.env<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-f<span class="w"> </span>docker/compose/docker-compose.one_app.yml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-f<span class="w"> </span>docker/compose/docker-compose.&lt;сервис&gt;.yml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>up<span class="w"> </span>-d<span class="w"> </span>--build<span class="w"> </span>&lt;сервис&gt;
+</pre></div>
+</div>
+</li>
+<li><p>Проверьте опубликованный порт на хосте, а не адрес nginx.</p></li>
+</ol>
+<p>Остановка — <code class="docutils literal notranslate"><span class="pre">stop</span></code> этого сервиса тем же набором <code class="docutils literal notranslate"><span class="pre">-f</span></code>.
+<code class="docutils literal notranslate"><span class="pre">down</span></code> здесь не используйте: в команде есть файл ядра, и <code class="docutils literal notranslate"><span class="pre">down</span></code>
+остановит <code class="docutils literal notranslate"><span class="pre">one_app</span></code> вместе с дополнительным сервисом.</p>
+</section>
+<section id="nginx">
+<span id="optional-via-nginx"></span><h3>Через nginx<a class="headerlink" href="#nginx" title="Link to this heading"></a></h3>
+<p>У такого сервиса в compose нет <code class="docutils literal notranslate"><span class="pre">ports:</span></code> на хост. Снаружи его публикует
+уже запущенный <code class="docutils literal notranslate"><span class="pre">prs-nginx-one-app</span></code>.</p>
+<p>MCP-серверы платформы и Grafana включаются ключами скрипта запуска.
+По умолчанию оба равны <code class="docutils literal notranslate"><span class="pre">false</span></code>. Те же ключи есть у
+<code class="docutils literal notranslate"><span class="pre">run_one_app.sh</span></code>, <code class="docutils literal notranslate"><span class="pre">run_one_app_dev.sh</span></code>, <code class="docutils literal notranslate"><span class="pre">run_one_app_dev_no_build.sh</span></code>
+и <code class="docutils literal notranslate"><span class="pre">run_one_app_ssl_letsencrypt.sh</span></code>. Значения по умолчанию задаются
+в <code class="docutils literal notranslate"><span class="pre">.env</span></code> (<code class="docutils literal notranslate"><span class="pre">PRS_MCP_PERESVET</span></code>, <code class="docutils literal notranslate"><span class="pre">PRS_MCP_GRAFANA</span></code>), ключ командной
+строки их перекрывает.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./run_one_app.sh<span class="w"> </span>--mcp-peresvet<span class="w"> </span><span class="nb">true</span><span class="w"> </span>--mcp-grafana<span class="w"> </span><span class="nb">true</span>
+</pre></div>
+</div>
+<p>При <code class="docutils literal notranslate"><span class="pre">true</span></code> скрипт добавляет compose-файл сервера и копирует его маршрут
+из <code class="docutils literal notranslate"><span class="pre">config/nginx/mcp/</span></code> в <code class="docutils literal notranslate"><span class="pre">config/nginx/optional/</span></code>. При <code class="docutils literal notranslate"><span class="pre">false</span></code>
+удаляет маршрут и останавливает контейнер. Снаружи адреса такие:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">https://&lt;хост&gt;/mcp/peresvet</span></code> — MCP платформы, проверка
+<code class="docutils literal notranslate"><span class="pre">https://&lt;хост&gt;/mcp/peresvet/health</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">https://&lt;хост&gt;/mcp/grafana</span></code> — MCP Grafana.</p></li>
+</ul>
+<p>Дальше описан тот же приём для сервиса, который скрипт запуска не знает.
+Распознавание видео подключается именно так, его комплектом, не поставкой
+платформы.</p>
+<ol class="arabic">
+<li><p>Поднимите контейнер из корня поставки. <code class="docutils literal notranslate"><span class="pre">up</span></code> — с именем сервиса:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>--env-file<span class="w"> </span>docker/compose/.cont_one_app.env<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-f<span class="w"> </span>docker/compose/docker-compose.&lt;сервис&gt;.yml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>up<span class="w"> </span>-d<span class="w"> </span>--build<span class="w"> </span>&lt;сервис&gt;
+</pre></div>
+</div>
+</li>
+<li><p>Комплект сервиса кладёт готовый файл
+<code class="docutils literal notranslate"><span class="pre">config/nginx/optional/&lt;сервис&gt;.conf</span></code>. Каталог смонтирован в nginx
+и подключён строкой <code class="docutils literal notranslate"><span class="pre">include</span> <span class="pre">conf.d/optional/*.conf</span></code>.
+<code class="docutils literal notranslate"><span class="pre">00-empty.conf</span></code> не удаляйте: без единого <code class="docutils literal notranslate"><span class="pre">.conf</span></code> nginx не стартует.
+Это готовый конфиг, не шаблон: подстановки <code class="docutils literal notranslate"><span class="pre">${...}</span></code> в нём нет.</p>
+<p>Имя контейнера в <code class="docutils literal notranslate"><span class="pre">proxy_pass</span></code> пишите через переменную. Буквальное
+имя nginx проверяет при старте и не поднимется, пока контейнера нет.
+Для распознавания комплект сервиса (не поставка платформы) кладёт
+такой файл:</p>
+<div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span class="k">location</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">/v1/vision/overlay</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">proxy_read_timeout</span><span class="w"> </span><span class="s">5s</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">set</span><span class="w"> </span><span class="nv">$prs_methods_video</span><span class="w"> </span><span class="s">prs-methods-video</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://</span><span class="nv">$prs_methods_video:8093/api/overlay$is_args$args</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</li>
+<li><p>Перечитайте конфиг. Образ nginx пересобирать не нужно:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>prs-nginx-one-app<span class="w"> </span>nginx<span class="w"> </span>-t<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>prs-nginx-one-app<span class="w"> </span>nginx<span class="w"> </span>-s<span class="w"> </span>reload
+</pre></div>
+</div>
+</li>
+</ol>
+<p>Снятие идёт в обратную сторону. Сначала удалите <code class="docutils literal notranslate"><span class="pre">&lt;сервис&gt;.conf</span></code>
+(<code class="docutils literal notranslate"><span class="pre">00-empty.conf</span></code> оставьте) и снова выполните <code class="docutils literal notranslate"><span class="pre">nginx</span> <span class="pre">-t</span></code> и
+<code class="docutils literal notranslate"><span class="pre">nginx</span> <span class="pre">-s</span> <span class="pre">reload</span></code>. Затем остановите контейнер командой с одним
+его <code class="docutils literal notranslate"><span class="pre">-f</span></code>, без файлов ядра:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>--env-file<span class="w"> </span>docker/compose/.cont_one_app.env<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-f<span class="w"> </span>docker/compose/docker-compose.&lt;сервис&gt;.yml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>stop<span class="w"> </span>&lt;сервис&gt;
+</pre></div>
+</div>
+<p>Остановка ядра командой из раздела «Остановка» дополнительный сервис
+не гасит: его файла в том списке нет.</p>
+</section>
+</section>
+<section id="id9">
+<h2>Сборка продуктового дистрибутива<a class="headerlink" href="#id9" title="Link to this heading"></a></h2>
 <p>Для подготовки архива релиза (из корня репозитория):</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./packaging/build_product_distribution.sh
 $<span class="w"> </span>./packaging/build_product_distribution.sh<span class="w"> </span>--output<span class="w"> </span>dist/peresvet-product-&lt;tag&gt;.tar.gz
@@ -285,8 +401,8 @@ $<span class="w"> </span>./packaging/build_product_distribution.sh<span class="w
 выполняется workflow <code class="docutils literal notranslate"><span class="pre">.github/workflows/product_distribution.yml</span></code> и прикрепляется
 к GitHub Release.</p>
 </section>
-<section id="id8">
-<h2>Остановка платформы<a class="headerlink" href="#id8" title="Link to this heading"></a></h2>
+<section id="id10">
+<h2>Остановка платформы<a class="headerlink" href="#id10" title="Link to this heading"></a></h2>
 <p>Из корня проекта остановите тот же набор compose-файлов, с которым
 платформу поднимает <code class="docutils literal notranslate"><span class="pre">./run_one_app.sh</span></code>. Для обычного запуска
 (HTTPS с самоподписанным сертификатом):</p>
