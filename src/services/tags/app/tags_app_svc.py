@@ -199,10 +199,12 @@ class TagsApp(AppSvc):
             prev_q = tag_proc.get("prsLastAcceptedQ")
 
             tag_params = tag_item.get("params") if isinstance(tag_item.get("params"), dict) else None
-            # Табличный (интеграционный) тег: при пустом ``data`` всё равно одна логическая запись
-            # (операция по умолчанию в хранилище). Параметры — в ``data[i].params``; у HTTP POST
-            # ``/v1/data/`` на корне тела только ``data`` (см. ``AllData``). Доп. ключи на корне
-            # ``mes`` возможны у других издателей в шину — тогда они попадут в ``common_payload``.
+            tag_operation = tag_item.get("operation")
+            # Табличный (интеграционный) тег: при пустом ``data`` всё равно одна логическая запись.
+            # Имя операции — ``data[i].operation`` (или корень сообщения). ``params`` необязателен.
+            # У HTTP POST ``/v1/data/`` на корне тела только ``data`` (см. ``AllData``).
+            # Доп. ключи на корне ``mes`` возможны у других издателей в шину — тогда они
+            # попадут в ``common_payload``.
             params_only_set = vt == int(TVT.CN_TABLE) and not normalized_data
             if params_only_set:
                 accepted = [normalize_point_xyq([])]
@@ -221,6 +223,8 @@ class TagsApp(AppSvc):
                 "tagId": tag_id,
                 "data": accepted,
             }
+            if isinstance(tag_operation, str) and tag_operation.strip():
+                new_tag_item["operation"] = tag_operation.strip()
             if tag_params:
                 new_tag_item["params"] = tag_params
 

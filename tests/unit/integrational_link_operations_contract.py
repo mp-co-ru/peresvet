@@ -4,6 +4,8 @@ import sys
 import types
 from uuid import UUID
 
+import pytest
+
 
 uvloop_stub = types.ModuleType("uvloop")
 uvloop_stub.EventLoopPolicy = asyncio.DefaultEventLoopPolicy
@@ -422,6 +424,7 @@ def test_v2_read_tag_link_operations_returns_extra_attrs():
                     {
                         "cn": ["calendar.select.v1"],
                         "prsActive": ["TRUE"],
+                        "prsDefault": ["TRUE"],
                         "prsEntityTypeCode": ["0"],
                         "description": ["Read shifts"],
                         "prsJsonConfigString": ['{"query":"select 1","timeoutMs":5000}'],
@@ -455,13 +458,20 @@ def test_v2_read_tag_link_operations_returns_extra_attrs():
     )
 
     assert ops[0]["attributes"]["description"] == "Read shifts"
+    assert ops[0]["attributes"]["prsDefault"] is True
     assert ops[0]["attributes"]["prsJsonConfigString"]["query"] == "select 1"
     assert ops[0]["parameters"][0]["attributes"]["description"] == "Shift start"
 
 
+def _bind_operation_resolver(dummy):
+    dummy._operation_kind_code = types.MethodType(DataStoragesAppIntegrationalBase._operation_kind_code, dummy)
+    dummy._ldap_bool = DataStoragesAppIntegrationalBase._ldap_bool
+    dummy._is_ldap_default = types.MethodType(DataStoragesAppIntegrationalBase._is_ldap_default, dummy)
+
+
 def test_integrational_resolve_operation_cn_reads_child_nodes():
     dummy = types.SimpleNamespace()
-    dummy._operation_kind_code = types.MethodType(DataStoragesAppIntegrationalBase._operation_kind_code, dummy)
+    _bind_operation_resolver(dummy)
 
     async def _search(payload: dict):
         _ = payload
@@ -491,6 +501,76 @@ def test_integrational_resolve_operation_cn_reads_child_nodes():
 
     assert op_get == "get.default"
     assert op_set == "set.write"
+
+
+def test_integrational_resolve_operation_uses_prs_default_when_several():
+    dummy = types.SimpleNamespace()
+    _bind_operation_resolver(dummy)
+
+    async def _search(payload: dict):
+        _ = payload
+        return [
+            ("op-1", None, {"cn": ["get.a"], "prsEntityTypeCode": ["0"], "prsDefault": ["FALSE"]}),
+            ("op-2", None, {"cn": ["get.b"], "prsEntityTypeCode": ["0"], "prsDefault": ["TRUE"]}),
+            ("op-3", None, {"cn": ["set.a"], "prsEntityTypeCode": ["1"]}),
+        ]
+
+    dummy._hierarchy = types.SimpleNamespace(search=_search)
+    op_get = asyncio.run(
+        DataStoragesAppIntegrationalBase._resolve_operation_cn_from_link(
+            dummy,
+            link_id="link-1",
+            requested_operation=None,
+            expected_kind=OperationKind.GET,
+        )
+    )
+    assert op_get == "get.b"
+
+
+def test_integrational_resolve_operation_errors_without_default_when_several():
+    dummy = types.SimpleNamespace()
+    _bind_operation_resolver(dummy)
+
+    async def _search(payload: dict):
+        _ = payload
+        return [
+            ("op-1", None, {"cn": ["get.a"], "prsEntityTypeCode": ["0"]}),
+            ("op-2", None, {"cn": ["get.b"], "prsEntityTypeCode": ["0"], "prsDefault": ["FALSE"]}),
+        ]
+
+    dummy._hierarchy = types.SimpleNamespace(search=_search)
+    with pytest.raises(ValueError, match="prsDefault"):
+        asyncio.run(
+            DataStoragesAppIntegrationalBase._resolve_operation_cn_from_link(
+                dummy,
+                link_id="link-1",
+                requested_operation=None,
+                expected_kind=OperationKind.GET,
+            )
+        )
+
+
+def test_integrational_resolve_operation_errors_when_several_defaults():
+    dummy = types.SimpleNamespace()
+    _bind_operation_resolver(dummy)
+
+    async def _search(payload: dict):
+        _ = payload
+        return [
+            ("op-1", None, {"cn": ["set.a"], "prsEntityTypeCode": ["1"], "prsDefault": ["TRUE"]}),
+            ("op-2", None, {"cn": ["set.b"], "prsEntityTypeCode": ["1"], "prsDefault": ["TRUE"]}),
+        ]
+
+    dummy._hierarchy = types.SimpleNamespace(search=_search)
+    with pytest.raises(ValueError, match="несколько"):
+        asyncio.run(
+            DataStoragesAppIntegrationalBase._resolve_operation_cn_from_link(
+                dummy,
+                link_id="link-1",
+                requested_operation=None,
+                expected_kind=OperationKind.SET,
+            )
+        )
 
 
 def test_integrational_load_operation_uses_new_cfg_keys_and_param_nodes():
@@ -1158,7 +1238,35 @@ def test_merge_integrational_request_params_nested_overrides_root():
 
 def test_merge_integrational_request_params_only_nested():
     got = DataStoragesAppIntegrationalBase._merge_integrational_request_params(
-        {"params": {"operation": "op.v1"}}
+        {"params": {"line": "L1"}}
     )
-    assert got == {"operation": "op.v1"}
+    assert got == {"line": "L1"}
+
+
+def test_merge_integrational_request_params_skips_operation_key():
+    got = DataStoragesAppIntegrationalBase._merge_integrational_request_params(
+        {"operation": "op.v1", "params": {"line": "L1"}}
+    )
+    assert got == {"line": "L1"}
+
+
+def test_explicit_operation_name_ignores_params():
+    dummy = types.SimpleNamespace()
+    dummy._normalize_operation_name = types.MethodType(
+        DataStoragesAppIntegrationalBase._normalize_operation_name, dummy
+    )
+    dummy._explicit_operation_name = types.MethodType(
+        DataStoragesAppIntegrationalBase._explicit_operation_name, dummy
+    )
+    assert DataStoragesAppIntegrationalBase._explicit_operation_name(
+        dummy, {"params": {"operation": "from-params"}}
+    ) is None
+    assert DataStoragesAppIntegrationalBase._explicit_operation_name(
+        dummy, {"operation": "from-root", "params": {"operation": "from-params"}}
+    ) == "from-root"
+    assert DataStoragesAppIntegrationalBase._explicit_operation_name(
+        dummy,
+        {"operation": "from-root"},
+        {"operation": "from-item", "params": {"sku": "A"}},
+    ) == "from-item"
 

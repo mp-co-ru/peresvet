@@ -392,11 +392,11 @@ class DataStoragesModelCRUDV2(DataStoragesModelCRUD):
                     value = raw[0]
                 else:
                     value = raw
-            if key == "prsActive":
+            if key in ("prsActive", "prsDefault"):
                 if isinstance(value, str):
                     value = value.upper() == "TRUE"
                 elif value is None:
-                    value = True
+                    value = key == "prsActive"
             elif key == "prsEntityTypeCode":
                 if value is None:
                     value = 0

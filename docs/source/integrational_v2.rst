@@ -85,6 +85,7 @@
             "attributes": {
               "cn": "erp.orders.select.v1",
               "prsEntityTypeCode": 0,
+              "prsDefault": true,
               "prsJsonConfigString": {
                 "query": "select ts as x, payload as y, 0 as q from erp_orders where ts >= :start and ts < :finish order by ts",
                 "timeoutMs": 5000,
@@ -101,6 +102,7 @@
             "attributes": {
               "cn": "erp.orders.insert.v1",
               "prsEntityTypeCode": 1,
+              "prsDefault": true,
               "prsJsonConfigString": {
                 "query": "insert into erp_orders(ts, payload) values(:x, :y)",
                 "timeoutMs": 5000
@@ -125,16 +127,30 @@
 - Если JSONata отсутствует или вернул ``null`` — запрос завершается ошибкой.
 - Значения по умолчанию не применяются.
 
+Выбор операции
+---------------
+
+Ключ ``params`` в запросе необязателен. Имя операции берётся из ключа
+``operation``, а не из ``params``.
+
+- ``GET /v1/data/``: query-параметр ``operation`` (строка) задаёт ``cn`` GET-операции.
+- ``POST /v1/data/``: ``data[i].operation`` (строка) задаёт ``cn`` SET-операции
+  для тега ``data[i]``.
+
+Если имя не передано:
+
+- операция нужного типа одна — берётся она, даже без ``prsDefault``;
+- операций нужного типа несколько — берётся та, у которой ``prsDefault = true``;
+- таких несколько или нет ни одной — ошибка.
+
+``prsEntityTypeCode=0`` — GET, ``prsEntityTypeCode=1`` — SET.
+В конфигураторе первая созданная операция каждого типа получает ``prsDefault = true``.
+
 Контракт ``params`` в запросах
 ------------------------------
 
-- ``get``: если JSONata параметров ссылается на ``$.params.*``, клиент передаёт
-  соответствующие ключи в ``params``.
-- ``get``: ``params.operation`` (строка) задаёт ``cn`` операции.
-- ``set``: ``data[i].params.operation`` (строка) задаёт ``cn`` операции для
-  конкретного тега ``data[i]``.
-  Если ключ операции не указан, выбирается первая операция нужного типа:
-  ``prsEntityTypeCode=0`` для ``data/get`` и ``prsEntityTypeCode=1`` для ``data/set``.
+- Если JSONata параметров ссылается на ``$.params.*``, клиент передаёт
+  соответствующие ключи в ``params``. Объект можно не передавать.
 
 Эталонные примеры
 -----------------
@@ -153,6 +169,7 @@
             "attributes": {
               "cn": "erp.orders.select.v1",
               "prsEntityTypeCode": 0,
+              "prsDefault": true,
               "prsJsonConfigString": {
                 "query": "select ts as x, payload as y, 0 as q from erp_orders where ts >= :start and ts < :finish order by ts",
                 "timeoutMs": 5000,
@@ -169,6 +186,7 @@
             "attributes": {
               "cn": "erp.orders.delete.v1",
               "prsEntityTypeCode": 1,
+              "prsDefault": true,
               "prsJsonConfigString": {
                 "query": "delete from erp_orders where ts = :x",
                 "timeoutMs": 5000
@@ -202,8 +220,8 @@
       {
         "tagId": "<tag_id>",
         "data": [],
+        "operation": "delete",
         "params": {
-          "operation": "delete",
           "x": 1738450800000
         }
       }

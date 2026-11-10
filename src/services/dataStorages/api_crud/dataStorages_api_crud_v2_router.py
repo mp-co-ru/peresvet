@@ -100,6 +100,11 @@ class LinkTagOperationAttributesV2(BaseModel):
         description="Текст для операторов: что выполняет операция.",
     )
     prsActive: bool = Field(True, title="Флаг активности операции")
+    prsDefault: bool | None = Field(
+        None,
+        title="Операция по умолчанию",
+        description="Среди операций одного типа (GET или SET) такой должна быть одна.",
+    )
     prsEntityTypeCode: int = Field(0, title="Тип операции", description="0 - GET, 1 - SET")
     prsJsonConfigString: dict | None = Field(
         default_factory=dict,
