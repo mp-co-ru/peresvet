@@ -67,6 +67,8 @@ services:
         HOST_GRAFANA: ${HOST_GRAFANA}
 
         TZ: ${TIME_ZONE}
+      volumes:
+        - ../../config/nginx/optional:/etc/nginx/conf.d/optional:ro
       networks:
         - peresvet      
 

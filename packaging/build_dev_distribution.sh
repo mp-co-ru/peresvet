@@ -194,11 +194,15 @@ required_pathspecs=(
     "config/nginx/nginx.conf"
     "config/nginx/no_ssl"
     "config/nginx/peresvet"
+    "config/nginx/optional"
+    "config/nginx/mcp"
     "config/nginx/ssl/default.conf.ssl"
     "config/nginx/ssl/default.conf.ssl_letsencrypt.template"
     "config/nginx/ssl/default.conf.ssl_letsencrypt_generate_certificates.template"
     "docker/compose/.cont_one_app.env"
     "docker/compose/docker-compose.grafana.yml"
+    "docker/compose/docker-compose.mcp.grafana.yml"
+    "docker/compose/docker-compose.mcp.peresvet.yml"
     "docker/compose/docker-compose.ldap.one_app.yml"
     "docker/compose/docker-compose.nginx.one_app.ssl.yml"
     "docker/compose/docker-compose.nginx.one_app.yml"
@@ -214,6 +218,7 @@ required_pathspecs=(
     "docker/compose/docker-compose.restart.yml"
     "docker/docker-files/all/Dockerfile.one_app.uvicorn"
     "docker/docker-files/grafana/Dockerfile.grafana"
+    "docker/docker-files/mcp"
     "docker/docker-files/ldap/Dockerfile.ldap.one_app"
     "docker/docker-files/ldap/src"
     "docker/docker-files/nginx/Dockerfile.nginx"
@@ -243,6 +248,7 @@ find "${stage_dir}" -type d -name __pycache__ -print0 | xargs -0 rm -rf
 
 mkdir -p "${stage_dir}/packaging"
 cp -p "${repo_root}/packaging/required-images.manifest" "${stage_dir}/packaging/required-images.manifest"
+cp -p "${repo_root}/packaging/mcp_launch.sh" "${stage_dir}/packaging/mcp_launch.sh"
 
 # В локальном режиме добавляем LOCAL_MODE=true к существующему .env
 if [[ "${local_mode}" == "true" ]]; then

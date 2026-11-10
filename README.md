@@ -83,6 +83,16 @@ Grafana предложит сменить пароль. Дальше откро�
 [подключение видеокамер](https://mp-co-ru.github.io/peresvet/video.html),
 [базовый курс](https://github.com/mp-co-ru/prs-peresvet-courses/tree/main/01.base).
 
+Сервисы, которые стоят не у каждого заказчика, подключаются после запуска
+платформы: одни своим портом на хосте, другие через nginx.
+MCP платформы и MCP Grafana относятся ко второму типу и по умолчанию
+выключены. Их включают ключи `./run_one_app.sh --mcp-peresvet true` и
+`--mcp-grafana true`. Адреса: `https://<хост>/mcp/peresvet` и
+`https://<хост>/mcp/grafana`. Распознавание видео в стандартную поставку
+не входит. Обе процедуры — в
+[установке](https://mp-co-ru.github.io/peresvet/installation.html),
+раздел «Дополнительные сервисы».
+
 ## Остановка
 
 Из каталога, где лежит `./run_one_app.sh`:

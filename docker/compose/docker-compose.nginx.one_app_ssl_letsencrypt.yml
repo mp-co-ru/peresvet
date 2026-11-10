@@ -70,6 +70,7 @@ services:
       volumes:
         - ../../certificates/certbot/www/:/var/www/certbot/:ro
         - ../../certificates/certbot/conf/:/etc/nginx/ssl/:ro
+        - ../../config/nginx/optional:/etc/nginx/conf.d/optional:ro
 
   certbot:
     container_name: prs-certbot

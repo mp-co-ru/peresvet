@@ -4,23 +4,36 @@ MCP-сервер платформы
 ====================
 
 Контейнер ``mcp_peresvet`` даёт агентам (Cursor, Roo и т.п.) набор инструментов
-поверх HTTP API ``one_app``. Транспорт по умолчанию — Streamable HTTP,
-конечная точка ``http://localhost:8009/mcp``.
+поверх HTTP API ``one_app``. Транспорт по умолчанию — Streamable HTTP.
+Снаружи сервер доступен через nginx: ``https://<хост>/mcp/peresvet``.
+
+Рядом так же публикуется MCP Grafana: ``https://<хост>/mcp/grafana``.
+Оба сервера слушают порт ``8000`` только внутри сети ``peresvet`` и
+наружу свой порт не открывают.
 
 Запуск
 ------
 
-MCP **не** входит в ``./run_one_app.sh``. После старта платформы поднимите
-сервер отдельным compose-файлом (тот же ``.cont_one_app.env``):
+Оба сервера выключены по умолчанию. Их включают ключи скрипта запуска
+платформы (:ref:`optional-via-nginx`):
 
 .. code:: sh
 
-   docker compose --env-file docker/compose/.cont_one_app.env \
-     -f docker/compose/docker-compose.one_app.yml \
-     -f docker/compose/docker-compose.mcp.peresvet.yml \
-     up -d --build mcp_peresvet
+   ./run_one_app.sh --mcp-peresvet true --mcp-grafana true
 
-Проверка: ``GET http://localhost:8009/health`` должен вернуть ``OK``.
+При ``false`` и когда ключ не передан, скрипт сервер не ставит: маршрут
+nginx удаляется, контейнер останавливается. То же делают ``run_one_app_dev.sh``,
+``run_one_app_dev_no_build.sh`` и ``run_one_app_ssl_letsencrypt.sh``.
+В ``.env`` тем же флагам соответствуют ``PRS_MCP_PERESVET`` и
+``PRS_MCP_GRAFANA``, оба ``false``.
+
+Проверка MCP платформы: ``GET https://<хост>/mcp/peresvet/health``
+должен вернуть ``OK``. MCP Grafana для большинства операций требует
+``GRAFANA_SERVICE_ACCOUNT_TOKEN`` (файл
+``docker/compose/.cont_one_app.secrets.env``). Токен выпускается
+в Grafana: Administration → Users and access → Service accounts →
+Add service account token. Описание —
+`Service accounts <https://grafana.com/docs/grafana/latest/administration/service-accounts/>`_.
 
 Переменные окружения
 --------------------
@@ -43,8 +56,8 @@ MCP **не** входит в ``./run_one_app.sh``. После старта пл�
    * - ``MCP_PERESVET_ENABLE_V2``
      - Инструменты ``/v2/dataStorages/``. Если не задано — берётся
        ``PRS_ENABLE_V2``.
-   * - ``PORT_MCP_PERESVET``
-     - Порт на хосте (по умолчанию ``8009``).
+   * - ``PORT_MCP_PERESVET_INNER``
+     - Порт внутри контейнера (по умолчанию ``8000``). На хост не публикуется.
 
 Пример клиента (``.roo/mcp.json`` / Cursor MCP):
 
@@ -54,7 +67,7 @@ MCP **не** входит в ``./run_one_app.sh``. После старта пл�
      "mcpServers": {
        "peresvet": {
          "type": "streamable-http",
-         "url": "http://localhost:8009/mcp"
+         "url": "https://<хост>/mcp/peresvet"
        }
      }
    }
