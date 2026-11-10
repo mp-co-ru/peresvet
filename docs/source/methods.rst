@@ -217,14 +217,16 @@ methods (методы)
   ``prsValueTypeCode`` (``1`` целый, ``2`` вещественный, ``3`` строка, ``4`` json);
 * ``parameterCount`` считается при чтении и в LDAP не хранится.
 
+Запрос ``POST /v1/methods/`` для папки:
+
 .. code-block:: json
 
-   POST /v1/methods/
    {"folder": true, "attributes": {"cn": "stdlib"}}
 
+Запрос ``POST /v1/methods/`` для определения в каталоге:
+
 .. code-block:: json
 
-   POST /v1/methods/
    {
      "parentId": "<id папки или пусто для корня каталога>",
      "attributes": {

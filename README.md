@@ -81,7 +81,7 @@ Grafana предложит сменить пароль. Дальше откро�
 Дальше по интерфейсу:
 [конфигуратор](https://mp-co-ru.github.io/peresvet/configurator/configurator.html),
 [подключение видеокамер](https://mp-co-ru.github.io/peresvet/video.html),
-[пример с объектом и тегом](https://mp-co-ru.github.io/peresvet/examples/examples.html).
+[базовый курс](https://github.com/mp-co-ru/prs-peresvet-courses/tree/main/01.base).
 
 ## Остановка
 
