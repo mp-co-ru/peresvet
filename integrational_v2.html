@@ -60,7 +60,6 @@
 <li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
-<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Примеры работы с платформой</a></li>
 <li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
@@ -70,11 +69,12 @@
 <li class="toctree-l2"><a class="reference internal" href="#id1">Операции как дочерние узлы привязки тега</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id2">Интеграционные теги</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#sql">Правила параметров SQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Выбор операции</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#params">Контракт <code class="docutils literal notranslate"><span class="pre">params</span></code> в запросах</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id3">Эталонные примеры</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">Эталонные примеры</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#get">Контракт результата GET</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#api-v2-datastorages">API v2 для dataStorages</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id4">Примечание про GET-параметры</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">Примечание про GET-параметры</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
@@ -186,6 +186,7 @@
 <span class="w">          </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">            </span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;erp.orders.select.v1&quot;</span><span class="p">,</span>
 <span class="w">            </span><span class="nt">&quot;prsEntityTypeCode&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;prsDefault&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
 <span class="w">            </span><span class="nt">&quot;prsJsonConfigString&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">              </span><span class="nt">&quot;query&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;select ts as x, payload as y, 0 as q from erp_orders where ts &gt;= :start and ts &lt; :finish order by ts&quot;</span><span class="p">,</span>
 <span class="w">              </span><span class="nt">&quot;timeoutMs&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5000</span><span class="p">,</span>
@@ -202,6 +203,7 @@
 <span class="w">          </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">            </span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;erp.orders.insert.v1&quot;</span><span class="p">,</span>
 <span class="w">            </span><span class="nt">&quot;prsEntityTypeCode&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;prsDefault&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
 <span class="w">            </span><span class="nt">&quot;prsJsonConfigString&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">              </span><span class="nt">&quot;query&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;insert into erp_orders(ts, payload) values(:x, :y)&quot;</span><span class="p">,</span>
 <span class="w">              </span><span class="nt">&quot;timeoutMs&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5000</span>
@@ -229,20 +231,33 @@
 <li><p>Значения по умолчанию не применяются.</p></li>
 </ul>
 </section>
+<section id="id3">
+<h2>Выбор операции<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<p>Ключ <code class="docutils literal notranslate"><span class="pre">params</span></code> в запросе необязателен. Имя операции берётся из ключа
+<code class="docutils literal notranslate"><span class="pre">operation</span></code>, а не из <code class="docutils literal notranslate"><span class="pre">params</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/</span></code>: query-параметр <code class="docutils literal notranslate"><span class="pre">operation</span></code> (строка) задаёт <code class="docutils literal notranslate"><span class="pre">cn</span></code> GET-операции.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/data/</span></code>: <code class="docutils literal notranslate"><span class="pre">data[i].operation</span></code> (строка) задаёт <code class="docutils literal notranslate"><span class="pre">cn</span></code> SET-операции
+для тега <code class="docutils literal notranslate"><span class="pre">data[i]</span></code>.</p></li>
+</ul>
+<p>Если имя не передано:</p>
+<ul class="simple">
+<li><p>операция нужного типа одна — берётся она, даже без <code class="docutils literal notranslate"><span class="pre">prsDefault</span></code>;</p></li>
+<li><p>операций нужного типа несколько — берётся та, у которой <code class="docutils literal notranslate"><span class="pre">prsDefault</span> <span class="pre">=</span> <span class="pre">true</span></code>;</p></li>
+<li><p>таких несколько или нет ни одной — ошибка.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">prsEntityTypeCode=0</span></code> — GET, <code class="docutils literal notranslate"><span class="pre">prsEntityTypeCode=1</span></code> — SET.
+В конфигураторе первая созданная операция каждого типа получает <code class="docutils literal notranslate"><span class="pre">prsDefault</span> <span class="pre">=</span> <span class="pre">true</span></code>.</p>
+</section>
 <section id="params">
 <h2>Контракт <code class="docutils literal notranslate"><span class="pre">params</span></code> в запросах<a class="headerlink" href="#params" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">get</span></code>: если JSONata параметров ссылается на <code class="docutils literal notranslate"><span class="pre">$.params.*</span></code>, клиент передаёт
-соответствующие ключи в <code class="docutils literal notranslate"><span class="pre">params</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">get</span></code>: <code class="docutils literal notranslate"><span class="pre">params.operation</span></code> (строка) задаёт <code class="docutils literal notranslate"><span class="pre">cn</span></code> операции.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">set</span></code>: <code class="docutils literal notranslate"><span class="pre">data[i].params.operation</span></code> (строка) задаёт <code class="docutils literal notranslate"><span class="pre">cn</span></code> операции для
-конкретного тега <code class="docutils literal notranslate"><span class="pre">data[i]</span></code>.
-Если ключ операции не указан, выбирается первая операция нужного типа:
-<code class="docutils literal notranslate"><span class="pre">prsEntityTypeCode=0</span></code> для <code class="docutils literal notranslate"><span class="pre">data/get</span></code> и <code class="docutils literal notranslate"><span class="pre">prsEntityTypeCode=1</span></code> для <code class="docutils literal notranslate"><span class="pre">data/set</span></code>.</p></li>
+<li><p>Если JSONata параметров ссылается на <code class="docutils literal notranslate"><span class="pre">$.params.*</span></code>, клиент передаёт
+соответствующие ключи в <code class="docutils literal notranslate"><span class="pre">params</span></code>. Объект можно не передавать.</p></li>
 </ul>
 </section>
-<section id="id3">
-<h2>Эталонные примеры<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<section id="id4">
+<h2>Эталонные примеры<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
 <ol class="arabic simple">
 <li><p>Пример <code class="docutils literal notranslate"><span class="pre">PUT</span> <span class="pre">/v2/dataStorages</span></code> для привязки табличного тега с операциями:</p></li>
 </ol>
@@ -256,6 +271,7 @@
 <span class="w">          </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">            </span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;erp.orders.select.v1&quot;</span><span class="p">,</span>
 <span class="w">            </span><span class="nt">&quot;prsEntityTypeCode&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;prsDefault&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
 <span class="w">            </span><span class="nt">&quot;prsJsonConfigString&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">              </span><span class="nt">&quot;query&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;select ts as x, payload as y, 0 as q from erp_orders where ts &gt;= :start and ts &lt; :finish order by ts&quot;</span><span class="p">,</span>
 <span class="w">              </span><span class="nt">&quot;timeoutMs&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5000</span><span class="p">,</span>
@@ -272,6 +288,7 @@
 <span class="w">          </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">            </span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;erp.orders.delete.v1&quot;</span><span class="p">,</span>
 <span class="w">            </span><span class="nt">&quot;prsEntityTypeCode&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;prsDefault&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
 <span class="w">            </span><span class="nt">&quot;prsJsonConfigString&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">              </span><span class="nt">&quot;query&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;delete from erp_orders where ts = :x&quot;</span><span class="p">,</span>
 <span class="w">              </span><span class="nt">&quot;timeoutMs&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5000</span>
@@ -305,8 +322,8 @@
 <span class="w">    </span><span class="p">{</span>
 <span class="w">      </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;tag_id&gt;&quot;</span><span class="p">,</span>
 <span class="w">      </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+<span class="w">      </span><span class="nt">&quot;operation&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;delete&quot;</span><span class="p">,</span>
 <span class="w">      </span><span class="nt">&quot;params&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;operation&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;delete&quot;</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1738450800000</span>
 <span class="w">      </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
@@ -349,8 +366,8 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">PUT</span> <span class="pre">/v2/dataStorages</span></code> — обновление (включая операции)</p></li>
 </ul>
 </section>
-<section id="id4">
-<h2>Примечание про GET-параметры<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<section id="id5">
+<h2>Примечание про GET-параметры<a class="headerlink" href="#id5" title="Link to this heading"></a></h2>
 <p>Начиная с текущей версии рекомендуется передавать параметры GET-запросов
 как обычные query-параметры (<code class="docutils literal notranslate"><span class="pre">id</span></code>, <code class="docutils literal notranslate"><span class="pre">base</span></code>, <code class="docutils literal notranslate"><span class="pre">scope</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code> и т.д.),
 а не через <code class="docutils literal notranslate"><span class="pre">q=&lt;json&gt;</span></code>.</p>

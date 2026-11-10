@@ -58,7 +58,6 @@
 <li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
-<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Примеры работы с платформой</a></li>
 <li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
@@ -1048,12 +1047,12 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 <code class="docutils literal notranslate"><span class="pre">prsValueTypeCode</span></code> (<code class="docutils literal notranslate"><span class="pre">1</span></code> целый, <code class="docutils literal notranslate"><span class="pre">2</span></code> вещественный, <code class="docutils literal notranslate"><span class="pre">3</span></code> строка, <code class="docutils literal notranslate"><span class="pre">4</span></code> json);</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">parameterCount</span></code> считается при чтении и в LDAP не хранится.</p></li>
 </ul>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="err">POST</span><span class="w"> </span><span class="err">/v</span><span class="mi">1</span><span class="err">/me</span><span class="kc">t</span><span class="err">hods/</span>
-<span class="p">{</span><span class="nt">&quot;folder&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stdlib&quot;</span><span class="p">}}</span>
+<p>Запрос <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/</span></code> для папки:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;folder&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stdlib&quot;</span><span class="p">}}</span>
 </pre></div>
 </div>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="err">POST</span><span class="w"> </span><span class="err">/v</span><span class="mi">1</span><span class="err">/me</span><span class="kc">t</span><span class="err">hods/</span>
-<span class="p">{</span>
+<p>Запрос <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/</span></code> для определения в каталоге:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;parentId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;id папки или пусто для корня каталога&gt;&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;add&quot;</span><span class="p">,</span>

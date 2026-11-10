@@ -23,7 +23,6 @@
    Исторические данные<historical_data>
    Конфигуратор модели<configurator/configurator>
    Создание экранов в Grafana<grafana/grafana_integration>
-   Примеры работы с платформой<examples/examples>
    Компоненты системы<components>
    Коннекторы<connectors_guide>
    Работа с видеоданными<video_data>
@@ -32,6 +31,13 @@
    Точки расширения безопасности<security_extension_points>
    Настройка безопасности платной редакции<security_enterprise_setup>
    API<api>
+
+Курс
+----
+
+Справочник выше разбирает платформу по темам.
+Базовый курс ведётся отдельно:
+`курсы по платформе <https://github.com/mp-co-ru/prs-peresvet-courses/tree/main/01.base>`_.
 
 Indices and tables
 ==================

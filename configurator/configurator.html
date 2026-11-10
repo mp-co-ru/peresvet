@@ -77,13 +77,12 @@
 <li class="toctree-l2"><a class="reference internal" href="#id14">Коннектор: журнал и команды</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id15">Метод</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id16">Тревога и расписание</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id17">Хранилища данных</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id18">Сервисы</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id19">Примеры</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id18">Хранилища данных</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id19">Сервисы</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id20">Дальше</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Примеры работы с платформой</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../components.html">Компоненты системы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../connectors_guide.html">Коннекторы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../video_data.html">Работа с видеоданными</a></li>
@@ -134,12 +133,12 @@
 <code class="docutils literal notranslate"><span class="pre">https://localhost/grafana</span></code>.</p>
 <p>При первом входе имя и пароль — <code class="docutils literal notranslate"><span class="pre">admin</span></code> / <code class="docutils literal notranslate"><span class="pre">admin</span></code>.
 Grafana предложит сменить пароль.</p>
-<figure class="align-default" id="id20">
+<figure class="align-default" id="id22">
 <img alt="Экран конфигуратора" src="../_images/01.screen.png" />
 <figcaption>
 <p><span class="caption-text">Слева дерево модели, справа свойства выбранного узла.
 Между колонками — разделитель: его можно перетащить.
-Такой же разделитель стоит между иерархией и блоком «Сервисы».</span><a class="headerlink" href="#id20" title="Link to this image"></a></p>
+Такой же разделитель стоит между иерархией и блоком «Сервисы».</span><a class="headerlink" href="#id22" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 <p>Пока узел не выбран, справа написано «Выберите узел в дереве слева».</p>
@@ -505,10 +504,11 @@ JSON фактических значений операции.</p>
 в хранилище, к которому тревога привязана.</p>
 <p>Расписание задаёт окно времени и шаг. Метод может подписаться
 на расписание так же, как на тег.</p>
-<p>Порядок работы с этими узлами разобран в <a class="reference internal" href="../examples/examples.html#examples"><span class="std std-ref">примерах</span></a>.</p>
+<p>Порядок работы с этими узлами разбирает
+<a class="reference external" href="https://github.com/mp-co-ru/prs-peresvet-courses/tree/main/01.base">базовый курс</a>.</p>
 </section>
-<section id="id17">
-<h2>Хранилища данных<a class="headerlink" href="#id17" title="Link to this heading"></a></h2>
+<section id="id18">
+<h2>Хранилища данных<a class="headerlink" href="#id18" title="Link to this heading"></a></h2>
 <p>Папка «Хранилища данных» открывает справа карточки хранилищ.
 У выбранного хранилища в дереве видны привязанные теги.
 Имя привязки — путь тега в иерархии: имя объекта, промежуточные узлы
@@ -517,7 +517,9 @@ JSON фактических значений операции.</p>
 У исторического хранилища это таблица, у видеоархива — каталог и срок
 хранения. Эти же сведения есть на вкладке <strong>Хранилище</strong> в свойствах тега.
 У привязки к интеграционному хранилищу задают операции чтения и записи:
-имя, описание и выражения параметров. Запись операций уходит отдельно,
+имя, описание, выражения параметров и признак операции по умолчанию.
+Первая созданная GET-операция и первая созданная SET-операция получают
+<code class="docutils literal notranslate"><span class="pre">prsDefault</span> <span class="pre">=</span> <span class="pre">true</span></code>. Запись операций уходит отдельно,
 кнопкой <strong>Записать операции (v2)</strong>. Подробности контракта —
 в разделе <a class="reference internal" href="../integrational_v2.html#integrational-v2"><span class="std std-ref">Интеграционные хранилища и операции (API v2)</span></a>.</p>
 <p>Кнопка «…» у привязки открывает две команды.
@@ -526,8 +528,8 @@ JSON фактических значений операции.</p>
 <p>Привязка тега к коннектору называется так же, путём тега, и в кнопке «…»
 содержит те же две команды. <strong>Удалить</strong> снимает связь с коннектором.</p>
 </section>
-<section id="id18">
-<h2>Сервисы<a class="headerlink" href="#id18" title="Link to this heading"></a></h2>
+<section id="id19">
+<h2>Сервисы<a class="headerlink" href="#id19" title="Link to this heading"></a></h2>
 <p>Папка «Сервисы» — журналы платформы, а не узлы модели.
 У каждой строки флажок «Показывать лог сервиса» и число consumer-ов.
 Справа общий хвост отмеченных сервисов.</p>
@@ -535,9 +537,10 @@ JSON фактических значений операции.</p>
 Корзина очищает журнал выбранных сервисов.
 Стрелка вниз сохраняет видимый текст в файл.</p>
 </section>
-<section id="id19">
-<h2>Примеры<a class="headerlink" href="#id19" title="Link to this heading"></a></h2>
-<p>Короткий сценарий с объектом, тегом и методом — в <a class="reference internal" href="../examples/examples.html#examples"><span class="std std-ref">примерах</span></a>.
+<section id="id20">
+<h2>Дальше<a class="headerlink" href="#id20" title="Link to this heading"></a></h2>
+<p>Сборка модели с нуля —
+<a class="reference external" href="https://github.com/mp-co-ru/prs-peresvet-courses/tree/main/01.base">базовый курс</a>.
 Подключение камеры — в <a class="reference internal" href="../video.html#video-cameras"><span class="std std-ref">Подключение видеокамер</span></a>.</p>
 </section>
 </section>

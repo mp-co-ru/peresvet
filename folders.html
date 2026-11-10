@@ -60,7 +60,6 @@
 <li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
-<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Примеры работы с платформой</a></li>
 <li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
@@ -121,14 +120,14 @@
 <code class="docutils literal notranslate"><span class="pre">/v1/folders</span></code> нет. Папка создаётся запросом создания той сущности,
 в чьей ветке она лежит. Поле <code class="docutils literal notranslate"><span class="pre">folder</span></code> по умолчанию <code class="docutils literal notranslate"><span class="pre">false</span></code>:
 без него запрос создаёт обычный узел.</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="err">POST</span><span class="w"> </span><span class="err">/v</span><span class="mi">1</span><span class="err">/objec</span><span class="kc">ts</span><span class="err">/</span>
-<span class="p">{</span><span class="nt">&quot;folder&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Режимы работы&quot;</span><span class="p">}}</span>
+<p>Запрос <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/objects/</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;folder&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Режимы работы&quot;</span><span class="p">}}</span>
 </pre></div>
 </div>
 <p>Пустой <code class="docutils literal notranslate"><span class="pre">parentId</span></code> — корень этого сервиса, как при создании объекта или тега.
 Чтобы положить папку внутрь объекта или другой папки, передайте их id.</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="err">POST</span><span class="w"> </span><span class="err">/v</span><span class="mi">1</span><span class="err">/</span><span class="kc">ta</span><span class="err">gs/</span>
-<span class="p">{</span>
+<p>Запрос <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/tags/</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;folder&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;parentId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;id объекта или папки&gt;&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Счётчики&quot;</span><span class="p">}</span>
@@ -172,8 +171,8 @@
 </table>
 <p>Тревога этим флагом папку не создаёт: запрос возвращает <code class="docutils literal notranslate"><span class="pre">422</span></code>.
 Каталог методов использует тот же флаг:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="err">POST</span><span class="w"> </span><span class="err">/v</span><span class="mi">1</span><span class="err">/me</span><span class="kc">t</span><span class="err">hods/</span>
-<span class="p">{</span><span class="nt">&quot;folder&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stdlib&quot;</span><span class="p">}}</span>
+<p>Запрос <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;folder&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stdlib&quot;</span><span class="p">}}</span>
 </pre></div>
 </div>
 <p>Имя <code class="docutils literal notranslate"><span class="pre">system</span></code> зарезервировано. В LDAP сохраняются <code class="docutils literal notranslate"><span class="pre">cn</span></code>, <code class="docutils literal notranslate"><span class="pre">description</span></code>,
