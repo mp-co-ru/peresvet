@@ -1,4 +1,4 @@
-aio-pika==9.3.0
+aio-pika==9.6.2
 patio==0.1.4
 patio-rabbitmq==0.1.1
-aiormq==6.7.7
+aiormq==6.9.4
