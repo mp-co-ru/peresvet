@@ -1,12 +1,9 @@
-FROM ubuntu:26.04
+FROM python:3.14-slim
 
-ENV DEBIAN_FRONTEND=noninteractive
 ENV LDAP_ORGANISATION=mycompany
 ENV LDAP_DOMAIN=mycompany.com
 ENV LDAP_ADMIN_PASSWORD=123456
 ENV PIP_NO_INDEX=1
-ENV VIRTUAL_ENV=/opt/venv
-ENV PATH="/opt/venv/bin:${PATH}"
 
 # В локальном режиме используем предустановленные пакеты
 # LOCAL_MODE может быть задан через ARG или через файл .local-mode
@@ -21,20 +18,19 @@ RUN if [ -f .local-mode ]; then \
     else \
         echo "Локальный режим отключён: зависимости будут установлены при сборке"; \
     fi
-
-# Системный Python 3.14 (пакет python3 в Ubuntu 26.04) и библиотеки,
-# с которыми собран python-ldap.
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        python3 \
-        python3-venv \
-        python3-pip \
-        ca-certificates \
-        libldap2 \
-        libsasl2-2 \
-        libsasl2-modules \
-        ffmpeg \
-    && python3 -m venv /opt/venv \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN if [ "${LOCAL_MODE}" = "true" ] && [ -d /preinstalled/apt-cache ]; then \
+        apt-get update && \
+        apt-get install -y --no-install-recommends /preinstalled/apt-cache/*.deb 2>/dev/null || true && \
+        apt-get clean && rm -rf /var/lib/apt/lists/*; \
+    else \
+        apt-get update && apt-get install -y --no-install-recommends \
+            libldap2-dev libsasl2-dev \
+            && bash -c "DEBIAN_FRONTEND=noninteractive apt install -q -y slapd ldap-utils" && \
+        apt-get -y purge slapd && \
+        apt-get -y autoremove && \
+        apt-get -y clean && \
+        rm -rf /var/lib/apt/lists/*; \
+    fi
 
 WORKDIR /usr/src
 RUN mkdir mpc-peresvet
@@ -49,17 +45,24 @@ RUN if [ "${LOCAL_MODE}" = "true" ]; then \
 
 # В локальном режиме используем предустановленные Python-пакеты
 RUN if [ "${LOCAL_MODE}" = "true" ] && [ -d /preinstalled/python-site-packages ]; then \
-        cp -Rp /preinstalled/python-site-packages/* /opt/venv/lib/python3.14/site-packages/ 2>/dev/null || true && \
+        cp -Rp /preinstalled/python-site-packages/* /usr/local/lib/python3.14/site-packages/ 2>/dev/null || true && \
         apt-get clean && rm -rf /var/lib/apt/lists/*; \
     else \
         pip install --no-cache-dir --no-index -r requirements.txt; \
-    fi
+    fi && \
+    apt-get -y purge slapd 2>/dev/null || true && \
+    apt-get -y autoremove 2>/dev/null || true && \
+    apt-get -y clean 2>/dev/null || true && \
+    rm -rf /var/lib/apt/lists/* 2>/dev/null || true
 
 RUN mkdir /usr/src/mpc-peresvet/log
 
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 COPY src /usr/src/mpc-peresvet/src
 COPY methods/packages /usr/src/mpc-peresvet/methods/packages
-RUN rm -rf /usr/src/mpc-peresvet/src/__pycache__
+RUN rm -r -f /usr/src/mpc-peresvet/src/__pycache__
 
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1

@@ -573,7 +573,7 @@ load_required_images() {
             "redis/redis-stack:7.2.0-v6"
             "rabbitmq:4.1.1-management"
             "postgres:16.1"
-            "ubuntu:26.04"
+            "python:3.14-slim"
             "osixia/openldap"
             "grafana/grafana-enterprise:12.4.0-22081664032-ubuntu"
             "nginx:1.25.3-alpine-slim"

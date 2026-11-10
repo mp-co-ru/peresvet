@@ -1,20 +1,6 @@
-FROM ubuntu:26.04
-
-ENV DEBIAN_FRONTEND=noninteractive
-ENV VIRTUAL_ENV=/opt/venv
-ENV PATH="/opt/venv/bin:${PATH}"
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+FROM python:3.14-slim
 
 WORKDIR /usr/src/peresvet-mcp
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        python3 \
-        python3-venv \
-        python3-pip \
-        ca-certificates \
-    && python3 -m venv /opt/venv \
-    && rm -rf /var/lib/apt/lists/*
 
 # В локальном режиме используем предустановленные Python-пакеты
 # LOCAL_MODE может быть задан через ARG или через файл .local-mode
@@ -30,12 +16,15 @@ RUN if [ -f .local-mode ]; then \
 
 # В локальном режиме используем предустановленные Python-пакеты
 RUN if [ "${LOCAL_MODE}" = "true" ] && [ -d /preinstalled/python-site-packages ]; then \
-        cp -Rp /preinstalled/python-site-packages/* /opt/venv/lib/python3.14/site-packages/ 2>/dev/null || true && \
+        cp -Rp /preinstalled/python-site-packages/* /usr/local/lib/python3.14/site-packages/ 2>/dev/null || true && \
         echo "Используются предустановленные Python-пакеты"; \
     else \
         pip install --no-cache-dir fastmcp aiohttp; \
     fi
 
 COPY src/mcp_server /usr/src/peresvet-mcp/mcp_server
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 CMD ["python", "-m", "mcp_server.server"]
