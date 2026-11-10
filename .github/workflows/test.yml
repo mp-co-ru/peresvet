@@ -21,7 +21,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Dependencies for python-ldap
         run: |
@@ -33,7 +33,7 @@ jobs:
           python -m venv .venv
           source .venv/bin/activate
           pip install --upgrade pip
-          pip install "setuptools>=65,<82"
+          pip install "setuptools>=65"
           pip install -r requirements_make_docs.txt
 
       - name: Run tests

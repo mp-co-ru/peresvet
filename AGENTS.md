@@ -2,7 +2,7 @@
 
 ## Repository
 
-Peresvet is a Python 3.12 platform for SCADA, monitoring, data acquisition,
+Peresvet is a Python 3.14 platform for SCADA, monitoring, data acquisition,
 technical object modeling and automation.
 
 Default branch: dev.
