@@ -152,6 +152,8 @@ tests/grafana/
 .vscode/launch.json
 
 docker/compose/config/nginx/
+config/nginx/optional/mcp-peresvet.conf
+config/nginx/optional/mcp-grafana.conf
 docker/images/
 
 # local secrets for docker compose

@@ -184,6 +184,135 @@ HTTPS
 
       $ ./run_one_app.sh
 
+.. _optional-services:
+
+Дополнительные сервисы
+----------------------
+
+``./run_one_app.sh`` поднимает ядро: RabbitMQ, OpenLDAP, PostgreSQL,
+``one_app``, захват и отдачу видео, Grafana и nginx. Сервис, который стоит
+не у каждого заказчика, в эту команду и в архив ``peresvet-product-*.tar.gz``
+не входит. Его ставят после того, как платформа уже запущена.
+
+Таких сервисов два типа, и запуск у них разный.
+
+* Свой порт. Контейнер публикует порт на хост, клиент ходит на него
+  напрямую. Nginx в этом не участвует.
+* Через nginx. Снаружи порта нет, запрос приходит на 443 платформы,
+  nginx передаёт его контейнеру в сети ``peresvet``. Так работают
+  MCP-серверы платформы и Grafana (:doc:`mcp`) и так подключается
+  распознавание видео. Распознавание в стандартную поставку не входит:
+  пока файла маршрута нет, ``/v1/vision/overlay`` отвечает 404.
+  MCP-серверы в поставку входят, но по умолчанию не запускаются.
+
+.. _optional-own-port:
+
+Свой порт
+~~~~~~~~~
+
+В compose-файле такого сервиса есть секция ``ports:`` и нет файла
+в ``config/nginx/optional/``.
+
+#. Файл сервиса лежит в ``docker/compose/``. Команду выполняйте из корня
+   поставки: имя проекта остаётся ``compose``, контейнер попадает в сеть
+   ``peresvet``. Если в файле есть ``depends_on: one_app``, добавьте
+   в ту же команду ``-f docker/compose/docker-compose.one_app.yml``,
+   иначе Compose не увидит зависимость. ``up`` вызывайте с именем
+   сервиса, чтобы не пересоздавать ядро:
+
+   .. code:: sh
+
+      $ docker compose --env-file docker/compose/.cont_one_app.env \
+          -f docker/compose/docker-compose.one_app.yml \
+          -f docker/compose/docker-compose.<сервис>.yml \
+          up -d --build <сервис>
+
+#. Проверьте опубликованный порт на хосте, а не адрес nginx.
+
+Остановка — ``stop`` этого сервиса тем же набором ``-f``.
+``down`` здесь не используйте: в команде есть файл ядра, и ``down``
+остановит ``one_app`` вместе с дополнительным сервисом.
+
+.. _optional-via-nginx:
+
+Через nginx
+~~~~~~~~~~~
+
+У такого сервиса в compose нет ``ports:`` на хост. Снаружи его публикует
+уже запущенный ``prs-nginx-one-app``.
+
+MCP-серверы платформы и Grafana включаются ключами скрипта запуска.
+По умолчанию оба равны ``false``. Те же ключи есть у
+``run_one_app.sh``, ``run_one_app_dev.sh``, ``run_one_app_dev_no_build.sh``
+и ``run_one_app_ssl_letsencrypt.sh``. Значения по умолчанию задаются
+в ``.env`` (``PRS_MCP_PERESVET``, ``PRS_MCP_GRAFANA``), ключ командной
+строки их перекрывает.
+
+.. code:: sh
+
+   $ ./run_one_app.sh --mcp-peresvet true --mcp-grafana true
+
+При ``true`` скрипт добавляет compose-файл сервера и копирует его маршрут
+из ``config/nginx/mcp/`` в ``config/nginx/optional/``. При ``false``
+удаляет маршрут и останавливает контейнер. Снаружи адреса такие:
+
+* ``https://<хост>/mcp/peresvet`` — MCP платформы, проверка
+  ``https://<хост>/mcp/peresvet/health``;
+* ``https://<хост>/mcp/grafana`` — MCP Grafana.
+
+Дальше описан тот же приём для сервиса, который скрипт запуска не знает.
+Распознавание видео подключается именно так, его комплектом, не поставкой
+платформы.
+
+#. Поднимите контейнер из корня поставки. ``up`` — с именем сервиса:
+
+   .. code:: sh
+
+      $ docker compose --env-file docker/compose/.cont_one_app.env \
+          -f docker/compose/docker-compose.<сервис>.yml \
+          up -d --build <сервис>
+
+#. Комплект сервиса кладёт готовый файл
+   ``config/nginx/optional/<сервис>.conf``. Каталог смонтирован в nginx
+   и подключён строкой ``include conf.d/optional/*.conf``.
+   ``00-empty.conf`` не удаляйте: без единого ``.conf`` nginx не стартует.
+   Это готовый конфиг, не шаблон: подстановки ``${...}`` в нём нет.
+
+   Имя контейнера в ``proxy_pass`` пишите через переменную. Буквальное
+   имя nginx проверяет при старте и не поднимется, пока контейнера нет.
+   Для распознавания комплект сервиса (не поставка платформы) кладёт
+   такой файл:
+
+   .. code:: nginx
+
+      location = /v1/vision/overlay {
+          proxy_set_header Host $host;
+          proxy_read_timeout 5s;
+          set $prs_methods_video prs-methods-video;
+          proxy_pass http://$prs_methods_video:8093/api/overlay$is_args$args;
+      }
+
+#. Перечитайте конфиг. Образ nginx пересобирать не нужно:
+
+   .. code:: sh
+
+      $ docker exec prs-nginx-one-app nginx -t \
+          && docker exec prs-nginx-one-app nginx -s reload
+
+Снятие идёт в обратную сторону. Сначала удалите ``<сервис>.conf``
+(``00-empty.conf`` оставьте) и снова выполните ``nginx -t`` и
+``nginx -s reload``. Затем остановите контейнер командой с одним
+его ``-f``, без файлов ядра:
+
+.. code:: sh
+
+   $ docker compose --env-file docker/compose/.cont_one_app.env \
+       -f docker/compose/docker-compose.<сервис>.yml \
+       stop <сервис>
+
+Остановка ядра командой из раздела «Остановка» дополнительный сервис
+не гасит: его файла в том списке нет.
+
 Сборка продуктового дистрибутива
 --------------------------------
 

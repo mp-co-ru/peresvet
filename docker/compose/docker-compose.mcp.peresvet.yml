@@ -1,6 +1,7 @@
 services:
   mcp_peresvet:
     container_name: prs-mcp-peresvet
+    restart: always
     depends_on:
       - one_app
     build:
@@ -21,8 +22,6 @@ services:
       MCP_PERESVET_TRANSPORT: ${MCP_PERESVET_TRANSPORT:-http}
       MCP_PERESVET_HOST: 0.0.0.0
       MCP_PERESVET_PORT: ${PORT_MCP_PERESVET_INNER}
-    ports:
-      - ${PORT_MCP_PERESVET}:${PORT_MCP_PERESVET_INNER}
     networks:
       - peresvet
 

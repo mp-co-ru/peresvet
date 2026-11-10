@@ -8,4 +8,5 @@ server {
 
     resolver 127.0.0.11 valid=5s;
     include conf.d/locations/*.conf;
+    include conf.d/optional/*.conf;
 }

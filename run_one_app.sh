@@ -5,6 +5,8 @@
 # сертификат на IPv4-адрес из PRS_IP (.env) или ключа --ip.
 # Ключ --ssl true подключает заранее подготовленные сертификаты.
 # Пересборка контейнеров перед запуском включается ключом --build true.
+# Ключи --mcp-peresvet и --mcp-grafana включают MCP-серверы через nginx.
+# По умолчанию оба выключены.
 
 set -euo pipefail
 
@@ -17,6 +19,7 @@ show_help() {
 Usage:
   ./run_one_app.sh [--ip ADDRESS] [--hostname HOSTNAME] [--ssl true|false]
                    [--build true|false] [--mirror URL] [--tmpdir DIR] [--local]
+                   [--mcp-peresvet true|false] [--mcp-grafana true|false]
 
 Options:
   --ip ADDRESS         IPv4 address of this server. The default startup puts it
@@ -35,12 +38,18 @@ Options:
                        ./run_one_app.sh --ip 192.168.1.10 --tmpdir /var/tmp
   --local              Local mode: use pre-installed dependencies. Use with
                        distributions prepared with ./packaging/build_dev_distribution.sh --local.
+  --mcp-peresvet true|false
+                       Start the platform MCP server and publish it through nginx
+                       at /mcp/peresvet. Default false (PRS_MCP_PERESVET).
+  --mcp-grafana true|false
+                       Start the Grafana MCP server and publish it through nginx
+                       at /mcp/grafana. Default false (PRS_MCP_GRAFANA).
   -h, --help           Show this help.
 
 Configuration:
   Defaults are read from .env next to this script. CLI options override .env.
   Variables: PRS_REGISTRY_MIRROR, PRS_HOSTNAME, PRS_IP, PRS_SSL, PRS_BUILD,
-             LOCAL_MODE, PRS_SKIP_IMAGE_PULL.
+             LOCAL_MODE, PRS_SKIP_IMAGE_PULL, PRS_MCP_PERESVET, PRS_MCP_GRAFANA.
 
 Mirror notes:
   - Already present local images are not downloaded again.
@@ -789,6 +798,9 @@ pull_required_images() {
 
     local required_images=()
     load_required_images required_images
+    if [[ "${mcp_grafana}" == true ]]; then
+        required_images+=("$(mcp_grafana_image)")
+    fi
 
     local image
     for image in "${required_images[@]}"; do
@@ -833,6 +845,10 @@ upsert_env_value() {
 }
 
 load_dotenv "${DOTENV_FILE}"
+
+# shellcheck source=packaging/mcp_launch.sh
+source "${SCRIPT_DIR}/packaging/mcp_launch.sh"
+mcp_init
 
 srv="${PRS_HOSTNAME:-${HOSTNAME:-$(hostname)}}"
 ssl="${PRS_SSL:-false}"
@@ -899,6 +915,14 @@ while [[ $# -gt 0 ]]; do
         --local)
             local_mode="true"
             shift
+            ;;
+        --mcp-peresvet|--mcp-grafana)
+            if [[ $# -lt 2 || -z "$2" ]]; then
+                echo "Ключ $1 принимает только true или false." >&2
+                exit 1
+            fi
+            mcp_set_flag "$1" "$2"
+            shift 2
             ;;
         -h|--help)
             show_help
@@ -967,8 +991,13 @@ if [[ "${ssl}" == "false" ]]; then
 fi
 
 if [[ "${PRS_LAUNCH_DRY_RUN:-0}" == "1" ]]; then
+    mcp_dry_run_report
     exit 0
 fi
+
+mcp_fill_compose_args
+
+mcp_prepare
 
 extra_env=()
 if [ -f docker/compose/.cont_one_app.secrets.env ]; then
@@ -988,4 +1017,8 @@ docker compose --env-file "${cont_env_file}" "${extra_env[@]}" \
 -f "${nginx_compose}" \
 -f docker/compose/docker-compose.ports.yml \
 -f docker/compose/docker-compose.restart.yml \
+"${mcp_compose_args[@]}" \
 "${up_args[@]}"
+
+mcp_stop_disabled
+mcp_reload_nginx

@@ -10,7 +10,7 @@ services:
       # URL Grafana внутри docker-сети; в проекте Grafana работает с sub-path /grafana
       GRAFANA_URL: http://${HOST_GRAFANA}:${PORT_GRAFANA}/grafana
       # Service account token (обязательно для большинства операций)
-      GRAFANA_SERVICE_ACCOUNT_TOKEN: ${GRAFANA_SERVICE_ACCOUNT_TOKEN}
+      GRAFANA_SERVICE_ACCOUNT_TOKEN: ${GRAFANA_SERVICE_ACCOUNT_TOKEN:-}
       GRAFANA_ORG_ID: ${MCP_GRAFANA_ORG_ID:-1}
     # Image entrypoint already includes `--transport sse`; replace it.
     entrypoint: ["/app/mcp-grafana"]
@@ -23,8 +23,6 @@ services:
       - "*"
       - "-allowed-origins"
       - "*"
-    ports:
-      - ${PORT_MCP_GRAFANA}:${PORT_MCP_GRAFANA_INNER}
     networks:
       - peresvet
 
