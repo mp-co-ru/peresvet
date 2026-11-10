@@ -12,12 +12,12 @@ def test_ci_installs_runtime_packages_used_by_unit_tests():
     assert "PyYAML==6.0.3" in text
 
 
-def test_app_image_uses_ubuntu_2604_and_python_314_wheels():
+def test_app_image_uses_python_314_slim_and_cp314_wheels():
     dockerfile = (ROOT / "docker/docker-files/all/Dockerfile.one_app.uvicorn").read_text(encoding="utf-8")
     requirements = (ROOT / "requirements.txt").read_text(encoding="utf-8")
     workflow = (ROOT / ".github/workflows/test.yml").read_text(encoding="utf-8")
-    assert "FROM ubuntu:26.04" in dockerfile
-    assert "/opt/venv/lib/python3.14/site-packages" in dockerfile
+    assert "FROM python:3.14-slim" in dockerfile
+    assert "/usr/local/lib/python3.14/site-packages" in dockerfile
     assert "cp314" in requirements
     assert "cp312" not in requirements
     assert 'python-version: "3.14"' in workflow
