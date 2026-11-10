@@ -1,26 +1,26 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="ru" >
+<html class="writer-html5" lang="ru" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Папки &mdash; документация МПК-Пересвет 0.4</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/sphinxcontrib-httpexample.css" type="text/css" />
-      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=68075b4e" />
+
   
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=11064190"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="_static/sphinxcontrib-httpexample.js"></script>
-        <script src="_static/translations.js?v=29b1f277"></script>
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=11064190"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/sphinxcontrib-httpexample.js"></script>
+      <script src="_static/translations.js?v=cd1d70c9"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
@@ -40,9 +40,6 @@
             
               <img src="_static/logo.png" class="logo" alt="Логотип"/>
           </a>
-              <div class="version">
-                0.4
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -115,22 +112,22 @@
            <div itemprop="articleBody">
              
   <section id="id1">
-<h1>Папки<a class="headerlink" href="#id1" title="Link to this heading"></a></h1>
+<h1>Папки<a class="headerlink" href="#id1" title="Ссылка на этот заголовок"></a></h1>
 <p>Пользовательская папка — класс <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code>. Отдельного ресурса
 <code class="docutils literal notranslate"><span class="pre">/v1/folders</span></code> нет. Папка создаётся запросом создания той сущности,
 в чьей ветке она лежит. Поле <code class="docutils literal notranslate"><span class="pre">folder</span></code> по умолчанию <code class="docutils literal notranslate"><span class="pre">false</span></code>:
 без него запрос создаёт обычный узел.</p>
 <p>Запрос <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/objects/</span></code>:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;folder&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Режимы работы&quot;</span><span class="p">}}</span>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"folder"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Режимы работы"</span><span class="p">}}</span>
 </pre></div>
 </div>
 <p>Пустой <code class="docutils literal notranslate"><span class="pre">parentId</span></code> — корень этого сервиса, как при создании объекта или тега.
 Чтобы положить папку внутрь объекта или другой папки, передайте их id.</p>
 <p>Запрос <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/tags/</span></code>:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;folder&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;parentId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;id объекта или папки&gt;&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Счётчики&quot;</span><span class="p">}</span>
+<span class="w">  </span><span class="nt">"folder"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"parentId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id объекта или папки&gt;"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Счётчики"</span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -172,7 +169,7 @@
 <p>Тревога этим флагом папку не создаёт: запрос возвращает <code class="docutils literal notranslate"><span class="pre">422</span></code>.
 Каталог методов использует тот же флаг:</p>
 <p>Запрос <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/</span></code>:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;folder&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stdlib&quot;</span><span class="p">}}</span>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"folder"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"stdlib"</span><span class="p">}}</span>
 </pre></div>
 </div>
 <p>Имя <code class="docutils literal notranslate"><span class="pre">system</span></code> зарезервировано. В LDAP сохраняются <code class="docutils literal notranslate"><span class="pre">cn</span></code>, <code class="docutils literal notranslate"><span class="pre">description</span></code>,

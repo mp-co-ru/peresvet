@@ -1,26 +1,26 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="ru" >
+<html class="writer-html5" lang="ru" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Администрирование &mdash; документация МПК-Пересвет 0.4</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/sphinxcontrib-httpexample.css" type="text/css" />
-      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=68075b4e" />
+
   
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=11064190"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="_static/sphinxcontrib-httpexample.js"></script>
-        <script src="_static/translations.js?v=29b1f277"></script>
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=11064190"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/sphinxcontrib-httpexample.js"></script>
+      <script src="_static/translations.js?v=cd1d70c9"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
@@ -40,9 +40,6 @@
             
               <img src="_static/logo.png" class="logo" alt="Логотип"/>
           </a>
-              <div class="version">
-                0.4
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -112,11 +109,11 @@
            <div itemprop="articleBody">
              
   <section id="administration">
-<span id="id1"></span><h1>Администрирование<a class="headerlink" href="#administration" title="Link to this heading"></a></h1>
+<span id="id1"></span><h1>Администрирование<a class="headerlink" href="#administration" title="Ссылка на этот заголовок"></a></h1>
 <p>Раздел описывает операции сопровождения развёртывания, не относящиеся к
 повседневной работе с моделью в конфигураторе.</p>
 <section id="docker">
-<span id="administration-docker-runtime-backup"></span><h2>Резервное копирование всех работающих Docker-контейнеров<a class="headerlink" href="#docker" title="Link to this heading"></a></h2>
+<span id="administration-docker-runtime-backup"></span><h2>Резервное копирование всех работающих Docker-контейнеров<a class="headerlink" href="#docker" title="Ссылка на этот заголовок"></a></h2>
 <p>Для переноса или аварийного восстановления всей текущей Docker-развёртки
 предусмотрены shell-скрипты в <code class="docutils literal notranslate"><span class="pre">admin_scripts/docker/</span></code>:</p>
 <ul class="simple">
@@ -129,7 +126,7 @@
 Поэтому в архив попадают не только контейнеры Пересвета, но и дополнительные
 контейнеры, запущенные в рамках проекта.</p>
 <section id="id2">
-<h3>Что попадает в архив<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<h3>Что попадает в архив<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">running_containers_backup.sh</span></code> сохраняет:</p>
 <ul class="simple">
 <li><p>committed-образы всех работающих контейнеров;</p></li>
@@ -145,7 +142,7 @@
 логически неконсистентным.</p>
 </section>
 <section id="id3">
-<h3>Создание архива<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<h3>Создание архива<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h3>
 <p>Скрипты в <code class="docutils literal notranslate"><span class="pre">admin_scripts/docker/</span></code> <strong>нужно запускать из корня проекта</strong>
 (каталог с <code class="docutils literal notranslate"><span class="pre">docker/compose/</span></code>, <code class="docutils literal notranslate"><span class="pre">admin_scripts/</span></code> и т.д.). Текущий каталог
 проверяется по <code class="docutils literal notranslate"><span class="pre">pwd</span> <span class="pre">-P</span></code>; при несовпадении скрипт завершится с ошибкой.
@@ -157,9 +154,9 @@
 <p>Основные параметры:</p>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 26%" />
-<col style="width: 54%" />
-<col style="width: 20%" />
+<col style="width: 26.0%" />
+<col style="width: 54.0%" />
+<col style="width: 20.0%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Параметр</p></th>
@@ -202,7 +199,7 @@
 </div>
 </section>
 <section id="id4">
-<h3>Восстановление<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<h3>Восстановление<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h3>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./admin_scripts/docker/running_containers_restore.sh<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--archive<span class="o">=</span>backups/docker_runtime/project_runtime_backup.tar.gz
 </pre></div>
@@ -224,9 +221,9 @@ hostname, restart policy и network-параметрами, которые уд�
 <p>Параметры восстановления:</p>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 26%" />
-<col style="width: 54%" />
-<col style="width: 20%" />
+<col style="width: 26.0%" />
+<col style="width: 54.0%" />
+<col style="width: 20.0%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Параметр</p></th>
@@ -274,7 +271,7 @@ networks (например, статические IPAM-настройки) со
 </section>
 </section>
 <section id="openldap">
-<span id="administration-ldap-backup"></span><h2>Резервное копирование и восстановление OpenLDAP<a class="headerlink" href="#openldap" title="Link to this heading"></a></h2>
+<span id="administration-ldap-backup"></span><h2>Резервное копирование и восстановление OpenLDAP<a class="headerlink" href="#openldap" title="Ссылка на этот заголовок"></a></h2>
 <p>Каталог OpenLDAP в контейнере хранит рабочие данные в каталоге
 <code class="docutils literal notranslate"><span class="pre">/var/lib/ldap</span></code>. В файлах Docker Compose этот путь монтируется во
 <strong>внешний том</strong> Docker (или в каталог на хосте при bind mount):</p>
@@ -296,7 +293,7 @@ networks (например, статические IPAM-настройки) со
 bind mount); требуются <code class="docutils literal notranslate"><span class="pre">docker</span></code> и <code class="docutils literal notranslate"><span class="pre">python3</span></code> в <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p></li>
 </ul>
 <section id="id5">
-<h3>Запуск из корня проекта<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<h3>Запуск из корня проекта<a class="headerlink" href="#id5" title="Ссылка на этот заголовок"></a></h3>
 <p>Скрипты <code class="docutils literal notranslate"><span class="pre">ldap_volume_backup.sh</span></code> и <code class="docutils literal notranslate"><span class="pre">ldap_volume_restore.sh</span></code> <strong>нужно
 запускать из корня проекта</strong> (того каталога, где лежат <code class="docutils literal notranslate"><span class="pre">docker/compose/</span></code>,
 <code class="docutils literal notranslate"><span class="pre">admin_scripts/</span></code> и т.д.). Текущий каталог проверяется по <code class="docutils literal notranslate"><span class="pre">pwd</span> <span class="pre">-P</span></code> и
@@ -311,7 +308,7 @@ bind mount); требуются <code class="docutils literal notranslate"><span
 </div>
 </section>
 <section id="id6">
-<h3>Формат параметров<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<h3>Формат параметров<a class="headerlink" href="#id6" title="Ссылка на этот заголовок"></a></h3>
 <p>Все параметры задаются в виде <code class="docutils literal notranslate"><span class="pre">--имя=значение</span></code>; имена <strong>только в нижнем
 регистре</strong>. Исключение: справка — <code class="docutils literal notranslate"><span class="pre">-h</span></code> или <code class="docutils literal notranslate"><span class="pre">--help</span></code> (без <code class="docutils literal notranslate"><span class="pre">=</span></code>), только
 отдельным аргументом.</p>
@@ -325,12 +322,12 @@ bind mount); требуются <code class="docutils literal notranslate"><span
 <code class="docutils literal notranslate"><span class="pre">/var/lib/ldap</span></code>).</p>
 </section>
 <section id="ldap-volume-backup-sh">
-<h3>Параметры: <code class="docutils literal notranslate"><span class="pre">ldap_volume_backup.sh</span></code><a class="headerlink" href="#ldap-volume-backup-sh" title="Link to this heading"></a></h3>
+<h3>Параметры: <code class="docutils literal notranslate"><span class="pre">ldap_volume_backup.sh</span></code><a class="headerlink" href="#ldap-volume-backup-sh" title="Ссылка на этот заголовок"></a></h3>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 22%" />
-<col style="width: 58%" />
-<col style="width: 20%" />
+<col style="width: 22.0%" />
+<col style="width: 58.0%" />
+<col style="width: 20.0%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Параметр</p></th>
@@ -392,12 +389,12 @@ bind mount); требуются <code class="docutils literal notranslate"><span
 </table>
 </section>
 <section id="ldap-volume-restore-sh">
-<h3>Параметры: <code class="docutils literal notranslate"><span class="pre">ldap_volume_restore.sh</span></code><a class="headerlink" href="#ldap-volume-restore-sh" title="Link to this heading"></a></h3>
+<h3>Параметры: <code class="docutils literal notranslate"><span class="pre">ldap_volume_restore.sh</span></code><a class="headerlink" href="#ldap-volume-restore-sh" title="Ссылка на этот заголовок"></a></h3>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 22%" />
-<col style="width: 58%" />
-<col style="width: 20%" />
+<col style="width: 22.0%" />
+<col style="width: 58.0%" />
+<col style="width: 20.0%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Параметр</p></th>
@@ -455,7 +452,7 @@ bind mount); требуются <code class="docutils literal notranslate"><span
 </table>
 </section>
 <section id="id7">
-<h3>Примеры<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<h3>Примеры<a class="headerlink" href="#id7" title="Ссылка на этот заголовок"></a></h3>
 <p>Создание бэкапа (остановка <code class="docutils literal notranslate"><span class="pre">ldap</span></code> через compose по умолчанию, архив в
 <code class="docutils literal notranslate"><span class="pre">backups/ldap/</span></code>):</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./admin_scripts/ldap/ldap_volume_backup.sh
@@ -478,7 +475,7 @@ bind mount); требуются <code class="docutils literal notranslate"><span
 </div>
 </section>
 <section id="resolve-ldap-storage-py">
-<h3>Вспомогательный <code class="docutils literal notranslate"><span class="pre">resolve_ldap_storage.py</span></code><a class="headerlink" href="#resolve-ldap-storage-py" title="Link to this heading"></a></h3>
+<h3>Вспомогательный <code class="docutils literal notranslate"><span class="pre">resolve_ldap_storage.py</span></code><a class="headerlink" href="#resolve-ldap-storage-py" title="Ссылка на этот заголовок"></a></h3>
 <p>Основной интерфейс для администратора — shell-скрипты выше. Python-скрипт
 вызывается ими автоматически. При ручной отладке аргументы <strong>позиционные</strong>
 (не в формате <code class="docutils literal notranslate"><span class="pre">--имя=значение</span></code>):</p>

@@ -1,26 +1,26 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="ru" >
+<html class="writer-html5" lang="ru" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Установка и запуск &mdash; документация МПК-Пересвет 0.4</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/sphinxcontrib-httpexample.css" type="text/css" />
-      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=68075b4e" />
+
   
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=11064190"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="_static/sphinxcontrib-httpexample.js"></script>
-        <script src="_static/translations.js?v=29b1f277"></script>
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=11064190"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/sphinxcontrib-httpexample.js"></script>
+      <script src="_static/translations.js?v=cd1d70c9"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
@@ -40,9 +40,6 @@
             
               <img src="_static/logo.png" class="logo" alt="Логотип"/>
           </a>
-              <div class="version">
-                0.4
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -112,9 +109,9 @@
            <div itemprop="articleBody">
              
   <section id="installation">
-<span id="id1"></span><h1>Установка и запуск<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
+<span id="id1"></span><h1>Установка и запуск<a class="headerlink" href="#installation" title="Ссылка на этот заголовок"></a></h1>
 <section id="id2">
-<h2>Системные требования<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<h2>Системные требования<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
 <ol class="arabic simple">
 <li><p>Ubuntu 22.04 (или совместимый Linux с Docker Engine).</p></li>
 <li><p><a class="reference external" href="https://docs.docker.com/engine/install/">Docker</a> с плагином <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code>.
@@ -126,7 +123,7 @@
 платформы и Grafana.</p>
 </section>
 <section id="id4">
-<h2>Установка из продуктового дистрибутива<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<h2>Установка из продуктового дистрибутива<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h2>
 <p>Рекомендуемый способ для конечного пользователя. Архив <code class="docutils literal notranslate"><span class="pre">peresvet-product-&lt;tag&gt;.tar.gz</span></code>
 публикуется в <a class="reference external" href="https://github.com/Vovaman/peresvet/releases">GitHub Release</a>.
 В архив входят Docker Compose-файлы, исходники runtime-сервисов, конфигурация,
@@ -139,7 +136,7 @@ $<span class="w"> </span>./run_one_app.sh
 </pre></div>
 </div>
 <section id="env">
-<h3>Файл <code class="docutils literal notranslate"><span class="pre">.env</span></code><a class="headerlink" href="#env" title="Link to this heading"></a></h3>
+<h3>Файл <code class="docutils literal notranslate"><span class="pre">.env</span></code><a class="headerlink" href="#env" title="Ссылка на этот заголовок"></a></h3>
 <p>Параметры по умолчанию задаются в файле <code class="docutils literal notranslate"><span class="pre">.env</span></code> в корне распакованного архива.
 Перед первым запуском укажите IPv4-адрес сервера в <code class="docutils literal notranslate"><span class="pre">PRS_IP</span></code>:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>PRS_REGISTRY_MIRROR=10.14.143.57:5000
@@ -154,8 +151,8 @@ PRS_SKIP_IMAGE_PULL=0
 (<code class="docutils literal notranslate"><span class="pre">--ip</span></code>, <code class="docutils literal notranslate"><span class="pre">--hostname</span></code>, <code class="docutils literal notranslate"><span class="pre">--mirror</span></code> и т.д.).</p>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 32%" />
-<col style="width: 68%" />
+<col style="width: 32.0%" />
+<col style="width: 68.0%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Переменная</p></th>
@@ -196,7 +193,7 @@ $<span class="w"> </span>./run_one_app.sh<span class="w"> </span>--mirror<span c
 </div>
 </section>
 <section id="id5">
-<h3>Зеркало базовых образов<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<h3>Зеркало базовых образов<a class="headerlink" href="#id5" title="Ссылка на этот заголовок"></a></h3>
 <p>Дистрибутив <strong>не содержит</strong> Docker-образы. При установке <code class="docutils literal notranslate"><span class="pre">./run_one_app.sh</span></code>
 проверяет наличие базовых образов локально и скачивает только отсутствующие.</p>
 <p>Если Docker Hub недоступен, укажите <strong>зеркало образов продукта</strong> — registry,
@@ -215,7 +212,7 @@ $<span class="w"> </span>./run_one_app.sh<span class="w"> </span>--mirror<span c
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>redis/redis-stack:7.2.0-v6
 rabbitmq:4.1.1-management
 postgres:16.1
-python:3.12-slim
+ubuntu:26.04
 osixia/openldap
 grafana/grafana-enterprise:12.4.0-22081664032-ubuntu
 nginx:1.25.3-alpine-slim
@@ -226,7 +223,7 @@ nginx:1.25.3-alpine-slim
 <p>Для HTTP-зеркала (без TLS) добавьте хост в <code class="docutils literal notranslate"><span class="pre">insecure-registries</span></code> в
 <code class="docutils literal notranslate"><span class="pre">/etc/docker/daemon.json</span></code> — это <strong>не</strong> то же самое, что <code class="docutils literal notranslate"><span class="pre">registry-mirrors</span></code>:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;insecure-registries&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;10.14.143.57:5000&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="nt">"insecure-registries"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"10.14.143.57:5000"</span><span class="p">]</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -243,7 +240,7 @@ nginx:1.25.3-alpine-slim
 шаблон: <code class="docutils literal notranslate"><span class="pre">docker/compose/.cont_one_app.secrets.env.example</span></code>.</p>
 </section>
 <section id="https">
-<h3>HTTPS<a class="headerlink" href="#https" title="Link to this heading"></a></h3>
+<h3>HTTPS<a class="headerlink" href="#https" title="Ссылка на этот заголовок"></a></h3>
 <p>Обычный запуск поднимает платформу по HTTPS. Контейнер nginx при старте
 выпускает самоподписанный сертификат на IPv4-адрес из <code class="docutils literal notranslate"><span class="pre">PRS_IP</span></code>.
 Ключ <code class="docutils literal notranslate"><span class="pre">--ip</span></code> перекрывает значение из <code class="docutils literal notranslate"><span class="pre">.env</span></code>.
@@ -264,7 +261,7 @@ nginx:1.25.3-alpine-slim
 </section>
 </section>
 <section id="id6">
-<h2>Установка из исходников (для разработки)<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
+<h2>Установка из исходников (для разработки)<a class="headerlink" href="#id6" title="Ссылка на этот заголовок"></a></h2>
 <ol class="arabic">
 <li><p>Клонируйте проект:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:mp-co-ru/mpc-peresvet.git
@@ -280,7 +277,7 @@ nginx:1.25.3-alpine-slim
 </ol>
 </section>
 <section id="optional-services">
-<span id="id7"></span><h2>Дополнительные сервисы<a class="headerlink" href="#optional-services" title="Link to this heading"></a></h2>
+<span id="id7"></span><h2>Дополнительные сервисы<a class="headerlink" href="#optional-services" title="Ссылка на этот заголовок"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">./run_one_app.sh</span></code> поднимает ядро: RabbitMQ, OpenLDAP, PostgreSQL,
 <code class="docutils literal notranslate"><span class="pre">one_app</span></code>, захват и отдачу видео, Grafana и nginx. Сервис, который стоит
 не у каждого заказчика, в эту команду и в архив <code class="docutils literal notranslate"><span class="pre">peresvet-product-*.tar.gz</span></code>
@@ -297,7 +294,7 @@ MCP-серверы платформы и Grafana (<a class="reference internal" 
 MCP-серверы в поставку входят, но по умолчанию не запускаются.</p></li>
 </ul>
 <section id="optional-own-port">
-<span id="id8"></span><h3>Свой порт<a class="headerlink" href="#optional-own-port" title="Link to this heading"></a></h3>
+<span id="id8"></span><h3>Свой порт<a class="headerlink" href="#optional-own-port" title="Ссылка на этот заголовок"></a></h3>
 <p>В compose-файле такого сервиса есть секция <code class="docutils literal notranslate"><span class="pre">ports:</span></code> и нет файла
 в <code class="docutils literal notranslate"><span class="pre">config/nginx/optional/</span></code>.</p>
 <ol class="arabic">
@@ -321,7 +318,7 @@ MCP-серверы в поставку входят, но по умолчани�
 остановит <code class="docutils literal notranslate"><span class="pre">one_app</span></code> вместе с дополнительным сервисом.</p>
 </section>
 <section id="nginx">
-<span id="optional-via-nginx"></span><h3>Через nginx<a class="headerlink" href="#nginx" title="Link to this heading"></a></h3>
+<span id="optional-via-nginx"></span><h3>Через nginx<a class="headerlink" href="#nginx" title="Ссылка на этот заголовок"></a></h3>
 <p>У такого сервиса в compose нет <code class="docutils literal notranslate"><span class="pre">ports:</span></code> на хост. Снаружи его публикует
 уже запущенный <code class="docutils literal notranslate"><span class="pre">prs-nginx-one-app</span></code>.</p>
 <p>MCP-серверы платформы и Grafana включаются ключами скрипта запуска.
@@ -391,7 +388,7 @@ MCP-серверы в поставку входят, но по умолчани�
 </section>
 </section>
 <section id="id9">
-<h2>Сборка продуктового дистрибутива<a class="headerlink" href="#id9" title="Link to this heading"></a></h2>
+<h2>Сборка продуктового дистрибутива<a class="headerlink" href="#id9" title="Ссылка на этот заголовок"></a></h2>
 <p>Для подготовки архива релиза (из корня репозитория):</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./packaging/build_product_distribution.sh
 $<span class="w"> </span>./packaging/build_product_distribution.sh<span class="w"> </span>--output<span class="w"> </span>dist/peresvet-product-&lt;tag&gt;.tar.gz
@@ -402,7 +399,7 @@ $<span class="w"> </span>./packaging/build_product_distribution.sh<span class="w
 к GitHub Release.</p>
 </section>
 <section id="id10">
-<h2>Остановка платформы<a class="headerlink" href="#id10" title="Link to this heading"></a></h2>
+<h2>Остановка платформы<a class="headerlink" href="#id10" title="Ссылка на этот заголовок"></a></h2>
 <p>Из корня проекта остановите тот же набор compose-файлов, с которым
 платформу поднимает <code class="docutils literal notranslate"><span class="pre">./run_one_app.sh</span></code>. Для обычного запуска
 (HTTPS с самоподписанным сертификатом):</p>

@@ -1,26 +1,26 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="ru" >
+<html class="writer-html5" lang="ru" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MCP-сервер платформы &mdash; документация МПК-Пересвет 0.4</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/sphinxcontrib-httpexample.css" type="text/css" />
-      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=68075b4e" />
+
   
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=11064190"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="_static/sphinxcontrib-httpexample.js"></script>
-        <script src="_static/translations.js?v=29b1f277"></script>
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=11064190"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/sphinxcontrib-httpexample.js"></script>
+      <script src="_static/translations.js?v=cd1d70c9"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
@@ -40,9 +40,6 @@
             
               <img src="_static/logo.png" class="logo" alt="Логотип"/>
           </a>
-              <div class="version">
-                0.4
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -100,7 +97,7 @@
            <div itemprop="articleBody">
              
   <section id="mcp">
-<span id="id1"></span><h1>MCP-сервер платформы<a class="headerlink" href="#mcp" title="Link to this heading"></a></h1>
+<span id="id1"></span><h1>MCP-сервер платформы<a class="headerlink" href="#mcp" title="Ссылка на этот заголовок"></a></h1>
 <p>Контейнер <code class="docutils literal notranslate"><span class="pre">mcp_peresvet</span></code> даёт агентам (Cursor, Roo и т.п.) набор инструментов
 поверх HTTP API <code class="docutils literal notranslate"><span class="pre">one_app</span></code>. Транспорт по умолчанию — Streamable HTTP.
 Снаружи сервер доступен через nginx: <code class="docutils literal notranslate"><span class="pre">https://&lt;хост&gt;/mcp/peresvet</span></code>.</p>
@@ -108,7 +105,7 @@
 Оба сервера слушают порт <code class="docutils literal notranslate"><span class="pre">8000</span></code> только внутри сети <code class="docutils literal notranslate"><span class="pre">peresvet</span></code> и
 наружу свой порт не открывают.</p>
 <section id="id2">
-<h2>Запуск<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<h2>Запуск<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
 <p>Оба сервера выключены по умолчанию. Их включают ключи скрипта запуска
 платформы (<a class="reference internal" href="installation.html#optional-via-nginx"><span class="std std-ref">Через nginx</span></a>):</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./run_one_app.sh<span class="w"> </span>--mcp-peresvet<span class="w"> </span><span class="nb">true</span><span class="w"> </span>--mcp-grafana<span class="w"> </span><span class="nb">true</span>
@@ -128,11 +125,11 @@ Add service account token. Описание —
 <a class="reference external" href="https://grafana.com/docs/grafana/latest/administration/service-accounts/">Service accounts</a>.</p>
 </section>
 <section id="id3">
-<h2>Переменные окружения<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<h2>Переменные окружения<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 34%" />
-<col style="width: 66%" />
+<col style="width: 34.0%" />
+<col style="width: 66.0%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Переменная</p></th>
@@ -164,10 +161,10 @@ Add service account token. Описание —
 </table>
 <p>Пример клиента (<code class="docutils literal notranslate"><span class="pre">.roo/mcp.json</span></code> / Cursor MCP):</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;mcpServers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;peresvet&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;streamable-http&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://&lt;хост&gt;/mcp/peresvet&quot;</span>
+<span class="w">  </span><span class="nt">"mcpServers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"peresvet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"streamable-http"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://&lt;хост&gt;/mcp/peresvet"</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
@@ -175,7 +172,7 @@ Add service account token. Описание —
 </div>
 </section>
 <section id="id4">
-<h2>Инструменты<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<h2>Инструменты<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h2>
 <p>Иерархия и CRUD:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">peresvet_objects_list</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_objects_tree</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_object_create</span></code></p></li>

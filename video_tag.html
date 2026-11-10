@@ -1,26 +1,26 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="ru" >
+<html class="writer-html5" lang="ru" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Видеопоток (тег типа 6) &mdash; документация МПК-Пересвет 0.4</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/sphinxcontrib-httpexample.css" type="text/css" />
-      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=68075b4e" />
+
   
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=11064190"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="_static/sphinxcontrib-httpexample.js"></script>
-        <script src="_static/translations.js?v=29b1f277"></script>
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=11064190"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/sphinxcontrib-httpexample.js"></script>
+      <script src="_static/translations.js?v=cd1d70c9"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
@@ -40,9 +40,6 @@
             
               <img src="_static/logo.png" class="logo" alt="Логотип"/>
           </a>
-              <div class="version">
-                0.4
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -112,7 +109,7 @@
            <div itemprop="articleBody">
              
   <section id="video-tag">
-<span id="id1"></span><h1>Видеопоток (тег типа 6)<a class="headerlink" href="#video-tag" title="Link to this heading"></a></h1>
+<span id="id1"></span><h1>Видеопоток (тег типа 6)<a class="headerlink" href="#video-tag" title="Ссылка на этот заголовок"></a></h1>
 <p>Как завести камеру в конфигураторе, описано в <a class="reference internal" href="video.html#video-cameras"><span class="std std-ref">Подключение видеокамер</span></a>.
 Ниже — контракт чтения, архива и управления.</p>
 <p>Тег с <code class="docutils literal notranslate"><span class="pre">prsValueTypeCode</span> <span class="pre">=</span> <span class="pre">6</span></code> — окно в камеру, а не ряд чисел.
@@ -124,19 +121,19 @@
 Новых атрибутов LDAP для этого нет.</p>
 <p>Пример конфигурации коннектора:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;rtspUrl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;rtsp://192.168.1.72:554/live/ch00_0&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;rtspTransport&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tcp&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;onvifPort&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8899</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;onvifUser&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;onvifPassword&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">  </span><span class="nt">"source"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"rtspUrl"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rtsp://192.168.1.72:554/live/ch00_0"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"rtspTransport"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"onvifPort"</span><span class="p">:</span><span class="w"> </span><span class="mi">8899</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"onvifUser"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"onvifPassword"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span>
 <span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">&quot;log&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;level&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;fileName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;logs/prs_connector_{id}.log&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;maxBytes&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10485760</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;backupCount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;sendToPlatform&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">  </span><span class="nt">"log"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"level"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INFO"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"fileName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"logs/prs_connector_{id}.log"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"maxBytes"</span><span class="p">:</span><span class="w"> </span><span class="mi">10485760</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"backupCount"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"sendToPlatform"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
@@ -155,7 +152,7 @@
 Отдельное сохранение на вкладке «Свойства» для этого не нужно.
 Каждая координата — доля кадра от 0 до 1, ноль слева и сверху. <code class="docutils literal notranslate"><span class="pre">zones</span></code> —
 массив многоугольников, каждый многоугольник сам массив точек <code class="docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y]</span></code>:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;zones&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[[[</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="mf">0.8</span><span class="p">]]]}</span>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"zones"</span><span class="p">:</span><span class="w"> </span><span class="p">[[[</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="mf">0.8</span><span class="p">]]]}</span>
 </pre></div>
 </div>
 <p>Сейчас в массиве одна зона. Пустой <code class="docutils literal notranslate"><span class="pre">zones</span></code> означает весь кадр. <strong>Весь кадр</strong>
@@ -233,7 +230,7 @@
 <p>Тег типа «Видеопоток» привязывается к этому коннектору на вкладке коннектора
 и не кладётся в хранилище истории.</p>
 <section id="id2">
-<h2>Чтение<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<h2>Чтение<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/?tagId=&lt;id&gt;</span></code> для такого тега отдаёт не JSON-точки, а медиа:</p>
 <ul class="simple">
 <li><p>без <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> — живой поток WebRTC (один H.264 на всех зрителей);</p></li>
@@ -263,7 +260,7 @@
 У остальных тегов отсутствие метки по-прежнему означает «сейчас».</p>
 </section>
 <section id="id3">
-<h2>Ошибки чтения<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<h2>Ошибки чтения<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
 <p>Тело ошибки — JSON <code class="docutils literal notranslate"><span class="pre">{&quot;error&quot;:</span> <span class="pre">{&quot;code&quot;:</span> <span class="pre">...,</span> <span class="pre">&quot;message&quot;:</span> <span class="pre">&quot;...&quot;}}</span></code>, не картинка.</p>
 <ul class="simple">
 <li><p>404 «Нет записи камеры на этот момент.» — на <code class="docutils literal notranslate"><span class="pre">finish</span></code> нет фрагмента.</p></li>
@@ -284,7 +281,7 @@
 </ul>
 </section>
 <section id="id4">
-<h2>Фрагмент<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<h2>Фрагмент<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> не отдают готовый файл с диска. Сервис подхвата
 находит покрывающие период фрагменты MPEG-TS, склеивает их и
 перекодирует в один <code class="docutils literal notranslate"><span class="pre">video/mp4</span></code> (H.264, preset <code class="docutils literal notranslate"><span class="pre">ultrafast</span></code>).
@@ -292,14 +289,14 @@
 в конфигураторе это надпись «Загрузка…».</p>
 </section>
 <section id="html">
-<h2>Своя HTML-страница<a class="headerlink" href="#html" title="Link to this heading"></a></h2>
+<h2>Своя HTML-страница<a class="headerlink" href="#html" title="Ссылка на этот заголовок"></a></h2>
 <p>Если <code class="docutils literal notranslate"><span class="pre">tagId</span></code> известен заранее, живой поток — это WebRTC.
 Браузер шлёт SDP на <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/video/webrtc</span></code> и принимает ответ в
 <code class="docutils literal notranslate"><span class="pre">RTCPeerConnection</span></code>. Снимок по <code class="docutils literal notranslate"><span class="pre">finish</span></code> по-прежнему можно поставить
 в <code class="docutils literal notranslate"><span class="pre">img</span></code>.</p>
-<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">video</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;cam&quot;</span> <span class="na">autoplay</span> <span class="na">muted</span> <span class="na">playsinline</span><span class="p">&gt;&lt;/</span><span class="nt">video</span><span class="p">&gt;</span>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">video</span> <span class="na">id</span><span class="o">=</span><span class="s">"cam"</span> <span class="na">autoplay</span> <span class="na">muted</span> <span class="na">playsinline</span><span class="p">&gt;&lt;/</span><span class="nt">video</span><span class="p">&gt;</span>
 <span class="p">&lt;</span><span class="nt">audio</span> <span class="na">autoplay</span>
-       <span class="na">src</span><span class="o">=</span><span class="s">&quot;/v1/data/?tagId=67bde18c-5431-1041-925c-470278307e33&amp;amp;audio=1&quot;</span><span class="p">&gt;</span>
+       <span class="na">src</span><span class="o">=</span><span class="s">"/v1/data/?tagId=67bde18c-5431-1041-925c-470278307e33&amp;amp;audio=1"</span><span class="p">&gt;</span>
 <span class="p">&lt;/</span><span class="nt">audio</span><span class="p">&gt;</span>
 </pre></div>
 </div>
@@ -314,20 +311,20 @@
 большой задержкой.</p>
 <p>Остановить просмотр в браузере — убрать адрес. Запись архива при этом
 продолжается:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s2">&quot;#cam&quot;</span><span class="p">).</span><span class="nx">removeAttribute</span><span class="p">(</span><span class="s2">&quot;src&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s2">"#cam"</span><span class="p">).</span><span class="nx">removeAttribute</span><span class="p">(</span><span class="s2">"src"</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Снимок на момент — тот же адрес с <code class="docutils literal notranslate"><span class="pre">finish</span></code>. Знак плюс в часовом поясе
 кодируется как <code class="docutils literal notranslate"><span class="pre">%2B</span></code>:</p>
-<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">img</span> <span class="na">alt</span><span class="o">=</span><span class="s">&quot;Снимок&quot;</span>
-     <span class="na">src</span><span class="o">=</span><span class="s">&quot;/v1/data/?tagId=67bde18c-5431-1041-925c-470278307e33&amp;amp;finish=2026-10-05T18:36:20%2B03:00&quot;</span><span class="p">&gt;</span>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">img</span> <span class="na">alt</span><span class="o">=</span><span class="s">"Снимок"</span>
+     <span class="na">src</span><span class="o">=</span><span class="s">"/v1/data/?tagId=67bde18c-5431-1041-925c-470278307e33&amp;amp;finish=2026-10-05T18:36:20%2B03:00"</span><span class="p">&gt;</span>
 </pre></div>
 </div>
 <p>Если записи нет, ответ — JSON, и тег <code class="docutils literal notranslate"><span class="pre">img</span></code> остаётся пустым.
 Текст ошибки тогда читают отдельным <code class="docutils literal notranslate"><span class="pre">fetch</span></code> по тому же адресу.</p>
 <p>Фрагмент за период — тег <code class="docutils literal notranslate"><span class="pre">video</span></code>. Картинка появится после сборки mp4:</p>
 <div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">video</span> <span class="na">controls</span>
-       <span class="na">src</span><span class="o">=</span><span class="s">&quot;/v1/data/?tagId=67bde18c-5431-1041-925c-470278307e33&amp;amp;start=2026-10-05T18:36:00%2B03:00&amp;amp;finish=2026-10-05T18:37:00%2B03:00&quot;</span><span class="p">&gt;</span>
+       <span class="na">src</span><span class="o">=</span><span class="s">"/v1/data/?tagId=67bde18c-5431-1041-925c-470278307e33&amp;amp;start=2026-10-05T18:36:00%2B03:00&amp;amp;finish=2026-10-05T18:37:00%2B03:00"</span><span class="p">&gt;</span>
 <span class="p">&lt;/</span><span class="nt">video</span><span class="p">&gt;</span>
 </pre></div>
 </div>
@@ -335,7 +332,7 @@
 Клиент вроде Advanced REST Client остаётся на строке «получены заголовки».</p>
 </section>
 <section id="id5">
-<h2>Просмотр в конфигураторе<a class="headerlink" href="#id5" title="Link to this heading"></a></h2>
+<h2>Просмотр в конфигураторе<a class="headerlink" href="#id5" title="Ссылка на этот заголовок"></a></h2>
 <p>У тега типа 6 блок «Данные тега» открыт и без привязки к хранилищу истории.
 Кнопка с иконкой воспроизведения читает тег по тем же правилам, что и <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/</span></code>:</p>
 <ul class="simple">
@@ -351,7 +348,7 @@
 включён хотя бы один.</p>
 </section>
 <section id="id6">
-<h2>Частота кадров просмотра<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
+<h2>Частота кадров просмотра<a class="headerlink" href="#id6" title="Ссылка на этот заголовок"></a></h2>
 <p>8 кадров в секунду — это не частота камеры. Для картинки в браузере
 подхват из того же сеанса отдаёт 8 кадров в секунду и ширину 960 пикселей
 (MJPEG). Этот поток один на камеру: его получают и зрители, и распознавание.</p>
@@ -365,7 +362,7 @@
 сколько бы страниц ни было открыто.</p>
 </section>
 <section id="id7">
-<h2>Диск и мощность подхвата<a class="headerlink" href="#id7" title="Link to this heading"></a></h2>
+<h2>Диск и мощность подхвата<a class="headerlink" href="#id7" title="Ссылка на этот заголовок"></a></h2>
 <p>Объём архива одной камеры:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ГБ ≈ часы_хранения × битрейт_Мбит/с × 0,44
 </pre></div>
@@ -384,7 +381,7 @@
 камер должно быть меньше либо картинка архива ещё уже.</p>
 </section>
 <section id="id8">
-<h2>Архив на диске<a class="headerlink" href="#id8" title="Link to this heading"></a></h2>
+<h2>Архив на диске<a class="headerlink" href="#id8" title="Ссылка на этот заголовок"></a></h2>
 <p>Архив — это фрагменты MPEG-TS. Каталог берётся из <code class="docutils literal notranslate"><span class="pre">archivePath</span></code>
 хранилища. У камеры с путём <code class="docutils literal notranslate"><span class="pre">/var/lib/peresvet/video/rear-cam</span></code>
 файлы лежат там, внутри тома контейнера подхвата.
@@ -403,7 +400,7 @@
 склеенный из покрывающих его фрагментов.</p>
 </section>
 <section id="id9">
-<h2>Изменение коннектора<a class="headerlink" href="#id9" title="Link to this heading"></a></h2>
+<h2>Изменение коннектора<a class="headerlink" href="#id9" title="Ссылка на этот заголовок"></a></h2>
 <p>Сохранение коннектора в конфигураторе публикует в брокер сообщение
 <code class="docutils literal notranslate"><span class="pre">prsConnector.model.updated.&lt;id&gt;</span></code>. Сервис подхвата подписан на создание,
 изменение и удаление коннектора так же, как остальные сервисы этой
@@ -420,7 +417,7 @@
 лишние фрагменты удаляются, а поток с камеры не переоткрывается.</p>
 </section>
 <section id="id10">
-<h2>Индикатор в дереве<a class="headerlink" href="#id10" title="Link to this heading"></a></h2>
+<h2>Индикатор в дереве<a class="headerlink" href="#id10" title="Ссылка на этот заголовок"></a></h2>
 <p>Кружок у коннектора зелёный, пока на брокере есть MQTT-сессия с ClientId,
 равным id этого коннектора. Для камеры такую сессию открывает сервис подхвата
 на время живого сеанса RTSP и закрывает её, когда сеанс останавливается.

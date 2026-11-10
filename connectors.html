@@ -1,26 +1,26 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="ru" >
+<html class="writer-html5" lang="ru" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Коннекторы &mdash; документация МПК-Пересвет 0.4</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/sphinxcontrib-httpexample.css" type="text/css" />
-      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=68075b4e" />
+
   
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=11064190"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="_static/sphinxcontrib-httpexample.js"></script>
-        <script src="_static/translations.js?v=29b1f277"></script>
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=11064190"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/sphinxcontrib-httpexample.js"></script>
+      <script src="_static/translations.js?v=cd1d70c9"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
@@ -40,9 +40,6 @@
             
               <img src="_static/logo.png" class="logo" alt="Логотип"/>
           </a>
-              <div class="version">
-                0.4
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -126,7 +123,7 @@
            <div itemprop="articleBody">
              
   <section id="id1">
-<h1>Коннекторы<a class="headerlink" href="#id1" title="Link to this heading"></a></h1>
+<h1>Коннекторы<a class="headerlink" href="#id1" title="Ссылка на этот заголовок"></a></h1>
 <p>Назначение коннектора, место установки, журнал и базовый класс
 <code class="docutils literal notranslate"><span class="pre">BaseConnector</span></code> описаны в <a class="reference internal" href="connectors_guide.html#connectors-guide"><span class="std std-ref">Коннекторы</span></a>.</p>
 <p>Типичным средством поставки данных в платформу являются коннекторы.</p>
@@ -138,7 +135,7 @@
 содержащая настройки коннектора и список привязанных к нему тегов, для которых коннектор должен читать данные
 из источника данных.</p>
 <section id="mqtt">
-<h2>Связь по MQTT и коды качества тегов<a class="headerlink" href="#mqtt" title="Link to this heading"></a></h2>
+<h2>Связь по MQTT и коды качества тегов<a class="headerlink" href="#mqtt" title="Ссылка на этот заголовок"></a></h2>
 <p>Коннекторы подключаются к платформе по протоколу MQTT. Сообщения коннекторов поступают в платформу
 через мост RabbitMQ MQTT plugin → обменник AMQP (обменник <code class="docutils literal notranslate"><span class="pre">peresvet</span></code>).</p>
 <p>Платформа отслеживает наличие связи с коннекторами и при определённых событиях записывает во все
@@ -147,7 +144,7 @@
 </section>
 </section>
 <section id="id2">
-<h1>Коды качества<a class="headerlink" href="#id2" title="Link to this heading"></a></h1>
+<h1>Коды качества<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h1>
 <ul>
 <li><p><strong>100</strong> — потеря связи с коннектором. Платформа пишет <code class="docutils literal notranslate"><span class="pre">null</span></code> с кодом 100 во все
 привязанные теги при <strong>любом</strong> разрыве MQTT-сессии на брокере:</p>
@@ -207,7 +204,7 @@ id коннектора, пока держит сеанс RTSP, и закрыв�
 </ul>
 </section>
 <section id="last-will-and-testament-lwt">
-<h1>Last Will and Testament (LWT)<a class="headerlink" href="#last-will-and-testament-lwt" title="Link to this heading"></a></h1>
+<h1>Last Will and Testament (LWT)<a class="headerlink" href="#last-will-and-testament-lwt" title="Ссылка на этот заголовок"></a></h1>
 <p>Чтобы при нештатном отключении коннектора (обрыв сети, аварийное завершение процесса) брокер
 дополнительно опубликовал явное сообщение в шину, коннектор при CONNECT настраивает Last Will.
 Основной путь записи <strong>100</strong> — событие <code class="docutils literal notranslate"><span class="pre">connection.closed</span></code> на брокере (включая штатный DISCONNECT
@@ -227,7 +224,7 @@ UUID коннектора в платформе (тот же, что испол�
 дополнительная настройка не требуется.</p>
 </section>
 <section id="id3">
-<h1>Удалённые команды коннектору<a class="headerlink" href="#id3" title="Link to this heading"></a></h1>
+<h1>Удалённые команды коннектору<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h1>
 <p>Через HTTP API <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/connectors_app/</span></code> (см. сервис <code class="docutils literal notranslate"><span class="pre">connectors_app_api</span></code>) можно передать коннектору
 поле <code class="docutils literal notranslate"><span class="pre">command.lines</span></code>: каждая непустая строка выполняется на стороне коннектора в shell (базовый класс
 <a class="reference external" href="https://github.com/mp-co-ru/prs-connector-core">prs-connector-core</a>). Результат (код выхода, stdout, stderr)
@@ -238,45 +235,29 @@ UUID коннектора в платформе (тот же, что испол�
 запрос, в сервисе connectors.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="connectors_api_crud_svc.ConfigStringForLinkedTag">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">connectors_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">ConfigStringForLinkedTag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxDev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">JSONata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#connectors_api_crud_svc.ConfigStringForLinkedTag" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">connectors_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">ConfigStringForLinkedTag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxDev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">JSONata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#connectors_api_crud_svc.ConfigStringForLinkedTag" title="Ссылка на это определение"></a></dt>
 <dd><dl class="py attribute">
 <dt class="sig sig-object py" id="connectors_api_crud_svc.ConfigStringForLinkedTag.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#connectors_api_crud_svc.ConfigStringForLinkedTag.model_config" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></span><a class="headerlink" href="#connectors_api_crud_svc.ConfigStringForLinkedTag.model_config" title="Ссылка на это определение"></a></dt>
 <dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="connectors_api_crud_svc.ConfigStringForLinkedTag.model_fields">
-<span class="sig-name descname"><span class="pre">model_fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">FieldInfo</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'JSONata':</span> <span class="pre">FieldInfo(annotation=Union[str,</span> <span class="pre">NoneType],</span> <span class="pre">required=False,</span> <span class="pre">title='Выражение</span> <span class="pre">на</span> <span class="pre">языке</span> <span class="pre">JSONata',</span> <span class="pre">description='Это</span> <span class="pre">выражение</span> <span class="pre">будет</span> <span class="pre">применено</span> <span class="pre">к</span> <span class="pre">прочитанным</span> <span class="pre">из</span> <span class="pre">источника</span> <span class="pre">данным.'),</span> <span class="pre">'frequency':</span> <span class="pre">FieldInfo(annotation=Union[float,</span> <span class="pre">NoneType],</span> <span class="pre">required=False,</span> <span class="pre">title='Частота</span> <span class="pre">сбора',</span> <span class="pre">description='Частота,</span> <span class="pre">с</span> <span class="pre">которой</span> <span class="pre">будут</span> <span class="pre">читаться</span> <span class="pre">данные</span> <span class="pre">тега</span> <span class="pre">из</span> <span class="pre">источника</span> <span class="pre">коннектором</span> <span class="pre">в</span> <span class="pre">случае.'),</span> <span class="pre">'maxDev':</span> <span class="pre">FieldInfo(annotation=float,</span> <span class="pre">required=False,</span> <span class="pre">default=0,</span> <span class="pre">title='Отклонение</span> <span class="pre">значения</span> <span class="pre">от</span> <span class="pre">предыдущей</span> <span class="pre">величины.',</span> <span class="pre">description='Коннектор</span> <span class="pre">отсылает</span> <span class="pre">данные</span> <span class="pre">в</span> <span class="pre">платформу</span> <span class="pre">для</span> <span class="pre">тега,</span> <span class="pre">если</span> <span class="pre">разница</span> <span class="pre">между</span> <span class="pre">вновь</span> <span class="pre">полученным</span> <span class="pre">значением</span> <span class="pre">и</span> <span class="pre">последним</span> <span class="pre">отосланным</span> <span class="pre">в</span> <span class="pre">платформу</span> <span class="pre">превышает</span> <span class="pre">указанное</span> <span class="pre">значение.'),</span> <span class="pre">'source':</span> <span class="pre">FieldInfo(annotation=dict,</span> <span class="pre">required=False,</span> <span class="pre">default={},</span> <span class="pre">title='Способ</span> <span class="pre">получения</span> <span class="pre">данных</span> <span class="pre">тега</span> <span class="pre">от</span> <span class="pre">источника',</span> <span class="pre">description='Каждый</span> <span class="pre">тип</span> <span class="pre">коннектора</span> <span class="pre">определяет</span> <span class="pre">формат</span> <span class="pre">этого</span> <span class="pre">словаря.')}</span></em><a class="headerlink" href="#connectors_api_crud_svc.ConfigStringForLinkedTag.model_fields" title="Link to this definition"></a></dt>
-<dd><p>Metadata about the fields defined on the model,
-mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</p>
-<p>This replaces <cite>Model.__fields__</cite> from Pydantic V1.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="connectors_api_crud_svc.ConnectorCopy">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">connectors_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">ConnectorCopy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sourceId</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copyLinkedTags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#connectors_api_crud_svc.ConnectorCopy" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">connectors_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">ConnectorCopy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sourceId</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copyLinkedTags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#connectors_api_crud_svc.ConnectorCopy" title="Ссылка на это определение"></a></dt>
 <dd><dl class="py attribute">
 <dt class="sig sig-object py" id="connectors_api_crud_svc.ConnectorCopy.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'protected_namespaces':</span> <span class="pre">()}</span></em><a class="headerlink" href="#connectors_api_crud_svc.ConnectorCopy.model_config" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'protected_namespaces':</span> <span class="pre">()}</span></span><a class="headerlink" href="#connectors_api_crud_svc.ConnectorCopy.model_config" title="Ссылка на это определение"></a></dt>
 <dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="connectors_api_crud_svc.ConnectorCopy.model_fields">
-<span class="sig-name descname"><span class="pre">model_fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">FieldInfo</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'attributes':</span> <span class="pre">FieldInfo(annotation=Union[dict,</span> <span class="pre">NoneType],</span> <span class="pre">required=False,</span> <span class="pre">title='Необязательные</span> <span class="pre">атрибуты</span> <span class="pre">копии</span> <span class="pre">(например</span> <span class="pre">cn).'),</span> <span class="pre">'copyLinkedTags':</span> <span class="pre">FieldInfo(annotation=bool,</span> <span class="pre">required=False,</span> <span class="pre">default=False,</span> <span class="pre">title='Копировать</span> <span class="pre">привязки</span> <span class="pre">тегов</span> <span class="pre">исходного</span> <span class="pre">коннектора'),</span> <span class="pre">'sourceId':</span> <span class="pre">FieldInfo(annotation=str,</span> <span class="pre">required=True,</span> <span class="pre">title='Id</span> <span class="pre">копируемого</span> <span class="pre">коннектора')}</span></em><a class="headerlink" href="#connectors_api_crud_svc.ConnectorCopy.model_fields" title="Link to this definition"></a></dt>
-<dd><p>Metadata about the fields defined on the model,
-mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</p>
-<p>This replaces <cite>Model.__fields__</cite> from Pydantic V1.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="connectors_api_crud_svc.create">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">connectors_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(ErrorHandler)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#connectors_api_crud_svc.create" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">connectors_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#connectors_api_crud_svc.create" title="Ссылка на это определение"></a></dt>
 <dd><p>Метод добавления коннектора в иерархию.</p>
 <p><strong>Запрос:</strong></p>
 <blockquote>
@@ -290,26 +271,26 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 <span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
 
 <span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;linkedTags&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="nt">"linkedTags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="s2">&quot;99a8bc4a-b2d4-103e-83ba-b9a6d48c0bf6&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="nt">&quot;prsJsonConfigString&quot;</span><span class="p">:{},</span>
-<span class="w">                </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="s2">&quot;description&quot;</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;name of a linked tag&quot;</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">&quot;prsValueScale&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">&quot;prsMaxDev&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">&quot;objectClass&quot;</span><span class="p">:</span><span class="s2">&quot;objectClass&quot;</span>
+<span class="w">            </span><span class="nt">"tagId"</span><span class="p">:</span><span class="s2">"99a8bc4a-b2d4-103e-83ba-b9a6d48c0bf6"</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">"prsJsonConfigString"</span><span class="p">:{},</span>
+<span class="w">                </span><span class="nt">"description"</span><span class="p">:</span><span class="s2">"description"</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"name of a linked tag"</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">"prsValueScale"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">"prsMaxDev"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">"objectClass"</span><span class="p">:</span><span class="s2">"objectClass"</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">],</span>
-<span class="w">    </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;connector1&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;prsJsonConfigString&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;param1&quot;</span><span class="p">:</span><span class="s2">&quot;val1&quot;</span><span class="p">},</span>
-<span class="w">        </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;description&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;prsActive&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;prsDefault&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;prsIndex&quot;</span><span class="p">:</span><span class="mi">1</span>
+<span class="w">    </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"connector1"</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"prsJsonConfigString"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"param1"</span><span class="p">:</span><span class="s2">"val1"</span><span class="p">},</span>
+<span class="w">        </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"description"</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"prsActive"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"prsDefault"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"prsIndex"</span><span class="p">:</span><span class="mi">1</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
@@ -317,13 +298,13 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 </div>
 <div class="http-example-response docutils container" id="id5">
 <p><span class="caption-text">response</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span><span class="o">:</span> <span class="l">*</span>
-<span class="na">Content-type</span><span class="o">:</span> <span class="l">application/json</span>
+<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
+<span class="na">Content-Type</span>: <span class="s">application/json</span>
+<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
+<span class="na">Content-type</span>: <span class="s">application/json</span>
 
 <span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;new tag id&quot;</span>
+<span class="w">    </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"new tag id"</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -378,7 +359,7 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 
 <dl class="py function">
 <dt class="sig sig-object py" id="connectors_api_crud_svc.delete">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">connectors_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ConnectorRead</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(ErrorHandler)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#connectors_api_crud_svc.delete" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">connectors_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ConnectorRead</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#connectors_api_crud_svc.delete" title="Ссылка на это определение"></a></dt>
 <dd><p>Метод удаления коннектора в иерархии.</p>
 <p><strong>Запрос:</strong></p>
 <blockquote>
@@ -392,17 +373,17 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 <span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
 
 <span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;949823fa-cbf5-103e-9301-555c1a8a1358&quot;</span>
+<span class="w">    </span><span class="nt">"id"</span><span class="p">:</span><span class="s2">"949823fa-cbf5-103e-9301-555c1a8a1358"</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 </div>
 <div class="http-example-response docutils container" id="id7">
 <p><span class="caption-text">response</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span><span class="o">:</span> <span class="l">*</span>
-<span class="na">Content-type</span><span class="o">:</span> <span class="l">application/json</span>
+<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
+<span class="na">Content-Type</span>: <span class="s">application/json</span>
+<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
+<span class="na">Content-type</span>: <span class="s">application/json</span>
 
 <span class="w">    </span><span class="kc">null</span>
 </pre></div>
@@ -424,7 +405,7 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 
 <dl class="py function">
 <dt class="sig sig-object py" id="connectors_api_crud_svc.read">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">connectors_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Query(None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hierarchy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">getParent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Query(None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">getLinkedTags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ConnectorRead</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(ErrorHandler)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#connectors_api_crud_svc.read" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">connectors_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Query(None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hierarchy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">getParent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Query(None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">getLinkedTags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ConnectorRead</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#connectors_api_crud_svc.read" title="Ссылка на это определение"></a></dt>
 <dd><p>Метод чтения коннектора из иерархии.</p>
 <p><strong>Пример запроса в формате JSON.</strong></p>
 <div class="http-example docutils container">
@@ -437,34 +418,34 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 <span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
 
 <span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;getLinkedTags&quot;</span><span class="p">:</span><span class="kc">false</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;b61a2360-cc05-103e-9308-555c1a8a1358&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;attributes&quot;</span><span class="p">:[</span><span class="s2">&quot;cn&quot;</span><span class="p">],</span>
-<span class="w">    </span><span class="nt">&quot;base&quot;</span><span class="p">:</span><span class="s2">&quot;base node&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;deref&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;scope&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;filter&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;connector1&quot;</span><span class="p">}</span>
+<span class="w">    </span><span class="nt">"getLinkedTags"</span><span class="p">:</span><span class="kc">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"id"</span><span class="p">:</span><span class="s2">"b61a2360-cc05-103e-9308-555c1a8a1358"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"attributes"</span><span class="p">:[</span><span class="s2">"cn"</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">"base"</span><span class="p">:</span><span class="s2">"base node"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"deref"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"scope"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"filter"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"connector1"</span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 </div>
 <div class="http-example-response docutils container" id="id9">
 <p><span class="caption-text">response</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span><span class="o">:</span> <span class="l">*</span>
-<span class="na">Content-type</span><span class="o">:</span> <span class="l">application/json</span>
+<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
+<span class="na">Content-Type</span>: <span class="s">application/json</span>
+<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
+<span class="na">Content-type</span>: <span class="s">application/json</span>
 
 <span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;b61a2360-cc05-103e-9308-555c1a8a1358&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">                    </span><span class="s2">&quot;b61a2360-cc05-103e-9308-555c1a8a1358&quot;</span>
+<span class="w">            </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b61a2360-cc05-103e-9308-555c1a8a1358"</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                    </span><span class="s2">"b61a2360-cc05-103e-9308-555c1a8a1358"</span>
 <span class="w">                </span><span class="p">]</span>
 <span class="w">            </span><span class="p">},</span>
-<span class="w">            </span><span class="nt">&quot;linkedTags&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="w">            </span><span class="nt">"linkedTags"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">]</span>
 <span class="p">}</span>
@@ -476,7 +457,7 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 <div class="http-example docutils container">
 <div class="http-example-http docutils container" id="id10">
 <p><span class="caption-text">http</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">GET</span> <span class="nn">/v1/connectors/?q={&quot;getLinkedTags&quot;:false,&quot;id&quot;:&quot;connector_id_to_find&quot;,&quot;attributes&quot;:[&quot;cn&quot;],&quot;base&quot;:&quot;base_node&quot;,&quot;deref&quot;:true,&quot;scope&quot;:1,&quot;filter&quot;:{&quot;cn&quot;:&quot;connector1&quot;}}</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">GET</span> <span class="nn">/v1/connectors/?q={"getLinkedTags":false,"id":"connector_id_to_find","attributes":["cn"],"base":"base_node","deref":true,"scope":1,"filter":{"cn":"connector1"}}</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 <span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
 <span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
 <span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
@@ -486,21 +467,21 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 </div>
 <div class="http-example-response docutils container" id="id11">
 <p><span class="caption-text">response</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span><span class="o">:</span> <span class="l">*</span>
-<span class="na">Content-type</span><span class="o">:</span> <span class="l">application/json</span>
+<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
+<span class="na">Content-Type</span>: <span class="s">application/json</span>
+<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
+<span class="na">Content-type</span>: <span class="s">application/json</span>
 
 <span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;b61a2360-cc05-103e-9308-555c1a8a1358&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">                    </span><span class="s2">&quot;b61a2360-cc05-103e-9308-555c1a8a1358&quot;</span>
+<span class="w">            </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b61a2360-cc05-103e-9308-555c1a8a1358"</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                    </span><span class="s2">"b61a2360-cc05-103e-9308-555c1a8a1358"</span>
 <span class="w">                </span><span class="p">]</span>
 <span class="w">            </span><span class="p">},</span>
-<span class="w">            </span><span class="nt">&quot;linkedTags&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="w">            </span><span class="nt">"linkedTags"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">]</span>
 <span class="p">}</span>
@@ -544,7 +525,7 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 
 <dl class="py function">
 <dt class="sig sig-object py" id="connectors_api_crud_svc.update">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">connectors_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(ErrorHandler)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#connectors_api_crud_svc.update" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">connectors_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#connectors_api_crud_svc.update" title="Ссылка на это определение"></a></dt>
 <dd><p>Метод обновления коннектора из иерархии.</p>
 <p><strong>Запрос:</strong></p>
 <blockquote>
@@ -558,25 +539,25 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 <span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
 
 <span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;949823fa-cbf5-103e-9301-555c1a8a1358&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;linkedTags&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="nt">"id"</span><span class="p">:</span><span class="s2">"949823fa-cbf5-103e-9301-555c1a8a1358"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"linkedTags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="nt">&quot;tagId&quot;</span><span class="p">:</span><span class="s2">&quot;99a8bc4a-b2d4-103e-83ba-b9a6d48c0bf6&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="nt">&quot;prsJsonConfigString&quot;</span><span class="p">:{},</span>
-<span class="w">                </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="s2">&quot;description&quot;</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;name of a linked tag&quot;</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">&quot;prsValueScale&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">&quot;prsMaxDev&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">&quot;objectClass&quot;</span><span class="p">:</span><span class="s2">&quot;objectClass&quot;</span>
+<span class="w">            </span><span class="nt">"tagId"</span><span class="p">:</span><span class="s2">"99a8bc4a-b2d4-103e-83ba-b9a6d48c0bf6"</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">"prsJsonConfigString"</span><span class="p">:{},</span>
+<span class="w">                </span><span class="nt">"description"</span><span class="p">:</span><span class="s2">"description"</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"name of a linked tag"</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">"prsValueScale"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">"prsMaxDev"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">"objectClass"</span><span class="p">:</span><span class="s2">"objectClass"</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">],</span>
-<span class="w">    </span><span class="nt">&quot;unlinkTags&quot;</span><span class="p">:[</span><span class="s2">&quot;94b1f028-cbf5-103e-9305-555c1a8a1358&quot;</span><span class="p">],</span>
-<span class="w">    </span><span class="nt">&quot;attributes&quot;</span><span class="p">:{</span>
-<span class="w">        </span><span class="nt">&quot;prsJsonConfigString&quot;</span><span class="p">:{</span><span class="nt">&quot;way_of_connecting&quot;</span><span class="p">:</span><span class="s2">&quot;new_way&quot;</span><span class="p">},</span>
-<span class="w">        </span><span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;new_name&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;prsActive&quot;</span><span class="p">:</span><span class="kc">false</span>
+<span class="w">    </span><span class="nt">"unlinkTags"</span><span class="p">:[</span><span class="s2">"94b1f028-cbf5-103e-9305-555c1a8a1358"</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">"attributes"</span><span class="p">:{</span>
+<span class="w">        </span><span class="nt">"prsJsonConfigString"</span><span class="p">:{</span><span class="nt">"way_of_connecting"</span><span class="p">:</span><span class="s2">"new_way"</span><span class="p">},</span>
+<span class="w">        </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"new_name"</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"prsActive"</span><span class="p">:</span><span class="kc">false</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
@@ -584,10 +565,10 @@ mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</
 </div>
 <div class="http-example-response docutils container" id="id13">
 <p><span class="caption-text">response</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span><span class="o">:</span> <span class="l">*</span>
-<span class="na">Content-type</span><span class="o">:</span> <span class="l">application/json</span>
+<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
+<span class="na">Content-Type</span>: <span class="s">application/json</span>
+<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
+<span class="na">Content-type</span>: <span class="s">application/json</span>
 
 <span class="p">{</span>
 <span class="w">    </span><span class="p">{}</span>

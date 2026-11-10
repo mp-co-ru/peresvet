@@ -1,26 +1,26 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="ru" >
+<html class="writer-html5" lang="ru" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Архитектура платформы &mdash; документация МПК-Пересвет 0.4</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/sphinxcontrib-httpexample.css" type="text/css" />
-      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=68075b4e" />
+
   
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=11064190"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="_static/sphinxcontrib-httpexample.js"></script>
-        <script src="_static/translations.js?v=29b1f277"></script>
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=11064190"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/sphinxcontrib-httpexample.js"></script>
+      <script src="_static/translations.js?v=cd1d70c9"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" /> 
@@ -38,9 +38,6 @@
             
               <img src="_static/logo.png" class="logo" alt="Логотип"/>
           </a>
-              <div class="version">
-                0.4
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -93,9 +90,9 @@
            <div itemprop="articleBody">
              
   <section id="id1">
-<h1>Архитектура платформы<a class="headerlink" href="#id1" title="Link to this heading"></a></h1>
+<h1>Архитектура платформы<a class="headerlink" href="#id1" title="Ссылка на этот заголовок"></a></h1>
 <section id="id2">
-<h2>Общее описание<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<h2>Общее описание<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
 <p>Архитектура платформы обуславливается, в значительной степени, создаваемой
 ей моделью технического объекта.</p>
 <p>Модель технического объекта состоит из двух частей: статической и динамической.
@@ -103,7 +100,7 @@
 а динамическая - процессы, протекающие между экземплярами сущностей.</p>
 </section>
 <section id="id3">
-<h2>Статическая модель<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<h2>Статическая модель<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
 <p>Статическая модель технических объектов, особенно в промышленности, хорошо
 описывается иерархической структурой. К примеру:</p>
 <p><code class="docutils literal notranslate"><span class="pre">Предприятие</span></code> → <code class="docutils literal notranslate"><span class="pre">Цех</span></code> → <code class="docutils literal notranslate"><span class="pre">Участок</span></code> →
@@ -113,7 +110,7 @@
 <figure class="align-center" id="id23">
 <img alt="_images/architecture_01.png" src="_images/architecture_01.png" />
 <figcaption>
-<p><span class="caption-text">LDAP-сервер</span><a class="headerlink" href="#id23" title="Link to this image"></a></p>
+<p><span class="caption-text">LDAP-сервер</span><a class="headerlink" href="#id23" title="Ссылка на это изображение"></a></p>
 </figcaption>
 </figure>
 <p>Каждый узел в иерархии LDAP-сервера имеет свой определённый класс.
@@ -122,7 +119,7 @@
 <figure class="align-center" id="id24">
 <img alt="_images/architecture_02.png" src="_images/architecture_02.png" />
 <figcaption>
-<p><span class="caption-text">Иерархия</span><a class="headerlink" href="#id24" title="Link to this image"></a></p>
+<p><span class="caption-text">Иерархия</span><a class="headerlink" href="#id24" title="Ссылка на это изображение"></a></p>
 </figcaption>
 </figure>
 <p>На рисунке выше показан пример иерархии. Белыми квадратами показаны экземпляры
@@ -169,12 +166,12 @@
 </div>
 </section>
 <section id="id4">
-<h2>Сервисы<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<h2>Сервисы<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h2>
 <p>Каждая сущность, присутствующая в иерархии, управляется своим сервисом.</p>
 <figure class="align-center" id="id25">
 <img alt="_images/architecture_03.png" src="_images/architecture_03.png" />
 <figcaption>
-<p><span class="caption-text">Сервисы</span><a class="headerlink" href="#id25" title="Link to this image"></a></p>
+<p><span class="caption-text">Сервисы</span><a class="headerlink" href="#id25" title="Ссылка на это изображение"></a></p>
 </figcaption>
 </figure>
 <p>В действительности, каждый сервис - это, в общем случае, набор из четырёх
@@ -182,11 +179,11 @@
 <figure class="align-center" id="id26">
 <img alt="_images/architecture_04.png" src="_images/architecture_04.png" />
 <figcaption>
-<p><span class="caption-text">Микросервисы</span><a class="headerlink" href="#id26" title="Link to this image"></a></p>
+<p><span class="caption-text">Микросервисы</span><a class="headerlink" href="#id26" title="Ссылка на это изображение"></a></p>
 </figcaption>
 </figure>
 <section id="api-crud">
-<h3>&lt;сущность&gt;_api_crud<a class="headerlink" href="#api-crud" title="Link to this heading"></a></h3>
+<h3>&lt;сущность&gt;_api_crud<a class="headerlink" href="#api-crud" title="Ссылка на этот заголовок"></a></h3>
 <p>Микросервис, принимающий от пользователя или, в общем, от любых внешних
 клиентов, запросы на создание, чтение, обновление, удаление экземпляров
 сущности (команды CRUD).</p>
@@ -198,7 +195,7 @@
 <figure class="align-center" id="id27">
 <img alt="_images/architecture_05.png" src="_images/architecture_05.png" />
 <figcaption>
-<p><span class="caption-text">&lt;сущность&gt;_api_crud</span><a class="headerlink" href="#id27" title="Link to this image"></a></p>
+<p><span class="caption-text">&lt;сущность&gt;_api_crud</span><a class="headerlink" href="#id27" title="Ссылка на это изображение"></a></p>
 </figcaption>
 </figure>
 <p>Выделение описанной функциональности в отдельный микросервис облегчает
@@ -207,19 +204,19 @@
 микросервиса.</p>
 </section>
 <section id="model-crud">
-<h3>&lt;сущность&gt;_model_crud<a class="headerlink" href="#model-crud" title="Link to this heading"></a></h3>
+<h3>&lt;сущность&gt;_model_crud<a class="headerlink" href="#model-crud" title="Ссылка на этот заголовок"></a></h3>
 <p>Микросервис, работающий с узлами сущности в иерархии. Именно этот сервис
 реализует непосредственную работу с иерархической моделью, взаимодействуя
 с LDAP-сервером.</p>
 <figure class="align-center" id="id28">
 <img alt="_images/architecture_06.png" src="_images/architecture_06.png" />
 <figcaption>
-<p><span class="caption-text">&lt;сущность&gt;_model_crud</span><a class="headerlink" href="#id28" title="Link to this image"></a></p>
+<p><span class="caption-text">&lt;сущность&gt;_model_crud</span><a class="headerlink" href="#id28" title="Ссылка на это изображение"></a></p>
 </figcaption>
 </figure>
 </section>
 <section id="app">
-<h3>&lt;сущность&gt;_app<a class="headerlink" href="#app" title="Link to this heading"></a></h3>
+<h3>&lt;сущность&gt;_app<a class="headerlink" href="#app" title="Ссылка на этот заголовок"></a></h3>
 <p>Иерархическая модель - не вещь в себе. Узлы в ней определяют, как функционирует
 модель технического объекта.
 То есть микросервис <code class="docutils literal notranslate"><span class="pre">&lt;сущность&gt;_app</span></code> определяет ту функциональность, ради
@@ -234,12 +231,12 @@
 <figure class="align-center" id="id29">
 <img alt="_images/architecture_07.png" src="_images/architecture_07.png" />
 <figcaption>
-<p><span class="caption-text">&lt;сущность&gt;_app</span><a class="headerlink" href="#id29" title="Link to this image"></a></p>
+<p><span class="caption-text">&lt;сущность&gt;_app</span><a class="headerlink" href="#id29" title="Ссылка на это изображение"></a></p>
 </figcaption>
 </figure>
 </section>
 <section id="app-api">
-<h3>&lt;сущность&gt;_app_api<a class="headerlink" href="#app-api" title="Link to this heading"></a></h3>
+<h3>&lt;сущность&gt;_app_api<a class="headerlink" href="#app-api" title="Ссылка на этот заголовок"></a></h3>
 <p>Микросервис предоставляет клиентам доступ к функциональности сервиса
 <code class="docutils literal notranslate"><span class="pre">&lt;сущность&gt;_app</span></code>. В случае тегов - это команды <code class="docutils literal notranslate"><span class="pre">data/set</span></code>, <code class="docutils literal notranslate"><span class="pre">data/get</span></code>.</p>
 <p>В случае тревог - команды квитирования, получения списка активных тревог и
@@ -247,14 +244,14 @@
 <figure class="align-center" id="id30">
 <img alt="_images/architecture_08.png" src="_images/architecture_08.png" />
 <figcaption>
-<p><span class="caption-text">&lt;сущность&gt;_app_api</span><a class="headerlink" href="#id30" title="Link to this image"></a></p>
+<p><span class="caption-text">&lt;сущность&gt;_app_api</span><a class="headerlink" href="#id30" title="Ссылка на это изображение"></a></p>
 </figcaption>
 </figure>
 </section>
 <section id="id5">
-<h3>Базовые сущности, входящие в ядро МПК-Пересвет<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<h3>Базовые сущности, входящие в ядро МПК-Пересвет<a class="headerlink" href="#id5" title="Ссылка на этот заголовок"></a></h3>
 <section id="id6">
-<h4>Объекты<a class="headerlink" href="#id6" title="Link to this heading"></a></h4>
+<h4>Объекты<a class="headerlink" href="#id6" title="Ссылка на этот заголовок"></a></h4>
 <div class="admonition note">
 <p class="admonition-title">Примечание</p>
 <p>Сущность <code class="docutils literal notranslate"><span class="pre">objects</span></code>, класс в иерархии <code class="docutils literal notranslate"><span class="pre">prsObject</span></code>.</p>
@@ -277,7 +274,7 @@
 <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> и тот же флаг <code class="docutils literal notranslate"><span class="pre">folder</span></code> у <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/</span></code>.</p>
 </section>
 <section id="id7">
-<h4>Теги<a class="headerlink" href="#id7" title="Link to this heading"></a></h4>
+<h4>Теги<a class="headerlink" href="#id7" title="Ссылка на этот заголовок"></a></h4>
 <div class="admonition note">
 <p class="admonition-title">Примечание</p>
 <p>Сущность <code class="docutils literal notranslate"><span class="pre">tags</span></code>, класс в иерархии <code class="docutils literal notranslate"><span class="pre">prsTag</span></code></p>
@@ -306,7 +303,7 @@
 значения данного тега.</p>
 </section>
 <section id="id8">
-<h4>Тревоги<a class="headerlink" href="#id8" title="Link to this heading"></a></h4>
+<h4>Тревоги<a class="headerlink" href="#id8" title="Ссылка на этот заголовок"></a></h4>
 <div class="admonition note">
 <p class="admonition-title">Примечание</p>
 <p>Сущность <code class="docutils literal notranslate"><span class="pre">alerts</span></code>, класс в иерархии <code class="docutils literal notranslate"><span class="pre">prsAlert</span></code></p>
@@ -378,7 +375,7 @@
    <hr color="#000000" size="1">
 </embed></section>
 <section id="id9">
-<h4>Методы<a class="headerlink" href="#id9" title="Link to this heading"></a></h4>
+<h4>Методы<a class="headerlink" href="#id9" title="Ссылка на этот заголовок"></a></h4>
 <div class="admonition note">
 <p class="admonition-title">Примечание</p>
 <p>Сущность <code class="docutils literal notranslate"><span class="pre">methods</span></code>, класс в иерархии <code class="docutils literal notranslate"><span class="pre">prsMethod</span></code></p>
@@ -394,7 +391,7 @@
 </ul>
 </section>
 <section id="id10">
-<h4>Хранилища данных<a class="headerlink" href="#id10" title="Link to this heading"></a></h4>
+<h4>Хранилища данных<a class="headerlink" href="#id10" title="Ссылка на этот заголовок"></a></h4>
 <div class="admonition note">
 <p class="admonition-title">Примечание</p>
 <p>Сущность <code class="docutils literal notranslate"><span class="pre">dataStorages</span></code>, класс в иерархии <code class="docutils literal notranslate"><span class="pre">prsDataStorage</span></code></p>
@@ -411,7 +408,7 @@
 причём разных типов.</p>
 </section>
 <section id="id11">
-<h4>Коннекторы<a class="headerlink" href="#id11" title="Link to this heading"></a></h4>
+<h4>Коннекторы<a class="headerlink" href="#id11" title="Ссылка на этот заголовок"></a></h4>
 <div class="admonition note">
 <p class="admonition-title">Примечание</p>
 <p>Сущность <code class="docutils literal notranslate"><span class="pre">connectors</span></code>, класс в иерархии <code class="docutils literal notranslate"><span class="pre">prsConnector</span></code></p>
@@ -432,7 +429,7 @@
 <a class="reference internal" href="connectors.html"><span class="doc">Коннекторы</span></a> (раздел «Связь по MQTT и коды качества тегов»).</p>
 </section>
 <section id="id12">
-<h4>Константы<a class="headerlink" href="#id12" title="Link to this heading"></a></h4>
+<h4>Константы<a class="headerlink" href="#id12" title="Ссылка на этот заголовок"></a></h4>
 <div class="admonition note">
 <p class="admonition-title">Примечание</p>
 <p>Сущность <code class="docutils literal notranslate"><span class="pre">constants</span></code>, класс в иерархии <code class="docutils literal notranslate"><span class="pre">prsConstant</span></code></p>
@@ -447,7 +444,7 @@
    <hr color="#000000" size="1">
 </embed></section>
 <section id="id13">
-<h4>Расписания<a class="headerlink" href="#id13" title="Link to this heading"></a></h4>
+<h4>Расписания<a class="headerlink" href="#id13" title="Ссылка на этот заголовок"></a></h4>
 <div class="admonition note">
 <p class="admonition-title">Примечание</p>
 <p>Сущность <code class="docutils literal notranslate"><span class="pre">schedules</span></code>, класс в иерархии <code class="docutils literal notranslate"><span class="pre">prsSchedule</span></code></p>
@@ -461,7 +458,7 @@
 </section>
 </section>
 <section id="id14">
-<h3>«Комплекты» сервисов<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
+<h3>«Комплекты» сервисов<a class="headerlink" href="#id14" title="Ссылка на этот заголовок"></a></h3>
 <p>Необязательно для каждой сущности должен существовать комплект из четырёх
 микросервисов.</p>
 <embed>
@@ -486,7 +483,7 @@
    <hr color="#000000" size="1">
 </embed></section>
 <section id="id15">
-<h3>Другие сервисы<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
+<h3>Другие сервисы<a class="headerlink" href="#id15" title="Ссылка на этот заголовок"></a></h3>
 <p>Платформа спроектирована таким образом, что допускает расширение списка
 сущностей, которые могут присутствовать в статической модели и, соответственно,
 внутри иерархии.</p>
@@ -521,7 +518,7 @@ LDAP-сервера и разработать комплект микросер�
 </section>
 </section>
 <section id="id16">
-<h2>Хранилища данных<a class="headerlink" href="#id16" title="Link to this heading"></a></h2>
+<h2>Хранилища данных<a class="headerlink" href="#id16" title="Ссылка на этот заголовок"></a></h2>
 <p>Значения тегов и тревог записываются в хранилища данных. В настоящий момент
 поддерживаются два типа хранилищ: PostgreSQL и Victoriametrics.
 Для поддержки нового типа хранилища необходимо написать соответствующий
@@ -529,7 +526,7 @@ LDAP-сервера и разработать комплект микросер�
 <figure class="align-center" id="id31">
 <img alt="_images/architecture_09.png" src="_images/architecture_09.png" />
 <figcaption>
-<p><span class="caption-text">Хранилища данных</span><a class="headerlink" href="#id31" title="Link to this image"></a></p>
+<p><span class="caption-text">Хранилища данных</span><a class="headerlink" href="#id31" title="Ссылка на это изображение"></a></p>
 </figcaption>
 </figure>
 <p>Допускается одновременная работа нескольких хранилищ данных, как одного типа,
@@ -537,7 +534,7 @@ LDAP-сервера и разработать комплект микросер�
 в разных хранилищах.</p>
 </section>
 <section id="id17">
-<h2>Брокер очередей сообщений<a class="headerlink" href="#id17" title="Link to this heading"></a></h2>
+<h2>Брокер очередей сообщений<a class="headerlink" href="#id17" title="Ссылка на этот заголовок"></a></h2>
 <p>Таким образом, платформа представляет собой большое количество микросервисов.</p>
 <p>Более того, одновременно может быть запущено несколько экземпляров каждого
 микросервиса, причем на разных серверах. Этим реализуется масштабируемость
@@ -550,7 +547,7 @@ LDAP-сервера и разработать комплект микросер�
 <figure class="align-center" id="id32">
 <img alt="_images/architecture_10.png" src="_images/architecture_10.png" />
 <figcaption>
-<p><span class="caption-text">Брокер сообщений</span><a class="headerlink" href="#id32" title="Link to this image"></a></p>
+<p><span class="caption-text">Брокер сообщений</span><a class="headerlink" href="#id32" title="Ссылка на это изображение"></a></p>
 </figcaption>
 </figure>
 <div class="admonition attention">
@@ -565,7 +562,7 @@ LDAP-сервера и разработать комплект микросер�
 </ul>
 </div>
 <section id="id18">
-<h3>Обменники сервисов<a class="headerlink" href="#id18" title="Link to this heading"></a></h3>
+<h3>Обменники сервисов<a class="headerlink" href="#id18" title="Ссылка на этот заголовок"></a></h3>
 <p>Как упоминалось выше в разделе <a class="reference internal" href="#id4">Сервисы</a>, для каждой сущности создаётся,
 в общем случае, группа из четырёх микросервисов.</p>
 <div class="admonition note">
@@ -578,14 +575,14 @@ LDAP-сервера и разработать комплект микросер�
 свои сообщения, указывая в качестве ключа маршрутизации указанную
 в конфигурации строку.</p>
 <section id="id19">
-<h4>Конфигурирование<a class="headerlink" href="#id19" title="Link to this heading"></a></h4>
+<h4>Конфигурирование<a class="headerlink" href="#id19" title="Ссылка на этот заголовок"></a></h4>
 <p>Далее на рисунках показан рекомендуемый подход к конфигурированию системы
 сообщений.</p>
 <p>Начнём с группы сервисов <code class="docutils literal notranslate"><span class="pre">objects</span></code>.</p>
 <figure class="align-center" id="id33">
 <img alt="_images/exchanges_01.png" src="_images/exchanges_01.png" />
 <figcaption>
-<p><span class="caption-text">Сервис <code class="docutils literal notranslate"><span class="pre">objects_model_crud</span></code>.</span><a class="headerlink" href="#id33" title="Link to this image"></a></p>
+<p><span class="caption-text">Сервис <code class="docutils literal notranslate"><span class="pre">objects_model_crud</span></code>.</span><a class="headerlink" href="#id33" title="Ссылка на это изображение"></a></p>
 </figcaption>
 </figure>
 <p>На рисунке видим, что сервис <code class="docutils literal notranslate"><span class="pre">objects_model_crud</span></code>:</p>
@@ -599,29 +596,29 @@ LDAP-сервера и разработать комплект микросер�
 <p>Таким образом, получаем следующую конфигурацию обменников для сервиса
 <code class="docutils literal notranslate"><span class="pre">objects_model_crud</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="c1"># блок &quot;публикаций&quot;</span>
-   <span class="s2">&quot;publish&quot;</span><span class="p">:</span> <span class="p">{</span>
+   <span class="c1"># блок "публикаций"</span>
+   <span class="s2">"publish"</span><span class="p">:</span> <span class="p">{</span>
       <span class="c1"># главный обменник;</span>
       <span class="c1"># в следующих реализациях, возможно, потребуются дополнительные</span>
       <span class="c1"># обменники, они будут описаны в своих ключах</span>
-      <span class="s2">&quot;main&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"main"</span><span class="p">:</span> <span class="p">{</span>
          <span class="c1"># имя обменника</span>
-         <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;objects&quot;</span><span class="p">,</span>
+         <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"objects"</span><span class="p">,</span>
          <span class="c1"># тип всех обменников - direct, но возможно, в классах-наследниках</span>
          <span class="c1"># потребуются другие типы, поэтому тип указываем явно</span>
-         <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;direct&quot;</span><span class="p">,</span>
+         <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"direct"</span><span class="p">,</span>
          <span class="c1"># ключ маршрутизации по умолчанию, но, для большей гибкости,</span>
          <span class="c1"># также задаём его имя</span>
-         <span class="s2">&quot;routing_key&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;objects_model_crud_publish&quot;</span><span class="p">]</span>
+         <span class="s2">"routing_key"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"objects_model_crud_publish"</span><span class="p">]</span>
       <span class="p">}</span>
    <span class="p">},</span>
-   <span class="c1"># блок &quot;потребления&quot;</span>
-   <span class="s2">&quot;consume&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="s2">&quot;main&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;objects&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;direct&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;queue_name&quot;</span><span class="p">:</span> <span class="s2">&quot;objects_model_crud_consume&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;routing_key&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;objects_model_crud_consume&quot;</span><span class="p">]</span>
+   <span class="c1"># блок "потребления"</span>
+   <span class="s2">"consume"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"main"</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"objects"</span><span class="p">,</span>
+         <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"direct"</span><span class="p">,</span>
+         <span class="s2">"queue_name"</span><span class="p">:</span> <span class="s2">"objects_model_crud_consume"</span><span class="p">,</span>
+         <span class="s2">"routing_key"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"objects_model_crud_consume"</span><span class="p">]</span>
       <span class="p">}</span>
    <span class="p">}</span>
 <span class="p">}</span>
@@ -631,7 +628,7 @@ LDAP-сервера и разработать комплект микросер�
 <figure class="align-center" id="id34">
 <img alt="_images/exchanges_02.png" src="_images/exchanges_02.png" />
 <figcaption>
-<p><span class="caption-text">Сервис <code class="docutils literal notranslate"><span class="pre">objects_api_crud</span></code>.</span><a class="headerlink" href="#id34" title="Link to this image"></a></p>
+<p><span class="caption-text">Сервис <code class="docutils literal notranslate"><span class="pre">objects_api_crud</span></code>.</span><a class="headerlink" href="#id34" title="Ссылка на это изображение"></a></p>
 </figcaption>
 </figure>
 <p>Логика та же, что и у предыдущего сервиса.</p>
@@ -644,19 +641,19 @@ LDAP-сервера и разработать комплект микросер�
 <p>Конфигурация сервиса аналогична предыдущей, за исключением имён очередей
 и ключей маршрутизации:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="s2">&quot;publish&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="s2">&quot;main&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;objects&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;direct&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;routing_key&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;objects_api_crud_publish&quot;</span><span class="p">]</span>
+   <span class="s2">"publish"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"main"</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"objects"</span><span class="p">,</span>
+         <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"direct"</span><span class="p">,</span>
+         <span class="s2">"routing_key"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"objects_api_crud_publish"</span><span class="p">]</span>
       <span class="p">}</span>
    <span class="p">},</span>
-   <span class="s2">&quot;consume&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="s2">&quot;main&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;objects&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;direct&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;queue_name&quot;</span><span class="p">:</span> <span class="s2">&quot;objects_api_crud_consume&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;routing_key&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;objects_api_crud_consume&quot;</span><span class="p">]</span>
+   <span class="s2">"consume"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"main"</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"objects"</span><span class="p">,</span>
+         <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"direct"</span><span class="p">,</span>
+         <span class="s2">"queue_name"</span><span class="p">:</span> <span class="s2">"objects_api_crud_consume"</span><span class="p">,</span>
+         <span class="s2">"routing_key"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"objects_api_crud_consume"</span><span class="p">]</span>
       <span class="p">}</span>
    <span class="p">}</span>
 <span class="p">}</span>
@@ -667,21 +664,21 @@ LDAP-сервера и разработать комплект микросер�
 мы добавляем дополнительный ключ маршрутизации: <code class="docutils literal notranslate"><span class="pre">objects_api_crud_publish</span></code>.</p>
 <p>Таким образом, конфигурация сервиса <code class="docutils literal notranslate"><span class="pre">objects_model_crud</span></code> становится такой:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="s2">&quot;publish&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="s2">&quot;main&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;objects&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;direct&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;routing_key&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;objects_model_crud_publish&quot;</span><span class="p">]</span>
+   <span class="s2">"publish"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"main"</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"objects"</span><span class="p">,</span>
+         <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"direct"</span><span class="p">,</span>
+         <span class="s2">"routing_key"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"objects_model_crud_publish"</span><span class="p">]</span>
       <span class="p">}</span>
    <span class="p">},</span>
-   <span class="s2">&quot;consume&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="s2">&quot;main&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;objects&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;direct&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;queue_name&quot;</span><span class="p">:</span> <span class="s2">&quot;objects_model_crud_consume&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;routing_key&quot;</span><span class="p">:</span> <span class="p">[</span>
-            <span class="s2">&quot;objects_model_crud_consume&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;objects_api_crud_publish&quot;</span>
+   <span class="s2">"consume"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"main"</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"objects"</span><span class="p">,</span>
+         <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"direct"</span><span class="p">,</span>
+         <span class="s2">"queue_name"</span><span class="p">:</span> <span class="s2">"objects_model_crud_consume"</span><span class="p">,</span>
+         <span class="s2">"routing_key"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">"objects_model_crud_consume"</span><span class="p">,</span>
+            <span class="s2">"objects_api_crud_publish"</span>
          <span class="p">]</span>
       <span class="p">}</span>
    <span class="p">}</span>
@@ -691,7 +688,7 @@ LDAP-сервера и разработать комплект микросер�
 </section>
 </section>
 <section id="id20">
-<h3>Логика сообщений при создании, обновлении и удалении узлов<a class="headerlink" href="#id20" title="Link to this heading"></a></h3>
+<h3>Логика сообщений при создании, обновлении и удалении узлов<a class="headerlink" href="#id20" title="Ссылка на этот заголовок"></a></h3>
 <p>Рассмотрим следующую ситуацию.</p>
 <p>Допустим, у нас есть иерархия и в этой иерархии - узел класса
 <code class="docutils literal notranslate"><span class="pre">prsСущность_1</span></code>. Через некоторое время была создана группа сервисов
@@ -795,45 +792,45 @@ LDAP-сервера и разработать комплект микросер�
 <p>Таким образом, сервис <code class="docutils literal notranslate"><span class="pre">&lt;сущность&gt;_model_crud</span></code> имеет следующую базовую
 конфигурацию обменников:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="s2">&quot;publish&quot;</span><span class="p">:</span> <span class="p">{</span>
+   <span class="s2">"publish"</span><span class="p">:</span> <span class="p">{</span>
       <span class="c1"># основной обменник, в который сервис шлёт свои сообщения</span>
-      <span class="s2">&quot;main&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"main"</span><span class="p">:</span> <span class="p">{</span>
          <span class="c1"># как правило - один обменник на всю группу сервисов</span>
          <span class="c1"># для одной сущности</span>
-         <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;сущность&gt;&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;direct&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;routing_key&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;сущность&gt;_model_crud_publish&quot;</span>
+         <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"&lt;сущность&gt;"</span><span class="p">,</span>
+         <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"direct"</span><span class="p">,</span>
+         <span class="s2">"routing_key"</span><span class="p">:</span> <span class="s2">"&lt;сущность&gt;_model_crud_publish"</span>
       <span class="p">}</span>
    <span class="p">},</span>
-   <span class="s2">&quot;consume&quot;</span><span class="p">:</span> <span class="p">{</span>
+   <span class="s2">"consume"</span><span class="p">:</span> <span class="p">{</span>
       <span class="c1"># главный обменник, от которого сервис ждёт управляющие команды</span>
-      <span class="s2">&quot;main&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;сущность&gt;&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;direct&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;queue&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;сущность&gt;_model_crud_consume&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;routing_key&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;сущность&gt;_model_crud_consume&quot;</span>
+      <span class="s2">"main"</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"&lt;сущность&gt;"</span><span class="p">,</span>
+         <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"direct"</span><span class="p">,</span>
+         <span class="s2">"queue"</span><span class="p">:</span> <span class="s2">"&lt;сущность&gt;_model_crud_consume"</span><span class="p">,</span>
+         <span class="s2">"routing_key"</span><span class="p">:</span> <span class="s2">"&lt;сущность&gt;_model_crud_consume"</span>
       <span class="p">}</span>
    <span class="p">},</span>
    <span class="c1"># блок описания обменников тех сущностей, на которые должен</span>
    <span class="c1"># подписаться сервис</span>
-   <span class="s2">&quot;subscribe&quot;</span><span class="p">:</span> <span class="p">{</span>
+   <span class="s2">"subscribe"</span><span class="p">:</span> <span class="p">{</span>
       <span class="c1"># сущность, уведомления об изменение/удаление узлов которой</span>
       <span class="c1"># требуются сервису</span>
-      <span class="s2">&quot;&lt;сущность_2&gt;&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="c1"># в этот обменник сервис будет посылать сообщение &quot;subscribe&quot;</span>
-         <span class="s2">&quot;publish&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;сущность_2&gt;&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;direct&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;routing_key&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;сущность_2&gt;_model_crud_consume&quot;</span>
+      <span class="s2">"&lt;сущность_2&gt;"</span><span class="p">:</span> <span class="p">{</span>
+         <span class="c1"># в этот обменник сервис будет посылать сообщение "subscribe"</span>
+         <span class="s2">"publish"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"&lt;сущность_2&gt;"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"direct"</span><span class="p">,</span>
+            <span class="s2">"routing_key"</span><span class="p">:</span> <span class="s2">"&lt;сущность_2&gt;_model_crud_consume"</span>
          <span class="p">},</span>
          <span class="c1"># обменник, из которого сервис будет получать уведомления об</span>
          <span class="c1"># изменениях узлов</span>
          <span class="c1"># (к этому обменнику, с указанным routing_key будет привязана</span>
          <span class="c1"># главная очередь сервиса с управляющими командами)</span>
-         <span class="s2">&quot;consume&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;сущность_2&gt;&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;direct&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;routing_key&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;сущность_2&gt;_model_crud_publish&quot;</span>
+         <span class="s2">"consume"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"&lt;сущность_2&gt;"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"direct"</span><span class="p">,</span>
+            <span class="s2">"routing_key"</span><span class="p">:</span> <span class="s2">"&lt;сущность_2&gt;_model_crud_publish"</span>
          <span class="p">}</span>
       <span class="p">}</span>
    <span class="p">}</span>
@@ -842,7 +839,7 @@ LDAP-сервера и разработать комплект микросер�
 </div>
 </section>
 <section id="id21">
-<h3>Типовые сообщения сервисов<a class="headerlink" href="#id21" title="Link to this heading"></a></h3>
+<h3>Типовые сообщения сервисов<a class="headerlink" href="#id21" title="Ссылка на этот заголовок"></a></h3>
 <div class="admonition note">
 <p class="admonition-title">Примечание</p>
 <p>В таблицах сообщений предполагаем следующее:</p>
@@ -854,8 +851,8 @@ LDAP-сервера и разработать комплект микросер�
 поэтому их не указываем в таблицах.</p></li>
 <li><p>Формат тела сообщений (за исключением ответов при RPC):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;some_action&gt;&quot;</span><span class="p">,</span>
-   <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+   <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"&lt;some_action&gt;"</span><span class="p">,</span>
+   <span class="s2">"data"</span><span class="p">:</span> <span class="p">{</span>
    <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
@@ -869,10 +866,10 @@ LDAP-сервера и разработать комплект микросер�
 </ol>
 </div>
 <section id="id22">
-<h4>&lt;сущность&gt;_model_crud<a class="headerlink" href="#id22" title="Link to this heading"></a></h4>
+<h4>&lt;сущность&gt;_model_crud<a class="headerlink" href="#id22" title="Ссылка на этот заголовок"></a></h4>
 <p><strong>Publish</strong></p>
 <table class="docutils align-default" id="id35">
-<caption><span class="caption-text">Сообщения, генерируемые сервисом <code class="docutils literal notranslate"><span class="pre">&lt;сущность&gt;_model_crud</span></code></span><a class="headerlink" href="#id35" title="Link to this table"></a></caption>
+<caption><span class="caption-text">Сообщения, генерируемые сервисом <code class="docutils literal notranslate"><span class="pre">&lt;сущность&gt;_model_crud</span></code></span><a class="headerlink" href="#id35" title="Ссылка на эту таблицу"></a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>action</p></th>
 <th class="head"><p>routing_key</p></th>
@@ -896,9 +893,9 @@ LDAP-сервера и разработать комплект микросер�
 <br/>
 <details>
 <summary><a>Тело сообщения</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;created&quot;</span><span class="p">,</span>
-   <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;new_node_id&gt;&quot;</span>
+   <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"created"</span><span class="p">,</span>
+   <span class="s2">"data"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"&lt;new_node_id&gt;"</span>
    <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
@@ -925,15 +922,15 @@ LDAP-сервера и разработать комплект микросер�
 <br/>
 <details>
 <summary><a>Тело сообщения</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;may_update&quot;</span><span class="p">,</span>
-   <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+   <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"may_update"</span><span class="p">,</span>
+   <span class="s2">"data"</span><span class="p">:</span> <span class="p">{</span>
          <span class="c1"># узел, который предполагается изменить</span>
-         <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;node_id&gt;&quot;</span><span class="p">,</span>
+         <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"&lt;node_id&gt;"</span><span class="p">,</span>
          <span class="c1"># id нового родительского узла, в случае, если узел</span>
          <span class="c1"># предполагается переместить</span>
-         <span class="s2">&quot;parentId&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;new_parent_id&gt;&quot;</span><span class="p">,</span>
+         <span class="s2">"parentId"</span><span class="p">:</span> <span class="s2">"&lt;new_parent_id&gt;"</span><span class="p">,</span>
          <span class="c1"># новые значения атрибутов</span>
-         <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
          <span class="p">}</span>
    <span class="p">}</span>
 <span class="p">}</span>
@@ -943,8 +940,8 @@ LDAP-сервера и разработать комплект микросер�
 <br/>
 <details>
 <summary><a>Тело ответа</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-      <span class="s2">&quot;response&quot;</span><span class="p">:</span> <span class="s2">&quot;ok&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;некоторое сообщение, если ответ `no`&quot;</span>
+      <span class="s2">"response"</span><span class="p">:</span> <span class="s2">"ok"</span><span class="p">,</span>
+      <span class="s2">"message"</span><span class="p">:</span> <span class="s2">"некоторое сообщение, если ответ `no`"</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -970,15 +967,15 @@ LDAP-сервера и разработать комплект микросер�
 <br/>
 <details>
 <summary><a>Тело сообщения</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;updating&quot;</span><span class="p">,</span>
-   <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+   <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"updating"</span><span class="p">,</span>
+   <span class="s2">"data"</span><span class="p">:</span> <span class="p">{</span>
          <span class="c1"># узел, который предполагается изменить</span>
-         <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;node_id&gt;&quot;</span><span class="p">,</span>
+         <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"&lt;node_id&gt;"</span><span class="p">,</span>
          <span class="c1"># id нового родительского узла, в случае, если узел</span>
          <span class="c1"># предполагается переместить</span>
-         <span class="s2">&quot;parentId&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;new_parent_id&gt;&quot;</span><span class="p">,</span>
+         <span class="s2">"parentId"</span><span class="p">:</span> <span class="s2">"&lt;new_parent_id&gt;"</span><span class="p">,</span>
          <span class="c1"># новые значения атрибутов</span>
-         <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
          <span class="p">}</span>
    <span class="p">}</span>
 <span class="p">}</span>
@@ -988,7 +985,7 @@ LDAP-сервера и разработать комплект микросер�
 <br/>
 <details>
 <summary><a>Тело ответа</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-      <span class="s2">&quot;response&quot;</span><span class="p">:</span> <span class="s2">&quot;ok&quot;</span>
+      <span class="s2">"response"</span><span class="p">:</span> <span class="s2">"ok"</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -1007,9 +1004,9 @@ LDAP-сервера и разработать комплект микросер�
 <br/>
 <details>
 <summary><a>Тело сообщения</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;updated&quot;</span><span class="p">,</span>
-   <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;node_id&gt;&quot;</span>
+   <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"updated"</span><span class="p">,</span>
+   <span class="s2">"data"</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"&lt;node_id&gt;"</span>
    <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
@@ -1037,10 +1034,10 @@ LDAP-сервера и разработать комплект микросер�
 <br/>
 <details>
 <summary><a>Тело сообщения</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;may_delete&quot;</span><span class="p">,</span>
-   <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+   <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"may_delete"</span><span class="p">,</span>
+   <span class="s2">"data"</span><span class="p">:</span> <span class="p">{</span>
          <span class="c1"># узел, который предполагается удалить</span>
-         <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;node_id&gt;&quot;</span>
+         <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"&lt;node_id&gt;"</span>
    <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
@@ -1049,7 +1046,7 @@ LDAP-сервера и разработать комплект микросер�
 <br/>
 <details>
 <summary><a>Тело ответа</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-      <span class="s2">&quot;response&quot;</span><span class="p">:</span> <span class="s2">&quot;ok&quot;</span>
+      <span class="s2">"response"</span><span class="p">:</span> <span class="s2">"ok"</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -1075,10 +1072,10 @@ LDAP-сервера и разработать комплект микросер�
 <br/>
 <details>
 <summary><a>Тело сообщения</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;deleting&quot;</span><span class="p">,</span>
-   <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+   <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"deleting"</span><span class="p">,</span>
+   <span class="s2">"data"</span><span class="p">:</span> <span class="p">{</span>
          <span class="c1"># узел, который предполагается удалить</span>
-         <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;node_id&gt;&quot;</span>
+         <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"&lt;node_id&gt;"</span>
    <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
@@ -1087,7 +1084,7 @@ LDAP-сервера и разработать комплект микросер�
 <br/>
 <details>
 <summary><a>Тело ответа</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-      <span class="s2">&quot;response&quot;</span><span class="p">:</span> <span class="s2">&quot;ok&quot;</span>
+      <span class="s2">"response"</span><span class="p">:</span> <span class="s2">"ok"</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -1106,9 +1103,9 @@ LDAP-сервера и разработать комплект микросер�
 <br/>
 <details>
 <summary><a>Тело сообщения</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;deleted&quot;</span><span class="p">,</span>
-   <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;node_id&gt;&quot;</span>
+   <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"deleted"</span><span class="p">,</span>
+   <span class="s2">"data"</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"&lt;node_id&gt;"</span>
    <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
@@ -1122,7 +1119,7 @@ LDAP-сервера и разработать комплект микросер�
 <p>Все сообщения для сервиса приходят в очередь <code class="docutils literal notranslate"><span class="pre">&lt;сущность&gt;_model_crud_consume</span></code>,
 <code class="docutils literal notranslate"><span class="pre">routing_key</span> <span class="pre">=</span> <span class="pre">&lt;сущность&gt;_model_crud_consume</span></code>.</p>
 <table class="docutils align-default" id="id36">
-<caption><span class="caption-text">Сообщения, обрабатываемые сервисом <code class="docutils literal notranslate"><span class="pre">&lt;сущность&gt;_model_crud</span></code></span><a class="headerlink" href="#id36" title="Link to this table"></a></caption>
+<caption><span class="caption-text">Сообщения, обрабатываемые сервисом <code class="docutils literal notranslate"><span class="pre">&lt;сущность&gt;_model_crud</span></code></span><a class="headerlink" href="#id36" title="Ссылка на эту таблицу"></a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>action</p></th>
 <th class="head"><p>RPC</p></th>
@@ -1137,10 +1134,10 @@ LDAP-сервера и разработать комплект микросер�
 </tr>
 <tr class="row-odd"><td colspan="3"><details>
 <summary><a>Тело сообщения</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;subscribe&quot;</span><span class="p">,</span>
-   <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="s2">&quot;routing_key&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;some_routing_key&gt;&quot;</span>
-         <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&lt;id_1&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;id_2&quot;</span><span class="p">]</span>
+   <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"subscribe"</span><span class="p">,</span>
+   <span class="s2">"data"</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">"routing_key"</span><span class="p">:</span> <span class="s2">"&lt;some_routing_key&gt;"</span>
+         <span class="s2">"id"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"&lt;id_1&gt;"</span><span class="p">,</span> <span class="s2">"id_2"</span><span class="p">]</span>
    <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
@@ -1155,10 +1152,10 @@ LDAP-сервера и разработать комплект микросер�
 </tr>
 <tr class="row-odd"><td colspan="3"><details>
 <summary><a>Тело сообщения</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;unsubscribe&quot;</span><span class="p">,</span>
-   <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="s2">&quot;routing_key&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;some_routing_key&gt;&quot;</span>
-         <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&lt;id_1&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;id_2&quot;</span><span class="p">]</span>
+   <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"unsubscribe"</span><span class="p">,</span>
+   <span class="s2">"data"</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">"routing_key"</span><span class="p">:</span> <span class="s2">"&lt;some_routing_key&gt;"</span>
+         <span class="s2">"id"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"&lt;id_1&gt;"</span><span class="p">,</span> <span class="s2">"id_2"</span><span class="p">]</span>
    <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>

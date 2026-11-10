@@ -1,26 +1,26 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="ru" >
+<html class="writer-html5" lang="ru" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Конфигуратор модели &mdash; документация МПК-Пересвет 0.4</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/sphinxcontrib-httpexample.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
-    <link rel="shortcut icon" href="../_static/peresvet_middle.png"/>
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-httpexample.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68075b4e" />
+
   
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=11064190"></script>
-        <script src="../_static/doctools.js?v=888ff710"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="../_static/sphinxcontrib-httpexample.js"></script>
-        <script src="../_static/translations.js?v=29b1f277"></script>
+    <link rel="shortcut icon" href="../_static/peresvet_middle.png"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=11064190"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/sphinxcontrib-httpexample.js"></script>
+      <script src="../_static/translations.js?v=cd1d70c9"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="../genindex.html" />
     <link rel="search" title="Поиск" href="../search.html" />
@@ -40,9 +40,6 @@
             
               <img src="../_static/logo.png" class="logo" alt="Логотип"/>
           </a>
-              <div class="version">
-                0.4
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -118,7 +115,7 @@
            <div itemprop="articleBody">
              
   <section id="configurator">
-<span id="id1"></span><h1>Конфигуратор модели<a class="headerlink" href="#configurator" title="Link to this heading"></a></h1>
+<span id="id1"></span><h1>Конфигуратор модели<a class="headerlink" href="#configurator" title="Ссылка на этот заголовок"></a></h1>
 <p>Конфигуратор — главная панель Grafana. В нём собирают иерархию
 платформы: объекты, теги, тревоги, методы, коннекторы, расписания
 и хранилища данных. Туда же выведены журналы сервисов.</p>
@@ -126,7 +123,7 @@
 Форматы команд создания, чтения, обновления и удаления узлов
 описаны в документации API.</p>
 <section id="id2">
-<h2>Как открыть<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<h2>Как открыть<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
 <p>Запустите платформу (<a class="reference internal" href="../installation.html#installation"><span class="std std-ref">Установка и запуск</span></a>) и откройте в браузере
 <code class="docutils literal notranslate"><span class="pre">https://&lt;IP-адрес</span> <span class="pre">из</span> <span class="pre">PRS_IP&gt;/grafana</span></code>. Сертификат самоподписанный,
 браузер покажет предупреждение. На самом сервере также открывается
@@ -138,13 +135,13 @@ Grafana предложит сменить пароль.</p>
 <figcaption>
 <p><span class="caption-text">Слева дерево модели, справа свойства выбранного узла.
 Между колонками — разделитель: его можно перетащить.
-Такой же разделитель стоит между иерархией и блоком «Сервисы».</span><a class="headerlink" href="#id22" title="Link to this image"></a></p>
+Такой же разделитель стоит между иерархией и блоком «Сервисы».</span><a class="headerlink" href="#id22" title="Ссылка на это изображение"></a></p>
 </figcaption>
 </figure>
 <p>Пока узел не выбран, справа написано «Выберите узел в дереве слева».</p>
 </section>
 <section id="id3">
-<h2>Папки модели<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<h2>Папки модели<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
 <p>На верхнем уровне лежат папки сущностей.</p>
 <p><strong>Объекты.</strong> Основная иерархия. Внутри объекта бывают другие объекты и теги.
 У тега — тревоги и методы. Внутри объекта и в корне «Объекты» можно завести
@@ -177,13 +174,13 @@ Grafana предложит сменить пароль.</p>
 Алфавитная сортировка включается в настройках и запоминается в браузере.</p>
 </section>
 <section id="id4">
-<h2>Поиск<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<h2>Поиск<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h2>
 <p>Над деревом поле «Поиск по имени или GUID».
 Список показывает совпадения по имени и по идентификатору.
 Выбор строки раскрывает ветку и делает узел текущим.</p>
 </section>
 <section id="id5">
-<h2>Настройки<a class="headerlink" href="#id5" title="Link to this heading"></a></h2>
+<h2>Настройки<a class="headerlink" href="#id5" title="Ссылка на этот заголовок"></a></h2>
 <p>Шестерёнка стоит в одной строке с надписью «Пересвет», у правого края.
 Окно запоминает флажки и размер шрифта в браузере.</p>
 <figure class="align-default">
@@ -206,7 +203,7 @@ Grafana предложит сменить пароль.</p>
 меньше базового размера в той же пропорции, что и раньше.</p>
 </section>
 <section id="id6">
-<h2>Меню команд узла<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
+<h2>Меню команд узла<a class="headerlink" href="#id6" title="Ссылка на этот заголовок"></a></h2>
 <p>У строки дерева справа стоит кнопка «…» с подсказкой «Команды».
 Длинное имя обрезается вплотную к этой кнопке, без пустого промежутка,
 и кнопка не уезжает за край панели. В меню только те пункты,
@@ -295,7 +292,7 @@ Grafana предложит сменить пароль.</p>
 окно с жёлтым треугольником, кнопки «Подтвердить» и «Отмена».</p>
 </section>
 <section id="id7">
-<h2>Перетаскивание<a class="headerlink" href="#id7" title="Link to this heading"></a></h2>
+<h2>Перетаскивание<a class="headerlink" href="#id7" title="Ссылка на этот заголовок"></a></h2>
 <p>Объекты, теги, коннекторы, расписания, хранилища и пользовательские папки
 можно переносить мышью. Служебные корни верхнего уровня не перетаскиваются.</p>
 <p>Узел отпускают на объект или на пользовательскую папку, и он становится потомком этого узла.
@@ -308,7 +305,7 @@ Grafana предложит сменить пароль.</p>
 Обычный щелчок выделение снимает.</p>
 </section>
 <section id="id8">
-<h2>Пометки в дереве<a class="headerlink" href="#id8" title="Link to this heading"></a></h2>
+<h2>Пометки в дереве<a class="headerlink" href="#id8" title="Ссылка на этот заголовок"></a></h2>
 <p>Подсказка строки собирается из того, что конфигуратор уже знает об узле.</p>
 <ul class="simple">
 <li><p>Знак паузы на родителе — в ветке есть приостановленный узел.</p></li>
@@ -323,7 +320,7 @@ Grafana предложит сменить пароль.</p>
 </ul>
 </section>
 <section id="id9">
-<h2>Свойства узла<a class="headerlink" href="#id9" title="Link to this heading"></a></h2>
+<h2>Свойства узла<a class="headerlink" href="#id9" title="Ссылка на этот заголовок"></a></h2>
 <p>Справа — имя, идентификатор и поля, которые относятся к этому виду узла.
 Изменённое поле обводится бирюзовой рамкой.</p>
 <p>Пока есть несохранённые правки, под формой активны две кнопки-значка.
@@ -388,7 +385,7 @@ Grafana предложит сменить пароль.</p>
 «Приостановить».</p>
 </section>
 <section id="id10">
-<h2>Тег: хранилище и коннектор<a class="headerlink" href="#id10" title="Link to this heading"></a></h2>
+<h2>Тег: хранилище и коннектор<a class="headerlink" href="#id10" title="Ссылка на этот заголовок"></a></h2>
 <p>У тега и у тревоги справа появляется вкладка <strong>Хранилище</strong>.
 У тега есть ещё вкладка <strong>Коннектор</strong>.</p>
 <p><strong>Хранилище.</strong> Одно хранилище на тег. Смена отвязывает тег от предыдущего.
@@ -405,12 +402,12 @@ Grafana предложит сменить пароль.</p>
 Связь — с коннектором-камерой. Подробности в <a class="reference internal" href="../video.html#video-cameras"><span class="std std-ref">Подключение видеокамер</span></a>.</p>
 </section>
 <section id="id11">
-<h2>Данные тега<a class="headerlink" href="#id11" title="Link to this heading"></a></h2>
+<h2>Данные тега<a class="headerlink" href="#id11" title="Ссылка на этот заголовок"></a></h2>
 <p>Блок «Данные тега» стоит на вкладке <strong>Хранилище</strong>.
 Он есть у обычного тега с выбранным хранилищем и у тега «Видеопоток»
 даже без привязки к истории.</p>
 <section id="id12">
-<h3>Запрос на чтение<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<h3>Запрос на чтение<a class="headerlink" href="#id12" title="Ссылка на этот заголовок"></a></h3>
 <p>Вкладка показывает готовый <code class="docutils literal notranslate"><span class="pre">GET</span></code> и адрес. Кнопка рядом копирует запрос.</p>
 <p>Ключи запроса совпадают с <a class="reference internal" href="../historical_data.html#historical-data"><span class="std std-ref">получением исторических данных</span></a>:
 <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">actual</span></code>, <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>,
@@ -425,7 +422,7 @@ Grafana предложит сменить пароль.</p>
 JSON фактических значений операции.</p>
 </section>
 <section id="id13">
-<h3>Запрос на запись<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<h3>Запрос на запись<a class="headerlink" href="#id13" title="Ссылка на этот заголовок"></a></h3>
 <p>Вкладка <strong>Запрос на запись</strong> задаёт значение и, при необходимости, метку времени.
 Перед отправкой значение приводится к типу тега: целое, вещественное,
 строка или JSON. Пустая метка означает текущий момент.
@@ -438,7 +435,7 @@ JSON фактических значений операции.</p>
 У видеопотока этой вкладки нет: кадр в историю тегов не пишется.</p>
 </section>
 <section id="csv">
-<h3>Экспорт в CSV<a class="headerlink" href="#csv" title="Link to this heading"></a></h3>
+<h3>Экспорт в CSV<a class="headerlink" href="#csv" title="Ссылка на этот заголовок"></a></h3>
 <p>После успешного <strong>Получить данные</strong> становится доступна кнопка
 <strong>Сохранить в CSV</strong>. Успешным считается HTTP-ответ с кодом <code class="docutils literal notranslate"><span class="pre">2xx</span></code>
 и корректным JSON. Пустой список тоже можно экспортировать.
@@ -461,7 +458,7 @@ JSON фактических значений операции.</p>
 </section>
 </section>
 <section id="id14">
-<h2>Коннектор: журнал и команды<a class="headerlink" href="#id14" title="Link to this heading"></a></h2>
+<h2>Коннектор: журнал и команды<a class="headerlink" href="#id14" title="Ссылка на этот заголовок"></a></h2>
 <p>Флажок <strong>Лог в платформу</strong> включает приём строк журнала коннектора.</p>
 <p>Ниже две вкладки.</p>
 <p><strong>Лог коннектора.</strong> Хвост журнала. Пауза останавливает обновление на экране,
@@ -474,7 +471,7 @@ JSON фактических значений операции.</p>
 задаются у тега видеопотока, см. <a class="reference internal" href="../video.html#video-cameras"><span class="std std-ref">Подключение видеокамер</span></a>.</p>
 </section>
 <section id="id15">
-<h2>Метод<a class="headerlink" href="#id15" title="Link to this heading"></a></h2>
+<h2>Метод<a class="headerlink" href="#id15" title="Ссылка на этот заголовок"></a></h2>
 <p><strong>Инициаторы</strong> — две вкладки, «Теги» и «Расписания».
 Поиск находит узел по имени, пути или id и добавляет его в список.
 Событие тега или срабатывание расписания запускает метод.</p>
@@ -498,7 +495,7 @@ JSON фактических значений операции.</p>
 В конфигурации это объект <code class="docutils literal notranslate"><span class="pre">httpRequest</span></code>.</p>
 </section>
 <section id="id16">
-<h2>Тревога и расписание<a class="headerlink" href="#id16" title="Link to this heading"></a></h2>
+<h2>Тревога и расписание<a class="headerlink" href="#id16" title="Ссылка на этот заголовок"></a></h2>
 <p>Тревога живёт под тегом. В конфигурации задают сравнение с порогом
 и квитирование. Факт появления, пропадания и квитирования пишется
 в хранилище, к которому тревога привязана.</p>
@@ -508,7 +505,7 @@ JSON фактических значений операции.</p>
 <a class="reference external" href="https://github.com/mp-co-ru/prs-peresvet-courses/tree/main/01.base">базовый курс</a>.</p>
 </section>
 <section id="id18">
-<h2>Хранилища данных<a class="headerlink" href="#id18" title="Link to this heading"></a></h2>
+<h2>Хранилища данных<a class="headerlink" href="#id18" title="Ссылка на этот заголовок"></a></h2>
 <p>Папка «Хранилища данных» открывает справа карточки хранилищ.
 У выбранного хранилища в дереве видны привязанные теги.
 Имя привязки — путь тега в иерархии: имя объекта, промежуточные узлы
@@ -529,7 +526,7 @@ JSON фактических значений операции.</p>
 содержит те же две команды. <strong>Удалить</strong> снимает связь с коннектором.</p>
 </section>
 <section id="id19">
-<h2>Сервисы<a class="headerlink" href="#id19" title="Link to this heading"></a></h2>
+<h2>Сервисы<a class="headerlink" href="#id19" title="Ссылка на этот заголовок"></a></h2>
 <p>Папка «Сервисы» — журналы платформы, а не узлы модели.
 У каждой строки флажок «Показывать лог сервиса» и число consumer-ов.
 Справа общий хвост отмеченных сервисов.</p>
@@ -538,7 +535,7 @@ JSON фактических значений операции.</p>
 Стрелка вниз сохраняет видимый текст в файл.</p>
 </section>
 <section id="id20">
-<h2>Дальше<a class="headerlink" href="#id20" title="Link to this heading"></a></h2>
+<h2>Дальше<a class="headerlink" href="#id20" title="Ссылка на этот заголовок"></a></h2>
 <p>Сборка модели с нуля —
 <a class="reference external" href="https://github.com/mp-co-ru/prs-peresvet-courses/tree/main/01.base">базовый курс</a>.
 Подключение камеры — в <a class="reference internal" href="../video.html#video-cameras"><span class="std std-ref">Подключение видеокамер</span></a>.</p>
