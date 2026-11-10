@@ -75,11 +75,14 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
     _META_OPERATION_TTL_SEC = 30
     _GET_MAX_ROWS_CAP = 50000
     _RE_OP_NAME = re.compile(r"^[a-zA-Z][a-zA-Z0-9_-]*$")
-    _INTEGRATIONAL_ROOT_PARAM_SKIP = frozenset({"data", "evalContextTagId"})
+    _INTEGRATIONAL_ROOT_PARAM_SKIP = frozenset({"data", "evalContextTagId", "operation"})
 
     @staticmethod
     def _merge_integrational_request_params(request: dict | None) -> dict[str, Any]:
-        """Параметры операции: корень запроса (кроме ``data``) + вложенный ``params`` (перекрывает корень)."""
+        """Параметры операции: корень запроса (кроме ``data`` и ``operation``) + вложенный ``params``.
+
+        Ключ ``params`` необязателен. Имя операции из него не берётся.
+        """
         if not request:
             return {}
         merged: dict[str, Any] = {}
@@ -244,7 +247,7 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
     async def _read_integrational_points(self, tag_id: str, request: dict) -> list[tuple]:
         ds_id, link_id, _link = await self._resolve_integrational_link(tag_id=tag_id)
         merged = self._merge_integrational_request_params(request)
-        op_name = self._normalize_operation_name(merged.get("operation"))
+        op_name = self._explicit_operation_name(request)
         op_cn = await self._resolve_operation_cn_from_link(
             link_id=link_id,
             requested_operation=op_name,
@@ -277,7 +280,7 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
         merged_params = dict(merged_params)
         merged_params.update(tag_item_params)
 
-        op_name = self._normalize_operation_name(merged_params.get("operation"))
+        op_name = self._explicit_operation_name(request, tag_item)
         op_cn = await self._resolve_operation_cn_from_link(
             link_id=link_id,
             requested_operation=op_name,
@@ -749,11 +752,19 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
             "parameters": op.parameters,
         }
 
+    def _explicit_operation_name(self, request: dict | None, tag_item: dict | None = None) -> str | None:
+        """Имя операции — ключ ``operation`` запроса. У записи ключ элемента ``data[i]`` перекрывает корень."""
+        if isinstance(tag_item, dict) and "operation" in tag_item:
+            return self._normalize_operation_name(tag_item.get("operation"))
+        if isinstance(request, dict) and "operation" in request:
+            return self._normalize_operation_name(request.get("operation"))
+        return None
+
     def _normalize_operation_name(self, operation: Any) -> str | None:
         if operation is None:
             return None
         if not isinstance(operation, str):
-            raise ValueError("params.operation должен быть строкой.")
+            raise ValueError("operation должен быть строкой.")
         op = operation.strip()
         if not op:
             return None
@@ -770,7 +781,7 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
                 "base": link_id,
                 "scope": CN_SCOPE_SUBTREE,
                 "filter": {"objectClass": ["prsDatastorageTagOperation"]},
-                "attributes": ["cn", "prsEntityTypeCode"],
+                "attributes": ["cn", "prsEntityTypeCode", "prsDefault"],
                 "deref": False,
             }
         )
@@ -793,17 +804,32 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
                     return cn
             raise ValueError(f"Операция '{requested_operation}' не найдена среди дочерних узлов link.")
 
+        candidates: list[tuple[str, bool]] = []
         for _, __, attrs in operations:
             cn_list = attrs.get("cn")
             if not cn_list:
                 continue
-            cn = cn_list[0]
             kind = OperationKind(self._operation_kind_code(attrs))
-            if kind == expected_kind:
-                return cn
+            if kind != expected_kind:
+                continue
+            candidates.append((cn_list[0], self._is_ldap_default(attrs)))
 
+        if not candidates:
+            raise ValueError(
+                f"Не найдена операция нужного типа ({int(expected_kind)}) среди дочерних узлов link."
+            )
+        if len(candidates) == 1:
+            return candidates[0][0]
+
+        defaults = [cn for cn, is_default in candidates if is_default]
+        if len(defaults) == 1:
+            return defaults[0]
+        if not defaults:
+            raise ValueError(
+                f"Среди операций типа {int(expected_kind)} нет операции с prsDefault=true."
+            )
         raise ValueError(
-            f"Не найдена операция нужного типа ({int(expected_kind)}) среди дочерних узлов link."
+            f"Среди операций типа {int(expected_kind)} несколько операций с prsDefault=true."
         )
 
     def _extract_operation_cn(self, value: Any) -> str | None:
@@ -827,8 +853,8 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
             raise ValueError(f"Недопустимый prsEntityTypeCode у операции: {code}. Ожидается 0 или 1.")
         return code
 
-    def _is_ldap_active(self, attrs: dict, default: bool = True) -> bool:
-        raw = attrs.get("prsActive")
+    @staticmethod
+    def _ldap_bool(raw: Any, default: bool) -> bool:
         if isinstance(raw, list):
             raw = raw[0] if raw else None
         if raw is None:
@@ -838,6 +864,12 @@ class DataStoragesAppIntegrationalBase(DataStoragesAppBase, ABC):
         if isinstance(raw, str):
             return raw.strip().upper() == "TRUE"
         return default
+
+    def _is_ldap_active(self, attrs: dict, default: bool = True) -> bool:
+        return DataStoragesAppIntegrationalBase._ldap_bool(attrs.get("prsActive"), default)
+
+    def _is_ldap_default(self, attrs: dict) -> bool:
+        return DataStoragesAppIntegrationalBase._ldap_bool(attrs.get("prsDefault"), False)
 
     def _build_eval_context(
             self,

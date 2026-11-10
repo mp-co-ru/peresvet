@@ -45,9 +45,14 @@ class TagData(BaseModel):
         title="id тега"
     )
     data: List[Annotated[DataPointItem, BeforeValidator(normalize_point)]]
+    operation: str | None = Field(
+        None,
+        title="cn операции интеграционного тега",
+    )
     params: dict[str, Any] | None = Field(
         None,
         title="Параметры операции для конкретного тега",
+        description="Необязательный объект. Имя операции задаётся ключом operation, не внутри params.",
     )
 
     @field_validator("tagId")
@@ -101,9 +106,14 @@ class DataGet(BaseModel):
         None,
         title="Шаг между соседними значениями."
     )
+    operation: str | None = Field(
+        None,
+        title="cn операции интеграционного тега",
+    )
     params: dict[str, Any] | None = Field(
         None,
-        title="Дополнительные параметры запроса."
+        title="Дополнительные параметры запроса.",
+        description="Необязательный объект. Имя операции задаётся ключом operation, не внутри params.",
     )
     evalContextTagId: str | None = Field(
         None,
@@ -173,6 +183,7 @@ _DATA_GET_QUERY_KNOWN_KEYS = frozenset(
         "count",
         "timeStep",
         "params",
+        "operation",
         "q",
     }
 )
@@ -318,6 +329,7 @@ async def data_get(
     value: str | None = None,
     count: int | None = None,
     timeStep: int | None = None,
+    operation: str | None = None,
     params: str | None = None,
     # fallback для обратной совместимости
     q: str | None = None,
@@ -351,8 +363,12 @@ async def data_get(
        * **timeStep** (int): шаг в микросекундах между соседними возвращаемыми значениями тега;
        * **maxCount** (int): максимальное количество значений одного тега в ответе на запрос;
        * **value** (any): фильтр на значения тега.
-       * **params** (json): дополнительные параметры запроса (например
+       * **operation** (str): cn операции интеграционного тега. Если не указан
+         и GET-операция одна, берётся она. Если их несколько, берётся операция
+         с ``prsDefault = true``.
+       * **params** (json): необязательные параметры запроса (например
          ``allRecordsAsValue`` для интеграционных табличных тегов).
+         Имя операции в этот объект не кладётся.
        * Любые другие query-параметры (например ``calendarTagId``) передаются в цепочку
          чтения данных и попадают в ``clientRequest`` виртуального метода для параметров
          с источником «данные из запроса клиента».
@@ -400,6 +416,8 @@ async def data_get(
                 body["count"] = count
             if timeStep is not None:
                 body["timeStep"] = timeStep
+            if operation is not None:
+                body["operation"] = operation
             if params is not None:
                 body["params"] = json.loads(params)
 
@@ -430,6 +448,10 @@ async def data_set(payload: AllData, error_handler: ErrorHandler = Depends()):
         json с данными одного тега. Json имеет формат:
 
         * **tagId** (str) - id тега;
+        * **operation** (str) - необязательное имя операции интеграционного тега.
+          Если не указано и SET-операция одна, берётся она. Если их несколько,
+          берётся операция с ``prsDefault = true``.
+        * **params** (json) - необязательные параметры операции.
         * **data** ([[value, timestamp, quality_code]]) - массив значений тега; каждое значение -
           массив из трёх элементов: значение тега, метка времени (целое число микросекунд или
           строка в формате ISO8601). В случае отсутствия метки времени берётся текущий момент времени.

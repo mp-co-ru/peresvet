@@ -1212,8 +1212,10 @@ async def peresvet_data_get(query: dict[str, Any] | None = None) -> dict[str, An
     Camera motion uses `peresvet_ptz`.
 
     Advanced options for integrational tabular tags:
-    - `query.params` (dict): extra options forwarded to `/v1/data`.
-      Example: `{"operation": "selectByCalendar", "allRecordsAsValue": false}`.
+    - `query.operation` (str): operation `cn`. Optional. One GET operation is
+      used as-is; several GET operations require `prsDefault=true` on one of them.
+    - `query.params` (dict): optional values forwarded to `/v1/data`.
+      Example: `{"allRecordsAsValue": false}`.
     - convenience key `query.allRecordsAsValue` is auto-mapped to
       `query.params.allRecordsAsValue`.
     """
@@ -1431,9 +1433,9 @@ async def peresvet_data_set(payload: dict[str, Any]) -> dict[str, Any]:
 
     Data points must be arrays in the order: `[x, y, q]` (or shorter forms `[y]`, `[x, y]`).
 
-    For integrational tabular tags, pass params per tag item:
-    - `data[i].params.operation` = operation `cn`
-    - other SQL values in `data[i].params.*`
+    For integrational tabular tags:
+    - `data[i].operation` = operation `cn` (optional; same default rules as GET)
+    - SQL values in optional `data[i].params.*`
     """
     return await _request("POST", "/v1/data/", json_body=payload)
 

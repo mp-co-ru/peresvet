@@ -6,17 +6,19 @@
 в чьей ветке она лежит. Поле ``folder`` по умолчанию ``false``:
 без него запрос создаёт обычный узел.
 
+Запрос ``POST /v1/objects/``:
+
 .. code-block:: json
 
-   POST /v1/objects/
    {"folder": true, "attributes": {"cn": "Режимы работы"}}
 
 Пустой ``parentId`` — корень этого сервиса, как при создании объекта или тега.
 Чтобы положить папку внутрь объекта или другой папки, передайте их id.
 
+Запрос ``POST /v1/tags/``:
+
 .. code-block:: json
 
-   POST /v1/tags/
    {
      "folder": true,
      "parentId": "<id объекта или папки>",
@@ -53,9 +55,10 @@
 Тревога этим флагом папку не создаёт: запрос возвращает ``422``.
 Каталог методов использует тот же флаг:
 
+Запрос ``POST /v1/methods/``:
+
 .. code-block:: json
 
-   POST /v1/methods/
    {"folder": true, "attributes": {"cn": "stdlib"}}
 
 Имя ``system`` зарезервировано. В LDAP сохраняются ``cn``, ``description``,
