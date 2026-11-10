@@ -108,7 +108,7 @@ PDF-документация, скрипт ``./run_one_app.sh``, файл ``.env
    redis/redis-stack:7.2.0-v6
    rabbitmq:4.1.1-management
    postgres:16.1
-   python:3.12-slim
+   python:3.14-slim
    osixia/openldap
    grafana/grafana-enterprise:12.4.0-22081664032-ubuntu
    nginx:1.25.3-alpine-slim

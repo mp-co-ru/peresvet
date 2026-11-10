@@ -1,8 +1,8 @@
-FROM python:3.12-slim
+FROM python:3.14-slim
 
-ENV LDAP_ORGANISATION mycompany
-ENV LDAP_DOMAIN mycompany.com
-ENV LDAP_ADMIN_PASSWORD 123456
+ENV LDAP_ORGANISATION=mycompany
+ENV LDAP_DOMAIN=mycompany.com
+ENV LDAP_ADMIN_PASSWORD=123456
 ENV PIP_NO_INDEX=1
 
 # В локальном режиме используем предустановленные пакеты
@@ -10,7 +10,7 @@ ENV PIP_NO_INDEX=1
 ARG LOCAL_MODE="false"
 COPY .local-mode* ./
 RUN if [ -f .local-mode ]; then \
-        source .local-mode 2>/dev/null || true; \
+        . ./.local-mode 2>/dev/null || true; \
         LOCAL_MODE="${LOCAL_MODE:-false}"; \
     fi && \
     if [ "${LOCAL_MODE}" = "true" ]; then \
@@ -45,7 +45,7 @@ RUN if [ "${LOCAL_MODE}" = "true" ]; then \
 
 # В локальном режиме используем предустановленные Python-пакеты
 RUN if [ "${LOCAL_MODE}" = "true" ] && [ -d /preinstalled/python-site-packages ]; then \
-        cp -Rp /preinstalled/python-site-packages/* /usr/local/lib/python3.12/site-packages/ 2>/dev/null || true && \
+        cp -Rp /preinstalled/python-site-packages/* /usr/local/lib/python3.14/site-packages/ 2>/dev/null || true && \
         apt-get clean && rm -rf /var/lib/apt/lists/*; \
     else \
         pip install --no-cache-dir --no-index -r requirements.txt; \
@@ -65,11 +65,8 @@ COPY methods/packages /usr/src/mpc-peresvet/methods/packages
 RUN rm -r -f /usr/src/mpc-peresvet/src/__pycache__
 
 # set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-
-#ENV amqp_url amqp://prs:Peresvet21@rabbitmq/
-#ENV ldap_url ldap://ldap:389/cn=prs????bindname=cn=admin%2ccn=prs,X-BINDPW=Peresvet21
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 WORKDIR /usr/src/mpc-peresvet
 

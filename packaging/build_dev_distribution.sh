@@ -132,15 +132,16 @@ if [[ "${local_mode}" == "true" ]]; then
     
     # Копируем Python-пакеты
     python3_user_site=$(python3 -c "import site; print(site.getuserbase())" 2>/dev/null || echo "~/.local")
-    python3_site="${python3_user_site}/lib/python3.12/site-packages"
+    py_mm=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null || echo "3.14")
+    python3_site="${python3_user_site}/lib/python${py_mm}/site-packages"
     if [[ ! -d "${python3_site}" ]]; then
-        python3_site="${python3_user_site}/python3.12/site-packages"
+        python3_site="${python3_user_site}/python${py_mm}/site-packages"
     fi
     if [[ ! -d "${python3_site}" ]]; then
-        python3_site="/usr/local/lib/python3.12/dist-packages"
+        python3_site="/usr/local/lib/python${py_mm}/dist-packages"
     fi
     if [[ ! -d "${python3_site}" ]]; then
-        python3_site=$(python3 -c "import site; print(site.getsitepackages()[0])" 2>/dev/null || echo "/usr/local/lib/python3.12/site-packages")
+        python3_site=$(python3 -c "import site; print(site.getsitepackages()[0])" 2>/dev/null || echo "/usr/lib/python3/dist-packages")
     fi
     log "Копирование Python-пакетов из ${python3_site}"
     if [[ -d "${python3_site}" ]]; then

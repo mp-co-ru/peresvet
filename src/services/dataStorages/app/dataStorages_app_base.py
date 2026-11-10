@@ -1583,12 +1583,13 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
             # линейная интерполяция значений 'y' в датафрейме для числовых тэгов
             # заполнение NaN полей ближайшими не-NaN для нечисловых тэгов
-            df[[0, 1]] = df[[0, 1]].interpolate(
-                method=('pad', 'index')[is_numeric_dtype(df[1])]
-            )
+            if is_numeric_dtype(df[1]):
+                df[[0, 1]] = df[[0, 1]].interpolate(method="index")
+            else:
+                df[[0, 1]] = df[[0, 1]].ffill()
 
             # None-значения 'q' заполняются ближайшим не-None значением сверху
-            df[2].fillna(method='ffill', inplace=True)
+            df[2] = df[2].ffill()
 
             # Удаление из датафрейма всех элементов, чьи 'x' не принадлежат ``time_row``
             df = df.loc[df[0].isin(time_row)]
