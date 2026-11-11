@@ -7,12 +7,16 @@ RUN mkdir -p /var/www/docs/pdf
 COPY docs/pdf/*.pdf /var/www/docs/pdf/
 RUN chown -R www-data:www-data /var/www
 COPY config/nginx/nginx.conf /etc/nginx/
-# openssl stays in the image: the entrypoint issues the self-signed certificate
-# for NGINX_TLS_IP when the container starts.
+# openssl stays in the image: prs-entrypoint.sh issues the self-signed certificate
+# for NGINX_TLS_IP before the official nginx entrypoint renders templates.
 RUN apk add --no-cache openssl \
     && mkdir -p /etc/nginx/ssl
-COPY docker/docker-files/nginx/20-self-signed-cert.sh /docker-entrypoint.d/20-self-signed-cert.sh
-RUN chmod 755 /docker-entrypoint.d/20-self-signed-cert.sh
+COPY docker/docker-files/nginx/20-self-signed-cert.sh /usr/local/bin/prs-self-signed-cert.sh
+COPY docker/docker-files/nginx/prs-entrypoint.sh /prs-entrypoint.sh
+RUN chmod 755 /usr/local/bin/prs-self-signed-cert.sh /prs-entrypoint.sh
+# Свой ENTRYPOINT сбрасывает CMD родительского образа.
+ENTRYPOINT ["/prs-entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]
 COPY config/nginx/no_ssl/default.conf.no_ssl.template /etc/nginx/templates/default.conf.template
 #COPY config/nginx/ssl/default.conf.ssl.template /etc/nginx/templates/
 COPY config/nginx/peresvet /etc/nginx/templates/

@@ -119,9 +119,14 @@ def test_help_documents_ip_option():
 
 def test_default_nginx_image_generates_cert_at_start():
     dockerfile = DOCKERFILE.read_text(encoding="utf-8")
+    entrypoint = (ROOT / "docker/docker-files/nginx/prs-entrypoint.sh").read_text(encoding="utf-8")
 
     assert "192.168.1.50" not in dockerfile
     assert "20-self-signed-cert.sh" in dockerfile
+    assert 'ENTRYPOINT ["/prs-entrypoint.sh"]' in dockerfile
+    assert 'CMD ["nginx", "-g", "daemon off;"]' in dockerfile
+    assert "/docker-entrypoint.d/" not in dockerfile
+    assert entrypoint.index("prs-self-signed-cert.sh") < entrypoint.index('exec /docker-entrypoint.sh "$@"')
     assert "NGINX_TLS_IP" in (ROOT / "docker/compose/docker-compose.nginx.one_app.yml").read_text(
         encoding="utf-8"
     )
@@ -129,7 +134,81 @@ def test_default_nginx_image_generates_cert_at_start():
         ROOT / "packaging/build_product_distribution.sh",
         ROOT / "packaging/build_dev_distribution.sh",
     ):
-        assert "docker/docker-files/nginx/20-self-signed-cert.sh" in packaging.read_text(encoding="utf-8")
+        text = packaging.read_text(encoding="utf-8")
+        assert "docker/docker-files/nginx/20-self-signed-cert.sh" in text
+        assert "docker/docker-files/nginx/prs-entrypoint.sh" in text
+
+
+def test_nginx_reload_waits_until_the_certificate_exists(tmp_path: Path):
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    calls = tmp_path / "calls"
+    stub = bin_dir / "docker"
+    stub.write_text(
+        f"""#!/bin/bash
+printf '%s\\n' "$1" >> "{calls}"
+if [[ "$1" == "exec" ]]; then
+    count=$(grep -c '^exec$' "{calls}")
+    if [[ "${{count}}" -lt 3 ]]; then
+        echo 'cannot load certificate "/etc/nginx/ssl/stand.crt"' >&2
+        exit 1
+    fi
+    exit 0
+fi
+exit 0
+""",
+        encoding="utf-8",
+    )
+    stub.chmod(0o755)
+
+    env = os.environ.copy()
+    env["PATH"] = f"{bin_dir}{os.pathsep}{env.get('PATH', '')}"
+    env["MCP_NGINX_RELOAD_ATTEMPTS"] = "5"
+    env["MCP_NGINX_RELOAD_DELAY"] = "0"
+    result = subprocess.run(
+        ["bash", "-c", f'source "{ROOT}/packaging/mcp_launch.sh" && mcp_reload_nginx'],
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "stand.crt" not in result.stderr
+    assert "Жду, пока nginx" in result.stdout
+    assert calls.read_text(encoding="utf-8").count("exec\n") == 3
+
+
+def test_nginx_reload_reports_the_last_error(tmp_path: Path):
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    stub = bin_dir / "docker"
+    stub.write_text(
+        """#!/bin/bash
+if [[ "$1" == "exec" ]]; then
+    echo 'cannot load certificate "/etc/nginx/ssl/stand.crt"' >&2
+    exit 1
+fi
+exit 0
+""",
+        encoding="utf-8",
+    )
+    stub.chmod(0o755)
+
+    env = os.environ.copy()
+    env["PATH"] = f"{bin_dir}{os.pathsep}{env.get('PATH', '')}"
+    env["MCP_NGINX_RELOAD_ATTEMPTS"] = "2"
+    env["MCP_NGINX_RELOAD_DELAY"] = "0"
+    result = subprocess.run(
+        ["bash", "-c", f'source "{ROOT}/packaging/mcp_launch.sh" && mcp_reload_nginx'],
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert result.stderr.count("stand.crt") == 1
 
 
 def test_self_signed_cert_uses_requested_ip(tmp_path: Path):
