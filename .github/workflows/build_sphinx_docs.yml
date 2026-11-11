@@ -2,18 +2,17 @@
 
 name: Build-sphinx-docs
 
-# Controls when the workflow will run
+# Публикация после ручного вливания dev в main на GitHub.
+# Открытие и обновление pull request сайт не меняют.
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
-  # push:
-  #  branches: [ master ]
   pull_request:
-    branches: [ dev ]
+    types: [closed]
+    branches: [ main ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Несколько pull request публикуют одну и ту же ветку gh-pages.
+# Ручной запуск и вливание dev в main публикуют одну и ту же ветку gh-pages.
 # Параллельные push отклоняются: ref уже сдвинут другим запуском.
 concurrency:
   group: gh-pages
@@ -25,11 +24,17 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+       github.event.pull_request.head.ref == 'dev')
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      # Коммит, который оказался в main после вливания. Ручной запуск берёт выбранную ветку.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
 
       - name: Set up Python 3.14
         uses: actions/setup-python@v4
