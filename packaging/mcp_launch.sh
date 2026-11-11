@@ -157,8 +157,32 @@ mcp_stop_disabled() {
 }
 
 mcp_reload_nginx() {
-    docker exec prs-nginx-one-app nginx -t
-    docker exec prs-nginx-one-app nginx -s reload
+    local attempt=1
+    local max_attempts="${MCP_NGINX_RELOAD_ATTEMPTS:-30}"
+    local delay="${MCP_NGINX_RELOAD_DELAY:-1}"
+    local err=""
+    local announced=0
+
+    # Контейнер уже «запущен», но entrypoint ещё выпускает stand.crt и
+    # подставляет шаблоны. nginx -t в этот момент падает, хотя через секунду
+    # конфиг уже валиден.
+    while [[ "${attempt}" -le "${max_attempts}" ]]; do
+        if err="$(docker exec prs-nginx-one-app sh -c 'nginx -t && nginx -s reload' 2>&1)"; then
+            return 0
+        fi
+        if [[ "${announced}" -eq 0 ]]; then
+            echo "Жду, пока nginx выпустит сертификат и применит конфиг..."
+            announced=1
+        fi
+        if [[ "${attempt}" -lt "${max_attempts}" ]]; then
+            sleep "${delay}"
+        fi
+        attempt=$((attempt + 1))
+    done
+
+    printf '%s\n' "${err}" >&2
+    docker logs --tail 40 prs-nginx-one-app >&2 || true
+    return 1
 }
 
 mcp_grafana_image() {
