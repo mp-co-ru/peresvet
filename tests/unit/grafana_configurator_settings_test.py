@@ -31,6 +31,8 @@ def test_configurator_settings_dialog_contract():
     assert header.index("prs-platform-version") < header.index('id="button-prsSettings"')
     assert ".prs-platform-version{font-weight:400" in css
     assert 'fetch(window.location.origin+"/v1/version"' in javascript
+    assert 't.querySelector("#prs-platform-version")' in javascript
+    assert 'document.getElementById("prs-platform-version")' not in javascript
     assert 'aria-label="Настройки"' in header
     assert 'class="prs-settings-icon"' in header
     assert "prs-auto-link-wrap" not in html
