@@ -9,7 +9,7 @@ import sys
 import os
 from fastapi import FastAPI, APIRouter
 from starlette.routing import Mount
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 
 uvicorn = None
 try:
@@ -204,23 +204,31 @@ from src.services.tags.datafunc_app_api.datafunc_app_api_svc \
     )
 # -----------------------------------------------------------------------------
 
+async def _enter_mounted_lifespans(app: FastAPI, stack: AsyncExitStack) -> None:
+    """Запускает on_startup приложений, смонтированных в one_app.
+
+    Starlette 1.0 убрал Router.startup(). У вложенного FastAPI остался
+    lifespan: он вызывает on_startup при входе и on_shutdown при выходе.
+    """
+    for route in app.router.routes:
+        if not isinstance(route, Mount):
+            continue
+        router = getattr(route.app, "router", None)
+        lifespan_context = getattr(router, "lifespan_context", None)
+        if lifespan_context is None:
+            continue
+        await stack.enter_async_context(lifespan_context(route.app))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from src.common.runtime_flags import set_platform_shutting_down
 
     set_platform_shutting_down(False)
-    for route in app.router.routes:
-        if isinstance(route, Mount):
-            sub_router = getattr(route.app, "router", None)
-            if sub_router is not None:
-                await sub_router.startup()
-    yield
-    set_platform_shutting_down(True)
-    for route in app.router.routes:
-        if isinstance(route, Mount):
-            sub_router = getattr(route.app, "router", None)
-            if sub_router is not None:
-                await sub_router.shutdown()
+    async with AsyncExitStack() as stack:
+        await _enter_mounted_lifespans(app, stack)
+        yield
+        set_platform_shutting_down(True)
 
 # для привязки подприложений необходимо создать базовое приложение
 app = FastAPI(lifespan=lifespan, title="МПК-Пересвет")
@@ -281,6 +289,16 @@ api_router.include_router(router=datafunc_app_api_router)
 # =============================================================================
 
 app.include_router(api_router)
+
+
+def platform_version() -> str:
+    """Номер платформы: PRS_VERSION из окружения контейнера."""
+    return os.environ.get("PRS_VERSION", "").strip()
+
+
+@app.get("/v1/version")
+def read_platform_version() -> dict[str, str]:
+    return {"version": platform_version()}
 
 # монтирование приложений =====================================================
 

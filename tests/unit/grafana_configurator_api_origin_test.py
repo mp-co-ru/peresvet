@@ -21,4 +21,5 @@ def test_api_urls_keep_the_page_origin():
     assert "${window.location.protocol}//${window.location.hostname}" not in javascript
     assert 'addNodeToHierarchy=e=>{url=window.location.origin+"/v1/"+e+"/"' in javascript
     assert 'Откройте https://"+window.location.host+"/grafana/' in javascript
-    assert javascript.count("window.location.origin") == 61
+    assert 'fetch(window.location.origin+"/v1/version"' in javascript
+    assert javascript.count("window.location.origin") == 62

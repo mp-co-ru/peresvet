@@ -269,6 +269,7 @@ else
 fi
 
 mkdir -p "${stage_dir}/log"
+printf '%s\n' "${version}" > "${stage_dir}/VERSION"
 
 mkdir -p "$(dirname "${output}")"
 tar -czf "${output}" -C "${tmp_dir}" "${root_dir}"
