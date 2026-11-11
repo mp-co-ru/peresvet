@@ -12,6 +12,7 @@ services:
       TZ: ${TIME_ZONE}
       # Enable Peresvet API v2 (dataStorages + integrational operations)
       PRS_ENABLE_V2: ${PRS_ENABLE_V2:-0}
+      PRS_VERSION: ${PRS_VERSION:-}
     networks:
       - peresvet
     volumes:

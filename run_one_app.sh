@@ -820,6 +820,30 @@ is_ipv4() {
     done
 }
 
+platform_version() {
+    if [[ -n "${PRS_VERSION:-}" ]]; then
+        printf '%s' "${PRS_VERSION}"
+        return 0
+    fi
+
+    local version_file="${SCRIPT_DIR}/VERSION"
+    if [[ -f "${version_file}" ]]; then
+        local from_file
+        from_file="$(tr -d '[:space:]' < "${version_file}")"
+        if [[ -n "${from_file}" ]]; then
+            printf '%s' "${from_file}"
+            return 0
+        fi
+    fi
+
+    if command -v git >/dev/null 2>&1 && git -C "${SCRIPT_DIR}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        git -C "${SCRIPT_DIR}" describe --tags --always --dirty
+        return 0
+    fi
+
+    printf '%s' ""
+}
+
 upsert_env_value() {
     local file="$1"
     local key="$2"
@@ -985,6 +1009,7 @@ fi
 
 cont_env_file="${PRS_CONT_ENV_FILE:-docker/compose/.cont_one_app.env}"
 sed -i "s/NGINX_HOST=.*/NGINX_HOST=${srv}/" "${cont_env_file}"
+upsert_env_value "${cont_env_file}" "PRS_VERSION" "$(platform_version)"
 if [[ "${ssl}" == "false" ]]; then
     upsert_env_value "${cont_env_file}" "NGINX_TLS_IP" "${tls_ip}"
     echo "HTTPS: самоподписанный сертификат для ${tls_ip}."
