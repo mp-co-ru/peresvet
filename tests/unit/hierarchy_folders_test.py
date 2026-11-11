@@ -462,6 +462,16 @@ def test_folder_name_system_and_filter_injection_are_rejected():
     assert "new-Цех" not in mem.nodes
 
 
+def test_entity_delete_of_user_folder_returns_success():
+    mem = _tree()
+    mem.put("folder-pumps", "obj-1", "prsFolder", "Насосы")
+    svc = _svc(mem)
+    result = asyncio.run(svc._delete({"id": "folder-pumps"}))
+    assert result == {}
+    assert "folder-pumps" not in mem.nodes
+    assert mem.deleted == ["folder-pumps"]
+
+
 def test_folder_delete_stops_when_a_later_child_vetoes():
     mem = _tree()
     mem.put("folder-a", "objects", "prsFolder", "a")
