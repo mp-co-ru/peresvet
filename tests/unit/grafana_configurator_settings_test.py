@@ -28,8 +28,10 @@ def test_configurator_settings_dialog_contract():
     assert "Пересвет" in header
     assert 'id="prs-platform-version"' in header
     assert header.index("Пересвет") < header.index('id="prs-platform-version"')
+    assert header.index("</a>") < header.index('id="prs-platform-version"')
     assert header.index("prs-platform-version") < header.index('id="button-prsSettings"')
-    assert ".prs-platform-version{font-weight:400" in css
+    assert ".prs-platform-version{font-weight:400;color:#8a9699" in css
+    assert "top:.3em;cursor:default" in css
     assert 'fetch(window.location.origin+"/v1/version"' in javascript
     assert 't.querySelector("#prs-platform-version")' in javascript
     assert 'document.getElementById("prs-platform-version")' not in javascript

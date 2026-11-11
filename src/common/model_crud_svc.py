@@ -350,6 +350,8 @@ class ModelCRUDSvc(Svc):
         if not isinstance(ids, list):
             ids = [ids]
 
+        # Успешное удаление только папок не доходит до присваивания внизу цикла.
+        res_response = {}
         for id in ids:
 
             if not (await self._hierarchy.does_node_exist((id))):
