@@ -74,6 +74,12 @@ def test_cli_ip_overrides_prs_ip(tmp_path: Path):
     stored = (tmp_path / "cont.env").read_text(encoding="utf-8")
     assert "NGINX_TLS_IP=10.1.2.3" in stored
     assert "10.9.8.7" not in stored
+    version = next(
+        line.split("=", 1)[1]
+        for line in stored.splitlines()
+        if line.startswith("PRS_VERSION=")
+    )
+    assert version
 
 
 def test_launcher_rejects_non_ipv4(tmp_path: Path):

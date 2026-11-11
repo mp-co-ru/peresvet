@@ -179,6 +179,7 @@ cp -p "${repo_root}/packaging/mcp_launch.sh" "${stage_dir}/packaging/mcp_launch.
 cp -p "${repo_root}/.env" "${stage_dir}/.env"
 
 mkdir -p "${stage_dir}/log"
+printf '%s\n' "${version}" > "${stage_dir}/VERSION"
 
 python3 - "${stage_dir}" <<'PY'
 import pathlib
