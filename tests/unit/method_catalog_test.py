@@ -1,4 +1,4 @@
-"""Каталог методов: проверки привязок, арифметика stdlib и лицензия пакета."""
+"""Каталог методов: проверки привязок и арифметика stdlib."""
 import importlib.util
 from pathlib import Path
 
@@ -9,7 +9,6 @@ from src.services.methods.method_catalog import (
     validate_binding,
     validate_method_message,
 )
-from src.services.methods.model_crud.method_package_loader import license_allows
 
 
 def test_catalog_definition_rejects_initiators_and_non_zero_type():
@@ -120,9 +119,3 @@ def test_stdlib_arithmetic_rejects_null_and_division_by_zero():
     assert worker._apply(1, 0, lambda x, y: x / y, divide=True) == {"error": "деление на ноль"}
 
 
-def test_package_license_modes(monkeypatch):
-    assert license_allows({"license": {"mode": "none"}}) is True
-    assert license_allows({"license": {"mode": "env", "env": "PERESVET_METHOD_LICENSE_DEMO"}}) is False
-    monkeypatch.setenv("PERESVET_METHOD_LICENSE_DEMO", "token")
-    assert license_allows({"license": {"mode": "env", "variable": "PERESVET_METHOD_LICENSE_DEMO"}}) is True
-    assert license_allows({"license": {"mode": "server"}}) is False

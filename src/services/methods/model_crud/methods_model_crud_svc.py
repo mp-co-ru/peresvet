@@ -16,7 +16,6 @@ from src.services.methods.method_catalog import (
     validate_method_message,
 )
 from src.services.methods.method_description import apply_method_description, parse_method_description
-from src.services.methods.model_crud.method_package_loader import seed_method_packages
 from src.services.methods.model_crud.methods_model_crud_settings import MethodsModelCRUDSettings
 
 
@@ -838,14 +837,6 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             await self._rewrite_legacy_method_folders()
         except Exception as ex:
             self._logger.error(f"{self._config.svc_name} :: Старые папки методов не переписаны: {ex}")
-        try:
-            await seed_method_packages(
-                self._hierarchy,
-                self._config.hierarchy.get("node_id"),
-                self._logger,
-            )
-        except Exception as ex:
-            self._logger.error(f"{self._config.svc_name} :: Пакеты методов не загружены: {ex}")
 
         await self._amqp_consume_queue.unbind(self._exchange, "prsTag.model.deleted.*")
         await self._amqp_consume_queue.unbind(self._exchange, "prsSchedule.model.deleted.*")

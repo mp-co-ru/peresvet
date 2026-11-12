@@ -160,7 +160,9 @@ required_pathspecs=(
     "docker/docker-files/rabbitmq/enabled_plugins"
     "docker/docker-files/rabbitmq/rabbitmq.conf"
     "docs/pdf"
-    "methods"
+    "methods/requirements.txt"
+    "methods/test_method.py"
+    "methods/times.py"
     "src"
 )
 

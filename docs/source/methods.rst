@@ -277,16 +277,13 @@ methods (методы)
 Уже существующий ``prsMethodAddress`` повторно не создаётся.
 В диалоге появляется список: какая папка и какой метод созданы.
 
-Пакеты методов лежат в ``methods/packages/<id>/``: ``manifest.json`` и
-``worker.py``. Сервис methods читает только JSON и создаёт отсутствующие
-методы по ``prsMethodAddress``. Python пакета не импортируется.
-Лицензия: ``{"mode": "none"}`` либо ``{"mode": "env", "variable": "ИМЯ"}``.
-Пустая переменная окружения пропускает пакет.
-Каталог пакетов переопределяется ``PRS_METHOD_PACKAGES_DIR``.
+Сервис methods при старте каталог с диска не читает и узлы не создаёт.
+Папки и методы появляются только через API: ``POST /v1/methods/``
+или ``POST /v1/methods/description``. Текст описания присылает клиент.
 
-В поставке есть ``methods/packages/stdlib``:
-``prs.stdlib.add``, ``prs.stdlib.sub``, ``prs.stdlib.mul``, ``prs.stdlib.div``.
-Воркер — отдельный процесс patio с проектом ``methods_app``:
+Пакет ``stdlib`` в поставку платформы не входит. Адреса
+``prs.stdlib.add``, ``prs.stdlib.sub``, ``prs.stdlib.mul``, ``prs.stdlib.div``
+создаются тем же API. Воркер — отдельный процесс patio с проектом ``methods_app``:
 
 .. code-block:: bash
 
@@ -342,19 +339,15 @@ methods (методы)
 возвращает ``409``. Копирование определения каталога на тег или тревогу
 возвращает ``422``.
 
-Пакет стандартных методов ``methods/packages/stdlib`` кладёт в папку
-``stdlib`` адреса ``prs.stdlib.add``, ``prs.stdlib.sub``, ``prs.stdlib.mul``,
-``prs.stdlib.div``. Worker запускается отдельно и не импортируется сервисом::
+Пакет ``stdlib`` в поставку платформы не входит. Папка ``stdlib`` и адреса
+``prs.stdlib.add``, ``prs.stdlib.sub``, ``prs.stdlib.mul``, ``prs.stdlib.div``
+создаются через API methods. Worker запускается отдельно
+и не импортируется сервисом::
 
    python methods/packages/stdlib/worker.py
 
 Он регистрируется в patio-проекте ``methods_app``. ``None``, нечисло
 и деление на ноль возвращают ``{"error": "..."}``: значение тега не пишется.
 
-Пакет партнёра — каталог ``methods/packages/<id>/`` с ``manifest.json``
-и своим ``worker.py``. Платформа читает только JSON и создаёт узлы.
-Python пакета не импортируется. Лицензия в манифесте: ``{"mode": "none"}``
-или ``{"mode": "env", "env": "PERESVET_METHOD_LICENSE_<ID>"}``.
-Пустая переменная окружения пропускает загрузку пакета и worker
-не должен регистрировать RPC. Каталог пакетов переопределяется
-``PRS_METHOD_PACKAGES_DIR``.
+Пакет партнёра устроен так же: описание уходит в API methods,
+``worker.py`` запускается отдельно и сервисом не импортируется.
