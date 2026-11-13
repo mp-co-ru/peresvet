@@ -102,7 +102,7 @@ def test_video_tag_parameter_is_passed_as_tag_id_without_data_get():
         "p1",
         None,
         {
-            "prsJsonConfigString": ['{"tagId": "video-tag", "actual": true}'],
+            "prsJsonConfigString": ['{"request": {"tagId": "video-tag", "actual": true}}'],
             "prsIndex": ["1"],
             "cn": ["source"],
         },
@@ -122,60 +122,21 @@ def test_worker_error_does_not_write_tag():
     svc._post_message.assert_not_called()
 
 
-def test_virtual_parent_outside_tag_is_ignored():
-    from src.services.dataStorages.app.dataStorages_app_base import DataStoragesAppBase
+def test_tag_io_binding_follows_method_type_and_parent_class():
+    folder = _Hierarchy()
+    folder.get_node_class = AsyncMock(return_value="prsModelNode")
+    svc = _make_service(folder)
+    asyncio.run(MethodsApp._bind_tag_io(svc, "method-1", 1))
+    assert svc._amqp_consume_queue.calls == []
 
-    calls = []
+    tag = _Hierarchy(parent_tag_id="tag-1")
+    svc = _make_service(tag)
+    asyncio.run(MethodsApp._bind_tag_io(svc, "method-1", 1))
+    asyncio.run(MethodsApp._bind_tag_io(svc, "method-2", 2))
+    assert ("bind", "main", "prsTag.app.data_get.tag-1") in svc._amqp_consume_queue.calls
+    assert ("bind", "main", "prsTag.app.data_set.tag-1") in svc._amqp_consume_queue.calls
 
-    class Hierarchy:
-        def __init__(self, parent_class):
-            self.parent_class = parent_class
-
-        async def search(self, payload):
-            return [("m1", None, {"prsEntityTypeCode": ["1"], "cn": ["m"]})]
-
-        async def get_parent(self, method_id):
-            return "parent", None
-
-        async def get_node_class(self, node_id):
-            return self.parent_class
-
-    class Logger:
-        def warning(self, *args, **kwargs):
-            pass
-
-        def error(self, *args, **kwargs):
-            pass
-
-    class _Concrete(DataStoragesAppBase):
-        async def _create_store_for_alert(self, *args, **kwargs):
-            return None
-
-        async def _create_store_for_tag(self, *args, **kwargs):
-            return None
-
-        async def _create_store_name_for_new_alert(self, *args, **kwargs):
-            return None
-
-        async def _create_store_name_for_new_tag(self, *args, **kwargs):
-            return None
-
-        async def _read_data(self, *args, **kwargs):
-            return None
-
-        async def _write_tag_data_to_db(self, *args, **kwargs):
-            return None
-
-    svc = object.__new__(_Concrete)
-    svc._logger = Logger()
-
-    async def sync(parent):
-        calls.append(parent)
-
-    svc._sync_parent_tag_data_get_subscription = sync
-    svc._hierarchy = Hierarchy("prsModelNode")
-    asyncio.run(DataStoragesAppBase._bind_all_virtual_method_parent_tags(svc))
-    assert calls == []
-    svc._hierarchy = Hierarchy("prsTag")
-    asyncio.run(DataStoragesAppBase._bind_all_virtual_method_parent_tags(svc))
-    assert calls == ["parent"]
+    storage = Path = __import__("pathlib").Path
+    base = storage("src/services/dataStorages/app/dataStorages_app_base.py").read_text(encoding="utf-8")
+    assert "prsMethod.app.virtual_data_get" not in base
+    assert "find_active_virtual_method_id" not in base

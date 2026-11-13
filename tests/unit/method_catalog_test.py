@@ -1,4 +1,4 @@
-"""Каталог методов: проверки привязок, арифметика stdlib и лицензия пакета."""
+"""Каталог методов: проверки привязок и арифметика stdlib."""
 import importlib.util
 from pathlib import Path
 
@@ -9,7 +9,6 @@ from src.services.methods.method_catalog import (
     validate_binding,
     validate_method_message,
 )
-from src.services.methods.model_crud.method_package_loader import license_allows
 
 
 def test_catalog_definition_rejects_initiators_and_non_zero_type():
@@ -91,8 +90,10 @@ def test_catalog_call_checks_arity_and_numeric_types():
         {"index": 2, "valueTypeCode": 2, "cn": "b"},
     ]
     assert catalog_call_error(catalog, [{"index": 1, "data": 1}]) is not None
-    assert catalog_call_error(catalog, [{"index": 1, "data": None}, {"index": 2, "data": 1}]) is not None
+    assert catalog_call_error(catalog, [{"index": 1, "data": None}, {"index": 2, "data": "текст"}]) is None
     assert catalog_call_error(catalog, [{"index": 1, "data": 1}, {"index": 2, "data": 2.5}]) is None
+    assert catalog_call_error(catalog, [{"index": 1, "data": 1}, {"index": 3, "data": "текст"}], variadic=True) is None
+    assert catalog_call_error(catalog, [{"index": 1, "data": None}], variadic=True) is None
     envelope = {"data": [{"data": [[10, 3, 0]]}]}
     assert numeric_of(envelope) == 3
     assert numeric_compatible(1, 2.5) is False
@@ -120,9 +121,3 @@ def test_stdlib_arithmetic_rejects_null_and_division_by_zero():
     assert worker._apply(1, 0, lambda x, y: x / y, divide=True) == {"error": "деление на ноль"}
 
 
-def test_package_license_modes(monkeypatch):
-    assert license_allows({"license": {"mode": "none"}}) is True
-    assert license_allows({"license": {"mode": "env", "env": "PERESVET_METHOD_LICENSE_DEMO"}}) is False
-    monkeypatch.setenv("PERESVET_METHOD_LICENSE_DEMO", "token")
-    assert license_allows({"license": {"mode": "env", "variable": "PERESVET_METHOD_LICENSE_DEMO"}}) is True
-    assert license_allows({"license": {"mode": "server"}}) is False

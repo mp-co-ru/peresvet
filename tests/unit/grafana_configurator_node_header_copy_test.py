@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261102-catalog-params-read-v1"
+CODE_VERSION = "20261113-param-layout-v32"
 
 
 def _parts():
@@ -76,7 +76,7 @@ def test_node_header_copy_buttons():
     assert 'title="Копировать описание"' in desc
     assert desc.count('class="prs-attr-slot"') == 3
     assert desc.index('class="prs-attr-copy"') < desc.index("fa-circle-info")
-    assert "Описание узла для операторов" in desc
+    assert "Описание узла. Оно же всплывающая подсказка строки в иерархии." in desc
     units = html[html.index('id="div-prsMeasureUnits"') : html.index('id="input-prsMeasureUnits"')]
     assert "fa-circle-info" in units
     assert "Единицы значения тега" in units

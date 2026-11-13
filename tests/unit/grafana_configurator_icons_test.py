@@ -46,12 +46,14 @@ def test_tree_and_action_icons_are_inline_svg():
     assert ">.prs-tree-rollup-strip{display:inline-flex;align-items:center;justify-content:flex-start;gap:3px;margin-right:.24rem;vertical-align:middle;box-sizing:border-box;flex:0 0 auto;width:auto;min-width:0;max-width:none}" in css
     assert ">.prs-tree-rollup-strip--spacer{flex:0 0 0;width:0;min-width:0;max-width:0;margin:0;padding:0;overflow:hidden}" in css
     assert "spacer-after-indicator-extra,1.35rem)" not in css
-    assert "prs-tree-rollup-strip--s.prs-tree-rollup-strip--d .prs-tree-rollup-dot--storage+.prs-tree-rollup-dot--nods{margin-left:.45rem}" in css
-    assert "#tree .list-group-item[role=treeitem] .prs-tree-rollup-dot--storage+.prs-tree-rollup-dot--nods{margin-left:.45rem}" not in css
+    assert "prs-tree-rollup-dot--storage+.prs-tree-rollup-dot--nods{margin-left:" not in css
     assert 'opacity="0.4"' not in javascript
     assert 'stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/>' in javascript
     assert "padding:1px 4px" not in css
-    assert "prs-tree-rollup-dot--storage{background:rgba(255,192,203,.72);padding:0;width:1.05rem;height:1.05rem;min-width:1.05rem;max-width:1.05rem;" in css
+    assert "prs-tree-rollup-dot--storage{background:rgba(255,192,203,.72);padding:0;width:1.28rem;height:1.28rem;min-width:1.28rem;max-width:1.28rem;" in css
+    assert "prs-tree-rollup-dot--inactive::before{color:#8b1e24}" in css
+    assert "prs-tree-rollup-dot--storage::before{color:#8b1e24}" in css
+    assert "prs-tree-rollup-dot--nods::before{color:#8b1e24}" in css
     assert '<rect x="2.15" y="2.15" width="11.7" height="11.7"' not in javascript
     assert '"fa-angle-down"' not in javascript.split("prsIconOrder=")[1].split("];")[0]
     assert "#tree .list-group-item[role=treeitem]>.state-icon svg{display:none!important}" in css

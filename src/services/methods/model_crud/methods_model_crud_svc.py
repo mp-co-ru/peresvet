@@ -12,11 +12,11 @@ from src.services.methods.method_catalog import (
     catalog_id_from_message,
     error as catalog_error,
     ldap_first,
+    ldap_flag,
     parent_allows_initiator_cache,
     validate_method_message,
 )
 from src.services.methods.method_description import apply_method_description, parse_method_description
-from src.services.methods.model_crud.method_package_loader import seed_method_packages
 from src.services.methods.model_crud.methods_model_crud_settings import MethodsModelCRUDSettings
 
 
@@ -264,7 +264,11 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
                         "cn": item["cn"],
                         "description": item.get("description") or "",
                         "prsIndex": item["prsIndex"],
-                        "prsValueTypeCode": item["prsValueTypeCode"],
+                        **(
+                            {"prsValueTypeCode": item["prsValueTypeCode"]}
+                            if item.get("prsValueTypeCode") is not None
+                            else {}
+                        ),
                     }
                 }
                 for item in method.get("parameters") or []
@@ -622,7 +626,35 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
                         r, initiator_id, method_id, obj_class
                     )
 
+    async def _variadic_parameter_policy(self, mes: dict) -> None:
+        """У метода с произвольным числом параметров в иерархии нет типов.
+
+        Определение в каталоге не хранит список параметров. У экземпляра
+        параметры есть, но без ``prsValueTypeCode``.
+        """
+        attrs = mes.get("attributes") or {}
+        catalog_id = mes.get("catalogMethodId") or attrs.get("prsCatalogMethodId")
+        if isinstance(catalog_id, str):
+            catalog_id = catalog_id.strip() or None
+        variadic = ldap_flag(attrs.get("prsVariadic")) and not catalog_id
+        if catalog_id:
+            rows = await self._hierarchy.search(
+                {"id": catalog_id, "attributes": ["prsVariadic"]}
+            )
+            if rows:
+                variadic = ldap_flag(ldap_first(rows[0][2], "prsVariadic"))
+        if not variadic:
+            return
+        if not catalog_id:
+            mes["parameters"] = []
+            return
+        for item in mes.get("parameters") or []:
+            item_attrs = item.get("attributes") if isinstance(item, dict) else None
+            if isinstance(item_attrs, dict):
+                item_attrs.pop("prsValueTypeCode", None)
+
     async def _further_create(self, mes: dict, new_id: str) -> None:
+        await self._variadic_parameter_policy(mes)
         system_node = await self._hierarchy.search(payload={
             "base": new_id,
             "scope": hierarchy.CN_SCOPE_ONELEVEL,
@@ -838,14 +870,6 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             await self._rewrite_legacy_method_folders()
         except Exception as ex:
             self._logger.error(f"{self._config.svc_name} :: Старые папки методов не переписаны: {ex}")
-        try:
-            await seed_method_packages(
-                self._hierarchy,
-                self._config.hierarchy.get("node_id"),
-                self._logger,
-            )
-        except Exception as ex:
-            self._logger.error(f"{self._config.svc_name} :: Пакеты методов не загружены: {ex}")
 
         await self._amqp_consume_queue.unbind(self._exchange, "prsTag.model.deleted.*")
         await self._amqp_consume_queue.unbind(self._exchange, "prsSchedule.model.deleted.*")

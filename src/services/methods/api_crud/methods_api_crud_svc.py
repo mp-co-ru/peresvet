@@ -19,18 +19,34 @@ class MethodCreateAttributes(svc.NodeAttributes):
     prsEntityTypeCode: int = Field(
         0,
         title="Тип метода",
-        description="0 — вычислительный (инициаторы, запись в БД); 1 — виртуальный (значение при GET /v1/data).",
+        description=(
+            "0 — вычислительный (инициаторы, запись результата в БД); "
+            "1 — чтение: значение GET /v1/data берётся из метода; "
+            "2 — запись: метод принимает данные SET /v1/data; "
+            "3 — действие при чтении: метод получает data_get и ответ не отправляет; "
+            "4 — действие при записи: метод получает data_set и ответ не отправляет."
+        ),
     )  # type: ignore
     prsCatalogMethodId: Optional[str] = Field(
         None,
         title="Метод каталога",
         description="entryUUID метода из cn=methods. Для локального метода не задаётся.",
     )
+    prsVariadic: Optional[bool] = Field(
+        None,
+        title="Произвольное число параметров",
+        description=(
+            "Факультативный атрибут метода каталога. Если true, ни число параметров "
+            "экземпляра, ни их типы не сверяются со слотами каталога. "
+            "Если атрибут не задан, арность и типы фиксированы."
+        ),
+    )
 
 class MethodUpdateAttributes(svc.NodeAttributes):
     prsMethodAddress: Optional[str] = None
     prsEntityTypeCode: Optional[int] = None
     prsCatalogMethodId: Optional[str] = None
+    prsVariadic: Optional[bool] = None
 
 class MethodParameterAttributes(svc.NodeAttributes):
     prsValueTypeCode: Optional[int] = Field(
@@ -170,8 +186,14 @@ async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
 
           * **prsMethodAddress** (str) - Адрес метода. Обязательное поле.
           * **prsEntityTypeCode** (int) - Тип метода: ``0`` — вычислительный (инициаторы,
-            запись результата в БД); ``1`` — виртуальный (значение для GET ``/v1/data/``
-            вычисляется при чтении, без чтения из БД). Необязательное поле.
+            запись результата в БД); ``1`` — чтение (значение для GET ``/v1/data/``
+            берётся из метода); ``2`` — запись (метод принимает данные SET ``/v1/data/``);
+            ``3`` — действие при чтении (сообщение ``data_get`` обрабатывается, ответ не отправляется);
+            ``4`` — действие при записи (сообщение ``data_set`` обрабатывается, ответ не отправляется).
+            Необязательное поле.
+          * **prsVariadic** (bool) - Факультативный атрибут. Если ``true``, метод каталога
+            принимает произвольное число параметров любых типов. Если атрибут не задан,
+            число и типы параметров экземпляра должны совпадать со списком каталога.
 
         * **parameters** (List[MethodParameter]) - Параметры метода. Необязательное поле.
 

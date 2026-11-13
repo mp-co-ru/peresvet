@@ -17,6 +17,7 @@ import src.common.times as times
 from src.common.app_svc import AppSvc
 from src.common.hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
 from src.common.amqp_rpc import NO_AMQP_RPC_REPLY
+from src.common.virtual_method_lookup import find_active_method_id
 from src.services.methods.app.methods_app_settings import MethodsAppSettings
 from src.services.methods.app.method_param_resolve import (
     parse_parameter_config,
@@ -27,6 +28,7 @@ from src.services.methods.method_catalog import (
     as_int,
     catalog_call_error,
     ldap_first,
+    ldap_flag,
     parent_allows_initiator_cache,
 )
 
@@ -90,8 +92,11 @@ class MethodsApp(AppSvc):
         self._method_broker = None
         self._rpc_executor = None
         self._rpc_exchange = None
+        # method_id -> (tag_id, "get" | "set"): подписки чтения типа 1 и записи типа 2
+        self._tag_io: dict[str, tuple[str, str]] = {}
 
     def _add_app_handlers(self):
+        self._handlers["prsTag.app.data_get.*"] = self._tag_data_get
         self._handlers["prsTag.app.data_set.*"] = self._start_method_by_tag
         self._handlers["prsSchedule.app.fire_event.*"] = self._start_method_by_sched
         self._handlers["prsMethod.app.virtual_data_get"] = self._virtual_data_get
@@ -208,7 +213,7 @@ class MethodsApp(AppSvc):
         self._logger.debug(f"{self._config.svc_name} :: methods_ids: {methods_ids}")
         for method_id, tag_id in list(methods_ids.items()):
             try:
-                if await self._method_entity_type(method_id) == 1:
+                if await self._method_entity_type(method_id) in (1, 2, 3, 4):
                     continue
                 parameters = await self._hierarchy.search({
                     "base": method_id,
@@ -246,6 +251,7 @@ class MethodsApp(AppSvc):
         self._logger.debug(f"Run methods. Data: {mes}")
 
         tag_ids: list[str] = []
+        writer_replied = False
         async with self._cache.get_redis() as r:
             for tag_item in mes["data"]:
                 tag_id = tag_item["tagId"]
@@ -254,33 +260,50 @@ class MethodsApp(AppSvc):
                 methods = self._unwrap_redis_json_root(
                     await r.json().get(f"{tag_id}.{self._config.svc_name}")
                 )
-                if not isinstance(methods, dict) or not methods:
-                    self._logger.error(f"{self._config.svc_name} :: К тегу '{tag_id}' не привязаны методы.")
-                    continue
-
-                self._logger.debug(f"methods_ids: {methods}")
-                initiator_tag_id = tag_id
-                for method_id, calc_tag_id in list(methods.items()):
-                    try:
-                        if await self._method_entity_type(method_id) == 1:
-                            continue
-                        parameters = await self._hierarchy.search({
-                            "base": method_id,
-                            "filter": {"cn": ["*"], "objectClass": ["prsMethodParameter"]},
-                            "attributes": ["prsJsonConfigString", "prsIndex", "cn"]
-                        })
-                        for tag_data_item in tag_data:
-                            await self._calc_tag(calc_tag_id, method_id, parameters, tag_data_item)
-                    except Exception as ex:
-                        self._logger.error(
-                            f"{self._config.svc_name} :: Ошибка запуска метода '{method_id}' "
-                            f"по тегу '{initiator_tag_id}': {ex}"
-                        )
-                        if self._is_missing_node_error(ex):
-                            await self._drop_stale_method_from_initiator_cache(
-                                initiator_tag_id, method_id
+                if isinstance(methods, dict) and methods:
+                    self._logger.debug(f"methods_ids: {methods}")
+                    initiator_tag_id = tag_id
+                    for method_id, calc_tag_id in list(methods.items()):
+                        try:
+                            if await self._method_entity_type(method_id) in (1, 2, 3, 4):
+                                continue
+                            parameters = await self._hierarchy.search({
+                                "base": method_id,
+                                "filter": {"cn": ["*"], "objectClass": ["prsMethodParameter"]},
+                                "attributes": ["prsJsonConfigString", "prsIndex", "cn"]
+                            })
+                            for tag_data_item in tag_data:
+                                await self._calc_tag(calc_tag_id, method_id, parameters, tag_data_item)
+                        except Exception as ex:
+                            self._logger.error(
+                                f"{self._config.svc_name} :: Ошибка запуска метода '{method_id}' "
+                                f"по тегу '{initiator_tag_id}': {ex}"
                             )
+                            if self._is_missing_node_error(ex):
+                                await self._drop_stale_method_from_initiator_cache(
+                                    initiator_tag_id, method_id
+                                )
 
+                action_id = await find_active_method_id(self._hierarchy, tag_id, 4)
+                if action_id:
+                    action_res = await self._invoke_tag_writer(
+                        action_id, tag_id, tag_data, expected_type=4
+                    )
+                    if isinstance(action_res, dict) and action_res.get("error"):
+                        self._logger.error(
+                            f"{self._config.svc_name} :: Действие при записи {action_id}: {action_res['error']}"
+                        )
+                writer_id = await find_active_method_id(self._hierarchy, tag_id, 2)
+                if not (isinstance(methods, dict) and methods) and not writer_id and not action_id:
+                    self._logger.error(f"{self._config.svc_name} :: К тегу '{tag_id}' не привязаны методы.")
+                if writer_id:
+                    written = await self._invoke_tag_writer(writer_id, tag_id, tag_data)
+                    if isinstance(written, dict) and written.get("error"):
+                        return written
+                    writer_replied = True
+
+        if writer_replied:
+            return {}
         if not tag_ids:
             return {}
         for tid in tag_ids:
@@ -317,10 +340,10 @@ class MethodsApp(AppSvc):
             address = ldap_first(rows[0][2], "prsMethodAddress", "")
             if isinstance(address, str):
                 address = address.strip()
-            return {"address": address, "catalogId": None, "catalogParameters": []}
+            return {"address": address, "catalogId": None, "catalogParameters": [], "variadic": False}
 
         catalog_rows = await self._hierarchy.search(
-            {"id": catalog_id, "attributes": ["prsMethodAddress"]}
+            {"id": catalog_id, "attributes": ["prsMethodAddress", "prsVariadic"]}
         )
         if not catalog_rows:
             return {"error": {"code": 404, "message": "Метод каталога не найден."}}
@@ -356,6 +379,7 @@ class MethodsApp(AppSvc):
             "address": address,
             "catalogId": catalog_id,
             "catalogParameters": catalog_parameters,
+            "variadic": ldap_flag(ldap_first(catalog_rows[0][2], "prsVariadic")),
         }
 
     async def _video_stream_argument(self, cfg: dict) -> dict | None:
@@ -423,7 +447,11 @@ class MethodsApp(AppSvc):
         parameters_data.sort(key=lambda item: (item["index"], 1000)[item["index"] is None])
         params_data = [item["data"] for item in parameters_data]
         if target.get("catalogId"):
-            call_error = catalog_call_error(target.get("catalogParameters") or [], parameters_data)
+            call_error = catalog_call_error(
+                target.get("catalogParameters") or [],
+                parameters_data,
+                variadic=bool(target.get("variadic")),
+            )
             if call_error:
                 self._logger.error(
                     f"{self._config.svc_name} :: Метод каталога {target['catalogId']}: {call_error}"
@@ -503,7 +531,97 @@ class MethodsApp(AppSvc):
         report["result"] = result
         return report
 
-    async def _virtual_data_get(self, mes: dict, routing_key: str | None = None) -> dict:
+    async def _resolved_call_arguments(self, method_id: str, tag_id: str | None, finish_ts: int) -> dict:
+        """Параметры метода в порядке prsIndex и цель вызова."""
+        target = await self._resolve_method_target(method_id)
+        if target.get("error"):
+            return target
+        parameters = await self._hierarchy.search({
+            "base": method_id,
+            "filter": {"cn": ["*"], "objectClass": ["prsMethodParameter"]},
+            "attributes": ["prsJsonConfigString", "prsIndex", "cn"]
+        })
+        parameters_data: list[dict] = []
+        for parameter in parameters:
+            cfg = parse_parameter_config(parameter[2]["prsJsonConfigString"][0])
+            param_data = await resolve_parameter_value(
+                cfg,
+                post_message=self._post_message,
+                client_request=None,
+                initiator_finish=finish_ts,
+                initiator_point=None,
+                virtual_resolution_tag_id=tag_id,
+                lookup_constant=self._lookup_constant,
+            )
+            raw_index = parameter[2]["prsIndex"][0]
+            index = None if raw_index is None else int(raw_index)
+            parameters_data.append({"index": index, "data": param_data})
+        parameters_data.sort(key=lambda item: (item["index"], 1000)[item["index"] is None])
+        if target.get("catalogId"):
+            call_error = catalog_call_error(
+                target.get("catalogParameters") or [],
+                parameters_data,
+                variadic=bool(target.get("variadic")),
+            )
+            if call_error:
+                return {"error": {"code": 422, "message": call_error}}
+        return {"target": target, "arguments": [item["data"] for item in parameters_data]}
+
+    async def _tag_data_get(self, mes: dict, routing_key: str | None = None) -> dict:
+        """Ответ на prsTag.app.data_get.<tag> для тега с активным методом типа 1."""
+        tag_ids = mes.get("tagId") or []
+        if len(tag_ids) != 1:
+            return NO_AMQP_RPC_REPLY
+        tag_id = tag_ids[0]
+        ctx = mes.get("evalContextTagId")
+        if ctx is not None and str(ctx) == str(tag_id):
+            return {
+                "error": {
+                    "code": 422,
+                    "message": "Вложенное чтение того же тега из метода типа 1.",
+                }
+            }
+        client_request = {k: v for k, v in mes.items() if k != "evalContextTagId"}
+        action_id = await find_active_method_id(self._hierarchy, tag_id, 3)
+        if action_id:
+            action_res = await self._virtual_data_get(
+                {"methodId": action_id, "tagId": tag_id, "clientRequest": client_request},
+                expected_type=3,
+            )
+            if isinstance(action_res, dict) and action_res.get("error"):
+                self._logger.error(
+                    f"{self._config.svc_name} :: Действие при чтении {action_id}: {action_res['error']}"
+                )
+        method_id = await find_active_method_id(self._hierarchy, tag_id, 1)
+        if not method_id:
+            return NO_AMQP_RPC_REPLY
+        return await self._virtual_data_get(
+            {"methodId": method_id, "tagId": tag_id, "clientRequest": client_request}
+        )
+
+    async def _invoke_tag_writer(self, method_id: str, tag_id: str, points, *, expected_type: int = 2) -> dict:
+        """Метод типа 2 принимает записываемые точки последним аргументом и отвечает на data_set."""
+        parent, _ = await self._hierarchy.get_parent(method_id)
+        if parent != tag_id:
+            return {"error": {"code": 400, "message": "Метод записи не принадлежит указанному тегу."}}
+        if await self._method_entity_type(method_id) != expected_type:
+            return {"error": {"code": 400, "message": "Метод не помечен как запись (prsEntityTypeCode != 2)."}}
+        prepared = await self._resolved_call_arguments(method_id, None, times.now_int())
+        if prepared.get("error"):
+            return prepared
+        target = prepared["target"]
+        try:
+            res = await self._rpc_exchange.call(target["address"], *prepared["arguments"], points)
+        except Exception as ex:
+            self._logger.error(f"{self._config.svc_name} :: Метод записи {method_id}: {ex}")
+            return {"error": {"code": 500, "message": str(ex)}}
+        if isinstance(res, dict) and res.get("error") is not None:
+            return {"error": {"code": 500, "message": str(res.get("error"))}}
+        return {}
+
+    async def _virtual_data_get(
+        self, mes: dict, routing_key: str | None = None, *, expected_type: int = 1
+    ) -> dict:
         method_id = mes.get("methodId")
         tag_id = mes.get("tagId")
         client_request = mes.get("clientRequest")
@@ -512,8 +630,8 @@ class MethodsApp(AppSvc):
         parent, _ = await self._hierarchy.get_parent(method_id)
         if parent != tag_id:
             return {"error": {"code": 400, "message": "Метод не принадлежит указанному тегу."}}
-        if await self._method_entity_type(method_id) != 1:
-            return {"error": {"code": 400, "message": "Метод не помечен как виртуальный (prsEntityTypeCode != 1)."}}
+        if await self._method_entity_type(method_id) != expected_type:
+            return {"error": {"code": 400, "message": f"Метод не имеет prsEntityTypeCode {expected_type}."}}
         target = await self._resolve_method_target(method_id)
         if target.get("error"):
             return target
@@ -552,7 +670,11 @@ class MethodsApp(AppSvc):
         parameters_data.sort(key=lambda item: (item["index"], 1000)[item["index"] is None])
         params_data = [item["data"] for item in parameters_data]
         if target.get("catalogId"):
-            call_error = catalog_call_error(target.get("catalogParameters") or [], parameters_data)
+            call_error = catalog_call_error(
+                target.get("catalogParameters") or [],
+                parameters_data,
+                variadic=bool(target.get("variadic")),
+            )
             if call_error:
                 return {"error": {"code": 422, "message": call_error}}
         method_addr = target["address"]
@@ -582,6 +704,7 @@ class MethodsApp(AppSvc):
         }
 
     async def _deleting(self, mes: dict, routing_key: str = None):
+        await self._clear_tag_io(mes["id"])
         empty_initiators = await self._delete_method_cache(mes['id'])
         await self._unbind_unused_initiators(mes['id'], empty_initiators)
 
@@ -719,6 +842,47 @@ class MethodsApp(AppSvc):
             await r.json().delete(key=method_key)
         return empty_initiators
 
+    def _tag_io_map(self) -> dict[str, tuple[str, str]]:
+        mapping = getattr(self, "_tag_io", None)
+        if mapping is None:
+            mapping = {}
+            self._tag_io = mapping
+        return mapping
+
+    async def _clear_tag_io(self, method_id: str) -> None:
+        current = self._tag_io_map().pop(method_id, None)
+        if not current:
+            return
+        tag_id, kind = current
+        if any(tag == tag_id and bound_kind == kind for tag, bound_kind in self._tag_io_map().values()):
+            return
+        if kind == "set" and await self._initiator_has_bound_methods(tag_id):
+            return
+        await self._amqp_consume_queue.unbind(
+            exchange=self._exchange,
+            routing_key=f"prsTag.app.data_{kind}.{tag_id}",
+        )
+
+    async def _bind_tag_io(self, method_id: str, entity_type: int) -> None:
+        """Тип 1 и 3 слушают data_get родителя-тега, типы 2 и 4 — data_set того же тега."""
+        await self._clear_tag_io(method_id)
+        try:
+            parent, _ = await self._hierarchy.get_parent(method_id)
+            parent_class = await self._hierarchy.get_node_class(parent) if parent else None
+        except Exception as ex:
+            self._logger.error(
+                f"{self._config.svc_name} :: Не удалось привязать метод '{method_id}' к тегу: {ex}"
+            )
+            return
+        if parent_class != "prsTag" or not parent:
+            return
+        kind = "get" if entity_type in (1, 3) else "set"
+        await self._amqp_consume_queue.bind(
+            exchange=self._exchange,
+            routing_key=f"prsTag.app.data_{kind}.{parent}",
+        )
+        self._tag_io_map()[method_id] = (parent, kind)
+
     async def _make_method_cache(self, method_id: str):
         """
         1) <initiator_id>.methods_app =
@@ -735,12 +899,15 @@ class MethodsApp(AppSvc):
         await self._delete_method_cache(method_id)
         await self._bind_method(method_id, False)
 
-        if await self._method_entity_type(method_id) == 1:
+        entity_type = await self._method_entity_type(method_id)
+        if entity_type in (1, 2, 3, 4):
+            await self._bind_tag_io(method_id, entity_type)
             self._logger.debug(
-                f"{self._config.svc_name} :: Метод '{method_id}' (prsEntityTypeCode=1): "
+                f"{self._config.svc_name} :: Метод '{method_id}' (prsEntityTypeCode={entity_type}): "
                 "кэш инициаторов не строится."
             )
             return True
+        await self._clear_tag_io(method_id)
 
         method_dn = await self._hierarchy.get_node_dn(method_id)
         payload = {
@@ -801,6 +968,7 @@ class MethodsApp(AppSvc):
 
     async def on_startup(self) -> None:
         await super().on_startup()
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.app.data_get.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.app.data_set.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsSchedule.app.fire_event.*")
         try:

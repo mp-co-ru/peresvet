@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
 DOCS_HOST = "mp-co-ru.github.io/peresvet"
-CODE_VERSION = "20261102-catalog-params-read-v1"
+CODE_VERSION = "20261113-param-layout-v32"
 
 
 def _dashboard_parts():
@@ -137,6 +137,12 @@ def test_tag_read_request_ux_dashboard_contract():
     assert "#prs-tag-pane-read .prs-tag-get-keys-summary" in css
     assert "#prs-tag-pane-read .prs-tag-get-key-row" in css
 
+    # Write request: value and timestamp first, body under them
+    write = html[html.index('id="prs-tag-pane-write"') : html.index('id="button-tagSetData"')]
+    assert write.index('id="span-tagSetDataURL"') < write.index('id="input-tagSetDataValue"')
+    assert write.index('id="input-tagSetDataValue"') < write.index('id="input-tagSetDataTime"')
+    assert write.index('id="input-tagSetDataTime"') < write.index('id="span-tagSetDataBody"')
+
     # Write tab / export / results table preserved
     assert 'id="prs-tag-pane-write"' in html
     assert 'id="button-tagGetData"' in read
@@ -158,10 +164,10 @@ def test_tag_read_request_ux_dashboard_contract():
 
 def test_tag_read_request_preserves_method_param_flag_layout():
     _, html, _, _ = _dashboard_parts()
-    # Method DG / head flags still use the shared one-row layout
-    assert "prs-method-param-dg-flags" in html
-    assert "prs-flags-one-row prs-method-param-dg-flags" in html
-    assert "prs-flags-one-row prs-method-param-head-flags" in html
-    # Read pane must not keep the old packed one-row flags
+    assert "prs-method-param-get-keys" in html
+    assert 'id="input-param-dg-start-0Picker"' in html
+    assert "prs-flags-one-row prs-method-param-dg-flags" not in html
+    assert "prs-method-param-head-flags" in html
+    assert 'id="div-param-get-keys-0"' in html
     read = _read_pane(html)
     assert "prs-flags-one-row" not in read

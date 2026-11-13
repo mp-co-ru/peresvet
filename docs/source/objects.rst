@@ -1,4 +1,4 @@
-Обьекты
+Объекты
 ~~~~~~~
 
 .. automodule:: objects_api_crud_svc

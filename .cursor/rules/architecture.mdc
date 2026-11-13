@@ -10,6 +10,7 @@ alwaysApply: true
 - Preserve existing service boundaries.
 - Do not introduce cross-service imports that bypass established communication patterns.
 - Services communicate through RabbitMQ; do not silently replace this with direct coupling.
+- Сервис знает другой сервис только как подписчик его сообщений. Слать сообщение, адресованное другому сервису, нельзя. Раньше написанный сервис публикует свои ключи и ждёт ответ на запрос; сервис, написанный позже, подписывается на эти ключи и отвечает в канал ответа. Позже написанный сервис не инициирует сообщение первому: у первого нет обработчика, придуманного после него.
 - Avoid broad refactors unless the task explicitly requires them.
 - When changing shared models, settings, RPC behavior or cache behavior, identify affected services.
 - Prefer existing patterns in nearby services over new abstractions.

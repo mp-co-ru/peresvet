@@ -8,7 +8,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261102-catalog-params-read-v1"
+CODE_VERSION = "20261113-param-layout-v32"
 
 
 def _parts():
@@ -40,10 +40,18 @@ def test_configurator_json_editor_contract():
     assert 'ta.addEventListener("input",function(){prsJsonEditorRefresh(ta);' in javascript
     assert 'class="form-control prs-mono" id="input-prsJsonConfigString"' not in html
 
-    assert ".prs-json-editor-code{display:flex;align-items:stretch;height:16rem" in css
+    assert ".prs-json-editor-code{display:flex;align-items:stretch;height:2.75rem;min-height:2.75rem" in css
+    assert "prs-json-editor-code--empty" not in css
+    assert 'code.dataset.prsUserH="1"' in javascript
+    assert 'code.style.height=empty?"":"16rem"' in javascript
+    assert "Math.max(lineMin,startH+" in javascript
+    assert html.index('id="div-prsMeasureUnits"') < html.index('id="div-prsJsonConfigString"')
+    assert html.index('id="div-prsJsonConfigString"') < html.index('id="prs-tab-pane-storage"')
     assert ".prs-json-editor-resize{position:absolute;right:1px;bottom:1px" in css
     assert "cursor:ns-resize" in css
     assert "prsJsonEditorBindResize=function" in javascript
+    assert 'querySelectorAll(".prs-json-editor-resize")' in javascript
+    assert 'ta.closest(".prs-json-editor-compact")' in javascript
     assert ".prs-json-editor-input{position:relative" in css
     assert "color:#243236;-webkit-text-fill-color:#243236" in css
     assert ".prs-json-editor-highlight{display:none}" in css
