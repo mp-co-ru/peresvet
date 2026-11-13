@@ -17,7 +17,7 @@ def _parts():
 def test_hierarchy_pane_fills_panel_and_scrolls_inside_the_tree():
     css, javascript = _parts()
 
-    assert 'prsConfiguratorCodeVersion="20261113-param-layout-v30"' in javascript
+    assert 'prsConfiguratorCodeVersion="20261113-param-layout-v31"' in javascript
     assert 'rgba(44,112,127,.1), rgba(44,112,127,.32) 48%, rgba(44,112,127,.1)' in javascript
     assert 'rgba(44,112,127,.72)' not in javascript
     assert 'rgba(44,112,127,.32) 48%,rgba(44,112,127,.1)' in css
@@ -164,8 +164,13 @@ def test_node_tooltip_is_description_and_errors_stay_on_icons():
     assert 'x.title="Есть тег, привязанный к хранилищу и к методу чтения или записи"' in javascript
     assert 'prs-tree-rollup-strip--x",!!k' in javascript
     assert "Object.keys(methodWrite).forEach(function(id){r[id]&&ce(id,s,prsConflict)})" in javascript
+    assert "function prsMethodIdByParameter(item,byDn)" in javascript
+    assert '",cn=parameters,cn=system,"' in javascript
+    assert "byDn[String(e.dn)]=String(e.id)" in javascript
+    assert "prsMethodIdByParameter(item,byDn)" in javascript
     assert "function prsConfigMissesTag(raw)" in javascript
     assert 'objectClass:["prsMethodParameter"]' in javascript
+    assert 'if(window.__prsCatalogVariadic){prsMethodParamRenderBusy=!1,"function"==typeof window.prsSyncOpenMethodTagGap&&window.prsSyncOpenMethodTagGap();return}' in javascript
     assert 'kind:"paramtag",title:"Параметр читает данные тега, но тег не выбран."' in javascript
     assert 'pt.title="В ветке есть метод, у которого параметр читает тег, но тег не выбран."' in javascript
     assert 'prs-tree-rollup-strip--p",!!m' in javascript
@@ -207,6 +212,31 @@ def test_tag_icon_color_follows_child_method_kind():
     assert 'prsOwnMarks.push({kind:"nods",title:"Нет привязки к коннектору и нет дочернего метода — данные не поступают"})' in javascript
     assert "prs-tag-tree-unlinked .prs-tree-label::before" not in css
     assert 'e.insertBefore(i,menu||c||a)' in javascript
+
+
+def test_empty_tag_parameter_is_tied_to_its_method_by_dn():
+    _, javascript = _parts()
+    start = javascript.find("function prsMethodIdByParameter")
+    end = javascript.find("function prsProblemIcon")
+    assert start >= 0 and end > start
+    script = javascript[start:end] + """
+const methodId = "8732294c-7312-1041-8c21-0dcaaf570565";
+const methodDn = "cn=Сумма,cn=Сумма 2,cn=Демо методов,cn=objects,cn=prs";
+const byDn = {};
+byDn[methodDn] = methodId;
+const item = {
+  dn: "cn=a,cn=parameters,cn=system," + methodDn,
+  parentId: null,
+  attributes: {prsJsonConfigString: ["{}"]}
+};
+if (prsMethodIdByParameter(item, byDn) !== methodId) throw new Error("method id");
+if (!prsConfigMissesTag(item.attributes.prsJsonConfigString)) throw new Error("empty request must miss a tag");
+if (prsConfigMissesTag('{"request":{"tagId":"t1"}}')) throw new Error("chosen tag must not miss");
+if (prsMethodIdByParameter({parentId: "direct"}, {}) !== "direct") throw new Error("parentId fallback");
+"""
+    node = shutil.which("node")
+    assert node
+    subprocess.run([node, "-e", script], check=True)
 
 
 def test_data_storage_group_stays_visible_after_expand():
