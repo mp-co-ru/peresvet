@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
 DOCS_HOST = "mp-co-ru.github.io/peresvet"
-CODE_VERSION = "20261113-method-type-tip-v1"
+CODE_VERSION = "20261113-param-layout-v20"
 
 
 def _dashboard_parts():
@@ -164,10 +164,10 @@ def test_tag_read_request_ux_dashboard_contract():
 
 def test_tag_read_request_preserves_method_param_flag_layout():
     _, html, _, _ = _dashboard_parts()
-    # Method DG / head flags still use the shared one-row layout
-    assert "prs-method-param-dg-flags" in html
-    assert "prs-flags-one-row prs-method-param-dg-flags" in html
-    assert "prs-flags-one-row prs-method-param-head-flags" in html
-    # Read pane must not keep the old packed one-row flags
+    assert "prs-method-param-get-keys" in html
+    assert 'id="input-param-dg-start-0Picker"' in html
+    assert "prs-flags-one-row prs-method-param-dg-flags" not in html
+    assert "prs-method-param-head-flags" in html
+    assert 'id="div-param-get-keys-0"' in html
     read = _read_pane(html)
     assert "prs-flags-one-row" not in read

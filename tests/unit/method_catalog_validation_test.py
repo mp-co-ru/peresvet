@@ -145,7 +145,7 @@ def test_catalog_call_checks_arity_and_numeric_codes():
     assert catalog_call_error(
         catalog,
         [{"index": 1, "data": {"data": [{"data": [[0, 1.5, None]]}]}}, {"index": 2, "data": 1.2}],
-    )
+    ) is None
     assert catalog_call_error(
         catalog,
         [{"index": 1, "data": 1}, {"index": 2, "data": 2}],

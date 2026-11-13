@@ -125,6 +125,23 @@ def test_resolve_legacy_tag_and_client_context():
         )
 
 
+def test_resolve_several_tags_in_one_data_get():
+    post = AsyncMock(return_value={"data": []})
+    asyncio.run(
+        resolve_parameter_value(
+            {"tagId": ["tag-a", "tag-b"], "actual": True},
+            post_message=post,
+            client_request=None,
+            initiator_finish=9,
+            initiator_point=None,
+        )
+    )
+    mes = post.await_args.kwargs["mes"]
+    assert mes["tagId"] == ["tag-a", "tag-b"]
+    assert mes["actual"] is True
+    assert post.await_args.kwargs["routing_key"] == "prsTag.app_api_client.data_get.*"
+
+
 def test_resolve_catalog_bindings_keep_legacy_paths():
     post = AsyncMock(return_value={"data": [{"data": [[1, 4, None]]}]})
     tag_value = asyncio.run(

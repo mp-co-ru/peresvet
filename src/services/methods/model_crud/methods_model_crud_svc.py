@@ -264,7 +264,11 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
                         "cn": item["cn"],
                         "description": item.get("description") or "",
                         "prsIndex": item["prsIndex"],
-                        "prsValueTypeCode": item["prsValueTypeCode"],
+                        **(
+                            {"prsValueTypeCode": item["prsValueTypeCode"]}
+                            if item.get("prsValueTypeCode") is not None
+                            else {}
+                        ),
                     }
                 }
                 for item in method.get("parameters") or []

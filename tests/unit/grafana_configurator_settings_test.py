@@ -8,7 +8,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261113-method-type-tip-v1"
+CODE_VERSION = "20261113-param-layout-v20"
 
 
 def _parts():
@@ -50,6 +50,8 @@ def test_configurator_settings_dialog_contract():
 
     assert ".prs-tree-header{display:flex" in css
     assert ".prs-settings-btn{margin-left:auto" in css
+    assert ".prs-tree-header .prs-platform-version{margin-left:auto;margin-right:.45rem}" in css
+    assert ".prs-tree-header .prs-settings-btn{margin-left:0}" in css
     assert ".prs-settings-overlay.is-open{display:flex}" in css
 
     assert "prs.configurator.autoLinkTagDefault" in javascript

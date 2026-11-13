@@ -138,13 +138,6 @@ def validate_binding(cfg: dict) -> str | None:
 def validate_catalog_parameter(attrs: dict, *, require_type: bool = True) -> str | None:
     if as_int(attrs.get("prsIndex")) is None:
         return "У параметра метода каталога должен быть prsIndex."
-    code = attrs.get("prsValueTypeCode")
-    if code in (None, ""):
-        if require_type:
-            return "У параметра метода каталога prsValueTypeCode должен быть 1, 2, 3 или 4."
-        return None
-    if as_int(code) not in VALUE_TYPE_CODES:
-        return "У параметра метода каталога prsValueTypeCode должен быть 1, 2, 3 или 4."
     return None
 
 
@@ -266,10 +259,10 @@ def catalog_call_error(
     *,
     variadic: bool = False,
 ) -> str | None:
-    """Арность и числовая совместимость (коды 1 и 2) до вызова patio.
+    """Число параметров до вызова patio. Тип значения не проверяется.
 
-    ``variadic`` — у метода каталога задан ``prsVariadic``: ни число параметров,
-    ни их типы не сверяются со слотами каталога.
+    ``variadic`` — у метода каталога задан ``prsVariadic``: число параметров
+    не сверяется со слотами каталога.
     """
     if variadic:
         return None
@@ -279,12 +272,6 @@ def catalog_call_error(
         return (
             f"Число параметров {len(actual)} не совпадает с методом каталога ({len(expected)})."
         )
-    for catalog_parameter, resolved_parameter in zip(expected, actual):
-        code = catalog_parameter.get("valueTypeCode")
-        if numeric_compatible(code, resolved_parameter.get("data")):
-            continue
-        name = catalog_parameter.get("cn") or catalog_parameter.get("index")
-        return f"Параметр «{name}» не совместим с типом {code}."
     return None
 
 
