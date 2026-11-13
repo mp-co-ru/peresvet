@@ -6,17 +6,17 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MCP-сервер платформы &mdash; документация МПК-Пересвет 0.4</title>
+  <title>MCP-сервер платформы &mdash; документация МПК-Пересвет v0.24.4</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
-      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=68075b4e" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5a2fdaf1" />
 
   
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=11064190"></script>
+      <script src="_static/documentation_options.js?v=9055ff96"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -25,7 +25,7 @@
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
     <link rel="next" title="Точки расширения безопасности" href="security_extension_points.html" />
-    <link rel="prev" title="Интеграционные хранилища и операции (API v2)" href="integrational_v2.html" /> 
+    <link rel="prev" title="Создание экранов в Grafana" href="grafana/grafana_integration.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -33,13 +33,11 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-
-          
-          
-          <a href="index.html">
-            
-              <img src="_static/logo.png" class="logo" alt="Логотип"/>
-          </a>
+  <a href="index.html">
+    
+      <img src="_static/logo.png" class="logo" alt="Логотип"/>
+  </a>
+  <div class="prs-version">v0.24.4</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -48,27 +46,41 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
-              <p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
-<ul class="current">
+              <p class="caption" role="heading"><span class="caption-text">Знакомство</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="description.html">Описание</a></li>
 <li class="toctree-l1"><a class="reference internal" href="terms.html">Терминология</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Установка и сопровождение</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Установка и запуск</a></li>
 <li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a></li>
-<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
-<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
-<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
-<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MCP-сервер</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#id2">Запуск</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id3">Переменные окружения</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id4">Инструменты</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Подключение агента</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">Переменные окружения</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">Инструменты</a></li>
 </ul>
 </li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Безопасность</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="security_extension_points.html">Точки расширения безопасности</a></li>
-<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка безопасности платной редакции</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка промышленной редакции</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Справочник</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 </ul>
 
@@ -98,68 +110,45 @@
              
   <section id="mcp">
 <span id="id1"></span><h1>MCP-сервер платформы<a class="headerlink" href="#mcp" title="Ссылка на этот заголовок"></a></h1>
-<p>Контейнер <code class="docutils literal notranslate"><span class="pre">mcp_peresvet</span></code> даёт агентам (Cursor, Roo и т.п.) набор инструментов
-поверх HTTP API <code class="docutils literal notranslate"><span class="pre">one_app</span></code>. Транспорт по умолчанию — Streamable HTTP.
-Снаружи сервер доступен через nginx: <code class="docutils literal notranslate"><span class="pre">https://&lt;хост&gt;/mcp/peresvet</span></code>.</p>
-<p>Рядом так же публикуется MCP Grafana: <code class="docutils literal notranslate"><span class="pre">https://&lt;хост&gt;/mcp/grafana</span></code>.
-Оба сервера слушают порт <code class="docutils literal notranslate"><span class="pre">8000</span></code> только внутри сети <code class="docutils literal notranslate"><span class="pre">peresvet</span></code> и
-наружу свой порт не открывают.</p>
+<p>MCP (Model Context Protocol) позволяет ИИ-агентам — Cursor, Roo и другим —
+работать с платформой: читать и строить модель, читать и писать данные
+тегов, настраивать коннекторы и методы. MCP-сервер платформы (контейнер
+<code class="docutils literal notranslate"><span class="pre">mcp_peresvet</span></code>) предоставляет агенту набор инструментов, каждый из которых
+вызывает HTTP API платформы.</p>
+<p>Вместе с ним поставляется MCP-сервер Grafana, через который агент работает
+с экранами и источниками данных Grafana.</p>
+<p>Оба сервера доступны через nginx:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">https://&lt;хост&gt;/mcp/peresvet</span></code> — MCP платформы;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">https://&lt;хост&gt;/mcp/grafana</span></code> — MCP Grafana.</p></li>
+</ul>
+<p>Своих портов на сервере у них нет: внутри сети <code class="docutils literal notranslate"><span class="pre">peresvet</span></code> они слушают
+порт <code class="docutils literal notranslate"><span class="pre">8000</span></code>, а снаружи доступны только через nginx. Транспорт по умолчанию —
+Streamable HTTP.</p>
 <section id="id2">
 <h2>Запуск<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
-<p>Оба сервера выключены по умолчанию. Их включают ключи скрипта запуска
-платформы (<a class="reference internal" href="installation.html#optional-via-nginx"><span class="std std-ref">Через nginx</span></a>):</p>
+<p>По умолчанию оба сервера выключены. Их включают ключами скрипта запуска
+платформы (подробнее — <a class="reference internal" href="installation.html#optional-via-nginx"><span class="std std-ref">Сервис через nginx</span></a>):</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./run_one_app.sh<span class="w"> </span>--mcp-peresvet<span class="w"> </span><span class="nb">true</span><span class="w"> </span>--mcp-grafana<span class="w"> </span><span class="nb">true</span>
 </pre></div>
 </div>
-<p>При <code class="docutils literal notranslate"><span class="pre">false</span></code> и когда ключ не передан, скрипт сервер не ставит: маршрут
-nginx удаляется, контейнер останавливается. То же делают <code class="docutils literal notranslate"><span class="pre">run_one_app_dev.sh</span></code>,
-<code class="docutils literal notranslate"><span class="pre">run_one_app_dev_no_build.sh</span></code> и <code class="docutils literal notranslate"><span class="pre">run_one_app_ssl_letsencrypt.sh</span></code>.
-В <code class="docutils literal notranslate"><span class="pre">.env</span></code> тем же флагам соответствуют <code class="docutils literal notranslate"><span class="pre">PRS_MCP_PERESVET</span></code> и
-<code class="docutils literal notranslate"><span class="pre">PRS_MCP_GRAFANA</span></code>, оба <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
-<p>Проверка MCP платформы: <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">https://&lt;хост&gt;/mcp/peresvet/health</span></code>
-должен вернуть <code class="docutils literal notranslate"><span class="pre">OK</span></code>. MCP Grafana для большинства операций требует
-<code class="docutils literal notranslate"><span class="pre">GRAFANA_SERVICE_ACCOUNT_TOKEN</span></code> (файл
-<code class="docutils literal notranslate"><span class="pre">docker/compose/.cont_one_app.secrets.env</span></code>). Токен выпускается
-в Grafana: Administration → Users and access → Service accounts →
-Add service account token. Описание —
-<a class="reference external" href="https://grafana.com/docs/grafana/latest/administration/service-accounts/">Service accounts</a>.</p>
+<p>Те же значения по умолчанию задаются в <code class="docutils literal notranslate"><span class="pre">.env</span></code> переменными
+<code class="docutils literal notranslate"><span class="pre">PRS_MCP_PERESVET</span></code> и <code class="docutils literal notranslate"><span class="pre">PRS_MCP_GRAFANA</span></code> (обе <code class="docutils literal notranslate"><span class="pre">false</span></code>). Если сервер
+выключен, скрипт удаляет его маршрут из nginx и останавливает контейнер.
+Те же ключи понимают <code class="docutils literal notranslate"><span class="pre">run_one_app_dev.sh</span></code>, <code class="docutils literal notranslate"><span class="pre">run_one_app_dev_no_build.sh</span></code>
+и <code class="docutils literal notranslate"><span class="pre">run_one_app_ssl_letsencrypt.sh</span></code>.</p>
+<p>Проверка MCP платформы: запрос <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">https://&lt;хост&gt;/mcp/peresvet/health</span></code>
+должен вернуть <code class="docutils literal notranslate"><span class="pre">OK</span></code>.</p>
+<p>MCP Grafana для большинства операций нужен токен сервисного аккаунта
+Grafana. Выпустите его в Grafana (Administration → Users and access →
+Service accounts → Add service account token, см.
+<a class="reference external" href="https://grafana.com/docs/grafana/latest/administration/service-accounts/">Service accounts</a>)
+и запишите в переменную <code class="docutils literal notranslate"><span class="pre">GRAFANA_SERVICE_ACCOUNT_TOKEN</span></code> файла
+<code class="docutils literal notranslate"><span class="pre">docker/compose/.cont_one_app.secrets.env</span></code>.</p>
 </section>
 <section id="id3">
-<h2>Переменные окружения<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
-<table class="docutils align-default">
-<colgroup>
-<col style="width: 34.0%" />
-<col style="width: 66.0%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Переменная</p></th>
-<th class="head"><p>Назначение</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PERESVET_BASE_URL</span></code></p></td>
-<td><p>Базовый URL API (в Docker: <code class="docutils literal notranslate"><span class="pre">http://one_app:8000</span></code>).</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PERESVET_TIMEOUT_SECONDS</span></code></p></td>
-<td><p>Таймаут запросов к API.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PERESVET_BEARER_TOKEN</span></code></p></td>
-<td><p>Необязательный Bearer-токен; пробрасывается в заголовок
-<code class="docutils literal notranslate"><span class="pre">Authorization</span></code> (платная редакция).</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MCP_PERESVET_TRANSPORT</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">http</span></code> (рекомендуется), <code class="docutils literal notranslate"><span class="pre">sse</span></code>, <code class="docutils literal notranslate"><span class="pre">stdio</span></code>.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MCP_PERESVET_ENABLE_V2</span></code></p></td>
-<td><p>Инструменты <code class="docutils literal notranslate"><span class="pre">/v2/dataStorages/</span></code>. Если не задано — берётся
-<code class="docutils literal notranslate"><span class="pre">PRS_ENABLE_V2</span></code>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PORT_MCP_PERESVET_INNER</span></code></p></td>
-<td><p>Порт внутри контейнера (по умолчанию <code class="docutils literal notranslate"><span class="pre">8000</span></code>). На хост не публикуется.</p></td>
-</tr>
-</tbody>
-</table>
-<p>Пример клиента (<code class="docutils literal notranslate"><span class="pre">.roo/mcp.json</span></code> / Cursor MCP):</p>
+<h2>Подключение агента<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
+<p>Пример настройки клиента (<code class="docutils literal notranslate"><span class="pre">.roo/mcp.json</span></code>, настройки MCP в Cursor):</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">"mcpServers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">"peresvet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -172,77 +161,139 @@ Add service account token. Описание —
 </div>
 </section>
 <section id="id4">
-<h2>Инструменты<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h2>
-<p>Иерархия и CRUD:</p>
+<h2>Переменные окружения<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 34.0%" />
+<col style="width: 66.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Переменная</p></th>
+<th class="head"><p>Назначение</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PERESVET_BASE_URL</span></code></p></td>
+<td><p>Адрес API платформы. В Docker — <code class="docutils literal notranslate"><span class="pre">http://one_app:8000</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PERESVET_TIMEOUT_SECONDS</span></code></p></td>
+<td><p>Ограничение времени запросов к API.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PERESVET_BEARER_TOKEN</span></code></p></td>
+<td><p>Необязательный токен, который сервер передаёт в заголовке
+<code class="docutils literal notranslate"><span class="pre">Authorization:</span> <span class="pre">Bearer</span></code> (для промышленной редакции).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MCP_PERESVET_TRANSPORT</span></code></p></td>
+<td><p>Транспорт: <code class="docutils literal notranslate"><span class="pre">http</span></code> (рекомендуется), <code class="docutils literal notranslate"><span class="pre">sse</span></code> или <code class="docutils literal notranslate"><span class="pre">stdio</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MCP_PERESVET_ENABLE_V2</span></code></p></td>
+<td><p>Включить инструменты API v2 (интеграционные хранилища). Если не задана,
+берётся значение <code class="docutils literal notranslate"><span class="pre">PRS_ENABLE_V2</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PORT_MCP_PERESVET_INNER</span></code></p></td>
+<td><p>Порт внутри контейнера, по умолчанию <code class="docutils literal notranslate"><span class="pre">8000</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id5">
+<h2>Инструменты<a class="headerlink" href="#id5" title="Ссылка на этот заголовок"></a></h2>
+<p><strong>Модель: объекты и теги</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_objects_list</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_objects_tree</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_object_create</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_tags_list</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_tags_tree</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_tag_create</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_apply_hierarchy</span></code> — безопасное создание дерева объектов и тегов.
-<code class="docutils literal notranslate"><span class="pre">root_parent_id</span></code> и <code class="docutils literal notranslate"><span class="pre">parent_id</span></code> у <code class="docutils literal notranslate"><span class="pre">peresvet_object_create</span></code> /
-<code class="docutils literal notranslate"><span class="pre">peresvet_tag_create</span></code> могут быть id пользовательской папки.
-Формат дерева <code class="docutils literal notranslate"><span class="pre">apply_hierarchy</span></code> не меняется.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_folder_create</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_folders_list</span></code> /
-<code class="docutils literal notranslate"><span class="pre">peresvet_folder_update</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_folder_delete</span></code> —
-пользовательские папки <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> (<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/&lt;ветка&gt;/</span></code> с <code class="docutils literal notranslate"><span class="pre">&quot;folder&quot;:</span> <span class="pre">true</span></code>).
-Это не папки каталога методов.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_crud_read</span></code> / <code class="docutils literal notranslate"><span class="pre">create</span></code> / <code class="docutils literal notranslate"><span class="pre">update</span></code> / <code class="docutils literal notranslate"><span class="pre">delete</span></code> — низкоуровневый
-доступ к <code class="docutils literal notranslate"><span class="pre">objects</span></code>, <code class="docutils literal notranslate"><span class="pre">tags</span></code>, <code class="docutils literal notranslate"><span class="pre">alerts</span></code>, <code class="docutils literal notranslate"><span class="pre">methods</span></code>, <code class="docutils literal notranslate"><span class="pre">connectors</span></code>,
-<code class="docutils literal notranslate"><span class="pre">schedules</span></code>, <code class="docutils literal notranslate"><span class="pre">dataStorages</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_objects_list</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_objects_tree</span></code>,
+<code class="docutils literal notranslate"><span class="pre">peresvet_object_create</span></code> — объекты;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_tags_list</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_tags_tree</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_tag_create</span></code> —
+теги;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_object_get_child_id</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_tag_get_child_id</span></code> —
+найти идентификатор дочернего объекта или тега по имени;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_apply_hierarchy</span></code> — создать дерево объектов и тегов за один
+вызов, не создавая дубликатов.</p></li>
 </ul>
-<p>Копирование узлов (<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/&lt;entity&gt;/copy</span></code>, для коннекторов — <code class="docutils literal notranslate"><span class="pre">POST</span></code> с
-<code class="docutils literal notranslate"><span class="pre">sourceId</span></code>):</p>
+<p>Родителем (<code class="docutils literal notranslate"><span class="pre">parent_id</span></code>, <code class="docutils literal notranslate"><span class="pre">root_parent_id</span></code>) может быть и пользовательская
+папка.</p>
+<p><strong>Папки</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_folder_create</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_folders_list</span></code>,
+<code class="docutils literal notranslate"><span class="pre">peresvet_folder_update</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_folder_delete</span></code> — пользовательские
+папки в ветках объектов, тегов, коннекторов, расписаний и хранилищ
+(см. <a class="reference internal" href="folders.html"><span class="doc">Папки</span></a>).</p></li>
+</ul>
+<p><strong>Универсальный доступ</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_crud_read</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_crud_create</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_crud_update</span></code>,
+<code class="docutils literal notranslate"><span class="pre">peresvet_crud_delete</span></code> — CRUD для <code class="docutils literal notranslate"><span class="pre">objects</span></code>, <code class="docutils literal notranslate"><span class="pre">tags</span></code>, <code class="docutils literal notranslate"><span class="pre">alerts</span></code>,
+<code class="docutils literal notranslate"><span class="pre">methods</span></code>, <code class="docutils literal notranslate"><span class="pre">connectors</span></code>, <code class="docutils literal notranslate"><span class="pre">schedules</span></code>, <code class="docutils literal notranslate"><span class="pre">dataStorages</span></code>.</p></li>
+</ul>
+<p><strong>Копирование</strong></p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">peresvet_object_copy</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_tag_copy</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_alert_copy</span></code>,
-<code class="docutils literal notranslate"><span class="pre">peresvet_method_copy</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_connector_copy</span></code></p></li>
+<code class="docutils literal notranslate"><span class="pre">peresvet_method_copy</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_connector_copy</span></code>.</p></li>
 </ul>
-<p>Тревоги и алармы:</p>
+<p><strong>Тревоги</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_alert_create</span></code> — порог <code class="docutils literal notranslate"><span class="pre">value</span></code> / <code class="docutils literal notranslate"><span class="pre">high</span></code> / <code class="docutils literal notranslate"><span class="pre">autoAck</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_alarms_get</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_alarm_ack</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_alert_create</span></code> — создать тревогу (порог <code class="docutils literal notranslate"><span class="pre">value</span></code>, направление
+<code class="docutils literal notranslate"><span class="pre">high</span></code>, автоквитирование <code class="docutils literal notranslate"><span class="pre">autoAck</span></code>);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_alarms_get</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_alarm_ack</span></code> — активные тревоги
+и их квитирование.</p></li>
 </ul>
-<p>Коннекторы (MQTT runtime):</p>
+<p><strong>Коннекторы</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_create</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_connector_update</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_command</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_link_status</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_log_tail</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_command_output_tail</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_create</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_connector_update</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_command</span></code> — удалённые команды коннектору;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_link_status</span></code> — есть ли связь с коннектором;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_log_tail</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_connector_command_output_tail</span></code> —
+журнал коннектора и результаты команд.</p></li>
 </ul>
-<p>Данные и методы:</p>
+<p><strong>Данные</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_data_get</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_data_set</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_datafunc_get</span></code> — агрегации <code class="docutils literal notranslate"><span class="pre">/v1/datafunc/</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_method_create</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_virtual_method_create</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_method_folder_create</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_method_folders_list</span></code> /
-<code class="docutils literal notranslate"><span class="pre">peresvet_method_folder_update</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_method_folder_delete</span></code> —
-папки каталога методов (<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/</span></code> с <code class="docutils literal notranslate"><span class="pre">&quot;folder&quot;:</span> <span class="pre">true</span></code>, класс <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code>,
-не путать с <code class="docutils literal notranslate"><span class="pre">peresvet_folder_*</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_method_description_import</span></code> — YAML-описание каталога
-(<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/description</span></code>, пробный вызов при <code class="docutils literal notranslate"><span class="pre">probe=true</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_schedule_create</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_data_get</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_data_set</span></code> — чтение и запись данных тегов;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_datafunc_get</span></code> — агрегаты данных (<code class="docutils literal notranslate"><span class="pre">/v1/datafunc/</span></code>).</p></li>
 </ul>
-<p>Камера (тег <code class="docutils literal notranslate"><span class="pre">prsValueTypeCode=6</span></code>):</p>
+<p><strong>Методы</strong> (см. <a class="reference internal" href="methods.html"><span class="doc">Методы</span></a>)</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_ptz</span></code> — <code class="docutils literal notranslate"><span class="pre">GET/POST</span> <span class="pre">/v1/ptz/</span></code> (<code class="docutils literal notranslate"><span class="pre">status</span></code>, <code class="docutils literal notranslate"><span class="pre">move</span></code>, <code class="docutils literal notranslate"><span class="pre">step</span></code>,
-<code class="docutils literal notranslate"><span class="pre">pulse</span></code>, <code class="docutils literal notranslate"><span class="pre">stop</span></code>, <code class="docutils literal notranslate"><span class="pre">home</span></code>, <code class="docutils literal notranslate"><span class="pre">preset</span></code>, <code class="docutils literal notranslate"><span class="pre">image</span></code>, <code class="docutils literal notranslate"><span class="pre">image_set</span></code>).
-Живой поток, снимок и фрагмент остаются бинарным <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/</span></code> и
-в JSON-инструмент чтения данных не заворачиваются.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_method_create</span></code> — метод любого типа <code class="docutils literal notranslate"><span class="pre">0</span></code>–<code class="docutils literal notranslate"><span class="pre">4</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_virtual_method_create</span></code> — метод чтения (тип <code class="docutils literal notranslate"><span class="pre">1</span></code>);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_write_method_create</span></code> — метод записи (тип <code class="docutils literal notranslate"><span class="pre">2</span></code>);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_read_action_create</span></code> — действие при чтении (тип <code class="docutils literal notranslate"><span class="pre">3</span></code>);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_write_action_create</span></code> — действие при записи (тип <code class="docutils literal notranslate"><span class="pre">4</span></code>);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_method_folder_create</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_method_folders_list</span></code>,
+<code class="docutils literal notranslate"><span class="pre">peresvet_method_folder_update</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_method_folder_delete</span></code> —
+папки каталога методов;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_method_description_import</span></code> — загрузить YAML-описание
+в каталог, с пробным вызовом методов при <code class="docutils literal notranslate"><span class="pre">probe=true</span></code>.</p></li>
 </ul>
-<p>Журнал сервисов платформы:</p>
+<p><strong>Расписания</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_services</span></code> — очереди RabbitMQ</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_service_log_tail</span></code> / <code class="docutils literal notranslate"><span class="pre">peresvet_connector_service_log_clear</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_schedule_create</span></code>.</p></li>
 </ul>
-<p>Интеграционные хранилища (v2, при <code class="docutils literal notranslate"><span class="pre">MCP_PERESVET_ENABLE_V2</span></code> / <code class="docutils literal notranslate"><span class="pre">PRS_ENABLE_V2</span></code>):</p>
+<p><strong>Камеры</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_datastorages_v2_read</span></code> / <code class="docutils literal notranslate"><span class="pre">create</span></code> / <code class="docutils literal notranslate"><span class="pre">update</span></code> / <code class="docutils literal notranslate"><span class="pre">delete</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_integrational_datastorage_create</span></code> / <code class="docutils literal notranslate"><span class="pre">update</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_integrational_tag_operations_update</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_ptz</span></code> — управление камерой (<code class="docutils literal notranslate"><span class="pre">status</span></code>, <code class="docutils literal notranslate"><span class="pre">move</span></code>, <code class="docutils literal notranslate"><span class="pre">step</span></code>,
+<code class="docutils literal notranslate"><span class="pre">pulse</span></code>, <code class="docutils literal notranslate"><span class="pre">stop</span></code>, <code class="docutils literal notranslate"><span class="pre">home</span></code>, <code class="docutils literal notranslate"><span class="pre">preset</span></code>, <code class="docutils literal notranslate"><span class="pre">image</span></code>, <code class="docutils literal notranslate"><span class="pre">image_set</span></code>),
+см. <a class="reference internal" href="video_tag.html#video-tag"><span class="std std-ref">Видеопоток: API</span></a>. Видео — живой поток, снимки и записи — через MCP
+не передаётся.</p></li>
 </ul>
-<p>Служебные:</p>
+<p><strong>Журналы сервисов платформы</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_openapi</span></code></p></li>
-<li><p>HTTP <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/health</span></code>, <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/config</span></code> (<code class="docutils literal notranslate"><span class="pre">auth_configured</span></code> не раскрывает токен)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_services</span></code> — список сервисов;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_connector_service_log_tail</span></code>,
+<code class="docutils literal notranslate"><span class="pre">peresvet_connector_service_log_clear</span></code> — чтение и очистка их журналов.</p></li>
+</ul>
+<p><strong>Интеграционные хранилища</strong> (если включён API v2)</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_datastorages_v2_read</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_datastorages_v2_create</span></code>,
+<code class="docutils literal notranslate"><span class="pre">peresvet_datastorages_v2_update</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_datastorages_v2_delete</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_integrational_datastorage_create</span></code>,
+<code class="docutils literal notranslate"><span class="pre">peresvet_integrational_datastorage_update</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_integrational_tag_operations_update</span></code>.</p></li>
+</ul>
+<p>См. <a class="reference internal" href="integrational_v2.html#integrational-v2"><span class="std std-ref">Интеграционные хранилища</span></a>.</p>
+<p><strong>Служебные</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_openapi</span></code> — описание API платформы в формате OpenAPI;</p></li>
+<li><p>HTTP-адреса сервера <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/health</span></code> и <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/config</span></code>. <code class="docutils literal notranslate"><span class="pre">/config</span></code>
+показывает настройки сервера; токен в нём не раскрывается, есть только
+признак <code class="docutils literal notranslate"><span class="pre">auth_configured</span></code>.</p></li>
 </ul>
 </section>
 </section>
@@ -251,7 +302,7 @@ Add service account token. Описание —
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
-        <a href="integrational_v2.html" class="btn btn-neutral float-left" title="Интеграционные хранилища и операции (API v2)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="grafana/grafana_integration.html" class="btn btn-neutral float-left" title="Создание экранов в Grafana" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
         <a href="security_extension_points.html" class="btn btn-neutral float-right" title="Точки расширения безопасности" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

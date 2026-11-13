@@ -6,17 +6,17 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Архитектура платформы &mdash; документация МПК-Пересвет 0.4</title>
+  <title>Архитектура платформы &mdash; документация МПК-Пересвет v0.24.4</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
-      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=68075b4e" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5a2fdaf1" />
 
   
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=11064190"></script>
+      <script src="_static/documentation_options.js?v=9055ff96"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -31,13 +31,11 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-
-          
-          
-          <a href="index.html">
-            
-              <img src="_static/logo.png" class="logo" alt="Логотип"/>
-          </a>
+  <a href="index.html">
+    
+      <img src="_static/logo.png" class="logo" alt="Логотип"/>
+  </a>
+  <div class="prs-version">v0.24.4</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -46,22 +44,35 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
-              <p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Знакомство</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="description.html">Описание</a></li>
 <li class="toctree-l1"><a class="reference internal" href="terms.html">Терминология</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Установка и сопровождение</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Установка и запуск</a></li>
 <li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a></li>
-<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
-<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
-<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
-<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Безопасность</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="security_extension_points.html">Точки расширения безопасности</a></li>
-<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка безопасности платной редакции</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка промышленной редакции</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Справочник</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 </ul>
 
@@ -152,7 +163,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">Ток</span> <span class="pre">фазы</span></code>.</p></li>
 </ul>
 </li>
-<li><p>Tег <code class="docutils literal notranslate"><span class="pre">Ток</span> <span class="pre">фазы</span></code> имеет тревогу <code class="docutils literal notranslate"><span class="pre">Превышение</span> <span class="pre">тока</span></code>, которая, в свою очередь,
+<li><p>Тег <code class="docutils literal notranslate"><span class="pre">Ток</span> <span class="pre">фазы</span></code> имеет тревогу <code class="docutils literal notranslate"><span class="pre">Превышение</span> <span class="pre">тока</span></code>, которая, в свою очередь,
 имеет метод <code class="docutils literal notranslate"><span class="pre">Оповещение</span></code>.</p></li>
 </ol>
 <p>Таким образом, в примере иерархии содержатся экземпляры четырёх сущностей:
@@ -188,7 +199,7 @@
 клиентов, запросы на создание, чтение, обновление, удаление экземпляров
 сущности (команды CRUD).</p>
 <p>Главная задача этого микросервиса - принять запрос от клиента и проверить
-корректность параметров запроса (в случае, если миросервис реализован
+корректность параметров запроса (в случае, если микросервис реализован
 на языке Python, то удобно для этих целей пользоваться модулем <code class="docutils literal notranslate"><span class="pre">pydantic</span></code>).</p>
 <p>Вторая задача - отправить соответствующий запрос микросервису
 <code class="docutils literal notranslate"><span class="pre">&lt;сущность&gt;_model_crud</span></code>:</p>
@@ -222,7 +233,7 @@
 То есть микросервис <code class="docutils literal notranslate"><span class="pre">&lt;сущность&gt;_app</span></code> определяет ту функциональность, ради
 которой экземпляры сущности и создаются.
 Например, для тегов это, в первую очередь, функции записи/чтения данных.
-Для тревог - функциональность по инициации/квитированию/прападанию тревог.</p>
+Для тревог - функциональность по возникновению/квитированию/пропаданию тревог.</p>
 <p>Таким образом, сервис <code class="docutils literal notranslate"><span class="pre">&lt;сущность&gt;_app</span></code> читает из иерархии описания
 узлов соответствующего типа и работает согласно этим описаниям.
 Например, к тегу <code class="docutils literal notranslate"><span class="pre">Температура</span> <span class="pre">помещения</span></code> привязана тревога
@@ -259,19 +270,13 @@
 <p>Базовый узел в иерархии. Каждый узел сущности <code class="docutils literal notranslate"><span class="pre">objects</span></code> может иметь
 любое количество дочерних узлов этой же сущности. Таким образом обеспечивается
 возможность создания иерархии объектов любой сложности.</p>
-<p>Пользовательские папки — отдельный структурный класс <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code>
-(не <code class="docutils literal notranslate"><span class="pre">prsModelNode</span></code>). Их создают в корнях <code class="docutils literal notranslate"><span class="pre">objects</span></code>, <code class="docutils literal notranslate"><span class="pre">tags</span></code>,
-<code class="docutils literal notranslate"><span class="pre">connectors</span></code>, <code class="docutils literal notranslate"><span class="pre">schedules</span></code>, <code class="docutils literal notranslate"><span class="pre">dataStorages</span></code>, внутри объекта и внутри
-другой такой папки. Вложенная папка наследует контекст корня: в ветке
-объектов это папки, объекты и теги; в корне тегов — папки и теги; в остальных
-корнях — папки и сущность этого корня. Отдельного <code class="docutils literal notranslate"><span class="pre">/v1/folders</span></code> нет:
-папка создаётся <code class="docutils literal notranslate"><span class="pre">POST</span></code> этой сущности с <code class="docutils literal notranslate"><span class="pre">&quot;folder&quot;:</span> <span class="pre">true</span></code> (по умолчанию
-<code class="docutils literal notranslate"><span class="pre">false</span></code>). Удаление папки
-удаляет и её содержимое тем же каскадом, что удаление объекта. Дерево без папок
-не меняется: те же родители, <code class="docutils literal notranslate"><span class="pre">parentId=null</span></code> у узла прямо под служебным
-корнем <code class="docutils literal notranslate"><span class="pre">prsModelNode</span></code>, поиск, realtime, история, тревоги, методы, привязки
-коннекторов, хранилища и расписания. Папка каталога методов — тот же
-<code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> и тот же флаг <code class="docutils literal notranslate"><span class="pre">folder</span></code> у <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/</span></code>.</p>
+<p>Для группировки узлов служит отдельный класс <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> — пользовательская
+папка. Служебный класс <code class="docutils literal notranslate"><span class="pre">prsModelNode</span></code> остаётся за корнями сервисов
+(<code class="docutils literal notranslate"><span class="pre">objects</span></code>, <code class="docutils literal notranslate"><span class="pre">tags</span></code> и т.д.) и узлом <code class="docutils literal notranslate"><span class="pre">cn=system</span></code>. Папку создают тем же
+запросом <code class="docutils literal notranslate"><span class="pre">POST</span></code>, что и сущность её ветки, с полем <code class="docutils literal notranslate"><span class="pre">&quot;folder&quot;:</span> <span class="pre">true</span></code>
+(см. <a class="reference internal" href="folders.html"><span class="doc">Папки</span></a>). Папка не влияет на работу узлов внутри неё: история,
+тревоги, методы, привязки к коннекторам и хранилищам работают так же,
+как без папки.</p>
 </section>
 <section id="id7">
 <h4>Теги<a class="headerlink" href="#id7" title="Ссылка на этот заголовок"></a></h4>
@@ -341,7 +346,7 @@
 количества тревог, привязанных к тегу.</p>
 <p>Кроме того, существуют дополнительные возможности при создании тревог:</p>
 <ul class="simple">
-<li><p>отложенные тревога;
+<li><p>отложенные тревоги;
 тревога, которая возникает спустя некоторое время после изменения значения
 тега на критичное</p></li>
 </ul>
@@ -418,15 +423,12 @@
 <p>Обычно реализует собой возможность чтения данных по какому-либо протоколу
 (modbus, OPC и т.д.).</p>
 <p>Коннектор устанавливается как можно ближе к источнику данных и связывается с
-платформой по протоколу MQTT (рекомендуемый способ; мост RabbitMQ MQTT plugin).
-Исторически поддерживается также связь по WebSocket. Коннектор передаёт в
-платформу считанные из источника данные и принимает от платформы сообщения об
-изменениях параметров тегов и конфигурации.</p>
-<p>Платформа отслеживает наличие связи с коннекторами и записывает в привязанные
-теги коды качества: 100 при любом разрыве MQTT-сессии на брокере
-(<code class="docutils literal notranslate"><span class="pre">connection.closed</span></code> и LWT), 101 при первом запросе конфигурации новой сессии
-до ответа <code class="docutils literal notranslate"><span class="pre">full_configuration</span></code>. Подробнее см.
-<a class="reference internal" href="connectors.html"><span class="doc">Коннекторы</span></a> (раздел «Связь по MQTT и коды качества тегов»).</p>
+платформой по протоколу MQTT через RabbitMQ. Коннектор передаёт в платформу
+считанные из источника данные и получает от платформы свою конфигурацию
+и её изменения.</p>
+<p>Платформа отслеживает связь с коннекторами и отмечает её потерю и
+восстановление в истории тегов кодами качества 100 и 101.
+Подробнее — <a class="reference internal" href="connectors_guide.html#connectors-guide"><span class="std std-ref">Коннекторы</span></a> и <a class="reference internal" href="connectors.html"><span class="doc">Коннекторы</span></a>.</p>
 </section>
 <section id="id12">
 <h4>Константы<a class="headerlink" href="#id12" title="Ссылка на этот заголовок"></a></h4>
@@ -470,12 +472,10 @@
 Никакой собственной функциональности у констант нет. Они существуют только для
 того, чтобы передаваться в методы. То есть, используются при работе сущности
 <code class="docutils literal notranslate"><span class="pre">methods</span></code>.</p>
-<p>Другой пример - сущность <code class="docutils literal notranslate"><span class="pre">connectors</span></code>, коннекторы. Имеет три микросервиса:
-<code class="docutils literal notranslate"><span class="pre">connectors_api_crud</span></code>, <code class="docutils literal notranslate"><span class="pre">connectors_model_crud</span></code>, <code class="docutils literal notranslate"><span class="pre">connectors_app</span></code>.
-Микросервиса <code class="docutils literal notranslate"><span class="pre">connectors_app_api</span></code> нет, так как <code class="docutils literal notranslate"><span class="pre">connectors_app</span></code>
-не предоставляет никакой функциональности внешним клиентам. Задача
-<code class="docutils literal notranslate"><span class="pre">connectors_app</span></code> - поддержание связи по веб-сокету с коннекторами и приём
-от них данных с дальнейшей отсылкой в платформу.</p>
+<p>Другой пример - сущность <code class="docutils literal notranslate"><span class="pre">schedules</span></code>, расписания. Имеет три микросервиса:
+<code class="docutils literal notranslate"><span class="pre">schedules_api_crud</span></code>, <code class="docutils literal notranslate"><span class="pre">schedules_model_crud</span></code>, <code class="docutils literal notranslate"><span class="pre">schedules_app</span></code>.
+Микросервиса <code class="docutils literal notranslate"><span class="pre">schedules_app_api</span></code> нет: <code class="docutils literal notranslate"><span class="pre">schedules_app</span></code> только генерирует
+события по времени и не предоставляет функциональности внешним клиентам.</p>
 <p>Ещё один пример - хранилища данных, сущность <code class="docutils literal notranslate"><span class="pre">dataStorages</span></code>. Также не имеет
 сервиса <code class="docutils literal notranslate"><span class="pre">datastorages_app_api</span></code>, но имеет много разных сервисов
 <code class="docutils literal notranslate"><span class="pre">datastorages_app</span></code>, каждый из которых реализует свой тип базы данных.</p>
@@ -487,7 +487,7 @@
 <p>Платформа спроектирована таким образом, что допускает расширение списка
 сущностей, которые могут присутствовать в статической модели и, соответственно,
 внутри иерархии.</p>
-<p>Для каждой новой сущности необходимо необходимо создать свой класс в схеме
+<p>Для каждой новой сущности необходимо создать свой класс в схеме
 LDAP-сервера и разработать комплект микросервисов, взяв за основу базовые
 классы.</p>
 <p>Экземпляры сущности в иерархии могут создаваться:</p>
@@ -784,7 +784,7 @@ LDAP-сервера и разработать комплект микросер�
 удаляемого объекта (при этом сам должен разослать сообщение
 <code class="docutils literal notranslate"><span class="pre">deleting</span></code> всем своим подписчикам).</p></li>
 <li><p>После того, как в ответ на <code class="docutils literal notranslate"><span class="pre">deleting</span></code> вернулись ответы <code class="docutils literal notranslate"><span class="pre">ok</span></code> от всех
-подписчиков, <code class="docutils literal notranslate"><span class="pre">objects_model_crud</span></code> удаляет объет.</p></li>
+подписчиков, <code class="docutils literal notranslate"><span class="pre">objects_model_crud</span></code> удаляет объект.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">objects_model_crud</span></code> посылает сообщение <code class="docutils literal notranslate"><span class="pre">deleted</span></code>.</p></li>
 </ol>
 </li>

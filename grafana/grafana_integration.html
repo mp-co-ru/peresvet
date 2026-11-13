@@ -6,17 +6,17 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Создание экранов в Grafana &mdash; документация МПК-Пересвет 0.4</title>
+  <title>Создание экранов в Grafana &mdash; документация МПК-Пересвет v0.24.4</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-httpexample.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68075b4e" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=5a2fdaf1" />
 
   
     <link rel="shortcut icon" href="../_static/peresvet_middle.png"/>
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=11064190"></script>
+      <script src="../_static/documentation_options.js?v=9055ff96"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/sphinxcontrib-httpexample.js"></script>
@@ -24,8 +24,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="../genindex.html" />
     <link rel="search" title="Поиск" href="../search.html" />
-    <link rel="next" title="Компоненты" href="../components.html" />
-    <link rel="prev" title="Конфигуратор модели" href="../configurator/configurator.html" /> 
+    <link rel="next" title="MCP-сервер платформы" href="../mcp.html" />
+    <link rel="prev" title="Интеграционные хранилища" href="../integrational_v2.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -33,13 +33,11 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-
-          
-          
-          <a href="../index.html">
-            
-              <img src="../_static/logo.png" class="logo" alt="Логотип"/>
-          </a>
+  <a href="../index.html">
+    
+      <img src="../_static/logo.png" class="logo" alt="Логотип"/>
+  </a>
+  <div class="prs-version">v0.24.4</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -48,22 +46,40 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
-              <p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
-<ul class="current">
+              <p class="caption" role="heading"><span class="caption-text">Знакомство</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../description.html">Описание</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../terms.html">Терминология</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components.html">Компоненты системы</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Установка и сопровождение</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Установка и запуск</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../administration.html">Администрирование</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../historical_data.html">Исторические данные</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../configurator/configurator.html">Конфигуратор модели</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Создание экранов в Grafana</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../components.html">Компоненты системы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methods.html">Методы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../connectors_guide.html">Коннекторы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../video_data.html">Работа с видеоданными</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Создание экранов в Grafana</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">Подготовка</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Источник данных</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">Тренд тега</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../mcp.html">MCP-сервер</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Безопасность</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../security_extension_points.html">Точки расширения безопасности</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../security_enterprise_setup.html">Настройка безопасности платной редакции</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security_enterprise_setup.html">Настройка промышленной редакции</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Справочник</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
 </ul>
 
@@ -93,93 +109,119 @@
              
   <section id="grafana">
 <h1>Создание экранов в Grafana<a class="headerlink" href="#grafana" title="Ссылка на этот заголовок"></a></h1>
-<ol class="arabic">
-<li><p>Установим платформу: <a class="reference internal" href="../installation.html#installation"><span class="std std-ref">Установка и запуск</span></a>.</p></li>
-<li><p>Укажите IPv4-адрес сервера в <code class="docutils literal notranslate"><span class="pre">PRS_IP</span></code> файла <code class="docutils literal notranslate"><span class="pre">.env</span></code> и запустите <code class="docutils literal notranslate"><span class="pre">./run_one_app.sh</span></code>.</p></li>
-<li><p>Соберите модель. Короткий маршрут —
-<a class="reference external" href="https://github.com/mp-co-ru/prs-peresvet-courses/tree/main/01.base">базовый курс</a>.</p></li>
-<li><p>Открываем браузер и в строке адреса вводим:
-<code class="docutils literal notranslate"><span class="pre">https://&lt;IP-адрес</span> <span class="pre">из</span> <span class="pre">PRS_IP&gt;/grafana</span></code>.
-Браузер предупредит о самоподписанном сертификате.</p>
-<p>В качестве имени пользователя и пароля введите <code class="docutils literal notranslate"><span class="pre">admin</span></code>.
-При первом входе будет предложено сменить пароль.</p>
-</li>
-<li><p>Регистрируем в Grafana платформу как новый источник данных,
-для чего открываем меню и выбираем команду <code class="docutils literal notranslate"><span class="pre">Add</span> <span class="pre">new</span> <span class="pre">connection</span></code>:</p>
-<img alt="../_images/01.add_new_connection.png" src="../_images/01.add_new_connection.png" />
-</li>
-<li><p>В появившемся списке плагинов выбираем «JSON API»:</p>
-<img alt="../_images/02.json_api.png" src="../_images/02.json_api.png" />
-<p>…устанавливаем его:</p>
-<img alt="../_images/03.install_json_api.png" src="../_images/03.install_json_api.png" />
-<p>…и создаём на его базе новый источник данных:</p>
-<img alt="../_images/04.add_new_ds.png" src="../_images/04.add_new_ds.png" />
-<p>…конфигурируем источник данных (имя источника может быть любым,
-имя сервера в URL замените на имя вашего компьютера):</p>
-<img alt="../_images/05.setup_ds.png" src="../_images/05.setup_ds.png" />
-<p>В завершении нажимаем кнопку «Save &amp; test»:</p>
+<p>Экраны мониторинга строятся в той же Grafana, где работает конфигуратор.
+Данные тегов Grafana получает от платформы запросом
+<code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/</span></code> (см. <a class="reference internal" href="../historical_data.html#historical-data"><span class="std std-ref">Исторические данные</span></a>) через плагин источника
+данных JSON API. Ниже по шагам построен тренд одного тега.</p>
+<section id="id1">
+<h2>Подготовка<a class="headerlink" href="#id1" title="Ссылка на этот заголовок"></a></h2>
+<ol class="arabic simple">
+<li><p>Установите и запустите платформу (<a class="reference internal" href="../installation.html#installation"><span class="std std-ref">Установка и запуск</span></a>).</p></li>
+<li><p>Соберите модель: тег, привязанный к хранилищу, в котором уже есть
+история. Как это сделать, показано в
+<a class="reference external" href="https://github.com/mp-co-ru/prs-peresvet-courses/tree/main/01.base">базовом курсе</a>.</p></li>
+<li><p>Откройте <code class="docutils literal notranslate"><span class="pre">https://&lt;адрес</span> <span class="pre">из</span> <span class="pre">PRS_IP&gt;/grafana</span></code> и войдите
+(при первом входе — <code class="docutils literal notranslate"><span class="pre">admin</span></code> / <code class="docutils literal notranslate"><span class="pre">admin</span></code>).</p></li>
+</ol>
+</section>
+<section id="id3">
+<h2>Источник данных<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
+<p>Плагин JSON API и источник данных <code class="docutils literal notranslate"><span class="pre">peresvet</span></code> на его основе создаются при
+установке платформы. Источник <code class="docutils literal notranslate"><span class="pre">peresvet</span></code> выбран источником по умолчанию,
+его адрес — <code class="docutils literal notranslate"><span class="pre">http://&lt;имя</span> <span class="pre">сервера&gt;/v1/</span></code>.</p>
+<p>Проверьте источник: откройте меню Grafana, раздел
+<strong>Connections → Data sources → peresvet</strong>, и нажмите <strong>Save &amp; test</strong>.</p>
 <img alt="../_images/06.save_and_test.png" src="../_images/06.save_and_test.png" />
-</li>
-<li><p>Допустим, в нашей модели есть тег с идентификатором <code class="docutils literal notranslate"><span class="pre">58993cd8-f3e9-103e-97a9-c54148266c5f</span></code>,
-для которого в исторической базе данных накоплены данные. Тогда для создания тренда для
-этого тега выполним следующие шаги…</p></li>
-<li><p>Создаём новый экран:</p>
+<p>Если проверка не проходит, поправьте адрес в поле <strong>URL</strong>: укажите
+<code class="docutils literal notranslate"><span class="pre">https://&lt;адрес</span> <span class="pre">сервера&gt;/v1/</span></code>, а для самоподписанного сертификата
+включите в настройках TLS пропуск проверки сертификата.</p>
+<p>Второй источник, например для другого сервера платформы, создаётся так же:
+<strong>Connections → Add new connection → JSON API → Add new data source</strong>.
+Имя источника может быть любым, в <strong>URL</strong> укажите адрес API платформы.</p>
+<img alt="../_images/05.setup_ds.png" src="../_images/05.setup_ds.png" />
+</section>
+<section id="id4">
+<h2>Тренд тега<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h2>
+<p>Пусть в модели есть тег с идентификатором
+<code class="docutils literal notranslate"><span class="pre">58993cd8-f3e9-103e-97a9-c54148266c5f</span></code>, и в хранилище есть его история.</p>
+<ol class="arabic">
+<li><p>Создайте новый экран (dashboard) и на нём новую панель
+(visualization):</p>
 <img alt="../_images/07.new_dashboard.png" src="../_images/07.new_dashboard.png" />
-<p>…и новую панель:</p>
 <img alt="../_images/08.new_panel.png" src="../_images/08.new_panel.png" />
-<p>В появившемся окне выберем созданный нами источник данных:</p>
-<img alt="../_images/09.select_ds.png" src="../_images/09.select_ds.png" />
 </li>
-<li><p>Откроется окно настройки панели с выбранным источником данных
-и нужным нам типом панели - «Time Series»:</p>
+<li><p>Выберите источник данных <code class="docutils literal notranslate"><span class="pre">peresvet</span></code>:</p>
+<img alt="../_images/09.select_ds.png" src="../_images/09.select_ds.png" />
+<p>Откроется редактор панели. Тип панели — <strong>Time series</strong>:</p>
 <img alt="../_images/10.panel_settings.png" src="../_images/10.panel_settings.png" />
 </li>
-<li><p>Настроим параметр <code class="docutils literal notranslate"><span class="pre">Path</span></code>:</p>
+<li><p>На вкладке <strong>Path</strong> запроса укажите путь к API данных относительно
+адреса источника. Для источника <code class="docutils literal notranslate"><span class="pre">peresvet</span></code> с адресом <code class="docutils literal notranslate"><span class="pre">.../v1/</span></code> это
+<code class="docutils literal notranslate"><span class="pre">data/</span></code>:</p>
 <img alt="../_images/11.set_path.png" src="../_images/11.set_path.png" />
 </li>
-<li><p>Создадим новый параметр во вкладке <code class="docutils literal notranslate"><span class="pre">Params</span></code> (параметр, включаемый в URL запроса).
-Назовём параметр <code class="docutils literal notranslate"><span class="pre">q</span></code>, а в качестве его значения укажем строку:</p>
-<p><code class="docutils literal notranslate"><span class="pre">{&quot;tagId&quot;:&quot;58993cd8-f3e9-103e-97a9-c54148266c5f&quot;,&quot;format&quot;:true,&quot;start&quot;:&quot;$__isoFrom()&quot;,&quot;finish&quot;:&quot;$__isoTo()&quot;}</span></code></p>
-<div class="admonition note">
-<p class="admonition-title">Примечание</p>
-<p>Подробно запрос к платформе на получение данных описан в разделе
-<a class="reference internal" href="../data_api.html#data-api"><span class="std std-ref">Данные</span></a></p>
+<li><p>На вкладке <strong>Params</strong> добавьте параметр запроса <code class="docutils literal notranslate"><span class="pre">q</span></code> со значением:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"tagId"</span><span class="p">:</span><span class="s2">"58993cd8-f3e9-103e-97a9-c54148266c5f"</span><span class="p">,</span><span class="nt">"format"</span><span class="p">:</span><span class="kc">true</span><span class="p">,</span><span class="nt">"start"</span><span class="p">:</span><span class="s2">"$__isoFrom()"</span><span class="p">,</span><span class="nt">"finish"</span><span class="p">:</span><span class="s2">"$__isoTo()"</span><span class="p">}</span>
+</pre></div>
 </div>
-<p>Заметим, что в запросе указаны функции Grafana - <code class="docutils literal notranslate"><span class="pre">__isoFrom()</span></code> и <code class="docutils literal notranslate"><span class="pre">__isoTo()</span></code>.
-Эти функции возвращают, соответственно, начало и конец выбранного пользователем на dashboard’е
-периода.</p>
+<p><code class="docutils literal notranslate"><span class="pre">$__isoFrom()</span></code> и <code class="docutils literal notranslate"><span class="pre">$__isoTo()</span></code> — функции Grafana. Они подставляют
+начало и конец периода, выбранного на экране, в формате ISO 8601.
+Остальные ключи запроса описаны в разделе <a class="reference internal" href="../historical_data.html#historical-data"><span class="std std-ref">Исторические данные</span></a>.</p>
 <img alt="../_images/12.set_params.png" src="../_images/12.set_params.png" />
 </li>
-<li><p>Для проверки того, что платформа возвращает данные, нажмём кнопку <code class="docutils literal notranslate"><span class="pre">Query</span> <span class="pre">inspector</span></code>:</p>
+<li><p>Проверьте, что платформа отвечает: нажмите <strong>Query inspector</strong>,
+затем <strong>Refresh</strong>. В ответе должен быть массив точек тега:</p>
 <img alt="../_images/13.query_inspector.png" src="../_images/13.query_inspector.png" />
-<p>…затем <code class="docutils literal notranslate"><span class="pre">Refresh</span></code>:</p>
 <img alt="../_images/14.refresh.png" src="../_images/14.refresh.png" />
-<p>…и убедимся, что платформа возвращает данные:</p>
 <img alt="../_images/15.got_data.png" src="../_images/15.got_data.png" />
 </li>
-<li><p>Теперь нам необходимо объяснить графане, как из полученного массива данных
-выбрать необходимые.</p>
-<p>Для этого переходим в закладку <code class="docutils literal notranslate"><span class="pre">Fields</span></code> и настраиваем её так, как показано на рисунке:</p>
+<li><p>Объясните Grafana, где в ответе время, а где значение. Платформа отдаёт
+каждую точку массивом <code class="docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y,</span> <span class="pre">q]</span></code>: метка времени, значение,
+код качества. На вкладке <strong>Fields</strong> добавьте два поля с типом выражения
+<strong>JSONPath</strong>:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 71.4%" />
+<col style="width: 28.6%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">$.data[0].data[*][0]</span></code></p></td>
+<td><p>Time</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">$.data[0].data[*][1]</span></code></p></td>
+<td><p>Number</p></td>
+</tr>
+</tbody>
+</table>
 <img alt="../_images/16.fields.png" src="../_images/16.fields.png" />
-<p>Здесь верхнее поле - это значения тега, которые необходимо отобразить (синтаксис JSONPath),
-нижнее - метка времени.</p>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Скриншот сделан в версии платформы, где точка имела вид
+<code class="docutils literal notranslate"><span class="pre">[y,</span> <span class="pre">x,</span> <span class="pre">q]</span></code>, поэтому индексы на нём переставлены. Ориентируйтесь
+на таблицу.</p>
+</div>
 </li>
-<li><p>Нажимаем кнопку <code class="docutils literal notranslate"><span class="pre">Apply</span></code> и видим тренд с данными тега:</p>
+<li><p>Нажмите <strong>Apply</strong>. На панели появится тренд тега:</p>
 <img alt="../_images/17.trend.png" src="../_images/17.trend.png" />
 </li>
-<li><p>Можно менять периоды, выбирать частоту обновления экрана, данные будут отображаться корректно:</p></li>
 </ol>
-<blockquote>
-<div><img alt="../_images/18.periods.png" src="../_images/18.periods.png" />
-</div></blockquote>
+<p>Период и частоту обновления можно менять в правом верхнем углу экрана:
+Grafana будет каждый раз запрашивать данные за новый период.</p>
+<img alt="../_images/18.periods.png" src="../_images/18.periods.png" />
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
-        <a href="../configurator/configurator.html" class="btn btn-neutral float-left" title="Конфигуратор модели" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
-        <a href="../components.html" class="btn btn-neutral float-right" title="Компоненты" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../integrational_v2.html" class="btn btn-neutral float-left" title="Интеграционные хранилища" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="../mcp.html" class="btn btn-neutral float-right" title="MCP-сервер платформы" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

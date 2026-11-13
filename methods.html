@@ -6,24 +6,26 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>methods (методы) &mdash; документация МПК-Пересвет 0.4</title>
+  <title>Методы &mdash; документация МПК-Пересвет v0.24.4</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
-      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=68075b4e" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5a2fdaf1" />
 
   
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=11064190"></script>
+      <script src="_static/documentation_options.js?v=9055ff96"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
       <script src="_static/translations.js?v=cd1d70c9"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
-    <link rel="search" title="Поиск" href="search.html" /> 
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Коннекторы" href="connectors_guide.html" />
+    <link rel="prev" title="Исторические данные" href="historical_data.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -31,13 +33,11 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-
-          
-          
-          <a href="index.html">
-            
-              <img src="_static/logo.png" class="logo" alt="Логотип"/>
-          </a>
+  <a href="index.html">
+    
+      <img src="_static/logo.png" class="logo" alt="Логотип"/>
+  </a>
+  <div class="prs-version">v0.24.4</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -46,22 +46,52 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
-              <p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Знакомство</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="description.html">Описание</a></li>
 <li class="toctree-l1"><a class="reference internal" href="terms.html">Терминология</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Установка и сопровождение</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Установка и запуск</a></li>
 <li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a></li>
-<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
-<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
-<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Методы</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Как устроен вызов</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Типы методов</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">Пример вычислительного метода</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Исполнитель</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Узел метода</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">Параметры</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id8">Каталог методов</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Определение в каталоге</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Ссылка на определение</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id11">Загрузка описания</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id12">Пакеты методов</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
-<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища (v2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Безопасность</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="security_extension_points.html">Точки расширения безопасности</a></li>
-<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка безопасности платной редакции</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка промышленной редакции</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Справочник</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 </ul>
 
@@ -79,7 +109,7 @@
           <div role="navigation" aria-label="Навигация по страницам">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">methods (методы)</li>
+      <li class="breadcrumb-item active">Методы</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/methods.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
       </li>
@@ -89,217 +119,284 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="methods">
-<h1>methods (методы)<a class="headerlink" href="#methods" title="Ссылка на этот заголовок"></a></h1>
-<p>Методы используются для вычислений значений тегов.
-Значение тега может приходить из внешнего источника, а может быть вычислено,
-для чего необходимо:</p>
-<ol class="arabic simple">
-<li><p>Написать метод для вычисления значений тега.</p></li>
-<li><p>Привязать этот метод к тегу, указав, какие события будут инициировать
-расчёт.</p></li>
-</ol>
-<section id="id1">
-<h2>Создание вычислительного метода тега<a class="headerlink" href="#id1" title="Ссылка на этот заголовок"></a></h2>
-<p>Рассмотрим создание вычислительного метода тега на следующем примере:
-допустим, у нас есть объект «комната» и в этой комнате - два потребителя
-электроэнергии: освещение и телевизор. С каждого потребителя мы можем получать
-количество потреблённой энергии в киловатт-часах.</p>
-<p>Комната же имеет тег «Суммарная потреблённая энергия», значение которого
-должно вычисляться как сумма потреблённой энергии освещением и телевизором,
-причём значение этого тега должно пересчитываться каждый раз, когда мы
-получаем новое значение потреблённой энергии от потребителей электроэнергии
-в комнате.</p>
-<p><strong>Подготовка иерархии объектов и тегов</strong>
-Создание объектов и тегов не будем здесь детально описывать - см.
-соответствующие разделы документации.</p>
-<p>Покажем иерархию созданных объектов и тегов:</p>
-<figure class="align-center" id="id4">
+  <section id="id1">
+<h1>Методы<a class="headerlink" href="#id1" title="Ссылка на этот заголовок"></a></h1>
+<p>Метод — программа, которую платформа вызывает, чтобы модель что-то сделала:
+посчитала значение тега, ответила на чтение тега, приняла запись, вызвала
+внешнюю систему. Методы и составляют динамическую модель объекта.</p>
+<section id="id2">
+<h2>Как устроен вызов<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
+<p>Код метода выполняется не внутри платформы, а в отдельном процессе —
+<strong>исполнителе</strong> (worker). Исполнитель подключается к RabbitMQ платформы
+и регистрирует свои функции под строковыми адресами, например <code class="docutils literal notranslate"><span class="pre">sum</span></code>
+или <code class="docutils literal notranslate"><span class="pre">prs.stdlib.add</span></code>. Для вызова используется библиотека
+<a class="reference external" href="https://pypi.org/project/patio/">patio</a> с транспортом
+<a class="reference external" href="https://pypi.org/project/patio-rabbitmq/">patio-rabbitmq</a>.</p>
+<p>В модели метод — это узел под тегом или тревогой. В узле записаны:</p>
+<ul class="simple">
+<li><p><strong>адрес</strong> (<code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code>) — под каким именем функция
+зарегистрирована в исполнителе;</p></li>
+<li><p><strong>тип</strong> (<code class="docutils literal notranslate"><span class="pre">prsEntityTypeCode</span></code>) — когда вызывается метод, см. <a class="reference internal" href="#id3">Типы методов</a>;</p></li>
+<li><p><strong>инициаторы</strong> — теги и расписания, события которых запускают
+вычислительный метод;</p></li>
+<li><p><strong>параметры</strong> — откуда взять значение каждого аргумента функции,
+см. <a class="reference internal" href="#id7">Параметры</a>.</p></li>
+</ul>
+<p>Когда наступает событие, сервис методов вычисляет значения параметров,
+сортирует их по <code class="docutils literal notranslate"><span class="pre">prsIndex</span></code> и вызывает функцию по адресу, передавая
+значения позиционными аргументами.</p>
+<p>Если метод не может или не должен вернуть результат (ошибка в данных,
+нового значения нет), функция возвращает словарь с ключом <code class="docutils literal notranslate"><span class="pre">error</span></code>.
+Значение ключа может быть любым: платформа запишет его в журнал,
+а значение тега не изменит.</p>
+</section>
+<section id="id3">
+<h2>Типы методов<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 8.0%" />
+<col style="width: 22.0%" />
+<col style="width: 70.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Код</p></th>
+<th class="head"><p>Тип</p></th>
+<th class="head"><p>Когда вызывается и что делает</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>Вычислительный</p></td>
+<td><p>Вызывается для каждого нового значения тега-инициатора и при каждом
+срабатывании расписания-инициатора. Результат записывается в тег,
+которому принадлежит метод, с меткой времени события.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>Чтение</p></td>
+<td><p>Вызывается при чтении тега (<code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/</span></code>). Результат
+возвращается клиенту как значение тега на момент <code class="docutils literal notranslate"><span class="pre">finish</span></code>
+запроса (или на текущий момент).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">2</span></code></p></td>
+<td><p>Запись</p></td>
+<td><p>Вызывается при записи в тег (<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/data/</span></code>). Последним
+аргументом функция получает записываемые точки. Если функция
+не вернула <code class="docutils literal notranslate"><span class="pre">error</span></code>, запись считается успешной.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">3</span></code></p></td>
+<td><p>Действие при чтении</p></td>
+<td><p>Вызывается при чтении тега так же, как тип <code class="docutils literal notranslate"><span class="pre">1</span></code>, но ответ клиенту
+не формирует: значение отдаёт хранилище. Ошибка действия
+записывается в журнал и на ответ не влияет.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">4</span></code></p></td>
+<td><p>Действие при записи</p></td>
+<td><p>Вызывается при записи в тег так же, как тип <code class="docutils literal notranslate"><span class="pre">2</span></code>, но на запись
+не отвечает: точки сохраняет хранилище. Если у тега нет ни хранилища,
+ни метода типа <code class="docutils literal notranslate"><span class="pre">2</span></code>, платформа сама подтверждает запись после
+выполнения действия.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Чтение и запись тега с методами типов <code class="docutils literal notranslate"><span class="pre">1</span></code> и <code class="docutils literal notranslate"><span class="pre">2</span></code> устроены так. Платформа
+рассылает одно сообщение о чтении (или записи) и ждёт <strong>один</strong> ответ.
+Если тег привязан и к хранилищу, и к методу типа <code class="docutils literal notranslate"><span class="pre">1</span></code> (или <code class="docutils literal notranslate"><span class="pre">2</span></code>),
+ответят оба, и платформа возьмёт тот ответ, который придёт первым.
+Поэтому тег с методом чтения или записи обычно к хранилищу не привязывают;
+конфигуратор отмечает такое сочетание красным значком. У типов <code class="docutils literal notranslate"><span class="pre">3</span></code> и <code class="docutils literal notranslate"><span class="pre">4</span></code>
+этой проблемы нет: они не отвечают.</p>
+</section>
+<section id="id4">
+<h2>Пример вычислительного метода<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h2>
+<p>В комнате два потребителя электроэнергии: освещение и телевизор. У каждого
+есть тег «Потреблённая энергия», значения приходят с приборов учёта.
+У комнаты есть тег «Суммарная потреблённая энергия», который должен
+пересчитываться каждый раз, когда приходит новое значение от любого
+из потребителей.</p>
+<figure class="align-center" id="id13">
 <img alt="_images/methods_01.png" src="_images/methods_01.png" />
 <figcaption>
-<p><span class="caption-text">Объекты</span><a class="headerlink" href="#id4" title="Ссылка на это изображение"></a></p>
+<p><span class="caption-text">Иерархия объектов и тегов примера</span><a class="headerlink" href="#id13" title="Ссылка на это изображение"></a></p>
 </figcaption>
 </figure>
-<p><strong>Создание расчётного метода</strong>
-Опишем процесс создания расчётного метода для тега
-«Суммарная потреблённая энергия» объекта «Комната».</p>
-<div class="admonition note">
-<p class="admonition-title">Примечание</p>
-<p>Для управления распределёнными вычислениями используются библиотеки
-<a class="reference external" href="https://pypi.org/project/patio/">patio</a> и
-<a class="reference external" href="https://pypi.org/project/patio-rabbitmq/">patio_rabbitmq</a>.</p>
-</div>
-<p>Создадим скрипт на языке <strong>python</strong>, предварительно установив пакеты
-«patio» и «patio_rabbitmq»:</p>
+<section id="id5">
+<h3>Исполнитель<a class="headerlink" href="#id5" title="Ссылка на этот заголовок"></a></h3>
+<p>Напишем исполнитель на Python. Нужны пакеты <code class="docutils literal notranslate"><span class="pre">patio</span></code> и <code class="docutils literal notranslate"><span class="pre">patio-rabbitmq</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
 <span class="linenos"> 2</span><span class="kn">from</span><span class="w"> </span><span class="nn">patio</span><span class="w"> </span><span class="kn">import</span> <span class="n">Registry</span><span class="p">,</span> <span class="n">AsyncExecutor</span>
 <span class="linenos"> 3</span><span class="kn">from</span><span class="w"> </span><span class="nn">patio_rabbitmq</span><span class="w"> </span><span class="kn">import</span> <span class="n">RabbitMQBroker</span>
 <span class="linenos"> 4</span>
 <span class="linenos"> 5</span><span class="n">rpc</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="n">project</span><span class="o">=</span><span class="s2">"methods_app"</span><span class="p">,</span> <span class="n">auto_naming</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="linenos"> 6</span>
-<span class="linenos"> 7</span><span class="nd">@rpc</span><span class="p">(</span><span class="s2">"sum"</span><span class="p">)</span>
-<span class="linenos"> 8</span><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">sum</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="linenos"> 9</span>   <span class="k">try</span><span class="p">:</span>
-<span class="linenos">10</span>      <span class="n">val_a</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">"data"</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
-<span class="linenos">11</span>      <span class="n">val_b</span> <span class="o">=</span> <span class="n">b</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">"data"</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
-<span class="linenos">12</span>      <span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="n">val_a</span><span class="p">,</span> <span class="mi">0</span><span class="p">)[</span><span class="n">val_a</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]</span><span class="o">+</span><span class="p">(</span><span class="n">val_b</span><span class="p">,</span> <span class="mi">0</span><span class="p">)[</span><span class="n">val_b</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]</span>
-<span class="linenos">13</span>   <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
-<span class="linenos">14</span>      <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Ошибка: </span><span class="si">{</span><span class="n">ex</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="linenos">15</span>      <span class="k">return</span> <span class="kc">None</span>
-<span class="linenos">16</span>
-<span class="linenos">17</span>   <span class="k">return</span> <span class="n">res</span>
-<span class="linenos">18</span>
-<span class="linenos">19</span><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-<span class="linenos">20</span>   <span class="k">async</span> <span class="k">with</span> <span class="n">AsyncExecutor</span><span class="p">(</span><span class="n">rpc</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
-<span class="linenos">21</span>      <span class="k">async</span> <span class="k">with</span> <span class="n">RabbitMQBroker</span><span class="p">(</span>
-<span class="linenos">22</span>            <span class="c1"># измените параметры подключения к RabbitMQ</span>
-<span class="linenos">23</span>            <span class="n">executor</span><span class="p">,</span> <span class="n">amqp_url</span><span class="o">=</span><span class="s2">"amqp://uid:pwd@localhost/"</span><span class="p">,</span>
-<span class="linenos">24</span>      <span class="p">)</span> <span class="k">as</span> <span class="n">broker</span><span class="p">:</span>
-<span class="linenos">25</span>            <span class="k">await</span> <span class="n">broker</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
-<span class="linenos">26</span>
-<span class="linenos">27</span><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
-<span class="linenos">28</span>   <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+<span class="linenos"> 7</span>
+<span class="linenos"> 8</span><span class="k">def</span><span class="w"> </span><span class="nf">last_value</span><span class="p">(</span><span class="n">response</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<span class="linenos"> 9</span><span class="w">    </span><span class="sd">"""Значение из ответа GET /v1/data/ на один тег."""</span>
+<span class="linenos">10</span>    <span class="k">return</span> <span class="n">response</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">"data"</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+<span class="linenos">11</span>
+<span class="linenos">12</span>
+<span class="linenos">13</span><span class="nd">@rpc</span><span class="p">(</span><span class="s2">"sum"</span><span class="p">)</span>
+<span class="linenos">14</span><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">sum_energy</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<span class="linenos">15</span>    <span class="k">try</span><span class="p">:</span>
+<span class="linenos">16</span>        <span class="n">val_a</span> <span class="o">=</span> <span class="n">last_value</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span>
+<span class="linenos">17</span>        <span class="n">val_b</span> <span class="o">=</span> <span class="n">last_value</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span>
+<span class="linenos">18</span>    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+<span class="linenos">19</span>        <span class="k">return</span> <span class="p">{</span><span class="s2">"error"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"нет данных: </span><span class="si">{</span><span class="n">ex</span><span class="si">}</span><span class="s2">"</span><span class="p">}</span>
+<span class="linenos">20</span>    <span class="k">return</span> <span class="n">val_a</span> <span class="o">+</span> <span class="n">val_b</span>
+<span class="linenos">21</span>
+<span class="linenos">22</span>
+<span class="linenos">23</span><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="linenos">24</span>    <span class="k">async</span> <span class="k">with</span> <span class="n">AsyncExecutor</span><span class="p">(</span><span class="n">rpc</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+<span class="linenos">25</span>        <span class="k">async</span> <span class="k">with</span> <span class="n">RabbitMQBroker</span><span class="p">(</span>
+<span class="linenos">26</span>            <span class="n">executor</span><span class="p">,</span>
+<span class="linenos">27</span>            <span class="c1"># адрес RabbitMQ платформы</span>
+<span class="linenos">28</span>            <span class="n">amqp_url</span><span class="o">=</span><span class="s2">"amqp://&lt;пользователь&gt;:&lt;пароль&gt;@&lt;сервер&gt;/"</span><span class="p">,</span>
+<span class="linenos">29</span>        <span class="p">)</span> <span class="k">as</span> <span class="n">broker</span><span class="p">:</span>
+<span class="linenos">30</span>            <span class="k">await</span> <span class="n">broker</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+<span class="linenos">31</span>
+<span class="linenos">32</span>
+<span class="linenos">33</span><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+<span class="linenos">34</span>    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
 </pre></div>
 </div>
-<div class="admonition attention">
-<p class="admonition-title">Внимание</p>
-<ol class="arabic simple">
-<li><p>Отметим, что расчётный метод регистрируется в системе под именем «sum»:
-<code class="docutils literal notranslate"><span class="pre">&#64;rpc(&quot;sum&quot;)</span></code> (строка 7).</p></li>
-<li><p>Выбор значений (строки 10-11) будет объяснён ниже.</p></li>
-</ol>
-</div>
-<div class="admonition attention">
-<p class="admonition-title">Внимание</p>
-<p>Если в процессе вычисления метода происходит какая-либо ошибка,
-либо метод не должен возвращать новое значение тега
-(к примеру, в процессе расчёта выяснилось, что нового значения у тега нет),
-то метод должен вернуть словарь с ключом <code class="docutils literal notranslate"><span class="pre">error</span></code>. Значение этого ключа -
-любое.</p>
-</div>
-<p>Созданный нами расчётный метод имеет два входных параметра: <code class="docutils literal notranslate"><span class="pre">a</span></code> и <code class="docutils literal notranslate"><span class="pre">b</span></code>.</p>
-<p><strong>Создание узла для расчётного метода</strong>
-Теперь нам необходимо создать узел, описывающий расчётный метод для тега
-«Суммарная потреблённая энергия».</p>
-<p>При создании узла мы должны указать:</p>
-<ol class="arabic simple">
-<li><p>зарегистрированное имя метода («sum»);</p></li>
-<li><p>на вход метод принимает два параметра;</p></li>
-<li><p>в качестве значений параметров должны передаваться значения тегов
-«Потреблённая энергия» объектов «Освещение» и «Телевизор»;</p></li>
-<li><p>метод должен инициироваться изменением двух вышеуказанных тегов.</p></li>
-</ol>
-<p>Соответственно, получаем такое тело запроса, который мы должны выполнить
-для создания узла метода:</p>
-<div class="admonition attention">
-<p class="admonition-title">Внимание</p>
-<p>Для удобства предположим, что:</p>
-<ol class="arabic simple">
-<li><p>id тега «Суммарная потреблённая энергия» = 1</p></li>
-<li><p>id «Освещение –&gt; Потреблённая энергия» = 2</p></li>
-<li><p>id «Телевизор –&gt; Потреблённая энергия» = 3</p></li>
-</ol>
-</div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1"># request: POST http://&lt;srv&gt;/v1/methods</span>
-<span class="linenos"> 2</span>
-<span class="linenos"> 3</span><span class="c1"># body:</span>
-<span class="linenos"> 4</span><span class="p">{</span>
-<span class="linenos"> 5</span>   <span class="c1"># id вычисляемого тега ("Суммарная потреблённая энергия")</span>
-<span class="linenos"> 6</span>   <span class="s2">"parentId"</span><span class="p">:</span> <span class="s2">"1"</span><span class="p">,</span>
-<span class="linenos"> 7</span>   <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
-<span class="linenos"> 8</span>      <span class="c1"># зарегистрированное имя метода</span>
-<span class="linenos"> 9</span>      <span class="s2">"cn"</span><span class="p">:</span> <span class="s2">"Сумма"</span><span class="p">,</span>
-<span class="linenos">10</span>      <span class="s2">"prsMethodAddress"</span><span class="p">:</span> <span class="s2">"sum"</span>
-<span class="linenos">11</span>   <span class="p">},</span>
-<span class="linenos">12</span>   <span class="c1"># id тегов "Потреблённая энергия" объектов "Освещение" и "Телевизор"</span>
-<span class="linenos">13</span>   <span class="s2">"initiatedBy"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"2"</span><span class="p">,</span> <span class="s2">"3"</span><span class="p">],</span>
-<span class="linenos">14</span>   <span class="s2">"parameters"</span><span class="p">:</span> <span class="p">[</span>
-<span class="linenos">15</span>      <span class="p">{</span>
-<span class="linenos">16</span>         <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
-<span class="linenos">17</span>            <span class="s2">"prsJsonConfigString"</span><span class="p">:</span> <span class="s2">"{</span><span class="se">\"</span><span class="s2">tagId</span><span class="se">\"</span><span class="s2">: </span><span class="se">\"</span><span class="s2">2</span><span class="se">\"</span><span class="s2">}"</span>
-<span class="linenos">18</span>         <span class="p">}</span>
-<span class="linenos">19</span>      <span class="p">},</span>
-<span class="linenos">20</span>      <span class="p">{</span>
-<span class="linenos">21</span>         <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
-<span class="linenos">22</span>            <span class="s2">"prsJsonConfigString"</span><span class="p">:</span> <span class="s2">"{</span><span class="se">\"</span><span class="s2">tagId</span><span class="se">\"</span><span class="s2">: </span><span class="se">\"</span><span class="s2">3</span><span class="se">\"</span><span class="s2">}"</span>
-<span class="linenos">23</span>         <span class="p">}</span>
-<span class="linenos">24</span>      <span class="p">}</span>
-<span class="linenos">25</span>   <span class="p">]</span>
-<span class="linenos">26</span><span class="p">}</span>
-</pre></div>
-</div>
-<p>Таким образом, имя метода передается в атрибуте <code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code>
-(строка 10).</p>
-<p>В рассматриваемом примере порядок следования параметров при вызове метода
-не важен. Если же при вызове метода необходимо учитывать порядок параметров,
-то в атрибутах параметра необходимо передать атрибут <code class="docutils literal notranslate"><span class="pre">prsIndex</span></code>. При вызове
-метода параметры будут отсортированы по этому атрибуту в порядке возрастания
-и переданы методу.</p>
-<p>Запрос с учётом порядка следования параметров:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1"># request: POST http://&lt;srv&gt;/v1/methods</span>
-<span class="linenos"> 2</span>
-<span class="linenos"> 3</span><span class="c1"># body:</span>
-<span class="linenos"> 4</span><span class="p">{</span>
-<span class="linenos"> 5</span>   <span class="c1"># id вычисляемого тега ("Суммарная потреблённая энергия")</span>
-<span class="linenos"> 6</span>   <span class="s2">"parentId"</span><span class="p">:</span> <span class="s2">"1"</span><span class="p">,</span>
-<span class="linenos"> 7</span>   <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
-<span class="linenos"> 8</span>      <span class="c1"># зарегистрированное имя метода</span>
-<span class="linenos"> 9</span>      <span class="s2">"cn"</span><span class="p">:</span> <span class="s2">"Сумма"</span><span class="p">,</span>
-<span class="linenos">10</span>      <span class="s2">"prsMethodAddress"</span><span class="p">:</span> <span class="s2">"sum"</span>
-<span class="linenos">11</span>   <span class="p">},</span>
-<span class="linenos">12</span>   <span class="c1"># id тегов "Потреблённая энергия" объектов "Освещение" и "Телевизор"</span>
-<span class="linenos">13</span>   <span class="s2">"initiatedBy"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"2"</span><span class="p">,</span> <span class="s2">"3"</span><span class="p">],</span>
-<span class="linenos">14</span>   <span class="s2">"parameters"</span><span class="p">:</span> <span class="p">[</span>
-<span class="linenos">15</span>      <span class="p">{</span>
-<span class="linenos">16</span>         <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
-<span class="linenos">17</span>            <span class="s2">"prsJsonConfigString"</span><span class="p">:</span> <span class="s2">"{</span><span class="se">\"</span><span class="s2">tagId</span><span class="se">\"</span><span class="s2">: </span><span class="se">\"</span><span class="s2">2</span><span class="se">\"</span><span class="s2">}"</span><span class="p">,</span>
-<span class="linenos">18</span>            <span class="s2">"prsIndex"</span><span class="p">:</span> <span class="mi">1</span>
-<span class="linenos">19</span>         <span class="p">}</span>
-<span class="linenos">20</span>      <span class="p">},</span>
-<span class="linenos">21</span>      <span class="p">{</span>
-<span class="linenos">22</span>         <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
-<span class="linenos">23</span>            <span class="s2">"prsJsonConfigString"</span><span class="p">:</span> <span class="s2">"{</span><span class="se">\"</span><span class="s2">tagId</span><span class="se">\"</span><span class="s2">: </span><span class="se">\"</span><span class="s2">3</span><span class="se">\"</span><span class="s2">}"</span><span class="p">,</span>
-<span class="linenos">24</span>            <span class="s2">"prsIndex"</span><span class="p">:</span> <span class="mi">2</span>
-<span class="linenos">25</span>         <span class="p">}</span>
-<span class="linenos">26</span>      <span class="p">}</span>
-<span class="linenos">27</span>   <span class="p">]</span>
-<span class="linenos">28</span><span class="p">}</span>
-</pre></div>
-</div>
-<p>Атрибут <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> содержит, фактически, запрос для команды
-<code class="docutils literal notranslate"><span class="pre">data/get</span></code>. При вызове метода в этот запрос автоматически подставляется
-флаг <code class="docutils literal notranslate"><span class="pre">finish</span></code>, который равен метке времени нового значения тега-инициатора
-расчёта. Именно поэтому в вычислительном методе такой сложный выбор значений
-(см. выше).</p>
-</section>
-<section id="id2">
-<h2>Каталог методов<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
-<p>Рядом с локальными методами тега и тревоги есть общий каталог.
-При старте <code class="docutils literal notranslate"><span class="pre">methods_model_crud</span></code> создаёт узел <code class="docutils literal notranslate"><span class="pre">cn=methods,cn=prs</span></code>.
-В каталоге лежат папки <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> и определения <code class="docutils literal notranslate"><span class="pre">prsMethod</span></code>.</p>
-<p>Папка создаётся тем же базовым <code class="docutils literal notranslate"><span class="pre">POST</span></code>, что и у остальных сущностей.
-Поле <code class="docutils literal notranslate"><span class="pre">folder</span></code> задано в <code class="docutils literal notranslate"><span class="pre">NodeCreate</span></code> (<code class="docutils literal notranslate"><span class="pre">api_crud</span></code>) и обрабатывается
-<code class="docutils literal notranslate"><span class="pre">model_crud</span></code>: при <code class="docutils literal notranslate"><span class="pre">true</span></code> создаётся <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code>, а не метод.
-Отдельного адреса <code class="docutils literal notranslate"><span class="pre">/v1/methods/folders</span></code> нет.
-Удаление папки само убирает вложенные папки и методы.
-Если на метод каталога ссылается экземпляр (атрибут <code class="docutils literal notranslate"><span class="pre">prsCatalogMethodId</span></code>),
-удаление такого метода или папки, в которой он лежит, возвращает <code class="docutils literal notranslate"><span class="pre">409</span></code>.</p>
-<p>Определение в каталоге:</p>
+<p>Обратите внимание:</p>
 <ul class="simple">
-<li><p>обязателен <code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code>;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">prsEntityTypeCode</span></code> только <code class="docutils literal notranslate"><span class="pre">0</span></code>;</p></li>
-<li><p>инициаторы не задаются;</p></li>
-<li><p>параметры — дочерние <code class="docutils literal notranslate"><span class="pre">prsMethodParameter</span></code> с <code class="docutils literal notranslate"><span class="pre">prsIndex</span></code> и
-<code class="docutils literal notranslate"><span class="pre">prsValueTypeCode</span></code> (<code class="docutils literal notranslate"><span class="pre">1</span></code> целый, <code class="docutils literal notranslate"><span class="pre">2</span></code> вещественный, <code class="docutils literal notranslate"><span class="pre">3</span></code> строка, <code class="docutils literal notranslate"><span class="pre">4</span></code> json);</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">parameterCount</span></code> считается при чтении и в LDAP не хранится.</p></li>
+<li><p>Проект в <code class="docutils literal notranslate"><span class="pre">Registry</span></code> должен называться <code class="docutils literal notranslate"><span class="pre">methods_app</span></code> — так называется
+сервис методов платформы.</p></li>
+<li><p>Функция зарегистрирована под адресом <code class="docutils literal notranslate"><span class="pre">sum</span></code> (строка 13). Этот адрес
+указывают в узле метода.</p></li>
+<li><p>Каждый аргумент получает ответ платформы на запрос
+<a class="reference internal" href="historical_data.html#historical-data"><span class="std std-ref">исторических данных</span></a> по одному тегу:
+<code class="docutils literal notranslate"><span class="pre">{&quot;data&quot;:</span> <span class="pre">[{&quot;tagId&quot;:</span> <span class="pre">&quot;...&quot;,</span> <span class="pre">&quot;data&quot;:</span> <span class="pre">[[x,</span> <span class="pre">y,</span> <span class="pre">q]]}]}</span></code>. Функция
+<code class="docutils literal notranslate"><span class="pre">last_value</span></code> достаёт из него значение <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p></li>
 </ul>
-<p>Запрос <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/</span></code> для папки:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"folder"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"stdlib"</span><span class="p">}}</span>
+<p>Исполнитель запускают как обычную программу на любой машине, откуда
+доступен RabbitMQ платформы (порт <code class="docutils literal notranslate"><span class="pre">5672</span></code>). Исполнителей может быть
+несколько: каждый регистрирует свои адреса.</p>
+</section>
+<section id="id6">
+<h3>Узел метода<a class="headerlink" href="#id6" title="Ссылка на этот заголовок"></a></h3>
+<p>Теперь создадим узел метода под тегом «Суммарная потреблённая энергия».
+Для краткости пусть идентификаторы тегов такие:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code> — «Суммарная потреблённая энергия» комнаты;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">2</span></code> — «Потреблённая энергия» освещения;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">3</span></code> — «Потреблённая энергия» телевизора.</p></li>
+</ul>
+<p>Запрос <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">   </span><span class="nt">"parentId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span>
+<span class="w">   </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Сумма"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"prsMethodAddress"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sum"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"prsEntityTypeCode"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">   </span><span class="p">},</span>
+<span class="w">   </span><span class="nt">"initiatedBy"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"2"</span><span class="p">,</span><span class="w"> </span><span class="s2">"3"</span><span class="p">],</span>
+<span class="w">   </span><span class="nt">"parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"prsIndex"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"prsJsonConfigString"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"request"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"2"</span><span class="p">]}}}},</span>
+<span class="w">      </span><span class="p">{</span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"prsIndex"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"prsJsonConfigString"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"request"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"3"</span><span class="p">]}}}}</span>
+<span class="w">   </span><span class="p">]</span>
+<span class="p">}</span>
 </pre></div>
 </div>
-<p>Запрос <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/</span></code> для определения в каталоге:</p>
+<p>Здесь:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">parentId</span></code> — тег, в который пишется результат;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code> — адрес функции в исполнителе;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">initiatedBy</span></code> — теги, новые значения которых запускают расчёт;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">parameters</span></code> — аргументы функции по порядку <code class="docutils literal notranslate"><span class="pre">prsIndex</span></code>. Каждый
+параметр здесь читает один тег: идентификатор лежит в <code class="docutils literal notranslate"><span class="pre">request.tagId</span></code>.</p></li>
+</ul>
+<p>В этот запрос платформа сама подставляет <code class="docutils literal notranslate"><span class="pre">finish</span></code>, равный метке
+времени нового значения инициатора. Поэтому метод получает значения
+обоих тегов на один и тот же момент, а результат записывается в тег <code class="docutils literal notranslate"><span class="pre">1</span></code>
+с той же меткой.</p>
+<p>То же самое можно сделать в <a class="reference internal" href="configurator/configurator.html#configurator"><span class="std std-ref">конфигураторе</span></a>: команда
+«Новый метод» в меню тега, затем адрес, инициаторы и параметры в свойствах.</p>
+</section>
+</section>
+<section id="id7">
+<h2>Параметры<a class="headerlink" href="#id7" title="Ссылка на этот заголовок"></a></h2>
+<p>Как вычислить значение параметра, задаёт JSON в атрибуте
+<code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> параметра. Возможны такие варианты.</p>
+<p><strong>Данные тега.</strong> Параметр читает теги одним запросом
+<a class="reference internal" href="historical_data.html#historical-data"><span class="std std-ref">исторических данных</span></a>. В конфигураторе правят
+тело этого запроса: идентификаторы тегов и любые дополнительные ключи,
+например имя операции интеграционного тега. В иерархию тело записывается
+объектом <code class="docutils literal notranslate"><span class="pre">request</span></code>. Рядом, отдельно от тела, может стоять
+<code class="docutils literal notranslate"><span class="pre">responseJsonata</span></code> — выражение, которое применяется уже к ответу.
+Идентификатор тега на одном уровне с <code class="docutils literal notranslate"><span class="pre">responseJsonata</span></code> запросом не
+является.</p>
+<p>Ключ <code class="docutils literal notranslate"><span class="pre">tagId</span></code> внутри <code class="docutils literal notranslate"><span class="pre">request</span></code> — один идентификатор или список.
+Платформа выполняет один <code class="docutils literal notranslate"><span class="pre">data_get</span></code> сразу по всем указанным тегам и
+подставляет <code class="docutils literal notranslate"><span class="pre">finish</span></code>: при запуске от тега или расписания это метка
+события, при чтении тега — <code class="docutils literal notranslate"><span class="pre">finish</span></code> из запроса клиента.</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="nt">"parentId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id папки или пусто для корня каталога&gt;"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"request"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"&lt;id тега&gt;"</span><span class="p">],</span><span class="w"> </span><span class="nt">"op"</span><span class="p">:</span><span class="w"> </span><span class="s2">"op"</span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"responseJsonata"</span><span class="p">:</span><span class="w"> </span><span class="s2">"$.data[0].data[0][1]"</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Запрос клиента.</strong> Объект запроса, которым клиент читает тег. Нужен
+методам чтения: так метод узнаёт, за какой период и с какими ключами
+спрашивают тег. Ключ <code class="docutils literal notranslate"><span class="pre">clientJsonata</span></code> выбирает из запроса нужную часть;
+без него в параметр попадает весь запрос:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"clientJsonata"</span><span class="p">:</span><span class="w"> </span><span class="s2">"$.finish"</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Если метод запущен событием, а не чтением, вместо запроса клиента
+используется объект <code class="docutils literal notranslate"><span class="pre">{&quot;finish&quot;:</span> <span class="pre">...,</span> <span class="pre">&quot;start&quot;:</span> <span class="pre">null,</span> <span class="pre">&quot;point&quot;:</span> <span class="pre">{&quot;x&quot;:</span> <span class="pre">...,</span> <span class="pre">&quot;y&quot;:</span> <span class="pre">...,</span> <span class="pre">&quot;q&quot;:</span> <span class="pre">...}}</span></code>
+с новым значением инициатора.</p>
+<p><strong>Запрос к платформе.</strong> Произвольное внутреннее сообщение сервису
+платформы: ключ маршрутизации <code class="docutils literal notranslate"><span class="pre">routingKey</span></code>, тело <code class="docutils literal notranslate"><span class="pre">message</span></code> и
+необязательное <code class="docutils literal notranslate"><span class="pre">responseJsonata</span></code>. Например, так метод получает
+атрибуты узла иерархии:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"routingKey"</span><span class="p">:</span><span class="w"> </span><span class="s2">"prsTag.api_crud.read.*"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"&lt;id тега&gt;"</span><span class="p">],</span><span class="w"> </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"prsJsonConfigString"</span><span class="p">]},</span>
+<span class="w">  </span><span class="nt">"responseJsonata"</span><span class="p">:</span><span class="w"> </span><span class="s2">"data[0].attributes"</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Внешний HTTP-запрос.</strong> Объект <code class="docutils literal notranslate"><span class="pre">httpRequest</span></code> с полями <code class="docutils literal notranslate"><span class="pre">method</span></code>
+(<code class="docutils literal notranslate"><span class="pre">GET</span></code>, <code class="docutils literal notranslate"><span class="pre">POST</span></code>, <code class="docutils literal notranslate"><span class="pre">PUT</span></code>, <code class="docutils literal notranslate"><span class="pre">PATCH</span></code>, <code class="docutils literal notranslate"><span class="pre">DELETE</span></code>, <code class="docutils literal notranslate"><span class="pre">HEAD</span></code>), <code class="docutils literal notranslate"><span class="pre">url</span></code>
+(только <code class="docutils literal notranslate"><span class="pre">http://</span></code> и <code class="docutils literal notranslate"><span class="pre">https://</span></code>), необязательными <code class="docutils literal notranslate"><span class="pre">headers</span></code> и <code class="docutils literal notranslate"><span class="pre">body</span></code>.
+В параметр попадает тело ответа; ответ в JSON разбирается в объект.
+Ответ больше 1 МБ, ответ с кодом не из диапазона <code class="docutils literal notranslate"><span class="pre">2xx</span></code> и ожидание
+дольше 20 секунд считаются ошибкой. Перенаправления не выполняются.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"httpRequest"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"GET"</span><span class="p">,</span><span class="w"> </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://example.com/api/rate"</span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"responseJsonata"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rate"</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Привязка.</strong> Короткая форма, которую обычно используют у ссылок
+на методы каталога (см. ниже):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">{&quot;binding&quot;:</span> <span class="pre">&quot;tag&quot;,</span> <span class="pre">&quot;tagId&quot;:</span> <span class="pre">&quot;&lt;id&gt;&quot;}</span></code> — значение одного тега.
+Это короткая привязка ссылки на метод каталога, не запрос <code class="docutils literal notranslate"><span class="pre">request</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{&quot;binding&quot;:</span> <span class="pre">&quot;literal&quot;,</span> <span class="pre">&quot;value&quot;:</span> <span class="pre">1,</span> <span class="pre">&quot;valueTypeCode&quot;:</span> <span class="pre">2}</span></code> — постоянное
+значение; <code class="docutils literal notranslate"><span class="pre">valueTypeCode</span></code>: <code class="docutils literal notranslate"><span class="pre">1</span></code> целое, <code class="docutils literal notranslate"><span class="pre">2</span></code> вещественное,
+<code class="docutils literal notranslate"><span class="pre">3</span></code> строка, <code class="docutils literal notranslate"><span class="pre">4</span></code> JSON;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{&quot;binding&quot;:</span> <span class="pre">&quot;constant&quot;,</span> <span class="pre">&quot;constantId&quot;:</span> <span class="pre">&quot;&lt;id&gt;&quot;}</span></code> — значение константы
+модели.</p></li>
+</ul>
+</section>
+<section id="id8">
+<h2>Каталог методов<a class="headerlink" href="#id8" title="Ссылка на этот заголовок"></a></h2>
+<p>Один и тот же метод часто нужен многим тегам: сложение, среднее, перевод
+единиц. Чтобы не повторять адрес и список параметров в каждом теге,
+определение метода кладут в <strong>каталог</strong> — папку «Методы» в конфигураторе
+(узел <code class="docutils literal notranslate"><span class="pre">cn=methods,cn=prs</span></code>), а у тегов и тревог создают <strong>ссылки</strong> на него.</p>
+<section id="id9">
+<h3>Определение в каталоге<a class="headerlink" href="#id9" title="Ссылка на этот заголовок"></a></h3>
+<p>Определение задаёт адрес и список параметров: имя, описание и порядок
+(<code class="docutils literal notranslate"><span class="pre">prsIndex</span></code>). Имя нужно только человеку: при вызове учитывается
+порядок параметров. Тип значения платформа не задаёт и не проверяет.
+Инициаторов и источников значений у определения нет, тип определения
+всегда <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+<p>Запрос <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"parentId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id папки каталога или пусто для корня&gt;"</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"add"</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"prsMethodAddress"</span><span class="p">:</span><span class="w"> </span><span class="s2">"prs.stdlib.add"</span><span class="p">,</span>
@@ -312,118 +409,113 @@
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Локальный метод тега или тревоги создаётся без
-<code class="docutils literal notranslate"><span class="pre">catalogMethodId</span></code>: адрес, инициаторы, параметры и коды <code class="docutils literal notranslate"><span class="pre">0</span></code>/<code class="docutils literal notranslate"><span class="pre">1</span></code>.
-В конфигураторе это тот же пункт «Новый метод»: в свойствах выбирают
-вновь создаваемый метод или ссылку на каталог. У ссылки адрес
-не редактируется. Параметры приходят из метода каталога:
-число, имя, описание и тип фиксированы. Индекс параметра совпадает с порядком
-закладок. Источник значения задаётся у ссылки — данные тега, данные из запроса клиента,
-запрос к платформе (<code class="docutils literal notranslate"><span class="pre">routingKey</span></code> и <code class="docutils literal notranslate"><span class="pre">message</span></code>) или внешний HTTP-запрос
-(<code class="docutils literal notranslate"><span class="pre">httpRequest</span></code>), как у локального метода.</p>
-<p>Экземпляр из каталога хранит <code class="docutils literal notranslate"><span class="pre">prsCatalogMethodId</span></code>, копирует
-<code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code> из каталога (атрибут обязателен в LDAP) и
-свои <code class="docutils literal notranslate"><span class="pre">prsMethodParameter</span></code>. Конфигурация параметра та же, что у
-локального метода: запрос данных тега (<code class="docutils literal notranslate"><span class="pre">routingKey</span></code> / <code class="docutils literal notranslate"><span class="pre">tagId</span></code>),
-выборка из запроса клиента (<code class="docutils literal notranslate"><span class="pre">clientJsonata</span></code>) или внешний HTTP-запрос
-(<code class="docutils literal notranslate"><span class="pre">httpRequest</span></code>: <code class="docutils literal notranslate"><span class="pre">method</span></code>, <code class="docutils literal notranslate"><span class="pre">url</span></code>, необязательные <code class="docutils literal notranslate"><span class="pre">headers</span></code> и <code class="docutils literal notranslate"><span class="pre">body</span></code>).
-Коды <code class="docutils literal notranslate"><span class="pre">prsEntityTypeCode</span></code> <code class="docutils literal notranslate"><span class="pre">0</span></code> и <code class="docutils literal notranslate"><span class="pre">1</span></code> и инициаторы у экземпляра сохраняются.
-При вызове берётся живой <code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code> каталога.
-Если узел каталога уже удалён, скопированный адрес не вызывается.
-Перед вызовом patio проверяются число параметров и числовая совместимость
-типов <code class="docutils literal notranslate"><span class="pre">1</span></code> и <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p>
-<p>Копирование экземпляра и копирование определения внутри каталога работают.
-Копирование определения каталога в тег или тревогу возвращает <code class="docutils literal notranslate"><span class="pre">422</span></code>.</p>
-<p>Описание каталога загружается командой «Загрузка описания» в меню папки
-«Методы» и вложенной папки. Конфигуратор сам читает файл YAML
-(<code class="docutils literal notranslate"><span class="pre">folders</span></code> и <code class="docutils literal notranslate"><span class="pre">methods</span></code>) и создаёт узлы обычным <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/</span></code>:
-папка — с <code class="docutils literal notranslate"><span class="pre">&quot;folder&quot;:</span> <span class="pre">true</span></code>, метод — с адресом и параметрами.
-У метода обязателен адрес (<code class="docutils literal notranslate"><span class="pre">address</span></code> или <code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code>),
-параметры задаются полями <code class="docutils literal notranslate"><span class="pre">cn</span></code>, <code class="docutils literal notranslate"><span class="pre">index</span></code> и <code class="docutils literal notranslate"><span class="pre">type</span></code>
-(<code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">string</span></code>, <code class="docutils literal notranslate"><span class="pre">json</span></code> или код <code class="docutils literal notranslate"><span class="pre">1</span></code>–<code class="docutils literal notranslate"><span class="pre">4</span></code>).
-Пример: <code class="docutils literal notranslate"><span class="pre">docs/source/samples/methods/methodDescription.yaml</span></code>.</p>
-<p>Уже существующий <code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code> повторно не создаётся.
-В диалоге появляется список: какая папка и какой метод созданы.</p>
-<p>Пакеты методов лежат в <code class="docutils literal notranslate"><span class="pre">methods/packages/&lt;id&gt;/</span></code>: <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> и
-<code class="docutils literal notranslate"><span class="pre">worker.py</span></code>. Сервис methods читает только JSON и создаёт отсутствующие
-методы по <code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code>. Python пакета не импортируется.
-Лицензия: <code class="docutils literal notranslate"><span class="pre">{&quot;mode&quot;:</span> <span class="pre">&quot;none&quot;}</span></code> либо <code class="docutils literal notranslate"><span class="pre">{&quot;mode&quot;:</span> <span class="pre">&quot;env&quot;,</span> <span class="pre">&quot;variable&quot;:</span> <span class="pre">&quot;ИМЯ&quot;}</span></code>.
-Пустая переменная окружения пропускает пакет.
-Каталог пакетов переопределяется <code class="docutils literal notranslate"><span class="pre">PRS_METHOD_PACKAGES_DIR</span></code>.</p>
-<p>В поставке есть <code class="docutils literal notranslate"><span class="pre">methods/packages/stdlib</span></code>:
-<code class="docutils literal notranslate"><span class="pre">prs.stdlib.add</span></code>, <code class="docutils literal notranslate"><span class="pre">prs.stdlib.sub</span></code>, <code class="docutils literal notranslate"><span class="pre">prs.stdlib.mul</span></code>, <code class="docutils literal notranslate"><span class="pre">prs.stdlib.div</span></code>.
-Воркер — отдельный процесс patio с проектом <code class="docutils literal notranslate"><span class="pre">methods_app</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>methods/packages/stdlib/worker.py
+<p>Если у определения задан атрибут <code class="docutils literal notranslate"><span class="pre">prsVariadic:</span> <span class="pre">true</span></code> («Произвольные
+параметры» в конфигураторе), список параметров в каталоге не хранится.
+Тогда каждая ссылка сама задаёт, сколько у неё параметров и какие,
+а платформа не проверяет их число. При чтении определения поле
+<code class="docutils literal notranslate"><span class="pre">parameterCount</span></code> показывает число параметров.</p>
+<p>Определения раскладывают по папкам. Папка каталога создаётся тем же
+запросом с флагом <code class="docutils literal notranslate"><span class="pre">folder</span></code> (см. <a class="reference internal" href="folders.html"><span class="doc">Папки</span></a>):</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"folder"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Арифметика"</span><span class="p">}}</span>
 </pre></div>
 </div>
-<p>Он принимает и конверт legacy <code class="docutils literal notranslate"><span class="pre">data_get</span></code>, и обычное число.
-<code class="docutils literal notranslate"><span class="pre">None</span></code>, нечисловое значение и деление на ноль возвращают
-<code class="docutils literal notranslate"><span class="pre">{&quot;error&quot;:</span> <span class="pre">&quot;...&quot;}</span></code>, и значение тега не записывается.</p>
-<p>Примеры тел запросов:
-<code class="docutils literal notranslate"><span class="pre">docs/source/samples/methods/addMethodFolderIn.txt</span></code>,
-<code class="docutils literal notranslate"><span class="pre">addCatalogMethodIn.txt</span></code>,
-<code class="docutils literal notranslate"><span class="pre">addCatalogInstanceIn.txt</span></code>.</p>
+<p>Удаление папки удаляет вложенные папки и определения.</p>
 </section>
-<section id="id3">
-<h2>Каталог методов<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
-<p>Локальный метод по-прежнему создаётся прямо под тегом или тревогой:
-у него свой <code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code>, инициаторы и параметры.
-Рядом с этим в модели есть общий каталог <code class="docutils literal notranslate"><span class="pre">cn=methods,cn=prs</span></code>.
-В конфигураторе это папка «Методы». Внутри неё методы раскладываются
-по папкам <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> (<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/</span></code> с <code class="docutils literal notranslate"><span class="pre">&quot;folder&quot;:</span> <span class="pre">true</span></code>).</p>
-<p>Определение в каталоге задаёт адрес <code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code> и параметры:
-имя, описание, <code class="docutils literal notranslate"><span class="pre">prsIndex</span></code> и <code class="docutils literal notranslate"><span class="pre">prsValueTypeCode</span></code> (<code class="docutils literal notranslate"><span class="pre">1</span></code> целый,
-<code class="docutils literal notranslate"><span class="pre">2</span></code> вещественный, <code class="docutils literal notranslate"><span class="pre">3</span></code> строка, <code class="docutils literal notranslate"><span class="pre">4</span></code> json). Откуда брать значение
-параметра, в определении не хранится: это привязка ссылки в иерархии.
-Инициаторы у определения не задаются,
-<code class="docutils literal notranslate"><span class="pre">prsEntityTypeCode</span></code> каталога всегда <code class="docutils literal notranslate"><span class="pre">0</span></code>. Число параметров при чтении
-возвращается полем <code class="docutils literal notranslate"><span class="pre">parameterCount</span></code>.</p>
-<p>Экземпляр на теге или тревоге ссылается на каталог:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="s2">"parentId"</span><span class="p">:</span> <span class="s2">"&lt;id тега&gt;"</span><span class="p">,</span>
-   <span class="s2">"catalogMethodId"</span><span class="p">:</span> <span class="s2">"&lt;id метода каталога&gt;"</span><span class="p">,</span>
-   <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"cn"</span><span class="p">:</span> <span class="s2">"Сумма комнаты"</span><span class="p">,</span> <span class="s2">"prsEntityTypeCode"</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
-   <span class="s2">"initiatedBy"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"&lt;id тега-инициатора&gt;"</span><span class="p">],</span>
-   <span class="s2">"parameters"</span><span class="p">:</span> <span class="p">[</span>
-      <span class="p">{</span><span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"prsIndex"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"prsJsonConfigString"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"binding"</span><span class="p">:</span> <span class="s2">"tag"</span><span class="p">,</span> <span class="s2">"tagId"</span><span class="p">:</span> <span class="s2">"&lt;id&gt;"</span><span class="p">}}},</span>
-      <span class="p">{</span><span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"prsIndex"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"prsJsonConfigString"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"binding"</span><span class="p">:</span> <span class="s2">"literal"</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"valueTypeCode"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}}}</span>
-   <span class="p">]</span>
+<section id="id10">
+<h3>Ссылка на определение<a class="headerlink" href="#id10" title="Ссылка на этот заголовок"></a></h3>
+<p>Ссылка — узел метода под тегом или тревогой с полем <code class="docutils literal notranslate"><span class="pre">catalogMethodId</span></code>.
+У ссылки свои тип (<code class="docutils literal notranslate"><span class="pre">0</span></code>–<code class="docutils literal notranslate"><span class="pre">4</span></code>), инициаторы и источники значений
+параметров, а адрес берётся из каталога:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">   </span><span class="nt">"parentId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id тега&gt;"</span><span class="p">,</span>
+<span class="w">   </span><span class="nt">"catalogMethodId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id определения в каталоге&gt;"</span><span class="p">,</span>
+<span class="w">   </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Сумма комнаты"</span><span class="p">,</span><span class="w"> </span><span class="nt">"prsEntityTypeCode"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span>
+<span class="w">   </span><span class="nt">"initiatedBy"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"&lt;id тега-инициатора&gt;"</span><span class="p">],</span>
+<span class="w">   </span><span class="nt">"parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"prsIndex"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"prsJsonConfigString"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"binding"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tag"</span><span class="p">,</span><span class="w"> </span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id&gt;"</span><span class="p">}}},</span>
+<span class="w">      </span><span class="p">{</span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"prsIndex"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"prsJsonConfigString"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"binding"</span><span class="p">:</span><span class="w"> </span><span class="s2">"literal"</span><span class="p">,</span><span class="w"> </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"valueTypeCode"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">}}}</span>
+<span class="w">   </span><span class="p">]</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Привязка параметра — одно из:</p>
+<p>Правила:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">{&quot;binding&quot;:</span> <span class="pre">&quot;tag&quot;,</span> <span class="pre">&quot;tagId&quot;:</span> <span class="pre">&quot;&lt;uuid&gt;&quot;}</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">{&quot;binding&quot;:</span> <span class="pre">&quot;literal&quot;,</span> <span class="pre">&quot;value&quot;:</span> <span class="pre">...,</span> <span class="pre">&quot;valueTypeCode&quot;:</span> <span class="pre">2}</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">{&quot;binding&quot;:</span> <span class="pre">&quot;constant&quot;,</span> <span class="pre">&quot;constantId&quot;:</span> <span class="pre">&quot;&lt;uuid&gt;&quot;}</span></code></p></li>
+<li><p>Адрес вызова каждый раз читается из каталога: если адрес в определении
+изменили, ссылки сразу вызывают новый.</p></li>
+<li><p>Источник значения параметра у ссылки задаётся любым из вариантов
+раздела <a class="reference internal" href="#id7">Параметры</a>.</p></li>
+<li><p>Перед вызовом платформа проверяет, что число параметров совпадает
+с определением. Тип значения не проверяется. При <code class="docutils literal notranslate"><span class="pre">prsVariadic</span></code>
+не проверяется и число.</p></li>
+<li><p>Определение, на которое есть ссылки, удалить нельзя (ответ <code class="docutils literal notranslate"><span class="pre">409</span></code>).
+То же относится к папке, в которой оно лежит.</p></li>
+<li><p>Ссылку можно копировать, определение — копировать внутри каталога.
+Скопировать определение под тег или тревогу нельзя (ответ <code class="docutils literal notranslate"><span class="pre">422</span></code>):
+для этого создают ссылку.</p></li>
 </ul>
-<p>Для ссылки на каталог <code class="docutils literal notranslate"><span class="pre">routingKey</span></code> запрещён. Адрес при вызове читается
-из каталога. Если определение удалено, вызов завершается ошибкой.
-Удаление определения, на которое есть ссылки <code class="docutils literal notranslate"><span class="pre">prsCatalogMethodId</span></code>,
-возвращает <code class="docutils literal notranslate"><span class="pre">409</span></code>. Копирование определения каталога на тег или тревогу
-возвращает <code class="docutils literal notranslate"><span class="pre">422</span></code>.</p>
-<p>Пакет стандартных методов <code class="docutils literal notranslate"><span class="pre">methods/packages/stdlib</span></code> кладёт в папку
-<code class="docutils literal notranslate"><span class="pre">stdlib</span></code> адреса <code class="docutils literal notranslate"><span class="pre">prs.stdlib.add</span></code>, <code class="docutils literal notranslate"><span class="pre">prs.stdlib.sub</span></code>, <code class="docutils literal notranslate"><span class="pre">prs.stdlib.mul</span></code>,
-<code class="docutils literal notranslate"><span class="pre">prs.stdlib.div</span></code>. Worker запускается отдельно и не импортируется сервисом:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">methods</span><span class="o">/</span><span class="n">packages</span><span class="o">/</span><span class="n">stdlib</span><span class="o">/</span><span class="n">worker</span><span class="o">.</span><span class="n">py</span>
+</section>
+<section id="id11">
+<h3>Загрузка описания<a class="headerlink" href="#id11" title="Ссылка на этот заголовок"></a></h3>
+<p>Набор папок и методов можно загрузить в каталог одним файлом YAML.
+В конфигураторе это команда «Загрузка описания» в меню папки «Методы»
+или вложенной папки, через API — <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/description</span></code>
+с полями <code class="docutils literal notranslate"><span class="pre">yaml</span></code> (текст описания), <code class="docutils literal notranslate"><span class="pre">parentId</span></code> (папка) и <code class="docutils literal notranslate"><span class="pre">probe</span></code>.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">folders</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cn</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stdlib</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Стандартные арифметические методы</span>
+<span class="w">    </span><span class="nt">methods</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cn</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">add</span>
+<span class="w">        </span><span class="nt">address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prs.stdlib.add</span>
+<span class="w">        </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Сложение</span>
+<span class="w">        </span><span class="nt">parameters</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">cn</span><span class="p">:</span><span class="w"> </span><span class="nv">a</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">float</span><span class="p p-Indicator">}</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">cn</span><span class="p">:</span><span class="w"> </span><span class="nv">b</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">float</span><span class="p p-Indicator">}</span>
+<span class="w">        </span><span class="nt">probe</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">]</span>
+<span class="nt">methods</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cn</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">echo</span>
+<span class="w">    </span><span class="nt">address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prs.example.echo</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">cn</span><span class="p">:</span><span class="w"> </span><span class="nv">text</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
-<p>Он регистрируется в patio-проекте <code class="docutils literal notranslate"><span class="pre">methods_app</span></code>. <code class="docutils literal notranslate"><span class="pre">None</span></code>, нечисло
-и деление на ноль возвращают <code class="docutils literal notranslate"><span class="pre">{&quot;error&quot;:</span> <span class="pre">&quot;...&quot;}</span></code>: значение тега не пишется.</p>
-<p>Пакет партнёра — каталог <code class="docutils literal notranslate"><span class="pre">methods/packages/&lt;id&gt;/</span></code> с <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code>
-и своим <code class="docutils literal notranslate"><span class="pre">worker.py</span></code>. Платформа читает только JSON и создаёт узлы.
-Python пакета не импортируется. Лицензия в манифесте: <code class="docutils literal notranslate"><span class="pre">{&quot;mode&quot;:</span> <span class="pre">&quot;none&quot;}</span></code>
-или <code class="docutils literal notranslate"><span class="pre">{&quot;mode&quot;:</span> <span class="pre">&quot;env&quot;,</span> <span class="pre">&quot;env&quot;:</span> <span class="pre">&quot;PERESVET_METHOD_LICENSE_&lt;ID&gt;&quot;}</span></code>.
-Пустая переменная окружения пропускает загрузку пакета и worker
-не должен регистрировать RPC. Каталог пакетов переопределяется
-<code class="docutils literal notranslate"><span class="pre">PRS_METHOD_PACKAGES_DIR</span></code>.</p>
+<p>У метода обязателен адрес (<code class="docutils literal notranslate"><span class="pre">address</span></code> или <code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code>).
+Параметр описывают поля <code class="docutils literal notranslate"><span class="pre">cn</span></code>, <code class="docutils literal notranslate"><span class="pre">index</span></code> и <code class="docutils literal notranslate"><span class="pre">type</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>,
+<code class="docutils literal notranslate"><span class="pre">string</span></code>, <code class="docutils literal notranslate"><span class="pre">json</span></code> или код <code class="docutils literal notranslate"><span class="pre">1</span></code>–<code class="docutils literal notranslate"><span class="pre">4</span></code>). Метод с адресом, который уже есть
+в каталоге, повторно не создаётся. В ответе перечислено, какие папки
+и методы созданы. При <code class="docutils literal notranslate"><span class="pre">probe:</span> <span class="pre">true</span></code> платформа после загрузки пробно
+вызывает каждый метод с аргументами из <code class="docutils literal notranslate"><span class="pre">probe</span></code> и сообщает результат.
+Полный пример — <code class="docutils literal notranslate"><span class="pre">docs/source/samples/methods/methodDescription.yaml</span></code>.</p>
+</section>
+<section id="id12">
+<h3>Пакеты методов<a class="headerlink" href="#id12" title="Ссылка на этот заголовок"></a></h3>
+<p>Пакет методов — это исполнитель вместе с YAML-описанием его адресов.
+Платформа не загружает пакеты сама: описание отправляют в каталог
+через API или конфигуратор, а исполнитель запускают отдельно.</p>
+<p>В репозитории лежит пример пакета — <code class="docutils literal notranslate"><span class="pre">methods/packages/stdlib</span></code>: сложение,
+вычитание, умножение и деление по адресам <code class="docutils literal notranslate"><span class="pre">prs.stdlib.add</span></code>,
+<code class="docutils literal notranslate"><span class="pre">prs.stdlib.sub</span></code>, <code class="docutils literal notranslate"><span class="pre">prs.stdlib.mul</span></code>, <code class="docutils literal notranslate"><span class="pre">prs.stdlib.div</span></code>. В поставку он
+не входит. Запуск исполнителя:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>methods/packages/stdlib/worker.py
+</pre></div>
+</div>
+<p>Адрес RabbitMQ исполнитель берёт из переменной окружения <code class="docutils literal notranslate"><span class="pre">amqp_url</span></code>.
+Аргументы он принимает и числами, и ответами <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/</span></code>.
+Если аргумент отсутствует, не число или делитель равен нулю,
+он возвращает <code class="docutils literal notranslate"><span class="pre">{&quot;error&quot;:</span> <span class="pre">&quot;...&quot;}</span></code>, и значение тега не записывается.</p>
+<p>Примеры тел запросов лежат в <code class="docutils literal notranslate"><span class="pre">docs/source/samples/methods/</span></code>:
+<code class="docutils literal notranslate"><span class="pre">addMethodFolderIn.txt</span></code>, <code class="docutils literal notranslate"><span class="pre">addCatalogMethodIn.txt</span></code>,
+<code class="docutils literal notranslate"><span class="pre">addCatalogInstanceIn.txt</span></code>.</p>
+</section>
 </section>
 </section>
 
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="historical_data.html" class="btn btn-neutral float-left" title="Исторические данные" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="connectors_guide.html" class="btn btn-neutral float-right" title="Коннекторы" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 
