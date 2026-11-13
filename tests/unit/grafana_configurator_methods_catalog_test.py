@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261113-param-layout-v31"
+CODE_VERSION = "20261113-param-layout-v32"
 
 
 def _parts():
@@ -207,6 +207,8 @@ def test_methods_catalog_root_and_menus():
     assert "prs-param-tag-missing" in javascript
     assert "prs-param-source-missing" in javascript
     assert ".prs-method-param-dg.prs-param-source-missing{background-color:#fdecee!important;border-color:#e7b7bd!important}" in css
+    assert 'tab&&tab.classList.toggle("prs-param-tab-missing",missing)' in javascript
+    assert "#prs-method-param-tabs .nav-link.prs-param-tab-missing.active{background-color:#fdecee!important;color:#8b1e24!important}" in css
     assert 'class="prs-mono prs-json-editor-input" id="textarea-param-built-query-${o}"' in javascript
     assert "prsMethodParamOnBuiltQueryInput" in javascript
     assert 'if(!prsCat)prsCat=(n("#select-prsCatalogMethodPick").val()||"").trim()' in javascript
