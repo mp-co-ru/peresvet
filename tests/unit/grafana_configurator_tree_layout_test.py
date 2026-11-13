@@ -17,7 +17,7 @@ def _parts():
 def test_hierarchy_pane_fills_panel_and_scrolls_inside_the_tree():
     css, javascript = _parts()
 
-    assert 'prsConfiguratorCodeVersion="20261113-param-layout-v20"' in javascript
+    assert 'prsConfiguratorCodeVersion="20261113-param-layout-v30"' in javascript
     assert 'rgba(44,112,127,.1), rgba(44,112,127,.32) 48%, rgba(44,112,127,.1)' in javascript
     assert 'rgba(44,112,127,.72)' not in javascript
     assert 'rgba(44,112,127,.32) 48%,rgba(44,112,127,.1)' in css
@@ -162,8 +162,16 @@ def test_node_tooltip_is_description_and_errors_stay_on_icons():
     assert 's.title="Есть теги или тревоги без привязки к хранилищу"' in javascript
     assert "rollupConflict:prsConflict" in javascript
     assert 'x.title="Есть тег, привязанный к хранилищу и к методу чтения или записи"' in javascript
-    assert "Object.keys(methodWrite).forEach(function(id){r[id]&&ce(id,s,prsConflict)})" in javascript
     assert 'prs-tree-rollup-strip--x",!!k' in javascript
+    assert "Object.keys(methodWrite).forEach(function(id){r[id]&&ce(id,s,prsConflict)})" in javascript
+    assert "function prsConfigMissesTag(raw)" in javascript
+    assert 'objectClass:["prsMethodParameter"]' in javascript
+    assert 'kind:"paramtag",title:"Параметр читает данные тега, но тег не выбран."' in javascript
+    assert 'pt.title="В ветке есть метод, у которого параметр читает тег, но тег не выбран."' in javascript
+    assert 'prs-tree-rollup-strip--p",!!m' in javascript
+    assert "methodTagGap:methodTagGap,rollupParamTag:rollupParamTag,parentById:s" in javascript
+    assert "window.prsSyncOpenMethodTagGap=function" in javascript
+    assert "prsMethodParamRenderBusy)return" in javascript
     assert '"prsTag"===u&&"tags"!==d?!1:!!prsConflictRollup[d]' in javascript
     assert 'l.title="Есть теги без коннектора и дочернего метода — данные не поступают"' in javascript
 
@@ -186,9 +194,13 @@ def test_tag_icon_color_follows_child_method_kind():
     assert ".prs-tree-rollup-dot--conflict{display:inline-flex;background:rgba(255,192,203,.72)" in css
     assert ".prs-tree-rollup-dot--conflict::before{content:\"\";display:block;width:.9rem;height:.9rem;background-color:#8b1e24" in css
     assert "prs-tree-rollup-strip--x .prs-tree-rollup-dot--conflict{" in css
+    assert ".prs-problem-menu-btn{width:1.28rem" in css
+    assert ".prs-problem-menu--roll .prs-problem-menu-list{right:0}" in css
     assert "prs-tree-rollup-strip--x .prs-tree-rollup-dot--conflict::before{content:\"\";display:block;width:.9rem;height:.9rem;background-color:#8b1e24" in css
     # Проблема самого тега — отдельный значок рядом с ярлыком, со своим тултипом.
     assert "function prsTreeSetOwnMarks(item,marks)" in javascript
+    assert 'box.className="prs-node-own-marks"' in javascript
+    assert '.className="prs-tree-rollup-strip"' in javascript
     assert 'anchor=active||icon;anchor?anchor.insertAdjacentElement("afterend",box)' in javascript
     assert "#tree .list-group-item[role=treeitem]>.prs-node-own-marks .prs-tree-rollup-dot{background:rgba(255,192,203,.72);" in css
     assert 'prsOwnMarks.push({kind:"storage",title:"Нет привязки к хранилищу данных"})' in javascript

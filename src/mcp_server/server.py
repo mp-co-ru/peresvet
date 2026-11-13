@@ -539,7 +539,7 @@ async def peresvet_method_create(
       and expects parameter bindings (`tag`, `literal` or `constant`) instead of `routingKey`.
     - `parameters[].config` / `parameters[].prsJsonConfigString` supports:
       `routingKey` + `message` + optional `responseJsonata`, `clientJsonata`,
-      legacy nested data get with `tagId`, or a catalog binding.
+      `request` (GET /v1/data body, optional `responseJsonata` beside it), or a catalog binding.
     """
     attributes: dict[str, Any] = {
         "prsMethodAddress": method_address,

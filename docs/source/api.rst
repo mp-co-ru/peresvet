@@ -57,6 +57,8 @@ API платформы
 Разделы
 -------
 
+API v2 интеграционных хранилищ описан в разделе :ref:`integrational_v2`.
+
 .. toctree::
    :maxdepth: 6
 
@@ -66,7 +68,6 @@ API платформы
    Папки<folders>
    Коннекторы<connectors>
    Хранилища данных<dataStorages_api_doc>
-   Интеграционные хранилища<integrational_v2>
    Расписания<schedules>
    Методы<methods_api_doc>
    Запись и чтение данных<data_api>

@@ -35,6 +35,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
+          # Метки релизов нужны для номера версии под логотипом.
+          fetch-depth: 0
 
       - name: Set up Python 3.14
         uses: actions/setup-python@v4

@@ -1,6 +1,8 @@
 """Пользовательская документация совпадает с тем, что делает платформа."""
 
 import re
+import runpy
+import sys
 from pathlib import Path
 
 
@@ -45,6 +47,44 @@ def test_mcp_page_lists_every_tool():
     page = _text("mcp.rst")
     missing = sorted(name for name in tools if f"``{name}``" not in page)
     assert not missing, missing
+
+
+def _sphinx_conf(monkeypatch, **env) -> dict:
+    for key, value in env.items():
+        monkeypatch.setenv(key, value)
+    monkeypatch.setattr(sys, "path", list(sys.path))
+    return runpy.run_path(str(DOCS / "conf.py"))
+
+
+def test_docs_release_comes_from_prs_version(monkeypatch):
+    conf = _sphinx_conf(monkeypatch, PRS_VERSION="v9.9.9")
+    assert conf["release"] == "v9.9.9"
+    assert conf["version"] == "v9.9.9"
+
+
+def test_docs_release_falls_back_to_newest_release_tag(monkeypatch):
+    monkeypatch.delenv("PRS_VERSION", raising=False)
+    conf = _sphinx_conf(monkeypatch)
+    assert conf["release"] != "0.4"
+    if conf["release"]:
+        assert re.fullmatch(r"v\d+(\.\d+)*", conf["release"]) or (ROOT / "VERSION").is_file()
+
+
+def test_sidebar_shows_release_under_logo():
+    layout = _text("_templates/layout.html")
+    assert '{% extends "!layout.html" %}' in layout
+    assert layout.index('class="logo"') < layout.index("{{ release }}") < layout.index("searchbox.html")
+    conf = _text("conf.py")
+    assert "'display_version'" not in conf
+
+
+def test_autodoc_keeps_pydantic_annotations_intact():
+    assert "autodoc_use_type_comments = False" in _text("conf.py")
+
+
+def test_docs_workflow_fetches_release_tags():
+    workflow = (ROOT / ".github/workflows/build_sphinx_docs.yml").read_text(encoding="utf-8")
+    assert "fetch-depth: 0" in workflow
 
 
 def test_security_docs_list_connector_service_actions():

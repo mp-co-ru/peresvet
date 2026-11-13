@@ -9,6 +9,8 @@
 import os
 import sys
 import datetime
+import subprocess
+from pathlib import Path
 
 sys.path.insert(0, os.path.abspath('../../'))
 
@@ -47,8 +49,34 @@ sys.path.insert(0, os.path.abspath('../../src/services/tags/model_crud/'))
 project = 'МПК-Пересвет'
 copyright = f'{datetime.date.today().year}, ООО Матч Поинт Консалтинг'
 author = 'V.Badashkin'
-version = '0.4'
-release = '0.4'
+
+
+def _release_version() -> str:
+    """Номер релиза: PRS_VERSION, файл VERSION поставки или старшая метка v* в git.
+
+    Метки релизов ставятся на коммиты main и в dev не попадают, поэтому
+    git describe в dev показал бы устаревший релиз.
+    """
+    from_env = os.environ.get('PRS_VERSION', '').strip()
+    if from_env:
+        return from_env
+    root = Path(__file__).resolve().parents[2]
+    version_file = root / 'VERSION'
+    if version_file.is_file():
+        from_file = version_file.read_text(encoding='utf-8').strip()
+        if from_file:
+            return from_file
+    try:
+        tags = subprocess.run(
+            ['git', '-C', str(root), 'tag', '--list', 'v*', '--sort=-v:refname'],
+            capture_output=True, text=True, check=True, timeout=10,
+        ).stdout.split()
+    except (OSError, subprocess.SubprocessError):
+        tags = []
+    return tags[0] if tags else ''
+
+
+version = release = _release_version()
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -77,6 +105,11 @@ extensions = [
 '''
 
 httpexample_scheme = 'http'
+
+# Sphinx 9 по умолчанию переписывает __annotations__ классов из исходников
+# их модулей, включая pydantic.BaseModel. После этого pydantic не может
+# построить модель с extra="allow" (DataGet в tags_app_api_svc).
+autodoc_use_type_comments = False
 
 templates_path = ['_templates']
 exclude_patterns = []
@@ -160,7 +193,6 @@ todo_include_todos = True
 html_logo = "pics/logo.png"
 html_theme_options = {
     'logo_only': True,
-    'display_version': True,
 }
 
 pdf_documents = [('index', u'documentation', u'My Docs', u'Me'), ]

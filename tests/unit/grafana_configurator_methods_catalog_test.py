@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261113-param-layout-v20"
+CODE_VERSION = "20261113-param-layout-v30"
 
 
 def _parts():
@@ -168,6 +168,11 @@ def test_methods_catalog_root_and_menus():
     assert "prsOpenParamTagPick" in javascript
     assert 'option value="tagData">Данные тега(-ов)' in javascript
     assert "prs-method-param-query-head" in javascript
+    assert '>Запрос:</label>' in javascript
+    assert "Сформированный запрос" not in javascript
+    assert 'class="prs-json-editor prs-json-editor-compact' in javascript
+    assert javascript.split('id="prs-json-editor-param-${o}"', 1)[1].split('prs-method-param-url-row', 1)[0].count("prs-json-editor-resize") == 1
+    assert ".prs-method-param-query-head>label{margin-left:.45rem}" in css
     assert javascript.find('class="d-flex align-items-center gap-2 mb-1 prs-method-param-query-head"') < javascript.find('<div class="prs-method-param-get-keys mb-2 d-none" id="div-param-get-keys-${o}">') < javascript.find('id="textarea-param-built-query-${o}"')
     assert ".prs-method-param-query-head .prs-icon-btn,.prs-method-param-url-row .prs-icon-btn{width:1.75rem" in css
     assert ".prs-method-param-query-head," not in css
@@ -179,6 +184,26 @@ def test_methods_catalog_root_and_menus():
     assert ".prs-anchor-btn{box-sizing:border-box;flex:0 0 auto;align-self:center;width:1.75rem;height:1.75rem;padding:0;display:inline-flex;align-items:center;justify-content:center;" in css
     assert 'prs-method-search-meta">\'+Le(item.id)+"</div>"' in pick
     assert "Le(item.cn" not in pick
+    assert "evalContextTagId:1" in javascript
+    assert "Object.prototype.hasOwnProperty.call(t,k)" in javascript
+    assert "Ge(e,parsed)" in javascript
+    assert "function prsStoreTagQuery(query,jsonata)" in javascript
+    assert "function prsTagQueryFromStored(e)" in javascript
+    assert "prsStoreTagQuery(parsed,expr)" in javascript
+    assert 'n=Fe(prsTagQueryFromStored(JSON.parse(t.value||"{}")))' in javascript
+    assert 'typeof window.prsMethodParamOnBuiltQueryInput==="function")window.prsMethodParamOnBuiltQueryInput' in javascript
+    assert "window.prsMethodParamOnBuiltQueryInput=prsMethodParamOnBuiltQueryInput" in javascript
+    assert "function set(v){t.textContent=v;t.title=v}" in javascript
+    assert 'class="prs-param-url-text prs-mono" id="input-parameter-dataUrl-preview-${o}"' in javascript
+    assert 'id="input-parameter-dataUrl-preview-0"' in html
+    assert "input-parameter-dataUrl-preview-0" in html and "<input" not in html[html.find("input-parameter-dataUrl-preview-0")-80:html.find("input-parameter-dataUrl-preview-0")]
+    assert ".prs-param-url-text{flex:1 1 auto" in css
+    assert ".prs-method-param-dg .prs-param-run{box-sizing:border-box;flex:0 0 auto;align-self:center;width:1.75rem" in css
+    assert 'class="prs-param-run"' in javascript
+    assert 'class="prs-param-run"' in html
+    assert "btn btn-sm btn-outline-primary" not in javascript
+    assert "btn btn-sm btn-outline-primary" not in html
+    assert ".prs-method-param-dg .prs-param-run{box-sizing:border-box" in css
     assert "prs-param-tag-missing" in javascript
     assert "prs-param-source-missing" in javascript
     assert ".prs-method-param-dg.prs-param-source-missing{background-color:#fdecee!important;border-color:#e7b7bd!important}" in css
@@ -199,6 +224,46 @@ def test_methods_catalog_root_and_menus():
     assert "prsMarkInitiatorMissing" in javascript
     assert html.count('class="prs-search-glyph"') == 3
     assert "#prs-method-init-tabs .nav-link.prs-init-tab-has{background:#c5e4ea!important" in css
+    assert 'querySelectorAll(".prs-json-editor-resize")' in javascript
+    assert 'ta.closest(".prs-json-editor-compact")' in javascript
+
+
+def test_tag_request_body_is_stored_apart_from_jsonata_and_builds_the_url():
+    import shutil
+    import subprocess
+
+    node = shutil.which("node")
+    assert node
+    _html, javascript = _parts()
+    start = javascript.find("function prsTagQueryFromStored")
+    end = javascript.find('function Fe(e){if(!e||"object"!=typeof e||Array.isArray(e))return{}')
+    ze = javascript.find("function ze(e,t){var r=window.location.origin")
+    ze_end = javascript.find('function Xe(e){var t=__prsConfiguratorGetEl("input-parameter-prsJsonConfigString-"')
+    assert start > 0 and end > start and ze > 0 and ze_end > ze
+    script = (
+        "global.window={location:{origin:'https://stand.example'}};\n"
+        + javascript[start:end]
+        + javascript[ze:ze_end]
+        + r"""
+const stored = prsStoreTagQuery(
+  {tagId:["86e4f85c-7312-1041-8be5-0dcaaf570565"], op:"op"},
+  "$.data[0].data[0][1]"
+);
+if (stored.responseJsonata !== "$.data[0].data[0][1]") throw new Error("jsonata moved");
+if (!stored.request || stored.request.responseJsonata) throw new Error("jsonata leaked into request");
+if (stored.request.op !== "op") throw new Error("extra key dropped");
+if (JSON.stringify(stored.request.tagId) !== JSON.stringify(["86e4f85c-7312-1041-8be5-0dcaaf570565"])) throw new Error("tagId");
+const body = prsTagQueryFromStored(stored);
+if (body.op !== "op" || body.responseJsonata) throw new Error("unwrap");
+const editing = {tagId:["86e4f85c-7312-1041-8be5-0dcaaf570565"], op:"op"};
+if (prsTagQueryFromStored(editing).op !== "op") throw new Error("editor body");
+const url = ze(body, false);
+if (!url.includes("tagId=86e4f85c-7312-1041-8be5-0dcaaf570565")) throw new Error(url);
+if (!url.includes("op=op")) throw new Error(url);
+if (url.includes("responseJsonata")) throw new Error(url);
+"""
+    )
+    subprocess.run([node, "-e", script], check=True)
 
 
 def test_method_description_yaml_is_parsed_in_the_configurator():

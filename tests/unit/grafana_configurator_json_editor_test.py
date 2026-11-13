@@ -8,7 +8,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261113-param-layout-v20"
+CODE_VERSION = "20261113-param-layout-v30"
 
 
 def _parts():
@@ -50,6 +50,8 @@ def test_configurator_json_editor_contract():
     assert ".prs-json-editor-resize{position:absolute;right:1px;bottom:1px" in css
     assert "cursor:ns-resize" in css
     assert "prsJsonEditorBindResize=function" in javascript
+    assert 'querySelectorAll(".prs-json-editor-resize")' in javascript
+    assert 'ta.closest(".prs-json-editor-compact")' in javascript
     assert ".prs-json-editor-input{position:relative" in css
     assert "color:#243236;-webkit-text-fill-color:#243236" in css
     assert ".prs-json-editor-highlight{display:none}" in css

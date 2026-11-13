@@ -102,7 +102,7 @@ def test_video_tag_parameter_is_passed_as_tag_id_without_data_get():
         "p1",
         None,
         {
-            "prsJsonConfigString": ['{"tagId": "video-tag", "actual": true}'],
+            "prsJsonConfigString": ['{"request": {"tagId": "video-tag", "actual": true}}'],
             "prsIndex": ["1"],
             "cn": ["source"],
         },

@@ -9,6 +9,7 @@ from src.services.methods.app.method_param_resolve import (
     parse_parameter_config,
     prepare_http_request,
     resolve_parameter_value,
+    single_parameter_tag_id,
 )
 
 
@@ -68,11 +69,11 @@ def test_video_zone_platform_request_returns_the_zones_key():
     assert post.await_args.kwargs["routing_key"] == "prsTag.api_crud.read.*"
 
 
-def test_resolve_legacy_tag_and_client_context():
+def test_resolve_tag_request_and_client_context():
     post = AsyncMock(return_value={"y": 1})
     val = asyncio.run(
         resolve_parameter_value(
-            {"tagId": "t1"},
+            {"request": {"tagId": "t1"}},
             post_message=post,
             client_request=None,
             initiator_finish=9,
@@ -129,7 +130,7 @@ def test_resolve_several_tags_in_one_data_get():
     post = AsyncMock(return_value={"data": []})
     asyncio.run(
         resolve_parameter_value(
-            {"tagId": ["tag-a", "tag-b"], "actual": True},
+            {"request": {"tagId": ["tag-a", "tag-b"], "actual": True}},
             post_message=post,
             client_request=None,
             initiator_finish=9,
@@ -139,7 +140,57 @@ def test_resolve_several_tags_in_one_data_get():
     mes = post.await_args.kwargs["mes"]
     assert mes["tagId"] == ["tag-a", "tag-b"]
     assert mes["actual"] is True
+    assert mes["finish"] == 9
+    assert "responseJsonata" not in mes
     assert post.await_args.kwargs["routing_key"] == "prsTag.app_api_client.data_get.*"
+
+
+def test_resolve_nested_tag_request_posts_body_without_jsonata():
+    post = AsyncMock(return_value={"v": 3})
+
+    async def fake_eval(expr, data, timeout_ms=None):
+        assert expr == "$.data[0].data[0][1]"
+        return data["v"]
+
+    with patch("src.services.methods.app.method_param_resolve.evaluate_jsonata", fake_eval):
+        value = asyncio.run(
+            resolve_parameter_value(
+                {
+                    "request": {
+                        "tagId": ["86e4f85c-7312-1041-8be5-0dcaaf570565"],
+                        "op": "op",
+                    },
+                    "responseJsonata": "$.data[0].data[0][1]",
+                },
+                post_message=post,
+                client_request=None,
+                initiator_finish=11,
+                initiator_point=None,
+            )
+        )
+    assert value == 3
+    mes = post.await_args.kwargs["mes"]
+    assert mes["tagId"] == ["86e4f85c-7312-1041-8be5-0dcaaf570565"]
+    assert mes["op"] == "op"
+    assert mes["finish"] == 11
+    assert "responseJsonata" not in mes
+    assert "request" not in mes
+    assert single_parameter_tag_id(
+        {"request": {"tagId": ["tag-1"]}, "responseJsonata": "v"}
+    ) == "tag-1"
+    assert single_parameter_tag_id({"binding": "tag", "tagId": "tag-1"}) == "tag-1"
+    flat = AsyncMock()
+    with pytest.raises(ValueError):
+        asyncio.run(
+            resolve_parameter_value(
+                {"tagId": "t1", "op": "op"},
+                post_message=flat,
+                client_request=None,
+                initiator_finish=9,
+                initiator_point=None,
+            )
+        )
+    flat.assert_not_called()
 
 
 def test_resolve_catalog_bindings_keep_legacy_paths():
