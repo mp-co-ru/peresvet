@@ -25,6 +25,13 @@ Shared infrastructure lives under `src/common`.
 
 Services communicate through RabbitMQ.
 
+A service may know another service only by subscribing to messages that
+service already publishes. It must not send a message addressed to another
+service. The earlier service publishes its own routing keys and waits for a
+reply. A service written later subscribes to those keys and answers on the
+request's reply channel. It does not start a new message to the earlier
+service: that service has no handler invented after it was written.
+
 Docker Compose is the primary runtime mechanism.
 
 Important infrastructure:

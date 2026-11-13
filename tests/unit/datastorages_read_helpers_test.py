@@ -180,23 +180,15 @@ def test_bind_tag_alert_ds_and_virtual_read():
     keys = [c[1] for c in svc._amqp_consume_queue.calls]
     assert "prsTag.app.data_get.t1" in keys
     assert "prsDataStorage.model.link_tag.ds-1" in keys
-    none = asyncio.run(svc._read_virtual_method_response("t1", {"evalContextTagId": "t1"}))
-    assert none is None
-    svc._find_active_virtual_method_id = AsyncMock(return_value="m1")
-    svc._post_message = AsyncMock(return_value={"data": [{"tagId": "t1", "data": []}]})
-    virt = asyncio.run(svc._read_virtual_method_response("t1", {"tagId": ["t1"]}))
-    assert virt["data"][0]["tagId"] == "t1"
-    svc._post_message = AsyncMock(return_value=None)
-    err = asyncio.run(svc._read_virtual_method_response("t1", {}))
-    assert err["error"]["code"] == 424
+    assert not hasattr(svc, "_read_virtual_method_response")
 
 
-def test_tag_get_virtual_and_actual():
+def test_tag_get_reads_history_without_calling_methods():
     store = {"t1.dataStorages_app": {"prsStep": False, "prsValueTypeCode": 1, "data": []}}
     svc = _svc(store=store)
-    svc._find_active_virtual_method_id = AsyncMock(return_value="m1")
-    svc._post_message = AsyncMock(return_value={"data": [{"tagId": "t1", "data": [[1, 2, 0]]}]})
+    svc._post_message = AsyncMock()
     svc._write_cache_data = AsyncMock()
+    svc._raw = [(1, 2, 0)]
     res = asyncio.run(svc._tag_get({
         "tagId": ["t1"],
         "start": 0,
@@ -208,10 +200,10 @@ def test_tag_get_virtual_and_actual():
         "count": None,
         "timeStep": None,
     }))
-    assert res["data"][0]["data"][0][1] == 2
+    svc._post_message.assert_not_called()
+    assert any(point[1] == 2 for point in res["data"][0]["data"])
 
     svc2 = _svc(store=store)
-    svc2._find_active_virtual_method_id = AsyncMock(return_value=None)
     svc2._write_cache_data = AsyncMock()
     svc2._raw = [(5, 9, 0)]
     actual = asyncio.run(svc2._tag_get({
@@ -309,3 +301,71 @@ def test_numeric_value_filter_is_not_measured_with_len():
     pg._tags = {"t1": {"value_type": 0, "step": False}}
     meta = asyncio.run(pg._tag_value_filter_meta("t1"))
     assert meta == {"value_type": 0, "step": False}
+
+
+def test_tag_type_change_recreates_store_from_column_when_link_has_no_type():
+    assert DataStoragesAppPostgreSQL._value_type_from_pg_udt("text") == 2
+    assert DataStoragesAppPostgreSQL._value_type_from_pg_udt("float8") == 1
+    assert DataStoragesAppPostgreSQL._value_type_from_link_config(['{"prsValueTypeCode": 2}']) == 2
+    assert DataStoragesAppPostgreSQL._value_type_from_link_config(None) is None
+
+    created = []
+    modified = []
+
+    class Conn:
+        def __init__(self, udt):
+            self.udt = udt
+
+        async def fetchval(self, *_a, **_k):
+            return self.udt
+
+    class Pool:
+        def __init__(self, udt):
+            self.udt = udt
+
+        def acquire(self):
+            conn = Conn(self.udt)
+
+            class _Ctx:
+                async def __aenter__(self_ctx):
+                    return conn
+
+                async def __aexit__(self_ctx, *_a):
+                    return None
+
+            return _Ctx()
+
+    def make(udt, link_config):
+        pg = object.__new__(DataStoragesAppPostgreSQL)
+        pg._logger = _Logger()
+        pg._config = SimpleNamespace(svc_name="dataStorages_app_postgresql")
+        pg._connection_pools = {"ds-1": Pool(udt)}
+        pg._create_store_for_tag = AsyncMock(side_effect=lambda **kw: created.append(kw))
+        pg._delete_tag_cache = AsyncMock()
+        pg._create_tag_cache = AsyncMock()
+
+        async def search(payload):
+            if payload.get("attributes") == ["prsValueTypeCode"]:
+                return [("tag-1", None, {"prsValueTypeCode": ["1"]})]
+            attrs = {"prsStore": ['{"table": "t_tag-1"}']}
+            if link_config is not None:
+                attrs["prsJsonConfigString"] = [link_config]
+            return [("link-1", None, attrs)]
+
+        async def modify(node_id, attrs):
+            modified.append((node_id, attrs))
+
+        pg._hierarchy = SimpleNamespace(search=search, modify=modify)
+        return pg
+
+    created.clear()
+    modified.clear()
+    asyncio.run(make("text", None)._tag_updated({"id": "tag-1"}))
+    assert created and created[0]["store"] == {"table": "t_tag-1"}
+    assert modified[-1][1] == {"prsJsonConfigString": {"prsValueTypeCode": 1}}
+
+    created.clear()
+    modified.clear()
+    asyncio.run(make("float8", None)._tag_updated({"id": "tag-1"}))
+    assert created == []
+    assert modified[-1][1] == {"prsJsonConfigString": {"prsValueTypeCode": 1}}

@@ -1,4 +1,4 @@
-"""Поиск активного виртуального метода (prsEntityTypeCode = 1) под тегом."""
+"""Поиск активного метода заданного prsEntityTypeCode под тегом."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from typing import Any
 _SCOPE_ONELEVEL = 1
 
 
-async def find_active_virtual_method_id(hierarchy: Any, tag_id: str) -> str | None:
-    """Активный метод с prsEntityTypeCode=1 под тегом (при нескольких — минимальный prsIndex)."""
+async def find_active_method_id(hierarchy: Any, tag_id: str, entity_type: int) -> str | None:
+    """Активный метод с заданным prsEntityTypeCode под тегом (при нескольких — минимальный prsIndex)."""
     payload = {
         "base": tag_id,
         "scope": _SCOPE_ONELEVEL,
@@ -24,7 +24,7 @@ async def find_active_virtual_method_id(hierarchy: Any, tag_id: str) -> str | No
         attrs = row[2]
         raw_code = attrs.get("prsEntityTypeCode", ["0"])
         try:
-            if int(raw_code[0]) != 1:
+            if int(raw_code[0]) != entity_type:
                 continue
         except Exception:
             continue
@@ -38,3 +38,8 @@ async def find_active_virtual_method_id(hierarchy: Any, tag_id: str) -> str | No
         return None
     candidates.sort(key=lambda z: z[0])
     return candidates[0][1]
+
+
+async def find_active_virtual_method_id(hierarchy: Any, tag_id: str) -> str | None:
+    """Активный метод с prsEntityTypeCode=1 под тегом."""
+    return await find_active_method_id(hierarchy, tag_id, 1)

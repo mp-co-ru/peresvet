@@ -92,6 +92,8 @@ def test_catalog_call_checks_arity_and_numeric_types():
     assert catalog_call_error(catalog, [{"index": 1, "data": 1}]) is not None
     assert catalog_call_error(catalog, [{"index": 1, "data": None}, {"index": 2, "data": 1}]) is not None
     assert catalog_call_error(catalog, [{"index": 1, "data": 1}, {"index": 2, "data": 2.5}]) is None
+    assert catalog_call_error(catalog, [{"index": 1, "data": 1}, {"index": 3, "data": "текст"}], variadic=True) is None
+    assert catalog_call_error(catalog, [{"index": 1, "data": None}], variadic=True) is None
     envelope = {"data": [{"data": [[10, 3, 0]]}]}
     assert numeric_of(envelope) == 3
     assert numeric_compatible(1, 2.5) is False

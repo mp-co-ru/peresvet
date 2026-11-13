@@ -17,7 +17,7 @@ def _parts():
 def test_hierarchy_pane_fills_panel_and_scrolls_inside_the_tree():
     css, javascript = _parts()
 
-    assert 'prsConfiguratorCodeVersion="20261102-catalog-params-read-v1"' in javascript
+    assert 'prsConfiguratorCodeVersion="20261113-method-type-tip-v1"' in javascript
     assert 'rgba(44,112,127,.1), rgba(44,112,127,.32) 48%, rgba(44,112,127,.1)' in javascript
     assert 'rgba(44,112,127,.72)' not in javascript
     assert 'rgba(44,112,127,.32) 48%,rgba(44,112,127,.1)' in css
@@ -160,6 +160,11 @@ def test_node_tooltip_is_description_and_errors_stay_on_icons():
     assert 'm?m+" · "+v' not in javascript
     assert 'o.title="В поддереве есть неактивные узлы (или узел неактивен)"' in javascript
     assert 's.title="Есть теги или тревоги без привязки к хранилищу"' in javascript
+    assert "rollupConflict:prsConflict" in javascript
+    assert 'x.title="Есть тег, привязанный к хранилищу и к методу чтения или записи"' in javascript
+    assert "Object.keys(methodWrite).forEach(function(id){r[id]&&ce(id,s,prsConflict)})" in javascript
+    assert 'prs-tree-rollup-strip--x",!!k' in javascript
+    assert '"prsTag"===u&&"tags"!==d?!1:!!prsConflictRollup[d]' in javascript
     assert 'l.title="Есть теги без коннектора и дочернего метода — данные не поступают"' in javascript
 
 
@@ -167,14 +172,21 @@ def test_tag_icon_color_follows_child_method_kind():
     css, javascript = _parts()
 
     assert 'r.append("attributes","prsEntityTypeCode")' in javascript
-    assert "var r={any:{},calc:{},virt:{}}" in javascript
-    assert "1===R(e)?r.virt[id]=!0:r.calc[id]=!0" in javascript
-    assert "tagCalcMethod:methodCalc,tagVirtMethod:methodVirt" in javascript
+    assert "var r={any:{},calc:{},virt:{},write:{}}" in javascript
+    assert "2===R(e)?r.write[id]=!0:1===R(e)?r.virt[id]=!0:3===R(e)||4===R(e)?0:r.calc[id]=!0" in javascript
+    assert "tagCalcMethod:methodCalc,tagVirtMethod:methodVirt,tagWriteMethod:methodWrite" in javascript
     assert 't.classList.add("prs-tag-method-"+prsTagKind)' in javascript
     assert "prs-tag-tree-unlinked>.item-icon{color:var(--ioterra-rust" not in css
     assert "#tree .list-group-item.prsTag.prs-tag-method-plain>.item-icon{color:#0e9f4a!important}" in css
     assert "#tree .list-group-item.prsTag.prs-tag-method-calc>.item-icon{color:#e06a00!important}" in css
     assert "#tree .list-group-item.prsTag.prs-tag-method-virt>.item-icon{color:#9b2fd0!important}" in css
+    assert "#tree .list-group-item.prs-tag-method-conflict>.item-icon{color:#e03131!important}" in css
+    assert 'prsOwnMarks.push({kind:"conflict",title:"Тег привязан к хранилищу и к методу чтения или записи"})' in javascript
+    assert "s&&(prsTagVirt[t.id]||prsTagWrite[t.id])&&prsOwnMarks.push" in javascript
+    assert ".prs-tree-rollup-dot--conflict{display:inline-flex;background:rgba(255,192,203,.72)" in css
+    assert ".prs-tree-rollup-dot--conflict::before{content:\"\";display:block;width:.9rem;height:.9rem;background-color:#8b1e24" in css
+    assert "prs-tree-rollup-strip--x .prs-tree-rollup-dot--conflict{" in css
+    assert "prs-tree-rollup-strip--x .prs-tree-rollup-dot--conflict::before{content:\"\";display:block;width:.9rem;height:.9rem;background-color:#8b1e24" in css
     # Проблема самого тега — отдельный значок рядом с ярлыком, со своим тултипом.
     assert "function prsTreeSetOwnMarks(item,marks)" in javascript
     assert 'anchor=active||icon;anchor?anchor.insertAdjacentElement("afterend",box)' in javascript

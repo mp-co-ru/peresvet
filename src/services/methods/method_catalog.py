@@ -32,6 +32,19 @@ def ldap_first(attrs: dict | None, key: str, default: Any = None) -> Any:
     return default if raw is None else raw
 
 
+def ldap_flag(value: Any) -> bool:
+    """Факультативный булев атрибут LDAP: отсутствует значит «нет»."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (bytes, bytearray)):
+        value = value.decode()
+    if isinstance(value, str):
+        return value.strip().lower() in {"true", "1"}
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return value == 1
+    return False
+
+
 def as_int(value: Any) -> int | None:
     if isinstance(value, bool) or value is None:
         return None
@@ -122,10 +135,15 @@ def validate_binding(cfg: dict) -> str | None:
     return None
 
 
-def validate_catalog_parameter(attrs: dict) -> str | None:
+def validate_catalog_parameter(attrs: dict, *, require_type: bool = True) -> str | None:
     if as_int(attrs.get("prsIndex")) is None:
         return "У параметра метода каталога должен быть prsIndex."
-    if as_int(attrs.get("prsValueTypeCode")) not in VALUE_TYPE_CODES:
+    code = attrs.get("prsValueTypeCode")
+    if code in (None, ""):
+        if require_type:
+            return "У параметра метода каталога prsValueTypeCode должен быть 1, 2, 3 или 4."
+        return None
+    if as_int(code) not in VALUE_TYPE_CODES:
         return "У параметра метода каталога prsValueTypeCode должен быть 1, 2, 3 или 4."
     return None
 
@@ -169,8 +187,14 @@ def validate_method_message(
         if require_address or "prsMethodAddress" in attrs:
             if is_blank(attrs.get("prsMethodAddress")):
                 return error(422, "У метода каталога должен быть prsMethodAddress.")
+        require_type = not ldap_flag(attrs.get("prsVariadic"))
+        if not require_type:
+            mes["parameters"] = []
         for item in mes.get("parameters") or []:
-            message = validate_catalog_parameter(parameter_attributes(item))
+            message = validate_catalog_parameter(
+                parameter_attributes(item),
+                require_type=require_type,
+            )
             if message:
                 return error(422, message)
         return None
@@ -182,8 +206,8 @@ def validate_method_message(
         attrs["prsMethodAddress"] = catalog_address
         mes["catalogMethodId"] = catalog_id
         if "prsEntityTypeCode" in attrs and attrs.get("prsEntityTypeCode") is not None:
-            if as_int(attrs.get("prsEntityTypeCode")) not in (0, 1):
-                return error(422, "prsEntityTypeCode экземпляра метода должен быть 0 или 1.")
+            if as_int(attrs.get("prsEntityTypeCode")) not in (0, 1, 2, 3, 4):
+                return error(422, "prsEntityTypeCode экземпляра метода должен быть 0, 1, 2, 3 или 4.")
         for item in mes.get("parameters") or []:
             try:
                 config_of_parameter(parameter_attributes(item))
@@ -236,8 +260,19 @@ def _sort_index(item: dict) -> int:
     return 10**9 if index is None else index
 
 
-def catalog_call_error(catalog_parameters: list[dict], resolved: list[dict]) -> str | None:
-    """Арность и числовая совместимость (коды 1 и 2) до вызова patio."""
+def catalog_call_error(
+    catalog_parameters: list[dict],
+    resolved: list[dict],
+    *,
+    variadic: bool = False,
+) -> str | None:
+    """Арность и числовая совместимость (коды 1 и 2) до вызова patio.
+
+    ``variadic`` — у метода каталога задан ``prsVariadic``: ни число параметров,
+    ни их типы не сверяются со слотами каталога.
+    """
+    if variadic:
+        return None
     expected = sorted(catalog_parameters or [], key=_sort_index)
     actual = sorted(resolved or [], key=_sort_index)
     if len(expected) != len(actual):

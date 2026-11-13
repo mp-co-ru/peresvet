@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261102-catalog-params-read-v1"
+CODE_VERSION = "20261113-method-type-tip-v1"
 
 
 def _parts():
@@ -26,6 +26,18 @@ def test_methods_catalog_root_and_menus():
     assert "catalogMethodInstance" not in javascript
     assert "Метод из каталога" not in javascript
     assert "select-prsMethodKind" in html
+    assert ">Метод/ссылка<" in html
+    assert ">Тип метода<" not in html
+    assert 'id="select-prsMethodEntityType"' in html
+    assert ">Вычислительный<" in html
+    assert ">Чтение<" in html
+    assert ">Запись<" in html
+    assert ">Действие при чтении<" in html
+    assert ">Действие при записи<" in html
+    assert "3 — действие при чтении: метод получает чтение и ответ не отправляет" in html
+    assert "4 — действие при записи: метод получает запись и ответ не отправляет" in html
+    assert "prsSyncMethodEntityTypeControl" in javascript
+    assert "prs-method-variadic-instance" in javascript
     assert "prsOnMethodKindChange" in javascript
     assert "prsCreateInstanceMethod" in javascript
     assert "Вновь создаваемый метод" in html
@@ -39,7 +51,16 @@ def test_methods_catalog_root_and_menus():
     )[0]
     assert 'getAttribute("data-parent-class")' in parent_fn
     assert "previousElementSibling" in parent_fn
-    assert 'prsMethod:{visible:["div-prsMethodAddress","div-prsMethodKind","div-prsCatalogMethodPick"' in javascript
+    assert 'prsMethod:{visible:["div-prsMethodAddress","div-prsVariadic","div-initiatedBy","div-parameters","div-prsEntityTypeCode"]' in javascript
+    assert 'catalogNode=prsMethodIsCatalogNode(node)' in javascript
+    assert 'variadicBox.classList.toggle("d-none",!catalogNode)' in javascript
+    assert "prsApplyVariadicParametersVisibility" in javascript
+    assert 'if(nodeData&&nodeData.id&&String(node.id)!==String(nodeData.id))return;' in javascript
+    assert 'if(!he(prsMethodRenderId))return;try{prsSyncMethodCatalogForm(nodeData)}' in javascript
+    assert "prsFormSeq!==window.prsFormLoadSeq||!he(t)" in javascript
+    assert "prs-method-variadic" in javascript
+    assert "if(he(t)){setAttributesVisibility(e);nodeData=a.data[0];" in javascript
+    assert "Да — параметры задаются там, где метод применяется. Нет — параметры заданы здесь." in html
     assert "Выберите метод каталога." in javascript
     assert 'case"prsMethodsRoot":a(["methodFolders","catalogMethods","methodDescription"])' in javascript
     assert 'case"prsModelNode":a(["methodFolders","catalogMethods","methodDescription","__active__","__delete__"])' in javascript
@@ -82,6 +103,14 @@ def test_methods_catalog_root_and_menus():
     assert 'if("prsModelNode"===fallback&&"prsMethod"===oc)return' in javascript
     assert 'id="prs-catalog-method-dialog"' not in html
     assert 'id="input-prsCatalogMethodId"' in html
+    assert 'id="div-prsVariadic"' in html
+    assert "prs-tag-method-conflict" in javascript
+    assert "Тег привязан к хранилищу и к методу чтения или записи" in javascript
+    assert 'n.classList.toggle("d-none",1===a||2===a)' in javascript
+    assert "prsVariadic" in javascript
+    assert 'if(!a.length)return""' in javascript
+    assert "Укажите тег, из которого берутся данные. Ключ value только фильтрует данные этого тега." in javascript
+    assert "Тег не выбран. Без него запрос GET /v1/data не читает данные." in javascript
     assert 'id="div-prsMethodKind"' in html
     assert 'id="div-catalogInstance"' in html
     storage_at = html.index('id="prs-storage-tag-only"')
@@ -113,6 +142,7 @@ def test_methods_catalog_root_and_menus():
     assert "function prsMethodParamSourceOf" in javascript
     assert ".prs-method-mode-instance #div-parameters{display:none" not in css
     assert ".prs-method-mode-instance .prs-method-param-add-wrap" in css
+    assert "#attributes-form.prs-method-mode-instance.prs-method-variadic-instance .prs-method-param-add-wrap{display:block!important}" in css
     assert ".prs-method-mode-catalog .prs-method-param-head-flags,.prs-method-mode-instance .prs-method-param-head-flags{flex-direction:column!important" in css
     assert ".prs-method-mode-catalog .prs-method-param-head-flags>.prs-catalog-vtype" in css
     assert "prs-catalog-vtype" in html

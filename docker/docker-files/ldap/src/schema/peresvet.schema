@@ -20,7 +20,7 @@ attributetype ( 1.3.6.1.4.1.58316.2.3.1
 # 2 - вычисляемый
 attributetype ( 1.3.6.1.4.1.58316.2.3.2
 	NAME 'prsEntityTypeCode'
-	DESC 'Код типа сущности. Для тэга - обычный или вычисляемый, для алерта 0 - обычная тревога'
+	DESC 'Код типа сущности. Для тэга - обычный или вычисляемый, для алерта 0 - обычная тревога. Для метода: 0 - вычислительный, 1 - чтение данных тега, 2 - запись данных тега, 3 - действие при чтении без ответа, 4 - действие при записи без ответа'
 	EQUALITY integerMatch
 	ORDERING integerOrderingMatch
 	SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
@@ -226,6 +226,14 @@ attributetype ( 1.3.6.1.4.1.58316.2.3.31
 	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
 	SINGLE-VALUE )
 
+# произвольное число параметров метода каталога
+attributetype ( 1.3.6.1.4.1.58316.2.3.32
+	NAME 'prsVariadic'
+	DESC 'Метод принимает произвольное число параметров. Отсутствие атрибута — фиксированная арность'
+	EQUALITY booleanMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.7
+	SINGLE-VALUE )
+
 objectClass ( 1.3.6.1.4.1.58316.2.4.1
 	NAME 'prsModelNode'
 	DESC 'класс, на базе которого создаются все узлы в модели'
@@ -265,7 +273,7 @@ objectClass ( 1.3.6.1.4.1.58316.2.4.7
 	DESC 'класс "метод"'
 	SUP prsModelNode STRUCTURAL
 	MUST ( prsMethodAddress )
-	MAY ( prsCatalogMethodId ))
+	MAY ( prsCatalogMethodId $ prsVariadic ))
 
 objectClass ( 1.3.6.1.4.1.58316.2.4.8
 	NAME 'prsObject'

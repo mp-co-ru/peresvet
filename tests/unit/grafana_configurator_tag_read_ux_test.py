@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
 DOCS_HOST = "mp-co-ru.github.io/peresvet"
-CODE_VERSION = "20261102-catalog-params-read-v1"
+CODE_VERSION = "20261113-method-type-tip-v1"
 
 
 def _dashboard_parts():
@@ -136,6 +136,12 @@ def test_tag_read_request_ux_dashboard_contract():
     # Scoped CSS must not redefine global method-param one-row flags
     assert "#prs-tag-pane-read .prs-tag-get-keys-summary" in css
     assert "#prs-tag-pane-read .prs-tag-get-key-row" in css
+
+    # Write request: value and timestamp first, body under them
+    write = html[html.index('id="prs-tag-pane-write"') : html.index('id="button-tagSetData"')]
+    assert write.index('id="span-tagSetDataURL"') < write.index('id="input-tagSetDataValue"')
+    assert write.index('id="input-tagSetDataValue"') < write.index('id="input-tagSetDataTime"')
+    assert write.index('id="input-tagSetDataTime"') < write.index('id="span-tagSetDataBody"')
 
     # Write tab / export / results table preserved
     assert 'id="prs-tag-pane-write"' in html

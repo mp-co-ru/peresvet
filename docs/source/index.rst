@@ -1,8 +1,3 @@
-.. MPCPeresvet documentation master file, created by
-   sphinx-quickstart on Wed Apr  5 18:51:09 2023.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 .. include:: <isonum.txt>
 
 .. |br| raw:: html
@@ -12,35 +7,57 @@
 МПК-Пересвет
 ============
 
+Документация платформы для построения моделей технических объектов,
+сбора, хранения и обработки данных.
+
+С чего начать: прочитайте :doc:`description`, установите платформу
+(:doc:`installation`) и соберите первую модель в
+:doc:`конфигураторе <configurator/configurator>`. Пошаговый пример —
+в `базовом курсе <https://github.com/mp-co-ru/prs-peresvet-courses/tree/main/01.base>`_.
+
 .. toctree::
    :maxdepth: 6
-   :caption: Содержание:
+   :caption: Знакомство
 
    Описание<description>
    Терминология<terms>
+   Компоненты системы<components>
+
+.. toctree::
+   :maxdepth: 6
+   :caption: Установка и сопровождение
+
    Установка и запуск<installation>
    Администрирование<administration>
-   Исторические данные<historical_data>
+
+.. toctree::
+   :maxdepth: 6
+   :caption: Работа с платформой
+
    Конфигуратор модели<configurator/configurator>
-   Создание экранов в Grafana<grafana/grafana_integration>
-   Компоненты системы<components>
+   Исторические данные<historical_data>
+   Методы<methods>
    Коннекторы<connectors_guide>
    Работа с видеоданными<video_data>
-   Интеграционные хранилища (v2)<integrational_v2>
+   Интеграционные хранилища<integrational_v2>
+   Создание экранов в Grafana<grafana/grafana_integration>
    MCP-сервер<mcp>
+
+.. toctree::
+   :maxdepth: 6
+   :caption: Безопасность
+
    Точки расширения безопасности<security_extension_points>
-   Настройка безопасности платной редакции<security_enterprise_setup>
+   Настройка промышленной редакции<security_enterprise_setup>
+
+.. toctree::
+   :maxdepth: 6
+   :caption: Справочник
+
    API<api>
 
-Курс
-----
-
-Справочник выше разбирает платформу по темам.
-Базовый курс ведётся отдельно:
-`курсы по платформе <https://github.com/mp-co-ru/prs-peresvet-courses/tree/main/01.base>`_.
-
-Indices and tables
-==================
+Указатели
+=========
 
 * :ref:`genindex`
 * :ref:`modindex`

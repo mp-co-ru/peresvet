@@ -8,7 +8,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261102-catalog-params-read-v1"
+CODE_VERSION = "20261113-method-type-tip-v1"
 
 
 def _parts():
