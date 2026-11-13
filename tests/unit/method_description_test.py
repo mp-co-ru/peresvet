@@ -54,6 +54,11 @@ def test_parse_method_description_tree_and_default_probe():
     assert echo["cn"] == "prs.stdlib.echo"
     assert echo["probe"] == ["probe"]
     assert tree["methods"][0]["probe"] == []
+    untyped = parse_method_description(
+        "methods:\n  - address: prs.example.plain\n    parameters:\n      - cn: x\n"
+    )
+    assert "prsValueTypeCode" not in untyped["methods"][0]["parameters"][0]
+    assert untyped["methods"][0]["probe"] == [None]
 
 
 def test_parse_json_manifest_puts_methods_into_its_folder():

@@ -103,6 +103,9 @@ def test_mcp_tools_call_http_layer():
                 probe=True,
             )
             await _unwrap(mcp_server.peresvet_virtual_method_create)(tag_id="t", method_address="pkg.fn")
+            await _unwrap(mcp_server.peresvet_write_method_create)(tag_id="t", method_address="pkg.write")
+            await _unwrap(mcp_server.peresvet_read_action_create)(tag_id="t", method_address="pkg.readact")
+            await _unwrap(mcp_server.peresvet_write_action_create)(tag_id="t", method_address="pkg.writeact")
             await _unwrap(mcp_server.peresvet_object_copy)(source_id="s", parent_id="p")
             await _unwrap(mcp_server.peresvet_tag_copy)(source_id="s", parent_id="p")
             await _unwrap(mcp_server.peresvet_alert_copy)(source_id="s", parent_id="p")
@@ -162,6 +165,16 @@ def test_mcp_tools_call_http_layer():
     move = next(item for item in captured if item[1] == "/v1/ptz/" and item[0] == "POST")
     assert move[3]["action"] == "move"
     assert move[3]["pan"] == 1
+    method_codes = {
+        item[3]["attributes"]["prsMethodAddress"]: item[3]["attributes"]["prsEntityTypeCode"]
+        for item in captured
+        if item[0] == "POST"
+        and item[1] == "/v1/methods/"
+        and item[3]
+        and item[3].get("attributes", {}).get("prsMethodAddress") in {"pkg.write", "pkg.readact", "pkg.writeact"}
+    }
+    assert method_codes == {"pkg.write": 2, "pkg.readact": 3, "pkg.writeact": 4}
+    assert all(item[3].get("initiatedBy") is None for item in captured if item[0] == "POST" and item[1] == "/v1/methods/" and item[3] and item[3].get("attributes", {}).get("prsMethodAddress") in method_codes)
     services = next(item for item in captured if item[1] == "/v1/connectors_app/services")
     assert services[0] == "GET"
     log_tail = next(item for item in captured if item[1] == "/v1/connectors_app/service_log_tail" and item[0] == "GET")

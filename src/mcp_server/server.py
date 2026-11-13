@@ -519,13 +519,27 @@ async def peresvet_method_create(
 
     Wraps `POST /v1/methods/`.
 
-    - `entity_type_code=0`: calculated method, triggered by `initiated_by`, writes result to tag data.
-    - `entity_type_code=1`: virtual method, called on `GET /v1/data/` and returns tag data without historian read.
+    - `entity_type_code=0`: calculated method. `initiated_by` tags and schedules
+      rebuild the initiator cache; the result is written to the parent tag.
+    - `entity_type_code=1`: read method. Subscribes to `prsTag.app.data_get.<tag>`
+      and its return value is the tag value. A storage link on the same tag
+      answers the same message; the platform keeps the first reply.
+    - `entity_type_code=2`: write method. Subscribes to `prsTag.app.data_set.<tag>`,
+      receives the written points as the last call argument and replies with
+      empty success. A storage link answers the same message; the first reply wins.
+    - `entity_type_code=3`: action on read. The method runs on `data_get` and
+      publishes no reply, so it does not race with storage or a type `1` method.
+    - `entity_type_code=4`: action on write. The method runs on `data_set` with
+      the written points last and publishes no reply. With a storage link the
+      storage's reply is kept. With neither storage nor a type `2` method the
+      methods service still acks the write with empty success.
+    - Codes `1`–`4` do not build the initiator cache. `initiated_by` applies to code `0`.
+    - A catalog definition must stay code `0`. Codes `1`–`4` belong on a tag or alert instance.
     - `catalog_method_id`: optional catalog method. The service copies its `prsMethodAddress`
       and expects parameter bindings (`tag`, `literal` or `constant`) instead of `routingKey`.
     - `parameters[].config` / `parameters[].prsJsonConfigString` supports:
       `routingKey` + `message` + optional `responseJsonata`, `clientJsonata`,
-      legacy nested data get with `tagId`, or a catalog binding.
+      `request` (GET /v1/data body, optional `responseJsonata` beside it), or a catalog binding.
     """
     attributes: dict[str, Any] = {
         "prsMethodAddress": method_address,
@@ -576,6 +590,91 @@ async def peresvet_virtual_method_create(
         cn=cn,
         description=description,
         entity_type_code=1,
+        initiated_by=None,
+        parameters=parameters,
+        attrs=attrs,
+    )
+
+
+@mcp.tool
+async def peresvet_write_method_create(
+    *,
+    tag_id: str,
+    method_address: str,
+    cn: str | None = None,
+    description: str | None = None,
+    parameters: list[dict[str, Any]] | None = None,
+    attrs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Create a write method (`prsEntityTypeCode=2`) for a tag.
+
+    `peresvet_data_set` publishes `prsTag.app.data_set.<tag_id>` and waits.
+    This method receives the written points as the last argument and replies
+    with empty success. A storage link on the same tag answers too; the
+    platform keeps the first reply.
+    """
+    return await peresvet_method_create(
+        parent_id=tag_id,
+        method_address=method_address,
+        cn=cn,
+        description=description,
+        entity_type_code=2,
+        initiated_by=None,
+        parameters=parameters,
+        attrs=attrs,
+    )
+
+
+@mcp.tool
+async def peresvet_read_action_create(
+    *,
+    tag_id: str,
+    method_address: str,
+    cn: str | None = None,
+    description: str | None = None,
+    parameters: list[dict[str, Any]] | None = None,
+    attrs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Create an action-on-read method (`prsEntityTypeCode=3`) for a tag.
+
+    The method runs on every `peresvet_data_get` of `tag_id` and publishes no
+    reply. The value still comes from storage or from a read method (code `1`).
+    """
+    return await peresvet_method_create(
+        parent_id=tag_id,
+        method_address=method_address,
+        cn=cn,
+        description=description,
+        entity_type_code=3,
+        initiated_by=None,
+        parameters=parameters,
+        attrs=attrs,
+    )
+
+
+@mcp.tool
+async def peresvet_write_action_create(
+    *,
+    tag_id: str,
+    method_address: str,
+    cn: str | None = None,
+    description: str | None = None,
+    parameters: list[dict[str, Any]] | None = None,
+    attrs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Create an action-on-write method (`prsEntityTypeCode=4`) for a tag.
+
+    The method runs on every `peresvet_data_set` of `tag_id`, receives the
+    written points as the last argument and publishes no reply. A storage link
+    or a write method (code `2`) still provides the reply. Storage together
+    with code `2` is a reply race; code `4` does not join it.
+    """
+    return await peresvet_method_create(
+        parent_id=tag_id,
+        method_address=method_address,
+        cn=cn,
+        description=description,
+        entity_type_code=4,
         initiated_by=None,
         parameters=parameters,
         attrs=attrs,
@@ -1199,7 +1298,10 @@ async def peresvet_data_get(query: dict[str, Any] | None = None) -> dict[str, An
     where `x` is timestamp (microseconds), `y` is value, `q` is quality.
 
     The backend can return data from historian, an integrational dataStorage,
-    or a virtual method (`prsEntityTypeCode=1`) attached to the tag.
+    or a read method (`prsEntityTypeCode=1`) attached to the tag. An
+    action-on-read method (`prsEntityTypeCode=3`) runs on the same read and
+    publishes no reply. Storage together with a read method is a reply race:
+    the platform keeps the first answer.
 
     Virtual method options:
     - arbitrary top-level query keys are forwarded to `/v1/data/` and become
@@ -1429,7 +1531,12 @@ if ENABLE_V2:
 
 @mcp.tool
 async def peresvet_data_set(payload: dict[str, Any]) -> dict[str, Any]:
-    """Write historical tag data via POST `/v1/data/`.
+    """Write tag data via POST `/v1/data/`.
+
+    The tags service publishes `prsTag.app.data_set.<tag>` and waits for one reply.
+    A write method (`prsEntityTypeCode=2`) answers with empty success. A storage
+    link answers too, and the platform keeps the first reply. An action-on-write
+    method (`prsEntityTypeCode=4`) runs on the same message and publishes no reply.
 
     Data points must be arrays in the order: `[x, y, q]` (or shorter forms `[y]`, `[x, y]`).
 

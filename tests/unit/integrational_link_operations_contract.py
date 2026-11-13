@@ -855,8 +855,8 @@ def test_v2_link_tag_omits_prsJsonConfigString_when_tag_type_5_and_no_config_in_
     assert "prsJsonConfigString" not in create_call[1]
 
 
-def test_v2_link_tag_omits_prsJsonConfigString_when_not_in_request_even_if_tag_type_not_5():
-    """Если в запросе не указан prsJsonConfigString, атрибут не записывается (в т.ч. при prsValueTypeCode != 5)."""
+def test_v2_link_tag_stores_value_type_when_not_in_request_and_tag_type_not_5():
+    """Без prsJsonConfigString в запросе узел привязки всё равно помнит тип тега: по нему смена типа пересоздаёт таблицу."""
     dummy = types.SimpleNamespace()
     add_calls: list[tuple[str, dict]] = []
 
@@ -913,7 +913,7 @@ def test_v2_link_tag_omits_prsJsonConfigString_when_not_in_request_even_if_tag_t
 
     create_call = next((c for c in add_calls if c[1].get("objectClass") == ["prsDatastorageTagData"]), None)
     assert create_call is not None
-    assert "prsJsonConfigString" not in create_call[1]
+    assert create_call[1]["prsJsonConfigString"] == {"prsValueTypeCode": 3}
 
 
 def test_v2_link_tag_sets_prsJsonConfigString_with_value_type_when_in_request_and_tag_type_not_5():

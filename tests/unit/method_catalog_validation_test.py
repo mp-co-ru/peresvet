@@ -24,6 +24,19 @@ def test_legacy_method_without_catalog_stays_compatible():
     assert "prsCatalogMethodId" not in mes["attributes"]
 
 
+def test_catalog_definition_rejects_runtime_method_types():
+    for code in (1, 2, 3, 4):
+        err = validate_method_message(
+            {"attributes": {"prsMethodAddress": "pkg.fn", "prsEntityTypeCode": code}},
+            placement="catalog",
+            catalog_id=None,
+            catalog_address=None,
+            require_address=True,
+        )
+        assert err["error"]["code"] == 422
+        assert "должен быть 0" in err["error"]["message"]
+
+
 def test_catalog_create_rejects_initiators_bad_type_and_blank_address():
     blank = {"attributes": {"prsMethodAddress": " "}, "initiatedBy": ["x"]}
     err = validate_method_message(
@@ -36,6 +49,19 @@ def test_catalog_create_rejects_initiators_bad_type_and_blank_address():
         typed, placement="catalog", catalog_id=None, catalog_address=None, require_address=True
     )
     assert err["error"]["code"] == 422
+
+    writer = {"attributes": {"prsMethodAddress": "pkg.write", "prsEntityTypeCode": 2}}
+    action = {"attributes": {"prsMethodAddress": "pkg.act", "prsEntityTypeCode": 3}}
+    write_action = {"attributes": {"prsMethodAddress": "pkg.onwrite", "prsEntityTypeCode": 4}}
+    assert validate_method_message(
+        action, placement="instance", catalog_id="cat", catalog_address="pkg.act", require_address=True
+    ) is None
+    assert validate_method_message(
+        write_action, placement="instance", catalog_id="cat", catalog_address="pkg.onwrite", require_address=True
+    ) is None
+    assert validate_method_message(
+        writer, placement="instance", catalog_id=None, catalog_address=None, require_address=False
+    ) is None
 
     linked = {
         "catalogMethodId": "other",
@@ -59,6 +85,14 @@ def test_catalog_create_accepts_parameters_and_counts_types():
         mes, placement="catalog", catalog_id=None, catalog_address=None, require_address=True
     ) is None
     assert mes["attributes"]["prsEntityTypeCode"] == 0
+    variadic = {
+        "attributes": {"prsMethodAddress": "demo.sum_any", "prsVariadic": True},
+        "parameters": [{"attributes": {"cn": "x", "prsIndex": 1}}],
+    }
+    assert validate_method_message(
+        variadic, placement="catalog", catalog_id=None, catalog_address=None, require_address=True
+    ) is None
+    assert variadic["parameters"] == []
     missing = {"attributes": {"prsMethodAddress": "prs.stdlib.add"}, "parameters": [{"attributes": {"cn": "a"}}]}
     assert validate_method_message(
         missing, placement="catalog", catalog_id=None, catalog_address=None, require_address=True
@@ -111,7 +145,7 @@ def test_catalog_call_checks_arity_and_numeric_codes():
     assert catalog_call_error(
         catalog,
         [{"index": 1, "data": {"data": [{"data": [[0, 1.5, None]]}]}}, {"index": 2, "data": 1.2}],
-    )
+    ) is None
     assert catalog_call_error(
         catalog,
         [{"index": 1, "data": 1}, {"index": 2, "data": 2}],
@@ -297,3 +331,24 @@ def test_prepare_copies_live_catalog_address_for_tag_instance():
         )
     )
     assert missing["error"]["code"] == 422
+
+
+def test_variadic_instance_parameters_are_stored_without_type():
+    class Hierarchy:
+        async def search(self, payload):
+            if payload.get("id") == "cat":
+                return [("cat", None, {"prsVariadic": ["TRUE"]})]
+            return []
+
+    svc = object.__new__(MethodsModelCRUD)
+    svc._hierarchy = Hierarchy()
+    mes = {
+        "catalogMethodId": "cat",
+        "attributes": {},
+        "parameters": [
+            {"attributes": {"cn": "a", "prsIndex": 1, "prsValueTypeCode": 2}},
+            {"attributes": {"cn": "b", "prsIndex": 2, "prsValueTypeCode": 3}},
+        ],
+    }
+    asyncio.run(MethodsModelCRUD._variadic_parameter_policy(svc, mes))
+    assert all("prsValueTypeCode" not in item["attributes"] for item in mes["parameters"])

@@ -47,14 +47,16 @@ def value_type_code(value: Any, path: str) -> int:
     raise ValueError(f"{path}: неизвестный тип параметра '{value}'.")
 
 
-def default_probe_value(type_code: int) -> Any:
+def default_probe_value(type_code: int | None) -> Any:
     if type_code == 1:
         return 1
     if type_code == 2:
         return 1.0
     if type_code == 3:
         return "probe"
-    return {}
+    if type_code == 4:
+        return {}
+    return None
 
 
 def _parameters(raw: Any, path: str) -> list[dict]:
@@ -74,22 +76,20 @@ def _parameters(raw: Any, path: str) -> list[dict]:
         type_value = item.get("prsValueTypeCode")
         if type_value is None:
             type_value = item.get("type")
-        if type_value is None:
-            type_value = 2
-        parameters.append(
-            {
-                "cn": cn,
-                "prsIndex": index,
-                "prsValueTypeCode": value_type_code(type_value, item_path),
-                "description": str(item.get("description") or "").strip(),
-            }
-        )
+        row = {
+            "cn": cn,
+            "prsIndex": index,
+            "description": str(item.get("description") or "").strip(),
+        }
+        if type_value is not None:
+            row["prsValueTypeCode"] = value_type_code(type_value, item_path)
+        parameters.append(row)
     return parameters
 
 
 def _probe(raw: Any, parameters: list[dict], path: str) -> list:
     if raw is None:
-        return [default_probe_value(item["prsValueTypeCode"]) for item in parameters]
+        return [default_probe_value(item.get("prsValueTypeCode")) for item in parameters]
     if not isinstance(raw, list):
         raise ValueError(f"{path}: probe должен быть списком аргументов.")
     return list(raw)

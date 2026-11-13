@@ -5,9 +5,10 @@
 - внешний HTTP-запрос: httpRequest (method, url, headers, body), опционально responseJsonata;
 - внутренний запрос платформы: routingKey + message, опционально responseJsonata;
 - JSONata по объекту клиентского GET /v1/data: clientJsonata;
-- без routingKey и без legacy tagId: весь объект клиентского GET /v1/data (или контекст
+- без routingKey и без ``request``: весь объект клиентского GET /v1/data (или контекст
   инициатора), опционально clientJsonata для выборки полей;
-- устаревший режим: тело запроса GET /v1/data (поле tagId), опционально responseJsonata.
+- данные тега: объект ``request`` (тело GET /v1/data, включая произвольные ключи)
+  и необязательный ``responseJsonata`` рядом с ним.
 
 Ключ ``clientStub`` (если есть в сохранённом JSON) игнорируется при выполнении — только для UI конфигуратора.
 
@@ -32,13 +33,28 @@ HTTP_METHODS = frozenset({"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"})
 HTTP_MAX_BYTES = 1_000_000
 
 
+def _tag_data_request(cfg: dict) -> dict | None:
+    """Тело GET /v1/data из объекта ``request``."""
+    nested = cfg.get("request")
+    if isinstance(nested, dict) and "tagId" in nested:
+        return copy.deepcopy(nested)
+    return None
+
+
 def single_parameter_tag_id(cfg: dict) -> str | None:
-    """Один tagId у запроса «данные тега». Литерал и привязка другого вида — None."""
+    """Один tagId у запроса «данные тега» или у привязки ``binding: tag``."""
     if not isinstance(cfg, dict):
         return None
-    if "binding" in cfg and cfg.get("binding") != "tag":
+    binding = cfg.get("binding")
+    if binding not in (None, "", "tag"):
         return None
-    raw = cfg.get("tagId")
+    if binding == "tag":
+        raw = cfg.get("tagId")
+    else:
+        body = _tag_data_request(cfg)
+        if body is None:
+            return None
+        raw = body.get("tagId")
     if isinstance(raw, list):
         if len(raw) != 1:
             return None
@@ -231,11 +247,11 @@ async def resolve_parameter_value(
     lookup_constant: Callable[[str], Awaitable[Any]] | None = None,
 ) -> Any:
     """
-    initiator_finish — метка времени инициатора (для legacy data_get подставляется в finish).
+    initiator_finish — метка времени инициатора (в тело ``request`` подставляется finish).
     initiator_point — сырая точка (x,y,q) при запуске от тега/расписания.
 
     virtual_resolution_tag_id — id тега-«владельца» виртуального метода: при чтении
-    того же тега по legacy ``tagId`` вложенный ``data_get`` не должен снова вызывать
+    того же тега по ``request.tagId`` вложенный ``data_get`` не должен снова вызывать
     виртуальный метод (иначе двойной вызов и рекурсия).
     """
     cfg = copy.deepcopy(cfg)
@@ -268,8 +284,8 @@ async def resolve_parameter_value(
             return await evaluate_jsonata(expr.strip(), raw)
         return raw
 
-    if "tagId" in cfg:
-        request = copy.deepcopy(cfg)
+    request = _tag_data_request(cfg)
+    if request is not None:
         request["finish"] = initiator_finish
         if virtual_resolution_tag_id is not None:
             request["evalContextTagId"] = virtual_resolution_tag_id
@@ -307,6 +323,6 @@ async def resolve_parameter_value(
 
     raise ValueError(
         "Некорректный prsJsonConfigString параметра метода: "
-        "нужен httpRequest, routingKey, tagId (legacy GET /v1/data) "
+        "нужен httpRequest, routingKey, request (GET /v1/data) "
         "или данные клиентского GET /v1/data."
     )

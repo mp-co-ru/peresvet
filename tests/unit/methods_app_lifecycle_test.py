@@ -1,6 +1,8 @@
 import asyncio
 import types
 
+import pytest
+
 from src.services.methods.app.methods_app_svc import MethodsApp
 
 
@@ -275,7 +277,26 @@ def test_make_method_cache_does_not_build_initiator_cache_for_virtual_method():
     assert ok is True
     assert svc._amqp_consume_queue.calls == [
         ("unbind", "main", "prsTag.app.data_set.initiator-tag"),
+        ("bind", "main", "prsTag.app.data_get.result-tag"),
     ]
+    assert svc._cache.store == {}
+
+
+@pytest.mark.parametrize(
+    ("method_type", "routing_key"),
+    [
+        (2, "prsTag.app.data_set.result-tag"),
+        (3, "prsTag.app.data_get.result-tag"),
+        (4, "prsTag.app.data_set.result-tag"),
+    ],
+)
+def test_make_method_cache_binds_tag_io_without_initiator_cache(method_type, routing_key):
+    svc = _make_service(_Hierarchy(method_type=method_type, initiators=["initiator-tag"]))
+
+    ok = asyncio.run(MethodsApp._make_method_cache(svc, "method-1"))
+
+    assert ok is True
+    assert ("bind", "main", routing_key) in svc._amqp_consume_queue.calls
     assert svc._cache.store == {}
 
 

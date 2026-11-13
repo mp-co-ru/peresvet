@@ -28,7 +28,7 @@ from src.services.tags.model_crud.tags_model_crud_settings import TagsModelCRUDS
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261102-catalog-params-read-v1"
+CODE_VERSION = "20261113-param-layout-v31"
 
 
 class _Logger:

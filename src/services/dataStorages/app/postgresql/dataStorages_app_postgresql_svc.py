@@ -318,6 +318,49 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             except PostgresError as ex:
                 self._logger.error(f"{self._config.svc_name} :: Ошибка при записи данных тревоги {alert_id}: {ex}")
 
+    @staticmethod
+    def _value_type_from_link_config(raw: Any) -> int | None:
+        if not raw or not raw[0]:
+            return None
+        parsed = raw[0]
+        if isinstance(parsed, str):
+            try:
+                parsed = json.loads(parsed)
+            except (TypeError, ValueError):
+                return None
+        if not isinstance(parsed, dict) or "prsValueTypeCode" not in parsed:
+            return None
+        try:
+            return int(parsed["prsValueTypeCode"])
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _value_type_from_pg_udt(udt_name: str | None) -> int | None:
+        return {
+            "int2": TVT.CN_INT,
+            "int4": TVT.CN_INT,
+            "int8": TVT.CN_INT,
+            "float4": TVT.CN_DOUBLE,
+            "float8": TVT.CN_DOUBLE,
+            "text": TVT.CN_STR,
+            "varchar": TVT.CN_STR,
+            "json": TVT.CN_JSON,
+            "jsonb": TVT.CN_JSON,
+        }.get(udt_name or "")
+
+    async def _stored_column_value_type(self, ds_id: str, table: str) -> int | None:
+        pool = self._connection_pools.get(ds_id)
+        if pool is None or not table:
+            return None
+        async with pool.acquire() as conn:
+            udt = await conn.fetchval(
+                "SELECT udt_name FROM information_schema.columns "
+                "WHERE table_schema = 'public' AND table_name = $1 AND column_name = 'y'",
+                table,
+            )
+        return self._value_type_from_pg_udt(udt)
+
     async def _tag_updated(self, mes: dict, routing_key: str | None = None):
         tag_id = mes['id']
 
@@ -343,18 +386,15 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
             if not tag_link_data:
                 self._logger.error(f"{self._config.svc_name} :: Тег '{tag_id}' не привязан к хранилищу '{ds_id}'")
                 continue
-            # Старый тип — из узла привязки; новый — уже из основной иерархии (tag_data выше).
-            try:
-                raw = tag_link_data[0][2].get("prsJsonConfigString")
-                if raw and raw[0]:
-                    old_type = int(json.loads(raw[0]).get("prsValueTypeCode", new_type))
-                else:
-                    old_type = new_type
-            except (TypeError, ValueError, KeyError):
-                old_type = new_type
+            # Старый тип — из узла привязки. Если его нет, смотрим колонку таблицы:
+            # смена типа в конфигураторе должна пересоздать хранилище.
+            link_attrs = tag_link_data[0][2]
+            old_type = self._value_type_from_link_config(link_attrs.get("prsJsonConfigString"))
+            store = json.loads(link_attrs["prsStore"][0])
+            if old_type is None:
+                old_type = await self._stored_column_value_type(ds_id, store.get("table"))
 
-            if new_type != old_type:
-                store = json.loads(tag_link_data[0][2]["prsStore"][0])
+            if old_type is not None and new_type != old_type:
                 await self._create_store_for_tag(tag_id=tag_id, ds_id=ds_id, store=store)
                 await self._hierarchy.modify(
                     tag_link_data[0][0],
@@ -363,8 +403,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                     }
                 )
                 self._logger.info(f"{self._config.svc_name} :: Хранилище тега '{tag_id}' в '{ds_id}' изменено.")
-            elif old_type == new_type and not (tag_link_data[0][2].get("prsJsonConfigString") and tag_link_data[0][2]["prsJsonConfigString"][0]):
-                # В узле привязки не было prsValueTypeCode — дописываем из иерархии тега для следующих обновлений.
+            elif old_type == new_type and not (link_attrs.get("prsJsonConfigString") and link_attrs["prsJsonConfigString"][0]):
                 await self._hierarchy.modify(
                     tag_link_data[0][0],
                     {"prsJsonConfigString": {"prsValueTypeCode": new_type}},
