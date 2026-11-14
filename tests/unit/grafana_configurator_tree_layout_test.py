@@ -17,7 +17,7 @@ def _parts():
 def test_hierarchy_pane_fills_panel_and_scrolls_inside_the_tree():
     css, javascript = _parts()
 
-    assert 'prsConfiguratorCodeVersion="20261113-param-layout-v46"' in javascript
+    assert 'prsConfiguratorCodeVersion="20261113-param-layout-v55"' in javascript
     assert 'rgba(44,112,127,.1), rgba(44,112,127,.32) 48%, rgba(44,112,127,.1)' in javascript
     assert 'rgba(44,112,127,.72)' not in javascript
     assert 'rgba(44,112,127,.32) 48%,rgba(44,112,127,.1)' in css
@@ -178,6 +178,8 @@ def test_node_tooltip_is_description_and_errors_stay_on_icons():
     assert "function prsMethodMissesInitiator(item)" in javascript
     assert 'kind:"noinit",title:"У вычислительного метода нет инициатора: ни тега, ни расписания."' in javascript
     assert 'prs-tree-rollup-strip--n",!!ni' in javascript
+    assert "function prsBindRollupMenu(strip)" in javascript
+    assert "prsBindRollupMenu(i)" in javascript
     assert "prsSyncOpenMethodNoInit" in javascript
     assert 'String(prsInitiatorNodeId||"")!==String(node.id)' in javascript
     assert 'prsInitiatorNodeId=String(e.id||"")' in javascript
