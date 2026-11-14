@@ -50,14 +50,12 @@ class BaseSvc(FastAPI):
 
         self._logger.debug(f"{self._config.svc_name} :: Начало инициализации сервиса {settings.svc_name}.")
 
-        if kwargs.get("on_startup"):
-            kwargs.append(self.on_startup)
-        else:
-            kwargs["on_startup"] = [self.on_startup]
-        if kwargs.get("on_shutdown"):
-            kwargs.append(self.on_shutdown)
-        else:
-            kwargs["on_shutdown"] = [self.on_shutdown]
+        startup_hooks = list(kwargs.pop("on_startup", None) or [])
+        startup_hooks.append(self.on_startup)
+        kwargs["on_startup"] = startup_hooks
+        shutdown_hooks = list(kwargs.pop("on_shutdown", None) or [])
+        shutdown_hooks.append(self.on_shutdown)
+        kwargs["on_shutdown"] = shutdown_hooks
 
         super().__init__(*args, **kwargs)
         self.add_middleware(AuthorizationContextMiddleware)
