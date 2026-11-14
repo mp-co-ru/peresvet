@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261113-param-layout-v32"
+CODE_VERSION = "20261113-param-layout-v56"
 
 
 def _parts():
@@ -26,6 +26,9 @@ def test_methods_catalog_root_and_menus():
     assert "catalogMethodInstance" not in javascript
     assert "Метод из каталога" not in javascript
     assert "select-prsMethodKind" in html
+    assert 'var wantCatalog=!!cat;kindEl&&(kindEl.value=wantCatalog?"catalog":"own")' in javascript
+    assert 'kindEl&&"catalog"===kindEl.value' not in javascript
+    assert 'if(!cur||String(cur.id)!==prsCatNodeId)return' in javascript
     assert ">Метод/ссылка<" in html
     assert ">Тип метода<" not in html
     assert 'id="select-prsMethodEntityType"' in html
@@ -62,12 +65,15 @@ def test_methods_catalog_root_and_menus():
     )[0]
     assert 'getAttribute("data-parent-class")' in parent_fn
     assert "previousElementSibling" in parent_fn
-    assert 'prsMethod:{visible:["div-prsMethodAddress","div-prsVariadic","div-initiatedBy","div-parameters","div-prsEntityTypeCode"]' in javascript
-    assert 'catalogNode=prsMethodIsCatalogNode(node)' in javascript
+    assert 'prsMethod:{visible:["div-prsMethodAddress","div-initiatedBy","div-parameters","div-prsEntityTypeCode"]' in javascript
+    assert 'hidden:["div-prsIndex","div-prsJsonConfigString","div-prsDefault","div-prsUpdate","div-prsStep","div-prsMaxLineDev","div-prsMeasureUnits","div-prsValueTypeCode","div-alertConfig","div-scheduleConfig","div-prsConnectorLogToPlatformRow","div-prsConnectorCommand","div-catalogInstance","div-prsVariadic"' in javascript
+    assert 'catalogNode=prsDnBranch?"catalog"===prsDnBranch:prsMethodIsCatalogNode(node)' in javascript
+    assert "function prsMethodDnBranch(dn)" in javascript
     assert 'variadicBox.classList.toggle("d-none",!catalogNode)' in javascript
     assert "prsApplyVariadicParametersVisibility" in javascript
     assert 'if(nodeData&&nodeData.id&&String(node.id)!==String(nodeData.id))return;' in javascript
-    assert 'if(!he(prsMethodRenderId))return;try{prsSyncMethodCatalogForm(nodeData)}' in javascript
+    assert 'if(!he(prsMethodRenderId)||window.prsFormLoadSeq!==prsFormSeq)return;' in javascript
+    assert 'if("prsMethod"===o){try{var prsCatJob=prsSyncMethodCatalogForm(nodeData);prsCatJob&&prsCatJob.then&&prsFormTrack(prsFormSeq,prsCatJob)}' in javascript
     assert "prsFormSeq!==window.prsFormLoadSeq||!he(t)" in javascript
     assert "prs-method-variadic" in javascript
     assert "if(he(t)){setAttributesVisibility(e);nodeData=a.data[0];" in javascript
@@ -123,10 +129,21 @@ def test_methods_catalog_root_and_menus():
     assert "Укажите тег, из которого берутся данные. Ключ value только фильтрует данные этого тега." in javascript
     assert "Тег не выбран. Без него запрос GET /v1/data не читает данные." in javascript
     assert 'id="div-prsMethodKind"' in html
+    assert "prsRestoreOpenCatalogMethod" not in javascript
+    assert "prsInitCaptured" not in javascript
+    assert 'resetChanges=()=>{var row=__prsConfiguratorHtmlNode&&__prsConfiguratorHtmlNode.querySelector("div.currentNode");if(!row)return;fillForm(row)}' in javascript
+    assert "fillForm(t)" in javascript
     assert 'id="div-catalogInstance"' in html
     storage_at = html.index('id="prs-storage-tag-only"')
     assert "div-catalogInstance" not in html[storage_at : storage_at + 500]
     assert html.index('id="div-catalogInstance"') < html.index('id="div-parameters"')
+    assert 'id="prs-tab-li-parameters"' in html
+    assert html.index('id="prs-tab-trigger-props"') < html.index('id="prs-tab-li-parameters"') < html.index('id="prs-tab-li-storage"')
+    pane = html.split('id="prs-tab-pane-parameters"', 1)[1].split('id="prs-tab-pane-storage"', 1)[0]
+    assert 'class="prs-method-params-tab" id="div-parameters"' in pane
+    assert "prs-input-label" not in pane
+    assert 'r("prs-tab-li-parameters","prsMethod"===e)' in javascript
+    assert '"prsMethod"===e?["#prs-tab-pane-props","#prs-tab-pane-parameters"]' in javascript
     assert "function prsMethodIsCatalogNode" in javascript
     assert 'prsMethodIsCatalogNode(node)||"prsModelNode"===poc' in javascript
     assert 'if("catalog"!==prsMode)a.prsJsonConfigString=e' in javascript
@@ -209,6 +226,12 @@ def test_methods_catalog_root_and_menus():
     assert ".prs-method-param-dg.prs-param-source-missing{background-color:#fdecee!important;border-color:#e7b7bd!important}" in css
     assert 'tab&&tab.classList.toggle("prs-param-tab-missing",missing)' in javascript
     assert "#prs-method-param-tabs .nav-link.prs-param-tab-missing.active{background-color:#fdecee!important;color:#8b1e24!important}" in css
+    assert "function prsSyncFormProblemTabs()" in javascript
+    assert 'paramsBtn.classList.toggle("prs-form-tab-problem",anyParam)' in javascript
+    assert 'propsBtn.classList.toggle("prs-form-tab-problem",initMissing)' in javascript
+    assert 'box.classList.toggle("prs-initiators-missing",initMissing)' in javascript
+    assert "#prs-form-tabs .nav-link.prs-form-tab-problem.active{background-color:#fdecee!important;color:#8b1e24!important}" in css
+    assert ".prs-method-initiators-wrap.prs-initiators-missing{background-color:#fdecee!important;border-color:#e7b7bd!important}" in css
     assert 'class="prs-mono prs-json-editor-input" id="textarea-param-built-query-${o}"' in javascript
     assert "prsMethodParamOnBuiltQueryInput" in javascript
     assert 'if(!prsCat)prsCat=(n("#select-prsCatalogMethodPick").val()||"").trim()' in javascript
@@ -356,3 +379,96 @@ console.log("ok");
 """
     completed = subprocess.run([node, "-e", script], check=False, capture_output=True, text=True)
     assert completed.returncode == 0, completed.stderr
+
+
+def test_form_tabs_follow_parameter_and_initiator_problems():
+    import shutil
+    import subprocess
+
+    node = shutil.which("node")
+    assert node
+    _html, javascript = _parts()
+    start = javascript.find("function prsSyncFormProblemTabs")
+    end = javascript.find("function prsMarkInitiatorMissing")
+    assert start > 0 and end > start
+    script = javascript[start:end] + r"""
+function classTokens(el){return String(el.className||"").split(/\s+/).filter(Boolean)}
+function matches(el, simple){
+  if(!simple||simple.charAt(0)!==".")return simple&&simple.charAt(0)==="#"&&el.id===simple.slice(1);
+  var need=simple.slice(1).split(".").filter(Boolean), have=classTokens(el);
+  return need.every(function(name){return have.indexOf(name)>=0});
+}
+function descendants(el){
+  var out=[];
+  (el.childNodes||[]).forEach(function(child){out.push(child);descendants(child).forEach(function(item){out.push(item)})});
+  return out;
+}
+function el(tag){
+  var node={tagName:String(tag||"div").toUpperCase(),className:"",id:"",value:"",parentNode:null,childNodes:[],attrs:{}};
+  node.appendChild=function(child){child.parentNode=node;node.childNodes.push(child);return child};
+  node.setAttribute=function(name, value){node.attrs[name]=String(value);if(name==="id")node.id=String(value)};
+  node.getAttribute=function(name){return Object.prototype.hasOwnProperty.call(node.attrs,name)?node.attrs[name]:null};
+  node.querySelectorAll=function(sel){
+    var roots=[node];
+    sel.split(/\s+/).forEach(function(part){
+      var next=[];
+      roots.forEach(function(base){descendants(base).forEach(function(child){if(matches(child, part))next.push(child)})});
+      roots=next;
+    });
+    return roots;
+  };
+  node.querySelector=function(sel){return node.querySelectorAll(sel)[0]||null};
+  node.getElementById=function(id){
+    if(node.id===id)return node;
+    var found=null;
+    node.childNodes.some(function(child){found=child.getElementById(id);return !!found});
+    return found;
+  };
+  node.classList={
+    contains:function(name){return classTokens(node).indexOf(name)>=0},
+    add:function(name){if(!node.classList.contains(name))node.className=(node.className+" "+name).trim()},
+    remove:function(name){node.className=classTokens(node).filter(function(item){return item!==name}).join(" ")},
+    toggle:function(name, force){var on=force===undefined?!node.classList.contains(name):!!force;on?node.classList.add(name):node.classList.remove(name);return on}
+  };
+  return node;
+}
+function prsMethodIsCatalogNode(node){return node.getAttribute("data-catalog")==="1"}
+function has(target, name){return !!(target&&target.classList.contains(name))}
+var root=el("div");
+var tree=el("div");tree.id="tree";root.appendChild(tree);
+var current=el("div");current.className="currentNode";current.setAttribute("objectClass","prsMethod");tree.appendChild(current);
+var params=el("button");params.id="prs-tab-trigger-parameters";root.appendChild(params);
+var props=el("button");props.id="prs-tab-trigger-props";root.appendChild(props);
+var typeEl=el("input");typeEl.id="input-prsEntityTypeCode";typeEl.value="0";root.appendChild(typeEl);
+var host=el("div");host.id="div-initiatedBy";root.appendChild(host);
+var wrap=el("div");wrap.className="prs-method-initiators-wrap";host.appendChild(wrap);
+var paramTabs=el("ul");paramTabs.id="prs-method-param-tabs";root.appendChild(paramTabs);
+var paramA=el("button");paramA.className="nav-link prs-param-tab-missing";paramTabs.appendChild(paramA);
+var paramB=el("button");paramB.className="nav-link";paramTabs.appendChild(paramB);
+var __prsConfiguratorHtmlNode=root;
+var we=["86e4f85c-7312-1041-8be5-0dcaaf570565"];
+prsSyncFormProblemTabs();
+if(!has(params,"prs-form-tab-problem"))throw new Error("parameters tab stays plain while a parameter misses its tag");
+if(has(props,"prs-form-tab-problem")||has(wrap,"prs-initiators-missing"))throw new Error("initiator present still paints properties");
+paramA.classList.remove("prs-param-tab-missing");
+we=[];
+prsSyncFormProblemTabs();
+if(has(params,"prs-form-tab-problem"))throw new Error("parameters tab stayed pink");
+if(!has(props,"prs-form-tab-problem")||!has(wrap,"prs-initiators-missing"))throw new Error("missing initiator did not paint properties");
+typeEl.value="1";
+prsSyncFormProblemTabs();
+if(has(props,"prs-form-tab-problem")||has(wrap,"prs-initiators-missing"))throw new Error("read method painted properties");
+typeEl.value="0";
+current.setAttribute("data-catalog","1");
+prsSyncFormProblemTabs();
+if(has(props,"prs-form-tab-problem")||has(wrap,"prs-initiators-missing"))throw new Error("catalog definition painted properties");
+current.removeAttribute=function(name){delete current.attrs[name]};
+current.setAttribute("objectClass","prsTag");
+props.classList.add("prs-form-tab-problem");
+params.classList.add("prs-form-tab-problem");
+wrap.classList.add("prs-initiators-missing");
+prsSyncFormProblemTabs();
+if(has(props,"prs-form-tab-problem")||has(params,"prs-form-tab-problem")||has(wrap,"prs-initiators-missing"))throw new Error("tag kept method problem marks");
+"""
+    completed = subprocess.run([node, "-e", script], check=False, capture_output=True, text=True)
+    assert completed.returncode == 0, completed.stderr or completed.stdout
