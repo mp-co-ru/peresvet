@@ -341,6 +341,184 @@ Promise.resolve().then(function(){
     assert completed.returncode == 0, completed.stderr or completed.stdout
 
 
+def test_problem_menus_list_icons_without_activating_the_row():
+    _, javascript = _parts()
+    start = javascript.find("function prsPositionRollupMenu")
+    end = javascript.find("function prsTreeSetOwnMarks")
+    assert start > 0 and end > start
+    script = javascript[start:end] + r"""
+function classTokens(el){return String(el.className||"").split(/\s+/).filter(Boolean)}
+function matches(el, simple){
+  if(!simple)return false;
+  if(simple.charAt(0)==="."){
+    var need=simple.slice(1).split(".").filter(Boolean), have=classTokens(el);
+    return need.every(function(name){return have.indexOf(name)>=0});
+  }
+  if(simple.charAt(0)==="#")return el.id===simple.slice(1);
+  return false;
+}
+function descendants(el){
+  var out=[];
+  (el.childNodes||[]).forEach(function(child){out.push(child);descendants(child).forEach(function(item){out.push(item)})});
+  return out;
+}
+function el(tag){
+  var node={
+    tagName:String(tag||"div").toUpperCase(),
+    className:"",
+    id:"",
+    hidden:false,
+    tabIndex:0,
+    parentNode:null,
+    childNodes:[],
+    style:{},
+    attrs:{},
+    listeners:{},
+    offsetWidth:240,
+    offsetHeight:36
+  };
+  node.appendChild=function(child){
+    if(child.parentNode&&child.parentNode!==node)child.parentNode.removeChild(child);
+    child.parentNode=node;
+    if(node.childNodes.indexOf(child)<0)node.childNodes.push(child);
+    return child;
+  };
+  node.insertBefore=function(child, ref){
+    if(child.parentNode&&child.parentNode!==node)child.parentNode.removeChild(child);
+    child.parentNode=node;
+    var at=ref?node.childNodes.indexOf(ref):0;
+    if(node.childNodes.indexOf(child)>=0)node.childNodes.splice(node.childNodes.indexOf(child),1);
+    node.childNodes.splice(at<0?node.childNodes.length:at,0,child);
+    return child;
+  };
+  node.removeChild=function(child){
+    var at=node.childNodes.indexOf(child);
+    if(at>=0)node.childNodes.splice(at,1);
+    child.parentNode=null;
+    return child;
+  };
+  node.remove=function(){node.parentNode&&node.parentNode.removeChild(node)};
+  node.setAttribute=function(name, value){node.attrs[name]=String(value);if(name==="id")node.id=String(value)};
+  node.getAttribute=function(name){return Object.prototype.hasOwnProperty.call(node.attrs,name)?node.attrs[name]:null};
+  node.removeAttribute=function(name){delete node.attrs[name];if(name==="id")node.id=""};
+  node.addEventListener=function(type, fn){(node.listeners[type]||(node.listeners[type]=[])).push(fn)};
+  node.dispatch=function(type){
+    var event={type:type,target:node,defaultPrevented:false,stopped:false,immediate:false};
+    event.preventDefault=function(){event.defaultPrevented=true};
+    event.stopPropagation=function(){event.stopped=true};
+    event.stopImmediatePropagation=function(){event.stopped=true;event.immediate=true};
+    var chain=[], cur=node;
+    while(cur){chain.push(cur);cur=cur.parentNode}
+    chain.some(function(host){
+      (host.listeners[type]||[]).slice().some(function(fn){fn(event);return event.immediate});
+      return event.stopped;
+    });
+    return event;
+  };
+  node.querySelectorAll=function(sel){
+    if(sel.indexOf(":scope > ")===0){
+      var simple=sel.slice(":scope > ".length);
+      return node.childNodes.filter(function(child){return matches(child, simple)});
+    }
+    var roots=[node];
+    sel.split(/\s+/).forEach(function(part){
+      var next=[];
+      roots.forEach(function(base){descendants(base).forEach(function(child){if(matches(child, part))next.push(child)})});
+      roots=next;
+    });
+    return roots;
+  };
+  node.querySelector=function(sel){return node.querySelectorAll(sel)[0]||null};
+  node.getBoundingClientRect=function(){
+    if(String(node.style.cssText||"").indexOf("visibility:hidden")>=0)return {left:10,top:5,right:10,bottom:5,width:0,height:0};
+    return {left:80,top:30,right:100,bottom:50,width:20,height:20};
+  };
+  node.classList={
+    contains:function(name){return classTokens(node).indexOf(name)>=0},
+    add:function(name){if(!node.classList.contains(name))node.className=(node.className+" "+name).trim()},
+    remove:function(name){node.className=classTokens(node).filter(function(item){return item!==name}).join(" ")},
+    toggle:function(name, force){var on=force===undefined?!node.classList.contains(name):!!force;on?node.classList.add(name):node.classList.remove(name);return on}
+  };
+  Object.defineProperty(node,"firstChild",{get:function(){return node.childNodes[0]||null}});
+  Object.defineProperty(node,"title",{
+    get:function(){return node.getAttribute("title")||""},
+    set:function(value){node.setAttribute("title",value==null?"":String(value))}
+  });
+  Object.defineProperty(node,"textContent",{
+    get:function(){return node.attrs.text||""},
+    set:function(value){node.attrs.text=value==null?"":String(value);node.childNodes.splice(0,node.childNodes.length)}
+  });
+  return node;
+}
+function dot(kind, title){
+  var node=el("span");
+  node.className="prs-tree-rollup-dot prs-tree-rollup-dot--"+kind;
+  node.title=title;
+  return node;
+}
+function titles(list){
+  return [].slice.call(list.querySelectorAll(".prs-problem-menu-item")).map(function(item){
+    var span=item.childNodes.filter(function(child){return child.tagName==="SPAN"&&classTokens(child).indexOf("prs-tree-rollup-dot")<0})[0];
+    return span&&span.attrs.text||"";
+  });
+}
+var root=el("div");
+global.document={createElement:el, body:root};
+global.window={innerWidth:1000, innerHeight:800};
+var __prsConfiguratorHtmlNode=root;
+var row=el("div");
+var toggled=0;
+row.addEventListener("click", function(){toggled+=1});
+root.appendChild(row);
+var box=el("span");
+box.className="prs-node-own-marks";
+box.appendChild(dot("storage","Нет привязки к хранилищу данных"));
+box.appendChild(dot("nods","Нет привязки к коннектору и нет дочернего метода — данные не поступают"));
+row.appendChild(box);
+prsBindOwnMenu(box);
+var ownButtons=box.querySelectorAll(":scope > .prs-problem-menu-btn");
+if(ownButtons.length!==1)throw new Error("own buttons "+ownButtons.length);
+if(box.querySelectorAll(":scope > .prs-tree-rollup-dot").length)throw new Error("own dots stayed visible");
+var ownList=box.querySelector(":scope > .prs-problem-menu-list");
+if(!ownList.hidden||ownList.style.display!=="none")throw new Error("own list starts open");
+var ownItems=ownList.querySelectorAll(".prs-problem-menu-item");
+if(ownItems.length!==2)throw new Error("own items "+ownItems.length);
+if(ownItems.some(function(item){return item.tagName!=="DIV"||item.getAttribute("role")==="button"}))throw new Error("own item is clickable");
+if(titles(ownList).join("|")!=="Нет привязки к хранилищу данных|Нет привязки к коннектору и нет дочернего метода — данные не поступают")throw new Error("own texts");
+ownButtons[0].dispatch("click");
+if(ownList.hidden||ownList.style.display!=="block"||ownList.style.position!=="fixed")throw new Error("own list did not open");
+if(ownList.style.left!=="-2px"||ownList.style.top!=="47px")throw new Error("own list position "+ownList.style.left+" "+ownList.style.top);
+if(ownButtons[0].getAttribute("aria-expanded")!=="true")throw new Error("own expanded");
+if(toggled)throw new Error("row toggled by own button");
+ownItems[0].dispatch("click");
+if(ownList.hidden||toggled)throw new Error("own item activated the row");
+ownButtons[0].dispatch("click");
+if(!ownList.hidden)throw new Error("own list stayed open");
+var strip=el("span");
+strip.className="prs-tree-rollup-strip prs-tree-rollup-strip--p prs-tree-rollup-strip--n";
+[["inactive","В поддереве есть неактивные узлы (или узел неактивен)"],["storage","Есть теги или тревоги без привязки к хранилищу"],["nods","Есть теги без коннектора и дочернего метода — данные не поступают"],["conflict","Есть тег, привязанный к хранилищу и к методу чтения или записи"],["paramtag","В ветке есть метод, у которого параметр читает тег, но тег не выбран."],["noinit","В ветке есть вычислительный метод без инициатора."]].forEach(function(pair){strip.appendChild(dot(pair[0], pair[1]))});
+row.appendChild(strip);
+prsBindRollupMenu(strip);
+if(strip.querySelectorAll(":scope > .prs-problem-menu-btn").length!==1)throw new Error("rollup button");
+var rollList=strip.querySelector(":scope > .prs-problem-menu-list");
+if(titles(rollList).join("|")!=="В ветке есть метод, у которого параметр читает тег, но тег не выбран.|В ветке есть вычислительный метод без инициатора.")throw new Error("rollup texts "+titles(rollList).join("|"));
+strip.querySelector(":scope > .prs-problem-menu-btn").dispatch("click");
+if(ownList.hidden!==true||rollList.hidden)throw new Error("opening rollup did not close the own list");
+if(toggled)throw new Error("row toggled by rollup button");
+var spacer=el("span");
+spacer.className="prs-tree-rollup-strip prs-tree-rollup-strip--spacer";
+prsBindRollupMenu(spacer);
+if(spacer.querySelector(":scope > .prs-problem-menu-btn"))throw new Error("spacer grew a button");
+var empty=el("span");
+prsBindOwnMenu(empty);
+if(empty.querySelector(":scope > .prs-problem-menu-btn"))throw new Error("empty node grew a button");
+"""
+    node = shutil.which("node")
+    assert node
+    completed = subprocess.run([node, "-e", script], check=False, capture_output=True, text=True)
+    assert completed.returncode == 0, completed.stderr or completed.stdout
+
+
 def test_data_storage_group_stays_visible_after_expand():
     _, javascript = _parts()
 

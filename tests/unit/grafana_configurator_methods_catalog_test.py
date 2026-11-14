@@ -379,3 +379,96 @@ console.log("ok");
 """
     completed = subprocess.run([node, "-e", script], check=False, capture_output=True, text=True)
     assert completed.returncode == 0, completed.stderr
+
+
+def test_form_tabs_follow_parameter_and_initiator_problems():
+    import shutil
+    import subprocess
+
+    node = shutil.which("node")
+    assert node
+    _html, javascript = _parts()
+    start = javascript.find("function prsSyncFormProblemTabs")
+    end = javascript.find("function prsMarkInitiatorMissing")
+    assert start > 0 and end > start
+    script = javascript[start:end] + r"""
+function classTokens(el){return String(el.className||"").split(/\s+/).filter(Boolean)}
+function matches(el, simple){
+  if(!simple||simple.charAt(0)!==".")return simple&&simple.charAt(0)==="#"&&el.id===simple.slice(1);
+  var need=simple.slice(1).split(".").filter(Boolean), have=classTokens(el);
+  return need.every(function(name){return have.indexOf(name)>=0});
+}
+function descendants(el){
+  var out=[];
+  (el.childNodes||[]).forEach(function(child){out.push(child);descendants(child).forEach(function(item){out.push(item)})});
+  return out;
+}
+function el(tag){
+  var node={tagName:String(tag||"div").toUpperCase(),className:"",id:"",value:"",parentNode:null,childNodes:[],attrs:{}};
+  node.appendChild=function(child){child.parentNode=node;node.childNodes.push(child);return child};
+  node.setAttribute=function(name, value){node.attrs[name]=String(value);if(name==="id")node.id=String(value)};
+  node.getAttribute=function(name){return Object.prototype.hasOwnProperty.call(node.attrs,name)?node.attrs[name]:null};
+  node.querySelectorAll=function(sel){
+    var roots=[node];
+    sel.split(/\s+/).forEach(function(part){
+      var next=[];
+      roots.forEach(function(base){descendants(base).forEach(function(child){if(matches(child, part))next.push(child)})});
+      roots=next;
+    });
+    return roots;
+  };
+  node.querySelector=function(sel){return node.querySelectorAll(sel)[0]||null};
+  node.getElementById=function(id){
+    if(node.id===id)return node;
+    var found=null;
+    node.childNodes.some(function(child){found=child.getElementById(id);return !!found});
+    return found;
+  };
+  node.classList={
+    contains:function(name){return classTokens(node).indexOf(name)>=0},
+    add:function(name){if(!node.classList.contains(name))node.className=(node.className+" "+name).trim()},
+    remove:function(name){node.className=classTokens(node).filter(function(item){return item!==name}).join(" ")},
+    toggle:function(name, force){var on=force===undefined?!node.classList.contains(name):!!force;on?node.classList.add(name):node.classList.remove(name);return on}
+  };
+  return node;
+}
+function prsMethodIsCatalogNode(node){return node.getAttribute("data-catalog")==="1"}
+function has(target, name){return !!(target&&target.classList.contains(name))}
+var root=el("div");
+var tree=el("div");tree.id="tree";root.appendChild(tree);
+var current=el("div");current.className="currentNode";current.setAttribute("objectClass","prsMethod");tree.appendChild(current);
+var params=el("button");params.id="prs-tab-trigger-parameters";root.appendChild(params);
+var props=el("button");props.id="prs-tab-trigger-props";root.appendChild(props);
+var typeEl=el("input");typeEl.id="input-prsEntityTypeCode";typeEl.value="0";root.appendChild(typeEl);
+var host=el("div");host.id="div-initiatedBy";root.appendChild(host);
+var wrap=el("div");wrap.className="prs-method-initiators-wrap";host.appendChild(wrap);
+var paramTabs=el("ul");paramTabs.id="prs-method-param-tabs";root.appendChild(paramTabs);
+var paramA=el("button");paramA.className="nav-link prs-param-tab-missing";paramTabs.appendChild(paramA);
+var paramB=el("button");paramB.className="nav-link";paramTabs.appendChild(paramB);
+var __prsConfiguratorHtmlNode=root;
+var we=["86e4f85c-7312-1041-8be5-0dcaaf570565"];
+prsSyncFormProblemTabs();
+if(!has(params,"prs-form-tab-problem"))throw new Error("parameters tab stays plain while a parameter misses its tag");
+if(has(props,"prs-form-tab-problem")||has(wrap,"prs-initiators-missing"))throw new Error("initiator present still paints properties");
+paramA.classList.remove("prs-param-tab-missing");
+we=[];
+prsSyncFormProblemTabs();
+if(has(params,"prs-form-tab-problem"))throw new Error("parameters tab stayed pink");
+if(!has(props,"prs-form-tab-problem")||!has(wrap,"prs-initiators-missing"))throw new Error("missing initiator did not paint properties");
+typeEl.value="1";
+prsSyncFormProblemTabs();
+if(has(props,"prs-form-tab-problem")||has(wrap,"prs-initiators-missing"))throw new Error("read method painted properties");
+typeEl.value="0";
+current.setAttribute("data-catalog","1");
+prsSyncFormProblemTabs();
+if(has(props,"prs-form-tab-problem")||has(wrap,"prs-initiators-missing"))throw new Error("catalog definition painted properties");
+current.removeAttribute=function(name){delete current.attrs[name]};
+current.setAttribute("objectClass","prsTag");
+props.classList.add("prs-form-tab-problem");
+params.classList.add("prs-form-tab-problem");
+wrap.classList.add("prs-initiators-missing");
+prsSyncFormProblemTabs();
+if(has(props,"prs-form-tab-problem")||has(params,"prs-form-tab-problem")||has(wrap,"prs-initiators-missing"))throw new Error("tag kept method problem marks");
+"""
+    completed = subprocess.run([node, "-e", script], check=False, capture_output=True, text=True)
+    assert completed.returncode == 0, completed.stderr or completed.stdout
