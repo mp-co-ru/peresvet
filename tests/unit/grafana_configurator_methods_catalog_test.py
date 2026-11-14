@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261113-param-layout-v55"
+CODE_VERSION = "20261113-param-layout-v56"
 
 
 def _parts():
@@ -226,6 +226,12 @@ def test_methods_catalog_root_and_menus():
     assert ".prs-method-param-dg.prs-param-source-missing{background-color:#fdecee!important;border-color:#e7b7bd!important}" in css
     assert 'tab&&tab.classList.toggle("prs-param-tab-missing",missing)' in javascript
     assert "#prs-method-param-tabs .nav-link.prs-param-tab-missing.active{background-color:#fdecee!important;color:#8b1e24!important}" in css
+    assert "function prsSyncFormProblemTabs()" in javascript
+    assert 'paramsBtn.classList.toggle("prs-form-tab-problem",anyParam)' in javascript
+    assert 'propsBtn.classList.toggle("prs-form-tab-problem",initMissing)' in javascript
+    assert 'box.classList.toggle("prs-initiators-missing",initMissing)' in javascript
+    assert "#prs-form-tabs .nav-link.prs-form-tab-problem.active{background-color:#fdecee!important;color:#8b1e24!important}" in css
+    assert ".prs-method-initiators-wrap.prs-initiators-missing{background-color:#fdecee!important;border-color:#e7b7bd!important}" in css
     assert 'class="prs-mono prs-json-editor-input" id="textarea-param-built-query-${o}"' in javascript
     assert "prsMethodParamOnBuiltQueryInput" in javascript
     assert 'if(!prsCat)prsCat=(n("#select-prsCatalogMethodPick").val()||"").trim()' in javascript
