@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261113-param-layout-v32"
+CODE_VERSION = "20261113-param-layout-v46"
 
 
 def _javascript() -> str:

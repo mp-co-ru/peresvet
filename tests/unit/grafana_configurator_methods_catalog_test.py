@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261113-param-layout-v32"
+CODE_VERSION = "20261113-param-layout-v46"
 
 
 def _parts():
@@ -26,6 +26,9 @@ def test_methods_catalog_root_and_menus():
     assert "catalogMethodInstance" not in javascript
     assert "Метод из каталога" not in javascript
     assert "select-prsMethodKind" in html
+    assert 'var wantCatalog=!!cat;kindEl&&(kindEl.value=wantCatalog?"catalog":"own")' in javascript
+    assert 'kindEl&&"catalog"===kindEl.value' not in javascript
+    assert 'if(!cur||String(cur.id)!==prsCatNodeId)return' in javascript
     assert ">Метод/ссылка<" in html
     assert ">Тип метода<" not in html
     assert 'id="select-prsMethodEntityType"' in html
@@ -62,12 +65,15 @@ def test_methods_catalog_root_and_menus():
     )[0]
     assert 'getAttribute("data-parent-class")' in parent_fn
     assert "previousElementSibling" in parent_fn
-    assert 'prsMethod:{visible:["div-prsMethodAddress","div-prsVariadic","div-initiatedBy","div-parameters","div-prsEntityTypeCode"]' in javascript
-    assert 'catalogNode=prsMethodIsCatalogNode(node)' in javascript
+    assert 'prsMethod:{visible:["div-prsMethodAddress","div-initiatedBy","div-parameters","div-prsEntityTypeCode"]' in javascript
+    assert 'hidden:["div-prsIndex","div-prsJsonConfigString","div-prsDefault","div-prsUpdate","div-prsStep","div-prsMaxLineDev","div-prsMeasureUnits","div-prsValueTypeCode","div-alertConfig","div-scheduleConfig","div-prsConnectorLogToPlatformRow","div-prsConnectorCommand","div-catalogInstance","div-prsVariadic"' in javascript
+    assert 'catalogNode=prsDnBranch?"catalog"===prsDnBranch:prsMethodIsCatalogNode(node)' in javascript
+    assert "function prsMethodDnBranch(dn)" in javascript
     assert 'variadicBox.classList.toggle("d-none",!catalogNode)' in javascript
     assert "prsApplyVariadicParametersVisibility" in javascript
     assert 'if(nodeData&&nodeData.id&&String(node.id)!==String(nodeData.id))return;' in javascript
-    assert 'if(!he(prsMethodRenderId))return;try{prsSyncMethodCatalogForm(nodeData)}' in javascript
+    assert 'if(!he(prsMethodRenderId)||window.prsFormLoadSeq!==prsFormSeq)return;' in javascript
+    assert 'if("prsMethod"===o){try{var prsCatJob=prsSyncMethodCatalogForm(nodeData);prsCatJob&&prsCatJob.then&&prsFormTrack(prsFormSeq,prsCatJob)}' in javascript
     assert "prsFormSeq!==window.prsFormLoadSeq||!he(t)" in javascript
     assert "prs-method-variadic" in javascript
     assert "if(he(t)){setAttributesVisibility(e);nodeData=a.data[0];" in javascript
@@ -123,10 +129,21 @@ def test_methods_catalog_root_and_menus():
     assert "Укажите тег, из которого берутся данные. Ключ value только фильтрует данные этого тега." in javascript
     assert "Тег не выбран. Без него запрос GET /v1/data не читает данные." in javascript
     assert 'id="div-prsMethodKind"' in html
+    assert "prsRestoreOpenCatalogMethod" not in javascript
+    assert "prsInitCaptured" not in javascript
+    assert 'resetChanges=()=>{var row=__prsConfiguratorHtmlNode&&__prsConfiguratorHtmlNode.querySelector("div.currentNode");if(!row)return;fillForm(row)}' in javascript
+    assert "fillForm(t)" in javascript
     assert 'id="div-catalogInstance"' in html
     storage_at = html.index('id="prs-storage-tag-only"')
     assert "div-catalogInstance" not in html[storage_at : storage_at + 500]
     assert html.index('id="div-catalogInstance"') < html.index('id="div-parameters"')
+    assert 'id="prs-tab-li-parameters"' in html
+    assert html.index('id="prs-tab-trigger-props"') < html.index('id="prs-tab-li-parameters"') < html.index('id="prs-tab-li-storage"')
+    pane = html.split('id="prs-tab-pane-parameters"', 1)[1].split('id="prs-tab-pane-storage"', 1)[0]
+    assert 'class="prs-method-params-tab" id="div-parameters"' in pane
+    assert "prs-input-label" not in pane
+    assert 'r("prs-tab-li-parameters","prsMethod"===e)' in javascript
+    assert '"prsMethod"===e?["#prs-tab-pane-props","#prs-tab-pane-parameters"]' in javascript
     assert "function prsMethodIsCatalogNode" in javascript
     assert 'prsMethodIsCatalogNode(node)||"prsModelNode"===poc' in javascript
     assert 'if("catalog"!==prsMode)a.prsJsonConfigString=e' in javascript

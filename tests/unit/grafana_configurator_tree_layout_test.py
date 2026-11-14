@@ -17,7 +17,7 @@ def _parts():
 def test_hierarchy_pane_fills_panel_and_scrolls_inside_the_tree():
     css, javascript = _parts()
 
-    assert 'prsConfiguratorCodeVersion="20261113-param-layout-v32"' in javascript
+    assert 'prsConfiguratorCodeVersion="20261113-param-layout-v46"' in javascript
     assert 'rgba(44,112,127,.1), rgba(44,112,127,.32) 48%, rgba(44,112,127,.1)' in javascript
     assert 'rgba(44,112,127,.72)' not in javascript
     assert 'rgba(44,112,127,.32) 48%,rgba(44,112,127,.1)' in css
@@ -174,7 +174,38 @@ def test_node_tooltip_is_description_and_errors_stay_on_icons():
     assert 'kind:"paramtag",title:"Параметр читает данные тега, но тег не выбран."' in javascript
     assert 'pt.title="В ветке есть метод, у которого параметр читает тег, но тег не выбран."' in javascript
     assert 'prs-tree-rollup-strip--p",!!m' in javascript
-    assert "methodTagGap:methodTagGap,rollupParamTag:rollupParamTag,parentById:s" in javascript
+    assert "methodTagGap:methodTagGap,rollupParamTag:rollupParamTag,methodNoInit:methodNoInit,rollupNoInit:rollupNoInit,parentById:s" in javascript
+    assert "function prsMethodMissesInitiator(item)" in javascript
+    assert 'kind:"noinit",title:"У вычислительного метода нет инициатора: ни тега, ни расписания."' in javascript
+    assert 'prs-tree-rollup-strip--n",!!ni' in javascript
+    assert "prsSyncOpenMethodNoInit" in javascript
+    assert 'String(prsInitiatorNodeId||"")!==String(node.id)' in javascript
+    assert 'prsInitiatorNodeId=String(e.id||"")' in javascript
+    assert "prsOpenInitiatorPick(e)}))}),prsMarkInitiatorMissing()" in javascript
+    assert "prsFormTrack(prsFormSeq,prsLoadMethodInitiators(nodeData));if(window.__prsCatalogMethodVariadic){prsMethodParamRenderBusy=!1}" in javascript
+    assert "function prsMethodDnBranch(dn)" in javascript
+    assert "seq!==window.prsFormLoadSeq)return" in javascript
+    assert "function prsLoadMethodInitiators(nodeData)" in javascript
+    assert "function prsFormBuildStart()" in javascript
+    assert "function prsFormBuildFinish(seq)" in javascript
+    assert "prsSyncMethodCatalogForm(window.prsFormNode,!0)" in javascript
+    assert "if(syncOnly)return" in javascript
+    assert "if(seq!==window.prsFormLoadSeq)return Promise.resolve()" in javascript
+    assert "function prsFormTrack(seq,p){if(seq!==window.prsFormLoadSeq)return Promise.resolve();var bag=window.prsFormJobBag||(window.prsFormJobBag={})" in javascript
+    assert ".finally(function(){if(seq!==window.prsFormLoadSeq)return;bag[seq]=Math.max(0,(bag[seq]||1)-1);window.prsFormJobs=bag[seq];prsFormBuildFinish(seq)}" in javascript
+    assert "if(seq!==window.prsFormLoadSeq||(window.prsFormJobBag&&window.prsFormJobBag[seq]||0)>0||!window.prsFormNode)return" in javascript
+    assert 'id="prs-form-build"' in json.loads((ROOT / "src/grafana/configurator/Configurator.json").read_text(encoding="utf-8"))["panels"][0]["options"]["html"]
+    assert "prs-form-build-spin" in json.loads((ROOT / "src/grafana/configurator/Configurator.json").read_text(encoding="utf-8"))["panels"][0]["options"]["html"]
+    assert "Чтение свойств…" not in json.loads((ROOT / "src/grafana/configurator/Configurator.json").read_text(encoding="utf-8"))["panels"][0]["options"]["html"]
+    assert "@keyframes prs-form-spin{to{transform:rotate(360deg)}}" in json.loads((ROOT / "src/grafana/configurator/Configurator.json").read_text(encoding="utf-8"))["panels"][0]["options"]["css"]
+    assert "let prsFormSeq=prsFormBuildStart()" in javascript
+    assert "function prsFormDismiss()" in javascript
+    assert "function prsFormAbort(seq)" in javascript
+    assert "if(!d)return prsFormAbort(prsFormSeq)" in javascript
+    assert 'if(prsTreeRootIds.includes(n)||"prsConnectorLinkedTag"===r)prsFormDismiss();else fillForm(t)' in javascript
+    assert "if(prsPickSeq!==window.prsFormLoadSeq)return" in javascript
+    assert "prsFormBuildFinish(prsFormSeq)" in javascript
+    assert "Ne(nodeData,body)" in javascript
     assert "window.prsSyncOpenMethodTagGap=function" in javascript
     assert "prsMethodParamRenderBusy)return" in javascript
     assert '"prsTag"===u&&"tags"!==d?!1:!!prsConflictRollup[d]' in javascript
@@ -185,7 +216,7 @@ def test_tag_icon_color_follows_child_method_kind():
     css, javascript = _parts()
 
     assert 'r.append("attributes","prsEntityTypeCode")' in javascript
-    assert "var r={any:{},calc:{},virt:{},write:{}}" in javascript
+    assert "var r={any:{},calc:{},virt:{},write:{},noInit:{}}" in javascript
     assert "2===R(e)?r.write[id]=!0:1===R(e)?r.virt[id]=!0:3===R(e)||4===R(e)?0:r.calc[id]=!0" in javascript
     assert "tagCalcMethod:methodCalc,tagVirtMethod:methodVirt,tagWriteMethod:methodWrite" in javascript
     assert 't.classList.add("prs-tag-method-"+prsTagKind)' in javascript
@@ -237,6 +268,73 @@ if (prsMethodIdByParameter({parentId: "direct"}, {}) !== "direct") throw new Err
     node = shutil.which("node")
     assert node
     subprocess.run([node, "-e", script], check=True)
+
+
+def test_computational_method_without_initiator_is_a_problem():
+    _, javascript = _parts()
+    start = javascript.find("function prsMethodMissesInitiator")
+    end = javascript.find("function prsMethodIdByParameter")
+    assert start >= 0 and end > start
+    placed = "cn=Сумма,cn=Сумма 2,cn=Демо методов,cn=objects,cn=prs"
+    catalog = "cn=sum,cn=Демо,cn=methods,cn=prs"
+    script = javascript[start:end] + f"""
+const placed = {placed!r};
+const catalog = {catalog!r};
+const empty = {{dn: placed, attributes: {{prsEntityTypeCode: ["0"]}}, initiatedBy: []}};
+const withTag = {{dn: placed, attributes: {{prsEntityTypeCode: ["0"]}}, initiatedBy: ["86e4f85c-7312-1041-8be5-0dcaaf570565"]}};
+const reader = {{dn: placed, attributes: {{prsEntityTypeCode: ["1"]}}, initiatedBy: []}};
+const definition = {{dn: catalog, attributes: {{prsEntityTypeCode: ["0"]}}, initiatedBy: []}};
+if (!prsMethodMissesInitiator(empty)) throw new Error("empty placed method");
+if (prsMethodMissesInitiator(withTag)) throw new Error("initiator present");
+if (prsMethodMissesInitiator(reader)) throw new Error("read method");
+if (prsMethodMissesInitiator(definition)) throw new Error("catalog definition");
+"""
+    node = shutil.which("node")
+    assert node
+    subprocess.run([node, "-e", script], check=True)
+
+
+def test_method_dn_branch_separates_catalog_definitions_from_placed_methods():
+    _, javascript = _parts()
+    start = javascript.find("function prsMethodDnBranch")
+    end = javascript.find("function prsMethodTreeParentClass")
+    assert start >= 0 and end > start
+    script = javascript[start:end] + r"""
+const summa = "cn=Сумма,cn=Сумма 2,cn=Демо методов,cn=objects,cn=prs";
+const priem = "cn=Приём,cn=Запись,cn=Демо методов,cn=objects,cn=prs";
+const catalog = "cn=sum_any,cn=Демо,cn=methods,cn=prs";
+if (prsMethodDnBranch(summa) !== "placed") throw new Error("summa");
+if (prsMethodDnBranch(priem) !== "placed") throw new Error("priem");
+if (prsMethodDnBranch(catalog) !== "catalog") throw new Error("catalog");
+if (prsMethodDnBranch("") !== "") throw new Error("empty");
+"""
+    node = shutil.which("node")
+    assert node
+    subprocess.run([node, "-e", script], check=True)
+
+
+def test_older_form_build_cannot_change_the_new_job_counter():
+    _, javascript = _parts()
+    start = javascript.find("function prsFormTrack")
+    end = javascript.find("fillForm=e=>")
+    assert start >= 0 and end > start
+    script = javascript[start:end] + r"""
+global.window = global;
+window.prsFormLoadSeq = 1;
+window.prsFormJobs = 0;
+const pending = new Promise(function(){});
+prsFormTrack(1, Promise.resolve());
+window.prsFormLoadSeq = 2;
+window.prsFormJobs = 0;
+prsFormTrack(2, pending);
+Promise.resolve().then(function(){
+  if (window.prsFormJobs !== 1) throw new Error("jobs " + window.prsFormJobs);
+}).catch(function(err){ console.error(err); process.exit(1); });
+"""
+    node = shutil.which("node")
+    assert node
+    completed = subprocess.run([node, "-e", script], check=False, capture_output=True, text=True)
+    assert completed.returncode == 0, completed.stderr or completed.stdout
 
 
 def test_data_storage_group_stays_visible_after_expand():
