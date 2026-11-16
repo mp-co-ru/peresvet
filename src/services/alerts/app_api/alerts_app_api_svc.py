@@ -8,7 +8,7 @@ from pydantic import (
     BaseModel, Field, field_validator, ConfigDict
 )
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 
 sys.path.append(".")
 
@@ -56,22 +56,29 @@ class AlarmData(BaseModel):
 
     id: str = Field(title="Id тревоги.")
     cn: str = Field(title="Имя тревоги.")
-    description: str = Field(title="Описание тревоги.")
-    start: int | str = Field(title="Время возникновения тревоги.")
-    finish: int | str = Field(None, title="Время пропадания тревоги.")
-    acked: int | str = Field(None, title="Время квитирования тревоги.")
+    description: str = Field("", title="Описание тревоги.")
+    tagId: str = Field("", title="Тег, на котором висит тревога.")
+    fired: int | str | None = Field(None, title="Время возникновения тревоги.")
+    finish: int | str | None = Field(None, title="Время пропадания тревоги.")
+    acked: int | str | None = Field(None, title="Время квитирования тревоги.")
 
 class AckAlarm(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
 
     id: str = Field(title="Id тревоги.")
-    x: int | str = Field(None, title="Время квитирования тревоги.")
+    x: int | str | None = Field(
+        None,
+        validate_default=True,
+        title="Время квитирования тревоги.",
+    )
 
     @field_validator("x")
     @classmethod
     def ts_in_iso_format(cls, v: Any) -> int:
         try:
+            # Нет метки — квитируем текущим моментом. Валидатор должен
+            # сработать и на значении по умолчанию.
             return t.ts(v)
         except ValueError as ex:
             raise ValueError(
@@ -79,7 +86,7 @@ class AckAlarm(BaseModel):
                     "Метка времени должна быть строкой в формате ISO8601, "
                     "целым числом или отсутствовать."
                 )
-            )
+            ) from ex
 
     @field_validator("id")
     @classmethod
@@ -113,12 +120,21 @@ class AlertsAppAPI(svc.Svc):
             mes=body,
             reply=True,
             routing_key=f"{self._config.hierarchy['class']}.app_api.get_alarms")
+        if not isinstance(res, dict):
+            raise HTTPException(status_code=503, detail="Сервис тревог не ответил.")
+        if res.get("error") and "data" not in res:
+            err = res["error"] if isinstance(res["error"], dict) else {}
+            raise HTTPException(
+                status_code=int(err.get("code") or 500),
+                detail=err.get("message") or "Ошибка чтения тревог.",
+            )
+        res.setdefault("data", [])
 
         if payload.format:
             for alarm_item in res["data"]:
-                alarm_item["fired"] = t.int_to_local_timestamp(alarm_item["fired"])
-                if alarm_item["acked"] is not None:
-                    alarm_item["acked"] = t.int_to_local_timestamp(alarm_item["acked"])
+                for key in ("fired", "finish", "acked"):
+                    value = alarm_item.get(key)
+                    alarm_item[key] = t.int_to_local_timestamp(value) if value else None
 
         return res
 

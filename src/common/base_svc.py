@@ -282,7 +282,8 @@ class BaseSvc(FastAPI):
                 reset_current_amqp_context(amqp_context_token)
 
     async def _post_message(
-            self, mes: dict, reply: bool = False, routing_key: str | None = None
+            self, mes: dict, reply: bool = False, routing_key: str | None = None,
+            timeout: float | None = None,
     ) -> dict | bool | None:
         """Метод отсылает сообщение в брокер.
 
@@ -332,10 +333,17 @@ class BaseSvc(FastAPI):
         self._callback_futures[correlation_id] = future
 
         try:
-            return await future
+            if timeout is None:
+                return await future
+            return await asyncio.wait_for(future, timeout)
+        except TimeoutError:
+            self._callback_futures.pop(correlation_id, None)
+            if not future.done():
+                future.cancel()
+            return None
         except Exception as ex:
             self._logger.error(f"{self._config.svc_name} :: Ошибка получения результата: {ex}.")
-            self._callback_futures.pop(correlation_id)
+            self._callback_futures.pop(correlation_id, None)
             return None
 
     async def _on_rpc_response(

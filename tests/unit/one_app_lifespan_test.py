@@ -48,14 +48,17 @@ def test_platform_version_comes_from_the_environment(monkeypatch):
 def test_version_route_is_registered_before_mounted_apps():
     paths = [getattr(route, "path", None) for route in app.routes]
     assert "/v1/version" in paths
+    assert "/v1/" in paths
     first_mount = next(index for index, route in enumerate(app.routes) if isinstance(route, Mount))
     assert paths.index("/v1/version") < first_mount
+    assert paths.index("/v1/") < first_mount
 
     root = Path(__file__).resolve().parents[2]
     nginx = (root / "config/nginx/peresvet/locations/peresvet.locations.conf.template").read_text(
         encoding="utf-8"
     )
     assert "location = /v1/version" in nginx
+    assert "location = /v1/" in nginx
     assert "proxy_pass http://objects_api_crud;" in nginx.split("location = /v1/version", 1)[1].split("location =", 1)[0]
     compose = (root / "docker/compose/docker-compose.one_app.yml").read_text(encoding="utf-8")
     assert "PRS_VERSION: ${PRS_VERSION:-}" in compose

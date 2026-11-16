@@ -128,13 +128,20 @@ def valid_schedule_config_for_update(v: str) -> str:
 
         return new_v
 
+def _default_schedule_config() -> dict:
+    # Момент создания узла, а не момент импорта модуля при старте сервиса.
+    return {
+        "start": t.ts_to_local_str(t.now_int()),
+        "interval_type": "hours",
+        "interval_value": 1,
+    }
+
+
 class ScheduleCreateAttributes(svc.NodeAttributes):
-    prsJsonConfigString: dict  = Field(
-        {
-            "start": t.ts_to_local_str(t.now_int()),
-            "interval_type": "hours",
-            "interval_value": 1
-        }, title="Конфигурация расписания")
+    prsJsonConfigString: dict = Field(
+        default_factory=_default_schedule_config,
+        title="Конфигурация расписания",
+    )
 
     @field_validator("prsJsonConfigString")
     @classmethod
@@ -142,7 +149,10 @@ class ScheduleCreateAttributes(svc.NodeAttributes):
         return valid_schedule_config(v)
 
 class ScheduleCreate(svc.NodeCreate):
-    attributes: ScheduleCreateAttributes = Field(ScheduleCreateAttributes(), title="Атрибуты узла")
+    attributes: ScheduleCreateAttributes = Field(
+        default_factory=ScheduleCreateAttributes,
+        title="Атрибуты узла",
+    )
 
     # validate_id = validator('parentId', 'dataStorageId', 'connectorId', allow_reuse=True)(svc.valid_uuid)
 
