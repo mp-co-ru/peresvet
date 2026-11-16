@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Конфигуратор модели &mdash; документация МПК-Пересвет v0.26.1</title>
+  <title>Конфигуратор модели &mdash; документация МПК-Пересвет v0.26.2</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="../_static/peresvet_middle.png"/>
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=2bf6f59a"></script>
+      <script src="../_static/documentation_options.js?v=1c0e7ff0"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/sphinxcontrib-httpexample.js"></script>
@@ -37,7 +37,7 @@
     
       <img src="../_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.26.1</div>
+  <div class="prs-version">v0.26.2</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -232,7 +232,9 @@
 светло-розовая иконка. Нажатие открывает список этих проблем: у каждой
 свой значок и текст, пункты списка ничего не выполняют и ветку не
 раскрывают. Если проблемы есть у узлов внутри ветки, справа перед
-кнопкой действий стоит такая же иконка со своим списком.</p>
+кнопкой действий стоит такая же иконка со своим списком.
+Она поднимается к каждому родителю, в том числе через папки:
+папка не обрывает путь от проблемного узла к объекту выше.</p>
 <ul class="simple">
 <li><p><strong>Перечёркнутый круг</strong> — тег или тревога не привязаны к хранилищу,
 история не пишется. Справа: в ветке есть такие узлы.</p></li>
@@ -458,7 +460,9 @@
 <p><strong>Запрос на чтение.</strong> Поля блока соответствуют ключам запроса
 <a class="reference internal" href="../historical_data.html#historical-data"><span class="std std-ref">получения исторических данных</span></a>: <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">actual</span></code>,
 <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">timeStep</span></code>, <code class="docutils literal notranslate"><span class="pre">maxCount</span></code>.
-У каждого ключа есть подсказка и ссылка на его описание. Для <code class="docutils literal notranslate"><span class="pre">start</span></code>
+У каждого ключа есть подсказка и ссылка на его описание.
+Ключ <code class="docutils literal notranslate"><span class="pre">format</span></code> включён по умолчанию: метки времени приходят строками
+ISO 8601. Для <code class="docutils literal notranslate"><span class="pre">start</span></code>
 и <code class="docutils literal notranslate"><span class="pre">finish</span></code> есть календарь и кнопка очистки; в эти поля можно вставить
 дату, скопированную из таблицы ответа. Для интеграционного тега есть ещё
 поле <code class="docutils literal notranslate"><span class="pre">params</span></code> — JSON с параметрами операции (<a class="reference internal" href="../integrational_v2.html#integrational-v2"><span class="std std-ref">Интеграционные хранилища</span></a>).</p>
