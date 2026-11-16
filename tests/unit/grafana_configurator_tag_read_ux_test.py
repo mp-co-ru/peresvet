@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
 DOCS_HOST = "mp-co-ru.github.io/peresvet"
-CODE_VERSION = "20261113-param-layout-v57"
+CODE_VERSION = "20261113-param-layout-v58"
 
 
 def _dashboard_parts():
@@ -132,6 +132,7 @@ def test_tag_read_request_ux_dashboard_contract():
         'checked="checked"'
     ) in read
     assert 'c.append("format","true")' in javascript
+    assert 'el.checked="input-tagGetDataFormat"===el.id' in javascript
 
     # Scoped CSS must not redefine global method-param one-row flags
     assert "#prs-tag-pane-read .prs-tag-get-keys-summary" in css
