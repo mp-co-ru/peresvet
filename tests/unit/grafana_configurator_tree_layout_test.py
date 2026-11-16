@@ -17,7 +17,7 @@ def _parts():
 def test_hierarchy_pane_fills_panel_and_scrolls_inside_the_tree():
     css, javascript = _parts()
 
-    assert 'prsConfiguratorCodeVersion="20261113-param-layout-v56"' in javascript
+    assert 'prsConfiguratorCodeVersion="20261113-param-layout-v58"' in javascript
     assert 'rgba(44,112,127,.1), rgba(44,112,127,.32) 48%, rgba(44,112,127,.1)' in javascript
     assert 'rgba(44,112,127,.72)' not in javascript
     assert 'rgba(44,112,127,.32) 48%,rgba(44,112,127,.1)' in css
@@ -180,6 +180,9 @@ def test_node_tooltip_is_description_and_errors_stay_on_icons():
     assert 'prs-tree-rollup-strip--n",!!ni' in javascript
     assert "function prsBindRollupMenu(strip)" in javascript
     assert "prsBindRollupMenu(i)" in javascript
+    assert "function prsLinkParents(items,parentById)" in javascript
+    assert '["objects","tags","methods","connectors","schedules","dataStorages"].forEach(function(svc){le(svc,"prsFolder",function(e,t){prsLinkParents(t,s),u()},!0,"")})' in javascript
+    assert "var d=13;function u()" in javascript
     assert "function prsBindOwnMenu(box)" in javascript
     assert "prsBindOwnMenu(box)" in javascript
     assert "prsSyncOpenMethodNoInit" in javascript
@@ -334,6 +337,34 @@ prsFormTrack(2, pending);
 Promise.resolve().then(function(){
   if (window.prsFormJobs !== 1) throw new Error("jobs " + window.prsFormJobs);
 }).catch(function(err){ console.error(err); process.exit(1); });
+"""
+    node = shutil.which("node")
+    assert node
+    completed = subprocess.run([node, "-e", script], check=False, capture_output=True, text=True)
+    assert completed.returncode == 0, completed.stderr or completed.stdout
+
+
+def test_problem_rollup_climbs_through_folders_to_the_parent_object():
+    _, javascript = _parts()
+    start = javascript.find("function prsLinkParents")
+    end = javascript.find("function He(", start)
+    assert start > 0 and end > start
+    script = javascript[start:end] + r"""
+const parents = {};
+prsLinkParents([
+  {id: "pumps", parentId: "shop"},
+  {id: "shop"},
+  {id: "pump", parentId: "pumps"},
+], parents);
+const rollup = {};
+ce("pressure", Object.assign({pressure: "pump"}, parents), rollup);
+["pressure", "pump", "pumps", "shop"].forEach(function(id){
+  if (!rollup[id]) throw new Error("rollup stopped before " + id);
+});
+const broken = {};
+ce("pressure", {pressure: "pump", pump: "pumps"}, broken);
+if (broken.shop) throw new Error("shop marked without the folder link");
+if (!broken.pump) throw new Error("pump");
 """
     node = shutil.which("node")
     assert node
