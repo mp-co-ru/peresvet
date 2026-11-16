@@ -11,6 +11,67 @@ from src.common.app_svc import AppSvc
 from src.common.amqp_rpc import NO_AMQP_RPC_REPLY
 from src.services.alerts.app.alerts_app_settings import AlertsAppSettings
 from src.common.hierarchy import CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE
+import src.common.times as t
+
+
+def _ts_or_none(value):
+    if isinstance(value, bool) or value in (None, 0, ""):
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def apply_stored_episode(alert_data: dict, episode: dict | None) -> None:
+    """Текущий эпизод из последней строки таблицы тревоги, не из значения тега."""
+    if not isinstance(episode, dict):
+        return
+    start = _ts_or_none(episode.get("x"))
+    if start is None:
+        return
+    acked = _ts_or_none(episode.get("cx"))
+    finish = _ts_or_none(episode.get("e"))
+    if finish is not None and acked is not None:
+        return
+    if finish is not None:
+        alert_data["fired"] = False
+        alert_data["episodeStart"] = start
+        alert_data["finish"] = finish
+        alert_data["acked"] = False
+        return
+    alert_data["fired"] = start
+    alert_data["episodeStart"] = None
+    alert_data["finish"] = None
+    alert_data["acked"] = acked if acked is not None else False
+
+
+def alarm_is_active(alarm: dict) -> bool:
+    return _ts_or_none(alarm.get("fired")) is not None
+
+
+def alarm_is_pending(alarm: dict) -> bool:
+    """Пропала и ещё не квитирована."""
+    return (
+        not alarm_is_active(alarm)
+        and _ts_or_none(alarm.get("finish")) is not None
+        and _ts_or_none(alarm.get("acked")) is None
+    )
+
+
+def alarm_list_item(alert_id: str, alarm: dict) -> dict:
+    active = alarm_is_active(alarm)
+    start = _ts_or_none(alarm.get("fired") if active else alarm.get("episodeStart"))
+    finish = None if active else _ts_or_none(alarm.get("finish"))
+    return {
+        "id": alert_id,
+        "cn": alarm.get("cn") or "",
+        "description": alarm.get("description") or "",
+        "tagId": alarm.get("tagId") or "",
+        "fired": start,
+        "finish": finish,
+        "acked": _ts_or_none(alarm.get("acked")),
+    }
 
 class AlertsApp(AppSvc):
     """Сервис работы с тревогами.
@@ -122,16 +183,25 @@ class AlertsApp(AppSvc):
             return None
 
         alert_data = {
-            #"tagId": tag_id,
+            "tagId": tag_id,
             "alertId": alert_id,
             "fired": False,
             "acked": False,
+            "finish": None,
+            "episodeStart": None,
             "value": alert_config["value"],
             "high": alert_config["high"],
             "autoAck": alert_config["autoAck"],
             "cn": alert[2]["cn"][0],
-            "description": alert[2]["description"][0]
+            "description": alert[2]["description"][0] or ""
         }
+        episode = await self._post_message(
+            {"alertId": alert_id},
+            reply=True,
+            routing_key=f"{self._config.hierarchy['class']}.app.alarm_state.{alert_id}",
+            timeout=1.0,
+        )
+        apply_stored_episode(alert_data, episode if isinstance(episode, dict) else None)
 
         async with self._cache.get_redis() as r:
             await r.json().set(
@@ -174,43 +244,58 @@ class AlertsApp(AppSvc):
         Returns:
             dict: _description_
         """
-        scope = (CN_SCOPE_ONELEVEL, CN_SCOPE_SUBTREE)[bool(mes.get('getChildren'))]
-
-        get_alerts = {
-            "base": mes.get("parentId"),
-            "scope": scope,
-            "filter": {
-                "objectClass": ['prsAlert'],
-                "prsActive": [True]
-            },
-            "attributes": ["cn"]
-        }
-
-        alerts = await self._hierarchy.search(get_alerts)
+        parents = mes.get("parentId")
+        if isinstance(parents, str):
+            parents = [parents]
+        elif parents is not None and not isinstance(parents, list):
+            parents = [parents]
+        # Без родителя — тревоги всей модели: список нужен панели Grafana.
+        search_all = not parents
+        scope = CN_SCOPE_SUBTREE if search_all or mes.get("getChildren") else CN_SCOPE_ONELEVEL
+        bases = [None] if search_all else parents
+        alerts = []
+        seen = set()
+        for base in bases:
+            payload = {
+                "scope": scope,
+                "filter": {
+                    "objectClass": ["prsAlert"],
+                    "prsActive": [True]
+                },
+                "attributes": ["cn"]
+            }
+            if base:
+                payload["base"] = base
+            found = await self._hierarchy.search(payload)
+            for row in found or []:
+                if row[0] in seen:
+                    continue
+                seen.add(row[0])
+                alerts.append(row)
         result = {
             "data": []
         }
+        fired_only = bool(mes.get("fired", True))
         async with self._cache.get_redis() as r:
             for alert in alerts:
                 alarm = await r.json().get(f"{alert[0]}.{self._config.svc_name}")
                 if alarm is None:
                     self._logger.error(f"{self._config.svc_name} :: Нет кэша для тревоги {alert[0]}")
                     continue
-
-                if mes["fired"] and not alarm["fired"]:
+                if not isinstance(alarm, dict):
                     continue
-
-                res_item = {
-                    "id": alert,
-                    "cn": alarm["cn"],
-                    "description": alarm["description"],
-                    "start": (False, alarm["fired"])[alarm["fired"]],
-                    "finish": False,
-                    "acked": (False, alarm["acked"])[alarm["acked"]]
-                }
-
-                result["data"].append(res_item)
-
+                if fired_only:
+                    if not alarm_is_active(alarm):
+                        continue
+                elif not alarm_is_active(alarm) and not alarm_is_pending(alarm):
+                    continue
+                if not alarm.get("tagId"):
+                    try:
+                        tag_id, _ = await self._hierarchy.get_parent(alert[0])
+                        alarm["tagId"] = tag_id
+                    except Exception:
+                        alarm["tagId"] = ""
+                result["data"].append(alarm_list_item(alert[0], alarm))
 
         return result
 
@@ -224,6 +309,11 @@ class AlertsApp(AppSvc):
             }
         """
         alert_id = mes["id"]
+        raw_x = mes.get("x")
+        try:
+            x = t.ts(raw_x) if raw_x else t.now_int()
+        except (TypeError, ValueError):
+            x = t.now_int()
         alert_cache_key = f"{alert_id}.{self._config.svc_name}"
         async with self._cache.get_redis() as r:
             alert_data = await r.json().get(name=alert_cache_key)
@@ -232,21 +322,29 @@ class AlertsApp(AppSvc):
                 self._logger.error(f"{self._config.svc_name} :: Отсутствует кэш по тревоге {alert_id}.")
                 return
 
-            if not alert_data["fired"]:
+            active = alarm_is_active(alert_data)
+            pending = alarm_is_pending(alert_data)
+            if _ts_or_none(alert_data.get("acked")) is not None:
+                self._logger.warning(f"{self._config.svc_name} :: Тревога {alert_id} уже квитирована.")
+                return
+            if not active and not pending:
                 self._logger.warning(f"{self._config.svc_name} :: Тревога {alert_id} неактивна.")
                 return
 
-            if alert_data["acked"]:
-                self._logger.warning(f"{self._config.svc_name} :: Тревога {alert_id} уже квитирована.")
-                return
-
-            alert_data["acked"] = mes["x"]
+            if active:
+                alert_data["acked"] = x
+            else:
+                # Пропавшая неквитированная после квитирования из списка уходит.
+                alert_data["fired"] = False
+                alert_data["acked"] = False
+                alert_data["finish"] = None
+                alert_data["episodeStart"] = None
             await r.json().set(name=alert_cache_key, path="$", obj=alert_data)
 
         await self._post_message(
             {
                 "alertId": alert_id,
-                "x": mes["data"]["x"]
+                "x": x
             },
             reply=False,
             routing_key=f"{self._config.hierarchy['class']}.app.alarm_acked.{alert_id}"
@@ -325,6 +423,9 @@ class AlertsApp(AppSvc):
                                 routing_key=f"{self._config.hierarchy['class']}.app.alarm_on.{alert_id}"
                             )
                             alert_data["fired"] = data_item[0]
+                            alert_data["finish"] = None
+                            alert_data["episodeStart"] = None
+                            alert_data["acked"] = False
 
                             if alert_data["autoAck"]:
                                 await self._post_message(
@@ -347,8 +448,15 @@ class AlertsApp(AppSvc):
                                 reply=False,
                                 routing_key=f"{self._config.hierarchy['class']}.app.alarm_off.{alert_id}"
                             )
-                            alert_data["fired"] = None
-                            alert_data["acked"] = None
+                            if _ts_or_none(alert_data.get("acked")) is not None:
+                                alert_data["fired"] = False
+                                alert_data["acked"] = False
+                                alert_data["finish"] = None
+                                alert_data["episodeStart"] = None
+                            else:
+                                alert_data["episodeStart"] = alert_data["fired"]
+                                alert_data["finish"] = data_item[0]
+                                alert_data["fired"] = False
 
                     await r.json().set(
                         name=f"{alert_id}.{self._config.svc_name}", path="$", obj=alert_data

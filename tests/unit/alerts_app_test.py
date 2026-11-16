@@ -111,11 +111,24 @@ def test_make_alert_cache_and_get_alarms():
     assert active is True
     assert store["a1.alerts_app"]["value"] == 10
     svc._hierarchy.search = AsyncMock(return_value=row)
-    alarms = asyncio.run(svc._get_alarms({"parentId": "obj", "fired": False, "getChildren": False}))
-    assert alarms["data"][0]["cn"] == "hi"
+    idle = asyncio.run(svc._get_alarms({"parentId": "obj", "fired": False, "getChildren": False}))
+    assert idle["data"] == []
+    store["a1.alerts_app"]["fired"] = 100
+    store["a1.alerts_app"]["tagId"] = "tag-1"
+    alarms = asyncio.run(svc._get_alarms({"fired": True}))
+    assert alarms["data"][0]["id"] == "a1"
+    assert alarms["data"][0]["tagId"] == "tag-1"
+    assert alarms["data"][0]["fired"] == 100
+    assert alarms["data"][0]["finish"] is None
+    assert alarms["data"][0]["acked"] is None
     store["a1.alerts_app"]["fired"] = False
-    fired_only = asyncio.run(svc._get_alarms({"parentId": "obj", "fired": True, "getChildren": True}))
-    assert fired_only["data"] == []
+    store["a1.alerts_app"]["episodeStart"] = 100
+    store["a1.alerts_app"]["finish"] = 200
+    pending = asyncio.run(svc._get_alarms({"parentId": "obj", "fired": False, "getChildren": False}))
+    assert pending["data"][0]["fired"] == 100
+    assert pending["data"][0]["finish"] == 200
+    hidden = asyncio.run(svc._get_alarms({"parentId": "obj", "fired": True, "getChildren": True}))
+    assert hidden["data"] == []
 
 
 def test_make_alert_cache_invalid_and_inactive():
@@ -149,19 +162,29 @@ def test_tag_value_changed_high_alarm_on_off_and_ack():
     assert asyncio.run(svc._tag_value_changed(mes, id_alert="a1")) is NO_AMQP_RPC_REPLY
     assert store["a1.alerts_app"]["fired"] == 100
     assert store["a1.alerts_app"]["acked"] == 100
+    bodies = [c.args[0] for c in svc._post_message.await_args_list]
     keys = [c.kwargs["routing_key"] for c in svc._post_message.await_args_list]
     assert any("alarm_on" in k for k in keys)
     assert any("alarm_acked" in k for k in keys)
+    assert all("data" not in body for body in bodies)
+    assert all(set(body) == {"alertId", "x"} for body in bodies)
 
     store["a1.alerts_app"]["autoAck"] = False
     store["a1.alerts_app"]["acked"] = False
     asyncio.run(svc._tag_value_changed({"data": [{"tagId": "tag-1", "data": [[200, 5, 0]]}]}, id_alert="a1"))
-    assert store["a1.alerts_app"]["fired"] is None
+    assert store["a1.alerts_app"]["fired"] is False
+    assert store["a1.alerts_app"]["episodeStart"] == 100
+    assert store["a1.alerts_app"]["finish"] == 200
 
     store["a1.alerts_app"] = {
-        "fired": 50, "acked": False, "value": 10, "high": True, "autoAck": False, "cn": "hi", "description": "d"
+        "fired": 50, "acked": False, "finish": None, "episodeStart": None,
+        "value": 10, "high": True, "autoAck": False, "cn": "hi", "description": "d",
     }
-    asyncio.run(svc._ack_alarm({"id": "a1", "x": 60, "data": {"x": 60}}))
+    asyncio.run(svc._ack_alarm({"id": "a1", "x": 60}))
+    assert store["a1.alerts_app"]["acked"] == 60
+    published = svc._post_message.await_args_list[-1].args[0]
+    assert published == {"alertId": "a1", "x": 60}
+    asyncio.run(svc._ack_alarm({"id": "a1", "x": 70}))
     assert store["a1.alerts_app"]["acked"] == 60
 
     asyncio.run(svc._ack_alarm({"id": "missing", "x": 1, "data": {"x": 1}}))
@@ -170,3 +193,66 @@ def test_tag_value_changed_high_alarm_on_off_and_ack():
     asyncio.run(svc._deleting({"id": "a1"}))
     svc._add_app_handlers()
     assert "prsAlert.app_api.get_alarms" in svc._handlers
+
+
+def test_ack_clears_pending_episode_and_cache_restores_open_row():
+    store = {
+        "a1.alerts_app": {
+            "fired": False,
+            "acked": False,
+            "episodeStart": 10,
+            "finish": 20,
+            "value": 10,
+            "high": True,
+            "autoAck": False,
+            "cn": "hi",
+            "description": "",
+            "tagId": "tag-1",
+        }
+    }
+    svc = _svc(store=store)
+    asyncio.run(svc._ack_alarm({"id": "a1"}))
+    assert store["a1.alerts_app"]["finish"] is None
+    assert store["a1.alerts_app"]["fired"] is False
+    assert svc._post_message.await_args.args[0]["alertId"] == "a1"
+    assert isinstance(svc._post_message.await_args.args[0]["x"], int)
+
+    row = [(
+        "a1", None,
+        {
+            "prsActive": ["TRUE"],
+            "cn": ["hi"],
+            "description": [""],
+            "prsJsonConfigString": ['{"value": 90, "high": true, "autoAck": false}'],
+        },
+    )]
+    restored = {}
+    svc2 = _svc(store=restored, alerts=row)
+    svc2._hierarchy.search = AsyncMock(return_value=row)
+
+    async def post(mes, reply=False, routing_key=None, timeout=None):
+        if routing_key and "alarm_state" in routing_key:
+            return {"alertId": "a1", "x": 95, "cx": None, "e": 80}
+        return None
+
+    svc2._post_message = post
+    assert asyncio.run(svc2._make_alert_cache("a1")) is True
+    assert restored["a1.alerts_app"]["fired"] is False
+    assert restored["a1.alerts_app"]["episodeStart"] == 95
+    assert restored["a1.alerts_app"]["finish"] == 80
+    assert restored["a1.alerts_app"]["tagId"] == "tag-1"
+
+    fresh = {}
+    svc3 = _svc(store=fresh, alerts=row)
+    svc3._hierarchy.search = AsyncMock(return_value=row)
+
+    async def post_open(mes, reply=False, routing_key=None, timeout=None):
+        if routing_key and "alarm_state" in routing_key:
+            return {"alertId": "a1", "x": 50, "cx": None, "e": None}
+        if routing_key and "data_get" in routing_key:
+            return {"data": [{"tagId": "tag-1", "data": [[90, 95, 0]]}]}
+        return None
+
+    svc3._post_message = post_open
+    assert asyncio.run(svc3._make_alert_cache("a1")) is True
+    assert fresh["a1.alerts_app"]["fired"] == 50

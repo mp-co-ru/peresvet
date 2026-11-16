@@ -247,7 +247,8 @@ def test_session_ffmpeg_uses_one_rtsp_input(tmp_path):
     assert "mpjpeg" not in args
     assert "image2pipe" not in args
     assert "segment" in args
-    assert "+genpts" not in args
+    assert "+genpts" in args
+    assert args.index("+genpts") < args.index("-i")
     assert "-use_wallclock_as_timestamps" in args
     assert args.count("libx264") == 1
     assert "copy" in args
@@ -263,6 +264,10 @@ def test_session_ffmpeg_uses_one_rtsp_input(tmp_path):
     assert args[preview + 1:preview + 3] == ["-c:v", "libx264"]
     assert "pipe:1" in args
     assert args[-1].endswith("preview.jpg")
+    preview_pix = args.index("yuvj420p")
+    assert args[preview_pix - 1] == "-pix_fmt"
+    assert any("format=yuvj420p" in item for item in args)
+    assert preview_pix > args.index("pipe:1")
     assert "libmp3lame" not in args
     target = "tcp://127.0.0.1:9"
     with_audio = session_ffmpeg_args(
