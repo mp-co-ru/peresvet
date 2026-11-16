@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Создание экранов в Grafana &mdash; документация МПК-Пересвет v0.26.2</title>
+  <title>Создание экранов в Grafana &mdash; документация МПК-Пересвет v0.26.3</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="../_static/peresvet_middle.png"/>
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=1c0e7ff0"></script>
+      <script src="../_static/documentation_options.js?v=b876fbe9"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/sphinxcontrib-httpexample.js"></script>
@@ -37,7 +37,7 @@
     
       <img src="../_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.26.2</div>
+  <div class="prs-version">v0.26.3</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -128,13 +128,18 @@
 <h2>Источник данных<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
 <p>Плагин JSON API и источник данных <code class="docutils literal notranslate"><span class="pre">peresvet</span></code> на его основе создаются при
 установке платформы. Источник <code class="docutils literal notranslate"><span class="pre">peresvet</span></code> выбран источником по умолчанию,
-его адрес — <code class="docutils literal notranslate"><span class="pre">http://&lt;имя</span> <span class="pre">сервера&gt;/v1/</span></code>.</p>
+его адрес — <code class="docutils literal notranslate"><span class="pre">https://&lt;имя</span> <span class="pre">сервера&gt;/v1/</span></code>. Для самоподписанного сертификата
+в поставке включён пропуск проверки TLS.</p>
 <p>Проверьте источник: откройте меню Grafana, раздел
-<strong>Connections → Data sources → peresvet</strong>, и нажмите <strong>Save &amp; test</strong>.</p>
+<strong>Connections → Data sources → peresvet</strong>, и нажмите <strong>Save &amp; test</strong>.
+Проверка запрашивает корень <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/</span></code>: платформа отвечает <code class="docutils literal notranslate"><span class="pre">200</span></code>
+и номером версии.</p>
 <img alt="../_images/06.save_and_test.png" src="../_images/06.save_and_test.png" />
 <p>Если проверка не проходит, поправьте адрес в поле <strong>URL</strong>: укажите
-<code class="docutils literal notranslate"><span class="pre">https://&lt;адрес</span> <span class="pre">сервера&gt;/v1/</span></code>, а для самоподписанного сертификата
-включите в настройках TLS пропуск проверки сертификата.</p>
+<code class="docutils literal notranslate"><span class="pre">https://&lt;адрес</span> <span class="pre">сервера&gt;/v1/</span></code> со слэшем в конце, а для самоподписанного
+сертификата включите в настройках TLS пропуск проверки сертификата.
+Адрес <code class="docutils literal notranslate"><span class="pre">http://…</span></code> не подходит: nginx на 80-м порту перенаправляет на HTTPS,
+и прокси Grafana остаётся без данных.</p>
 <p>Второй источник, например для другого сервера платформы, создаётся так же:
 <strong>Connections → Add new connection → JSON API → Add new data source</strong>.
 Имя источника может быть любым, в <strong>URL</strong> укажите адрес API платформы.</p>
@@ -155,9 +160,10 @@
 <p>Откроется редактор панели. Тип панели — <strong>Time series</strong>:</p>
 <img alt="../_images/10.panel_settings.png" src="../_images/10.panel_settings.png" />
 </li>
-<li><p>На вкладке <strong>Path</strong> запроса укажите путь к API данных относительно
-адреса источника. Для источника <code class="docutils literal notranslate"><span class="pre">peresvet</span></code> с адресом <code class="docutils literal notranslate"><span class="pre">.../v1/</span></code> это
-<code class="docutils literal notranslate"><span class="pre">data/</span></code>:</p>
+<li><p>На вкладке <strong>Path</strong> запроса укажите путь к API данных. Плагин JSON API
+склеивает путь с адресом прокси без добавления слэша, поэтому путь
+начинается со слэша. Для источника <code class="docutils literal notranslate"><span class="pre">peresvet</span></code> с адресом <code class="docutils literal notranslate"><span class="pre">.../v1/</span></code>
+это <code class="docutils literal notranslate"><span class="pre">/data/</span></code>:</p>
 <img alt="../_images/11.set_path.png" src="../_images/11.set_path.png" />
 </li>
 <li><p>На вкладке <strong>Params</strong> добавьте параметр запроса <code class="docutils literal notranslate"><span class="pre">q</span></code> со значением:</p>
@@ -167,6 +173,9 @@
 <p><code class="docutils literal notranslate"><span class="pre">$__isoFrom()</span></code> и <code class="docutils literal notranslate"><span class="pre">$__isoTo()</span></code> — функции Grafana. Они подставляют
 начало и конец периода, выбранного на экране, в формате ISO 8601.
 Остальные ключи запроса описаны в разделе <a class="reference internal" href="../historical_data.html#historical-data"><span class="std std-ref">Исторические данные</span></a>.</p>
+<p>Поле <strong>Cache Time</strong> у запроса по умолчанию равно 5 минутам: панель
+повторяет старый ответ и не показывает свежие значения. Для живого
+экрана поставьте <code class="docutils literal notranslate"><span class="pre">0s</span></code>.</p>
 <img alt="../_images/12.set_params.png" src="../_images/12.set_params.png" />
 </li>
 <li><p>Проверьте, что платформа отвечает: нажмите <strong>Query inspector</strong>,

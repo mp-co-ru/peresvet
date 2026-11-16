@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Тревоги &mdash; документация МПК-Пересвет v0.26.2</title>
+  <title>Тревоги &mdash; документация МПК-Пересвет v0.26.3</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=1c0e7ff0"></script>
+      <script src="_static/documentation_options.js?v=b876fbe9"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -37,7 +37,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.26.2</div>
+  <div class="prs-version">v0.26.3</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -79,11 +79,8 @@
 <li class="toctree-l2"><a class="reference internal" href="api.html#id2">Общие правила</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="api.html#id3">Разделы</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Тревоги</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#alerts_api_crud_svc.AlertCopy"><code class="docutils literal notranslate"><span class="pre">AlertCopy</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#alerts_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#alerts_api_crud_svc.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#alerts_api_crud_svc.read"><code class="docutils literal notranslate"><span class="pre">read()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#alerts_api_crud_svc.update"><code class="docutils literal notranslate"><span class="pre">update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id2">Состояние тревоги</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Список и квитирование</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
@@ -125,9 +122,65 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-alerts_api_crud_svc">
-<span id="id1"></span><h1>Тревоги<a class="headerlink" href="#module-alerts_api_crud_svc" title="Ссылка на этот заголовок"></a></h1>
-<p>Запросы на создание, чтение, обновление, удаление тревог.</p>
+  <section id="id1">
+<h1>Тревоги<a class="headerlink" href="#id1" title="Ссылка на этот заголовок"></a></h1>
+<section id="id2">
+<h2>Состояние тревоги<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
+<p>Тревога описывается конфигурацией тега</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"high"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="p">,</span><span class="w"> </span><span class="nt">"autoAck"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>При <code class="docutils literal notranslate"><span class="pre">high:</span> <span class="pre">true</span></code> тревога активна, пока значение тега больше или равно
+<code class="docutils literal notranslate"><span class="pre">value</span></code>. При <code class="docutils literal notranslate"><span class="pre">high:</span> <span class="pre">false</span></code> — пока значение меньше <code class="docutils literal notranslate"><span class="pre">value</span></code>.
+<code class="docutils literal notranslate"><span class="pre">autoAck:</span> <span class="pre">true</span></code> квитирует тревогу в момент срабатывания.</p>
+<p>События пишутся в таблицу хранилища <code class="docutils literal notranslate"><span class="pre">a_&lt;id</span> <span class="pre">тревоги&gt;</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">x</span></code> — метка срабатывания;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cx</span></code> — метка квитирования;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">e</span></code> — метка пропадания.</p></li>
+</ul>
+<p>Сервис тревог публикует три сообщения с плоским телом
+<code class="docutils literal notranslate"><span class="pre">{&quot;alertId&quot;:</span> <span class="pre">&quot;&lt;id&gt;&quot;,</span> <span class="pre">&quot;x&quot;:</span> <span class="pre">&lt;микросекунды&gt;}</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">prsAlert.app.alarm_on.&lt;id&gt;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prsAlert.app.alarm_off.&lt;id&gt;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prsAlert.app.alarm_acked.&lt;id&gt;</span></code></p></li>
+</ul>
+<p>Хранилище отвечает на <code class="docutils literal notranslate"><span class="pre">prsAlert.app.alarm_state.&lt;id&gt;</span></code> последней строкой
+этой таблицы. После перезапуска сервиса тревог кэш восстанавливается из неё.</p>
+</section>
+<section id="id3">
+<h2>Список и квитирование<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/alarms/</span></code> возвращает активные тревоги. С <code class="docutils literal notranslate"><span class="pre">fired=false</span></code> в список
+добавляются уже пропавшие, но ещё не квитированные. Без <code class="docutils literal notranslate"><span class="pre">parentId</span></code>
+отдаются тревоги всей модели — так их берёт панель Grafana.
+<code class="docutils literal notranslate"><span class="pre">getChildren=true</span></code> включает тревоги дочерних узлов.
+Без <code class="docutils literal notranslate"><span class="pre">format</span></code> метки — целые микросекунды. С <code class="docutils literal notranslate"><span class="pre">format=true</span></code> — строки
+местного времени ISO 8601.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/alarms/?parentId=&lt;id объекта&gt;&amp;getChildren=true&amp;format=true
+</pre></div>
+</div>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span>
+<span class="w">  </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id тревоги&gt;"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Высокий уровень"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id тега&gt;"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"fired"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-11-16T16:25:32.429572+03:00"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"finish"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"acked"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="p">}]}</span>
+</pre></div>
+</div>
+<p>Квитирование — <code class="docutils literal notranslate"><span class="pre">PUT</span> <span class="pre">/v1/alarms/</span></code>. Если <code class="docutils literal notranslate"><span class="pre">x</span></code> не передан, берётся текущий
+момент. Повторное квитирование ничего не меняет.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>PUT /v1/alarms/
+{"id": "&lt;id тревоги&gt;"}
+</pre></div>
+</div>
+<p>История значений тега запрашивается через <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/</span></code>. Идентификатор
+тревоги для этого запроса не годится: ответ <code class="docutils literal notranslate"><span class="pre">422</span></code> и пояснение, что события
+тревоги читаются через <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/alarms/</span></code>.</p>
+<p id="module-alerts_api_crud_svc">Запросы на создание, чтение, обновление, удаление тревог.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="alerts_api_crud_svc.AlertCopy">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">alerts_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">AlertCopy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sourceId</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parentId</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#alerts_api_crud_svc.AlertCopy" title="Ссылка на это определение"></a></dt>
@@ -146,7 +199,7 @@
 <p><strong>Запрос:</strong></p>
 <blockquote>
 <div><div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id2">
+<div class="http-example-http docutils container" id="id4">
 <p><span class="caption-text">http</span></p>
 <div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">POST</span> <span class="nn">/v1/alerts/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 <span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
@@ -167,7 +220,7 @@
 </pre></div>
 </div>
 </div>
-<div class="http-example-response docutils container" id="id3">
+<div class="http-example-response docutils container" id="id5">
 <p><span class="caption-text">response</span></p>
 <div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
 <span class="na">Content-Type</span>: <span class="s">application/json</span>
@@ -229,7 +282,7 @@
 <p><strong>Запрос:</strong></p>
 <blockquote>
 <div><div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id4">
+<div class="http-example-http docutils container" id="id6">
 <p><span class="caption-text">http</span></p>
 <div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">DELETE</span> <span class="nn">/v1/alerts/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 <span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
@@ -243,7 +296,7 @@
 </pre></div>
 </div>
 </div>
-<div class="http-example-response docutils container" id="id5">
+<div class="http-example-response docutils container" id="id7">
 <p><span class="caption-text">response</span></p>
 <div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
 <span class="na">Content-Type</span>: <span class="s">application/json</span>
@@ -274,7 +327,7 @@
 <dd><p>Метод ищет тревоги в модели и возвращает запрошенные по ним данные.</p>
 <p><strong>Пример запроса в формате JSON.</strong></p>
 <div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id6">
+<div class="http-example-http docutils container" id="id8">
 <p><span class="caption-text">http</span></p>
 <div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">GET</span> <span class="nn">/v1/alerts/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 <span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
@@ -297,7 +350,7 @@
 </pre></div>
 </div>
 </div>
-<div class="http-example-response docutils container" id="id7">
+<div class="http-example-response docutils container" id="id9">
 <p><span class="caption-text">response</span></p>
 <div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
 <span class="na">Content-Type</span>: <span class="s">application/json</span>
@@ -331,7 +384,7 @@
 </div>
 <p><strong>Пример query запроса.</strong></p>
 <div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id8">
+<div class="http-example-http docutils container" id="id10">
 <p><span class="caption-text">http</span></p>
 <div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">GET</span> <span class="nn">/v1/alerts/?q={"base":"id_of_a_node_where_to_search","id":"id_of_an_alert_to_find","deref":true,"scope":1}</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 <span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
@@ -341,7 +394,7 @@
 </pre></div>
 </div>
 </div>
-<div class="http-example-response docutils container" id="id9">
+<div class="http-example-response docutils container" id="id11">
 <p><span class="caption-text">response</span></p>
 <div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
 <span class="na">Content-Type</span>: <span class="s">application/json</span>
@@ -423,7 +476,7 @@
 <p><strong>Запрос:</strong></p>
 <blockquote>
 <div><div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id10">
+<div class="http-example-http docutils container" id="id12">
 <p><span class="caption-text">http</span></p>
 <div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">PUT</span> <span class="nn">/v1/alerts/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 <span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
@@ -445,7 +498,7 @@
 </pre></div>
 </div>
 </div>
-<div class="http-example-response docutils container" id="id11">
+<div class="http-example-response docutils container" id="id13">
 <p><span class="caption-text">response</span></p>
 <div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
 <span class="na">Content-Type</span>: <span class="s">application/json</span>
@@ -474,6 +527,7 @@
 </div></blockquote>
 </dd></dl>
 
+</section>
 </section>
 
 
