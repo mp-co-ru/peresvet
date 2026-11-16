@@ -247,7 +247,8 @@ _SAME_FRAME = "select=isnan(prev_selected_t)+gte(t-prev_selected_t\\,0.02)"
 # если у хранилища не заданы ширина и частота.
 _LIVE_VF = f"{_ARRIVAL_PTS},{_SAME_FRAME},fps=15,scale=960:-2"
 # Редкий JPEG только для распознавания. Зрителям он не отдаётся.
-_PREVIEW_VF = f"{_ARRIVAL_PTS},fps=2,scale=640:-2"
+# yuvj420p: MJPEG в ffmpeg 7 не принимает ограниченный YUV (yuv420p, tv).
+_PREVIEW_VF = f"{_ARRIVAL_PTS},fps=2,scale=640:-2,format=yuvj420p"
 
 
 def archive_video_filter(camera: CameraConfig) -> str:
@@ -411,6 +412,9 @@ def session_ffmpeg_args(
         "-rtsp_transport", camera.transport,
         "-timeout", "8000000",
         "-use_wallclock_as_timestamps", "1",
+        # У HEVC без меток mpegts с -c copy пишет
+        # «first pts and dts value must be set» и рвёт захват.
+        "-fflags", "+genpts",
         "-i", camera.rtsp_url,
         *_archive_output(camera, pattern, segment_seconds_value),
         "-map", "0:v:0", "-an",
@@ -424,6 +428,7 @@ def session_ffmpeg_args(
         "pipe:1",
         "-map", "0:v:0", "-an",
         "-vf", _PREVIEW_VF,
+        "-pix_fmt", "yuvj420p",
         "-q:v", "8",
         "-f", "image2", "-update", "1",
         str(directory / "preview.jpg"),

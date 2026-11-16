@@ -46,6 +46,16 @@ class TagsApp(AppSvc):
         for tag_id in tag_ids:
 
             res = await self._get_tag_cache_key_value(tag_id, "prsActive")
+            if res == "alert":
+                return {
+                    "error": {
+                        "code": 422,
+                        "message": (
+                            f"Узел '{tag_id}' — тревога. "
+                            "События тревоги читаются запросом GET /v1/alarms/."
+                        ),
+                    }
+                }
             if res is None:
                 self._logger.error(f"{self._config.svc_name} :: Нет тега c id = '{tag_id}'.")
                 continue
@@ -85,6 +95,8 @@ class TagsApp(AppSvc):
 
             if res is None:
                 res = await self._make_tag_cache(tag_id)
+                if res == "alert":
+                    return "alert"
                 # если метод перестроения кэша возвращает False - значит, нет такого узла
                 if not res:
                     return None
@@ -148,9 +160,12 @@ class TagsApp(AppSvc):
         if not hres:
             return None
         attrs = hres[0][2]
+        raw_type = (attrs.get("prsValueTypeCode") or [None])[0]
+        if raw_type is None:
+            return None
         new_doc = {
             "prsActive": attrs["prsActive"][0] == "TRUE",
-            "prsValueTypeCode": int(attrs["prsValueTypeCode"][0]),
+            "prsValueTypeCode": int(raw_type),
             "prsMaxLineDev": parse_prs_max_line_dev_from_ldap_attrs(attrs),
             "prsLastAcceptedY": last_y,
             "prsLastAcceptedQ": last_q,
@@ -281,17 +296,23 @@ class TagsApp(AppSvc):
         res = await self._hierarchy.search(
             {
                 "id": tag_id,
-                "attributes": ["prsActive", "prsValueTypeCode", "prsMaxLineDev"],
+                "attributes": ["prsActive", "prsValueTypeCode", "prsMaxLineDev", "objectClass"],
             }
         )
         if not res:
             return False
 
         attrs = res[0][2]
+        raw_type = (attrs.get("prsValueTypeCode") or [None])[0]
+        if raw_type is None:
+            classes = [str(item) for item in (attrs.get("objectClass") or []) if item]
+            if "prsAlert" in classes:
+                return "alert"
+            return False
         active = attrs["prsActive"][0] == "TRUE"
         doc = {
             "prsActive": active,
-            "prsValueTypeCode": int(attrs["prsValueTypeCode"][0]),
+            "prsValueTypeCode": int(raw_type),
             "prsMaxLineDev": parse_prs_max_line_dev_from_ldap_attrs(attrs),
             "prsLastAcceptedY": None,
             "prsLastAcceptedQ": None,

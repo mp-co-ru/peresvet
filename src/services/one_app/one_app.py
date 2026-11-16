@@ -300,6 +300,13 @@ def platform_version() -> str:
 def read_platform_version() -> dict[str, str]:
     return {"version": platform_version()}
 
+
+@app.get("/v1")
+@app.get("/v1/")
+def read_api_root() -> dict[str, str]:
+    """Корень API. Проверка источника Grafana запрашивает именно его."""
+    return {"version": platform_version()}
+
 # монтирование приложений =====================================================
 
 # connectors ------------------------------------------------------------------

@@ -14,7 +14,10 @@ except ModuleNotFoundError as _:
 sys.path.append(".")
 
 from src.services.dataStorages.app.postgresql.dataStorages_app_postgresql_settings import DataStoragesAppPostgreSQLSettings
-from src.services.dataStorages.app.dataStorages_app_base import DataStoragesAppBase
+from src.services.dataStorages.app.dataStorages_app_base import (
+    DataStoragesAppBase,
+    alarm_event_body,
+)
 import src.common.times as t
 from src.common.tag_max_line_dev import history_points_to_insert
 from src.common.consts import (
@@ -185,11 +188,15 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
         except Exception as ex:
             self._logger.error(f"{self._config.svc_name} :: Ошибка создания хранилища тега: {ex}")
 
+    def _alarm_event(self, mes: dict) -> tuple[str, int]:
+        body = alarm_event_body(mes)
+        return str(body["alertId"]), int(body["x"])
+
     async def _alarm_on(self, mes: dict, routing_key: str | None = None) -> None:
 
         self._logger.debug(f"Обработка возникновения тревоги: {mes}")
 
-        alert_id = mes["alertId"]
+        alert_id, x = self._alarm_event(mes)
 
         async with self._cache.get_redis() as r:
             alert_params = await r.json().get(f"{alert_id}.{self._config.svc_name}")
@@ -219,7 +226,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                         if not records or records[0][0] is None or records[0][3]:
                             await conn.copy_records_to_table(
                                 alert_tbl,
-                                records=[(mes["x"], None, None)],
+                                records=[(x, None, None)],
                                 columns=('x', 'cx', 'e'))
 
                             self._logger.debug(f"Тревога {alert_id} зафиксирована.")
@@ -233,7 +240,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
         self._logger.debug(f"Обработка квитирования тревоги: {mes}")
 
-        alert_id = mes["alertId"]
+        alert_id, x = self._alarm_event(mes)
 
         async with self._cache.get_redis() as r:
             alert_params = await r.json().get(f"{alert_id}.{self._config.svc_name}")
@@ -260,11 +267,11 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                             records.append((r.get('id'), r.get('x'), r.get('cx'), r.get('e')))
 
                         # если алярмов у тревоги вообще нет или уже квитирована...
-                        if records[0][0] is None or records[0][2]:
+                        if not records or records[0][0] is None or records[0][2]:
                             self._logger.debug(f"Тревоги {alert_id} нет, либо уже квитирована.")
-                            return
+                            continue
 
-                        q = f"update \"{alert_tbl}\" set cx = {mes['x']}"
+                        q = f'update "{alert_tbl}" set cx = {x} where id = {int(records[0][0])}'
                         await conn.execute(q)
 
                         self._logger.debug(f"Тревога {alert_id} квитирована.")
@@ -280,7 +287,7 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
 
         """
         self._logger.debug(f"Обработка пропадания тревоги: {mes}")
-        alert_id = mes["alertId"]
+        alert_id, x = self._alarm_event(mes)
 
         async with self._cache.get_redis() as r:
             alert_params = await r.json().get(f"{alert_id}.{self._config.svc_name}")
@@ -306,17 +313,60 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                             records.append((r.get('id'), r.get('x'), r.get('cx'), r.get('e')))
 
                         # если алярмов у тревоги вообще нет или закончились...
-                        if records[0][0] is None or records[0][3]:
+                        if not records or records[0][0] is None or records[0][3]:
                             self._logger.debug(f"Нет активной тревоги {alert_id}.")
-                            return
+                            continue
 
-                        q = f"update \"{alert_tbl}\" set e = {mes['data']['x']}"
+                        q = f'update "{alert_tbl}" set e = {x} where id = {int(records[0][0])}'
                         await conn.execute(q)
 
                         self._logger.debug(f"Тревога {alert_id} закончена.")
 
             except PostgresError as ex:
                 self._logger.error(f"{self._config.svc_name} :: Ошибка при записи данных тревоги {alert_id}: {ex}")
+
+    async def _alarm_state(self, mes: dict, routing_key: str | None = None) -> dict:
+        """Последняя строка ``a_<id>``: по ней сервис тревог восстанавливает кэш."""
+        body = alarm_event_body(mes)
+        alert_id = body.get("alertId")
+        if not alert_id and routing_key:
+            alert_id = routing_key.rsplit(".", 1)[-1]
+        empty = {"alertId": alert_id, "x": None, "cx": None, "e": None}
+        if not alert_id:
+            return empty
+
+        async with self._cache.get_redis() as r:
+            alert_params = await r.json().get(f"{alert_id}.{self._config.svc_name}")
+            if alert_params is None:
+                alert_params = await self._create_alert_cache(alert_id)
+        if not isinstance(alert_params, dict):
+            return empty
+
+        for ds_id, prsStore in (alert_params.get("dss") or {}).items():
+            if not isinstance(prsStore, dict) or not prsStore.get("table"):
+                continue
+            connection_pool = self._connection_pools.get(ds_id)
+            if connection_pool is None:
+                continue
+            alert_tbl = prsStore["table"]
+            try:
+                async with connection_pool.acquire() as conn:
+                    row = await conn.fetchrow(
+                        f'select x, cx, e from "{alert_tbl}" order by x desc limit 1'
+                    )
+                if row is None:
+                    continue
+                return {
+                    "alertId": alert_id,
+                    "x": row["x"],
+                    "cx": row["cx"],
+                    "e": row["e"],
+                }
+            except PostgresError as ex:
+                self._logger.error(
+                    f"{self._config.svc_name} :: Ошибка чтения состояния тревоги {alert_id}: {ex}"
+                )
+        return empty
 
     @staticmethod
     def _value_type_from_link_config(raw: Any) -> int | None:

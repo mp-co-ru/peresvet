@@ -8,7 +8,9 @@ datasources:
         typeLogoUrl: public/plugins/marcusolsson-json-datasource/img/logo.svg
         access: proxy
         allowUiUpdates: true
-        url: http://NGINX_HOST/v1/
+        url: https://NGINX_HOST/v1/
+        jsonData:
+            tlsSkipVerify: true
         user: ''
         database: ''
         basicAuth: false

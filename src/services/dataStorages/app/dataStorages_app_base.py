@@ -15,6 +15,7 @@ import numpy as np
 sys.path.append(".")
 
 from src.common import app_svc
+from src.common.amqp_rpc import NO_AMQP_RPC_REPLY
 from src.services.dataStorages.app.dataStorages_app_base_settings import DataStoragesAppBaseSettings
 
 from src.common.hierarchy import (
@@ -27,6 +28,20 @@ from src.common.consts import (
     CNTagValueTypes as TVT,
     Order
 )
+def alarm_event_body(mes: dict | None) -> dict:
+    """Тело события тревоги в одном виде: ``{"alertId", "x"}``.
+
+    Так публикует ``alerts_app``. Сообщение, уже обёрнутое в ``data``,
+    тоже принимается: в очереди может лежать старый экземпляр.
+    """
+    if not isinstance(mes, dict):
+        return {}
+    nested = mes.get("data")
+    if isinstance(nested, dict) and "alertId" in nested:
+        return nested
+    return mes
+
+
 def linear_interpolated(start_point: Tuple[int, Any],
                         end_point: Tuple[int, Any],
                         x: int):
@@ -127,6 +142,17 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         #    "<ds_id>": <connection_pool>
         # }
         self._connection_pools = {}
+        # Подключение к СУБД не должно занимать обработчик очереди:
+        # иначе PUT и DELETE этого хранилища некому читать.
+        self._ds_connect_tasks: dict[str, asyncio.Task] = {}
+        self._watched_ds: set[str] = set()
+
+    def _ensure_ds_runtime(self) -> None:
+        if not hasattr(self, "_ds_connect_tasks"):
+            self._ds_connect_tasks = {}
+        if not hasattr(self, "_watched_ds"):
+            self._watched_ds = set()
+
     def _add_app_handlers(self):
         self._handlers["prsTag.app.data_get.*"] = self._tag_get
         self._handlers["prsTag.app.data_set.*"] = self._tag_set
@@ -135,6 +161,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         self._handlers["prsAlert.app.alarm_acked.*"] = self._alarm_ack
         self._handlers["prsAlert.app.alarm_on.*"] = self._alarm_on
         self._handlers["prsAlert.app.alarm_off.*"] = self._alarm_off
+        self._handlers["prsAlert.app.alarm_state.*"] = self._alarm_state
         self._handlers["prsAlert.model.deleted.*"] = self._alert_deleted
         self._handlers["prsDataStorage.model.link_tag.*"] = self._link_tag
         self._handlers["prsDataStorage.model.unlink_tag.*"] = self._unlink_tag
@@ -207,11 +234,13 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_acked.{alert_id}")
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_on.{alert_id}")
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_off.{alert_id}")
+            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_state.{alert_id}")
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsAlert.model.deleted.{alert_id}")
         else:
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_acked.{alert_id}")
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_on.{alert_id}")
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_off.{alert_id}")
+            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_state.{alert_id}")
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.model.deleted.{alert_id}")
 
     async def _bind_ds(self, ds_id: str, bind: bool = True):
@@ -227,6 +256,76 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
     async def _is_supported_ds_type(self, ds_type: int | None) -> bool:
         return ds_type is not None and int(ds_type) == int(self._config.datastorage_type)
+
+    def _parse_ds_config(self, attrs: dict) -> dict | None:
+        """Конфигурация подключения. Пустая и отсутствующая — не конфигурация."""
+        parsed = self._safe_json_attr(attrs.get("prsJsonConfigString"), default=None)
+        if isinstance(parsed, dict) and parsed:
+            return parsed
+        return None
+
+    def _cancel_ds_connect(self, ds_id: str) -> None:
+        self._ensure_ds_runtime()
+        task = self._ds_connect_tasks.pop(ds_id, None)
+        if task is not None and not task.done():
+            task.cancel()
+
+    def _schedule_ds_connect(self, ds_id: str) -> None:
+        self._ensure_ds_runtime()
+        task = self._ds_connect_tasks.get(ds_id)
+        if task is not None and not task.done():
+            return
+        self._ds_connect_tasks[ds_id] = asyncio.create_task(self._connect_ds_until_ready(ds_id))
+
+    async def _connect_ds_until_ready(self, ds_id: str) -> None:
+        """Фоновое подключение. Нет конфигурации — выход, без повторов.
+
+        Повтор при ошибке связи не держит обработчик очереди, поэтому
+        изменение и удаление хранилища обрабатываются сразу.
+        """
+        try:
+            while True:
+                if ds_id in self._connection_pools:
+                    return
+                info = await self._get_ds_info(ds_id)
+                if info is None or not await self._is_supported_ds_type(info["type"]):
+                    return
+                active_raw = (info["attrs"].get("prsActive") or [None])[0]
+                if active_raw != "TRUE":
+                    return
+                config = self._parse_ds_config(info["attrs"])
+                if config is None:
+                    self._logger.error(
+                        f"{self._config.svc_name} :: У хранилища '{ds_id}' нет конфигурации подключения. "
+                        f"Подключение отложено до записи настроек."
+                    )
+                    return
+                try:
+                    pool = await self._create_connection_pool(config)
+                except asyncio.CancelledError:
+                    raise
+                except Exception as ex:
+                    self._logger.error(
+                        f"{self._config.svc_name} :: Ошибка связи с базой данных '{ds_id}': {ex}"
+                    )
+                    await asyncio.sleep(5)
+                    continue
+                if ds_id in self._connection_pools:
+                    await self._await_close_pool(pool)
+                    return
+                fresh = await self._get_ds_info(ds_id)
+                if fresh is None or not await self._is_supported_ds_type(fresh["type"]):
+                    await self._await_close_pool(pool)
+                    return
+                self._connection_pools[ds_id] = pool
+                self._logger.info(f"{self._config.svc_name} :: Связь с базой данных {ds_id} установлена.")
+                return
+        except asyncio.CancelledError:
+            return
+        finally:
+            current = getattr(self, "_ds_connect_tasks", {}).get(ds_id)
+            if current is asyncio.current_task():
+                self._ds_connect_tasks.pop(ds_id, None)
 
     def _safe_json_attr(self, ldap_attr, default=None):
         if not ldap_attr:
@@ -287,10 +386,20 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             pass
 
     async def _remove_supported_ds(self, ds_id: str) -> None:
-        if ds_id not in self._connection_pools:
+        self._ensure_ds_runtime()
+        self._cancel_ds_connect(ds_id)
+        in_pool = ds_id in self._connection_pools
+        watched = ds_id in self._watched_ds
+        if not in_pool and not watched:
             return
-        # unbind ds-level handlers
-        await self._bind_ds(ds_id, False)
+        if watched:
+            self._watched_ds.discard(ds_id)
+            try:
+                await self._bind_ds(ds_id, False)
+            except Exception:
+                pass
+        elif in_pool:
+            await self._bind_ds(ds_id, False)
 
         # unbind tags/alerts we previously bound (if cache exists)
         try:
@@ -328,27 +437,21 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             return
 
         ds_attrs = ds_info["attrs"]
+        self._ensure_ds_runtime()
 
         # If already supported, do nothing.
         if ds_id in self._connection_pools:
             return
 
         # привяжемся к сообщениям, касающимся изменениям хранилища ---------------------------------
-        await self._bind_ds(ds_id, True)
+        if ds_id not in self._watched_ds:
+            await self._bind_ds(ds_id, True)
+            self._watched_ds.add(ds_id)
         # ----------------------------------------------------------------------------------------
+        # Соединение — в фоне. Пустая конфигурация нового узла не крутит
+        # повтор и не занимает очередь, иначе узел нельзя ни изменить, ни удалить.
         if ds_attrs["prsActive"][0] == "TRUE":
-            # если хранилище активно, то подсоединимся к нему
-            connected = False
-            while not connected:
-                try:
-                    self._connection_pools[ds_id] = await self._create_connection_pool(
-                        json.loads(ds_attrs["prsJsonConfigString"][0])
-                    )
-                    self._logger.info(f"{self._config.svc_name} :: Связь с базой данных {ds_id} установлена.")
-                    connected = True
-                except Exception as ex:
-                    self._logger.error(f"{self._config.svc_name} :: Ошибка связи с базой данных '{ds_id}': {ex}")
-                    await asyncio.sleep(5)
+            self._schedule_ds_connect(ds_id)
 
 
         payload = {
@@ -361,7 +464,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
         ds_cache = {
             "prsActive": ds_attrs["prsActive"][0] == "TRUE",
-            "prsJsonConfigString": json.loads(ds_attrs["prsJsonConfigString"][0]),
+            "prsJsonConfigString": self._parse_ds_config(ds_attrs) or {},
             "tags": [],
             "alerts": []
         }
@@ -413,6 +516,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.app.alarm_acked.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.app.alarm_on.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.app.alarm_off.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.app.alarm_state.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.model.deleting.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.model.deleted.*")
         # ----------------------------------------------------------------------------------------
@@ -507,64 +611,32 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
     async def _created(self, mes: dict, routing_key: str | None = None):
         return await self.created(mes, routing_key=routing_key)
 
-    async def updating(self, mes: dict, routing_key: str = None) -> None:
-        # обновление атрибутов хранилища
-        # привязка/отвязка тегов и тревог выполняется
-        # методами link/unlink
-        # необслуживаемые хранилища отсекаются методом reject_message
-        ds_id = mes["id"]
-        ds_info = await self._get_ds_info(ds_id)
-        if ds_info is None:
-            return
-
-        if not await self._is_supported_ds_type(ds_info["type"]):
-            # if we previously supported it, drop it
-            await self._remove_supported_ds(ds_id)
-            return
-
-        if ds_id not in self._connection_pools:
-            # became supported due to type change
-            await self._add_supported_ds(ds_id)
-            return
-
-        payload = {
-            "id": ds_id,
-            "attributes": ["prsActive", "prsJsonConfigString"]
-        }
-        ds_data = await self._hierarchy.search(payload=payload)
-        if not ds_data:
-            self._logger.error(f"{self._config.svc_name} :: В модели нет данных по хранилищу {ds_id}")
-            return
-
-        old_pool = self._connection_pools.pop(ds_id, None)
-        await self._await_close_pool(old_pool)
-
-        connected = False
-        while not connected:
-            try:
-                self._connection_pools[ds_id] = await self._create_connection_pool(
-                    json.loads(ds_data[0][2]["prsJsonConfigString"][0])
-                )
-                self._logger.info(f"{self._config.svc_name} :: Связь с базой данных {ds_id} установлена.")
-                connected = True
-            except Exception as ex:
-                self._logger.error(f"{self._config.svc_name} :: Ошибка связи с базой данных '{ds_id}': {ex}")
-                await asyncio.sleep(5)
-
+    async def updating(self, mes: dict, routing_key: str = None) -> dict:
+        # Каталог к этому моменту ещё не изменён. Ждать здесь соединение
+        # нельзя: пустая конфигурация нового хранилища не даёт записать
+        # ни имя, ни тип, ни настройки.
         return {"response": True}
 
     async def updated(self, mes: dict, routing_key: str | None = None):
-        # type changes are applied after update; use this event to rebalance ownership
+        # Настройки в каталоге уже новые. Подключение — в фоне.
         ds_id = mes.get("id")
         if not ds_id:
             return {"response": True}
+        self._ensure_ds_runtime()
         ds_info = await self._get_ds_info(ds_id)
         if ds_info is None:
+            await self._remove_supported_ds(ds_id)
             return {"response": True}
 
         if await self._is_supported_ds_type(ds_info["type"]):
-            if ds_id not in self._connection_pools:
+            if ds_id not in self._watched_ds:
                 await self._add_supported_ds(ds_id)
+            else:
+                old_pool = self._connection_pools.pop(ds_id, None)
+                await self._await_close_pool(old_pool)
+                self._cancel_ds_connect(ds_id)
+                if (ds_info["attrs"].get("prsActive") or [None])[0] == "TRUE":
+                    self._schedule_ds_connect(ds_id)
         else:
             await self._remove_supported_ds(ds_id)
         return {"response": True}
@@ -602,15 +674,13 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         """Факт пропадания тревоги.
 
         Args:
-            mes (dict): {
-                "action": "alerts.alrmOff",
-                "data": {
-                    "alertId": "alert_id",
-                    "x": 123
-                }
-            }
+            mes (dict): {"alertId": "alert_id", "x": 123}
         """
         pass
+
+    async def _alarm_state(self, mes: dict, routing_key: str = None):
+        """Последняя строка таблицы тревоги. Отвечает хранилище, которое её ведёт."""
+        return NO_AMQP_RPC_REPLY
 
     async def _reject_message(self, mes: dict) -> bool:
 
