@@ -38,6 +38,9 @@ COPY config/grafana/provisioning/dashboards/prs.yaml /etc/grafana/provisioning/d
 COPY config/grafana/provisioning/datasources/prs.yaml /etc/grafana/provisioning/datasources
 RUN sed -i "s/NGINX_HOST/$NGINX_HOST/" /etc/grafana/provisioning/datasources/prs.yaml
 
+# JSONata 2.0.6 (MIT): предпросмотр выражений в Конфигураторе, без CDN.
+COPY config/grafana/vendor/jsonata-2.0.6.min.js /usr/share/grafana/public/vendor/jsonata-2.0.6.min.js
+
 COPY config/grafana/logos/mpcperesvet32.png /usr/share/grafana/public/img/fav32.png
 COPY config/grafana/logos/mpcperesvet32.png /usr/share/grafana/public/build/img/fav32.png
 COPY config/grafana/logos/mpcperesvet32.png /usr/share/grafana/public/img/apple-touch-icon.png
