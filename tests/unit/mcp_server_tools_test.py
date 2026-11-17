@@ -111,7 +111,11 @@ def test_mcp_tools_call_http_layer():
             await _unwrap(mcp_server.peresvet_alert_copy)(source_id="s", parent_id="p")
             await _unwrap(mcp_server.peresvet_alert_create)(parent_id="t")
             await _unwrap(mcp_server.peresvet_alarms_get)(parent_id="o")
+            await _unwrap(mcp_server.peresvet_alarms_get)(
+                parent_id="o", fired=False, get_children=True, format_ts=True,
+            )
             await _unwrap(mcp_server.peresvet_alarm_ack)(alarm_id="a", x=1)
+            await _unwrap(mcp_server.peresvet_alarm_ack)(alarm_id="a")
             await _unwrap(mcp_server.peresvet_schedule_create)(cn="s", start="2026-01-01T00:00:00")
             await _unwrap(mcp_server.peresvet_data_get)(query={"tagId": "t1"})
             await _unwrap(mcp_server.peresvet_data_set)(payload={"data": []})
@@ -177,6 +181,13 @@ def test_mcp_tools_call_http_layer():
     assert all(item[3].get("initiatedBy") is None for item in captured if item[0] == "POST" and item[1] == "/v1/methods/" and item[3] and item[3].get("attributes", {}).get("prsMethodAddress") in method_codes)
     services = next(item for item in captured if item[1] == "/v1/connectors_app/services")
     assert services[0] == "GET"
+    alarm_lists = [item for item in captured if item[1] == "/v1/alarms/" and item[0] == "GET"]
+    assert ("fired", "false") in alarm_lists[-1][2]
+    assert ("getChildren", "true") in alarm_lists[-1][2]
+    assert ("format", "true") in alarm_lists[-1][2]
+    acks = [item[3] for item in captured if item[1] == "/v1/alarms/" and item[0] == "PUT"]
+    assert acks[-1] == {"id": "a"}
+    assert "x" not in acks[-1]
     log_tail = next(item for item in captured if item[1] == "/v1/connectors_app/service_log_tail" and item[0] == "GET")
     assert ("service", "methods_app") in log_tail[2]
     assert ("limit", "10") in log_tail[2]
