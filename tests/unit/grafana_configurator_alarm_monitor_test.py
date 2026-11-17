@@ -38,6 +38,21 @@ def test_alarm_monitor_is_a_separate_tree_mark_and_uses_the_alarms_api():
     assert "function prsAlarmPlaceDot(row)" in javascript
     place = _between(javascript, "function prsAlarmPlaceDot", "function prsAlarmClearDot")
     assert "prs-alarm-pulse" in place
+    assert 'if("prsAlert"===row.getAttribute("objectClass"))' in place
+    assert 'row.querySelector(":scope > .prs-node-own-marks")' in place
+    assert 'row.querySelector(":scope > .prs-tree-active-btn")' in place
+    assert 'row.querySelector(":scope > .item-icon")' in place
+    assert 'after.insertAdjacentElement("afterend",dot)' in place
+    assert "function prsAlarmIsTreeRoot(row)" in javascript
+    assert "prsTreeRootIds.indexOf(id)" in javascript
+    assert "if(prsAlarmIsTreeRoot(row))" in javascript
+    assert "Старт:" in javascript
+    assert "Финиш:" in javascript
+    assert "Квитирование:" in javascript
+    assert "function prsAlarmPathLabel(dn)" in javascript
+    assert 'path.className="prs-alarm-row-path"' in javascript
+    assert 'kept.join("→")' in javascript
+    assert "fired: " not in javascript
     assert "prs-problem-menu" not in place
     assert "prs-tree-rollup-dot" not in place
     assert "prs-problem-menu-item" not in place
@@ -99,6 +114,9 @@ expect(prsAlarmRootDn("objects"), root, "root dn");
 expect(prsAlarmRootDn("tags"), "cn=tags,cn=prs", "tags root");
 expect(prsAlarmIsGuid("objects"), false, "root is not a guid");
 expect(prsAlarmIsGuid("8732294c-7312-1041-8c21-0dcaaf570565"), true, "guid");
+expect(prsAlarmPathLabel("cn=Высокий уровень,cn=Уровень,cn=Насос,cn=Цех,cn=objects,cn=prs"), "Цех→Насос→Уровень", "object to tag");
+expect(prsAlarmPathLabel("cn=Порог,cn=Давление,cn=tags,cn=prs"), "Давление", "tag only");
+expect(prsAlarmPathLabel(""), "", "no dn");
 """
     node = shutil.which("node")
     assert node, "Node.js is required to check alarm state classification"
