@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MCP-сервер платформы &mdash; документация МПК-Пересвет v0.27.0</title>
+  <title>MCP-сервер платформы &mdash; документация МПК-Пересвет v0.28.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fe5b3bda"></script>
+      <script src="_static/documentation_options.js?v=4848945e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -37,7 +37,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.27.0</div>
+  <div class="prs-version">v0.28.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -233,8 +233,11 @@ Service accounts → Add service account token, см.
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">peresvet_alert_create</span></code> — создать тревогу (порог <code class="docutils literal notranslate"><span class="pre">value</span></code>, направление
 <code class="docutils literal notranslate"><span class="pre">high</span></code>, автоквитирование <code class="docutils literal notranslate"><span class="pre">autoAck</span></code>);</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_alarms_get</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_alarm_ack</span></code> — активные тревоги
-и их квитирование.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_alarms_get</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_alarm_ack</span></code> — текущие тревоги
+и их квитирование. <code class="docutils literal notranslate"><span class="pre">fired=true</span></code> (по умолчанию) возвращает только
+активные. <code class="docutils literal notranslate"><span class="pre">fired=false</span></code> добавляет пропавшие, но ещё не квитированные.
+В элементе списка: <code class="docutils literal notranslate"><span class="pre">id</span></code>, <code class="docutils literal notranslate"><span class="pre">cn</span></code>, <code class="docutils literal notranslate"><span class="pre">tagId</span></code>, <code class="docutils literal notranslate"><span class="pre">fired</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>,
+<code class="docutils literal notranslate"><span class="pre">acked</span></code>. Квитирование без <code class="docutils literal notranslate"><span class="pre">x</span></code> берёт текущий момент.</p></li>
 </ul>
 <p><strong>Коннекторы</strong></p>
 <ul class="simple">

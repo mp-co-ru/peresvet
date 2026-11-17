@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Конфигуратор модели &mdash; документация МПК-Пересвет v0.27.0</title>
+  <title>Конфигуратор модели &mdash; документация МПК-Пересвет v0.28.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="../_static/peresvet_middle.png"/>
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=fe5b3bda"></script>
+      <script src="../_static/documentation_options.js?v=4848945e"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/sphinxcontrib-httpexample.js"></script>
@@ -37,7 +37,7 @@
     
       <img src="../_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.27.0</div>
+  <div class="prs-version">v0.28.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -260,11 +260,14 @@
 пока сервис захвата видео держит соединение с ней.</p></li>
 <li><p><strong>Красный кружок</strong> — в узле или ниже по ветке есть тревога: активная
 не квитированная, активная квитированная или пропавшая не квитированная.
-Кружок пульсирует справа у строки, слева от списка проблем ветки
-и кнопки действий. Это отдельный знак: в меню проблем его нет,
-и другие пометки он не заменяет. Когда таких тревог нет, кружок
-исчезает и место под него не остаётся. Знак поднимается к папкам,
-объектам и корням, в том числе у свёрнутой ветки.</p></li>
+У самой тревоги кружок пульсирует после её значка и значка «Узел активен».
+У родителей в ветке он пульсирует справа у строки, слева от списка
+проблем и кнопки действий. На корневые папки («Объекты», «Теги»,
+«Коннекторы», «Расписания», «Методы», «Хранилища данных») знак
+не поднимается — так же, как иконки внутренних проблем.
+Это отдельный знак: в меню проблем его нет, и другие пометки он
+не заменяет. Когда таких тревог нет, кружок исчезает и место под
+него не остаётся.</p></li>
 </ul>
 <p>У хранилища по умолчанию стоит своя пометка. Подсказка на имени любого
 узла показывает его описание.</p>
@@ -403,8 +406,10 @@
 <li><p><strong>Пропала, не квитирована</strong> — есть <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">acked</span></code> пустой.</p></li>
 </ul>
 <p>Пропавшая и уже квитированная тревога в список не приходит.
-Строка показывает имя (<code class="docutils literal notranslate"><span class="pre">cn</span></code>), подпись состояния и метки <code class="docutils literal notranslate"><span class="pre">fired</span></code>,
-<code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">acked</span></code> так, как их вернула платформа. Щелчок по строке
+Строка показывает имя (<code class="docutils literal notranslate"><span class="pre">cn</span></code>), путь от объекта к тегу
+(<code class="docutils literal notranslate"><span class="pre">Цех→Насос→Уровень</span></code>), подпись состояния и три строки
+«Старт:», «Финиш:», «Квитирование:» со значениями меток.
+Пустая метка остаётся пустой. Щелчок по строке
 раскрывает эту тревогу в дереве и открывает её свойства. Кнопка
 «Квитировать» видна, только пока <code class="docutils literal notranslate"><span class="pre">acked</span></code> пустой. Она отправляет
 <code class="docutils literal notranslate"><span class="pre">PUT</span> <span class="pre">/v1/alarms/</span></code> с телом <code class="docutils literal notranslate"><span class="pre">{&quot;id&quot;:</span> <span class="pre">&quot;&lt;id&gt;&quot;}</span></code>, без ключа <code class="docutils literal notranslate"><span class="pre">x</span></code>.
