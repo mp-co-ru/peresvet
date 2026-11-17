@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261116-jsonata-local-v59"
+CODE_VERSION = "20261117-alarm-monitor-v60"
 
 
 def _parts():
