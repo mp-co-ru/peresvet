@@ -17,7 +17,7 @@ def test_object_tree_dnd_dashboard_contract():
 
     assert dashboard["uid"] == "ddy59kw4v5ssgc"
     assert (
-        'prsConfiguratorCodeVersion="20261116-jsonata-local-v59"' in javascript
+        'prsConfiguratorCodeVersion="20261117-alarm-monitor-v60"' in javascript
     )
     for required_fragment in (
         "prsBindAllObjectTreeDnd",
