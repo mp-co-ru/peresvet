@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 import pytest
 from fastapi import HTTPException
 
+from src.services.alerts.app_api.alerts_app_api_settings import AlertsAppAPISettings
 from src.services.alerts.app_api.alerts_app_api_svc import (
     AckAlarm,
     AlarmsGet,
@@ -51,6 +52,16 @@ def test_alarms_get_formats_fired_finish_and_acked():
     assert item["finish"] is None
     assert isinstance(item["acked"], datetime)
     assert "start" not in item
+
+
+def test_alerts_api_addresses_the_alert_service():
+    settings = AlertsAppAPISettings()
+    assert settings.hierarchy["class"] == "prsAlert"
+    svc = object.__new__(AlertsAppAPI)
+    svc._config = settings
+    svc._post_message = AsyncMock(return_value={"data": []})
+    asyncio.run(svc.alarms_get(AlarmsGet.model_validate({"fired": False})))
+    assert svc._post_message.await_args.kwargs["routing_key"] == "prsAlert.app_api.get_alarms"
 
 
 def test_alarms_get_without_reply_is_an_error():
