@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Конфигуратор модели &mdash; документация МПК-Пересвет v0.26.3</title>
+  <title>Конфигуратор модели &mdash; документация МПК-Пересвет v0.27.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="../_static/peresvet_middle.png"/>
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=b876fbe9"></script>
+      <script src="../_static/documentation_options.js?v=fe5b3bda"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/sphinxcontrib-httpexample.js"></script>
@@ -37,7 +37,7 @@
     
       <img src="../_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.26.3</div>
+  <div class="prs-version">v0.27.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -258,6 +258,13 @@
 красный — нет, серый — состояние ещё не получено. Конфигуратор
 обновляет его примерно раз в пять секунд. У камеры кружок зелёный,
 пока сервис захвата видео держит соединение с ней.</p></li>
+<li><p><strong>Красный кружок</strong> — в узле или ниже по ветке есть тревога: активная
+не квитированная, активная квитированная или пропавшая не квитированная.
+Кружок пульсирует справа у строки, слева от списка проблем ветки
+и кнопки действий. Это отдельный знак: в меню проблем его нет,
+и другие пометки он не заменяет. Когда таких тревог нет, кружок
+исчезает и место под него не остаётся. Знак поднимается к папкам,
+объектам и корням, в том числе у свёрнутой ветки.</p></li>
 </ul>
 <p>У хранилища по умолчанию стоит своя пометка. Подсказка на имени любого
 узла показывает его описание.</p>
@@ -378,6 +385,36 @@
 выключить.</p>
 <p><strong>Удалить</strong> удаляет узел вместе со всеми потомками.</p>
 <p>Копирование, приостановка и удаление требуют подтверждения.</p>
+<p><strong>Тревоги.</strong> Пункт есть в меню только у узла с красным кружком.
+Он открывает справа, вместо свойств, список тревог этой ветки.
+Запрос
+<code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/alarms/?parentId=&lt;id&gt;&amp;getChildren=true&amp;fired=false&amp;format=true</span></code>
+уходит, только если идентификатор узла — GUID.
+У корневых папок идентификатор не GUID: <code class="docutils literal notranslate"><span class="pre">objects</span></code>, <code class="docutils literal notranslate"><span class="pre">tags</span></code>,
+<code class="docutils literal notranslate"><span class="pre">connectors</span></code>, <code class="docutils literal notranslate"><span class="pre">schedules</span></code>, <code class="docutils literal notranslate"><span class="pre">dataStorages</span></code>, <code class="docutils literal notranslate"><span class="pre">methods</span></code>.
+Для них <code class="docutils literal notranslate"><span class="pre">parentId</span></code> не отправляется. Список такой ветки и кружки
+берутся из <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/alarms/?fired=false&amp;format=true</span></code>.
+Этот запрос без <code class="docutils literal notranslate"><span class="pre">parentId</span></code> обновляет кружки и при открытом списке,
+и когда список закрыт.
+Пустыми считаются <code class="docutils literal notranslate"><span class="pre">null</span></code>, пустая строка, <code class="docutils literal notranslate"><span class="pre">0</span></code> и <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<ul class="simple">
+<li><p><strong>Активна, не квитирована</strong> — есть <code class="docutils literal notranslate"><span class="pre">fired</span></code>, а <code class="docutils literal notranslate"><span class="pre">finish</span></code> и <code class="docutils literal notranslate"><span class="pre">acked</span></code> пустые.</p></li>
+<li><p><strong>Активна, квитирована</strong> — есть <code class="docutils literal notranslate"><span class="pre">fired</span></code> и <code class="docutils literal notranslate"><span class="pre">acked</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code> пустой.</p></li>
+<li><p><strong>Пропала, не квитирована</strong> — есть <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">acked</span></code> пустой.</p></li>
+</ul>
+<p>Пропавшая и уже квитированная тревога в список не приходит.
+Строка показывает имя (<code class="docutils literal notranslate"><span class="pre">cn</span></code>), подпись состояния и метки <code class="docutils literal notranslate"><span class="pre">fired</span></code>,
+<code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">acked</span></code> так, как их вернула платформа. Щелчок по строке
+раскрывает эту тревогу в дереве и открывает её свойства. Кнопка
+«Квитировать» видна, только пока <code class="docutils literal notranslate"><span class="pre">acked</span></code> пустой. Она отправляет
+<code class="docutils literal notranslate"><span class="pre">PUT</span> <span class="pre">/v1/alarms/</span></code> с телом <code class="docutils literal notranslate"><span class="pre">{&quot;id&quot;:</span> <span class="pre">&quot;&lt;id&gt;&quot;}</span></code>, без ключа <code class="docutils literal notranslate"><span class="pre">x</span></code>.
+Ошибка запроса с <code class="docutils literal notranslate"><span class="pre">parentId</span></code>, квитирования и раскрытия строки
+пишется в области списка. Сбой общего запроса без <code class="docutils literal notranslate"><span class="pre">parentId</span></code>
+в список не выводится. Пока список открыт, опрос идёт примерно
+раз в три секунды. Когда список закрыт, кружки обновляются
+примерно раз в пять секунд. Щелчок по строке дерева закрывает список.
+У обычного узла открываются его свойства. У корня правая колонка
+очищается, форма не собирается.</p>
 </section>
 <section id="id12">
 <h2>Перетаскивание<a class="headerlink" href="#id12" title="Ссылка на этот заголовок"></a></h2>
@@ -629,7 +666,8 @@ JSON снова корректен. Дописанные ключи видны �
 <p>Тревога создаётся в меню тега. У неё задают условие (значение тега
 <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code> порога или <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> порога) и квитирование. Появление, пропадание
 и квитирование тревоги записываются в хранилище, к которому привязана
-тревога. Для сложного условия к тревоге добавляют метод.</p>
+тревога. Для сложного условия к тревоге добавляют метод.
+Красный кружок у ветки и список её тревог описаны в <a class="reference internal" href="#id11">Команды узла</a>.</p>
 <p>Расписание задаёт начало, конец и шаг. Метод подписывается на расписание
 так же, как на тег: расписание добавляют в его инициаторы.</p>
 </section>
