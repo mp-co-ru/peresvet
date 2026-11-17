@@ -1036,13 +1036,22 @@ async def peresvet_alarms_get(
     format_ts: bool = False,
     fired: bool = True,
 ) -> dict[str, Any]:
-    """Read active (or unacked inactive) alarms.
+    """Read current alarms.
 
-    Wraps `GET /v1/alarms/`.
+    Wraps `GET /v1/alarms/`. Omit `parent_id` to read the whole model.
 
-    - `parent_id`: object UUID or list of object UUIDs.
-    - `get_children=true`: include alarms of child objects.
-    - `fired=true`: only currently active alarms.
+    - `fired=true` (default): only active alarms.
+    - `fired=false`: active alarms and inactive alarms that are not yet
+      acknowledged. An alarm that has both ended and been acknowledged
+      is not returned.
+    - `get_children=true`: include alarms under child objects.
+    - `format_ts=true`: `fired`, `finish` and `acked` are local ISO 8601
+      strings; otherwise they are integer microseconds.
+
+    Each item has `id`, `cn`, `description`, `tagId`, `fired`, `finish`,
+    `acked`. Active and unacknowledged: `fired` set, `finish` and `acked`
+    empty. Active and acknowledged: `fired` and `acked` set, `finish`
+    empty. Gone and unacknowledged: `finish` set, `acked` empty.
     """
     query: dict[str, Any] = {
         "getChildren": get_children,

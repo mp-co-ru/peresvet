@@ -126,8 +126,11 @@ Service accounts → Add service account token, см.
 
 * ``peresvet_alert_create`` — создать тревогу (порог ``value``, направление
   ``high``, автоквитирование ``autoAck``);
-* ``peresvet_alarms_get``, ``peresvet_alarm_ack`` — активные тревоги
-  и их квитирование.
+* ``peresvet_alarms_get``, ``peresvet_alarm_ack`` — текущие тревоги
+  и их квитирование. ``fired=true`` (по умолчанию) возвращает только
+  активные. ``fired=false`` добавляет пропавшие, но ещё не квитированные.
+  В элементе списка: ``id``, ``cn``, ``tagId``, ``fired``, ``finish``,
+  ``acked``. Квитирование без ``x`` берёт текущий момент.
 
 **Коннекторы**
 
