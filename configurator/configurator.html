@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Конфигуратор модели &mdash; документация МПК-Пересвет v0.28.1</title>
+  <title>Конфигуратор модели &mdash; документация МПК-Пересвет v0.28.2</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="../_static/peresvet_middle.png"/>
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=ec301047"></script>
+      <script src="../_static/documentation_options.js?v=dbc89a2d"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/sphinxcontrib-httpexample.js"></script>
@@ -37,7 +37,7 @@
     
       <img src="../_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.28.1</div>
+  <div class="prs-version">v0.28.2</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -396,16 +396,18 @@
 У корневых папок идентификатор не GUID: <code class="docutils literal notranslate"><span class="pre">objects</span></code>, <code class="docutils literal notranslate"><span class="pre">tags</span></code>,
 <code class="docutils literal notranslate"><span class="pre">connectors</span></code>, <code class="docutils literal notranslate"><span class="pre">schedules</span></code>, <code class="docutils literal notranslate"><span class="pre">dataStorages</span></code>, <code class="docutils literal notranslate"><span class="pre">methods</span></code>.
 Для них <code class="docutils literal notranslate"><span class="pre">parentId</span></code> не отправляется. Список такой ветки и кружки
-берутся из <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/alarms/?fired=false&amp;format=true</span></code>.
-Этот запрос без <code class="docutils literal notranslate"><span class="pre">parentId</span></code> обновляет кружки и при открытом списке,
-и когда список закрыт.
+берутся из <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/alarms/?getChildren=true&amp;fired=false&amp;format=true</span></code>.
+<code class="docutils literal notranslate"><span class="pre">getChildren</span></code> нужен, чтобы в ответ вошли тревоги вложенных объектов,
+а не только верхнего уровня. Этот запрос без <code class="docutils literal notranslate"><span class="pre">parentId</span></code> обновляет
+кружки и при открытом списке, и когда список закрыт.
 Пустыми считаются <code class="docutils literal notranslate"><span class="pre">null</span></code>, пустая строка, <code class="docutils literal notranslate"><span class="pre">0</span></code> и <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 <ul class="simple">
 <li><p><strong>Активна, не квитирована</strong> — есть <code class="docutils literal notranslate"><span class="pre">fired</span></code>, а <code class="docutils literal notranslate"><span class="pre">finish</span></code> и <code class="docutils literal notranslate"><span class="pre">acked</span></code> пустые.</p></li>
 <li><p><strong>Активна, квитирована</strong> — есть <code class="docutils literal notranslate"><span class="pre">fired</span></code> и <code class="docutils literal notranslate"><span class="pre">acked</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code> пустой.</p></li>
 <li><p><strong>Пропала, не квитирована</strong> — есть <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">acked</span></code> пустой.</p></li>
 </ul>
-<p>Пропавшая и уже квитированная тревога в список не приходит.
+<p>Пропавшая и уже квитированная тревога в этот ответ приходит с пустыми
+метками, поэтому строка и кружок для неё не рисуются.
 Строка показывает имя (<code class="docutils literal notranslate"><span class="pre">cn</span></code>), путь от объекта к тегу
 (<code class="docutils literal notranslate"><span class="pre">Цех→Насос→Уровень</span></code>), подпись состояния и три строки
 «Старт:», «Финиш:», «Квитирование:» со значениями меток.
@@ -482,10 +484,18 @@
 <h2>Тег: хранилище, коннектор и данные<a class="headerlink" href="#id14" title="Ссылка на этот заголовок"></a></h2>
 <p>У тега справа есть вкладки <strong>Хранилище</strong> и <strong>Коннектор</strong>, у тревоги —
 только <strong>Хранилище</strong>.</p>
-<p><strong>Хранилище.</strong> Тег или тревога пишутся в одно хранилище. Выбор другого
-хранилища отвязывает узел от прежнего. На этой же вкладке у тега лежит блок
-«Данные тега» (см. ниже). Те же связи видны со стороны хранилищ —
-в папке «Хранилища данных».</p>
+<p><strong>Хранилище.</strong> Тег или тревога пишутся в одно хранилище. На вкладке
+<strong>Хранилище</strong> выбирают его в списке — и у тега, и у тревоги. Выбор другого
+хранилища отвязывает узел от прежнего. Таблицу задаёт само хранилище:
+у тревоги она называется <code class="docutils literal notranslate"><span class="pre">a_&lt;id</span> <span class="pre">тревоги&gt;</span></code>. На этой же вкладке у тега лежит
+блок «Данные тега» (см. ниже). У тревоги там же блок «Данные тревоги»:
+запрос на чтение устроен так же, как у тега (строка <code class="docutils literal notranslate"><span class="pre">GET</span></code>, ключи
+<code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">fired</span></code>, <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code> и кнопка
+«Получить данные»). <code class="docutils literal notranslate"><span class="pre">parentId</span></code> в запросе — идентификатор тревоги.
+Пока <code class="docutils literal notranslate"><span class="pre">fired</span></code> включён, приходит эпизод, активный в момент <code class="docutils literal notranslate"><span class="pre">finish</span></code>
+(если <code class="docutils literal notranslate"><span class="pre">finish</span></code> пуст — сейчас), и <code class="docutils literal notranslate"><span class="pre">count</span></code> в запрос не попадает.
+В таблице — старт, финиш и квитирование.
+Те же связи видны со стороны хранилищ — в папке «Хранилища данных».</p>
 <p><strong>Коннектор.</strong> Тег получает данные от одного коннектора. На вкладке задают
 описание связи и её конфигурацию в JSON: адрес регистра, топик и другие
 параметры, по которым коннектор найдёт значение этого тега в источнике.
@@ -515,6 +525,7 @@ ISO 8601. Для <code class="docutils literal notranslate"><span class="pre">st
 <img alt="Запрос на чтение тега" src="../_images/08.tag-read.png" />
 </figure>
 <p><strong>Запрос на запись.</strong> Задайте значение и, при необходимости, метку времени.
+Тело запроса в поле <code class="docutils literal notranslate"><span class="pre">body</span></code> собирается сразу, по мере ввода.
 Пустая метка означает текущий момент. Метку можно указать целым числом
 микросекунд или датой со временем; кнопка календаря подставляет дату
 с часовым поясом. Перед отправкой значение приводится к типу тега.
@@ -692,9 +703,10 @@ JSON снова корректен. Дописанные ключи видны �
 <section id="id19">
 <h2>Хранилища данных<a class="headerlink" href="#id19" title="Ссылка на этот заголовок"></a></h2>
 <p>Папка «Хранилища данных» справа показывает карточки всех хранилищ.
-Под хранилищем в дереве перечислены привязанные к нему теги. Привязка
-названа путём тега в иерархии: объекты и папки до тега, разделённые
-стрелкой <code class="docutils literal notranslate"><span class="pre">→</span></code>.</p>
+Под хранилищем в дереве перечислены привязанные к нему теги и тревоги.
+Привязка названа путём узла в иерархии: объекты и папки до тега или тревоги,
+разделённые стрелкой <code class="docutils literal notranslate"><span class="pre">→</span></code>. Саму привязку задают на вкладке <strong>Хранилище</strong>
+тега или тревоги.</p>
 <p>Щелчок по привязке открывает её параметры. У хранилища истории это таблица,
 у видеоархива — каталог и срок хранения. Те же сведения есть на вкладке
 <strong>Хранилище</strong> в свойствах тега.</p>

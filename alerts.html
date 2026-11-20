@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Тревоги &mdash; документация МПК-Пересвет v0.28.1</title>
+  <title>Тревоги &mdash; документация МПК-Пересвет v0.28.2</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=ec301047"></script>
+      <script src="_static/documentation_options.js?v=dbc89a2d"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -37,7 +37,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.28.1</div>
+  <div class="prs-version">v0.28.2</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -151,12 +151,25 @@
 </section>
 <section id="id3">
 <h2>Список и квитирование<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/alarms/</span></code> возвращает активные тревоги. С <code class="docutils literal notranslate"><span class="pre">fired=false</span></code> в список
-добавляются уже пропавшие, но ещё не квитированные. Без <code class="docutils literal notranslate"><span class="pre">parentId</span></code>
-отдаются тревоги всей модели — так их берёт панель Grafana.
-<code class="docutils literal notranslate"><span class="pre">getChildren=true</span></code> включает тревоги дочерних узлов.
-Без <code class="docutils literal notranslate"><span class="pre">format</span></code> метки — целые микросекунды. С <code class="docutils literal notranslate"><span class="pre">format=true</span></code> — строки
-местного времени ISO 8601.</p>
+<p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/alarms/</span></code> читает алярмы. <code class="docutils literal notranslate"><span class="pre">parentId</span></code> — объект, тег, сама тревога
+или список таких узлов. <code class="docutils literal notranslate"><span class="pre">getChildren=true</span></code> включает дочерние объекты.</p>
+<p>Без <code class="docutils literal notranslate"><span class="pre">parentId</span></code> и без <code class="docutils literal notranslate"><span class="pre">getChildren</span></code> возвращаются алярмы объектов
+верхнего уровня и всех тегов из папки «Теги». Без <code class="docutils literal notranslate"><span class="pre">parentId</span></code>, но с
+<code class="docutils literal notranslate"><span class="pre">getChildren=true</span></code> — алярмы всей ветки объектов и той же папки «Теги».
+Так кружки в дереве берёт панель Grafana: <code class="docutils literal notranslate"><span class="pre">getChildren=true</span></code> и
+<code class="docutils literal notranslate"><span class="pre">fired=false</span></code>, без <code class="docutils literal notranslate"><span class="pre">parentId</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">fired=true</span></code> (значение по умолчанию) — эпизод, который был активен
+в момент <code class="docutils literal notranslate"><span class="pre">finish</span></code>. <code class="docutils literal notranslate"><span class="pre">finish</span></code> по умолчанию — текущее время. Ключ
+<code class="docutils literal notranslate"><span class="pre">count</span></code> при <code class="docutils literal notranslate"><span class="pre">fired</span></code> не используется. <code class="docutils literal notranslate"><span class="pre">start</span></code> оставляет только те
+из них, чей старт не раньше этой метки.</p>
+<p><code class="docutils literal notranslate"><span class="pre">fired=false</span></code> без <code class="docutils literal notranslate"><span class="pre">start</span></code> и без <code class="docutils literal notranslate"><span class="pre">count</span></code> — состояние каждой тревоги
+на момент <code class="docutils literal notranslate"><span class="pre">finish</span></code>, в том числе неактивной: один ряд на тревогу.
+<code class="docutils literal notranslate"><span class="pre">fired=false</span></code> вместе со <code class="docutils literal notranslate"><span class="pre">start</span></code> или <code class="docutils literal notranslate"><span class="pre">count</span></code> — список срабатываний.
+<code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> ограничивают метку старта, <code class="docutils literal notranslate"><span class="pre">count</span></code> — сколько
+последних эпизодов вернуть по каждой тревоге (не больше 500).</p>
+<p>Без <code class="docutils literal notranslate"><span class="pre">format</span></code> метки — целые микросекунды. С <code class="docutils literal notranslate"><span class="pre">format=true</span></code> — строки
+местного времени ISO 8601. Параметр <code class="docutils literal notranslate"><span class="pre">alertId</span></code> означает то же, что
+<code class="docutils literal notranslate"><span class="pre">parentId</span></code> с идентификатором тревоги.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/alarms/?parentId=&lt;id объекта&gt;&amp;getChildren=true&amp;format=true
 </pre></div>
 </div>
@@ -178,10 +191,33 @@
 </pre></div>
 </div>
 <p>Конфигуратор (<a class="reference internal" href="configurator/configurator.html#configurator"><span class="std std-ref">Конфигуратор модели</span></a>) берёт этот список с <code class="docutils literal notranslate"><span class="pre">fired=false</span></code>
-и квитирует тем же <code class="docutils literal notranslate"><span class="pre">PUT</span></code>.</p>
+и квитирует тем же <code class="docutils literal notranslate"><span class="pre">PUT</span></code>. В списке он показывает только активные
+и пропавшие, но ещё не квитированные. Пропавшая и уже квитированная
+в этом ответе с пустыми метками: эпизод закрыт, и список её не рисует.
+Сами срабатывания читаются с <code class="docutils literal notranslate"><span class="pre">fired=false</span></code> и <code class="docutils literal notranslate"><span class="pre">count</span></code> или <code class="docutils literal notranslate"><span class="pre">start</span></code>.</p>
+<p>Список срабатываний одной тревоги — те же поля, по ряду на эпизод:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/alarms/?parentId=&lt;id тревоги&gt;&amp;fired=false&amp;count=2&amp;format=true
+</pre></div>
+</div>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span>
+<span class="w">  </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id тревоги&gt;"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Высокий уровень"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id тега&gt;"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"fired"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-11-17T19:10:58.571809+03:00"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"finish"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-11-17T19:12:16.078625+03:00"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"acked"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-11-17T19:15:00.000000+03:00"</span>
+<span class="p">}]}</span>
+</pre></div>
+</div>
+<p>На вкладке <strong>Хранилище</strong> тревоги в Конфигураторе тот же запрос собран
+как чтение истории тега: строка <code class="docutils literal notranslate"><span class="pre">GET</span></code>, ключи <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">fired</span></code>,
+<code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code> и кнопка «Получить данные».
+Пока <code class="docutils literal notranslate"><span class="pre">fired</span></code> включён, в ответе не больше одного эпизода — того,
+что активно в момент <code class="docutils literal notranslate"><span class="pre">finish</span></code>.</p>
 <p>История значений тега запрашивается через <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/</span></code>. Идентификатор
 тревоги для этого запроса не годится: ответ <code class="docutils literal notranslate"><span class="pre">422</span></code> и пояснение, что события
-тревоги читаются через <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/alarms/</span></code>.</p>
+тревоги читаются через <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/alarms/?parentId=</span></code>.</p>
 <p id="module-alerts_api_crud_svc">Запросы на создание, чтение, обновление, удаление тревог.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="alerts_api_crud_svc.AlertCopy">
