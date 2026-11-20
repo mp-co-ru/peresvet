@@ -61,8 +61,8 @@ def test_alarm_monitor_is_a_separate_tree_mark_and_uses_the_alarms_api():
     assert 'data-tb="__alarms__"' in javascript
     assert 'if("__alarms__"===t)return void prsAlarmOpenList(r)' in javascript
     assert 'prsAlarmUrl("?parentId="+encodeURIComponent(window.prsAlarmListNodeId)+"&getChildren=true&fired=false&format=true")' in javascript
-    assert 'prsAlarmUrl("?fired=false&format=true")' in javascript
-    assert "parentId" not in 'prsAlarmUrl("?fired=false&format=true")'
+    assert 'prsAlarmUrl("?getChildren=true&fired=false&format=true")' in javascript
+    assert "parentId" not in 'prsAlarmUrl("?getChildren=true&fired=false&format=true")'
     ack = _between(javascript, "function prsAlarmAck", "function prsAlarmOpenList")
     assert 'body:JSON.stringify({id:String(id)})' in ack
     assert 'method:"PUT"' in ack

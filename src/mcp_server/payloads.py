@@ -127,9 +127,14 @@ def alarms_query_to_params(query: dict[str, Any]) -> list[tuple[str, str]]:
     params: list[tuple[str, str]] = []
     if "parentId" in query and query["parentId"] is not None:
         add_list(params, "parentId", query["parentId"])
+    if query.get("alertId"):
+        params.append(("alertId", str(query["alertId"])))
     for k in ("getChildren", "format", "fired"):
         if k in query and query[k] is not None:
             params.append((k, bool_str(query[k])))
+    for k in ("start", "finish", "count"):
+        if query.get(k) is not None and query.get(k) != "":
+            params.append((k, str(query[k])))
     return params
 
 

@@ -87,6 +87,10 @@ class _Conn:
         row = self.rows[0]
         return {"x": row["x"], "cx": row["cx"], "e": row["e"]}
 
+    async def fetch(self, query, *args):
+        self.fetched = (query, args)
+        return self.rows
+
 
 class _Pool:
     def __init__(self, conn):
@@ -129,3 +133,27 @@ def test_alarm_on_off_and_ack_write_x_e_and_cx():
     svc, conn = _svc([{"id": 7, "x": 100, "cx": None, "e": None}])
     state = asyncio.run(svc._alarm_state({"alertId": "a1"}))
     assert state == {"alertId": "a1", "x": 100, "cx": None, "e": None}
+
+
+def test_alarm_history_reads_episode_rows():
+    svc, conn = _svc([
+        {"x": 300, "cx": 320, "e": 310},
+        {"x": 100, "cx": None, "e": 180},
+    ])
+    history = asyncio.run(svc._alarm_history({"alertId": "a1", "start": 150, "count": 10}))
+    query, args = conn.fetched
+    assert 'from "a_a1"' in query
+    assert "x >= $1" in query
+    assert "order by x desc" in query
+    assert args == (150, 10)
+    history = asyncio.run(svc._alarm_history({
+        "alertId": "a1", "start": 150, "finish": 400, "count": 10,
+    }))
+    query, args = conn.fetched
+    assert "x <= $2" in query
+    assert args == (150, 400, 10)
+    assert history["data"][0]["fired"] == 300
+    assert history["data"] == [
+        {"fired": 300, "acked": 320, "finish": 310},
+        {"fired": 100, "acked": None, "finish": 180},
+    ]
