@@ -2,6 +2,7 @@
 Модуль содержит классы, описывающие входные данные для команд CRUD для тегов
 и класс сервиса ``tags_api_crud_svc``.
 """
+import asyncio
 import sys
 import json
 
@@ -57,6 +58,130 @@ def alarm_is_pending(alarm: dict) -> bool:
         and _ts_or_none(alarm.get("finish")) is not None
         and _ts_or_none(alarm.get("acked")) is None
     )
+
+
+def _object_classes(attrs: dict | None) -> set[str]:
+    raw = (attrs or {}).get("objectClass") or []
+    if isinstance(raw, str):
+        raw = [raw]
+    classes = set()
+    for item in raw:
+        if item is None:
+            continue
+        if isinstance(item, bytes):
+            item = item.decode()
+        classes.add(str(item))
+    return classes
+
+
+def _dn_under(dn: str | None, parent_dn: str | None) -> bool:
+    if not dn or not parent_dn:
+        return False
+    return dn.lower().endswith("," + parent_dn.lower())
+
+
+def _query_ts(value):
+    if value is None or value == "" or isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value or None
+    try:
+        return t.ts(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _query_count(value) -> int | None:
+    if value is None or value == "":
+        return None
+    try:
+        count = int(value)
+    except (TypeError, ValueError):
+        return None
+    if count < 1:
+        return 1
+    if count > 500:
+        return 500
+    return count
+
+
+def _cache_episodes(alarm: dict) -> list[dict]:
+    item = alarm_list_item("", alarm)
+    if item["fired"] is None and item["finish"] is None and item["acked"] is None:
+        return []
+    return [{
+        "fired": item["fired"],
+        "finish": item["finish"],
+        "acked": item["acked"],
+    }]
+
+
+def select_alarm_episodes(
+    episodes: list[dict] | None,
+    *,
+    fired: bool,
+    start: int | None,
+    finish: int,
+    count: int | None,
+) -> list[dict]:
+    """Отбор эпизодов одной тревоги.
+
+    ``fired=True`` — только эпизод, активный в момент ``finish``. ``count``
+    тогда игнорируется. Без ``fired``, ``start`` и ``count`` — состояние
+    тревоги в момент ``finish``: активный эпизод, пропавший и ещё не
+    квитированный, либо пустые метки, если эпизод уже закрыт.
+    ``start`` или ``count`` при ``fired=False`` — список эпизодов со стартом
+    в ``[start, finish]``, не больше ``count`` последних (если ``count``
+    не задан — не больше 500).
+    """
+    clean = []
+    for row in episodes or []:
+        if not isinstance(row, dict):
+            continue
+        started = _ts_or_none(row.get("fired"))
+        if started is None:
+            continue
+        clean.append({
+            "fired": started,
+            "finish": _ts_or_none(row.get("finish")),
+            "acked": _ts_or_none(row.get("acked")),
+        })
+    clean.sort(key=lambda row: row["fired"], reverse=True)
+
+    def clip(row: dict) -> dict:
+        out = dict(row)
+        if out["finish"] is not None and out["finish"] > finish:
+            out["finish"] = None
+        if out["acked"] is not None and out["acked"] > finish:
+            out["acked"] = None
+        return out
+
+    def covers(row: dict) -> bool:
+        ended = row["finish"]
+        return row["fired"] <= finish and (ended is None or ended > finish)
+
+    if fired:
+        chosen = next((row for row in clean if covers(row)), None)
+        if chosen is None or (start is not None and chosen["fired"] < start):
+            return []
+        return [clip(chosen)]
+
+    if start is None and count is None:
+        chosen = next((row for row in clean if row["fired"] <= finish), None)
+        if chosen is None:
+            return [{"fired": None, "finish": None, "acked": None}]
+        clipped = clip(chosen)
+        # Закрытый эпизод — это уже не состояние, а история. Её отдают count и start.
+        if clipped["finish"] is not None and clipped["acked"] is not None:
+            return [{"fired": None, "finish": None, "acked": None}]
+        return [clipped]
+
+    window = [
+        row for row in clean
+        if row["fired"] <= finish and (start is None or row["fired"] >= start)
+    ]
+    limit = 500 if count is None else count
+    return [clip(row) for row in window[:limit]]
 
 
 def alarm_list_item(alert_id: str, alarm: dict) -> dict:
@@ -228,66 +353,169 @@ class AlertsApp(AppSvc):
             self._logger.warning(f"{self._config.svc_name} :: Тег {tag_id} не привязан к хранилищу.")
             return True
 
+    async def _root_base(self, name: str) -> str:
+        dn = f"cn={name},cn=prs"
+        getter = getattr(self._hierarchy, "get_node_id", None)
+        if getter is None:
+            return dn
+        try:
+            node_id = await getter(dn)
+        except Exception:
+            return dn
+        return node_id or dn
+
+    async def _search_nodes(self, base: str | None, scope: int, object_class: str) -> list:
+        payload = {
+            "scope": scope,
+            "filter": {
+                "objectClass": [object_class],
+                "prsActive": [True],
+            },
+            "attributes": ["cn", "objectClass"],
+        }
+        if base:
+            payload["base"] = base
+        found = await self._hierarchy.search(payload)
+        return found or []
+
+    async def _lookup_node(self, node_id: str):
+        found = await self._hierarchy.search({
+            "id": node_id,
+            "attributes": ["objectClass", "cn"],
+        })
+        return found[0] if found else None
+
+    def _without_child_objects(self, alerts: list, child_objects: list) -> list:
+        child_dns = [row[1] for row in child_objects if row[1]]
+        if not child_dns:
+            return alerts
+        kept = []
+        for alert in alerts:
+            dn = alert[1]
+            if any(_dn_under(dn, child) for child in child_dns):
+                continue
+            kept.append(alert)
+        return kept
+
+    async def _alarms_of_object(self, object_id: str, get_children: bool) -> list:
+        if get_children:
+            return await self._search_nodes(object_id, CN_SCOPE_SUBTREE, "prsAlert")
+        alerts = await self._search_nodes(object_id, CN_SCOPE_SUBTREE, "prsAlert")
+        # Вложенный объект может лежать в папке, не прямым потомком.
+        descendants = await self._search_nodes(object_id, CN_SCOPE_SUBTREE, "prsObject")
+        descendants = [row for row in descendants if row[0] != object_id]
+        return self._without_child_objects(alerts, descendants)
+
+    async def _alarms_for_parent(self, parent: str, get_children: bool) -> list:
+        node = await self._lookup_node(parent)
+        classes = _object_classes(node[2]) if node else set()
+        if "prsAlert" in classes:
+            return [node]
+        if "prsTag" in classes:
+            scope = CN_SCOPE_SUBTREE if get_children else CN_SCOPE_ONELEVEL
+            return await self._search_nodes(parent, scope, "prsAlert")
+        if "prsObject" in classes:
+            return await self._alarms_of_object(parent, get_children)
+        scope = CN_SCOPE_SUBTREE if get_children else CN_SCOPE_ONELEVEL
+        return await self._search_nodes(parent, scope, "prsAlert")
+
+    async def _top_level_objects(self, objects_root: str) -> list:
+        objects = await self._search_nodes(objects_root, CN_SCOPE_SUBTREE, "prsObject")
+        top = []
+        for obj in objects:
+            dn = obj[1]
+            if any(
+                other[0] != obj[0] and _dn_under(dn, other[1])
+                for other in objects
+            ):
+                continue
+            top.append(obj)
+        return top
+
+    async def _alarm_scope(self, parents: list[str] | None, get_children: bool) -> list:
+        if not parents:
+            objects_root = await self._root_base("objects")
+            tags_root = await self._root_base("tags")
+            if get_children:
+                rows = await self._search_nodes(objects_root, CN_SCOPE_SUBTREE, "prsAlert")
+                rows += await self._search_nodes(tags_root, CN_SCOPE_SUBTREE, "prsAlert")
+            else:
+                rows = []
+                for obj in await self._top_level_objects(objects_root):
+                    rows += await self._alarms_of_object(obj[0], False)
+                rows += await self._search_nodes(tags_root, CN_SCOPE_SUBTREE, "prsAlert")
+        else:
+            rows = []
+            for parent in parents:
+                rows += await self._alarms_for_parent(parent, get_children)
+        found = []
+        seen = set()
+        for row in rows:
+            if not row or row[0] in seen:
+                continue
+            seen.add(row[0])
+            found.append(row)
+        return found
+
+    async def _read_alarm_episodes(
+        self,
+        alert_id: str,
+        start: int | None,
+        finish: int,
+        count: int,
+    ) -> list:
+        body = {"alertId": alert_id, "finish": finish, "count": count}
+        if start is not None:
+            body["start"] = start
+        try:
+            res = await self._post_message(
+                body,
+                reply=True,
+                timeout=5.0,
+                routing_key=f"{self._config.hierarchy['class']}.app.alarm_history.{alert_id}",
+            )
+        except Exception as ex:
+            self._logger.error(
+                f"{self._config.svc_name} :: История тревоги {alert_id} не прочитана: {ex}"
+            )
+            return []
+        if not isinstance(res, dict):
+            return []
+        data = res.get("data")
+        return data if isinstance(data, list) else []
+
     async def _get_alarms(self, mes: dict, routing_key: str = None) -> dict:
-        """
-        Метод получения алярмов.
-        Пока получаем только текущие алярмы - либо активные, либо незаквитированные.
-        #TODO: Работа с историей алармов
+        """Алярмы по правилам ``AlarmsGet``.
 
-        Args:
-            mes (dict):
-                parentId: str | list[str] - Объект, тревоги которого запрашиваем.
-                getChildren: bool = False - Учитывать тревоги дочерних объектов.
-                format: bool = False - форматировать метки времени.
-                fired: bool = True - только активированные/
-
-        Returns:
-            dict: _description_
+        ``fired`` (по умолчанию да) — эпизод, активный в момент ``finish``.
+        ``finish`` по умолчанию — текущее время. ``count`` при ``fired``
+        не используется. Без ``fired``, ``start`` и ``count`` возвращается
+        состояние каждой тревоги на момент ``finish``. ``start`` или
+        ``count`` без ``fired`` — список эпизодов.
         """
         parents = mes.get("parentId")
         if isinstance(parents, str):
             parents = [parents]
         elif parents is not None and not isinstance(parents, list):
             parents = [parents]
-        # Без родителя — тревоги всей модели: список нужен панели Grafana.
-        search_all = not parents
-        scope = CN_SCOPE_SUBTREE if search_all or mes.get("getChildren") else CN_SCOPE_ONELEVEL
-        bases = [None] if search_all else parents
-        alerts = []
-        seen = set()
-        for base in bases:
-            payload = {
-                "scope": scope,
-                "filter": {
-                    "objectClass": ["prsAlert"],
-                    "prsActive": [True]
-                },
-                "attributes": ["cn"]
-            }
-            if base:
-                payload["base"] = base
-            found = await self._hierarchy.search(payload)
-            for row in found or []:
-                if row[0] in seen:
-                    continue
-                seen.add(row[0])
-                alerts.append(row)
-        result = {
-            "data": []
-        }
+        get_children = bool(mes.get("getChildren"))
         fired_only = bool(mes.get("fired", True))
+        start = _query_ts(mes.get("start"))
+        finish = _query_ts(mes.get("finish"))
+        count = None if fired_only else _query_count(mes.get("count"))
+        now = t.now_int()
+        point = now if finish is None else finish
+        # Текущее состояние уже лежит в кэше. Таблица нужна для прошлого
+        # момента и для списка эпизодов.
+        use_history = start is not None or point < now or count is not None
+        alerts = await self._alarm_scope(parents, get_children)
+        result = {"data": []}
+        prepared = []
         async with self._cache.get_redis() as r:
             for alert in alerts:
                 alarm = await r.json().get(f"{alert[0]}.{self._config.svc_name}")
-                if alarm is None:
-                    self._logger.error(f"{self._config.svc_name} :: Нет кэша для тревоги {alert[0]}")
-                    continue
                 if not isinstance(alarm, dict):
-                    continue
-                if fired_only:
-                    if not alarm_is_active(alarm):
-                        continue
-                elif not alarm_is_active(alarm) and not alarm_is_pending(alarm):
+                    self._logger.error(f"{self._config.svc_name} :: Нет кэша для тревоги {alert[0]}")
                     continue
                 if not alarm.get("tagId"):
                     try:
@@ -295,8 +523,35 @@ class AlertsApp(AppSvc):
                         alarm["tagId"] = tag_id
                     except Exception:
                         alarm["tagId"] = ""
-                result["data"].append(alarm_list_item(alert[0], alarm))
+                prepared.append((alert[0], alarm))
 
+        if use_history:
+            fetch_count = count or 500
+            histories = await asyncio.gather(*(
+                self._read_alarm_episodes(alert_id, start, point, fetch_count)
+                for alert_id, _alarm in prepared
+            ))
+        else:
+            histories = [_cache_episodes(alarm) for _alert_id, alarm in prepared]
+
+        for (alert_id, alarm), episodes in zip(prepared, histories):
+            rows = select_alarm_episodes(
+                episodes,
+                fired=fired_only,
+                start=start,
+                finish=point,
+                count=count,
+            )
+            for row in rows:
+                result["data"].append({
+                    "id": alert_id,
+                    "cn": alarm.get("cn") or "",
+                    "description": alarm.get("description") or "",
+                    "tagId": alarm.get("tagId") or "",
+                    "fired": row.get("fired"),
+                    "finish": row.get("finish"),
+                    "acked": row.get("acked"),
+                })
         return result
 
     async def _ack_alarm(self, mes: dict, routing_key: str = None):

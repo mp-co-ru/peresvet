@@ -143,6 +143,8 @@ def test_tag_read_request_ux_dashboard_contract():
     assert write.index('id="span-tagSetDataURL"') < write.index('id="input-tagSetDataValue"')
     assert write.index('id="input-tagSetDataValue"') < write.index('id="input-tagSetDataTime"')
     assert write.index('id="input-tagSetDataTime"') < write.index('id="span-tagSetDataBody"')
+    assert 'id="input-tagSetDataValue" oninput="tagSetDataValueChanged();"' in write
+    assert 'n("#span-tagSetDataBody").val(' in javascript
 
     # Write tab / export / results table preserved
     assert 'id="prs-tag-pane-write"' in html

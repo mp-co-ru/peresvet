@@ -24,7 +24,7 @@ def test_storage_tag_bindings_use_tag_paths_and_a_context_menu():
     assert "prsDsTagPathLabel=function(index,tagId)" in javascript
     assert 'names.join(" → ")' in javascript
     assert "function prsVideoTagOnHistorian()" in javascript
-    assert "(s||prsVideoTagOnHistorian())?be()" in javascript
+    assert '(s||"prsTag"===t&&prsVideoTagOnHistorian())?be()' in javascript
     assert "3!==r.entityType" in javascript
     assert "prsDsTagOpenPath=function(index,tagId)" in javascript
     assert "prsDsTagPathLoad(!1)" in javascript

@@ -3,7 +3,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 from src.common.amqp_rpc import NO_AMQP_RPC_REPLY
-from src.services.alerts.app.alerts_app_svc import AlertsApp
+from src.services.alerts.app.alerts_app_svc import AlertsApp, select_alarm_episodes
 
 
 class _Logger:
@@ -112,7 +112,10 @@ def test_make_alert_cache_and_get_alarms():
     assert store["a1.alerts_app"]["value"] == 10
     svc._hierarchy.search = AsyncMock(return_value=row)
     idle = asyncio.run(svc._get_alarms({"parentId": "obj", "fired": False, "getChildren": False}))
-    assert idle["data"] == []
+    assert idle["data"][0]["id"] == "a1"
+    assert idle["data"][0]["fired"] is None
+    assert idle["data"][0]["finish"] is None
+    assert idle["data"][0]["acked"] is None
     store["a1.alerts_app"]["fired"] = 100
     store["a1.alerts_app"]["tagId"] = "tag-1"
     alarms = asyncio.run(svc._get_alarms({"fired": True}))
@@ -256,3 +259,118 @@ def test_ack_clears_pending_episode_and_cache_restores_open_row():
     svc3._post_message = post_open
     assert asyncio.run(svc3._make_alert_cache("a1")) is True
     assert fresh["a1.alerts_app"]["fired"] == 50
+
+
+EPISODES = [
+    {"fired": 300, "finish": 310, "acked": 320},
+    {"fired": 100, "finish": 180, "acked": 200},
+]
+
+
+def test_select_alarm_episodes_follows_fired_start_and_count():
+    active = select_alarm_episodes(EPISODES, fired=True, start=None, finish=150, count=50)
+    assert active == [{"fired": 100, "finish": None, "acked": None}]
+    assert select_alarm_episodes(EPISODES, fired=True, start=150, finish=305, count=None) == [
+        {"fired": 300, "finish": None, "acked": None}
+    ]
+    state = select_alarm_episodes(EPISODES, fired=False, start=None, finish=150, count=None)
+    assert state == [{"fired": 100, "finish": None, "acked": None}]
+    listed = select_alarm_episodes(EPISODES, fired=False, start=50, finish=400, count=1)
+    assert listed == [{"fired": 300, "finish": 310, "acked": 320}]
+    idle = select_alarm_episodes([], fired=False, start=None, finish=150, count=None)
+    assert idle == [{"fired": None, "finish": None, "acked": None}]
+    closed = select_alarm_episodes(EPISODES, fired=False, start=None, finish=400, count=None)
+    assert closed == [{"fired": None, "finish": None, "acked": None}]
+    pending = select_alarm_episodes(
+        [{"fired": 100, "finish": 180, "acked": None}],
+        fired=False, start=None, finish=400, count=None,
+    )
+    assert pending == [{"fired": 100, "finish": 180, "acked": None}]
+    assert select_alarm_episodes([], fired=True, start=None, finish=150, count=None) == []
+
+
+def test_get_alarms_reads_history_when_count_is_set():
+    store = {
+        "a1.alerts_app": {
+            "fired": False,
+            "acked": 320,
+            "finish": 310,
+            "episodeStart": 300,
+            "cn": "hi",
+            "description": "",
+            "tagId": "tag-1",
+        }
+    }
+    svc = _svc(store=store, alerts=[("a1", None, {"cn": ["hi"]})])
+    svc._hierarchy.search = AsyncMock(return_value=[("a1", None, {"cn": ["hi"]})])
+    svc._post_message = AsyncMock(return_value={"data": EPISODES})
+    res = asyncio.run(svc._get_alarms({
+        "parentId": "obj",
+        "fired": False,
+        "count": 2,
+    }))
+    assert [row["fired"] for row in res["data"]] == [300, 100]
+    body = svc._post_message.await_args.args[0]
+    assert body["alertId"] == "a1"
+    assert body["count"] == 2
+    assert "alarm_history.a1" in svc._post_message.await_args.kwargs["routing_key"]
+
+
+def test_object_without_children_skips_alarms_of_nested_objects():
+    parent = "obj"
+    parent_dn = "cn=Цех,cn=objects,cn=prs"
+    child_dn = "cn=Насос,cn=Цех,cn=objects,cn=prs"
+    own = ("a-own", "cn=hi,cn=Уровень," + parent_dn, {"cn": ["own"]})
+    nested = ("a-nested", "cn=hi,cn=Уровень," + child_dn, {"cn": ["nested"]})
+
+    async def search(payload):
+        if payload.get("id") == parent:
+            return [(parent, parent_dn, {"objectClass": ["prsObject"]})]
+        classes = (payload.get("filter") or {}).get("objectClass")
+        if classes == ["prsAlert"]:
+            return [own, nested]
+        if classes == ["prsObject"]:
+            return [
+                (parent, parent_dn, {"objectClass": ["prsObject"]}),
+                ("child", child_dn, {"objectClass": ["prsObject"]}),
+            ]
+        return []
+
+    def alarm(name):
+        return {
+            "fired": 10,
+            "acked": False,
+            "finish": None,
+            "episodeStart": None,
+            "cn": name,
+            "description": "",
+            "tagId": "t",
+        }
+
+    svc = _svc(store={
+        "a-own.alerts_app": alarm("own"),
+        "a-nested.alerts_app": alarm("nested"),
+    })
+    svc._hierarchy.search = search
+    own_only = asyncio.run(svc._get_alarms({
+        "parentId": parent, "fired": True, "getChildren": False,
+    }))
+    assert [row["id"] for row in own_only["data"]] == ["a-own"]
+    both = asyncio.run(svc._get_alarms({
+        "parentId": parent, "fired": True, "getChildren": True,
+    }))
+    assert {row["id"] for row in both["data"]} == {"a-own", "a-nested"}
+
+
+def test_get_alarms_without_parent_uses_object_and_tag_roots():
+    calls = []
+
+    async def search(payload):
+        calls.append(payload.get("base"))
+        return []
+
+    svc = _svc()
+    svc._hierarchy.search = search
+    asyncio.run(svc._get_alarms({"fired": True}))
+    assert "cn=objects,cn=prs" in calls
+    assert "cn=tags,cn=prs" in calls

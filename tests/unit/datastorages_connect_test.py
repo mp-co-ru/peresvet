@@ -135,6 +135,52 @@ def test_empty_storage_does_not_block_and_connects_after_config():
     asyncio.run(run())
 
 
+def test_tag_link_is_cached_after_the_pool_is_ready():
+    class Catalog(_Catalog):
+        async def search(self, payload):
+            ids = payload.get("id")
+            if ids:
+                if "tag-1" in ids:
+                    return [(
+                        "tag-1",
+                        None,
+                        {
+                            "prsActive": ["TRUE"],
+                            "prsUpdate": ["FALSE"],
+                            "prsValueTypeCode": ["1"],
+                            "prsMaxLineDev": ["0"],
+                            "prsStep": ["FALSE"],
+                        },
+                    )]
+                return await super().search(payload)
+            if payload.get("base") == "ds-1":
+                filt = payload.get("filter") or {}
+                if filt.get("objectClass") == ["prsDatastorageTagData"]:
+                    return [(
+                        "link-1",
+                        None,
+                        {
+                            "cn": ["tag-1"],
+                            "prsStore": ['{"table": "t_tag-1"}'],
+                        },
+                    )]
+            return []
+
+    catalog = Catalog()
+    catalog.config = {"dsn": "postgresql://db/prs"}
+    svc = _svc(catalog)
+    store = {}
+    svc._cache = SimpleNamespace(get_redis=lambda: _Redis(store))
+
+    async def run():
+        await svc._add_supported_ds("ds-1")
+        await asyncio.sleep(0)
+        cache = store["tag-1.dataStorages_app_postgresql"]
+        assert cache["dss"]["ds-1"] == {"table": "t_tag-1"}
+
+    asyncio.run(run())
+
+
 def test_delete_stops_reconnect_attempts():
     catalog = _Catalog()
     catalog.config = {"dsn": "postgresql://db/prs"}

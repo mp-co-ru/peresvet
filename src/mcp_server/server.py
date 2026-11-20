@@ -1035,31 +1035,49 @@ async def peresvet_alarms_get(
     get_children: bool = False,
     format_ts: bool = False,
     fired: bool = True,
+    alert_id: str | None = None,
+    start: str | int | None = None,
+    finish: str | int | None = None,
+    count: int | None = None,
 ) -> dict[str, Any]:
-    """Read current alarms.
+    """Read alarms.
 
-    Wraps `GET /v1/alarms/`. Omit `parent_id` to read the whole model.
+    Wraps `GET /v1/alarms/`. `parent_id` is an object, a tag, an alert,
+    or a list of those. `alert_id` is the same as one alert `parent_id`.
+    Omit both to read top-level objects and the Tags folder.
+    `get_children=true` includes child objects; without `parent_id` it
+    reads the whole object tree.
 
-    - `fired=true` (default): only active alarms.
-    - `fired=false`: active alarms and inactive alarms that are not yet
-      acknowledged. An alarm that has both ended and been acknowledged
-      is not returned.
-    - `get_children=true`: include alarms under child objects.
+    - `fired=true` (default): the episode active at `finish` (default: now).
+      `count` is ignored.
+    - `fired=false` without `start` and `count`: state of every alarm at
+      `finish`, including inactive ones.
+    - `fired=false` with `start` or `count`: stored episodes per alarm.
+      `count` is how many of the latest episodes to return (max 500).
     - `format_ts=true`: `fired`, `finish` and `acked` are local ISO 8601
       strings; otherwise they are integer microseconds.
 
     Each item has `id`, `cn`, `description`, `tagId`, `fired`, `finish`,
-    `acked`. Active and unacknowledged: `fired` set, `finish` and `acked`
-    empty. Active and acknowledged: `fired` and `acked` set, `finish`
-    empty. Gone and unacknowledged: `finish` set, `acked` empty.
+    `acked`.
     """
+    parents: list[str] = []
+    if parent_id is not None:
+        parents.extend([parent_id] if isinstance(parent_id, str) else list(parent_id))
+    if alert_id:
+        parents.append(alert_id)
     query: dict[str, Any] = {
         "getChildren": get_children,
         "format": format_ts,
         "fired": fired,
     }
-    if parent_id is not None:
-        query["parentId"] = parent_id
+    if parents:
+        query["parentId"] = parents
+    if start is not None:
+        query["start"] = start
+    if finish is not None:
+        query["finish"] = finish
+    if count is not None and not fired:
+        query["count"] = count
     return await _request("GET", "/v1/alarms/", params=alarms_query_to_params(query))
 
 

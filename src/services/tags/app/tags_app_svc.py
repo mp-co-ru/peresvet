@@ -52,7 +52,7 @@ class TagsApp(AppSvc):
                         "code": 422,
                         "message": (
                             f"Узел '{tag_id}' — тревога. "
-                            "События тревоги читаются запросом GET /v1/alarms/."
+                            "События тревоги читаются запросом GET /v1/alarms/?parentId=."
                         ),
                     }
                 }
