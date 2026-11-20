@@ -114,6 +114,9 @@ def test_mcp_tools_call_http_layer():
             await _unwrap(mcp_server.peresvet_alarms_get)(
                 parent_id="o", fired=False, get_children=True, format_ts=True,
             )
+            await _unwrap(mcp_server.peresvet_alarms_get)(
+                alert_id="a1", start=1, finish=2, count=5, format_ts=True, fired=False,
+            )
             await _unwrap(mcp_server.peresvet_alarm_ack)(alarm_id="a", x=1)
             await _unwrap(mcp_server.peresvet_alarm_ack)(alarm_id="a")
             await _unwrap(mcp_server.peresvet_schedule_create)(cn="s", start="2026-01-01T00:00:00")
@@ -182,9 +185,14 @@ def test_mcp_tools_call_http_layer():
     services = next(item for item in captured if item[1] == "/v1/connectors_app/services")
     assert services[0] == "GET"
     alarm_lists = [item for item in captured if item[1] == "/v1/alarms/" and item[0] == "GET"]
+    assert ("fired", "false") in alarm_lists[-2][2]
+    assert ("getChildren", "true") in alarm_lists[-2][2]
+    assert ("format", "true") in alarm_lists[-2][2]
+    assert ("parentId", "a1") in alarm_lists[-1][2]
     assert ("fired", "false") in alarm_lists[-1][2]
-    assert ("getChildren", "true") in alarm_lists[-1][2]
-    assert ("format", "true") in alarm_lists[-1][2]
+    assert ("start", "1") in alarm_lists[-1][2]
+    assert ("finish", "2") in alarm_lists[-1][2]
+    assert ("count", "5") in alarm_lists[-1][2]
     acks = [item[3] for item in captured if item[1] == "/v1/alarms/" and item[0] == "PUT"]
     assert acks[-1] == {"id": "a"}
     assert "x" not in acks[-1]

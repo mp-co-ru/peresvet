@@ -21,21 +21,33 @@ import src.common.times as t
 class AlarmsGet(BaseModel):
     """
     Логика получения алярмов:
-    parentId: указываем объект (список объектов), алярмы которого хотим получить
-    getChildren: флаг учёта дочерних объектов
-    format: флаг форматирования меток времени в ответе на запрос
+    parentId: объект, тег или тревога (либо их список). По умолчанию None.
+    getChildren: учитывать дочерние объекты. По умолчанию False.
 
-    Запрос возвращает активные алярмы, либо неактивные и неквитированные.
+    Без parentId и без getChildren — активные алярмы объектов верхнего
+    уровня и всех тегов из папки «Теги». Без parentId, но с getChildren —
+    алярмы всей ветки объектов и той же папки «Теги».
 
-    Возвращение истории алярмов (использование флагов start и finish) - в следующей версии.
+    format: форматировать метки времени. По умолчанию False.
+    fired: только активные алярмы. По умолчанию True. False — все алярмы.
+    start: начало интервала по метке срабатывания. По умолчанию None.
+    finish: конец интервала. По умолчанию текущее время.
+    count: сколько алярмов вернуть по каждой тревоге. Если fired = True, count игнорируется.
+
+    fired без start и count — эпизод, активный в момент finish.
+    fired=false без start и count — состояние каждой тревоги в момент finish.
+    fired=false вместе со start или count — список срабатываний.
     """
     # https://giters.com/pydantic/pydantic/issues/6322
     model_config = ConfigDict(protected_namespaces=())
 
-    parentId: str | list[str] = Field(None, title="Объект, тревоги которого запрашиваем.")
+    parentId: str | list[str] = Field(None, title="Объект, тег или тревога.")
     getChildren: bool = Field(False, title="Учитывать тревоги дочерних объектов.")
     format: bool = Field(False, title="Флаг форматирования меток времени.")
     fired: bool = Field(True, title="Флаг возврата только активных алярмов.")
+    start: int | str | None = Field(None, title="Начало интервала по метке срабатывания.")
+    finish: int | str | None = Field(None, title="Момент или конец интервала.")
+    count: int | None = Field(None, title="Сколько алярмов вернуть по каждой тревоге.")
 
     @field_validator("parentId")
     @classmethod
@@ -49,6 +61,30 @@ class AlarmsGet(BaseModel):
     @classmethod
     def validate_id(cls, v: Any) -> Any:
         return valid_uuid(v)
+
+    @field_validator("start", "finish")
+    @classmethod
+    def optional_ts(cls, v: Any) -> int | None:
+        if v is None or v == "":
+            return None
+        try:
+            return t.ts(v)
+        except ValueError as ex:
+            raise ValueError(
+                "Метка времени должна быть строкой ISO8601 или целым числом микросекунд."
+            ) from ex
+
+    @field_validator("count")
+    @classmethod
+    def count_bounds(cls, v: int | None) -> int | None:
+        if v is None:
+            return None
+        if v < 1:
+            return 1
+        if v > 500:
+            return 500
+        return v
+
 
 class AlarmData(BaseModel):
     # https://giters.com/pydantic/pydantic/issues/6322
@@ -164,18 +200,29 @@ async def alarms_get(
     getChildren: bool = False,
     format: bool = False,
     fired: bool = True,
+    alertId: str | None = None,
+    start: str | None = None,
+    finish: str | None = None,
+    count: int | None = None,
     q: str | None = None,
 ):
     if q:
         payload = AlarmsGet.model_validate_json(q)
     else:
+        # alertId оставлен как ещё один parentId: тревога читается тем же запросом.
+        parents = list(parentId or [])
+        if alertId:
+            parents.append(alertId)
         body = {
             "getChildren": getChildren,
             "format": format,
             "fired": fired,
+            "start": start,
+            "finish": finish,
+            "count": count,
         }
-        if parentId is not None:
-            body["parentId"] = parentId
+        if parents:
+            body["parentId"] = parents
         payload = AlarmsGet.model_validate(body)
 
     res = await app.alarms_get(payload)

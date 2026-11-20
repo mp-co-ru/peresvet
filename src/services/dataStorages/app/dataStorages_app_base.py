@@ -162,6 +162,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         self._handlers["prsAlert.app.alarm_on.*"] = self._alarm_on
         self._handlers["prsAlert.app.alarm_off.*"] = self._alarm_off
         self._handlers["prsAlert.app.alarm_state.*"] = self._alarm_state
+        self._handlers["prsAlert.app.alarm_history.*"] = self._alarm_history
         self._handlers["prsAlert.model.deleted.*"] = self._alert_deleted
         self._handlers["prsDataStorage.model.link_tag.*"] = self._link_tag
         self._handlers["prsDataStorage.model.unlink_tag.*"] = self._unlink_tag
@@ -235,12 +236,14 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_on.{alert_id}")
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_off.{alert_id}")
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_state.{alert_id}")
+            await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_history.{alert_id}")
             await self._amqp_consume_queue.bind(exchange=self._exchange, routing_key=f"prsAlert.model.deleted.{alert_id}")
         else:
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_acked.{alert_id}")
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_on.{alert_id}")
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_off.{alert_id}")
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_state.{alert_id}")
+            await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.app.alarm_history.{alert_id}")
             await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key=f"prsAlert.model.deleted.{alert_id}")
 
     async def _bind_ds(self, ds_id: str, bind: bool = True):
@@ -319,6 +322,8 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
                     return
                 self._connection_pools[ds_id] = pool
                 self._logger.info(f"{self._config.svc_name} :: Связь с базой данных {ds_id} установлена.")
+                # Кэш тега ищет привязки только среди уже открытых пулов.
+                await self._attach_linked_tags(ds_id)
                 return
         except asyncio.CancelledError:
             return
@@ -473,18 +478,8 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         for tag in tags:
             await self._bind_tag(tag[2]["cn"][0], True)
             ds_cache["tags"].append(tag[2]["cn"][0])
-
-        # Startup prewarm: build per-tag cache for all linked tags for faster first reads.
-        if ds_cache["tags"]:
-            prewarm = await asyncio.gather(
-                *[self._create_tag_cache(tag_id) for tag_id in ds_cache["tags"]],
-                return_exceptions=True,
-            )
-            for tag_id, res in zip(ds_cache["tags"], prewarm):
-                if isinstance(res, Exception):
-                    self._logger.error(
-                        f"{self._config.svc_name} :: Ошибка предзаполнения кэша тега {tag_id}: {res}"
-                    )
+        # Кэш с привязкой собирается в _connect_ds_until_ready, когда пул уже есть.
+        # Здесь пула ещё нет, и собранный сейчас кэш затёр бы dss.
 
         payload = {
             "base": ds_id,
@@ -500,6 +495,33 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
         async with self._cache.get_redis() as r:
             await r.json().set(name=f"{ds_id}.{self._config.svc_name}", path="$", obj=ds_cache)
+
+    async def _attach_linked_tags(self, ds_id: str) -> None:
+        """Собрать кэш привязанных тегов, когда пул хранилища уже открыт."""
+        payload = {
+            "base": ds_id,
+            "filter": {
+                "objectClass": ["prsDatastorageTagData"]
+            },
+            "attributes": ["cn"]
+        }
+        try:
+            tags = await self._hierarchy.search(payload)
+        except Exception as ex:
+            self._logger.error(
+                f"{self._config.svc_name} :: Не удалось прочитать привязки хранилища {ds_id}: {ex}"
+            )
+            return
+        for tag in tags or []:
+            tag_id = (tag[2].get("cn") or [None])[0]
+            if not tag_id:
+                continue
+            try:
+                await self._create_tag_cache(tag_id)
+            except Exception as ex:
+                self._logger.error(
+                    f"{self._config.svc_name} :: Ошибка кэша тега {tag_id}: {ex}"
+                )
 
     async def on_startup(self) -> None:
 
@@ -517,6 +539,7 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.app.alarm_on.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.app.alarm_off.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.app.alarm_state.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.app.alarm_history.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.model.deleting.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.model.deleted.*")
         # ----------------------------------------------------------------------------------------
@@ -680,6 +703,10 @@ class DataStoragesAppBase(app_svc.AppSvc, ABC):
 
     async def _alarm_state(self, mes: dict, routing_key: str = None):
         """Последняя строка таблицы тревоги. Отвечает хранилище, которое её ведёт."""
+        return NO_AMQP_RPC_REPLY
+
+    async def _alarm_history(self, mes: dict, routing_key: str = None):
+        """Строки таблицы ``a_<id>``. Отвечает хранилище, которое её ведёт."""
         return NO_AMQP_RPC_REPLY
 
     async def _reject_message(self, mes: dict) -> bool:

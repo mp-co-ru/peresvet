@@ -368,6 +368,71 @@ class DataStoragesAppPostgreSQL(DataStoragesAppBase):
                 )
         return empty
 
+    async def _alarm_history(self, mes: dict, routing_key: str | None = None) -> dict:
+        """Строки ``a_<id>`` за интервал по метке срабатывания ``x``."""
+        body = mes if isinstance(mes, dict) else {}
+        alert_id = body.get("alertId")
+        if not alert_id and routing_key:
+            alert_id = routing_key.rsplit(".", 1)[-1]
+        empty = {"alertId": alert_id, "data": []}
+        if not alert_id:
+            return empty
+
+        try:
+            limit = int(body.get("count") or 100)
+        except (TypeError, ValueError):
+            limit = 100
+        limit = 1 if limit < 1 else 500 if limit > 500 else limit
+
+        async with self._cache.get_redis() as r:
+            alert_params = await r.json().get(f"{alert_id}.{self._config.svc_name}")
+            if alert_params is None:
+                alert_params = await self._create_alert_cache(alert_id)
+        if not isinstance(alert_params, dict):
+            return empty
+
+        start = body.get("start")
+        finish = body.get("finish")
+        for ds_id, prsStore in (alert_params.get("dss") or {}).items():
+            if not isinstance(prsStore, dict) or not prsStore.get("table"):
+                continue
+            connection_pool = self._connection_pools.get(ds_id)
+            if connection_pool is None:
+                continue
+            alert_tbl = str(prsStore["table"])
+            if not alert_tbl.replace("_", "").replace("-", "").isalnum():
+                continue
+            clauses = []
+            args: list = []
+            if start is not None:
+                args.append(int(start))
+                clauses.append(f"x >= ${len(args)}")
+            if finish is not None:
+                args.append(int(finish))
+                clauses.append(f"x <= ${len(args)}")
+            where = (" where " + " and ".join(clauses)) if clauses else ""
+            args.append(limit)
+            query = (
+                f'select x, cx, e from "{alert_tbl}"{where} '
+                f"order by x desc limit ${len(args)}"
+            )
+            try:
+                async with connection_pool.acquire() as conn:
+                    rows = await conn.fetch(query, *args)
+            except PostgresError as ex:
+                self._logger.error(
+                    f"{self._config.svc_name} :: Ошибка чтения истории тревоги {alert_id}: {ex}"
+                )
+                continue
+            return {
+                "alertId": alert_id,
+                "data": [
+                    {"fired": row["x"], "acked": row["cx"], "finish": row["e"]}
+                    for row in rows
+                ],
+            }
+        return empty
+
     @staticmethod
     def _value_type_from_link_config(raw: Any) -> int | None:
         if not raw or not raw[0]:

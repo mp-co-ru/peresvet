@@ -95,7 +95,20 @@ def test_configurator_connector_binding_labels():
     pane_at = html.index('id="prs-tab-pane-connector"')
     # Вкладка «Коннектор» лежит внутри переключателя вкладок, а не под «Свойствами».
     assert _tab_content_depth(html, 'id="prs-tab-pane-connector"') == 1
-    assert _tab_content_depth(html, 'id="prs-storage-alert-only"') == 2
+    storage_at = html.index('id="prs-tab-pane-storage"')
+    link_at = html.index('id="div-prsTagDataStorageLink"')
+    tag_only_at = html.index('id="prs-storage-tag-only"')
+    assert storage_at < link_at < tag_only_at
+    assert _tab_content_depth(html, 'id="div-prsTagDataStorageLink"') == 2
+    assert "Привязка тревоги к хранилищу данных настраивается" not in html
+    assert "linkedAlerts:[{alertId:t}]" in javascript
+    assert "unlinkAlerts:[t]" in javascript
+    assert 'id="prs-alert-history"' in html
+    assert "Данные тревоги" in html
+    assert 'id="button-alertGetData"' in html
+    assert "formAlertHistoryPanels=function()" in javascript
+    assert 'q.append("parentId",id)' in javascript
+    assert 'id="input-alertGetDataFired"' in html
     pane = html[pane_at : pane_at + 1800]
     assert 'prs-attr-name">Описание</span>' in pane
     assert ">Конфигурация</label>" in pane
