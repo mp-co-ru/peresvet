@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Конфигуратор модели &mdash; документация МПК-Пересвет v0.28.2</title>
+  <title>Конфигуратор модели &mdash; документация МПК-Пересвет v0.29.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="../_static/peresvet_middle.png"/>
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=dbc89a2d"></script>
+      <script src="../_static/documentation_options.js?v=399dde07"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/sphinxcontrib-httpexample.js"></script>
@@ -37,7 +37,7 @@
     
       <img src="../_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.28.2</div>
+  <div class="prs-version">v0.29.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -239,7 +239,9 @@
 <li><p><strong>Перечёркнутый круг</strong> — тег или тревога не привязаны к хранилищу,
 история не пишется. Справа: в ветке есть такие узлы.</p></li>
 <li><p><strong>Молния</strong> — у тега нет источника данных: ни коннектора,
-ни дочернего метода. Справа: в ветке есть такие теги.</p></li>
+ни дочернего метода. Справа: в ветке есть такие теги.
+Если в настройках включено «Отсутствие источника данных - не ошибка»,
+эта пометка не ставится ни на тег, ни на родителей.</p></li>
 <li><p><strong>Восклицательный знак</strong> — тег одновременно привязан к хранилищу
 и имеет метод чтения или записи. На чтение или запись отвечают оба,
 платформа берёт ответ, который пришёл первым. Справа: в ветке есть
@@ -300,6 +302,10 @@
 Тег типа «Видеопоток» к хранилищу истории не привязывается никогда.</p>
 <p><strong>Сортировка узлов по алфавиту.</strong> Внутри каждого вида узлы сортируются
 по имени, а не по <code class="docutils literal notranslate"><span class="pre">prsIndex</span></code>. Действует сразу и на уже раскрытые ветки.</p>
+<p><strong>Отсутствие источника данных - не ошибка.</strong> Если флажок включён, тег
+без коннектора и без дочернего метода не считается проблемой: молния
+не рисуется ни на нём, ни выше по ветке. Остальные пометки не меняются.
+По умолчанию флажок выключен.</p>
 <p><strong>Размер шрифта.</strong> Базовый размер шрифта страницы в пикселях: от 10 до 32,
 по умолчанию 16. Все надписи конфигуратора масштабируются от него.</p>
 </section>
@@ -388,26 +394,39 @@
 выключить.</p>
 <p><strong>Удалить</strong> удаляет узел вместе со всеми потомками.</p>
 <p>Копирование, приостановка и удаление требуют подтверждения.</p>
-<p><strong>Тревоги.</strong> Пункт есть в меню только у узла с красным кружком.
-Он открывает справа, вместо свойств, список тревог этой ветки.
-Запрос
-<code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/alarms/?parentId=&lt;id&gt;&amp;getChildren=true&amp;fired=false&amp;format=true</span></code>
-уходит, только если идентификатор узла — GUID.
+<p><strong>Тревоги.</strong> Пункт есть в меню каждого узла, в том числе без красного кружка.
+Он открывает справа, вместо свойств, список алярмов.
+Первый запрос — <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/alarms/?parentId=&lt;id</span> <span class="pre">узла&gt;</span></code>.
+Поле <code class="docutils literal notranslate"><span class="pre">parentId</span></code> показывает этот узел и не редактируется.
 У корневых папок идентификатор не GUID: <code class="docutils literal notranslate"><span class="pre">objects</span></code>, <code class="docutils literal notranslate"><span class="pre">tags</span></code>,
 <code class="docutils literal notranslate"><span class="pre">connectors</span></code>, <code class="docutils literal notranslate"><span class="pre">schedules</span></code>, <code class="docutils literal notranslate"><span class="pre">dataStorages</span></code>, <code class="docutils literal notranslate"><span class="pre">methods</span></code>.
-Для них <code class="docutils literal notranslate"><span class="pre">parentId</span></code> не отправляется. Список такой ветки и кружки
-берутся из <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/alarms/?getChildren=true&amp;fired=false&amp;format=true</span></code>.
-<code class="docutils literal notranslate"><span class="pre">getChildren</span></code> нужен, чтобы в ответ вошли тревоги вложенных объектов,
-а не только верхнего уровня. Этот запрос без <code class="docutils literal notranslate"><span class="pre">parentId</span></code> обновляет
-кружки и при открытом списке, и когда список закрыт.
+Для них <code class="docutils literal notranslate"><span class="pre">parentId</span></code> пустой, запрос уходит без него.
+Сверху панели запрос собран так же, как чтение данных тега:
+строка <code class="docutils literal notranslate"><span class="pre">GET</span></code> видна всегда, параметры по умолчанию схлопнуты.
+Имена ключей — на сером фоне, у каждого есть подсказка и ссылка
+на документацию. Ключи: <code class="docutils literal notranslate"><span class="pre">parentId</span></code>, <code class="docutils literal notranslate"><span class="pre">getChildren</span></code>,
+<code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">fired</span></code>, <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code>. Пока ключ
+в значении по умолчанию, в строку запроса он не попадает.
+<code class="docutils literal notranslate"><span class="pre">fired</span></code> включён, <code class="docutils literal notranslate"><span class="pre">getChildren</span></code> и <code class="docutils literal notranslate"><span class="pre">format</span></code> выключены,
+<code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code> и <code class="docutils literal notranslate"><span class="pre">count</span></code> пустые. Изменение ключа сразу
+переписывает строку <code class="docutils literal notranslate"><span class="pre">GET</span></code>. Список перечитывает иконка
+<strong>Читать данные</strong> под ключами; она видна и когда ключи схлопнуты.
+При открытии панели первый запрос выполняется сам.
+Кружки дерева от этого запроса не зависят:
+они по-прежнему берутся из
+<code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/alarms/?getChildren=true&amp;fired=false&amp;format=true</span></code>.
+Этот запрос без <code class="docutils literal notranslate"><span class="pre">parentId</span></code> обновляет кружки и при открытом списке,
+и когда список закрыт.
 Пустыми считаются <code class="docutils literal notranslate"><span class="pre">null</span></code>, пустая строка, <code class="docutils literal notranslate"><span class="pre">0</span></code> и <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 <ul class="simple">
 <li><p><strong>Активна, не квитирована</strong> — есть <code class="docutils literal notranslate"><span class="pre">fired</span></code>, а <code class="docutils literal notranslate"><span class="pre">finish</span></code> и <code class="docutils literal notranslate"><span class="pre">acked</span></code> пустые.</p></li>
 <li><p><strong>Активна, квитирована</strong> — есть <code class="docutils literal notranslate"><span class="pre">fired</span></code> и <code class="docutils literal notranslate"><span class="pre">acked</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code> пустой.</p></li>
 <li><p><strong>Пропала, не квитирована</strong> — есть <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">acked</span></code> пустой.</p></li>
 </ul>
-<p>Пропавшая и уже квитированная тревога в этот ответ приходит с пустыми
-метками, поэтому строка и кружок для неё не рисуются.
+<p>Пропавшая и уже квитированная тревога в этот ответ приходит со всеми
+тремя метками. Строка и кружок для неё не рисуются: в списке остаются
+только три состояния выше. На вкладке хранилища тот же ответ показывает
+старт, финиш и квитирование последнего эпизода.
 Строка показывает имя (<code class="docutils literal notranslate"><span class="pre">cn</span></code>), путь от объекта к тегу
 (<code class="docutils literal notranslate"><span class="pre">Цех→Насос→Уровень</span></code>), подпись состояния и три строки
 «Старт:», «Финиш:», «Квитирование:» со значениями меток.
@@ -490,11 +509,14 @@
 у тревоги она называется <code class="docutils literal notranslate"><span class="pre">a_&lt;id</span> <span class="pre">тревоги&gt;</span></code>. На этой же вкладке у тега лежит
 блок «Данные тега» (см. ниже). У тревоги там же блок «Данные тревоги»:
 запрос на чтение устроен так же, как у тега (строка <code class="docutils literal notranslate"><span class="pre">GET</span></code>, ключи
-<code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">fired</span></code>, <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code> и кнопка
-«Получить данные»). <code class="docutils literal notranslate"><span class="pre">parentId</span></code> в запросе — идентификатор тревоги.
+<code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">fired</span></code>, <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code> и иконка
+«Читать данные»). <code class="docutils literal notranslate"><span class="pre">parentId</span></code> в запросе — идентификатор тревоги.
 Пока <code class="docutils literal notranslate"><span class="pre">fired</span></code> включён, приходит эпизод, активный в момент <code class="docutils literal notranslate"><span class="pre">finish</span></code>
 (если <code class="docutils literal notranslate"><span class="pre">finish</span></code> пуст — сейчас), и <code class="docutils literal notranslate"><span class="pre">count</span></code> в запрос не попадает.
-В таблице — старт, финиш и квитирование.
+С выключенным <code class="docutils literal notranslate"><span class="pre">fired</span></code> и пустыми <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">count</span></code> приходит текущее
+состояние: последний эпизод, уже начавшийся к этому моменту, вместе со
+стартом, финишем и квитированием, даже если тревога уже закончилась.
+В таблице — эти три метки.
 Те же связи видны со стороны хранилищ — в папке «Хранилища данных».</p>
 <p><strong>Коннектор.</strong> Тег получает данные от одного коннектора. На вкладке задают
 описание связи и её конфигурацию в JSON: адрес регистра, топик и другие
@@ -519,7 +541,7 @@ ISO 8601. Для <code class="docutils literal notranslate"><span class="pre">st
 дату, скопированную из таблицы ответа. Для интеграционного тега есть ещё
 поле <code class="docutils literal notranslate"><span class="pre">params</span></code> — JSON с параметрами операции (<a class="reference internal" href="../integrational_v2.html#integrational-v2"><span class="std std-ref">Интеграционные хранилища</span></a>).</p>
 <p>Над полями показан готовый запрос <code class="docutils literal notranslate"><span class="pre">GET</span></code> с адресом; кнопка рядом копирует
-его. Кнопка <strong>Получить данные</strong> выполняет запрос и выводит таблицу
+его. Иконка <strong>Читать данные</strong> выполняет запрос и выводит таблицу
 «Время / Значение / Качество». Коды качества описаны в <a class="reference internal" href="../historical_data.html#qualitycodes"><span class="std std-ref">Коды качества</span></a>.</p>
 <figure class="align-default">
 <img alt="Запрос на чтение тега" src="../_images/08.tag-read.png" />
@@ -529,7 +551,7 @@ ISO 8601. Для <code class="docutils literal notranslate"><span class="pre">st
 Пустая метка означает текущий момент. Метку можно указать целым числом
 микросекунд или датой со временем; кнопка календаря подставляет дату
 с часовым поясом. Перед отправкой значение приводится к типу тега.
-Кнопка <strong>Записать данные</strong> отправляет запрос <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/data/</span></code>.
+Иконка <strong>Записать данные</strong> отправляет запрос <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/data/</span></code>.
 У видеопотока этой вкладки нет.</p>
 <figure class="align-default">
 <img alt="Запрос на запись тега" src="../_images/09.tag-write.png" />

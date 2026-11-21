@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Тревоги &mdash; документация МПК-Пересвет v0.28.2</title>
+  <title>Тревоги &mdash; документация МПК-Пересвет v0.29.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=dbc89a2d"></script>
+      <script src="_static/documentation_options.js?v=399dde07"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -37,7 +37,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.28.2</div>
+  <div class="prs-version">v0.29.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -163,7 +163,10 @@
 <code class="docutils literal notranslate"><span class="pre">count</span></code> при <code class="docutils literal notranslate"><span class="pre">fired</span></code> не используется. <code class="docutils literal notranslate"><span class="pre">start</span></code> оставляет только те
 из них, чей старт не раньше этой метки.</p>
 <p><code class="docutils literal notranslate"><span class="pre">fired=false</span></code> без <code class="docutils literal notranslate"><span class="pre">start</span></code> и без <code class="docutils literal notranslate"><span class="pre">count</span></code> — состояние каждой тревоги
-на момент <code class="docutils literal notranslate"><span class="pre">finish</span></code>, в том числе неактивной: один ряд на тревогу.
+на момент <code class="docutils literal notranslate"><span class="pre">finish</span></code>: один ряд, последний эпизод, уже начавшийся к этому
+моменту. Если он успел закончиться и быть квитирован, в ряде остаются
+его <code class="docutils literal notranslate"><span class="pre">fired</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code> и <code class="docutils literal notranslate"><span class="pre">acked</span></code>. Пустые метки — только у тревоги,
+которая к этому моменту ещё не начиналась.
 <code class="docutils literal notranslate"><span class="pre">fired=false</span></code> вместе со <code class="docutils literal notranslate"><span class="pre">start</span></code> или <code class="docutils literal notranslate"><span class="pre">count</span></code> — список срабатываний.
 <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">finish</span></code> ограничивают метку старта, <code class="docutils literal notranslate"><span class="pre">count</span></code> — сколько
 последних эпизодов вернуть по каждой тревоге (не больше 500).</p>
@@ -184,6 +187,67 @@
 <span class="p">}]}</span>
 </pre></div>
 </div>
+<p>Примеры запросов. Идентификаторы ниже — примеры. Несколько
+<code class="docutils literal notranslate"><span class="pre">parentId</span></code> в строке — это список узлов. <code class="docutils literal notranslate"><span class="pre">fired</span></code> и <code class="docutils literal notranslate"><span class="pre">getChildren</span></code>
+пишутся как <code class="docutils literal notranslate"><span class="pre">true</span></code> и <code class="docutils literal notranslate"><span class="pre">false</span></code>. Пустой запрос — ключи по умолчанию:
+<code class="docutils literal notranslate"><span class="pre">fired=true</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code> равен текущему времени.</p>
+<p>Все активные алярмы объектов верхнего уровня и всех тегов из папки «Теги»:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/alarms/
+</pre></div>
+</div>
+<p>Активные алярмы объекта:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/alarms/?parentId=123e4567-e89b-12d3-a456-426614174000
+</pre></div>
+</div>
+<p>Состояние всех тревог объекта на текущий момент. <code class="docutils literal notranslate"><span class="pre">fired=false</span></code> без
+<code class="docutils literal notranslate"><span class="pre">start</span></code> и без <code class="docutils literal notranslate"><span class="pre">count</span></code> даёт один ряд на тревогу, в том числе неактивную:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/alarms/?parentId=123e4567-e89b-12d3-a456-426614174000&amp;fired=false
+</pre></div>
+</div>
+<p>По 10 последних записей по каждой тревоге объекта:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/alarms/?parentId=123e4567-e89b-12d3-a456-426614174000&amp;fired=false&amp;count=10
+</pre></div>
+</div>
+<p>Активные алярмы перечисленных объектов и всех их детей:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/alarms/?parentId=123e4567-e89b-12d3-a456-426614174000&amp;parentId=123e4567-e89b-12d3-a456-426614174001&amp;getChildren=true
+</pre></div>
+</div>
+<p>Активные алярмы объекта и тега. Первый <code class="docutils literal notranslate"><span class="pre">parentId</span></code> — объект, второй — тег:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/alarms/?parentId=123e4567-e89b-12d3-a456-426614174000&amp;parentId=123e4567-e89b-12d3-a456-426614174002
+</pre></div>
+</div>
+<p>Проверка, активна ли тревога. <code class="docutils literal notranslate"><span class="pre">parentId</span></code> здесь — идентификатор самой тревоги:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/alarms/?parentId=123e4567-e89b-12d3-a456-426614174003
+</pre></div>
+</div>
+<p>Активные алярмы объекта, старт которых не раньше 1 января 2026:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/alarms/?parentId=123e4567-e89b-12d3-a456-426614174000&amp;start=2026-01-01T00:00:00Z
+</pre></div>
+</div>
+<p>Активные на 10 января 2026 алярмы объекта, старт которых не раньше 1 января:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/alarms/?parentId=123e4567-e89b-12d3-a456-426614174000&amp;start=2026-01-01T00:00:00Z&amp;finish=2026-01-10T00:00:00Z
+</pre></div>
+</div>
+<p>Все срабатывания объекта со стартом не раньше 1 января и не позднее 10 января:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/alarms/?parentId=123e4567-e89b-12d3-a456-426614174000&amp;start=2026-01-01T00:00:00Z&amp;finish=2026-01-10T00:00:00Z&amp;fired=false
+</pre></div>
+</div>
+<p>Все срабатывания объекта со стартом не раньше 1 января 2026:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/alarms/?parentId=123e4567-e89b-12d3-a456-426614174000&amp;start=2026-01-01T00:00:00Z&amp;fired=false
+</pre></div>
+</div>
+<p>Алярмы объекта, которые были активны 1 января 2026:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/alarms/?parentId=123e4567-e89b-12d3-a456-426614174000&amp;finish=2026-01-01T00:00:00Z
+</pre></div>
+</div>
+<p>Состояние всех тревог объекта на 1 января 2026:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/alarms/?parentId=123e4567-e89b-12d3-a456-426614174000&amp;finish=2026-01-01T00:00:00Z&amp;fired=false
+</pre></div>
+</div>
+<p>По 10 последних записей по каждой тревоге объекта на 1 января 2026:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/alarms/?parentId=123e4567-e89b-12d3-a456-426614174000&amp;finish=2026-01-01T00:00:00Z&amp;count=10&amp;fired=false
+</pre></div>
+</div>
 <p>Квитирование — <code class="docutils literal notranslate"><span class="pre">PUT</span> <span class="pre">/v1/alarms/</span></code>. Если <code class="docutils literal notranslate"><span class="pre">x</span></code> не передан, берётся текущий
 момент. Повторное квитирование ничего не меняет.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>PUT /v1/alarms/
@@ -193,7 +257,7 @@
 <p>Конфигуратор (<a class="reference internal" href="configurator/configurator.html#configurator"><span class="std std-ref">Конфигуратор модели</span></a>) берёт этот список с <code class="docutils literal notranslate"><span class="pre">fired=false</span></code>
 и квитирует тем же <code class="docutils literal notranslate"><span class="pre">PUT</span></code>. В списке он показывает только активные
 и пропавшие, но ещё не квитированные. Пропавшая и уже квитированная
-в этом ответе с пустыми метками: эпизод закрыт, и список её не рисует.
+в ответ приходит со всеми тремя метками, но список и кружок её не рисуют.
 Сами срабатывания читаются с <code class="docutils literal notranslate"><span class="pre">fired=false</span></code> и <code class="docutils literal notranslate"><span class="pre">count</span></code> или <code class="docutils literal notranslate"><span class="pre">start</span></code>.</p>
 <p>Список срабатываний одной тревоги — те же поля, по ряду на эпизод:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/alarms/?parentId=&lt;id тревоги&gt;&amp;fired=false&amp;count=2&amp;format=true
@@ -212,7 +276,7 @@
 </div>
 <p>На вкладке <strong>Хранилище</strong> тревоги в Конфигураторе тот же запрос собран
 как чтение истории тега: строка <code class="docutils literal notranslate"><span class="pre">GET</span></code>, ключи <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">fired</span></code>,
-<code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code> и кнопка «Получить данные».
+<code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code> и иконка «Читать данные».
 Пока <code class="docutils literal notranslate"><span class="pre">fired</span></code> включён, в ответе не больше одного эпизода — того,
 что активно в момент <code class="docutils literal notranslate"><span class="pre">finish</span></code>.</p>
 <p>История значений тега запрашивается через <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/</span></code>. Идентификатор
