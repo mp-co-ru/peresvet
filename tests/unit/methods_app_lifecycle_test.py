@@ -1,8 +1,10 @@
 import asyncio
+import json
 import types
 
 import pytest
 
+from src.common.amqp_rpc import NO_AMQP_RPC_REPLY
 from src.services.methods.app.methods_app_svc import MethodsApp
 
 
@@ -134,12 +136,14 @@ class _Hierarchy:
         initiator_classes=None,
         parent_tag_id="result-tag",
         method_active=True,
+        initiator_events=None,
     ):
         self.method_ids = method_ids or ["method-1"]
         self.method_type = method_type
         self.initiators = initiators or []
         self.initiator_classes = initiator_classes or {}
         self.parent_tag_id = parent_tag_id
+        self.initiator_events = initiator_events or {}
         self.failing_methods = set()
         self.missing_nodes = set()
         self.method_active = method_active
@@ -178,10 +182,17 @@ class _Hierarchy:
             return [(method_id, None, {"prsEntityTypeCode": [str(code)]})]
         if str(payload.get("base", "")).startswith("cn=initiatedBy,cn=system,"):
             method_id = self._method_id_from_initiated_by_base(payload.get("base", ""))
-            return [
-                (initiator_id, None, {"cn": [initiator_id]})
-                for initiator_id in self._initiators_for(method_id)
-            ]
+            per_method = self.initiator_events.get(method_id) or {}
+            rows = []
+            for initiator_id in self._initiators_for(method_id):
+                attrs = {"cn": [initiator_id]}
+                events = per_method.get(initiator_id) if isinstance(per_method, dict) else None
+                if events:
+                    attrs["prsJsonConfigString"] = [
+                        json.dumps({"events": list(events)}, ensure_ascii=False)
+                    ]
+                rows.append((initiator_id, None, attrs))
+            return rows
         return []
 
     async def get_node_dn(self, method_id):
@@ -629,3 +640,349 @@ def test_tag_initiated_method_on_sibling_still_runs_after_shared_schedule_peer_d
     )
 
     assert invoked == [("method-b", "tag-speed-b")]
+
+
+def test_make_method_cache_rebinds_active_alert_initiator_after_unbind():
+    svc = _make_service(
+        _Hierarchy(
+            initiators=["initiator-alert"],
+            initiator_classes={"initiator-alert": "prsAlert"},
+        )
+    )
+
+    ok = asyncio.run(MethodsApp._make_method_cache(svc, "method-1"))
+
+    assert ok is True
+    assert svc._amqp_consume_queue.calls == [
+        ("unbind", "main", "prsAlert.app.alarm_on.initiator-alert"),
+        ("bind", "main", "prsAlert.app.alarm_on.initiator-alert"),
+    ]
+    assert svc._cache.store["initiator-alert.methods_app"] == {"method-1": "result-tag"}
+    assert svc._cache.store["method-1.methods_app"] == ["initiator-alert"]
+
+
+def test_deleting_shared_alert_method_does_not_unbind_alarm_on():
+    hierarchy = _Hierarchy(
+        method_ids=["method-a", "method-b"],
+        initiators={
+            "method-a": ["alert-1"],
+            "method-b": ["alert-1"],
+        },
+        initiator_classes={"alert-1": "prsAlert"},
+    )
+    svc = _make_service(hierarchy)
+    asyncio.run(MethodsApp._make_method_cache(svc, "method-a"))
+    asyncio.run(MethodsApp._make_method_cache(svc, "method-b"))
+    svc._amqp_consume_queue.calls.clear()
+
+    asyncio.run(MethodsApp._deleting(svc, {"id": "method-a"}))
+
+    assert ("unbind", "main", "prsAlert.app.alarm_on.alert-1") not in svc._amqp_consume_queue.calls
+    assert svc._cache.store["alert-1.methods_app"] == {"method-b": "result-tag"}
+    assert "method-a.methods_app" not in svc._cache.store
+
+
+def test_deleting_last_alert_method_unbinds_alarm_on_and_deletes_key():
+    hierarchy = _Hierarchy(
+        initiators=["alert-1"],
+        initiator_classes={"alert-1": "prsAlert"},
+    )
+    svc = _make_service(hierarchy)
+    asyncio.run(MethodsApp._make_method_cache(svc, "method-1"))
+    svc._amqp_consume_queue.calls.clear()
+
+    asyncio.run(MethodsApp._deleting(svc, {"id": "method-1"}))
+
+    assert ("unbind", "main", "prsAlert.app.alarm_on.alert-1") in svc._amqp_consume_queue.calls
+    assert "alert-1.methods_app" not in svc._cache.store
+    assert "method-1.methods_app" not in svc._cache.store
+
+
+def test_start_method_by_alert_uses_alarm_point_and_keeps_neighbor_keys():
+    hierarchy = _Hierarchy(
+        method_type={
+            "method-1": 0,
+            "method-t1": 1,
+            "method-t2": 2,
+            "method-t3": 3,
+            "method-t4": 4,
+        },
+        initiator_classes={"alert-1": "prsAlert"},
+    )
+    svc = _make_service(hierarchy)
+    svc._cache.store["alert-1.methods_app"] = {
+        "method-1": "result-tag",
+        "method-t1": "result-tag",
+        "method-t2": "result-tag",
+        "method-t3": "result-tag",
+        "method-t4": "result-tag",
+    }
+    svc._cache.store["tag-1.methods_app"] = {"method-b": "other-tag"}
+    svc._cache.store["sched-1.methods_app"] = {"method-c": "sched-tag"}
+    invoked = []
+
+    async def _calc_tag(tag_id, method_id, parameters, data):
+        invoked.append((method_id, tag_id, data))
+
+    svc._calc_tag = _calc_tag
+
+    result = asyncio.run(
+        MethodsApp._start_method_by_alert(svc, {"alertId": "alert-1", "x": 777})
+    )
+
+    assert result is NO_AMQP_RPC_REPLY
+    assert invoked == [("method-1", "result-tag", [777, None, None])]
+    assert svc._cache.store["tag-1.methods_app"] == {"method-b": "other-tag"}
+    assert svc._cache.store["sched-1.methods_app"] == {"method-c": "sched-tag"}
+    assert set(svc._cache.store["alert-1.methods_app"]) == {
+        "method-1",
+        "method-t1",
+        "method-t2",
+        "method-t3",
+        "method-t4",
+    }
+
+
+def test_start_method_by_alert_drops_missing_method_only_from_this_alert():
+    hierarchy = _Hierarchy(
+        method_ids=["dead-method", "live-method"],
+        initiators={"live-method": ["alert-1"]},
+        initiator_classes={"alert-1": "prsAlert"},
+    )
+    hierarchy.missing_nodes.add("dead-method")
+    svc = _make_service(hierarchy)
+    svc._cache.store["alert-1.methods_app"] = {
+        "dead-method": "tag-dead",
+        "live-method": "result-tag",
+    }
+    svc._cache.store["tag-1.methods_app"] = {
+        "dead-method": "tag-dead",
+        "live-method": "result-tag",
+    }
+    svc._cache.store["sched-1.methods_app"] = {"live-method": "result-tag"}
+    invoked = []
+
+    async def _calc_tag(tag_id, method_id, parameters, data):
+        invoked.append((method_id, tag_id, data))
+
+    svc._calc_tag = _calc_tag
+
+    asyncio.run(
+        MethodsApp._start_method_by_alert(svc, {"alertId": "alert-1", "x": 55})
+    )
+
+    assert invoked == [("live-method", "result-tag", [55, None, None])]
+    assert svc._cache.store["alert-1.methods_app"] == {"live-method": "result-tag"}
+    assert svc._cache.store["tag-1.methods_app"] == {
+        "dead-method": "tag-dead",
+        "live-method": "result-tag",
+    }
+    assert svc._cache.store["sched-1.methods_app"] == {"live-method": "result-tag"}
+
+
+def test_alert_without_attribute_subscribes_only_to_alarm_on():
+    svc = _make_service(
+        _Hierarchy(
+            initiators=["alert-1"],
+            initiator_classes={"alert-1": "prsAlert"},
+        )
+    )
+
+    ok = asyncio.run(MethodsApp._make_method_cache(svc, "method-1"))
+
+    assert ok is True
+    assert svc._amqp_consume_queue.calls == [
+        ("unbind", "main", "prsAlert.app.alarm_on.alert-1"),
+        ("bind", "main", "prsAlert.app.alarm_on.alert-1"),
+    ]
+    assert svc._cache.store["alert-1.methods_app"] == {"method-1": "result-tag"}
+    assert svc._cache.store["method-1.methods_app"] == ["alert-1"]
+
+
+def test_alert_event_set_subscribes_only_to_selected_keys():
+    svc = _make_service(
+        _Hierarchy(
+            initiators=["alert-1"],
+            initiator_classes={"alert-1": "prsAlert"},
+            initiator_events={"method-1": {"alert-1": ["alarm_acked", "alarm_off"]}},
+        )
+    )
+
+    ok = asyncio.run(MethodsApp._make_method_cache(svc, "method-1"))
+
+    assert ok is True
+    assert svc._amqp_consume_queue.calls == [
+        ("unbind", "main", "prsAlert.app.alarm_off.alert-1"),
+        ("unbind", "main", "prsAlert.app.alarm_acked.alert-1"),
+        ("bind", "main", "prsAlert.app.alarm_off.alert-1"),
+        ("bind", "main", "prsAlert.app.alarm_acked.alert-1"),
+    ]
+    assert svc._cache.store["alert-1.methods_app"] == {"method-1": "result-tag"}
+    assert svc._cache.store["method-1.methods_app"] == ["alert-1"]
+    assert svc._alert_event_memory()[("alert-1", "method-1")] == ("alarm_off", "alarm_acked")
+
+
+def test_two_alert_methods_unbind_only_their_own_keys():
+    hierarchy = _Hierarchy(
+        method_ids=["method-a", "method-b"],
+        initiators={
+            "method-a": ["alert-1"],
+            "method-b": ["alert-1"],
+        },
+        initiator_classes={"alert-1": "prsAlert"},
+        initiator_events={"method-a": {"alert-1": ["alarm_off", "alarm_acked"]}},
+        parent_tag_id={"method-a": "tag-a", "method-b": "tag-b"},
+    )
+    svc = _make_service(hierarchy)
+    asyncio.run(MethodsApp._make_method_cache(svc, "method-a"))
+    asyncio.run(MethodsApp._make_method_cache(svc, "method-b"))
+    svc._amqp_consume_queue.calls.clear()
+
+    asyncio.run(MethodsApp._deleting(svc, {"id": "method-a"}))
+
+    unbound = [call[2] for call in svc._amqp_consume_queue.calls if call[0] == "unbind"]
+    assert "prsAlert.app.alarm_off.alert-1" in unbound
+    assert "prsAlert.app.alarm_acked.alert-1" in unbound
+    assert "prsAlert.app.alarm_on.alert-1" not in unbound
+    assert svc._cache.store["alert-1.methods_app"] == {"method-b": "tag-b"}
+    assert "method-a.methods_app" not in svc._cache.store
+
+    svc._amqp_consume_queue.calls.clear()
+    asyncio.run(MethodsApp._deleting(svc, {"id": "method-b"}))
+
+    unbound = [call[2] for call in svc._amqp_consume_queue.calls if call[0] == "unbind"]
+    assert unbound == ["prsAlert.app.alarm_on.alert-1"]
+    assert "alert-1.methods_app" not in svc._cache.store
+    assert "method-b.methods_app" not in svc._cache.store
+
+
+def test_removing_alert_initiator_releases_keys_other_methods_do_not_keep():
+    hierarchy = _Hierarchy(
+        method_ids=["method-a", "method-b"],
+        initiators={
+            "method-a": ["alert-1"],
+            "method-b": ["alert-1"],
+        },
+        initiator_classes={"alert-1": "prsAlert"},
+        initiator_events={"method-a": {"alert-1": ["alarm_off"]}},
+        parent_tag_id={"method-a": "tag-a", "method-b": "tag-b"},
+    )
+    svc = _make_service(hierarchy)
+    asyncio.run(MethodsApp._make_method_cache(svc, "method-a"))
+    asyncio.run(MethodsApp._make_method_cache(svc, "method-b"))
+    hierarchy.initiators["method-a"] = []
+    svc._amqp_consume_queue.calls.clear()
+
+    asyncio.run(MethodsApp._make_method_cache(svc, "method-a"))
+
+    unbound = [call[2] for call in svc._amqp_consume_queue.calls if call[0] == "unbind"]
+    assert "prsAlert.app.alarm_off.alert-1" in unbound
+    assert "prsAlert.app.alarm_on.alert-1" not in unbound
+    assert ("alert-1", "method-a") not in svc._alert_event_memory()
+    assert svc._alert_event_memory()[("alert-1", "method-b")] == ("alarm_on",)
+    assert svc._cache.store["alert-1.methods_app"] == {"method-b": "tag-b"}
+
+
+def test_alarm_off_starts_only_the_method_that_selected_it():
+    hierarchy = _Hierarchy(
+        method_type={
+            "method-off": 0,
+            "method-on": 0,
+            "method-t1": 1,
+            "method-t2": 2,
+            "method-t3": 3,
+            "method-t4": 4,
+        },
+        initiators={
+            "method-off": ["alert-1"],
+            "method-on": ["alert-1"],
+            "method-t1": ["alert-1"],
+            "method-t2": ["alert-1"],
+            "method-t3": ["alert-1"],
+            "method-t4": ["alert-1"],
+        },
+        initiator_classes={"alert-1": "prsAlert"},
+        initiator_events={
+            "method-off": {"alert-1": ["alarm_off"]},
+            "method-t1": {"alert-1": ["alarm_on", "alarm_off"]},
+            "method-t2": {"alert-1": ["alarm_off"]},
+            "method-t3": {"alert-1": ["alarm_off"]},
+            "method-t4": {"alert-1": ["alarm_off"]},
+        },
+        parent_tag_id={
+            "method-off": "tag-off",
+            "method-on": "tag-on",
+            "method-t1": "tag-t1",
+            "method-t2": "tag-t2",
+            "method-t3": "tag-t3",
+            "method-t4": "tag-t4",
+        },
+    )
+    svc = _make_service(hierarchy)
+    svc._cache.store["alert-1.methods_app"] = {
+        "method-off": "tag-off",
+        "method-on": "tag-on",
+        "method-t1": "tag-t1",
+        "method-t2": "tag-t2",
+        "method-t3": "tag-t3",
+        "method-t4": "tag-t4",
+    }
+    svc._cache.store["tag-1.methods_app"] = {"method-b": "other-tag"}
+    svc._cache.store["sched-1.methods_app"] = {"method-c": "sched-tag"}
+    invoked = []
+
+    async def _calc_tag(tag_id, method_id, parameters, data):
+        invoked.append((method_id, tag_id, data))
+
+    svc._calc_tag = _calc_tag
+
+    result = asyncio.run(
+        MethodsApp._start_method_by_alert(
+            svc,
+            {"alertId": "alert-1", "x": 180},
+            routing_key="prsAlert.app.alarm_off.alert-1",
+        )
+    )
+
+    assert result is NO_AMQP_RPC_REPLY
+    assert invoked == [("method-off", "tag-off", [180, None, None])]
+    assert svc._cache.store["tag-1.methods_app"] == {"method-b": "other-tag"}
+    assert svc._cache.store["sched-1.methods_app"] == {"method-c": "sched-tag"}
+    assert set(svc._cache.store["alert-1.methods_app"]) == {
+        "method-off",
+        "method-on",
+        "method-t1",
+        "method-t2",
+        "method-t3",
+        "method-t4",
+    }
+
+
+def test_alarm_on_and_acked_with_the_same_x_call_the_method_twice():
+    hierarchy = _Hierarchy(
+        initiators=["alert-1"],
+        initiator_classes={"alert-1": "prsAlert"},
+        initiator_events={"method-1": {"alert-1": ["alarm_on", "alarm_acked"]}},
+    )
+    svc = _make_service(hierarchy)
+    asyncio.run(MethodsApp._make_method_cache(svc, "method-1"))
+    invoked = []
+
+    async def _calc_tag(tag_id, method_id, parameters, data):
+        invoked.append((method_id, data))
+
+    svc._calc_tag = _calc_tag
+    for event in ("alarm_on", "alarm_acked"):
+        result = asyncio.run(
+            MethodsApp._start_method_by_alert(
+                svc,
+                {"alertId": "alert-1", "x": 180},
+                routing_key=f"prsAlert.app.{event}.alert-1",
+            )
+        )
+        assert result is NO_AMQP_RPC_REPLY
+
+    assert invoked == [
+        ("method-1", [180, None, None]),
+        ("method-1", [180, None, None]),
+    ]

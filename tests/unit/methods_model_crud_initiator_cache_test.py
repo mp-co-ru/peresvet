@@ -272,3 +272,67 @@ def test_delete_method_cache_does_not_fail_whole_handler_on_missing_method():
 
     assert svc._cache.store["sched-1.methods_model_crud"] == ["dead-method"]
     assert any("dead-method" in msg for msg in svc._logger.warnings)
+
+
+def test_delete_alert_initiator_clears_only_its_own_key():
+    hierarchy = _Hierarchy(
+        missing_nodes=["dead-method"],
+        present_methods=["live-method"],
+    )
+    svc = _make_service(hierarchy)
+    svc._cache.store["deleted-alert.methods_model_crud"] = ["dead-method", "live-method"]
+    svc._cache.store["other-tag.methods_model_crud"] = ["sibling-method"]
+    svc._cache.store["other-sched.methods_model_crud"] = ["sibling-method"]
+
+    asyncio.run(
+        MethodsModelCRUD._delete_initiator(
+            svc,
+            {"id": "deleted-alert"},
+            "prsAlert.model.deleted.deleted-alert",
+        )
+    )
+
+    assert "deleted-alert.methods_model_crud" not in svc._cache.store
+    assert svc._cache.store["other-tag.methods_model_crud"] == ["sibling-method"]
+    assert svc._cache.store["other-sched.methods_model_crud"] == ["sibling-method"]
+    assert hierarchy.deleted == ["live-method:deleted-alert"]
+    assert ("unbind", "main", "prsAlert.model.deleted.deleted-alert") in svc._amqp_consume_queue.calls
+    assert all(
+        call[2] == "prsAlert.model.deleted.deleted-alert"
+        for call in svc._amqp_consume_queue.calls
+        if call[0] == "unbind"
+    )
+
+
+def test_alert_delete_bind_uses_structural_class_not_top():
+    class Hierarchy:
+        async def get_parent(self, method_id):
+            return "alert-parent", None
+
+        async def get_node_class(self, node_id):
+            return "prsAlert"
+
+    svc = _make_service(Hierarchy())
+
+    async def _get_initiators(method_id):
+        return [(
+            "alert-1",
+            {"objectClass": ["top", "prsModelNode", "prsAlert"]},
+        )]
+
+    svc._get_method_initiators = _get_initiators
+    asyncio.run(MethodsModelCRUD._make_method_cache(svc, "method-1"))
+    assert ("bind", "main", "prsAlert.model.deleted.alert-1") in svc._amqp_consume_queue.calls
+    assert not any(call[2].startswith("top.") for call in svc._amqp_consume_queue.calls)
+
+    svc._cache.store["alert-1.methods_model_crud"] = ["method-1"]
+    asyncio.run(MethodsModelCRUD._delete_method_cache(svc, "method-1"))
+    assert ("unbind", "main", "prsAlert.model.deleted.alert-1") in svc._amqp_consume_queue.calls
+
+
+def test_alert_deleted_handler_uses_existing_delete_initiator():
+    svc = object.__new__(MethodsModelCRUD)
+    svc._handlers = {}
+    MethodsModelCRUD._add_app_handlers(svc)
+    assert svc._handlers["prsAlert.model.deleted.*"].__func__ is MethodsModelCRUD._delete_initiator
+    assert svc._handlers["prsTag.model.deleted.*"].__func__ is MethodsModelCRUD._delete_initiator

@@ -89,6 +89,13 @@ def test_mcp_tools_call_http_layer():
                 method_address="placeholder",
                 catalog_method_id="cat-1",
             )
+            await _unwrap(mcp_server.peresvet_method_create)(
+                cn="by-alert",
+                parent_id="p",
+                method_address="pkg.by_alert",
+                initiated_by=["alert-1", "sched-1"],
+                alert_events={"alert-1": ["alarm_off", "alarm_acked"]},
+            )
             await _unwrap(mcp_server.peresvet_method_folder_create)(cn="stdlib", description="arith")
             await _unwrap(mcp_server.peresvet_method_folders_list)(base="root", scope=2, filter={"cn": ["stdlib"]})
             await _unwrap(mcp_server.peresvet_method_folder_update)(folder_id="f1", cn="renamed")
@@ -146,6 +153,17 @@ def test_mcp_tools_call_http_layer():
     assert catalog_calls
     assert catalog_calls[0][3]["attributes"]["prsCatalogMethodId"] == "cat-1"
     assert catalog_calls[0][3]["attributes"]["prsMethodAddress"] == "placeholder"
+    plain_method = next(
+        item for item in captured
+        if item[0] == "POST" and item[1] == "/v1/methods/" and item[3] and item[3].get("attributes", {}).get("cn") == "m"
+    )
+    assert "alertEvents" not in plain_method[3]
+    by_alert = next(
+        item for item in captured
+        if item[0] == "POST" and item[1] == "/v1/methods/" and item[3] and item[3].get("attributes", {}).get("cn") == "by-alert"
+    )
+    assert by_alert[3]["initiatedBy"] == ["alert-1", "sched-1"]
+    assert by_alert[3]["alertEvents"] == {"alert-1": ["alarm_off", "alarm_acked"]}
     folder_create = next(
         item for item in captured
         if item[1] == "/v1/methods/" and item[0] == "POST" and item[3] and item[3].get("folder") is True

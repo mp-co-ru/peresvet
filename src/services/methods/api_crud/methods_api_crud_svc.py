@@ -5,7 +5,7 @@
 import sys
 from typing import List, Optional
 import json
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from fastapi import APIRouter, Depends, Query
 
 sys.path.append(".")
@@ -65,7 +65,21 @@ class MethodCreate(svc.NodeCreate):
         title="Метод каталога",
         description="То же, что attributes.prsCatalogMethodId.",
     )
-    initiatedBy: str | list[str] | None = Field(None, title="Список id экземпляров сущностей, инициирующих вычисление тега.")
+    initiatedBy: str | list[str] | None = Field(
+        None,
+        title="Список id тегов, расписаний и тревог, инициирующих вычисление.",
+        description="У тревоги выбираются события: срабатывание, пропадание и квитирование.",
+    )
+    alertEvents: dict[str, list[str]] | None = Field(
+        None,
+        title="События тревог-инициаторов.",
+        description=(
+            "Ключ — id тревоги из initiatedBy. Значение — непустой набор из "
+            "alarm_on (срабатывание), alarm_off (пропадание) и alarm_acked (квитирование). "
+            "Нет поля — только срабатывание. Пустой набор нельзя. "
+            "Теги и расписания событий не выбирают."
+        ),
+    )
     parameters: List[MethodParameter] | None = Field(
         None,
         title="Параметры метода.",
@@ -83,6 +97,26 @@ class MethodCreate(svc.NodeCreate):
             return [v]
         return v
 
+    @model_validator(mode="after")
+    def alert_events_belong_to_initiators(self):
+        events = self.alertEvents
+        if not events:
+            return self
+        raw_initiators = self.initiatedBy or []
+        if isinstance(raw_initiators, str):
+            raw_initiators = [raw_initiators]
+        known = {str(item) for item in raw_initiators}
+        allowed = {"alarm_on", "alarm_off", "alarm_acked"}
+        for key, names in events.items():
+            if str(key) not in known:
+                raise ValueError(f"alertEvents: '{key}' нет в initiatedBy.")
+            if not isinstance(names, list) or not names:
+                raise ValueError("Пустой набор событий тревоги нельзя.")
+            for name in names:
+                if name not in allowed:
+                    raise ValueError(f"Неизвестное событие тревоги '{name}'.")
+        return self
+
 class MethodRead(svc.NodeRead):
     pass
 
@@ -93,7 +127,19 @@ class OneMethodInReadResult(svc.OneNodeInReadResult):
         title="Число параметров метода каталога",
         description="Только для чтения. Считается по дочерним prsMethodParameter.",
     )
-    initiatedBy: str | list[str] = Field([], title="Список id экземпляров сущностей, инициирующих вычисление тега.")
+    initiatedBy: str | list[str] = Field(
+        [],
+        title="Список id тегов, расписаний и тревог, инициирующих вычисление.",
+        description="У тревоги выбираются события: срабатывание, пропадание и квитирование.",
+    )
+    alertEvents: dict[str, list[str]] | None = Field(
+        None,
+        title="События тревог-инициаторов.",
+        description=(
+            "Только явно сохранённый набор. Нет поля — у тревоги только срабатывание. "
+            "Теги и расписания сюда не входят."
+        ),
+    )
     parameters: List[dict] = Field(
         [],
         title="Параметры метода.",
@@ -180,8 +226,12 @@ async def create(payload: dict, error_handler: svc.ErrorHandler = Depends()):
         * **folder** (bool) - поле базового POST. Если ``true``, создаётся
           папка ``prsFolder``, а не метод. По умолчанию ``false``.
         * **parentId** (str) - Id родительского узла. Обязательное поле.
-        * **initiatedBy** (str | list[str]) - Список id экземпляров сущностей,
-          инициирующих вычисление тега. Необязательный атрибут.
+        * **initiatedBy** (str | list[str]) - Список id тегов, расписаний и тревог,
+          инициирующих вычисление. У тревоги выбираются события. Необязательный атрибут.
+        * **alertEvents** (dict) - События тревог из ``initiatedBy``:
+          ``alarm_on`` (срабатывание), ``alarm_off`` (пропадание),
+          ``alarm_acked`` (квитирование). Нет поля — только срабатывание.
+          Пустой набор нельзя. Необязательный атрибут.
         * **attributes** (dict) - Атрибуты метода. Обязательное поле. Включает в себя:
 
           * **prsMethodAddress** (str) - Адрес метода. Обязательное поле.
