@@ -33,13 +33,11 @@ def apply_stored_episode(alert_data: dict, episode: dict | None) -> None:
         return
     acked = _ts_or_none(episode.get("cx"))
     finish = _ts_or_none(episode.get("e"))
-    if finish is not None and acked is not None:
-        return
     if finish is not None:
         alert_data["fired"] = False
         alert_data["episodeStart"] = start
         alert_data["finish"] = finish
-        alert_data["acked"] = False
+        alert_data["acked"] = acked if acked is not None else False
         return
     alert_data["fired"] = start
     alert_data["episodeStart"] = None
@@ -128,8 +126,9 @@ def select_alarm_episodes(
 
     ``fired=True`` — только эпизод, активный в момент ``finish``. ``count``
     тогда игнорируется. Без ``fired``, ``start`` и ``count`` — состояние
-    тревоги в момент ``finish``: активный эпизод, пропавший и ещё не
-    квитированный, либо пустые метки, если эпизод уже закрыт.
+    тревоги в момент ``finish``: последний эпизод, уже начавшийся к этому
+    моменту, вместе с его финишем и квитированием. Пустые метки — только
+    если к этому моменту тревога ещё ни разу не начиналась.
     ``start`` или ``count`` при ``fired=False`` — список эпизодов со стартом
     в ``[start, finish]``, не больше ``count`` последних (если ``count``
     не задан — не больше 500).
@@ -170,11 +169,7 @@ def select_alarm_episodes(
         chosen = next((row for row in clean if row["fired"] <= finish), None)
         if chosen is None:
             return [{"fired": None, "finish": None, "acked": None}]
-        clipped = clip(chosen)
-        # Закрытый эпизод — это уже не состояние, а история. Её отдают count и start.
-        if clipped["finish"] is not None and clipped["acked"] is not None:
-            return [{"fired": None, "finish": None, "acked": None}]
-        return [clipped]
+        return [clip(chosen)]
 
     window = [
         row for row in clean
@@ -490,8 +485,10 @@ class AlertsApp(AppSvc):
         ``fired`` (по умолчанию да) — эпизод, активный в момент ``finish``.
         ``finish`` по умолчанию — текущее время. ``count`` при ``fired``
         не используется. Без ``fired``, ``start`` и ``count`` возвращается
-        состояние каждой тревоги на момент ``finish``. ``start`` или
-        ``count`` без ``fired`` — список эпизодов.
+        состояние каждой тревоги на момент ``finish``: последний эпизод,
+        уже начавшийся к этому моменту, в том числе закончившийся и
+        квитированный. ``start`` или ``count`` без ``fired`` — список
+        эпизодов.
         """
         parents = mes.get("parentId")
         if isinstance(parents, str):
@@ -586,14 +583,9 @@ class AlertsApp(AppSvc):
                 self._logger.warning(f"{self._config.svc_name} :: Тревога {alert_id} неактивна.")
                 return
 
-            if active:
-                alert_data["acked"] = x
-            else:
-                # Пропавшая неквитированная после квитирования из списка уходит.
-                alert_data["fired"] = False
-                alert_data["acked"] = False
-                alert_data["finish"] = None
-                alert_data["episodeStart"] = None
+            # Активная получает метку квитирования. Пропавшая остаётся в кэше
+            # последним эпизодом: старт, финиш и эта метка.
+            alert_data["acked"] = x
             await r.json().set(name=alert_cache_key, path="$", obj=alert_data)
 
         await self._post_message(
@@ -703,15 +695,9 @@ class AlertsApp(AppSvc):
                                 reply=False,
                                 routing_key=f"{self._config.hierarchy['class']}.app.alarm_off.{alert_id}"
                             )
-                            if _ts_or_none(alert_data.get("acked")) is not None:
-                                alert_data["fired"] = False
-                                alert_data["acked"] = False
-                                alert_data["finish"] = None
-                                alert_data["episodeStart"] = None
-                            else:
-                                alert_data["episodeStart"] = alert_data["fired"]
-                                alert_data["finish"] = data_item[0]
-                                alert_data["fired"] = False
+                            alert_data["episodeStart"] = alert_data["fired"]
+                            alert_data["finish"] = data_item[0]
+                            alert_data["fired"] = False
 
                     await r.json().set(
                         name=f"{alert_id}.{self._config.svc_name}", path="$", obj=alert_data

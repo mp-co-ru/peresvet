@@ -172,3 +172,4 @@ scripts/
 src/grafana/**/*.py
 backups/
 .venv-pdfbuild/
+alarmsGet.py
