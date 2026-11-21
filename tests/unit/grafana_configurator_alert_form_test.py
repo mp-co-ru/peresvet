@@ -33,3 +33,6 @@ def test_alert_and_schedule_fields_are_not_squeezed_into_col_1():
     assert "function prsTreeDropDeleted" in javascript
     assert "prsTreeDropDeleted(s)" in javascript
     assert "methodById:(t&&t.byId)||{}" in javascript
+    save = javascript.split("saveChanges=()", 1)[1].split("prsReorderMethodParameterIndices", 1)[0]
+    ok_at = save.find('showAlert("div-updateAlert","div-updateAlertMessage","i-updateAlert","Свойства сохранены.",!0)')
+    assert save.find("if(!r.ok)throw r") < ok_at < save.find("Ошибка обновления узла")

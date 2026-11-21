@@ -352,3 +352,151 @@ def test_variadic_instance_parameters_are_stored_without_type():
     }
     asyncio.run(MethodsModelCRUD._variadic_parameter_policy(svc, mes))
     assert all("prsValueTypeCode" not in item["attributes"] for item in mes["parameters"])
+
+
+class _AlertEventHierarchy:
+    def __init__(self, classes):
+        self.classes = classes
+        self.added = []
+
+    async def get_node_class(self, node_id):
+        return self.classes.get(node_id, "prsTag")
+
+    async def get_parent(self, node_id):
+        return "tag-parent", None
+
+    async def get_node_dn(self, node_id):
+        return f"cn={node_id},cn=prs"
+
+    async def search(self, payload):
+        if payload.get("attributes") == ["prsActive"]:
+            return [(payload.get("id"), None, {"prsActive": ["FALSE"]})]
+        attrs = payload.get("attributes") or []
+        if payload.get("id") and "objectClass" in attrs:
+            node_id = payload.get("id")
+            object_class = self.classes.get(node_id)
+            if not object_class:
+                return []
+            return [(node_id, None, {"objectClass": ["top", "prsModelNode", object_class]})]
+        cn = (payload.get("filter") or {}).get("cn")
+        if cn == ["system"]:
+            return [("system-node", None, {"cn": ["system"]})]
+        return []
+
+    async def add(self, parent, attrs):
+        self.added.append((parent, dict(attrs)))
+        return f"new-{len(self.added)}"
+
+
+def _link_attrs(hierarchy, cn):
+    return [attrs for _, attrs in hierarchy.added if attrs.get("cn") == [cn]]
+
+
+def test_alert_events_are_stored_only_when_wider_than_alarm_on():
+    hierarchy = _AlertEventHierarchy({"alert-1": "prsAlert", "tag-1": "prsTag"})
+    svc = _make_service(hierarchy)
+    mes = {
+        "parentId": "tag-parent",
+        "attributes": {"prsMethodAddress": "sum", "prsEntityTypeCode": 0},
+        "initiatedBy": ["alert-1", "tag-1"],
+    }
+
+    asyncio.run(MethodsModelCRUD._further_create(svc, mes, "method-1"))
+
+    assert _link_attrs(hierarchy, "alert-1") == [{"cn": ["alert-1"]}]
+    assert _link_attrs(hierarchy, "tag-1") == [{"cn": ["tag-1"]}]
+    assert all("prsJsonConfigString" not in attrs for _, attrs in hierarchy.added)
+
+    hierarchy.added.clear()
+    mes["alertEvents"] = {"alert-1": ["alarm_off", "alarm_on"]}
+    asyncio.run(MethodsModelCRUD._further_create(svc, mes, "method-1"))
+    assert _link_attrs(hierarchy, "alert-1") == [{
+        "cn": ["alert-1"],
+        "prsJsonConfigString": {"events": ["alarm_on", "alarm_off"]},
+    }]
+
+    hierarchy.added.clear()
+    mes["alertEvents"] = {"alert-1": ["alarm_on"]}
+    asyncio.run(MethodsModelCRUD._further_create(svc, mes, "method-1"))
+    assert _link_attrs(hierarchy, "alert-1") == [{"cn": ["alert-1"]}]
+
+
+def test_alert_events_reject_empty_unknown_foreign_and_non_alert():
+    hierarchy = _AlertEventHierarchy({
+        "alert-1": "prsAlert",
+        "tag-1": "prsTag",
+    })
+    svc = _make_service(hierarchy)
+    base = {
+        "parentId": "tag-parent",
+        "attributes": {"prsMethodAddress": "sum", "prsEntityTypeCode": 0},
+        "initiatedBy": ["alert-1", "tag-1"],
+    }
+
+    empty = {**base, "alertEvents": {"alert-1": []}}
+    rejected = asyncio.run(MethodsModelCRUD._further_create(svc, empty, "method-1"))
+    assert rejected["error"]["code"] == 422
+    assert hierarchy.added == []
+    prepared = asyncio.run(MethodsModelCRUD._prepare_method_write(svc, empty, creating=True))
+    assert prepared["error"]["code"] == 422
+
+    unknown = {**base, "alertEvents": {"alert-1": ["alarm_fired"]}}
+    assert asyncio.run(
+        MethodsModelCRUD._prepare_method_write(svc, unknown, creating=True)
+    )["error"]["code"] == 422
+
+    foreign = {**base, "alertEvents": {"other-alert": ["alarm_off"]}}
+    assert asyncio.run(
+        MethodsModelCRUD._prepare_method_write(svc, foreign, creating=True)
+    )["error"]["code"] == 422
+
+    tag = {**base, "alertEvents": {"tag-1": ["alarm_off"]}}
+    assert asyncio.run(
+        MethodsModelCRUD._prepare_method_write(svc, tag, creating=True)
+    )["error"]["code"] == 422
+
+    # objectClass[0] был бы top, структурный класс — prsAlert.
+    accepted = {**base, "alertEvents": {"alert-1": ["alarm_acked"]}}
+    assert asyncio.run(
+        MethodsModelCRUD._prepare_method_write(svc, accepted, creating=True)
+    ) is None
+
+
+def test_further_read_returns_alert_events_only_where_stored():
+    class Hierarchy:
+        async def get_node_class(self, node_id):
+            return "prsMethod"
+
+        async def get_node_dn(self, node_id):
+            return "cn=method-1,cn=prs"
+
+        async def get_parent(self, node_id):
+            raise RuntimeError(node_id)
+
+        async def search(self, payload):
+            base = payload.get("base") or ""
+            if base.startswith("cn=initiatedBy,"):
+                assert "prsJsonConfigString" in payload["attributes"]
+                return [
+                    ("link-tag", None, {"cn": ["tag-1"]}),
+                    (
+                        "link-alert",
+                        None,
+                        {
+                            "cn": ["alert-1"],
+                            "prsJsonConfigString": ['{"events": ["alarm_acked", "alarm_on"]}'],
+                        },
+                    ),
+                    ("link-plain", None, {"cn": ["alert-2"]}),
+                ]
+            if base.startswith("cn=parameters,"):
+                return []
+            raise AssertionError(payload)
+
+    svc = _make_service(Hierarchy())
+    result = asyncio.run(MethodsModelCRUD._further_read(svc, {}, {
+        "data": [{"id": "method-1", "attributes": {"objectClass": ["prsMethod"]}}]
+    }))
+    item = result["data"][0]
+    assert item["initiatedBy"] == ["tag-1", "alert-1", "alert-2"]
+    assert item["alertEvents"] == {"alert-1": ["alarm_on", "alarm_acked"]}

@@ -176,7 +176,7 @@ def test_node_tooltip_is_description_and_errors_stay_on_icons():
     assert 'prs-tree-rollup-strip--p",!!m' in javascript
     assert "methodTagGap:methodTagGap,rollupParamTag:rollupParamTag,methodNoInit:methodNoInit,rollupNoInit:rollupNoInit,parentById:s" in javascript
     assert "function prsMethodMissesInitiator(item)" in javascript
-    assert 'kind:"noinit",title:"У вычислительного метода нет инициатора: ни тега, ни расписания."' in javascript
+    assert 'kind:"noinit",title:"У вычислительного метода нет инициатора: ни тега, ни расписания, ни тревоги."' in javascript
     assert 'prs-tree-rollup-strip--n",!!ni' in javascript
     assert "function prsBindRollupMenu(strip)" in javascript
     assert "prsBindRollupMenu(i)" in javascript

@@ -247,7 +247,7 @@ def test_methods_catalog_root_and_menus():
     assert "prsAfterTagTimeField" in javascript
     assert "prsMarkInitiatorTabs" in javascript
     assert "prsMarkInitiatorMissing" in javascript
-    assert html.count('class="prs-search-glyph"') == 3
+    assert html.count('class="prs-search-glyph"') == 4
     assert "#prs-method-init-tabs .nav-link.prs-init-tab-has{background:#c5e4ea!important" in css
     assert 'querySelectorAll(".prs-json-editor-resize")' in javascript
     assert 'ta.closest(".prs-json-editor-compact")' in javascript
@@ -469,6 +469,63 @@ params.classList.add("prs-form-tab-problem");
 wrap.classList.add("prs-initiators-missing");
 prsSyncFormProblemTabs();
 if(has(props,"prs-form-tab-problem")||has(params,"prs-form-tab-problem")||has(wrap,"prs-initiators-missing"))throw new Error("tag kept method problem marks");
+"""
+    completed = subprocess.run([node, "-e", script], check=False, capture_output=True, text=True)
+    assert completed.returncode == 0, completed.stderr or completed.stdout
+
+
+def test_initiator_chips_stay_on_their_own_tab():
+    import shutil
+    import subprocess
+
+    node = shutil.which("node")
+    assert node
+    _html, javascript = _parts()
+    le = javascript.find('function Le(e){return String(e||"").replace(/&/g,"&amp;")')
+    le_end = javascript.find("var Ie={Tags:0,Schedules:0,Alerts:0}", le)
+    oe = javascript.find('function Oe(e){const t=__prsConfiguratorGetEl("div-initiatorChips"')
+    oe_end = javascript.find("function prsMarkInitiatorTabs(", oe)
+    assert le > 0 and le_end > le and oe > 0 and oe_end > oe
+    script = javascript[le:le_end] + javascript[oe:oe_end] + r"""
+function makeBox(){return {innerHTML:"", children:[], appendChild:function(child){this.children.push(child)}}}
+var boxes={
+  "div-initiatorChipsTags":makeBox(),
+  "div-initiatorChipsSchedules":makeBox(),
+  "div-initiatorChipsAlerts":makeBox()
+};
+function __prsConfiguratorGetEl(id){return boxes[id]||null}
+function prsMarkInitiatorTabs(){}
+function Pe(){}
+function ke(){}
+global.document={createElement:function(){return {className:"", innerHTML:"", title:"", querySelector:function(){return {addEventListener:function(){}}}}}};
+global.window={
+  prsInitiatorCatalogTags:[{id:"tag-1", cn:"Давление", path:"Цех → Давление"}],
+  prsInitiatorCatalogSchedules:[{id:"sch-1", cn:"Каждую минуту", path:"Каждую минуту"}],
+  prsInitiatorCatalogAlerts:[{id:"alert-1", cn:"Высокий уровень", path:"Цех → Высокий уровень"}]
+};
+var we=["tag-1","sch-1","alert-1","gone-1"];
+Oe("Tags");
+Oe("Schedules");
+Oe("Alerts");
+function texts(box){return box.children.map(function(chip){return chip.innerHTML}).join("\n")}
+var tags=texts(boxes["div-initiatorChipsTags"]);
+var schedules=texts(boxes["div-initiatorChipsSchedules"]);
+var alerts=texts(boxes["div-initiatorChipsAlerts"]);
+if(boxes["div-initiatorChipsTags"].children.length!==1)throw new Error("tag chip count "+boxes["div-initiatorChipsTags"].children.length);
+if(boxes["div-initiatorChipsSchedules"].children.length!==1)throw new Error("schedule chip count "+boxes["div-initiatorChipsSchedules"].children.length);
+if(boxes["div-initiatorChipsAlerts"].children.length!==1)throw new Error("alert chip count "+boxes["div-initiatorChipsAlerts"].children.length);
+if(tags.indexOf("Давление")<0)throw new Error("tag name missing "+tags);
+if(tags.indexOf("Каждую минуту")>=0||tags.indexOf("sch-1")>=0||tags.indexOf("gone-1")>=0||tags.indexOf("Высокий уровень")>=0||tags.indexOf("alert-1")>=0)throw new Error("foreign chip on tags "+tags);
+if(schedules.indexOf("Каждую минуту")<0)throw new Error("schedule name missing "+schedules);
+if(schedules.indexOf("Давление")>=0||schedules.indexOf("tag-1")>=0||schedules.indexOf("gone-1")>=0||schedules.indexOf("Высокий уровень")>=0||schedules.indexOf("alert-1")>=0)throw new Error("foreign chip on schedules "+schedules);
+if(alerts.indexOf("Высокий уровень")<0)throw new Error("alert name missing "+alerts);
+if(alerts.indexOf("Давление")>=0||alerts.indexOf("tag-1")>=0||alerts.indexOf("Каждую минуту")>=0||alerts.indexOf("sch-1")>=0||alerts.indexOf("gone-1")>=0)throw new Error("foreign chip on alerts "+alerts);
+if(we.join(",")!=="tag-1,sch-1,alert-1,gone-1")throw new Error("render changed initiator ids "+we.join(","));
+["Срабатывание","Пропадание","Квитирование"].forEach(function(label){
+  if(alerts.indexOf(label)<0)throw new Error("alert chip misses "+label+" "+alerts);
+  if(tags.indexOf(label)>=0)throw new Error("tag chip has "+label);
+  if(schedules.indexOf(label)>=0)throw new Error("schedule chip has "+label);
+});
 """
     completed = subprocess.run([node, "-e", script], check=False, capture_output=True, text=True)
     assert completed.returncode == 0, completed.stderr or completed.stdout

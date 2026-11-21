@@ -1,4 +1,5 @@
 import asyncio
+import json
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -10,6 +11,7 @@ from src.common.model_copy import (
     _remap_link_operations,
     _safe_json_ldap,
     collect_subtree_nodes,
+    copy_nodes_via_amqp,
     copy_single_method,
     copy_subtree_rooted_at,
     ensure_attrs_for_create,
@@ -317,3 +319,88 @@ def test_copy_subtree_wrong_class():
         )
     )
     assert res["error"]["code"] == 422
+
+
+def test_copy_method_carries_alert_events_and_rewrites_subtree_alert_id():
+    inside = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+    outside = "cccccccc-cccc-cccc-cccc-cccccccccccc"
+    copied = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+    source = "method-1"
+
+    class H:
+        async def get_node_class(self, nid):
+            if nid in ("parent-tag", "dest"):
+                return "prsTag"
+            return "prsMethod"
+
+        async def get_parent(self, nid):
+            return "parent-tag", None
+
+        async def get_node_dn(self, nid):
+            return f"cn={nid}"
+
+        async def search(self, payload):
+            if payload.get("id") == [source]:
+                return [(source, None, {"cn": ["sum"], "prsMethodAddress": ["sum"], "prsActive": ["TRUE"]})]
+            base = str(payload.get("base") or "")
+            if "initiatedBy" in base:
+                return [
+                    (
+                        inside,
+                        None,
+                        {
+                            "cn": [inside],
+                            "prsJsonConfigString": [
+                                json.dumps({"events": ["alarm_acked", "alarm_on"]})
+                            ],
+                        },
+                    ),
+                    (
+                        outside,
+                        None,
+                        {
+                            "cn": [outside],
+                            "prsJsonConfigString": [json.dumps({"events": ["alarm_off"]})],
+                        },
+                    ),
+                ]
+            return []
+
+    bodies = []
+
+    async def post_message(*, mes, reply, routing_key):
+        bodies.append(mes)
+        return {"id": "copied-method"}
+
+    result = asyncio.run(
+        copy_single_method(
+            H(),
+            post_message,
+            source_id=source,
+            new_parent_id="dest",
+            subtree_ids=frozenset({inside}),
+            id_map={inside: copied},
+        )
+    )
+    assert result == {"id": "copied-method"}
+    assert bodies[0]["initiatedBy"] == [copied, outside]
+    assert bodies[0]["alertEvents"] == {
+        copied: ["alarm_on", "alarm_acked"],
+        outside: ["alarm_off"],
+    }
+
+    tree = asyncio.run(
+        copy_nodes_via_amqp(
+            H(),
+            post_message,
+            [(source, "prsMethod", {"cn": ["sum"], "prsMethodAddress": ["sum"], "prsActive": ["TRUE"]})],
+            source,
+            "dest",
+            {inside: copied},
+            frozenset({inside}),
+            None,
+        )
+    )
+    assert tree == {"id": "copied-method"}
+    assert bodies[1]["alertEvents"][copied] == ["alarm_on", "alarm_acked"]
+    assert bodies[1]["initiatedBy"] == [copied, outside]

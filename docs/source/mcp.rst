@@ -151,7 +151,11 @@ Service accounts → Add service account token, см.
 
 **Методы** (см. :doc:`methods`)
 
-* ``peresvet_method_create`` — метод любого типа ``0``–``4``;
+* ``peresvet_method_create`` — метод любого типа ``0``–``4``.
+  У вычислительного метода инициатором может быть тревога, и у каждой
+  тревоги свой набор событий в ``alert_events``: срабатывание
+  (``alarm_on``), пропадание (``alarm_off``) и квитирование
+  (``alarm_acked``). Нет ключа — только срабатывание;
 * ``peresvet_virtual_method_create`` — метод чтения (тип ``1``);
 * ``peresvet_write_method_create`` — метод записи (тип ``2``);
 * ``peresvet_read_action_create`` — действие при чтении (тип ``3``);

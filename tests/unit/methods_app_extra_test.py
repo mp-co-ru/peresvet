@@ -17,6 +17,7 @@ def test_entity_type_and_missing_node_and_routing_key():
     assert MethodsApp._is_missing_node_error(RuntimeError("x")) is False
     assert svc._initiator_event_routing_key("prsTag", "t") == "prsTag.app.data_set.t"
     assert svc._initiator_event_routing_key("prsSchedule", "s") == "prsSchedule.app.fire_event.s"
+    assert svc._initiator_event_routing_key("prsAlert", "a") == "prsAlert.app.alarm_on.a"
     assert svc._initiator_event_routing_key("prsObject", "o") is None
     assert MethodsApp._unwrap_redis_json_root([["a"]]) == ["a"]
     assert MethodsApp._unwrap_redis_json_root(["a"]) == ["a"]
@@ -37,3 +38,6 @@ def test_updated_inactive_and_created():
     svc._make_method_cache.assert_awaited()
     svc._add_app_handlers()
     assert "prsSchedule.app.fire_event.*" in svc._handlers
+    assert svc._handlers["prsAlert.app.alarm_on.*"].__func__ is MethodsApp._start_method_by_alert
+    assert svc._handlers["prsAlert.app.alarm_off.*"].__func__ is MethodsApp._start_method_by_alert
+    assert svc._handlers["prsAlert.app.alarm_acked.*"].__func__ is MethodsApp._start_method_by_alert
