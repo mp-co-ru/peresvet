@@ -198,7 +198,7 @@ def test_tag_value_changed_high_alarm_on_off_and_ack():
     assert "prsAlert.app_api.get_alarms" in svc._handlers
 
 
-def test_ack_clears_pending_episode_and_cache_restores_open_row():
+def test_ack_keeps_closed_episode_and_cache_restores_it():
     store = {
         "a1.alerts_app": {
             "fired": False,
@@ -215,8 +215,10 @@ def test_ack_clears_pending_episode_and_cache_restores_open_row():
     }
     svc = _svc(store=store)
     asyncio.run(svc._ack_alarm({"id": "a1"}))
-    assert store["a1.alerts_app"]["finish"] is None
     assert store["a1.alerts_app"]["fired"] is False
+    assert store["a1.alerts_app"]["episodeStart"] == 10
+    assert store["a1.alerts_app"]["finish"] == 20
+    assert isinstance(store["a1.alerts_app"]["acked"], int)
     assert svc._post_message.await_args.args[0]["alertId"] == "a1"
     assert isinstance(svc._post_message.await_args.args[0]["x"], int)
 
@@ -260,6 +262,22 @@ def test_ack_clears_pending_episode_and_cache_restores_open_row():
     assert asyncio.run(svc3._make_alert_cache("a1")) is True
     assert fresh["a1.alerts_app"]["fired"] == 50
 
+    closed = {}
+    svc4 = _svc(store=closed, alerts=row)
+    svc4._hierarchy.search = AsyncMock(return_value=row)
+
+    async def post_closed(mes, reply=False, routing_key=None, timeout=None):
+        if routing_key and "alarm_state" in routing_key:
+            return {"alertId": "a1", "x": 300, "cx": 320, "e": 310}
+        return None
+
+    svc4._post_message = post_closed
+    assert asyncio.run(svc4._make_alert_cache("a1")) is True
+    assert closed["a1.alerts_app"]["fired"] is False
+    assert closed["a1.alerts_app"]["episodeStart"] == 300
+    assert closed["a1.alerts_app"]["finish"] == 310
+    assert closed["a1.alerts_app"]["acked"] == 320
+
 
 EPISODES = [
     {"fired": 300, "finish": 310, "acked": 320},
@@ -280,13 +298,69 @@ def test_select_alarm_episodes_follows_fired_start_and_count():
     idle = select_alarm_episodes([], fired=False, start=None, finish=150, count=None)
     assert idle == [{"fired": None, "finish": None, "acked": None}]
     closed = select_alarm_episodes(EPISODES, fired=False, start=None, finish=400, count=None)
-    assert closed == [{"fired": None, "finish": None, "acked": None}]
+    assert closed == [{"fired": 300, "finish": 310, "acked": 320}]
     pending = select_alarm_episodes(
         [{"fired": 100, "finish": 180, "acked": None}],
         fired=False, start=None, finish=400, count=None,
     )
     assert pending == [{"fired": 100, "finish": 180, "acked": None}]
     assert select_alarm_episodes([], fired=True, start=None, finish=150, count=None) == []
+
+
+def test_off_while_acked_keeps_the_episode():
+    store = {
+        "a1.alerts_app": {
+            "fired": 100,
+            "acked": 110,
+            "finish": None,
+            "episodeStart": None,
+            "value": 10,
+            "high": True,
+            "autoAck": True,
+            "cn": "hi",
+            "description": "d",
+        }
+    }
+    svc = _svc(store=store)
+    asyncio.run(svc._tag_value_changed(
+        {"data": [{"tagId": "tag-1", "data": [[200, 5, 0]]}]},
+        id_alert="a1",
+    ))
+    alarm = store["a1.alerts_app"]
+    assert alarm["fired"] is False
+    assert alarm["episodeStart"] == 100
+    assert alarm["finish"] == 200
+    assert alarm["acked"] == 110
+
+
+def test_get_alarms_state_returns_closed_episode_from_cache():
+    store = {
+        "a1.alerts_app": {
+            "fired": False,
+            "acked": 320,
+            "finish": 310,
+            "episodeStart": 300,
+            "cn": "Высокий уровень",
+            "description": "",
+            "tagId": "tag-1",
+        }
+    }
+    svc = _svc(store=store, alerts=[("a1", None, {"cn": ["Высокий уровень"]})])
+    svc._hierarchy.search = AsyncMock(return_value=[("a1", None, {"cn": ["Высокий уровень"]})])
+    res = asyncio.run(svc._get_alarms({
+        "parentId": "a1",
+        "fired": False,
+    }))
+    assert res["data"] == [{
+        "id": "a1",
+        "cn": "Высокий уровень",
+        "description": "",
+        "tagId": "tag-1",
+        "fired": 300,
+        "finish": 310,
+        "acked": 320,
+    }]
+    svc._post_message.assert_not_called()
 
 
 def test_get_alarms_reads_history_when_count_is_set():

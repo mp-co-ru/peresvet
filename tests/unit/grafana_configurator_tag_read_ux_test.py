@@ -149,6 +149,13 @@ def test_tag_read_request_ux_dashboard_contract():
     # Write tab / export / results table preserved
     assert 'id="prs-tag-pane-write"' in html
     assert 'id="button-tagGetData"' in read
+    assert 'class="prs-icon-btn flex-shrink-0" id="button-tagGetData"' in read
+    assert 'title="Читать данные" aria-label="Читать данные"' in read
+    assert ">Получить данные<" not in html
+    assert 'id="button-tagSetData"' in html
+    assert 'title="Записать данные" aria-label="Записать данные"' in html
+    assert ">Записать данные<" not in html
+    assert 'id="button-alertGetData"' in html
     assert 'id="button-tagExportCsv"' in read
     assert 'id="prs-tag-data-table"' in read
     assert 'id="tbody-tagData"' in read

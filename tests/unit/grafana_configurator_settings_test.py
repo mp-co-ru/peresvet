@@ -22,7 +22,7 @@ def test_configurator_settings_dialog_contract():
     header_at = html.index('class="p-2 sub-element prs-tree-header"')
     header = html[header_at : header_at + 1200]
     dialog_at = html.index('id="prs-settings-overlay"')
-    dialog = html[dialog_at : dialog_at + 1600]
+    dialog = html[dialog_at : dialog_at + 2200]
 
     assert f'prsConfiguratorCodeVersion="{CODE_VERSION}"' in javascript
     assert "Пересвет" in header
@@ -43,10 +43,18 @@ def test_configurator_settings_dialog_contract():
     assert 'id="chk-sortNodesAlphabetically"' in dialog
     assert "Привязка тегов и тревог к хранилищу по умолчанию при создании" in dialog
     assert "Сортировка узлов по алфавиту" in dialog
+    assert 'id="chk-missingSourceOk"' in dialog
+    assert "Отсутствие источника данных - не ошибка" in dialog
     assert dialog.index("chk-autoLinkTagDefault") < dialog.index("chk-sortNodesAlphabetically")
+    assert dialog.index("chk-sortNodesAlphabetically") < dialog.index("chk-missingSourceOk")
     assert 'id="input-prsFontSize"' in dialog
     assert "Размер шрифта" in dialog
-    assert dialog.index("chk-sortNodesAlphabetically") < dialog.index("input-prsFontSize")
+    assert dialog.index("chk-missingSourceOk") < dialog.index("input-prsFontSize")
+    assert "prsMissingSourceOk=function()" in javascript
+    assert "prs.configurator.missingSourceOk" in javascript
+    assert 'h=!(!l||!l[d])&&!prsMissingSourceOk()' in javascript
+    assert "prsNoSource=!(l||c||d)&&!prsMissingSourceOk()" in javascript
+    assert '"function"==typeof q&&q()' in javascript
 
     assert ".prs-tree-header{display:flex" in css
     assert ".prs-settings-btn{margin-left:auto" in css
