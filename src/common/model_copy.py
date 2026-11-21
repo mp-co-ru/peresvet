@@ -294,19 +294,56 @@ async def order_nodes_tree_parents_first_async(
     return ordered
 
 
-async def read_method_initiated_by_and_parameters(hierarchy, method_id: str) -> tuple[list[str], list[dict]]:
+_ALERT_EVENT_ORDER = ("alarm_on", "alarm_off", "alarm_acked")
+
+
+def _explicit_alert_events(attrs: dict[str, Any] | None) -> list[str] | None:
+    """Сохранённый набор событий тревоги. Одно срабатывание и пустой атрибут — нет."""
+    cfg = _safe_json_ldap((attrs or {}).get("prsJsonConfigString"), None)
+    if not isinstance(cfg, dict):
+        return None
+    names = cfg.get("events")
+    if not isinstance(names, list) or not names:
+        return None
+    ordered = [name for name in _ALERT_EVENT_ORDER if name in names]
+    if not ordered or ordered == ["alarm_on"]:
+        return None
+    return ordered
+
+
+def _remap_alert_events(
+    alert_events: dict[str, list[str]] | None,
+    id_map: dict[str, str],
+    subtree_ids: frozenset[str],
+) -> dict[str, list[str]]:
+    """Id тревоги внутри поддерева переписывается так же, как id в initiatedBy."""
+    if not alert_events:
+        return {}
+    old_ids = list(alert_events)
+    new_ids = remap_initiated_by(old_ids, id_map, subtree_ids)
+    return {new_id: list(alert_events[old_id]) for old_id, new_id in zip(old_ids, new_ids)}
+
+
+async def read_method_initiated_by_and_parameters(
+    hierarchy, method_id: str
+) -> tuple[list[str], list[dict], dict[str, list[str]]]:
     method_dn = await hierarchy.get_node_dn(method_id)
     initiated_by: list[str] = []
     parameters: list[dict] = []
+    alert_events: dict[str, list[str]] = {}
 
     payload_ib = {
         "base": f"cn=initiatedBy,cn=system,{method_dn}",
         "scope": CN_SCOPE_ONELEVEL,
         "filter": {"cn": ["*"]},
-        "attributes": ["cn"],
+        "attributes": ["cn", "prsJsonConfigString"],
     }
     for row in await hierarchy.search(payload_ib):
-        initiated_by.append(row[2]["cn"][0])
+        initiator_id = row[2]["cn"][0]
+        initiated_by.append(initiator_id)
+        explicit = _explicit_alert_events(row[2])
+        if explicit:
+            alert_events[initiator_id] = explicit
 
     payload_p = {
         "base": f"cn=parameters,cn=system,{method_dn}",
@@ -323,7 +360,7 @@ async def read_method_initiated_by_and_parameters(hierarchy, method_id: str) -> 
     }
     for row in await hierarchy.search(payload_p):
         parameters.append({"attributes": copy.deepcopy(row[2])})
-    return initiated_by, parameters
+    return initiated_by, parameters, alert_events
 
 
 async def copy_nodes_via_amqp(
@@ -355,8 +392,9 @@ async def copy_nodes_via_amqp(
             attrs_plain["cn"] = new_root_cn
 
         if oc == "prsMethod":
-            ib, params = await read_method_initiated_by_and_parameters(hierarchy, nid)
+            ib, params, alert_events = await read_method_initiated_by_and_parameters(hierarchy, nid)
             ib2 = remap_initiated_by(ib, id_map, subtree_ids)
+            alert_events2 = _remap_alert_events(alert_events, id_map, subtree_ids)
             params2 = []
             for p in params:
                 raw_p = p.get("attributes", {})
@@ -391,6 +429,8 @@ async def copy_nodes_via_amqp(
                 "initiatedBy": ib2,
                 "parameters": params2 if params2 else None,
             }
+            if alert_events2:
+                body["alertEvents"] = alert_events2
         else:
             parent_old, _ = await hierarchy.get_parent(nid)
             if nid == root_source_id:
@@ -705,7 +745,7 @@ async def copy_subtree_rooted_at(
         still: list[tuple[str, str, dict[str, Any]]] = []
         for m in unresolved:
             mid, moc, mattrs = m
-            ib, _ = await read_method_initiated_by_and_parameters(hierarchy, mid)
+            ib, _, _ = await read_method_initiated_by_and_parameters(hierarchy, mid)
             ok = True
             for i in ib:
                 if i in subtree_ids and i not in id_map:
@@ -814,8 +854,9 @@ async def copy_single_method(
     if not raw_items:
         return {"error": {"code": 422, "message": "Метод не найден."}}
     _, _, raw_attrs = raw_items[0]
-    ib, params = await read_method_initiated_by_and_parameters(hierarchy, source_id)
+    ib, params, alert_events = await read_method_initiated_by_and_parameters(hierarchy, source_id)
     ib2 = remap_initiated_by(ib, id_map, subtree_ids)
+    alert_events2 = _remap_alert_events(alert_events, id_map, subtree_ids)
     params2 = []
     for p in params:
         raw_p = p.get("attributes", {})
@@ -834,6 +875,8 @@ async def copy_single_method(
         "initiatedBy": ib2,
         "parameters": params2 or None,
     }
+    if alert_events2:
+        body["alertEvents"] = alert_events2
     res = await post_message(mes=body, reply=True, routing_key="prsMethod.api_crud.create")
     if not res or res.get("id") is None:
         return {"error": {"code": 422, "message": f"Ошибка копирования метода: {res}"}}

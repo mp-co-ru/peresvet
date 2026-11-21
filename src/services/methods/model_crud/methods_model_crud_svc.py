@@ -1,5 +1,6 @@
 import sys
 import copy
+import json
 
 sys.path.append(".")
 
@@ -32,6 +33,57 @@ def _stored_object_classes(attrs: dict | None) -> list[str]:
         if text and text not in classes:
             classes.append(text)
     return classes
+
+
+def _initiator_object_class(initiator_data: dict | None) -> str:
+    """Структурный класс инициатора, а не ``top`` или ``prsModelNode``.
+
+    slapd отдаёт ``objectClass`` вместе с SUP, и первым часто оказывается ``top``.
+    Ключ удаления при этом должен быть ``prsAlert.model.deleted.<id>``.
+    """
+    return node_class_from_object_classes(_stored_object_classes(initiator_data))
+
+
+_ALERT_EVENT_ORDER = ("alarm_on", "alarm_off", "alarm_acked")
+
+
+def _initiator_ids(mes: dict | None) -> list[str]:
+    raw = (mes or {}).get("initiatedBy")
+    if isinstance(raw, str):
+        return [raw]
+    if isinstance(raw, list):
+        return [str(item) for item in raw]
+    return []
+
+
+def _alert_event_names_or_error(names) -> tuple[list[str] | None, str | None]:
+    if not isinstance(names, list) or not names:
+        return None, "Пустой набор событий тревоги нельзя."
+    unknown = [name for name in names if name not in _ALERT_EVENT_ORDER]
+    if unknown:
+        return None, f"Неизвестное событие тревоги '{unknown[0]}'."
+    return [name for name in _ALERT_EVENT_ORDER if name in names], None
+
+
+def _explicit_alert_events(attrs: dict | None) -> list[str] | None:
+    """Сохранённый набор шире одного срабатывания. Нет атрибута — не отдаём."""
+    raw = (attrs or {}).get("prsJsonConfigString")
+    if isinstance(raw, list):
+        raw = raw[0] if raw else None
+    if isinstance(raw, str):
+        text = raw.strip()
+        if not text:
+            return None
+        try:
+            raw = json.loads(text)
+        except json.JSONDecodeError:
+            return None
+    if not isinstance(raw, dict):
+        return None
+    ordered, err = _alert_event_names_or_error(raw.get("events"))
+    if err or not ordered or ordered == ["alarm_on"]:
+        return None
+    return ordered
 
 
 class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
@@ -164,6 +216,9 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             if not catalog_node.get("isCatalog"):
                 return catalog_error(422, "Указанный метод не входит в каталог.")
             catalog_address = catalog_node.get("address")
+        _, err = await self._stored_alert_events(mes)
+        if err:
+            return err
         return validate_method_message(
             mes,
             placement=placement,
@@ -171,6 +226,39 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             catalog_address=catalog_address,
             require_address=creating and placement == "catalog",
         )
+
+    async def _stored_alert_events(self, mes: dict) -> tuple[dict[str, list[str]], dict | None]:
+        """Наборы, которые нужно записать. Ровно alarm_on в хранилище не попадает.
+
+        Ошибка — ключ не из initiatedBy, пустой список, неизвестное имя
+        или id, чей структурный класс не prsAlert.
+        """
+        if not isinstance(mes, dict) or mes.get("alertEvents") is None:
+            return {}, None
+        raw = mes.get("alertEvents")
+        if not isinstance(raw, dict):
+            return {}, catalog_error(422, "alertEvents должен быть объектом.")
+        initiator_ids = set(_initiator_ids(mes))
+        stored: dict[str, list[str]] = {}
+        for key, names in raw.items():
+            alert_id = str(key)
+            if alert_id not in initiator_ids:
+                return {}, catalog_error(422, f"alertEvents: '{alert_id}' нет в initiatedBy.")
+            ordered, err = _alert_event_names_or_error(names)
+            if err:
+                return {}, catalog_error(422, err)
+            try:
+                rows = await self._hierarchy.search(
+                    {"id": alert_id, "attributes": ["objectClass"]}
+                )
+            except Exception:
+                rows = []
+            attrs = rows[0][2] if rows else None
+            if _initiator_object_class(attrs) != "prsAlert":
+                return {}, catalog_error(422, f"alertEvents: '{alert_id}' не является тревогой.")
+            if ordered != ["alarm_on"]:
+                stored[alert_id] = ordered
+        return stored, None
 
     async def _create(self, mes: dict, routing_key: str | None = None) -> dict:
         if mes is None:
@@ -402,6 +490,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
     def _add_app_handlers(self):
         self._handlers["prsTag.model.deleted.*"] = self._delete_initiator
         self._handlers["prsSchedule.model.deleted.*"] = self._delete_initiator
+        self._handlers["prsAlert.model.deleted.*"] = self._delete_initiator
 
     @staticmethod
     def _unwrap_redis_json_root(val):
@@ -483,7 +572,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         async with self._cache.get_redis() as r:
             for initiator_id, initiator_data in initiators:
-                obj_class = initiator_data["objectClass"][0]
+                obj_class = _initiator_object_class(initiator_data)
 
                 # если есть кэш для этого инициатора, добавляем метод
                 # если нет, создаём
@@ -548,7 +637,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             "base": initiatedBy_id,
             "scope": hierarchy.CN_SCOPE_ONELEVEL,
             "filter": {"cn": ["*"]},
-            "attributes": ["cn"]
+            "attributes": ["cn", "prsJsonConfigString"]
         }
         initiators = await self._hierarchy.search(payload=payload)
 
@@ -621,7 +710,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
                     continue
 
                 for initiator_id, initiator_data in initiators:
-                    obj_class = initiator_data["objectClass"][0]
+                    obj_class = _initiator_object_class(initiator_data)
                     await self._remove_method_from_initiator_cache(
                         r, initiator_id, method_id, obj_class
                     )
@@ -653,7 +742,10 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
             if isinstance(item_attrs, dict):
                 item_attrs.pop("prsValueTypeCode", None)
 
-    async def _further_create(self, mes: dict, new_id: str) -> None:
+    async def _further_create(self, mes: dict, new_id: str) -> dict | None:
+        alert_events, err = await self._stored_alert_events(mes)
+        if err:
+            return err
         await self._variadic_parameter_policy(mes)
         system_node = await self._hierarchy.search(payload={
             "base": new_id,
@@ -690,9 +782,13 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
                 return res
 
             for initiator_id in mes["initiatedBy"]:
+                link_attrs: dict = {"cn": [initiator_id]}
+                events = alert_events.get(str(initiator_id))
+                if events:
+                    link_attrs["prsJsonConfigString"] = {"events": events}
                 await self._hierarchy.add(
                     initiatedBy_node_id,
-                    {"cn": [initiator_id]}
+                    link_attrs,
                 )
 
         # создадим узлы-параметры
@@ -745,6 +841,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
                 continue
             new_method_item["initiatedBy"] = []
             new_method_item["parameters"] = []
+            alert_events: dict[str, list[str]] = {}
 
             # TODO: переработать, т.к. получать DN, потом составлять новый - плохая практика
             method_dn = await self._hierarchy.get_node_dn(new_method_item["id"])
@@ -755,11 +852,17 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
                 "base": initiated_by_node_dn,
                 "scope": 1,
                 "filter": {"cn": ["*"]},
-                "attributes": ["cn"]
+                "attributes": ["cn", "prsJsonConfigString"]
             }
             initiators = await self._hierarchy.search(payload)
             for initiator in initiators:
-                new_method_item["initiatedBy"].append(initiator[2]["cn"][0])
+                initiator_id = initiator[2]["cn"][0]
+                new_method_item["initiatedBy"].append(initiator_id)
+                explicit = _explicit_alert_events(initiator[2])
+                if explicit:
+                    alert_events[initiator_id] = explicit
+            if alert_events:
+                new_method_item["alertEvents"] = alert_events
 
             # ищем параметры
             parameters_node_dn = f"cn=parameters,cn=system,{method_dn}"
@@ -873,6 +976,7 @@ class MethodsModelCRUD(model_crud_svc.ModelCRUDSvc):
 
         await self._amqp_consume_queue.unbind(self._exchange, "prsTag.model.deleted.*")
         await self._amqp_consume_queue.unbind(self._exchange, "prsSchedule.model.deleted.*")
+        await self._amqp_consume_queue.unbind(self._exchange, "prsAlert.model.deleted.*")
         try:
             await self._get_methods()
         except Exception as ex:

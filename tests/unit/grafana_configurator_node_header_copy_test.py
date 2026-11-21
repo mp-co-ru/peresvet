@@ -56,6 +56,11 @@ def test_node_header_copy_buttons():
     assert "prs-copy-pair" in header
     css = json.loads(DASHBOARD_PATH.read_text(encoding="utf-8"))["panels"][0]["options"]["css"]
     assert "#attributes-form .prs-copy-pair{display:flex;align-items:center;flex-wrap:wrap;column-gap:.75rem;row-gap:.25rem}" in css
+    assert "#attributes-form>.row.align-items-center{display:flex;flex-wrap:nowrap;align-items:center}" in css
+    assert "#attributes-form>.row>.prs-node-kind{flex:0 0 12em;width:12em;max-width:12em;white-space:nowrap;padding-right:0}" in css
+    assert "#attributes-form>.row>.prs-copy-pair{flex:1 1 auto;flex-wrap:nowrap!important;align-items:center;min-width:0;column-gap:.75rem;row-gap:0}" in css
+    assert "#attributes-form>.row>.prs-copy-pair>.prs-icon-btn{margin-left:0;flex:0 0 1.75rem}" in css
+    assert "#attributes-form>.row #div-nodeName,#attributes-form>.row #div-nodeId{flex:1 1 auto;min-width:0;margin:0;line-height:1.75rem;white-space:nowrap}" in css
     assert "#attributes-form .prs-copy-pair .prs-icon-btn{margin-left:.35rem}" in css
     assert "#attributes-form .prs-attr-tools{margin-left:auto;display:inline-flex;align-items:center;flex:0 0 auto;gap:.45em}" in css
     assert "#attributes-form .prs-attr-slot{width:1.15em;height:1.15em;display:inline-flex;align-items:center;justify-content:center;flex:0 0 1.15em}" in css

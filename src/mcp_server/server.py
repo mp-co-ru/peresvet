@@ -511,6 +511,7 @@ async def peresvet_method_create(
     description: str | None = None,
     entity_type_code: int = 0,
     initiated_by: str | list[str] | None = None,
+    alert_events: dict[str, list[str]] | None = None,
     parameters: list[dict[str, Any]] | None = None,
     attrs: dict[str, Any] | None = None,
     catalog_method_id: str | None = None,
@@ -519,8 +520,13 @@ async def peresvet_method_create(
 
     Wraps `POST /v1/methods/`.
 
-    - `entity_type_code=0`: calculated method. `initiated_by` tags and schedules
-      rebuild the initiator cache; the result is written to the parent tag.
+    - `entity_type_code=0`: calculated method. Initiators are tags, schedules and alerts.
+      `initiated_by` is their ids and rebuilds the initiator cache; the result is written to the parent tag.
+      Each alert has its own initiating events in `alert_events`:
+      `{alert_id: ["alarm_on", "alarm_off", "alarm_acked"]}` —
+      activation, clear and acknowledgement. An alert missing from `alert_events`
+      starts the method only on `alarm_on`. An empty list is rejected.
+      Tags and schedules have no event choice. The alert body stays `{"alertId","x"}`.
     - `entity_type_code=1`: read method. Subscribes to `prsTag.app.data_get.<tag>`
       and its return value is the tag value. A storage link on the same tag
       answers the same message; the platform keeps the first reply.
@@ -561,6 +567,8 @@ async def peresvet_method_create(
         payload["catalogMethodId"] = catalog_method_id
     if initiated_by is not None:
         payload["initiatedBy"] = initiated_by
+    if alert_events is not None:
+        payload["alertEvents"] = alert_events
     if parameters is not None:
         payload["parameters"] = [method_parameter_payload(p) for p in parameters]
     return await _request("POST", "/v1/methods/", json_body=payload)

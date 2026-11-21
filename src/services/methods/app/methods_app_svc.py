@@ -66,8 +66,8 @@ class MethodsApp(AppSvc):
        мы всё равно перестраиваем кэш.
     3) Deleted:
        Удаляем кэш метода.
-    4) При создании кэша метода подписываемся на события инициаторов (изменение значений тега и
-       генерация событий расписания)
+    4) При создании кэша метода подписываемся на события инициаторов (изменение значений тега,
+       генерация событий расписания и срабатывание тревоги)
     5) При удалении кэша метода удаляем также и соответствующий ключ из
        кэша инициатора и смотрим: если кэш инициатора остался пустой, то
        удаляем кэш инициатора и отписываемся от генерируемых событий.
@@ -85,6 +85,10 @@ class MethodsApp(AppSvc):
             "<initiator_id1>", "<initiator_id2>"
         ]
 
+    Набор событий тревоги в эти ключи не пишется. Он читается из узла-ссылки.
+    Пара «тревога, метод» помнится только в памяти процесса. Строковое значение
+    кэша — id родителя, из него события не читаются. Нет атрибута — alarm_on.
+
     """
 
     def __init__(self, settings: MethodsAppSettings, *args, **kwargs):
@@ -94,11 +98,17 @@ class MethodsApp(AppSvc):
         self._rpc_exchange = None
         # method_id -> (tag_id, "get" | "set"): подписки чтения типа 1 и записи типа 2
         self._tag_io: dict[str, tuple[str, str]] = {}
+        # (alert_id, method_id) -> набор событий. Не ключ Redis: нужен, чтобы
+        # снять ключ после удаления узла метода, когда ссылку уже не прочитать.
+        self._alert_method_events: dict[tuple[str, str], tuple[str, ...]] = {}
 
     def _add_app_handlers(self):
         self._handlers["prsTag.app.data_get.*"] = self._tag_data_get
         self._handlers["prsTag.app.data_set.*"] = self._start_method_by_tag
         self._handlers["prsSchedule.app.fire_event.*"] = self._start_method_by_sched
+        self._handlers["prsAlert.app.alarm_on.*"] = self._start_method_by_alert
+        self._handlers["prsAlert.app.alarm_off.*"] = self._start_method_by_alert
+        self._handlers["prsAlert.app.alarm_acked.*"] = self._start_method_by_alert
         self._handlers["prsMethod.app.virtual_data_get"] = self._virtual_data_get
         self._handlers["prsMethod.app.probe"] = self._probe_method
 
@@ -309,6 +319,47 @@ class MethodsApp(AppSvc):
         for tid in tag_ids:
             if not await self._tag_has_datastorage_tagdata(tid):
                 return {}
+        return NO_AMQP_RPC_REPLY
+
+    async def _start_method_by_alert(self, mes: dict, routing_key: str = None) -> dict:
+        self._logger.debug(f"Run methods. Data: {mes}")
+
+        """
+        {
+            "alertId": alert_id,
+            "x": x
+        }
+        """
+        initiator = mes["alertId"]
+        event = self._alert_event_from_key(routing_key)
+
+        async with self._cache.get_redis() as r:
+            methods_ids = await r.json().get(f"{initiator}.{self._config.svc_name}")
+        methods_ids = self._unwrap_redis_json_root(methods_ids)
+        if not isinstance(methods_ids, dict) or not methods_ids:
+            self._logger.error(f"{self._config.svc_name} :: К тревоге '{initiator}' не привязаны методы.")
+            return NO_AMQP_RPC_REPLY
+
+        self._logger.debug(f"{self._config.svc_name} :: methods_ids: {methods_ids}")
+        for method_id, tag_id in list(methods_ids.items()):
+            try:
+                if await self._method_entity_type(method_id) in (1, 2, 3, 4):
+                    continue
+                if event not in await self._alert_events_for_pair(initiator, method_id):
+                    continue
+                parameters = await self._hierarchy.search({
+                    "base": method_id,
+                    "filter": {"cn": ["*"], "objectClass": ["prsMethodParameter"]},
+                    "attributes": ["prsJsonConfigString", "prsIndex", "cn"]
+                })
+                await self._calc_tag(tag_id, method_id, parameters, [mes['x'], None, None])
+            except Exception as ex:
+                self._logger.error(
+                    f"{self._config.svc_name} :: Ошибка запуска метода '{method_id}' "
+                    f"по тревоге '{initiator}': {ex}"
+                )
+                if self._is_missing_node_error(ex):
+                    await self._drop_stale_method_from_initiator_cache(initiator, method_id)
         return NO_AMQP_RPC_REPLY
 
     async def _lookup_constant(self, constant_id: str):
@@ -708,12 +759,135 @@ class MethodsApp(AppSvc):
         empty_initiators = await self._delete_method_cache(mes['id'])
         await self._unbind_unused_initiators(mes['id'], empty_initiators)
 
+    _ALERT_EVENT_NAMES = ("alarm_on", "alarm_off", "alarm_acked")
+
+    def _alert_event_memory(self) -> dict[tuple[str, str], tuple[str, ...]]:
+        mapping = getattr(self, "_alert_method_events", None)
+        if mapping is None:
+            mapping = {}
+            self._alert_method_events = mapping
+        return mapping
+
+    def _alert_routing_key(self, event: str, initiator_id: str) -> str:
+        return f"prsAlert.app.{event}.{initiator_id}"
+
+    def _alert_event_from_key(self, routing_key: str | None) -> str:
+        """Имя события из ключа. Прямой вызов без ключа — срабатывание."""
+        if not routing_key:
+            return "alarm_on"
+        parts = str(routing_key).split(".")
+        if len(parts) >= 3 and parts[2] in self._ALERT_EVENT_NAMES:
+            return parts[2]
+        return "alarm_on"
+
+    def _events_from_link_attrs(self, attrs: dict | None) -> tuple[str, ...]:
+        """Набор из prsJsonConfigString узла-ссылки. Нет атрибута — alarm_on."""
+        raw = (attrs or {}).get("prsJsonConfigString")
+        if isinstance(raw, list):
+            raw = raw[0] if raw else None
+        if isinstance(raw, str):
+            text = raw.strip()
+            if not text:
+                return ("alarm_on",)
+            try:
+                raw = json.loads(text)
+            except json.JSONDecodeError:
+                return ("alarm_on",)
+        if not isinstance(raw, dict):
+            return ("alarm_on",)
+        names = raw.get("events")
+        if not isinstance(names, list) or not names:
+            return ("alarm_on",)
+        ordered = tuple(name for name in self._ALERT_EVENT_NAMES if name in names)
+        return ordered or ("alarm_on",)
+
+    async def _methods_cached_for_initiator(self, initiator_id: str) -> dict:
+        async with self._cache.get_redis() as r:
+            raw = self._unwrap_redis_json_root(
+                await r.json().get(f"{initiator_id}.{self._config.svc_name}")
+            )
+        # Список и строка — прежняя связь, события из них не читаются.
+        return raw if isinstance(raw, dict) else {}
+
+    def _alert_event_kept_by_other(
+        self,
+        alert_id: str,
+        method_id: str,
+        event: str,
+        cached: dict,
+    ) -> bool:
+        memory = self._alert_event_memory()
+        remembered: set[str] = set()
+        for (aid, mid), events in memory.items():
+            if aid != str(alert_id) or mid == str(method_id):
+                continue
+            remembered.add(mid)
+            if event in events:
+                return True
+        if event != "alarm_on":
+            return False
+        for mid, value in cached.items():
+            if str(mid) == str(method_id) or str(mid) in remembered:
+                continue
+            # Строковое значение — id родителя. Без памяти это прежний alarm_on.
+            if isinstance(value, str) or value is None:
+                return True
+        return False
+
+    async def _release_alert_subscription(
+        self,
+        alert_id: str,
+        method_id: str,
+        ldap_events: tuple[str, ...] | None,
+    ) -> None:
+        memory = self._alert_event_memory()
+        pair = (str(alert_id), str(method_id))
+        if pair in memory:
+            events = memory.pop(pair)
+        else:
+            events = ldap_events or ("alarm_on",)
+        cached = await self._methods_cached_for_initiator(alert_id)
+        for event in events:
+            if self._alert_event_kept_by_other(alert_id, method_id, event, cached):
+                continue
+            await self._amqp_consume_queue.unbind(
+                exchange=self._exchange,
+                routing_key=self._alert_routing_key(event, alert_id),
+            )
+
+    async def _release_remembered_alert_methods(self, method_id: str) -> set[str]:
+        memory = self._alert_event_memory()
+        alert_ids = [aid for aid, mid in list(memory) if mid == str(method_id)]
+        for alert_id in alert_ids:
+            await self._release_alert_subscription(alert_id, method_id, None)
+        return set(alert_ids)
+
+    async def _alert_events_for_pair(self, alert_id: str, method_id: str) -> tuple[str, ...]:
+        remembered = self._alert_event_memory().get((str(alert_id), str(method_id)))
+        if remembered is not None:
+            return remembered
+        method_dn = await self._hierarchy.get_node_dn(method_id)
+        rows = await self._hierarchy.search({
+            "base": f"cn=initiatedBy,cn=system,{method_dn}",
+            "scope": CN_SCOPE_ONELEVEL,
+            "filter": {"cn": [alert_id]},
+            "attributes": ["cn", "prsJsonConfigString"],
+        })
+        for row in rows or []:
+            cn = (row[2].get("cn") or [None])[0]
+            if str(cn) != str(alert_id):
+                continue
+            return self._events_from_link_attrs(row[2])
+        return ("alarm_on",)
+
     def _initiator_event_routing_key(self, init_class: str, initiator_id: str) -> str | None:
         match init_class:
             case "prsTag":
                 return f"prsTag.app.data_set.{initiator_id}"
             case "prsSchedule":
                 return f"prsSchedule.app.fire_event.{initiator_id}"
+            case "prsAlert":
+                return f"prsAlert.app.alarm_on.{initiator_id}"
             case _:
                 return None
 
@@ -751,7 +925,10 @@ class MethodsApp(AppSvc):
             self._logger.warning(
                 f"{self._config.svc_name} :: Не удалось отписать инициаторов метода '{method_id}': {ex}"
             )
+        released_alerts = await self._release_remembered_alert_methods(method_id)
         for initiator_id in empty_initiator_ids or []:
+            if initiator_id in released_alerts:
+                continue
             await self._unbind_one_initiator(initiator_id)
 
     async def _drop_stale_method_from_initiator_cache(self, initiator_id: str, method_id: str) -> None:
@@ -776,8 +953,23 @@ class MethodsApp(AppSvc):
             "base": base,
             "scope": CN_SCOPE_ONELEVEL,
             "filter": {"cn": "*"},
-            "attributes": ["cn"]
+            "attributes": ["cn", "prsJsonConfigString"]
         })
+        # Тревога, убранная из initiatedBy, уже не в поиске. Её набор
+        # остаётся в памяти процесса и иначе держит ключ для других методов.
+        if not bind:
+            current_ids = {
+                str((initiator[2].get("cn") or [None])[0])
+                for initiator in initiators or []
+            }
+            memory = self._alert_event_memory()
+            stale = [
+                alert_id
+                for alert_id, mid in list(memory)
+                if mid == str(method_id) and alert_id not in current_ids
+            ]
+            for alert_id in stale:
+                await self._release_alert_subscription(alert_id, method_id, None)
 
         if not initiators:
             self._logger.warning(f"{self._config.svc_name} :: Метод '{method_id}' не имеет инициаторов.")
@@ -786,6 +978,18 @@ class MethodsApp(AppSvc):
         for initiator in initiators:
             initiator_id = initiator[2]["cn"][0]
             init_class = await self._hierarchy.get_node_class(initiator_id)
+            if init_class == "prsAlert":
+                ldap_events = self._events_from_link_attrs(initiator[2])
+                if bind:
+                    self._alert_event_memory()[(str(initiator_id), str(method_id))] = ldap_events
+                    for event in ldap_events:
+                        await self._amqp_consume_queue.bind(
+                            exchange=self._exchange,
+                            routing_key=self._alert_routing_key(event, initiator_id),
+                        )
+                else:
+                    await self._release_alert_subscription(initiator_id, method_id, ldap_events)
+                continue
             routing_key = self._initiator_event_routing_key(init_class, initiator_id)
             if not routing_key:
                 self._logger.error(
@@ -971,6 +1175,9 @@ class MethodsApp(AppSvc):
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.app.data_get.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsTag.app.data_set.*")
         await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsSchedule.app.fire_event.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.app.alarm_on.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.app.alarm_off.*")
+        await self._amqp_consume_queue.unbind(exchange=self._exchange, routing_key="prsAlert.app.alarm_acked.*")
         try:
             await self._get_methods()
         except Exception as ex:
