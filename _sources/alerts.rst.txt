@@ -27,6 +27,11 @@
 * ``prsAlert.app.alarm_off.<id>``
 * ``prsAlert.app.alarm_acked.<id>``
 
+Вычислительный метод может слушать уже описанные
+``prsAlert.app.alarm_on.<id>``, ``prsAlert.app.alarm_off.<id>``
+и ``prsAlert.app.alarm_acked.<id>``.
+Тело остаётся ``{"alertId": "<id>", "x": <микросекунды>}``.
+
 Хранилище отвечает на ``prsAlert.app.alarm_state.<id>`` последней строкой
 этой таблицы. После перезапуска сервиса тревог кэш восстанавливается из неё.
 

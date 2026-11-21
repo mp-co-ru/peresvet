@@ -137,7 +137,7 @@
 <li><p><strong>адрес</strong> (<code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code>) — под каким именем функция
 зарегистрирована в исполнителе;</p></li>
 <li><p><strong>тип</strong> (<code class="docutils literal notranslate"><span class="pre">prsEntityTypeCode</span></code>) — когда вызывается метод, см. <a class="reference internal" href="#id3">Типы методов</a>;</p></li>
-<li><p><strong>инициаторы</strong> — теги и расписания, события которых запускают
+<li><p><strong>инициаторы</strong> — теги, расписания и тревоги, события которых запускают
 вычислительный метод;</p></li>
 <li><p><strong>параметры</strong> — откуда взять значение каждого аргумента функции,
 см. <a class="reference internal" href="#id7">Параметры</a>.</p></li>
@@ -167,9 +167,11 @@
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
 <td><p>Вычислительный</p></td>
-<td><p>Вызывается для каждого нового значения тега-инициатора и при каждом
-срабатывании расписания-инициатора. Результат записывается в тег,
-которому принадлежит метод, с меткой времени события.</p></td>
+<td><p>Вызывается для каждого нового значения тега-инициатора, при каждом
+срабатывании расписания-инициатора и по выбранным событиям
+тревоги-инициатора: срабатывание, пропадание и квитирование.
+По умолчанию у тревоги только срабатывание, пустой набор выбрать нельзя.
+Результат записывается в тег, которому принадлежит метод, с меткой времени события.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
 <td><p>Чтение</p></td>
@@ -302,7 +304,10 @@
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">parentId</span></code> — тег, в который пишется результат;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code> — адрес функции в исполнителе;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">initiatedBy</span></code> — теги, новые значения которых запускают расчёт;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">initiatedBy</span></code> — теги, расписания и тревоги, события которых запускают расчёт.
+У тревоги в <code class="docutils literal notranslate"><span class="pre">alertEvents</span></code> выбираются срабатывание (<code class="docutils literal notranslate"><span class="pre">alarm_on</span></code>),
+пропадание (<code class="docutils literal notranslate"><span class="pre">alarm_off</span></code>) и квитирование (<code class="docutils literal notranslate"><span class="pre">alarm_acked</span></code>).
+По умолчанию только срабатывание, пустой набор нельзя;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">parameters</span></code> — аргументы функции по порядку <code class="docutils literal notranslate"><span class="pre">prsIndex</span></code>. Каждый
 параметр здесь читает один тег: идентификатор лежит в <code class="docutils literal notranslate"><span class="pre">request.tagId</span></code>.</p></li>
 </ul>
@@ -328,8 +333,8 @@
 является.</p>
 <p>Ключ <code class="docutils literal notranslate"><span class="pre">tagId</span></code> внутри <code class="docutils literal notranslate"><span class="pre">request</span></code> — один идентификатор или список.
 Платформа выполняет один <code class="docutils literal notranslate"><span class="pre">data_get</span></code> сразу по всем указанным тегам и
-подставляет <code class="docutils literal notranslate"><span class="pre">finish</span></code>: при запуске от тега или расписания это метка
-события, при чтении тега — <code class="docutils literal notranslate"><span class="pre">finish</span></code> из запроса клиента.</p>
+подставляет <code class="docutils literal notranslate"><span class="pre">finish</span></code>: при запуске от тега, расписания или выбранного
+события тревоги это метка события, при чтении тега — <code class="docutils literal notranslate"><span class="pre">finish</span></code> из запроса клиента.</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">"request"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"&lt;id тега&gt;"</span><span class="p">],</span><span class="w"> </span><span class="nt">"op"</span><span class="p">:</span><span class="w"> </span><span class="s2">"op"</span><span class="p">},</span>
 <span class="w">  </span><span class="nt">"responseJsonata"</span><span class="p">:</span><span class="w"> </span><span class="s2">"$.data[0].data[0][1]"</span>

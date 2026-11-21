@@ -146,6 +146,10 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">prsAlert.app.alarm_off.&lt;id&gt;</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">prsAlert.app.alarm_acked.&lt;id&gt;</span></code></p></li>
 </ul>
+<p>Вычислительный метод может слушать уже описанные
+<code class="docutils literal notranslate"><span class="pre">prsAlert.app.alarm_on.&lt;id&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">prsAlert.app.alarm_off.&lt;id&gt;</span></code>
+и <code class="docutils literal notranslate"><span class="pre">prsAlert.app.alarm_acked.&lt;id&gt;</span></code>.
+Тело остаётся <code class="docutils literal notranslate"><span class="pre">{&quot;alertId&quot;:</span> <span class="pre">&quot;&lt;id&gt;&quot;,</span> <span class="pre">&quot;x&quot;:</span> <span class="pre">&lt;микросекунды&gt;}</span></code>.</p>
 <p>Хранилище отвечает на <code class="docutils literal notranslate"><span class="pre">prsAlert.app.alarm_state.&lt;id&gt;</span></code> последней строкой
 этой таблицы. После перезапуска сервиса тревог кэш восстанавливается из неё.</p>
 </section>

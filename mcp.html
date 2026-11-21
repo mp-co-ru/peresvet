@@ -258,7 +258,11 @@ Service accounts → Add service account token, см.
 </ul>
 <p><strong>Методы</strong> (см. <a class="reference internal" href="methods.html"><span class="doc">Методы</span></a>)</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_method_create</span></code> — метод любого типа <code class="docutils literal notranslate"><span class="pre">0</span></code>–<code class="docutils literal notranslate"><span class="pre">4</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_method_create</span></code> — метод любого типа <code class="docutils literal notranslate"><span class="pre">0</span></code>–<code class="docutils literal notranslate"><span class="pre">4</span></code>.
+У вычислительного метода инициатором может быть тревога, и у каждой
+тревоги свой набор событий в <code class="docutils literal notranslate"><span class="pre">alert_events</span></code>: срабатывание
+(<code class="docutils literal notranslate"><span class="pre">alarm_on</span></code>), пропадание (<code class="docutils literal notranslate"><span class="pre">alarm_off</span></code>) и квитирование
+(<code class="docutils literal notranslate"><span class="pre">alarm_acked</span></code>). Нет ключа — только срабатывание;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">peresvet_virtual_method_create</span></code> — метод чтения (тип <code class="docutils literal notranslate"><span class="pre">1</span></code>);</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">peresvet_write_method_create</span></code> — метод записи (тип <code class="docutils literal notranslate"><span class="pre">2</span></code>);</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">peresvet_read_action_create</span></code> — действие при чтении (тип <code class="docutils literal notranslate"><span class="pre">3</span></code>);</p></li>
