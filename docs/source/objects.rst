@@ -1,6 +1,35 @@
 Объекты
 ~~~~~~~
 
-.. automodule:: objects_api_crud_svc
-   :members:
-   :exclude-members: ObjectCreateAttributes, ObjectCreate, ObjectRead, OneObjectInReadResult, ObjectReadResult, ObjectUpdate, ObjectsAPICRUD
+Адрес — ``/v1/objects/``. Запросы те же, что у всех узлов модели
+(:doc:`api_nodes`), включая копирование ``POST /v1/objects/copy``.
+
+Родитель объекта — другой объект или пользовательская папка в ветке
+объектов. Без ``parentId`` объект создаётся в корне ветки «Объекты».
+
+Своих атрибутов у объекта нет: только общие (:doc:`api_nodes`).
+``prsEntityTypeCode`` и ``prsJsonConfigString`` платформа у объекта
+не толкует — в них можно хранить код типа оборудования и любые
+собственные настройки.
+
+Пример — цех с насосом внутри:
+
+.. code-block:: text
+
+   POST /v1/objects/
+   {"attributes": {"cn": "Цех 1"}}
+
+   → {"id": "<id цеха>"}
+
+   POST /v1/objects/
+   {"parentId": "<id цеха>", "attributes": {"cn": "Насос 1"}}
+
+Копирование объекта копирует всё его поддерево: вложенные объекты, теги,
+тревоги и методы. Как при этом пересчитываются ссылки, описано
+в разделе :doc:`api_nodes`.
+
+Найти объект по имени внутри родителя:
+
+.. code-block:: text
+
+   GET /v1/objects/?base=<id цеха>&filter={"cn":["Насос 1"]}

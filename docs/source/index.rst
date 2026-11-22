@@ -35,11 +35,14 @@
    :caption: Работа с платформой
 
    Конфигуратор модели<configurator/configurator>
-   Исторические данные<historical_data>
-   Методы<methods>
    Коннекторы<connectors_guide>
-   Работа с видеоданными<video_data>
+   Хранилища данных<storages_guide>
+   Исторические данные<historical_data>
+   Тревоги<alerts_guide>
+   Методы<methods>
+   Расписания<schedules_guide>
    Интеграционные хранилища<integrational_v2>
+   Работа с видеоданными<video_data>
    Создание экранов в Grafana<grafana/grafana_integration>
    MCP-сервер<mcp>
 

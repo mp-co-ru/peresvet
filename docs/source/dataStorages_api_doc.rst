@@ -1,6 +1,98 @@
 Хранилища данных
 ~~~~~~~~~~~~~~~~
 
-.. automodule:: dataStorages_api_crud_svc
-   :members:
-   :exclude-members: LinkTagOrAlertAttributes, LinkTag, LinkAlert, DataStorageAttributes, DataStorageCreate, DataStorageRead, OneDataStorageInReadResult, DataStorageReadResult, DataStorageUpdate, DataStoragesAPICRUD
+Какие бывают хранилища и как их настраивать, описано в разделе
+:ref:`storages_guide`.
+
+Адрес — ``/v1/dataStorages/``. Запросы те же, что у всех узлов модели
+(:doc:`api_nodes`). Родитель хранилища — пользовательская папка в ветке
+хранилищ; без ``parentId`` хранилище создаётся в корне ветки.
+
+Тип и конфигурация
+------------------
+
+Тип хранилища задаёт ``prsEntityTypeCode``, подключение —
+``prsJsonConfigString``:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 10 26 64
+
+   * - Код
+     - Тип
+     - Конфигурация
+   * - ``0``
+     - PostgreSQL (по умолчанию)
+     - ``{"dsn": "postgres://<пользователь>:<пароль>@<сервер>:5432/<база>"}``
+   * - ``1``
+     - VictoriaMetrics
+     - ``{"putUrl": "http://<сервер>:4242/api/put", "getUrl": "http://<сервер>:8428/api/v1/export"}``
+   * - ``2``
+     - Интеграционное
+     - ``{"dsn": "postgresql://<пользователь>:<пароль>@<сервер>:5432/<база>"}``,
+       см. :ref:`integrational_v2`
+   * - ``3``
+     - Видеоархив
+     - ``{"archivePath": "/var/lib/peresvet/video", "retentionHours": 24}``,
+       см. :ref:`video_cameras`
+
+Привязка тегов и тревог
+-----------------------
+
+Теги и тревоги привязывают к хранилищу полями ``linkedTags``
+и ``linkedAlerts`` в запросах ``POST`` и ``PUT``, отвязывают — полями
+``unlinkTags`` и ``unlinkAlerts`` в запросе ``PUT``:
+
+.. code-block:: text
+
+   PUT /v1/dataStorages/
+
+.. code-block:: json
+
+   {
+     "id": "<id хранилища>",
+     "linkedTags": [{"tagId": "<id тега>"}],
+     "linkedAlerts": [{"alertId": "<id тревоги>"}],
+     "unlinkTags": ["<id другого тега>"],
+     "unlinkAlerts": ["<id другой тревоги>"]
+   }
+
+При привязке хранилище само заводит место для данных: в PostgreSQL —
+таблицу ``t_<id тега>`` для тега и ``a_<id тревоги>`` для тревоги.
+При отвязке эта таблица удаляется вместе с историей.
+
+.. warning::
+
+   PostgreSQL создаёт таблицу заново при каждой привязке. Если передать
+   в ``linkedTags`` тег, который уже привязан к этому хранилищу, его
+   история будет стёрта. Передавайте в ``linkedTags`` только новые теги.
+
+Тег можно привязать к нескольким хранилищам: значения пишутся в каждое.
+Тег типа «Видеопоток» к хранилищу истории не привязывается: только
+к видеоархиву.
+
+Чтение привязок
+---------------
+
+``GET /v1/dataStorages/?getLinkedTags=true&getLinkedAlerts=true``
+добавляет к каждому хранилищу списки привязок:
+
+.. code-block:: json
+
+   {
+     "data": [
+       {
+         "id": "<id хранилища>",
+         "attributes": {"cn": ["psql"]},
+         "linkedTags": [
+           {"tagId": "<id тега>", "attributes": {"cn": "<id тега>", "prsStore": {"table": "t_<id тега>"}}}
+         ],
+         "linkedAlerts": [
+           {"alertId": "<id тревоги>", "attributes": {"cn": "<id тревоги>", "prsStore": {"table": "a_<id тревоги>"}}}
+         ]
+       }
+     ]
+   }
+
+API v2 (интеграционные хранилища с операциями) описан в разделе
+:ref:`integrational_v2`.
