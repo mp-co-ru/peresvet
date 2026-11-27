@@ -8,7 +8,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261127-services-icon-mask"
+CODE_VERSION = "20261127-svc-drag"
 
 
 def _parts():
@@ -34,6 +34,8 @@ def test_configurator_settings_dialog_contract():
     assert "top:.3em;cursor:default" in css
     assert 'fetch(window.location.origin+"/v1/version"' in javascript
     assert 't.querySelector("#prs-platform-version")' in javascript
+    assert "var live=node()||n;if(v&&live)live.textContent=v" in javascript
+    assert ".prs-tree-header>.prs-platform-version{flex:0 0 auto!important;overflow:visible!important;position:static!important;" in css
     assert 'document.getElementById("prs-platform-version")' not in javascript
     assert 'aria-label="Настройки"' in header
     assert 'class="prs-settings-icon"' in header

@@ -17,7 +17,7 @@ def _parts():
 def test_hierarchy_pane_fills_panel_and_scrolls_inside_the_tree():
     css, javascript = _parts()
 
-    assert 'prsConfiguratorCodeVersion="20261127-services-icon-mask"' in javascript
+    assert 'prsConfiguratorCodeVersion="20261127-svc-drag"' in javascript
     assert "rgba(44,112,127,.32)" not in javascript
     assert "rgba(44,112,127,.32)" not in css
     assert ".prs-splitter::after{content:\"\";position:absolute;left:50%;top:50%;width:16px;height:28px;" in css
@@ -26,6 +26,16 @@ def test_hierarchy_pane_fills_panel_and_scrolls_inside_the_tree():
         ".main-container.prs-split-root{height:100%!important;min-height:0!important;max-height:100%!important;overflow:hidden!important}"
         in css
     )
+    assert ":host{display:block;height:100%;min-height:100%;background:radial-gradient(900px 420px at 0% 0%,rgba(16,80,96,.08),transparent 60%),#f4f7fb!important}" in css
+    assert ".main-container.prs-split-root{background:radial-gradient(900px 420px at 0% 0%,rgba(16,80,96,.08),transparent 60%),#f4f7fb!important}" in css
+    assert ".prs-split-pane.element-holder{background:#fff}" in css
+    assert 'imp(left,"background","transparent")' in javascript
+    assert 'imp(left,"height","auto")' in javascript
+    assert 'imp(header,"margin","0 0 12px 0")' in javascript
+    assert ".main-container.prs-split-root{box-sizing:border-box!important;padding:8px!important}" in css
+    assert "#prs-split-right.element-holder{margin:0!important}" in css
+    assert "#prs-split-left>.prs-tree-scroll>#tree,#prs-split-left>.prs-services-tree-scroll>#services-tree{border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important}" in css
+    assert 'class="prs-split-pane prs-split-left element-holder"' not in json.loads(DASHBOARD_PATH.read_text(encoding="utf-8"))["panels"][0]["options"]["html"]
     assert (
         ".prs-tree-scroll{display:flex!important;flex-direction:column!important;flex:1 1 auto!important;min-height:0!important;overflow:hidden!important}"
         in css
@@ -79,6 +89,12 @@ def test_services_splitter_sits_between_hierarchy_and_services():
     assert "cursor:row-resize!important" in css
     assert "cursor:row-resize" in css
     assert "#prs-split-left .prs-services-tree-scroll{flex:0 0 var(--prs-services-size,auto)!important;" in css
+    assert 'imp(services,"flex","0 0 auto")' in javascript
+    assert 'svcRoot.getAttribute("aria-expanded")==="true"' in javascript
+    assert "window.prsLayoutServicesPane=function(hug)" in javascript
+    assert "svcUserSized=!0" in javascript
+    assert "(svcOpen||svcUserSized)" in javascript
+    assert '"function"==typeof prsLayoutServicesPane&&prsLayoutServicesPane()' in javascript
 
 
 def test_connector_linked_tags_indent_past_the_connector_icon():

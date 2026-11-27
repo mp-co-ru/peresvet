@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261127-services-icon-mask"
+CODE_VERSION = "20261127-svc-drag"
 MENU_LITERAL = (
     '["__copy__","fa-clone","Копировать"],["__sep__","after-copy"],'
     '["__active__","fa-pause","Приостановить узел"],'
@@ -110,9 +110,11 @@ def test_alarm_monitor_is_a_separate_tree_mark_and_uses_the_alarms_api():
     assert 'e.target.closest("input,button,.prs-node-actions,.prs-problem-menu-btn,.prs-problem-menu-list")' in javascript
     assert "prsServicesForceAll" in javascript
     assert "prsServicesSelectAllOnLoad" not in javascript
-    assert 'prsServicesSetAllSelected(0===ev.detail?!r.checked:r.dataset.prsWas!=="1")' in javascript
+    assert 'r.addEventListener("click",function(ev){ev.stopPropagation();var on=!!r.checked;prsServicesSetAllSelected(on);setTimeout(function(){r.checked=on,r.indeterminate=!1},0)},!0)' in javascript
+    assert "ev.preventDefault(),ev.stopPropagation();prsServicesSetAllSelected" not in javascript
     assert "Object.keys(prsServicesSelected).forEach(function(k){prsServicesSelected[k]=!1})" in javascript
     assert 'class="item-icon fa-solid fa-server"' in javascript
+    assert 'if(!t.querySelector("svg")){t.removeAttribute("data-prs-icon");t.classList.remove("fa-server");t.classList.add("fa-solid","fa-server")}' in javascript
     assert "prsServicesIconSvg" not in javascript
     assert "prs-services-root-icon" not in css
     assert '<rect x="2.35" y="3.2" width="11.3" height="9.6" rx="1.6"' in javascript
