@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Объекты &mdash; документация МПК-Пересвет v0.29.0</title>
+  <title>Объекты &mdash; документация МПК-Пересвет v0.30.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=399dde07"></script>
+      <script src="_static/documentation_options.js?v=62c6f60e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -24,8 +24,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
-    <link rel="next" title="Папки" href="folders.html" />
-    <link rel="prev" title="Теги" href="tags.html" /> 
+    <link rel="next" title="Теги" href="tags.html" />
+    <link rel="prev" title="Узлы модели: общие правила" href="api_nodes.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -37,7 +37,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.29.0</div>
+  <div class="prs-version">v0.30.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -60,11 +60,14 @@
 <p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
-<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
-<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
-<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storages_guide.html">Хранилища данных</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules_guide.html">Расписания</a></li>
 <li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
 </ul>
@@ -76,25 +79,21 @@
 <p class="caption" role="heading"><span class="caption-text">Справочник</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="api.html#id2">Общие правила</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="api.html#id3">Разделы</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id2">Адрес и формат</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#get">Параметры запросов GET</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id3">Ответы и ошибки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id4">Служебные запросы</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="api.html#id5">Разделы справочника</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="api_nodes.html">Узлы модели: общие правила</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Объекты</a></li>
 <li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Объекты</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#objects_api_crud_svc.ObjectCopy"><code class="docutils literal notranslate"><span class="pre">ObjectCopy</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#objects_api_crud_svc.copy_object"><code class="docutils literal notranslate"><span class="pre">copy_object()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#objects_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#objects_api_crud_svc.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#objects_api_crud_svc.read"><code class="docutils literal notranslate"><span class="pre">read()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#objects_api_crud_svc.update"><code class="docutils literal notranslate"><span class="pre">update()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
-<li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
-<li class="toctree-l3"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a></li>
-<li class="toctree-l3"><a class="reference internal" href="schedules.html">Расписания</a></li>
+<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
 <li class="toctree-l3"><a class="reference internal" href="methods_api_doc.html">Методы</a></li>
-<li class="toctree-l3"><a class="reference internal" href="data_api.html">Запись и чтение данных</a></li>
+<li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
+<li class="toctree-l3"><a class="reference internal" href="schedules.html">Расписания</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a></li>
+<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_api.html">Данные тегов</a></li>
 </ul>
 </li>
 </ul>
@@ -126,341 +125,41 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-objects_api_crud_svc">
-<span id="id1"></span><h1>Объекты<a class="headerlink" href="#module-objects_api_crud_svc" title="Ссылка на этот заголовок"></a></h1>
-<p>Модуль содержит примеры запросов и ответов на них, параметров которые могут входить в
-запрос, в сервисе objects.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="objects_api_crud_svc.ObjectCopy">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">objects_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">ObjectCopy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sourceId</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parentId</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects_api_crud_svc.ObjectCopy" title="Ссылка на это определение"></a></dt>
-<dd><p>Копирование объекта вместе с поддеревом (теги, тревоги, методы).</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="objects_api_crud_svc.ObjectCopy.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'protected_namespaces':</span> <span class="pre">()}</span></span><a class="headerlink" href="#objects_api_crud_svc.ObjectCopy.model_config" title="Ссылка на это определение"></a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
+  <section id="id1">
+<h1>Объекты<a class="headerlink" href="#id1" title="Ссылка на этот заголовок"></a></h1>
+<p>Адрес — <code class="docutils literal notranslate"><span class="pre">/v1/objects/</span></code>. Запросы те же, что у всех узлов модели
+(<a class="reference internal" href="api_nodes.html"><span class="doc">Узлы модели: общие правила</span></a>), включая копирование <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/objects/copy</span></code>.</p>
+<p>Родитель объекта — другой объект или пользовательская папка в ветке
+объектов. Без <code class="docutils literal notranslate"><span class="pre">parentId</span></code> объект создаётся в корне ветки «Объекты».</p>
+<p>Своих атрибутов у объекта нет: только общие (<a class="reference internal" href="api_nodes.html"><span class="doc">Узлы модели: общие правила</span></a>).
+<code class="docutils literal notranslate"><span class="pre">prsEntityTypeCode</span></code> и <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> платформа у объекта
+не толкует — в них можно хранить код типа оборудования и любые
+собственные настройки.</p>
+<p>Пример — цех с насосом внутри:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>POST /v1/objects/
+{"attributes": {"cn": "Цех 1"}}
 
-</dd></dl>
+→ {"id": "&lt;id цеха&gt;"}
 
-<dl class="py function">
-<dt class="sig sig-object py" id="objects_api_crud_svc.copy_object">
-<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">objects_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">copy_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#objects_api_crud_svc.ObjectCopy" title="objects_api_crud_svc.ObjectCopy"><span class="pre">ObjectCopy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects_api_crud_svc.copy_object" title="Ссылка на это определение"></a></dt>
-<dd><p>Копирует объект и всё поддерево; внутренние ссылки пересчитываются, внешние сохраняются.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="objects_api_crud_svc.create">
-<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">objects_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects_api_crud_svc.create" title="Ссылка на это определение"></a></dt>
-<dd><p>Метод добавляет обьект в иерархию.</p>
-<p><strong>Запрос:</strong></p>
-<blockquote>
-<div><div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id2">
-<p><span class="caption-text">http</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">POST</span> <span class="nn">/v1/objects/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
-<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object1"</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"describtion"</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"prsJsonConfigString"</span><span class="p">:</span><span class="w"> </span><span class="s2">"configuration parameters"</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"prsActive"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"prsDefault"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"prsIndex"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
+POST /v1/objects/
+{"parentId": "&lt;id цеха&gt;", "attributes": {"cn": "Насос 1"}}
 </pre></div>
 </div>
-</div>
-<div class="http-example-response docutils container" id="id3">
-<p><span class="caption-text">response</span></p>
-<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
-<span class="na">Content-Type</span>: <span class="s">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
-<span class="na">Content-type</span>: <span class="s">application/json</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"new object id"</span>
-<span class="p">}</span>
+<p>Копирование объекта копирует всё его поддерево: вложенные объекты, теги,
+тревоги и методы. Как при этом пересчитываются ссылки, описано
+в разделе <a class="reference internal" href="api_nodes.html"><span class="doc">Узлы модели: общие правила</span></a>.</p>
+<p>Найти объект по имени внутри родителя:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/objects/?base=&lt;id цеха&gt;&amp;filter={"cn":["Насос 1"]}
 </pre></div>
 </div>
-</div>
-</div>
-<ul class="simple">
-<li><p><strong>folder</strong> (bool) - если <code class="docutils literal notranslate"><span class="pre">true</span></code>, создаётся папка <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code>,
-а не объект. По умолчанию <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
-<li><p><strong>parentId</strong> (str) - id родителя. Если поле пустое, узел создаётся
-в корне <code class="docutils literal notranslate"><span class="pre">objects</span></code>. Родителем может быть другой объект или
-пользовательская папка <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> ветки объектов.</p></li>
-<li><p><strong>attributes</strong> (dict) - словарь с параметрами для создания обьекта.</p>
-<ul>
-<li><p><strong>cn</strong> (str) - имя обьекта; Обязательный атрибут.</p></li>
-<li><p><strong>description</strong> (str) - описание обьекта. Необязательный атрибут.</p></li>
-<li><p><strong>prsJsonConfigString</strong> (str) - Строка содержит, в случае необходимости,
-конфигурацию узла. Интерпретируется сервисом, управляющим сущностью,
-которой принадлежит экземпляр. Необязательный аттрибут.</p></li>
-<li><p><strong>prsActive</strong> (bool) - Определяет, активен ли экземпляр. Необязательный атрибут.</p></li>
-<li><p><strong>prsDefault</strong> (bool) - Если = <code class="docutils literal notranslate"><span class="pre">True</span></code>, то данный экземпляр. Необязательный атрибут.
-считается узлом по умолчанию в списке равноправных узлов данного уровня иерархии.
-Необязательный атрибут.</p></li>
-<li><p><strong>prsIndex</strong> (int) - Если у узлов одного уровня иерархии проставлены индексы, то
-перед отдачей клиенту списка экземпляров они сортируются
-в соответствии с их индексами. Необязательный атрибут.</p></li>
-</ul>
-</li>
-</ul>
-</div></blockquote>
-<p><strong>Ответ:</strong></p>
-<blockquote>
-<div><ul class="simple">
-<li><p><strong>id</strong> (uuid) - id созданного обьекта</p></li>
-<li><p><strong>detail</strong> (str) - пояснения к ошибке</p></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="objects_api_crud_svc.delete">
-<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">objects_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ObjectRead</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects_api_crud_svc.delete" title="Ссылка на это определение"></a></dt>
-<dd><p>Метод удаления объекта в иерархии.</p>
-<p><strong>Запрос:</strong></p>
-<blockquote>
-<div><div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id4">
-<p><span class="caption-text">http</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">DELETE</span> <span class="nn">/v1/objects/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
-<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"id of an object to delete"</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-<div class="http-example-response docutils container" id="id5">
-<p><span class="caption-text">response</span></p>
-<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
-<span class="na">Content-Type</span>: <span class="s">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
-<span class="na">Content-type</span>: <span class="s">application/json</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="kc">null</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-</div>
-<ul class="simple">
-<li><p><strong>id</strong> (str | list[str]) - Идентификатор/ы удаляемого объекта.</p></li>
-</ul>
-</div></blockquote>
-<p><strong>Ответ:</strong></p>
-<blockquote>
-<div><ul class="simple">
-<li><p>null - в случае успешного запроса.</p></li>
-<li><p><strong>detail</strong> (list) - детали ошибки.</p></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="objects_api_crud_svc.read">
-<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">objects_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Query(None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hierarchy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">getParent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Query(None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ObjectRead</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects_api_crud_svc.read" title="Ссылка на это определение"></a></dt>
-<dd><p>Метод чтения обьекта в иерархии.</p>
-<p><strong>Пример запроса в формате JSON.</strong></p>
-<blockquote>
-<div><div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id6">
-<p><span class="caption-text">http</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">GET</span> <span class="nn">/v1/objects/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
-<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object id to retrive"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object1"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"describtion"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"prsJsonConfigString"</span><span class="p">:</span><span class="w"> </span><span class="s2">"configuration parameters"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"prsActive"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"prsDefault"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"prsIndex"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-<div class="http-example-response docutils container" id="id7">
-<p><span class="caption-text">response</span></p>
-<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
-<span class="na">Content-Type</span>: <span class="s">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
-<span class="na">Content-type</span>: <span class="s">application/json</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"retrived objects"</span><span class="p">]</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div></blockquote>
-<p><strong>Пример query запроса.</strong></p>
-<blockquote>
-<div><div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id8">
-<p><span class="caption-text">http</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">GET</span> <span class="nn">/v1/objects/?q={"id":"object_id_to_retrive","cn":"object1","description":"describtion","prsJsonConfigString":"configuration_parameters","prsActive":true,"prsDefault":true,"prsIndex":1}</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
-<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
-</pre></div>
-</div>
-</div>
-<div class="http-example-response docutils container" id="id9">
-<p><span class="caption-text">response</span></p>
-<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
-<span class="na">Content-Type</span>: <span class="s">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
-<span class="na">Content-type</span>: <span class="s">application/json</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"retrived objects"</span><span class="p">]</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div></blockquote>
-<p><strong>Параметры запроса:</strong></p>
-<blockquote>
-<div><ul>
-<li><p><strong>id</strong> (str | list(str)) - идентификатор объекта, который мы хотим прочитать
-Необязательный аттрибут.</p></li>
-<li><p><strong>cn</strong> (str) - имя объекта, который мы хотим прочитать
-Необязательный аттрибут.</p></li>
-<li><p><strong>attributes</strong> (list[str]) - Список атрибутов, значения которых необходимо
-вернуть в ответе. По умолчанию - [„.“], то есть все атрибуты (кроме системных).
-Необязательный аттрибут.</p></li>
-<li><p><strong>base</strong> (str) - Базовый узел для поиска. Необязательный аттрибут.
-Если не указан, то поиск ведётся от главного узла иерархии.</p></li>
-<li><p><strong>deref</strong> (bool) - Флаг разыменования ссылок. По умолчанию true.
-Необязательный аттрибут.</p></li>
-<li><p><strong>scope</strong> (int) - Масштаб поиска. По умолчанию 1. Необязательный аттрибут.</p>
-<p>0 - получение данных по указанному в ключе <code class="docutils literal notranslate"><span class="pre">base</span></code> узлу</p>
-<p>1 - поиск среди непосредственных потомков указанного в <code class="docutils literal notranslate"><span class="pre">base</span></code> узла</p>
-<p>2 - поиск по всему дереву, начиная с указанного в <code class="docutils literal notranslate"><span class="pre">base</span></code> узла.</p>
-</li>
-<li><p><strong>hierarchy</strong> (bool) - если true, обход спускается внутрь
-пользовательских папок <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code>. При <code class="docutils literal notranslate"><span class="pre">scope=1</span></code> без этого флага
-папка и то, что лежит в ней, в ответ не попадают.</p></li>
-<li><p><strong>filter</strong> (dict) - Словарь из атрибутов и их значений, из которых
-формируется фильтр для поиска. Необязательный атрибут.</p></li>
-</ul>
-</div></blockquote>
-<p><strong>Ответ:</strong></p>
-<blockquote>
-<div><ul class="simple">
-<li><p><strong>data</strong> (list) - данные прочитанного тега/тегов. Если ничего не найденно -
-пустой лист.</p></li>
-<li><p><strong>detail</strong> (list) - Детали ошибки.</p></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="objects_api_crud_svc.update">
-<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">objects_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#objects_api_crud_svc.update" title="Ссылка на это определение"></a></dt>
-<dd><p>Метод обновления обьекта в иерархии.</p>
-<p><strong>Запрос:</strong></p>
-<blockquote>
-<div><div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id10">
-<p><span class="caption-text">http</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">PUT</span> <span class="nn">/v1/alerts/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
-<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"id"</span><span class="p">:</span><span class="s2">"object_id"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object name"</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"description of the object"</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"prsJsonConfigString"</span><span class="p">:</span><span class="w"> </span><span class="s2">"node configuration"</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"prsActive"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"prsDefault"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"prsIndex"</span><span class="p">:</span><span class="w"> </span><span class="mi">12345</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-<div class="http-example-response docutils container" id="id11">
-<p><span class="caption-text">response</span></p>
-<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
-<span class="na">Content-Type</span>: <span class="s">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
-<span class="na">Content-type</span>: <span class="s">application/json</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="p">{}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-</div>
-<ul class="simple">
-<li><p><strong>id</strong> (str) - Идентификатор изменяемого узла.</p></li>
-<li><p><strong>attributes</strong> (dict) - словарь с параметрами для обновления объекта.</p>
-<ul>
-<li><p><strong>cn</strong> (str) - имя объекта. Необязательный атрибут.</p></li>
-<li><p><strong>description</strong> (str) - описание объекта. Необязательный атрибут.</p></li>
-<li><p><strong>prsJsonConfigString</strong> (str) - Строка содержит, в случае необходимости,
-конфигурацию узла. Интерпретируется сервисом, управляющим сущностью,
-которой принадлежит экземпляр. Необязательный аттрибут.</p></li>
-<li><p><strong>prsActive</strong> (bool) - Определяет, активен ли экземпляр. Применяется,
-к примеру, для временного „выключения“ экземпляра на время, пока он ещё
-не настроен окончательно. Необязательный аттрибут.</p></li>
-<li><p><strong>prsDefault</strong> (bool) - «Если = <code class="docutils literal notranslate"><span class="pre">True</span></code>, то данный экземпляр считается
-узлом по умолчанию в списке равноправных узлов данного уровня иерархии.
-Необязательный аттрибут.</p></li>
-<li><p><strong>prsEntityTypeCode</strong> (int) - Атрибут используется для определения типа.
-К примеру, хранилища данных могут быть разных типов. Необязательный аттрибут.</p></li>
-<li><p><strong>prsIndex</strong> (int) - Если у узлов одного уровня иерархии проставлены
-индексы, то перед отдачей клиенту списка экземпляров они сортируются
-в соответствии с их индексами. Необязательный аттрибут.</p></li>
-</ul>
-</li>
-</ul>
-</div></blockquote>
-<p><strong>Ответ:</strong></p>
-<blockquote>
-<div><ul class="simple">
-<li><p>{} - пустой словарь в случае успешного запроса.</p></li>
-<li><p><strong>detail</strong> (list) - детали ошибки.</p></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
-        <a href="tags.html" class="btn btn-neutral float-left" title="Теги" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
-        <a href="folders.html" class="btn btn-neutral float-right" title="Папки" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="api_nodes.html" class="btn btn-neutral float-left" title="Узлы модели: общие правила" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="tags.html" class="btn btn-neutral float-right" title="Теги" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

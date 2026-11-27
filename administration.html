@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Администрирование &mdash; документация МПК-Пересвет v0.29.0</title>
+  <title>Администрирование &mdash; документация МПК-Пересвет v0.30.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=399dde07"></script>
+      <script src="_static/documentation_options.js?v=62c6f60e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -37,7 +37,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.29.0</div>
+  <div class="prs-version">v0.30.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -56,16 +56,19 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Установка и запуск</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Администрирование</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Какой способ выбрать</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Общие правила</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#administration-docker-runtime-backup">Резервная копия всех контейнеров</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id3">Что сохраняется</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id4">Создание архива</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id5">Восстановление</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#ldap">Резервная копия LDAP</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Что сохраняется</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id6">Создание архива</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id7">Восстановление</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id8">Отладка определения тома</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#administration-ldap-backup">Резервная копия данных</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Все три хранилища сразу</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Каждое хранилище отдельно</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id11">Параметры</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id12">Отладка определения тома</a></li>
 </ul>
 </li>
 </ul>
@@ -74,11 +77,14 @@
 <p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
-<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
-<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
-<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storages_guide.html">Хранилища данных</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules_guide.html">Расписания</a></li>
 <li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
 </ul>
@@ -120,32 +126,63 @@
 <span id="id1"></span><h1>Администрирование<a class="headerlink" href="#administration" title="Ссылка на этот заголовок"></a></h1>
 <p>Раздел описывает резервное копирование и восстановление установленной
 платформы. Все скрипты лежат в каталоге <code class="docutils literal notranslate"><span class="pre">admin_scripts/</span></code>.</p>
-<p>Общие правила для всех скриптов:</p>
+<section id="id2">
+<h2>Какой способ выбрать<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 44.0%" />
+<col style="width: 56.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Задача</p></th>
+<th class="head"><p>Способ</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Перенести установку на другой сервер или восстановить её
+после аварии целиком</p></td>
+<td><p><a class="reference internal" href="#id4">Резервная копия всех контейнеров</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>Регулярно сохранять данные платформы: модель, историю тегов,
+экраны Grafana</p></td>
+<td><p><a class="reference internal" href="#id8">Резервная копия данных</a>, все три хранилища сразу</p></td>
+</tr>
+<tr class="row-even"><td><p>Сохранить или вернуть что-то одно, например только модель</p></td>
+<td><p><a class="reference internal" href="#id8">Резервная копия данных</a>, отдельный скрипт</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id3">
+<h2>Общие правила<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
 <ul class="simple">
 <li><p>Скрипты запускаются <strong>из корня установки</strong> — каталога, где лежат
 <code class="docutils literal notranslate"><span class="pre">run_one_app.sh</span></code>, <code class="docutils literal notranslate"><span class="pre">docker/compose/</span></code> и <code class="docutils literal notranslate"><span class="pre">admin_scripts/</span></code>.
-Из другого каталога скрипт откажется работать. Исключение — справка
-<code class="docutils literal notranslate"><span class="pre">-h</span></code> или <code class="docutils literal notranslate"><span class="pre">--help</span></code>: она выводится откуда угодно.</p></li>
+Из другого каталога скрипт откажется работать. Справку <code class="docutils literal notranslate"><span class="pre">-h</span></code>
+или <code class="docutils literal notranslate"><span class="pre">--help</span></code> можно вывести откуда угодно.</p></li>
 <li><p>Параметры задаются в виде <code class="docutils literal notranslate"><span class="pre">--имя=значение</span></code>, имена пишутся строчными
 буквами.</p></li>
+<li><p>Логические параметры включаются значениями <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">true</span></code>, <code class="docutils literal notranslate"><span class="pre">yes</span></code>,
+<code class="docutils literal notranslate"><span class="pre">YES</span></code>. Любое другое значение, в том числе пустое, означает
+«выключено».</p></li>
 <li><p>Архивы содержат все данные платформы, а архив контейнеров — ещё
 и переменные окружения с паролями. Храните их как конфиденциальные файлы.</p></li>
 </ul>
+</section>
 <section id="administration-docker-runtime-backup">
-<span id="id2"></span><h2>Резервная копия всех контейнеров<a class="headerlink" href="#administration-docker-runtime-backup" title="Ссылка на этот заголовок"></a></h2>
-<p>Этот способ сохраняет всю Docker-установку целиком и подходит для переноса
-на другой сервер или аварийного восстановления. Скрипты лежат
+<span id="id4"></span><h2>Резервная копия всех контейнеров<a class="headerlink" href="#administration-docker-runtime-backup" title="Ссылка на этот заголовок"></a></h2>
+<p>Этот способ сохраняет всю Docker-установку целиком. Скрипты лежат
 в <code class="docutils literal notranslate"><span class="pre">admin_scripts/docker/</span></code>:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">running_containers_backup.sh</span></code> — собирает все работающие контейнеры
 и их данные в один архив <code class="docutils literal notranslate"><span class="pre">.tar.gz</span></code>;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">running_containers_restore.sh</span></code> — разворачивает такой архив.</p></li>
 </ul>
-<p>Скрипты берут список контейнеров из <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">ps</span></code>, а не из compose-файлов.
-Поэтому в архив попадают все работающие контейнеры, в том числе сторонние,
+<p>Список контейнеров скрипты берут из <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">ps</span></code>, а не из compose-файлов.
+Поэтому в архив попадают все работающие контейнеры сервера, в том числе
 не относящиеся к Пересвету.</p>
-<section id="id3">
-<h3>Что сохраняется<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h3>
+<section id="id5">
+<h3>Что сохраняется<a class="headerlink" href="#id5" title="Ссылка на этот заголовок"></a></h3>
 <ul class="simple">
 <li><p>образ каждого работающего контейнера в его текущем состоянии
 (снимок <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">commit</span></code>);</p></li>
@@ -161,10 +198,11 @@
 <code class="docutils literal notranslate"><span class="pre">--skip_stop=1</span></code> контейнеры продолжают работать, но тогда данные в архиве
 могут оказаться несогласованными.</p>
 </section>
-<section id="id4">
-<h3>Создание архива<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h3>
+<section id="id6">
+<h3>Создание архива<a class="headerlink" href="#id6" title="Ссылка на этот заголовок"></a></h3>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/путь/к/peresvet
-./admin_scripts/docker/running_containers_backup.sh
+./admin_scripts/docker/running_containers_backup.sh<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--archive_name<span class="o">=</span>project_runtime_backup.tar.gz
 </pre></div>
 </div>
 <table class="docutils align-default">
@@ -206,20 +244,15 @@
 </tr>
 </tbody>
 </table>
-<p>Пример с именем архива:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./admin_scripts/docker/running_containers_backup.sh<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--archive_name<span class="o">=</span>project_runtime_backup.tar.gz
-</pre></div>
-</div>
 </section>
-<section id="id5">
-<h3>Восстановление<a class="headerlink" href="#id5" title="Ссылка на этот заголовок"></a></h3>
+<section id="id7">
+<h3>Восстановление<a class="headerlink" href="#id7" title="Ссылка на этот заголовок"></a></h3>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./admin_scripts/docker/running_containers_restore.sh<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--archive<span class="o">=</span>backups/docker_runtime/project_runtime_backup.tar.gz
 </pre></div>
 </div>
-<p>Что делает скрипт:</p>
-<ul class="simple">
+<p>Скрипт:</p>
+<ol class="arabic simple">
 <li><p>загружает образы из архива (<code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">load</span></code>);</p></li>
 <li><p>создаёт недостающие тома Docker;</p></li>
 <li><p>если том или каталог сервера уже существует, спрашивает, перезаписать
@@ -227,7 +260,7 @@
 <li><p>создаёт сети Docker из архива, если сетей с такими именами ещё нет;</p></li>
 <li><p>запускает контейнеры с сохранёнными томами, портами, именем хоста,
 политикой перезапуска и сетями.</p></li>
-</ul>
+</ol>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 26.0%" />
@@ -275,196 +308,201 @@
 </div>
 </section>
 </section>
-<section id="ldap">
-<span id="administration-ldap-backup"></span><h2>Резервная копия LDAP<a class="headerlink" href="#ldap" title="Ссылка на этот заголовок"></a></h2>
-<p>Иерархия модели хранится в OpenLDAP. Если нужно сохранить только её,
-без остальных контейнеров, используйте скрипты из <code class="docutils literal notranslate"><span class="pre">admin_scripts/ldap/</span></code>:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">ldap_volume_backup.sh</span></code> — создаёт архив данных LDAP;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ldap_volume_restore.sh</span></code> — восстанавливает данные из архива.</p></li>
-</ul>
-<p>Данные OpenLDAP лежат в контейнере в каталоге <code class="docutils literal notranslate"><span class="pre">/var/lib/ldap</span></code>. Compose-файлы
-подключают его как том Docker:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">docker/compose/docker-compose.ldap.one_app.yml</span></code> — том
-<code class="docutils literal notranslate"><span class="pre">ldap_data_one_app</span></code> (стандартная поставка);</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">docker/compose/docker-compose.ldap.yml</span></code> — том <code class="docutils literal notranslate"><span class="pre">ldap_data</span></code>.</p></li>
-</ul>
-<p>Docker добавляет к имени тома имя проекта, например
-<code class="docutils literal notranslate"><span class="pre">compose_ldap_data_one_app</span></code>. Посмотреть фактическое имя можно командой
-<code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">volume</span> <span class="pre">ls</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">ldap</span></code>.</p>
-<p>Где лежат данные, скрипты по умолчанию определяют сами: они разбирают
-compose-файл и находят, что подключено в <code class="docutils literal notranslate"><span class="pre">/var/lib/ldap</span></code> у сервиса LDAP —
-том Docker или каталог сервера. Для этого на сервере нужен <code class="docutils literal notranslate"><span class="pre">python3</span></code>.
-Цель можно задать и явно. Приоритет такой: сначала <code class="docutils literal notranslate"><span class="pre">ldap_docker_volume</span></code>,
-затем <code class="docutils literal notranslate"><span class="pre">ldap_data_dir</span></code>, затем разбор <code class="docutils literal notranslate"><span class="pre">compose_file</span></code>.</p>
-<p>Логические параметры (<code class="docutils literal notranslate"><span class="pre">skip_stop</span></code>, <code class="docutils literal notranslate"><span class="pre">skip_compose_stop</span></code>, <code class="docutils literal notranslate"><span class="pre">assume_yes</span></code>)
-считаются включёнными при значениях <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">true</span></code>, <code class="docutils literal notranslate"><span class="pre">yes</span></code>, <code class="docutils literal notranslate"><span class="pre">YES</span></code>.
-Любое другое значение, в том числе пустое, означает «выключено».</p>
-<section id="id6">
-<h3>Создание архива<a class="headerlink" href="#id6" title="Ссылка на этот заголовок"></a></h3>
-<p>По умолчанию скрипт останавливает сервис <code class="docutils literal notranslate"><span class="pre">ldap</span></code> через <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code>,
-упаковывает данные в <code class="docutils literal notranslate"><span class="pre">backups/ldap/</span></code> и снова запускает сервис:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/путь/к/peresvet
-./admin_scripts/ldap/ldap_volume_backup.sh
-</pre></div>
-</div>
-<p>С явными параметрами:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./admin_scripts/ldap/ldap_volume_backup.sh<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--compose_file<span class="o">=</span>docker/compose/docker-compose.ldap.one_app.yml<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--compose_project_name<span class="o">=</span>myproj<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--backup_dir<span class="o">=</span>backups/ldap
-</pre></div>
-</div>
+<section id="administration-ldap-backup">
+<span id="id8"></span><h2>Резервная копия данных<a class="headerlink" href="#administration-ldap-backup" title="Ссылка на этот заголовок"></a></h2>
+<p>Данные платформы лежат в трёх хранилищах. У каждого есть своя пара
+скриптов — создание архива и восстановление из него:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 22.0%" />
-<col style="width: 58.0%" />
-<col style="width: 20.0%" />
+<col style="width: 30.0%" />
+<col style="width: 48.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Что хранится</p></th>
+<th class="head"><p>Каталог в контейнере</p></th>
+<th class="head"><p>Скрипты</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Модель (иерархия) в OpenLDAP</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/var/lib/ldap</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">admin_scripts/ldap/ldap_volume_backup.sh</span></code>,
+<code class="docutils literal notranslate"><span class="pre">admin_scripts/ldap/ldap_volume_restore.sh</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>История тегов и эпизоды тревог в PostgreSQL</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/var/lib/postgresql/data</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">admin_scripts/historian/historian_volume_backup.sh</span></code>,
+<code class="docutils literal notranslate"><span class="pre">admin_scripts/historian/historian_volume_restore.sh</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Экраны и настройки Grafana</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/var/lib/grafana</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">admin_scripts/grafana/grafana_volume_backup.sh</span></code>,
+<code class="docutils literal notranslate"><span class="pre">admin_scripts/grafana/grafana_volume_restore.sh</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<section id="id9">
+<h3>Все три хранилища сразу<a class="headerlink" href="#id9" title="Ссылка на этот заголовок"></a></h3>
+<p>Скрипт <code class="docutils literal notranslate"><span class="pre">admin_scripts/backup_storages.sh</span></code> по очереди вызывает три
+скрипта создания архива. Архивы попадают в <code class="docutils literal notranslate"><span class="pre">backups/ldap/</span></code>,
+<code class="docutils literal notranslate"><span class="pre">backups/historian/</span></code> и <code class="docutils literal notranslate"><span class="pre">backups/grafana/</span></code>:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/путь/к/peresvet
+./admin_scripts/backup_storages.sh
+</pre></div>
+</div>
+<p>Восстановление — <code class="docutils literal notranslate"><span class="pre">admin_scripts/restore_storages.sh</span></code> с путями ко всем
+трём архивам:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./admin_scripts/restore_storages.sh<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--ldap_archive<span class="o">=</span>backups/ldap/&lt;архив&gt;.tar.gz<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--historian_archive<span class="o">=</span>backups/historian/&lt;архив&gt;.tar.gz<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--grafana_archive<span class="o">=</span>backups/grafana/&lt;архив&gt;.tar.gz
+</pre></div>
+</div>
+<p>Параметры <code class="docutils literal notranslate"><span class="pre">--skip_ldap=1</span></code>, <code class="docutils literal notranslate"><span class="pre">--skip_historian=1</span></code> и <code class="docutils literal notranslate"><span class="pre">--skip_grafana=1</span></code>
+пропускают хранилище; тогда его архив указывать не нужно. Общие параметры
+<code class="docutils literal notranslate"><span class="pre">compose_project_name</span></code>, <code class="docutils literal notranslate"><span class="pre">skip_stop</span></code>, <code class="docutils literal notranslate"><span class="pre">skip_compose_stop</span></code>, а при
+восстановлении ещё <code class="docutils literal notranslate"><span class="pre">assume_yes</span></code> и <code class="docutils literal notranslate"><span class="pre">restore_helper_image</span></code>, передаются
+всем трём скриптам.</p>
+</section>
+<section id="id10">
+<h3>Каждое хранилище отдельно<a class="headerlink" href="#id10" title="Ссылка на этот заголовок"></a></h3>
+<p>По умолчанию скрипт создания архива останавливает сервис через
+<code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code>, упаковывает каталог данных и снова запускает сервис:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./admin_scripts/ldap/ldap_volume_backup.sh
+</pre></div>
+</div>
+<p>Скрипт восстановления останавливает сервис, очищает каталог данных,
+распаковывает архив и снова запускает сервис. Перед перезаписью он
+спрашивает подтверждение; <code class="docutils literal notranslate"><span class="pre">--assume_yes=1</span></code> отключает вопрос:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./admin_scripts/ldap/ldap_volume_restore.sh<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--assume_yes<span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--archive<span class="o">=</span>backups/ldap/&lt;архив&gt;.tar.gz
+</pre></div>
+</div>
+<p>Скрипты PostgreSQL и Grafana вызываются так же.</p>
+<p>Где лежат данные, скрипты определяют сами: разбирают compose-файл
+и находят, что подключено в каталог данных сервиса — том Docker или
+каталог сервера. Для этого на сервере нужен <code class="docutils literal notranslate"><span class="pre">python3</span></code>. Цель можно
+задать и явно, параметром тома или каталога (см. таблицу ниже).
+Приоритет: явный том, затем явный каталог, затем разбор compose-файла.</p>
+<p>Docker добавляет к имени тома имя проекта, например
+<code class="docutils literal notranslate"><span class="pre">compose_ldap_data_one_app</span></code>. Фактические имена показывает команда
+<code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">volume</span> <span class="pre">ls</span></code>.</p>
+</section>
+<section id="id11">
+<h3>Параметры<a class="headerlink" href="#id11" title="Ссылка на этот заголовок"></a></h3>
+<p>Параметры у трёх пар скриптов одинаковые, различаются только имена
+некоторых из них и значения по умолчанию:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28.0%" />
+<col style="width: 24.0%" />
+<col style="width: 24.0%" />
+<col style="width: 24.0%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Параметр</p></th>
-<th class="head"><p>Назначение</p></th>
-<th class="head"><p>По умолчанию</p></th>
+<th class="head"><p>LDAP</p></th>
+<th class="head"><p>PostgreSQL</p></th>
+<th class="head"><p>Grafana</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">compose_file</span></code></p></td>
-<td><p>Compose-файл с сервисом LDAP: относительно корня установки или
-абсолютный путь.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">docker/compose/docker-compose.ldap.one_app.yml</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">docker/compose/</span></code>
+<code class="docutils literal notranslate"><span class="pre">docker-compose.ldap.one_app.yml</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">docker/compose/</span></code>
+<code class="docutils literal notranslate"><span class="pre">docker-compose.postgresql.data_in_volume.yml</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">docker/compose/</span></code>
+<code class="docutils literal notranslate"><span class="pre">docker-compose.grafana.yml</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Имя сервиса в compose-файле</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ldap_service=ldap</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">postgres_service=psql</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">grafana_service=grafana</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">backup_dir</span></code> (только создание)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">backups/ldap</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">backups/historian</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">backups/grafana</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Явно заданный том Docker</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ldap_docker_volume</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">historian_docker_volume</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">grafana_docker_volume</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Явно заданный каталог сервера</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ldap_data_dir</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">historian_data_dir</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">grafana_data_dir</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Общие для всех:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 74.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Параметр</p></th>
+<th class="head"><p>Назначение</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">archive</span></code></p></td>
+<td><p><strong>Обязательный при восстановлении.</strong> Путь к архиву: относительно
+корня установки или абсолютный.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">compose_project_name</span></code></p></td>
 <td><p>Имя проекта Docker Compose (ключ <code class="docutils literal notranslate"><span class="pre">-p</span></code>). Пусто — как у
 <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code> без <code class="docutils literal notranslate"><span class="pre">-p</span></code>, с учётом переменной
 <code class="docutils literal notranslate"><span class="pre">COMPOSE_PROJECT_NAME</span></code>.</p></td>
-<td><p>—</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ldap_service</span></code></p></td>
-<td><p>Имя сервиса LDAP в compose-файле.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">ldap</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">backup_dir</span></code></p></td>
-<td><p>Каталог для архивов: относительно корня установки или абсолютный путь.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">backups/ldap</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ldap_docker_volume</span></code></p></td>
-<td><p>Явно заданное полное имя тома Docker с данными LDAP.</p></td>
-<td><p>—</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ldap_data_dir</span></code></p></td>
-<td><p>Явно заданный каталог сервера с данными LDAP. Не используется,
-если задан <code class="docutils literal notranslate"><span class="pre">ldap_docker_volume</span></code>.</p></td>
-<td><p>—</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">backup_helper_image</span></code></p></td>
-<td><p>Образ вспомогательного контейнера, который упаковывает том.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">busybox:stable</span></code></p></td>
+<td><p>Образ вспомогательного контейнера, который упаковывает данные.
+По умолчанию <code class="docutils literal notranslate"><span class="pre">busybox:stable</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">skip_stop</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code> — не останавливать контейнеры, которые используют том.
-Имеет смысл вместе с <code class="docutils literal notranslate"><span class="pre">skip_compose_stop=1</span></code>. Архив может оказаться
-несогласованным.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">skip_compose_stop</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code> — не вызывать <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">stop/start</span></code> для сервиса LDAP.
-Тогда перед упаковкой тома останавливаются контейнеры, которые его
-используют (если не задан <code class="docutils literal notranslate"><span class="pre">skip_stop=1</span></code>).</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="id7">
-<h3>Восстановление<a class="headerlink" href="#id7" title="Ссылка на этот заголовок"></a></h3>
-<p>Скрипт останавливает сервис LDAP, очищает каталог данных, распаковывает
-архив и снова запускает сервис. Перед перезаписью он спрашивает
-подтверждение. Без вопросов:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/путь/к/peresvet
-./admin_scripts/ldap/ldap_volume_restore.sh<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--assume_yes<span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--archive<span class="o">=</span>backups/ldap/ИМЯ_АРХИВА.tar.gz
-</pre></div>
-</div>
-<table class="docutils align-default">
-<colgroup>
-<col style="width: 22.0%" />
-<col style="width: 58.0%" />
-<col style="width: 20.0%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Параметр</p></th>
-<th class="head"><p>Назначение</p></th>
-<th class="head"><p>По умолчанию</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">archive</span></code></p></td>
-<td><p><strong>Обязательный.</strong> Путь к архиву: относительно корня установки
-или абсолютный.</p></td>
-<td><p>—</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">compose_file</span></code></p></td>
-<td><p>Как при создании архива.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">docker/compose/docker-compose.ldap.one_app.yml</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">compose_project_name</span></code></p></td>
-<td><p>Как при создании архива.</p></td>
-<td><p>—</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ldap_service</span></code></p></td>
-<td><p>Как при создании архива.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">ldap</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ldap_docker_volume</span></code></p></td>
-<td><p>Явно заданный том, в который распаковывается архив.</p></td>
-<td><p>—</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ldap_data_dir</span></code></p></td>
-<td><p>Явно заданный каталог сервера, в который распаковывается архив.</p></td>
-<td><p>—</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">restore_helper_image</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">restore_helper_image</span></code></p></td>
 <td><p>Образ вспомогательного контейнера, который очищает и распаковывает
-данные (в нём нужны <code class="docutils literal notranslate"><span class="pre">find</span></code> и <code class="docutils literal notranslate"><span class="pre">tar</span></code>).</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">alpine:3.20</span></code></p></td>
+данные (в нём нужны <code class="docutils literal notranslate"><span class="pre">find</span></code> и <code class="docutils literal notranslate"><span class="pre">tar</span></code>). По умолчанию <code class="docutils literal notranslate"><span class="pre">alpine:3.20</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">assume_yes</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">assume_yes</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">1</span></code> — не спрашивать подтверждение перед перезаписью.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">skip_stop</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code> — не останавливать контейнеры, которые используют том.
-Если том занят, скрипт завершится ошибкой: писать в работающую
-базу он не будет.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">skip_compose_stop</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code> — не вызывать <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">stop/start</span></code>. Тогда перед
-восстановлением останавливаются контейнеры, которые используют том
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code> — не вызывать <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">stop/start</span></code> для сервиса.
+Тогда останавливаются контейнеры, которые используют том
 (если не задан <code class="docutils literal notranslate"><span class="pre">skip_stop=1</span></code>).</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">skip_stop</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code> — не останавливать и контейнеры, которые используют том.
+Имеет смысл вместе с <code class="docutils literal notranslate"><span class="pre">skip_compose_stop=1</span></code>. При создании архив
+может оказаться несогласованным, при восстановлении скрипт
+завершится ошибкой, если том занят: писать в работающую базу
+он не будет.</p></td>
 </tr>
 </tbody>
 </table>
 <div class="admonition warning">
 <p class="admonition-title">Предупреждение</p>
-<p>Восстанавливайте архив только в такую же установку: с тем же образом
-и той же схемой LDAP. В архив попадают только данные из <code class="docutils literal notranslate"><span class="pre">/var/lib/ldap</span></code>,
-а настройки <code class="docutils literal notranslate"><span class="pre">slapd</span></code> и схема зашиты в образ при сборке.</p>
+<p>Восстанавливайте архив только в такую же установку: с теми же
+образами и той же схемой LDAP. В архив попадает только каталог данных,
+а настройки <code class="docutils literal notranslate"><span class="pre">slapd</span></code>, схема LDAP и версия PostgreSQL зашиты в образы.</p>
 </div>
 </section>
-<section id="id8">
-<h3>Отладка определения тома<a class="headerlink" href="#id8" title="Ссылка на этот заголовок"></a></h3>
-<p>Том или каталог данных находит вспомогательный скрипт
-<code class="docutils literal notranslate"><span class="pre">admin_scripts/ldap/resolve_ldap_storage.py</span></code>. Shell-скрипты вызывают его
-сами; вручную он нужен только для отладки. Его аргументы позиционные:</p>
+<section id="id12">
+<h3>Отладка определения тома<a class="headerlink" href="#id12" title="Ссылка на этот заголовок"></a></h3>
+<p>Том или каталог данных находят вспомогательные скрипты
+<code class="docutils literal notranslate"><span class="pre">resolve_ldap_storage.py</span></code>, <code class="docutils literal notranslate"><span class="pre">resolve_historian_storage.py</span></code> и
+<code class="docutils literal notranslate"><span class="pre">resolve_grafana_storage.py</span></code> в тех же каталогах. Shell-скрипты вызывают
+их сами; вручную они нужны только для отладки. Аргументы позиционные:</p>
 <ol class="arabic simple">
 <li><p>путь к compose-файлу;</p></li>
 <li><p>имя проекта для <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">-p</span></code> (необязательно; пустая строка —
 без <code class="docutils literal notranslate"><span class="pre">-p</span></code>);</p></li>
-<li><p>имя сервиса (необязательно, по умолчанию <code class="docutils literal notranslate"><span class="pre">ldap</span></code>).</p></li>
+<li><p>имя сервиса (необязательно, по умолчанию как в таблице выше).</p></li>
 </ol>
 <p>Переменная окружения <code class="docutils literal notranslate"><span class="pre">RESOLVE_CWD</span></code> задаёт рабочий каталог для
 <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code>. Скрипт печатает одну строку из двух полей через

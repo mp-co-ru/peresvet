@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Методы &mdash; документация МПК-Пересвет v0.29.0</title>
+  <title>Методы &mdash; документация МПК-Пересвет v0.30.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=399dde07"></script>
+      <script src="_static/documentation_options.js?v=62c6f60e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -24,8 +24,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
-    <link rel="next" title="Коннекторы" href="connectors_guide.html" />
-    <link rel="prev" title="Исторические данные" href="historical_data.html" /> 
+    <link rel="next" title="Расписания" href="schedules_guide.html" />
+    <link rel="prev" title="Тревоги" href="alerts_guide.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -37,7 +37,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.29.0</div>
+  <div class="prs-version">v0.30.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -60,7 +60,10 @@
 <p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storages_guide.html">Хранилища данных</a></li>
 <li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Методы</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#id2">Как устроен вызов</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id3">Типы методов</a></li>
@@ -73,15 +76,15 @@
 <li class="toctree-l2"><a class="reference internal" href="#id8">Каталог методов</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id9">Определение в каталоге</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id10">Ссылка на определение</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id11">Загрузка описания</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#methods-yaml">Загрузка описания</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id12">Пакеты методов</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
-<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules_guide.html">Расписания</a></li>
 <li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
 </ul>
@@ -322,7 +325,43 @@
 <section id="id7">
 <h2>Параметры<a class="headerlink" href="#id7" title="Ссылка на этот заголовок"></a></h2>
 <p>Как вычислить значение параметра, задаёт JSON в атрибуте
-<code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> параметра. Возможны такие варианты.</p>
+<code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> параметра:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 24.0%" />
+<col style="width: 24.0%" />
+<col style="width: 52.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Источник</p></th>
+<th class="head"><p>Ключ</p></th>
+<th class="head"><p>Когда нужен</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Данные тега</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">request</span></code></p></td>
+<td><p>Значения других тегов на момент события.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Запрос клиента</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">clientJsonata</span></code></p></td>
+<td><p>Методу чтения: за какой период и с какими ключами читают тег.</p></td>
+</tr>
+<tr class="row-even"><td><p>Запрос к платформе</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">routingKey</span></code>, <code class="docutils literal notranslate"><span class="pre">message</span></code></p></td>
+<td><p>Атрибуты узлов модели, ответы внутренних сервисов.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Внешний HTTP-запрос</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">httpRequest</span></code></p></td>
+<td><p>Данные внешних систем: курсы, справочники, погода.</p></td>
+</tr>
+<tr class="row-even"><td><p>Привязка</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">binding</span></code></p></td>
+<td><p>Коротко задать тег, число или константу у ссылки на метод каталога.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Подробно каждый вариант описан ниже.</p>
 <p><strong>Данные тега.</strong> Параметр читает теги одним запросом
 <a class="reference internal" href="historical_data.html#historical-data"><span class="std std-ref">исторических данных</span></a>. В конфигураторе правят
 тело этого запроса: идентификаторы тегов и любые дополнительные ключи,
@@ -332,9 +371,9 @@
 Идентификатор тега на одном уровне с <code class="docutils literal notranslate"><span class="pre">responseJsonata</span></code> запросом не
 является.</p>
 <p>Ключ <code class="docutils literal notranslate"><span class="pre">tagId</span></code> внутри <code class="docutils literal notranslate"><span class="pre">request</span></code> — один идентификатор или список.
-Платформа выполняет один <code class="docutils literal notranslate"><span class="pre">data_get</span></code> сразу по всем указанным тегам и
-подставляет <code class="docutils literal notranslate"><span class="pre">finish</span></code>: при запуске от тега, расписания или выбранного
-события тревоги это метка события, при чтении тега — <code class="docutils literal notranslate"><span class="pre">finish</span></code> из запроса клиента.</p>
+Платформа читает все указанные теги одним запросом и подставляет
+<code class="docutils literal notranslate"><span class="pre">finish</span></code>: при запуске от тега, расписания или выбранного события
+тревоги это метка события, при чтении тега — <code class="docutils literal notranslate"><span class="pre">finish</span></code> из запроса клиента.</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">"request"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"&lt;id тега&gt;"</span><span class="p">],</span><span class="w"> </span><span class="nt">"op"</span><span class="p">:</span><span class="w"> </span><span class="s2">"op"</span><span class="p">},</span>
 <span class="w">  </span><span class="nt">"responseJsonata"</span><span class="p">:</span><span class="w"> </span><span class="s2">"$.data[0].data[0][1]"</span>
@@ -381,7 +420,8 @@
 Это короткая привязка ссылки на метод каталога, не запрос <code class="docutils literal notranslate"><span class="pre">request</span></code>;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">{&quot;binding&quot;:</span> <span class="pre">&quot;literal&quot;,</span> <span class="pre">&quot;value&quot;:</span> <span class="pre">1,</span> <span class="pre">&quot;valueTypeCode&quot;:</span> <span class="pre">2}</span></code> — постоянное
 значение; <code class="docutils literal notranslate"><span class="pre">valueTypeCode</span></code>: <code class="docutils literal notranslate"><span class="pre">1</span></code> целое, <code class="docutils literal notranslate"><span class="pre">2</span></code> вещественное,
-<code class="docutils literal notranslate"><span class="pre">3</span></code> строка, <code class="docutils literal notranslate"><span class="pre">4</span></code> JSON;</p></li>
+<code class="docutils literal notranslate"><span class="pre">3</span></code> строка, <code class="docutils literal notranslate"><span class="pre">4</span></code> JSON. Эти коды не совпадают с кодами типов
+значений тега;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">{&quot;binding&quot;:</span> <span class="pre">&quot;constant&quot;,</span> <span class="pre">&quot;constantId&quot;:</span> <span class="pre">&quot;&lt;id&gt;&quot;}</span></code> — значение константы
 модели.</p></li>
 </ul>
@@ -459,8 +499,8 @@
 для этого создают ссылку.</p></li>
 </ul>
 </section>
-<section id="id11">
-<h3>Загрузка описания<a class="headerlink" href="#id11" title="Ссылка на этот заголовок"></a></h3>
+<section id="methods-yaml">
+<span id="id11"></span><h3>Загрузка описания<a class="headerlink" href="#methods-yaml" title="Ссылка на этот заголовок"></a></h3>
 <p>Набор папок и методов можно загрузить в каталог одним файлом YAML.
 В конфигураторе это команда «Загрузка описания» в меню папки «Методы»
 или вложенной папки, через API — <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/description</span></code>
@@ -518,8 +558,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
-        <a href="historical_data.html" class="btn btn-neutral float-left" title="Исторические данные" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
-        <a href="connectors_guide.html" class="btn btn-neutral float-right" title="Коннекторы" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="alerts_guide.html" class="btn btn-neutral float-left" title="Тревоги" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="schedules_guide.html" class="btn btn-neutral float-right" title="Расписания" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MCP-сервер платформы &mdash; документация МПК-Пересвет v0.29.0</title>
+  <title>MCP-сервер платформы &mdash; документация МПК-Пересвет v0.30.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=399dde07"></script>
+      <script src="_static/documentation_options.js?v=62c6f60e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -37,7 +37,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.29.0</div>
+  <div class="prs-version">v0.30.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -60,11 +60,14 @@
 <p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
-<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
-<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
-<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storages_guide.html">Хранилища данных</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules_guide.html">Расписания</a></li>
 <li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MCP-сервер</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#id2">Запуск</a></li>
@@ -231,17 +234,15 @@ Service accounts → Add service account token, см.
 </ul>
 <p><strong>Тревоги</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_alert_create</span></code> — создать тревогу (порог <code class="docutils literal notranslate"><span class="pre">value</span></code>, направление
-<code class="docutils literal notranslate"><span class="pre">high</span></code>, автоквитирование <code class="docutils literal notranslate"><span class="pre">autoAck</span></code>);</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_alarms_get</span></code>, <code class="docutils literal notranslate"><span class="pre">peresvet_alarm_ack</span></code> — чтение тревог
-и их квитирование. <code class="docutils literal notranslate"><span class="pre">parent_id</span></code> — объект, тег, тревога или список.
-<code class="docutils literal notranslate"><span class="pre">alert_id</span></code> — то же, что один <code class="docutils literal notranslate"><span class="pre">parent_id</span></code> тревоги. <code class="docutils literal notranslate"><span class="pre">fired=true</span></code>
-(по умолчанию) возвращает эпизод, активный в момент <code class="docutils literal notranslate"><span class="pre">finish</span></code>
-(по умолчанию сейчас); <code class="docutils literal notranslate"><span class="pre">count</span></code> при этом не передаётся.
-<code class="docutils literal notranslate"><span class="pre">fired=false</span></code> без <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">count</span></code> — состояние каждой тревоги.
-<code class="docutils literal notranslate"><span class="pre">fired=false</span></code> со <code class="docutils literal notranslate"><span class="pre">start</span></code> или <code class="docutils literal notranslate"><span class="pre">count</span></code> — список срабатываний.
-В элементе: <code class="docutils literal notranslate"><span class="pre">id</span></code>, <code class="docutils literal notranslate"><span class="pre">cn</span></code>, <code class="docutils literal notranslate"><span class="pre">tagId</span></code>, <code class="docutils literal notranslate"><span class="pre">fired</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">acked</span></code>.
-Квитирование без <code class="docutils literal notranslate"><span class="pre">x</span></code> берёт текущий момент.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_alert_create</span></code> — создать тревогу у тега: порог <code class="docutils literal notranslate"><span class="pre">value</span></code>,
+направление <code class="docutils literal notranslate"><span class="pre">high</span></code>, автоквитирование <code class="docutils literal notranslate"><span class="pre">auto_ack</span></code>
+(см. <a class="reference internal" href="alerts_guide.html#alerts-guide"><span class="std std-ref">Тревоги</span></a>);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_alarms_get</span></code> — эпизоды тревог, то же, что запрос
+<code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/alarms/</span></code> (<a class="reference internal" href="alerts.html"><span class="doc">Тревоги</span></a>). Параметры: <code class="docutils literal notranslate"><span class="pre">parent_id</span></code>
+(объект, тег, тревога или их список), <code class="docutils literal notranslate"><span class="pre">alert_id</span></code>, <code class="docutils literal notranslate"><span class="pre">get_children</span></code>,
+<code class="docutils literal notranslate"><span class="pre">fired</span></code>, <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code>, <code class="docutils literal notranslate"><span class="pre">format_ts</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">peresvet_alarm_ack</span></code> — квитировать тревогу <code class="docutils literal notranslate"><span class="pre">alarm_id</span></code>; без <code class="docutils literal notranslate"><span class="pre">x</span></code>
+квитирует текущим моментом.</p></li>
 </ul>
 <p><strong>Коннекторы</strong></p>
 <ul class="simple">

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Описание &mdash; документация МПК-Пересвет v0.29.0</title>
+  <title>Описание &mdash; документация МПК-Пересвет v0.30.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=399dde07"></script>
+      <script src="_static/documentation_options.js?v=62c6f60e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -37,7 +37,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.29.0</div>
+  <div class="prs-version">v0.30.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -65,11 +65,14 @@
 <p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
-<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
-<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
-<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storages_guide.html">Хранилища данных</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules_guide.html">Расписания</a></li>
 <li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
 </ul>
@@ -129,9 +132,9 @@
 с оборудования, <strong>хранилища данных</strong>, где лежит история тегов,
 и <strong>расписания</strong>, которые запускают задачи по времени.</p>
 <p>Поведение модели задают методы. Метод — программа, которую платформа
-вызывает, когда меняется тег или срабатывает расписание. Методы считают
-значения вычисляемых тегов, проверяют сложные условия тревог, отвечают
-на чтение и запись тегов, обращаются к внешним системам.</p>
+вызывает, когда меняется тег, срабатывает расписание или тревога. Методы
+считают значения вычисляемых тегов, отвечают на чтение и запись тегов,
+обращаются к внешним системам.</p>
 <p>Термины подробно разобраны в разделе <a class="reference internal" href="terms.html#terms"><span class="std std-ref">Терминология</span></a>.</p>
 </section>
 <section id="id3">
@@ -141,14 +144,17 @@
 <li><p>В браузере открывают Grafana. Главная панель Grafana —
 <a class="reference internal" href="configurator/configurator.html#configurator"><span class="std std-ref">конфигуратор</span></a>: в нём собирают иерархию объектов
 и тегов, настраивают коннекторы, хранилища, тревоги и методы.</p></li>
-<li><p>Коннекторы, установленные рядом с оборудованием, начинают присылать
-значения тегов (<a class="reference internal" href="connectors_guide.html#connectors-guide"><span class="std std-ref">Коннекторы</span></a>). Видеокамеры подключаются так же,
+<li><p>Коннекторы, установленные рядом с оборудованием, присылают значения
+тегов (<a class="reference internal" href="connectors_guide.html#connectors-guide"><span class="std std-ref">Коннекторы</span></a>). Видеокамеры подключаются так же,
 коннектором (<a class="reference internal" href="video.html#video-cameras"><span class="std std-ref">Подключение видеокамер</span></a>).</p></li>
-<li><p>История тегов попадает в хранилище данных и читается запросом
-<code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/</span></code> (<a class="reference internal" href="historical_data.html#historical-data"><span class="std std-ref">Исторические данные</span></a>).</p></li>
+<li><p>История тегов попадает в хранилище данных (<a class="reference internal" href="storages_guide.html#storages-guide"><span class="std std-ref">Хранилища данных</span></a>)
+и читается запросом <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/</span></code> (<a class="reference internal" href="historical_data.html#historical-data"><span class="std std-ref">Исторические данные</span></a>).</p></li>
+<li><p>Тревоги следят за значениями тегов, оператор видит и квитирует их
+в конфигураторе (<a class="reference internal" href="alerts_guide.html#alerts-guide"><span class="std std-ref">Тревоги</span></a>).</p></li>
 <li><p>Экраны мониторинга строятся в той же Grafana
 (<a class="reference internal" href="grafana/grafana_integration.html"><span class="doc">Создание экранов в Grafana</span></a>). Внешние системы работают
-с платформой через <a class="reference internal" href="api.html#api"><span class="std std-ref">HTTP API</span></a>.</p></li>
+с платформой через <a class="reference internal" href="api.html#api"><span class="std std-ref">HTTP API</span></a>, ИИ-агенты — через
+<a class="reference internal" href="mcp.html#mcp"><span class="std std-ref">MCP-сервер</span></a>.</p></li>
 </ol>
 <p>Пошаговое построение модели с нуля разобрано в
 <a class="reference external" href="https://github.com/mp-co-ru/prs-peresvet-courses/tree/main/01.base">базовом курсе</a>.</p>

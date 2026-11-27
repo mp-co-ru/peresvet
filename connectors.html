@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Коннекторы &mdash; документация МПК-Пересвет v0.29.0</title>
+  <title>Коннекторы &mdash; документация МПК-Пересвет v0.30.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=399dde07"></script>
+      <script src="_static/documentation_options.js?v=62c6f60e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -24,8 +24,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
-    <link rel="next" title="Хранилища данных" href="dataStorages_api_doc.html" />
-    <link rel="prev" title="Папки" href="folders.html" /> 
+    <link rel="next" title="Расписания" href="schedules.html" />
+    <link rel="prev" title="Методы" href="methods_api_doc.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -37,7 +37,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.29.0</div>
+  <div class="prs-version">v0.30.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -60,11 +60,14 @@
 <p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
-<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
-<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
-<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storages_guide.html">Хранилища данных</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules_guide.html">Расписания</a></li>
 <li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
 </ul>
@@ -76,24 +79,26 @@
 <p class="caption" role="heading"><span class="caption-text">Справочник</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="api.html#id2">Общие правила</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="api.html#id3">Разделы</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id2">Адрес и формат</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#get">Параметры запросов GET</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id3">Ответы и ошибки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id4">Служебные запросы</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="api.html#id5">Разделы справочника</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="api_nodes.html">Узлы модели: общие правила</a></li>
 <li class="toctree-l3"><a class="reference internal" href="objects.html">Объекты</a></li>
-<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
+<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
+<li class="toctree-l3"><a class="reference internal" href="methods_api_doc.html">Методы</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Коннекторы</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id2">Протокол обмена</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id3">Потеря связи</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id4">Камеры</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#api">Сервисный API коннекторов</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#module-connectors_api_crud_svc">CRUD API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id2">Узлы коннекторов</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id6">Сервисные запросы</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id8">Протокол обмена</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a></li>
 <li class="toctree-l3"><a class="reference internal" href="schedules.html">Расписания</a></li>
-<li class="toctree-l3"><a class="reference internal" href="methods_api_doc.html">Методы</a></li>
-<li class="toctree-l3"><a class="reference internal" href="data_api.html">Запись и чтение данных</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a></li>
+<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_api.html">Данные тегов</a></li>
 </ul>
 </li>
 </ul>
@@ -127,19 +132,191 @@
              
   <section id="id1">
 <h1>Коннекторы<a class="headerlink" href="#id1" title="Ссылка на этот заголовок"></a></h1>
-<p>Назначение коннекторов, их настройка и журнал описаны в разделе
-<a class="reference internal" href="connectors_guide.html#connectors-guide"><span class="std std-ref">Коннекторы</span></a>. Здесь — протокол обмена коннектора с платформой
-для тех, кто пишет свой коннектор без пакета
-<a class="reference external" href="https://github.com/mp-co-ru/prs-connector-core">prs-connector-core</a>,
-и справочник CRUD API коннекторов.</p>
+<p>Как работают коннекторы, как их настраивать и читать их журнал, описано
+в разделе <a class="reference internal" href="connectors_guide.html#connectors-guide"><span class="std std-ref">Коннекторы</span></a>. Здесь — запросы к коннекторам и протокол
+обмена для тех, кто пишет свой коннектор без пакета
+<a class="reference external" href="https://github.com/mp-co-ru/prs-connector-core">prs-connector-core</a>.</p>
 <section id="id2">
-<h2>Протокол обмена<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
+<h2>Узлы коннекторов<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
+<p>Адрес — <code class="docutils literal notranslate"><span class="pre">/v1/connectors/</span></code>. Запросы те же, что у всех узлов модели
+(<a class="reference internal" href="api_nodes.html"><span class="doc">Узлы модели: общие правила</span></a>). Родитель коннектора — пользовательская папка в ветке
+коннекторов; без <code class="docutils literal notranslate"><span class="pre">parentId</span></code> коннектор создаётся в корне ветки.</p>
+<section id="id3">
+<h3>Конфигурация коннектора<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> коннектора состоит из двух блоков:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">source</span></code> — как подключиться к источнику. Формат задаёт конкретный
+коннектор;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">log</span></code> — журнал: <code class="docutils literal notranslate"><span class="pre">level</span></code>, <code class="docutils literal notranslate"><span class="pre">fileName</span></code>, <code class="docutils literal notranslate"><span class="pre">maxBytes</span></code>, <code class="docutils literal notranslate"><span class="pre">backupCount</span></code>,
+<code class="docutils literal notranslate"><span class="pre">sendToPlatform</span></code> (см. <a class="reference internal" href="connectors_guide.html#connectors-guide"><span class="std std-ref">Коннекторы</span></a>).</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">prsEntityTypeCode</span> <span class="pre">=</span> <span class="pre">10</span></code> или ключ <code class="docutils literal notranslate"><span class="pre">source.rtspUrl</span></code> означают камеру
+(<a class="reference internal" href="video.html#video-cameras"><span class="std std-ref">Подключение видеокамер</span></a>).</p>
+</section>
+<section id="id4">
+<h3>Привязка тегов<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h3>
+<p>Теги привязывают полем <code class="docutils literal notranslate"><span class="pre">linkedTags</span></code> в запросах <code class="docutils literal notranslate"><span class="pre">POST</span></code> и <code class="docutils literal notranslate"><span class="pre">PUT</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id коннектора&gt;"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"linkedTags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id тега&gt;"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">"prsJsonConfigString"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">"source"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"register"</span><span class="p">:</span><span class="w"> </span><span class="mi">40001</span><span class="p">},</span>
+<span class="w">          </span><span class="nt">"maxDev"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"JSONata"</span><span class="p">:</span><span class="w"> </span><span class="s2">"$ / 10"</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"frequency"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"unlinkTags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"&lt;id другого тега&gt;"</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ключи <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> привязки:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 18.0%" />
+<col style="width: 62.0%" />
+<col style="width: 20.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Ключ</p></th>
+<th class="head"><p>Смысл</p></th>
+<th class="head"><p>По умолчанию</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">source</span></code></p></td>
+<td><p>Где взять значение тега в источнике: адрес регистра, топик и т.п.
+Формат задаёт коннектор.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{}</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">maxDev</span></code></p></td>
+<td><p>Значимое отклонение: коннектор не отправляет значение, если оно
+отличается от последнего отправленного меньше чем на эту величину.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">JSONata</span></code></p></td>
+<td><p>Выражение JSONata, которое применяется к прочитанному значению.</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">frequency</span></code></p></td>
+<td><p>Период опроса тега в секундах (для коннекторов, которые сами
+опрашивают источник).</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">5</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">linkedTags</span></code> в <code class="docutils literal notranslate"><span class="pre">PUT</span></code> добавляет теги или меняет параметры уже
+привязанных.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unlinkTags</span></code> — список идентификаторов тегов, которые нужно отвязать.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/connectors/?getLinkedTags=true</span></code> возвращает у каждого
+коннектора список <code class="docutils literal notranslate"><span class="pre">linkedTags</span></code> с параметрами привязок.</p></li>
+</ul>
+<p>Обычно тег привязывают к одному коннектору: конфигуратор предлагает
+выбрать один. API не запрещает несколько привязок, но тогда тег получает
+значения от каждого коннектора вперемешку.</p>
+</section>
+<section id="id5">
+<h3>Копирование<a class="headerlink" href="#id5" title="Ссылка на этот заголовок"></a></h3>
+<p>Коннектор копируется запросом создания с полем <code class="docutils literal notranslate"><span class="pre">sourceId</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>POST /v1/connectors/
+</pre></div>
+</div>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"sourceId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id коннектора&gt;"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"copyLinkedTags"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Счётчик 2"</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">copyLinkedTags:</span> <span class="pre">true</span></code> привязывает к копии те же теги с теми же
+параметрами. Пока одну из привязок не снимут, каждый такой тег получает
+значения от обоих коннекторов.</p>
+</section>
+</section>
+<section id="id6">
+<h2>Сервисные запросы<a class="headerlink" href="#id6" title="Ссылка на этот заголовок"></a></h2>
+<p>Адрес — <code class="docutils literal notranslate"><span class="pre">/v1/connectors_app/</span></code>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 44.0%" />
+<col style="width: 56.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Запрос</p></th>
+<th class="head"><p>Что делает</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/connectors_app/</span></code></p></td>
+<td><p>Отправляет коннектору команды оболочки (см. ниже).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/connectors_app/link_status?id=&lt;id&gt;</span></code></p></td>
+<td><p>Есть ли связь с коннектором: <code class="docutils literal notranslate"><span class="pre">{&quot;id&quot;:</span> <span class="pre">&quot;...&quot;,</span> <span class="pre">&quot;mqttConnected&quot;:</span> <span class="pre">true}</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/connectors_app/log_tail?id=&lt;id&gt;</span></code></p></td>
+<td><p>Последние строки журнала, которые коннектор прислал в платформу:
+<code class="docutils literal notranslate"><span class="pre">{&quot;id&quot;:</span> <span class="pre">&quot;...&quot;,</span> <span class="pre">&quot;entries&quot;:</span> <span class="pre">[...]}</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/connectors_app/command_output_tail?id=&lt;id&gt;</span></code></p></td>
+<td><p>Последние результаты удалённых команд.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/connectors_app/services</span></code></p></td>
+<td><p>Список сервисов платформы (блок «Сервисы» конфигуратора).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/connectors_app/service_log_tail?service=&lt;имя&gt;&amp;limit=400</span></code></p></td>
+<td><p>Последние строки журналов сервисов. <code class="docutils literal notranslate"><span class="pre">service</span></code> можно повторить
+несколько раз, <code class="docutils literal notranslate"><span class="pre">limit</span></code> — от 1 до 2000 строк на сервис.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DELETE</span> <span class="pre">/v1/connectors_app/service_log_tail?service=&lt;имя&gt;</span></code></p></td>
+<td><p>Очищает журналы выбранных сервисов в памяти платформы.</p></td>
+</tr>
+</tbody>
+</table>
+<section id="id7">
+<h3>Удалённые команды<a class="headerlink" href="#id7" title="Ссылка на этот заголовок"></a></h3>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id коннектора&gt;"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"lines"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"ping -c 3 192.168.1.50"</span><span class="p">,</span><span class="w"> </span><span class="s2">"df -h"</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">"timeoutSec"</span><span class="p">:</span><span class="w"> </span><span class="mi">60</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ключи <code class="docutils literal notranslate"><span class="pre">command</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">lines</span></code> — команды оболочки, каждая строка выполняется отдельно;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">timeoutSec</span></code> — ограничение времени на одну строку, по умолчанию
+120 секунд;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maxOutputBytes</span></code> — сколько байт вывода сохранять, по умолчанию 65536;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">logToPlatform</span></code> — включить (<code class="docutils literal notranslate"><span class="pre">true</span></code>) или выключить (<code class="docutils literal notranslate"><span class="pre">false</span></code>)
+передачу журнала коннектора в платформу.</p></li>
+</ul>
+<p>Ответ <code class="docutils literal notranslate"><span class="pre">{&quot;ok&quot;:</span> <span class="pre">true,</span> <span class="pre">&quot;message&quot;:</span> <span class="pre">&quot;Команда</span> <span class="pre">принята</span> <span class="pre">к</span> <span class="pre">доставке</span> <span class="pre">коннектору.&quot;}</span></code>
+означает, что команда передана брокеру. Результаты приходят позже, их
+читают запросом <code class="docutils literal notranslate"><span class="pre">command_output_tail</span></code>. Если доставить команду некому,
+ответ — <code class="docutils literal notranslate"><span class="pre">424</span></code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Предупреждение</p>
+<p>Команды выполняются на машине коннектора с правами его процесса.
+В открытой редакции платформа не проверяет, кто их отправляет.</p>
+</div>
+</section>
+</section>
+<section id="id8">
+<h2>Протокол обмена<a class="headerlink" href="#id8" title="Ссылка на этот заголовок"></a></h2>
 <p>Коннектор подключается к брокеру RabbitMQ платформы по MQTT (порт <code class="docutils literal notranslate"><span class="pre">1883</span></code>).
 Сообщения MQTT попадают в обменник <code class="docutils literal notranslate"><span class="pre">peresvet</span></code>, где их принимает сервис
 <code class="docutils literal notranslate"><span class="pre">connectors_mqtt_app</span></code>.</p>
 <ul class="simple">
-<li><p><strong>ClientId</strong> MQTT-сессии должен совпадать с UUID узла коннектора
-в платформе. По нему платформа сопоставляет сессию брокера с коннектором.</p></li>
+<li><p><strong>ClientId</strong> MQTT-сессии должен совпадать с идентификатором узла
+коннектора. По нему платформа понимает, какой коннектор подключился.</p></li>
 <li><p>Коннектор публикует сообщения в топик <code class="docutils literal notranslate"><span class="pre">conn2prs/&lt;id</span> <span class="pre">коннектора&gt;</span></code>.</p></li>
 <li><p>Платформа отправляет коннектору сообщения в топик
 <code class="docutils literal notranslate"><span class="pre">prs2conn/&lt;id</span> <span class="pre">коннектора&gt;</span></code>.</p></li>
@@ -158,430 +335,32 @@
 конфигурации текущие значения слать нельзя: они окажутся в истории
 раньше отметки 101, и текущим значением тега останется <code class="docutils literal notranslate"><span class="pre">null</span></code>.</p></li>
 </ol>
-</section>
-<section id="id3">
-<h2>Потеря связи<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
+<section id="id9">
+<h3>Потеря связи<a class="headerlink" href="#id9" title="Ссылка на этот заголовок"></a></h3>
 <p>При любом закрытии MQTT-сессии — штатном отключении, обрыве TCP, истечении
 keepalive — брокер публикует событие <code class="docutils literal notranslate"><span class="pre">connection.closed</span></code> в обменник
 <code class="docutils literal notranslate"><span class="pre">amq.rabbitmq.event</span></code>. Сервис <code class="docutils literal notranslate"><span class="pre">connectors_mqtt_app</span></code> получает его
-по AMQP и пишет во все теги коннектора <code class="docutils literal notranslate"><span class="pre">null</span></code> с кодом качества 100.
-Повторная запись 100 подряд отсекается. После этого следующий запрос
-конфигурации снова запишет 101.</p>
-<p>Дополнительно коннектор при подключении задаёт Last Will:</p>
+и пишет во все теги коннектора <code class="docutils literal notranslate"><span class="pre">null</span></code> с кодом качества 100. Повторная
+запись 100 подряд не делается. Следующий запрос конфигурации снова
+запишет 101.</p>
+<p>Кроме того, коннектор при подключении задаёт Last Will:</p>
 <ul class="simple">
 <li><p>топик — <code class="docutils literal notranslate"><span class="pre">prsConnector/connection_lost/&lt;id</span> <span class="pre">коннектора&gt;</span></code>;</p></li>
 <li><p>тело — <code class="docutils literal notranslate"><span class="pre">{&quot;id&quot;:</span> <span class="pre">&quot;&lt;id</span> <span class="pre">коннектора&gt;&quot;}</span></code>.</p></li>
 </ul>
 <p>Если коннектор пропал нештатно, брокер публикует это сообщение, и платформа
 обрабатывает его так же, как <code class="docutils literal notranslate"><span class="pre">connection.closed</span></code>. <code class="docutils literal notranslate"><span class="pre">BaseConnector</span></code>
-настраивает Last Will сам.</p>
+из <code class="docutils literal notranslate"><span class="pre">prs-connector-core</span></code> настраивает Last Will сам.</p>
 </section>
-<section id="id4">
-<h2>Камеры<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h2>
-<p>Коннектор-камера (с ключом <code class="docutils literal notranslate"><span class="pre">rtspUrl</span></code> в <code class="docutils literal notranslate"><span class="pre">source</span></code> или с кодом типа
-<code class="docutils literal notranslate"><span class="pre">prsEntityTypeCode</span> <span class="pre">=</span> <span class="pre">10</span></code>) этим протоколом не пользуется. MQTT-сессию
-с ClientId камеры открывает сервис захвата видео, пока держит соединение
-с камерой, и закрывает её вместе с соединением. По событиям этой сессии
-платформа только показывает состояние связи в дереве: коды 100 и 101
-в теги камеры не пишутся, <code class="docutils literal notranslate"><span class="pre">full_configuration</span></code> не отправляется.
-Журнал у камеры такой же, как у других коннекторов. Подробно — в
+<section id="id10">
+<h3>Камеры<a class="headerlink" href="#id10" title="Ссылка на этот заголовок"></a></h3>
+<p>Коннектор-камера этим протоколом не пользуется. MQTT-сессию с ClientId
+камеры открывает сервис захвата видео, пока держит соединение с камерой,
+и закрывает её вместе с соединением. По этой сессии конфигуратор только
+показывает состояние связи: коды 100 и 101 в теги камеры не пишутся,
+<code class="docutils literal notranslate"><span class="pre">full_configuration</span></code> не отправляется. Подробно — в разделе
 <a class="reference internal" href="video.html#video-cameras"><span class="std std-ref">Подключение видеокамер</span></a>.</p>
 </section>
-<section id="api">
-<h2>Сервисный API коннекторов<a class="headerlink" href="#api" title="Ссылка на этот заголовок"></a></h2>
-<p>Кроме CRUD, сервис <code class="docutils literal notranslate"><span class="pre">connectors_app_api</span></code> предоставляет такие запросы:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/connectors_app/</span></code> — отправить коннектору удалённые команды
-(см. <a class="reference internal" href="connectors_guide.html#connectors-guide"><span class="std std-ref">Коннекторы</span></a>);</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/connectors_app/link_status?id=&lt;id&gt;</span></code> — есть ли сейчас
-MQTT-сессия коннектора;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/connectors_app/log_tail?id=&lt;id&gt;</span></code> — последние строки журнала
-коннектора, присланные в платформу;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/connectors_app/command_output_tail?id=&lt;id&gt;</span></code> — последние
-результаты удалённых команд;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/connectors_app/services</span></code> и
-<code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/connectors_app/service_log_tail?service=&lt;имя&gt;</span></code> — сервисы
-платформы и их журналы (блок «Сервисы» конфигуратора).</p></li>
-</ul>
-</section>
-<section id="module-connectors_api_crud_svc">
-<span id="crud-api"></span><h2>CRUD API<a class="headerlink" href="#module-connectors_api_crud_svc" title="Ссылка на этот заголовок"></a></h2>
-<p>Модуль содержит примеры запросов и ответов на них, параметров которые могут входить в
-запрос, в сервисе connectors.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="connectors_api_crud_svc.ConfigStringForLinkedTag">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">connectors_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">ConfigStringForLinkedTag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxDev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">JSONata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#connectors_api_crud_svc.ConfigStringForLinkedTag" title="Ссылка на это определение"></a></dt>
-<dd><dl class="py attribute">
-<dt class="sig sig-object py" id="connectors_api_crud_svc.ConfigStringForLinkedTag.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></span><a class="headerlink" href="#connectors_api_crud_svc.ConfigStringForLinkedTag.model_config" title="Ссылка на это определение"></a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="connectors_api_crud_svc.ConnectorCopy">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">connectors_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">ConnectorCopy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sourceId</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copyLinkedTags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#connectors_api_crud_svc.ConnectorCopy" title="Ссылка на это определение"></a></dt>
-<dd><dl class="py attribute">
-<dt class="sig sig-object py" id="connectors_api_crud_svc.ConnectorCopy.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'protected_namespaces':</span> <span class="pre">()}</span></span><a class="headerlink" href="#connectors_api_crud_svc.ConnectorCopy.model_config" title="Ссылка на это определение"></a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="connectors_api_crud_svc.create">
-<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">connectors_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#connectors_api_crud_svc.create" title="Ссылка на это определение"></a></dt>
-<dd><p>Метод добавления коннектора в иерархию.</p>
-<p><strong>Запрос:</strong></p>
-<blockquote>
-<div><div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id5">
-<p><span class="caption-text">http</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">POST</span> <span class="nn">/v1/connectors/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
-<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"linkedTags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="nt">"tagId"</span><span class="p">:</span><span class="s2">"99a8bc4a-b2d4-103e-83ba-b9a6d48c0bf6"</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="nt">"prsJsonConfigString"</span><span class="p">:{},</span>
-<span class="w">                </span><span class="nt">"description"</span><span class="p">:</span><span class="s2">"description"</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"name of a linked tag"</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">"prsValueScale"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">"prsMaxDev"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">"objectClass"</span><span class="p">:</span><span class="s2">"objectClass"</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">],</span>
-<span class="w">    </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"connector1"</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"prsJsonConfigString"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"param1"</span><span class="p">:</span><span class="s2">"val1"</span><span class="p">},</span>
-<span class="w">        </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"description"</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"prsActive"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"prsDefault"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"prsIndex"</span><span class="p">:</span><span class="mi">1</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-<div class="http-example-response docutils container" id="id6">
-<p><span class="caption-text">response</span></p>
-<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
-<span class="na">Content-Type</span>: <span class="s">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
-<span class="na">Content-type</span>: <span class="s">application/json</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"new tag id"</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-</div>
-<ul class="simple">
-<li><p><strong>parentId</strong> (str) - id пользовательской папки <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> в ветке
-коннекторов. Если поле пустое, коннектор создаётся в корне <code class="docutils literal notranslate"><span class="pre">connectors</span></code>.</p></li>
-<li><p><strong>attributes</strong> (dict) - словарь с параметрами для создания коннектора.
-Обязательный параметр.</p>
-<ul>
-<li><p><strong>prsJsonConfigString</strong> (str) - Способ подключения к источнику данных.
-Обязательный атрибут.</p></li>
-<li><p><strong>cn</strong> (str) - имя коннектора. Необязательный атрибут.</p></li>
-<li><p><strong>description</strong> (str) - описание коннектора. Необязательный атрибут.</p></li>
-<li><p><strong>prsActive</strong> (bool) - Определяет, активен ли экземпляр. Необязательный атрибут.</p></li>
-<li><p><strong>prsDefault</strong> (bool) - Если = <code class="docutils literal notranslate"><span class="pre">True</span></code>, то данный экземпляр. Необязательный атрибут.
-считается узлом по умолчанию в списке равноправных узлов данного уровня иерархии.
-Необязательный атрибут.</p></li>
-<li><p><strong>prsIndex</strong> (int) - Если у узлов одного уровня иерархии проставлены индексы, то
-перед отдачей клиенту списка экземпляров они сортируются
-в соответствии с их индексами. Необязательный атрибут.</p></li>
-</ul>
-</li>
-<li><p><strong>linkedTags</strong> (list[LinkTag]) - список тегов к которым прикреплен
-указанный коннектор. Обязательный атрибут.</p>
-<ul>
-<li><p><strong>tagId</strong> (str) - id прикрепляемого тега. Обязательный атрибут.</p></li>
-<li><p><strong>attributes</strong> (dict) - словарь с параметрами для прилинкованного тега.
-Обязательный атрибут.</p>
-<ul>
-<li><p><strong>cn</strong> (str) - словарь с параметрами для прикрепляемого тега.
-Необязательный атрибут.</p></li>
-<li><p><strong>prsJsonConfigString</strong> (dict) - Параметры подключение к источнику данных.
-Обязательный атрибут.</p></li>
-<li><p><strong>description</strong> (str) - Пояснение. Необязательный атрибут.</p></li>
-<li><p><strong>objectClass</strong> (str) - Класс объекта. Необязательный атрибут.</p></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</div></blockquote>
-<p><strong>Ответ:</strong></p>
-<blockquote>
-<div><ul class="simple">
-<li><p><strong>id</strong> (uuid) - id созданного коннектора.</p></li>
-<li><p><strong>detail</strong> (str) - пояснения к ошибке.</p></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="connectors_api_crud_svc.delete">
-<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">connectors_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ConnectorRead</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#connectors_api_crud_svc.delete" title="Ссылка на это определение"></a></dt>
-<dd><p>Метод удаления коннектора в иерархии.</p>
-<p><strong>Запрос:</strong></p>
-<blockquote>
-<div><div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id7">
-<p><span class="caption-text">http</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">DELETE</span> <span class="nn">/v1/connectors/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
-<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"id"</span><span class="p">:</span><span class="s2">"949823fa-cbf5-103e-9301-555c1a8a1358"</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-<div class="http-example-response docutils container" id="id8">
-<p><span class="caption-text">response</span></p>
-<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
-<span class="na">Content-Type</span>: <span class="s">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
-<span class="na">Content-type</span>: <span class="s">application/json</span>
-
-<span class="w">    </span><span class="kc">null</span>
-</pre></div>
-</div>
-</div>
-</div>
-<ul class="simple">
-<li><p><strong>id</strong> (str | list[str]) - Идентификатор/ы удаляемого узла.</p></li>
-</ul>
-</div></blockquote>
-<p><strong>Ответ:</strong></p>
-<blockquote>
-<div><ul class="simple">
-<li><p>null - в случае успешного запроса.</p></li>
-<li><p><strong>detail</strong> (list) - Детали ошибки.</p></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="connectors_api_crud_svc.read">
-<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">connectors_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Query(None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hierarchy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">getParent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Query(None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">getLinkedTags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ConnectorRead</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#connectors_api_crud_svc.read" title="Ссылка на это определение"></a></dt>
-<dd><p>Метод чтения коннектора из иерархии.</p>
-<p><strong>Пример запроса в формате JSON.</strong></p>
-<div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id9">
-<p><span class="caption-text">http</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">GET</span> <span class="nn">/v1/connectors/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
-<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"getLinkedTags"</span><span class="p">:</span><span class="kc">false</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"id"</span><span class="p">:</span><span class="s2">"b61a2360-cc05-103e-9308-555c1a8a1358"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"attributes"</span><span class="p">:[</span><span class="s2">"cn"</span><span class="p">],</span>
-<span class="w">    </span><span class="nt">"base"</span><span class="p">:</span><span class="s2">"base node"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"deref"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"scope"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"filter"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"connector1"</span><span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-<div class="http-example-response docutils container" id="id10">
-<p><span class="caption-text">response</span></p>
-<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
-<span class="na">Content-Type</span>: <span class="s">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
-<span class="na">Content-type</span>: <span class="s">application/json</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b61a2360-cc05-103e-9308-555c1a8a1358"</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">                    </span><span class="s2">"b61a2360-cc05-103e-9308-555c1a8a1358"</span>
-<span class="w">                </span><span class="p">]</span>
-<span class="w">            </span><span class="p">},</span>
-<span class="w">            </span><span class="nt">"linkedTags"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">]</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-</div>
-<p><strong>Пример query запроса.</strong></p>
-<div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id11">
-<p><span class="caption-text">http</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">GET</span> <span class="nn">/v1/connectors/?q={"getLinkedTags":false,"id":"connector_id_to_find","attributes":["cn"],"base":"base_node","deref":true,"scope":1,"filter":{"cn":"connector1"}}</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
-<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
-</pre></div>
-</div>
-</div>
-<div class="http-example-response docutils container" id="id12">
-<p><span class="caption-text">response</span></p>
-<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
-<span class="na">Content-Type</span>: <span class="s">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
-<span class="na">Content-type</span>: <span class="s">application/json</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b61a2360-cc05-103e-9308-555c1a8a1358"</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">                    </span><span class="s2">"b61a2360-cc05-103e-9308-555c1a8a1358"</span>
-<span class="w">                </span><span class="p">]</span>
-<span class="w">            </span><span class="p">},</span>
-<span class="w">            </span><span class="nt">"linkedTags"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">]</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-</div>
-<p><strong>Параметры запроса:</strong></p>
-<blockquote>
-<div><ul>
-<li><p><strong>getLinkedTags</strong> (bool) - Флаг возврата присоединённых тегов.
-Необязательный аттрибут.</p></li>
-<li><p><strong>id</strong> (str | list(str)) - идентификатор коннектора в формате uuid,
-который мы хотим прочитать. В случае отсутствия будут выведены все
-коннекторы или те, которые соответствуют фильтру. Необязательный аттрибут.</p></li>
-<li><p><strong>attributes</strong> (list[str]) - Список атрибутов, значения которых необходимо
-вернуть в ответе. По умолчанию - [„.“], то есть все атрибуты (кроме системных).
-Необязательный аттрибут.</p></li>
-<li><p><strong>base</strong> (str) - Базовый узел для поиска. Если не указан, то поиск
-ведётся от главного узла иерархии. Необязательный аттрибут.</p></li>
-<li><p><strong>deref</strong> (bool) - Флаг разыменования ссылок. По умолчанию true.
-Необязательный аттрибут.</p></li>
-<li><p><strong>scope</strong> (int) - Масштаб поиска. По умолчанию 1. Необязательный аттрибут.</p>
-<p>0 - получение данных по указанному в ключе <code class="docutils literal notranslate"><span class="pre">base</span></code> узлу</p>
-<p>1 - поиск среди непосредственных потомков указанного в <code class="docutils literal notranslate"><span class="pre">base</span></code> узла</p>
-<p>2 - поиск по всему дереву, начиная с указанного в <code class="docutils literal notranslate"><span class="pre">base</span></code> узла.</p>
-</li>
-<li><p><strong>filter</strong> (dict) - Словарь из атрибутов и их значений, из которых
-формируется фильтр для поиска. Необязательный аттрибут.</p></li>
-</ul>
-</div></blockquote>
-<p><strong>Ответ:</strong></p>
-<blockquote>
-<div><ul class="simple">
-<li><p><strong>data</strong> (list) - данные прочитанного коннектора/коннекторов. Если
-ничего не найденно - пустой лист.</p></li>
-<li><p><strong>detail</strong> (list) - Детали ошибки.</p></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="connectors_api_crud_svc.update">
-<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">connectors_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#connectors_api_crud_svc.update" title="Ссылка на это определение"></a></dt>
-<dd><p>Метод обновления коннектора из иерархии.</p>
-<p><strong>Запрос:</strong></p>
-<blockquote>
-<div><div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id13">
-<p><span class="caption-text">http</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">PUT</span> <span class="nn">/v1/connectors/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
-<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"id"</span><span class="p">:</span><span class="s2">"949823fa-cbf5-103e-9301-555c1a8a1358"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"linkedTags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="nt">"tagId"</span><span class="p">:</span><span class="s2">"99a8bc4a-b2d4-103e-83ba-b9a6d48c0bf6"</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="nt">"prsJsonConfigString"</span><span class="p">:{},</span>
-<span class="w">                </span><span class="nt">"description"</span><span class="p">:</span><span class="s2">"description"</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"name of a linked tag"</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">"prsValueScale"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">"prsMaxDev"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">"objectClass"</span><span class="p">:</span><span class="s2">"objectClass"</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">],</span>
-<span class="w">    </span><span class="nt">"unlinkTags"</span><span class="p">:[</span><span class="s2">"94b1f028-cbf5-103e-9305-555c1a8a1358"</span><span class="p">],</span>
-<span class="w">    </span><span class="nt">"attributes"</span><span class="p">:{</span>
-<span class="w">        </span><span class="nt">"prsJsonConfigString"</span><span class="p">:{</span><span class="nt">"way_of_connecting"</span><span class="p">:</span><span class="s2">"new_way"</span><span class="p">},</span>
-<span class="w">        </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"new_name"</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"prsActive"</span><span class="p">:</span><span class="kc">false</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-<div class="http-example-response docutils container" id="id14">
-<p><span class="caption-text">response</span></p>
-<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
-<span class="na">Content-Type</span>: <span class="s">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
-<span class="na">Content-type</span>: <span class="s">application/json</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="p">{}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-</div>
-<ul>
-<li><p><strong>id</strong> (bool) - Идентификатор изменяемого коннектора.
-Обязательный аттрибут.</p></li>
-<li><p><strong>linkedTags</strong> (list[LinkTag]) - список тегов, привязанных к указанному коннектору. Необязательный атрибут.</p></li>
-<li><p><strong>unlinkTags</strong> (list[str]) - Список тегов для отсоединения от коннектора.
-Необязательный аттрибут.</p></li>
-<li><p><strong>attributes</strong> (dict) - Атрибуты коннектора</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><strong>prsJsonConfigString</strong> (dict) - Способ подключения к источнику данных. Необязательный аттрибут.</p></li>
-<li><p><strong>cn</strong> (str) - имя коннектора. Необязательный атрибут</p></li>
-<li><p><strong>description</strong> (str) - описание коннектора. Необязательный атрибут.</p></li>
-<li><p><strong>prsActive</strong> (bool) - Параметр активности коннектора. Необязательный атрибут.</p></li>
-<li><p><strong>prsDefault</strong> (bool) - Если = <code class="docutils literal notranslate"><span class="pre">True</span></code>, то данный коннектор считается узлом по умолчанию в списке равноправных узлов данного уровня иерархии.</p></li>
-<li><p><strong>prsEntityTypeCode</strong> (int) - Атрибут используется для определения типа. К примеру, хранилища данных могут быть разных типов.</p></li>
-<li><p><strong>prsIndex</strong> (int) - Если у узлов одного уровня иерархии проставлены индексы, то перед отдачей клиенту списка экземпляров они сортируются в соответствии с их индексами.</p></li>
-</ul>
-</div></blockquote>
-</li>
-</ul>
-</div></blockquote>
-<p><strong>Ответ:</strong></p>
-<blockquote>
-<div><ul class="simple">
-<li><p>{} - Пустой словарь в случае успешного запроса.</p></li>
-<li><p><strong>detail</strong> (list) - Детали ошибки.</p></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
 </section>
 </section>
 
@@ -589,8 +368,8 @@ MQTT-сессия коннектора;</p></li>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
-        <a href="folders.html" class="btn btn-neutral float-left" title="Папки" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
-        <a href="dataStorages_api_doc.html" class="btn btn-neutral float-right" title="Хранилища данных" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="methods_api_doc.html" class="btn btn-neutral float-left" title="Методы" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="schedules.html" class="btn btn-neutral float-right" title="Расписания" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

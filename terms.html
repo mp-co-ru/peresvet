@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Терминология &mdash; документация МПК-Пересвет v0.29.0</title>
+  <title>Терминология &mdash; документация МПК-Пересвет v0.30.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=399dde07"></script>
+      <script src="_static/documentation_options.js?v=62c6f60e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -37,7 +37,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.29.0</div>
+  <div class="prs-version">v0.30.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -49,7 +49,13 @@
               <p class="caption" role="heading"><span class="caption-text">Знакомство</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="description.html">Описание</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Терминология</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Терминология</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Модель</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Сущности модели объекта</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">Сущности информационной системы</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">События</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Установка и сопровождение</span></p>
@@ -60,11 +66,14 @@
 <p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
-<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
-<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
-<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storages_guide.html">Хранилища данных</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules_guide.html">Расписания</a></li>
 <li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
 </ul>
@@ -104,71 +113,72 @@
              
   <section id="terms">
 <span id="id1"></span><h1>Терминология<a class="headerlink" href="#terms" title="Ссылка на этот заголовок"></a></h1>
-<p><strong>Модель технического объекта</strong> — статическая модель (из чего состоит объект)
-вместе с динамической (как он себя ведёт).</p>
-<p><strong>Статическая модель</strong> — иерархия сущностей. Кроме самого объекта, в неё
-входят сущности информационной системы: коннекторы, хранилища, расписания.
-В простейшем случае статическая модель — линейный список тегов без объектов.</p>
-<p><strong>Динамическая модель</strong> — набор методов. Методы описывают процессы на объекте
-и считают значения вычисляемых тегов. Платформа запускает их по событиям
-модели.</p>
-<p id="entity"><strong>Сущность</strong> — тип узла иерархии. Основные сущности модели объекта: объекты,
-теги, тревоги, методы, расписания. Сущности информационной системы:
-коннекторы и хранилища данных. Каждому типу соответствует класс LDAP
-с префиксом <code class="docutils literal notranslate"><span class="pre">prs</span></code>: <code class="docutils literal notranslate"><span class="pre">prsObject</span></code>, <code class="docutils literal notranslate"><span class="pre">prsTag</span></code>, <code class="docutils literal notranslate"><span class="pre">prsAlert</span></code> и т.д.
+<section id="id2">
+<h2>Модель<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
+<p><strong>Модель технического объекта</strong> — описание того, из чего состоит объект
+(статическая модель) и как он себя ведёт (динамическая модель).</p>
+<p><strong>Статическая модель</strong> — иерархия узлов: объекты, теги, тревоги, а рядом
+с ними — сущности информационной системы: коннекторы, хранилища,
+расписания. В простейшем случае статическая модель — линейный список тегов
+без объектов.</p>
+<p><strong>Динамическая модель</strong> — набор методов. Методы описывают процессы
+на объекте и считают значения вычисляемых тегов. Платформа запускает их
+по событиям модели.</p>
+<p id="entity"><strong>Сущность</strong> — вид узла иерархии. Каждой сущности соответствует класс
+LDAP с префиксом <code class="docutils literal notranslate"><span class="pre">prs</span></code>: <code class="docutils literal notranslate"><span class="pre">prsObject</span></code>, <code class="docutils literal notranslate"><span class="pre">prsTag</span></code>, <code class="docutils literal notranslate"><span class="pre">prsAlert</span></code> и т.д.
 Платформу можно расширять собственными сущностями со своей логикой.</p>
+<p><strong>Узел</strong> — один элемент иерархии: конкретный объект, тег, тревога.
+У каждого узла есть имя и неизменный идентификатор (GUID).</p>
+</section>
+<section id="id3">
+<h2>Сущности модели объекта<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
 <p><strong>Объект</strong> — основной элемент иерархии: предприятие, цех, участок,
 технологическая линия, агрегат, датчик. Объект может содержать любое число
-дочерних объектов и тегов.</p>
+вложенных объектов и тегов.</p>
 <p><strong>Тег</strong> — параметр объекта: температура, давление, сила тока и т.п.
-Значения тега хранятся в хранилище данных. У каждого значения есть метка
-времени и код качества (см. <a class="reference internal" href="historical_data.html#qualitycodes"><span class="std std-ref">Коды качества</span></a>).
-Тег обычно лежит под объектом, но может лежать и в общем списке тегов
-без объекта.</p>
-<p>Типы значений тега: целый, вещественный, строковый, JSON, интеграционный
-и видеопоток. Значения интеграционного тега читаются и пишутся запросами
-к внешней базе (<a class="reference internal" href="integrational_v2.html#integrational-v2"><span class="std std-ref">Интеграционные хранилища</span></a>). Кадры видеопотока в историю тегов
-не пишутся (<a class="reference internal" href="video.html#video-cameras"><span class="std std-ref">Подключение видеокамер</span></a>).</p>
-<div class="admonition warning">
-<p class="admonition-title">Предупреждение</p>
-<p>Хранилище VictoriaMetrics коды качества не хранит.</p>
-</div>
-<p><strong>Папка</strong> — узел для группировки других узлов в дереве (класс <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code>).
-Папка ничего не вычисляет и ни на что не влияет: она только помогает
-разложить объекты, теги, коннекторы, расписания, хранилища и методы
-каталога по смысловым группам.</p>
-<p><strong>Событие</strong> — то, на что реагирует модель. Основных событий три: новое
-значение тега, возникновение тревоги, срабатывание расписания. К событиям
-привязывают методы, и модель «оживает».</p>
-<p><strong>Тревога</strong> — состояние тега, которое возникает, когда значение тега
-выполняет заданное условие. В автоматизации обычно используют четыре уровня:
-LoLo, Lo, Hi, HiHi.</p>
-<div class="line-block">
-<div class="line">Пример: рыбкам в аквариуме комфортно при температуре воды от 20 до 25 °C,</div>
-<div class="line">а ниже 15 °C и выше 30 °C — опасно. К тегу температуры воды привязывают</div>
-<div class="line">четыре тревоги: LoLo = 15 °C, Lo = 20 °C, Hi = 25 °C, HiHi = 30 °C.</div>
-<div class="line">Тревога Lo или Hi говорит, что вода вышла из комфортного диапазона и пора</div>
-<div class="line">поправить нагрев. Тревога LoLo или HiHi требует срочных мер.</div>
-</div>
-<p>В МПК-Пересвет у тега может быть сколько угодно тревог. Условием тревоги
-может быть не только порог, но и результат метода: так строят сложные
-тревоги, учитывающие значения других тегов.</p>
-<p><strong>Метод</strong> — программный код, который реализует поведение модели. Метод
-вызывается по событию и, например, считает значение тега, решает,
-возникла ли тревога, или вызывает внешний процесс. Подробно —
-в разделе <a class="reference internal" href="methods.html"><span class="doc">Методы</span></a>.</p>
-<p><strong>Расписание</strong> — генератор событий по времени. По событию расписания
-запускаются методы: расчёт тегов, формирование отчётов, рассылки.</p>
-<p><strong>Хранилище данных</strong> — база, в которой лежит история значений тегов
-и тревог. Платформа одновременно работает с несколькими хранилищами разных
-типов. Для промышленной автоматизации рекомендуется PostgreSQL, есть также
-драйвер VictoriaMetrics, интеграционное хранилище для внешних реляционных
-баз и хранилище видеоархива. Для других баз можно написать свой драйвер.</p>
-<p id="definition-connector"><strong>Коннектор</strong> — программа, которая читает данные устройства по определённому
-протоколу и передаёт их в платформу. Обычно на каждый протокол пишут свой
-коннектор. См. <a class="reference internal" href="connectors_guide.html#connectors-guide"><span class="std std-ref">Коннекторы</span></a>.</p>
+Тег обычно лежит в объекте, но может лежать и в общем списке тегов
+без объекта. Значения тега — это его история: у каждого значения есть
+метка времени и код качества (<a class="reference internal" href="historical_data.html#qualitycodes"><span class="std std-ref">Коды качества</span></a>). Типы значений: целое,
+вещественное, строка, JSON, интеграционный (значения лежат во внешней
+базе, <a class="reference internal" href="integrational_v2.html#integrational-v2"><span class="std std-ref">Интеграционные хранилища</span></a>) и видеопоток (<a class="reference internal" href="video.html#video-cameras"><span class="std std-ref">Подключение видеокамер</span></a>).</p>
+<p><strong>Тревога</strong> — правило, которое следит за значением тега и срабатывает,
+когда оно выходит за порог. У тега может быть сколько угодно тревог.
+Срабатывание, пропадание и квитирование тревоги вместе называются
+<strong>эпизодом</strong>. Подробно — в разделе <a class="reference internal" href="alerts_guide.html#alerts-guide"><span class="std std-ref">Тревоги</span></a>.</p>
+<p><strong>Квитирование</strong> — подтверждение оператора, что он увидел тревогу.</p>
+<p><strong>Метод</strong> — программа, которую платформа вызывает по событию: считает
+значение тега, отвечает на чтение или запись тега, обращается к внешней
+системе. Подробно — в разделе <a class="reference internal" href="methods.html"><span class="doc">Методы</span></a>.</p>
+<p><strong>Инициатор</strong> — тег, расписание или тревога, событие которых запускает
+вычислительный метод.</p>
+<p><strong>Папка</strong> — узел для группировки других узлов в дереве (класс
+<code class="docutils literal notranslate"><span class="pre">prsFolder</span></code>). Папка ничего не вычисляет и ни на что не влияет: она
+только помогает разложить объекты, теги, коннекторы, расписания,
+хранилища и методы каталога по смысловым группам.</p>
 <p><strong>Константа</strong> — значение, общее для всей модели, которое можно передать
 в метод (класс <code class="docutils literal notranslate"><span class="pre">prsConstant</span></code>). Отдельного API для констант пока нет.</p>
+</section>
+<section id="id4">
+<h2>Сущности информационной системы<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h2>
+<p id="definition-connector"><strong>Коннектор</strong> — программа, которая читает данные устройства
+по определённому протоколу и передаёт их в теги платформы. Обычно
+на каждый протокол пишут свой коннектор. Подробно — в разделе
+<a class="reference internal" href="connectors_guide.html#connectors-guide"><span class="std std-ref">Коннекторы</span></a>.</p>
+<p><strong>Хранилище данных</strong> — база, в которой лежит история значений тегов
+и эпизоды тревог. Платформа работает с несколькими хранилищами
+одновременно. В стандартной поставке — PostgreSQL; есть также
+интеграционные хранилища для внешних баз и видеоархив. Подробно —
+в разделе <a class="reference internal" href="storages_guide.html#storages-guide"><span class="std std-ref">Хранилища данных</span></a>.</p>
+<p><strong>Расписание</strong> — генератор событий по времени. По событию расписания
+запускаются методы: расчёт тегов, формирование отчётов, рассылки.
+Подробно — в разделе <a class="reference internal" href="schedules_guide.html#schedules-guide"><span class="std std-ref">Расписания</span></a>.</p>
+</section>
+<section id="id5">
+<h2>События<a class="headerlink" href="#id5" title="Ссылка на этот заголовок"></a></h2>
+<p><strong>Событие</strong> — то, на что реагирует модель: новое значение тега,
+срабатывание, пропадание или квитирование тревоги, срабатывание
+расписания. К событиям привязывают методы, и модель «оживает».</p>
+</section>
 </section>
 
 

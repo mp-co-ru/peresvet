@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Методы &mdash; документация МПК-Пересвет v0.29.0</title>
+  <title>Методы &mdash; документация МПК-Пересвет v0.30.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=399dde07"></script>
+      <script src="_static/documentation_options.js?v=62c6f60e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -24,8 +24,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
-    <link rel="next" title="Данные" href="data_api.html" />
-    <link rel="prev" title="Расписания" href="schedules.html" /> 
+    <link rel="next" title="Коннекторы" href="connectors.html" />
+    <link rel="prev" title="Тревоги" href="alerts.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -37,7 +37,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.29.0</div>
+  <div class="prs-version">v0.30.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -60,11 +60,14 @@
 <p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
-<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
-<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
-<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storages_guide.html">Хранилища данных</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules_guide.html">Расписания</a></li>
 <li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
 </ul>
@@ -76,27 +79,29 @@
 <p class="caption" role="heading"><span class="caption-text">Справочник</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="api.html#id2">Общие правила</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="api.html#id3">Разделы</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id2">Адрес и формат</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#get">Параметры запросов GET</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id3">Ответы и ошибки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id4">Служебные запросы</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="api.html#id5">Разделы справочника</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="api_nodes.html">Узлы модели: общие правила</a></li>
 <li class="toctree-l3"><a class="reference internal" href="objects.html">Объекты</a></li>
-<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
-<li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
-<li class="toctree-l3"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a></li>
-<li class="toctree-l3"><a class="reference internal" href="schedules.html">Расписания</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
+<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Методы</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#methods_api_crud_svc.MethodCopy"><code class="docutils literal notranslate"><span class="pre">MethodCopy</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#methods_api_crud_svc.MethodDescriptionImport"><code class="docutils literal notranslate"><span class="pre">MethodDescriptionImport</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#methods_api_crud_svc.MethodParameterAttributes"><code class="docutils literal notranslate"><span class="pre">MethodParameterAttributes</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#methods_api_crud_svc.MethodReadResult"><code class="docutils literal notranslate"><span class="pre">MethodReadResult</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#methods_api_crud_svc.MethodUpdateAttributes"><code class="docutils literal notranslate"><span class="pre">MethodUpdateAttributes</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#methods_api_crud_svc.OneMethodInReadResult"><code class="docutils literal notranslate"><span class="pre">OneMethodInReadResult</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#methods_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#methods_api_crud_svc.import_description"><code class="docutils literal notranslate"><span class="pre">import_description()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id2">Где лежит метод</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Атрибуты</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id4">Поля запроса</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id5">Чтение</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id6">Копирование и удаление</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id7">Загрузка описания каталога</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="data_api.html">Запись и чтение данных</a></li>
+<li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
+<li class="toctree-l3"><a class="reference internal" href="schedules.html">Расписания</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a></li>
+<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_api.html">Данные тегов</a></li>
 </ul>
 </li>
 </ul>
@@ -128,221 +133,162 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-methods_api_crud_svc">
-<span id="id1"></span><h1>Методы<a class="headerlink" href="#module-methods_api_crud_svc" title="Ссылка на этот заголовок"></a></h1>
-<p>Модуль содержит примеры запросов и ответов на них, параметров которые могут входить в
-запрос, в сервисе methods.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="methods_api_crud_svc.MethodCopy">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">methods_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">MethodCopy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sourceId</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parentId</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#methods_api_crud_svc.MethodCopy" title="Ссылка на это определение"></a></dt>
-<dd><dl class="py attribute">
-<dt class="sig sig-object py" id="methods_api_crud_svc.MethodCopy.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'protected_namespaces':</span> <span class="pre">()}</span></span><a class="headerlink" href="#methods_api_crud_svc.MethodCopy.model_config" title="Ссылка на это определение"></a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="methods_api_crud_svc.MethodDescriptionImport">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">methods_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">MethodDescriptionImport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">yaml</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parentId</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#methods_api_crud_svc.MethodDescriptionImport" title="Ссылка на это определение"></a></dt>
-<dd><dl class="py attribute">
-<dt class="sig sig-object py" id="methods_api_crud_svc.MethodDescriptionImport.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'protected_namespaces':</span> <span class="pre">()}</span></span><a class="headerlink" href="#methods_api_crud_svc.MethodDescriptionImport.model_config" title="Ссылка на это определение"></a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="methods_api_crud_svc.MethodParameterAttributes">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">methods_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">MethodParameterAttributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">cn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prsJsonConfigString</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prsActive</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prsDefault</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prsEntityTypeCode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prsIndex</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prsValueTypeCode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#methods_api_crud_svc.MethodParameterAttributes" title="Ссылка на это определение"></a></dt>
-<dd><dl class="py attribute">
-<dt class="sig sig-object py" id="methods_api_crud_svc.MethodParameterAttributes.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'protected_namespaces':</span> <span class="pre">()}</span></span><a class="headerlink" href="#methods_api_crud_svc.MethodParameterAttributes.model_config" title="Ссылка на это определение"></a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="methods_api_crud_svc.MethodReadResult">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">methods_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">MethodReadResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#methods_api_crud_svc.OneMethodInReadResult" title="methods_api_crud_svc.OneMethodInReadResult"><span class="pre">OneMethodInReadResult</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#methods_api_crud_svc.MethodReadResult" title="Ссылка на это определение"></a></dt>
-<dd><dl class="py attribute">
-<dt class="sig sig-object py" id="methods_api_crud_svc.MethodReadResult.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'protected_namespaces':</span> <span class="pre">()}</span></span><a class="headerlink" href="#methods_api_crud_svc.MethodReadResult.model_config" title="Ссылка на это определение"></a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="methods_api_crud_svc.MethodUpdateAttributes">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">methods_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">MethodUpdateAttributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">cn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prsJsonConfigString</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prsActive</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prsDefault</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prsEntityTypeCode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prsIndex</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prsMethodAddress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prsCatalogMethodId</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prsVariadic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#methods_api_crud_svc.MethodUpdateAttributes" title="Ссылка на это определение"></a></dt>
-<dd><dl class="py attribute">
-<dt class="sig sig-object py" id="methods_api_crud_svc.MethodUpdateAttributes.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'protected_namespaces':</span> <span class="pre">()}</span></span><a class="headerlink" href="#methods_api_crud_svc.MethodUpdateAttributes.model_config" title="Ссылка на это определение"></a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="methods_api_crud_svc.OneMethodInReadResult">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">methods_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">OneMethodInReadResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parentId</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">children</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameterCount</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initiatedBy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alertEvents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#methods_api_crud_svc.OneMethodInReadResult" title="Ссылка на это определение"></a></dt>
-<dd><dl class="py attribute">
-<dt class="sig sig-object py" id="methods_api_crud_svc.OneMethodInReadResult.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'protected_namespaces':</span> <span class="pre">()}</span></span><a class="headerlink" href="#methods_api_crud_svc.OneMethodInReadResult.model_config" title="Ссылка на это определение"></a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="methods_api_crud_svc.create">
-<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">methods_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#methods_api_crud_svc.create" title="Ссылка на это определение"></a></dt>
-<dd><p>Метод добавляет метод в иерархию.</p>
-<p><strong>Запрос:</strong></p>
-<blockquote>
-<div><div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id2">
-<p><span class="caption-text">http</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">POST</span> <span class="nn">/v1/methods/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
-<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"initiatedBy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"id of a node which initiates method"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">"prsMethodAddress"</span><span class="p">:</span><span class="s2">"method_adress"</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"prsEntityTypeCode"</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"cn"</span><span class="p">:</span><span class="s2">"method1"</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"description"</span><span class="p">:</span><span class="s2">"method1_description"</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"prsJsonConfigString"</span><span class="p">:</span><span class="s2">"method1_config_string"</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"prsActive"</span><span class="p">:</span><span class="kc">true</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="nt">"parameters"</span><span class="p">:[</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="nt">"attributes"</span><span class="p">:{</span>
-<span class="w">                </span><span class="nt">"cn"</span><span class="p">:</span><span class="s2">"param1"</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">"description"</span><span class="p">:</span><span class="s2">"param1_description"</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">"prsJsonConfigString"</span><span class="p">:</span><span class="s2">"config_string1"</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">"prsActive"</span><span class="p">:</span><span class="kc">true</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">        </span><span class="p">},</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="nt">"attributes"</span><span class="p">:{</span>
-<span class="w">                </span><span class="nt">"cn"</span><span class="p">:</span><span class="s2">"param2"</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">"description"</span><span class="p">:</span><span class="s2">"param2_description"</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">"prsJsonConfigString"</span><span class="p">:</span><span class="s2">"config_string2"</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">"prsActive"</span><span class="p">:</span><span class="kc">true</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">],</span>
-<span class="w">    </span><span class="nt">"parentId"</span><span class="p">:</span><span class="s2">"id of a node to which method adjasted"</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-<div class="http-example-response docutils container" id="id3">
-<p><span class="caption-text">response</span></p>
-<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
-<span class="na">Content-Type</span>: <span class="s">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
-<span class="na">Content-type</span>: <span class="s">application/json</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"new method id"</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-</div>
-<ul>
-<li><p><strong>folder</strong> (bool) - поле базового POST. Если <code class="docutils literal notranslate"><span class="pre">true</span></code>, создаётся
-папка <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code>, а не метод. По умолчанию <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
-<li><p><strong>parentId</strong> (str) - Id родительского узла. Обязательное поле.</p></li>
-<li><p><strong>initiatedBy</strong> (str | list[str]) - Список id тегов, расписаний и тревог,
-инициирующих вычисление. У тревоги выбираются события. Необязательный атрибут.</p></li>
-<li><p><strong>alertEvents</strong> (dict) - События тревог из <code class="docutils literal notranslate"><span class="pre">initiatedBy</span></code>:
-<code class="docutils literal notranslate"><span class="pre">alarm_on</span></code> (срабатывание), <code class="docutils literal notranslate"><span class="pre">alarm_off</span></code> (пропадание),
-<code class="docutils literal notranslate"><span class="pre">alarm_acked</span></code> (квитирование). Нет поля — только срабатывание.
-Пустой набор нельзя. Необязательный атрибут.</p></li>
-<li><p><strong>attributes</strong> (dict) - Атрибуты метода. Обязательное поле. Включает в себя:</p>
+  <section id="id1">
+<h1>Методы<a class="headerlink" href="#id1" title="Ссылка на этот заголовок"></a></h1>
+<p>Как устроены методы, их типы и источники параметров, описано в разделе
+<a class="reference internal" href="methods.html"><span class="doc">Методы</span></a>. Здесь — запросы к узлам методов.</p>
+<p>Адрес — <code class="docutils literal notranslate"><span class="pre">/v1/methods/</span></code>. Запросы те же, что у всех узлов модели
+(<a class="reference internal" href="api_nodes.html"><span class="doc">Узлы модели: общие правила</span></a>), с дополнительными полями.</p>
+<section id="id2">
+<h2>Где лежит метод<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
 <ul class="simple">
-<li><p><strong>prsMethodAddress</strong> (str) - Адрес метода. Обязательное поле.</p></li>
-<li><p><strong>prsEntityTypeCode</strong> (int) - Тип метода: <code class="docutils literal notranslate"><span class="pre">0</span></code> — вычислительный (инициаторы,
-запись результата в БД); <code class="docutils literal notranslate"><span class="pre">1</span></code> — чтение (значение для GET <code class="docutils literal notranslate"><span class="pre">/v1/data/</span></code>
-берётся из метода); <code class="docutils literal notranslate"><span class="pre">2</span></code> — запись (метод принимает данные SET <code class="docutils literal notranslate"><span class="pre">/v1/data/</span></code>);
-<code class="docutils literal notranslate"><span class="pre">3</span></code> — действие при чтении (сообщение <code class="docutils literal notranslate"><span class="pre">data_get</span></code> обрабатывается, ответ не отправляется);
-<code class="docutils literal notranslate"><span class="pre">4</span></code> — действие при записи (сообщение <code class="docutils literal notranslate"><span class="pre">data_set</span></code> обрабатывается, ответ не отправляется).
-Необязательное поле.</p></li>
-<li><p><strong>prsVariadic</strong> (bool) - Факультативный атрибут. Если <code class="docutils literal notranslate"><span class="pre">true</span></code>, метод каталога
-принимает произвольное число параметров любых типов. Если атрибут не задан,
-число и типы параметров экземпляра должны совпадать со списком каталога.</p></li>
+<li><p><strong>Метод тега или тревоги</strong> — <code class="docutils literal notranslate"><span class="pre">parentId</span></code> равен идентификатору тега
+или тревоги. Это либо самостоятельный метод, либо ссылка на определение
+из каталога.</p></li>
+<li><p><strong>Определение в каталоге</strong> — <code class="docutils literal notranslate"><span class="pre">parentId</span></code> равен идентификатору папки
+каталога или не задан (корень каталога «Методы»).</p></li>
 </ul>
-</li>
-<li><p><strong>parameters</strong> (List[MethodParameter]) - Параметры метода. Необязательное поле.</p>
-<ul>
-<li><p><strong>MethodParameter</strong> - Включает в себя:</p>
-<ul>
-<li><p><strong>attributes</strong> (dict) - Атрибуты узла. Необязательное поле.</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><strong>cn</strong> (str) - имя тега. Необязательный атрибут.</p></li>
-<li><p><strong>description</strong> (str) - описание экземпляра. Необязательный атрибут.</p></li>
-<li><dl class="simple">
-<dt><strong>prsJsonConfigString</strong> (str) - Строка содержит, в случае необходимости,</dt><dd><p>конфигурацию узла. Интерпретируется сервисом, управляющим сущностью,
-которой принадлежит экземпляр. Необязательный аттрибут</p>
-</dd>
-</dl>
-</li>
-<li><p><strong>prsActive</strong> (bool) - Определяет, активен ли экземпляр. Необязательный атрибут.</p></li>
-<li><dl class="simple">
-<dt><strong>prsDefault</strong> (bool) - Если = <code class="docutils literal notranslate"><span class="pre">True</span></code>, то данный экземпляр. Необязательный атрибут.</dt><dd><p>считаеться узлом по умолчанию в списке равноправных узлов данного уровня иерархии.
-Необязательный атрибут.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><strong>prsIndex</strong> (int) - Если у узлов одного уровня иерархии проставлены индексы, то</dt><dd><p>перед отдачей клиенту списка экземпляров они сортируются соответственно  их индексам. Необязательный атрибут.</p>
-</dd>
-</dl>
-</li>
+</section>
+<section id="id3">
+<h2>Атрибуты<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 74.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Атрибут</p></th>
+<th class="head"><p>Смысл</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">prsMethodAddress</span></code></p></td>
+<td><p>Адрес функции в исполнителе, например <code class="docutils literal notranslate"><span class="pre">prs.stdlib.add</span></code>.
+У ссылки на каталог адрес берётся из определения.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">prsEntityTypeCode</span></code></p></td>
+<td><p>Тип метода: <code class="docutils literal notranslate"><span class="pre">0</span></code> — вычислительный, <code class="docutils literal notranslate"><span class="pre">1</span></code> — чтение, <code class="docutils literal notranslate"><span class="pre">2</span></code> — запись,
+<code class="docutils literal notranslate"><span class="pre">3</span></code> — действие при чтении, <code class="docutils literal notranslate"><span class="pre">4</span></code> — действие при записи.
+По умолчанию <code class="docutils literal notranslate"><span class="pre">0</span></code>. У определения в каталоге всегда <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">prsCatalogMethodId</span></code></p></td>
+<td><p>Идентификатор определения в каталоге — у ссылки. То же можно
+передать полем <code class="docutils literal notranslate"><span class="pre">catalogMethodId</span></code> рядом с <code class="docutils literal notranslate"><span class="pre">attributes</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">prsVariadic</span></code></p></td>
+<td><p>У определения в каталоге: <code class="docutils literal notranslate"><span class="pre">true</span></code> — произвольное число параметров,
+список задаёт каждая ссылка.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id4">
+<h2>Поля запроса<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h2>
+<p>Рядом с <code class="docutils literal notranslate"><span class="pre">attributes</span></code> в запросах создания и изменения передают:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Поле</p></th>
+<th class="head"><p>Смысл</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">initiatedBy</span></code></p></td>
+<td><p>Список идентификаторов тегов, расписаний и тревог, события которых
+запускают вычислительный метод.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">alertEvents</span></code></p></td>
+<td><p>Для тревог из <code class="docutils literal notranslate"><span class="pre">initiatedBy</span></code>: какие события запускают метод.
+Ключ — идентификатор тревоги, значение — непустой список из
+<code class="docutils literal notranslate"><span class="pre">alarm_on</span></code> (срабатывание), <code class="docutils literal notranslate"><span class="pre">alarm_off</span></code> (пропадание),
+<code class="docutils literal notranslate"><span class="pre">alarm_acked</span></code> (квитирование). Тревога без ключа запускает метод
+только при срабатывании.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">parameters</span></code></p></td>
+<td><p>Список параметров. У каждого — <code class="docutils literal notranslate"><span class="pre">attributes</span></code>: <code class="docutils literal notranslate"><span class="pre">cn</span></code> (имя),
+<code class="docutils literal notranslate"><span class="pre">prsIndex</span></code> (порядковый номер аргумента), <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code>
+(источник значения, см. <a class="reference internal" href="methods.html"><span class="doc">Методы</span></a>). У параметра определения
+в каталоге вместо источника задают <code class="docutils literal notranslate"><span class="pre">prsValueTypeCode</span></code>: <code class="docutils literal notranslate"><span class="pre">1</span></code> —
+целое, <code class="docutils literal notranslate"><span class="pre">2</span></code> — вещественное, <code class="docutils literal notranslate"><span class="pre">3</span></code> — строка, <code class="docutils literal notranslate"><span class="pre">4</span></code> — JSON.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Предупреждение</p>
+<p>Коды типов параметров (<code class="docutils literal notranslate"><span class="pre">1</span></code>–<code class="docutils literal notranslate"><span class="pre">4</span></code>) не совпадают с кодами типов
+значений тега (<code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">4</span></code>…).</p>
+</div>
+<p>В запросе <code class="docutils literal notranslate"><span class="pre">PUT</span></code> поля <code class="docutils literal notranslate"><span class="pre">initiatedBy</span></code> и <code class="docutils literal notranslate"><span class="pre">parameters</span></code> заменяют
+прежние списки целиком. Если поле не передать, список не меняется.</p>
+<p>Пример — метод тега, который пересчитывается при каждом новом значении
+двух тегов и складывает их:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>POST /v1/methods/
+</pre></div>
+</div>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"parentId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id тега-результата&gt;"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Сумма"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"prsMethodAddress"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sum"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"prsEntityTypeCode"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"initiatedBy"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"&lt;id тега A&gt;"</span><span class="p">,</span><span class="w"> </span><span class="s2">"&lt;id тега B&gt;"</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a"</span><span class="p">,</span><span class="w"> </span><span class="nt">"prsIndex"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"prsJsonConfigString"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"request"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"&lt;id тега A&gt;"</span><span class="p">]}}}},</span>
+<span class="w">    </span><span class="p">{</span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b"</span><span class="p">,</span><span class="w"> </span><span class="nt">"prsIndex"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"prsJsonConfigString"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"request"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"&lt;id тега B&gt;"</span><span class="p">]}}}}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h2>Чтение<a class="headerlink" href="#id5" title="Ссылка на этот заголовок"></a></h2>
+<p>В ответе <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/methods/</span></code> у каждого метода, кроме <code class="docutils literal notranslate"><span class="pre">attributes</span></code>, есть
+поля <code class="docutils literal notranslate"><span class="pre">initiatedBy</span></code>, <code class="docutils literal notranslate"><span class="pre">alertEvents</span></code> (если набор событий задан явно)
+и <code class="docutils literal notranslate"><span class="pre">parameters</span></code>. У определения в каталоге есть ещё <code class="docutils literal notranslate"><span class="pre">parameterCount</span></code> —
+число параметров.</p>
+</section>
+<section id="id6">
+<h2>Копирование и удаление<a class="headerlink" href="#id6" title="Ссылка на этот заголовок"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/copy</span></code> принимает <code class="docutils literal notranslate"><span class="pre">sourceId</span></code> и <code class="docutils literal notranslate"><span class="pre">parentId</span></code>. Метод
+тега или тревоги копируется под тег или тревогу, определение — внутри
+каталога. Определение каталога под тег или тревогу не копируется (ответ
+<code class="docutils literal notranslate"><span class="pre">422</span></code>): для этого создают ссылку.</p>
+<p>Определение, на которое есть ссылки, и папку с таким определением удалить
+нельзя: ответ <code class="docutils literal notranslate"><span class="pre">409</span></code>.</p>
+</section>
+<section id="id7">
+<h2>Загрузка описания каталога<a class="headerlink" href="#id7" title="Ссылка на этот заголовок"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/methods/description</span></code></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"yaml"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;текст описания&gt;"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"parentId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id папки каталога&gt;"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"probe"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">yaml</span></code> — описание папок и методов (формат — в разделе
+<a class="reference internal" href="methods.html#methods-yaml"><span class="std std-ref">Загрузка описания</span></a>);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">parentId</span></code> — папка каталога, куда загрузить описание. Пусто —
+корень каталога;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">probe</span></code> — после загрузки пробно вызвать каждый метод с аргументами
+из описания.</p></li>
 </ul>
-</div></blockquote>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</div></blockquote>
-<p><strong>Ответ:</strong></p>
-<blockquote>
-<div><ul class="simple">
-<li><p><strong>id</strong> (uuid) - id созданного тега</p></li>
-<li><p><strong>detail</strong> (str) - пояснения к ошибке</p></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="methods_api_crud_svc.import_description">
-<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">methods_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">import_description</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#methods_api_crud_svc.MethodDescriptionImport" title="methods_api_crud_svc.MethodDescriptionImport"><span class="pre">MethodDescriptionImport</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#methods_api_crud_svc.import_description" title="Ссылка на это определение"></a></dt>
-<dd><p>Загружает YAML-описание папок и методов. При probe=true делает пробный вызов каждого метода.</p>
-</dd></dl>
-
+<p>В ответе перечислено, какие папки и методы созданы, и результаты пробных
+вызовов.</p>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
-        <a href="schedules.html" class="btn btn-neutral float-left" title="Расписания" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
-        <a href="data_api.html" class="btn btn-neutral float-right" title="Данные" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="alerts.html" class="btn btn-neutral float-left" title="Тревоги" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="connectors.html" class="btn btn-neutral float-right" title="Коннекторы" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>API платформы &mdash; документация МПК-Пересвет v0.29.0</title>
+  <title>API платформы &mdash; документация МПК-Пересвет v0.30.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=399dde07"></script>
+      <script src="_static/documentation_options.js?v=62c6f60e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -24,7 +24,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
-    <link rel="next" title="Тревоги" href="alerts.html" />
+    <link rel="next" title="Узлы модели: общие правила" href="api_nodes.html" />
     <link rel="prev" title="Настройка безопасности промышленной редакции" href="security_enterprise_setup.html" /> 
 </head>
 
@@ -37,7 +37,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.29.0</div>
+  <div class="prs-version">v0.30.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -60,11 +60,14 @@
 <p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
-<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
-<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
-<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storages_guide.html">Хранилища данных</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules_guide.html">Расписания</a></li>
 <li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
 </ul>
@@ -76,17 +79,21 @@
 <p class="caption" role="heading"><span class="caption-text">Справочник</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id2">Общие правила</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id3">Разделы</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Адрес и формат</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#get">Параметры запросов GET</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Ответы и ошибки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">Служебные запросы</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">Разделы справочника</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api_nodes.html">Узлы модели: общие правила</a></li>
 <li class="toctree-l3"><a class="reference internal" href="objects.html">Объекты</a></li>
-<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
-<li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
-<li class="toctree-l3"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a></li>
-<li class="toctree-l3"><a class="reference internal" href="schedules.html">Расписания</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
+<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
 <li class="toctree-l3"><a class="reference internal" href="methods_api_doc.html">Методы</a></li>
-<li class="toctree-l3"><a class="reference internal" href="data_api.html">Запись и чтение данных</a></li>
+<li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
+<li class="toctree-l3"><a class="reference internal" href="schedules.html">Расписания</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a></li>
+<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_api.html">Данные тегов</a></li>
 </ul>
 </li>
 </ul>
@@ -119,169 +126,182 @@
              
   <section id="api">
 <span id="id1"></span><h1>API платформы<a class="headerlink" href="#api" title="Ссылка на этот заголовок"></a></h1>
-<p>Платформа принимает запросы HTTP(S) по адресу <code class="docutils literal notranslate"><span class="pre">https://&lt;сервер&gt;/v1/...</span></code>.
-Тот же API использует конфигуратор, поэтому всё, что делается в нём,
-можно сделать и запросом из своей программы.</p>
+<p>Всё, что делает конфигуратор, он делает через HTTP API платформы.
+Любое действие можно повторить запросом из своей программы.</p>
 <section id="id2">
-<h2>Общие правила<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
-<ol class="arabic">
-<li><p>Имена полей в JSON и названия запросов пишутся в стиле camelCase:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">   </span><span class="nt">"parentId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="p">,</span>
-<span class="w">   </span><span class="nt">"tagName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span>
-<span class="p">}</span>
+<h2>Адрес и формат<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
+<p>API доступен по адресу <code class="docutils literal notranslate"><span class="pre">https://&lt;сервер&gt;/v1/</span></code>. Запросы и ответы —
+объекты JSON. Имена полей пишутся в стиле camelCase: <code class="docutils literal notranslate"><span class="pre">parentId</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tagId</span></code>, <code class="docutils literal notranslate"><span class="pre">getChildren</span></code>.</p>
+<p>Узлы модели указываются идентификаторами — значениями атрибута
+<code class="docutils literal notranslate"><span class="pre">entryUUID</span></code> вида <code class="docutils literal notranslate"><span class="pre">2e9c3c5a-0f6b-103f-8a4b-27c2f0a7d6e1</span></code>. Платформа
+присваивает идентификатор при создании узла, и он не меняется, даже если
+узел перенести в другое место иерархии. Имя узла хранится в атрибуте <code class="docutils literal notranslate"><span class="pre">cn</span></code>
+и может быть любым; обратную косую черту (<code class="docutils literal notranslate"><span class="pre">\</span></code>) и кавычки в нём
+экранируют обратной косой чертой.</p>
+<p>Большинство запросов работает с массивами: за один запрос можно прочитать,
+изменить или удалить несколько узлов, записать данные нескольких тегов.</p>
+</section>
+<section id="get">
+<h2>Параметры запросов GET<a class="headerlink" href="#get" title="Ссылка на этот заголовок"></a></h2>
+<p>Параметры запроса на чтение можно передать тремя способами:</p>
+<ul>
+<li><p>обычными параметрами адреса — рекомендуемый способ:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/tags/?id=&lt;id1&gt;&amp;id=&lt;id2&gt;&amp;attributes=cn&amp;attributes=prsValueTypeCode
 </pre></div>
 </div>
 </li>
-<li><p>Тело запроса — один объект JSON. Массивы передаются полями внутри него.
-Ответ — тоже один объект JSON.</p></li>
-<li><p>Большинство запросов работает сразу с массивами: можно создать,
-прочитать или изменить несколько узлов за один запрос. Подробности —
-в описании каждого запроса.</p></li>
-<li><p>Иерархия хранится в LDAP, поэтому имя любого узла — атрибут <code class="docutils literal notranslate"><span class="pre">cn</span></code>.</p></li>
-<li><p>У каждого узла есть атрибут <code class="docutils literal notranslate"><span class="pre">entryUUID</span></code> — неизменяемый уникальный
-идентификатор. Его присваивает платформа при создании узла, и он
-не меняется при переносе узла в другое место иерархии. Во всех запросах
-узлы указываются этим идентификатором (<code class="docutils literal notranslate"><span class="pre">id</span></code>, <code class="docutils literal notranslate"><span class="pre">parentId</span></code>, <code class="docutils literal notranslate"><span class="pre">tagId</span></code>).</p></li>
-<li><p>В имени узла допустимы любые символы. Обратную косую черту (<code class="docutils literal notranslate"><span class="pre">\</span></code>)
-и кавычки в нём нужно экранировать обратной косой чертой.</p></li>
-<li><p>При ошибке ответ содержит ключ <code class="docutils literal notranslate"><span class="pre">detail</span></code>. Это либо строка с описанием
-ошибки:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"detail"</span><span class="p">:</span><span class="w"> </span><span class="s2">"описание ошибки"</span><span class="p">}</span>
+<li><p>одним параметром <code class="docutils literal notranslate"><span class="pre">q</span></code> с JSON-объектом всех ключей:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/tags/?q={"id":["&lt;id1&gt;","&lt;id2&gt;"],"attributes":["cn","prsValueTypeCode"]}
 </pre></div>
 </div>
-<p>либо список ошибок проверки запроса:</p>
+</li>
+<li><p>телом запроса в формате JSON. Не все HTTP-клиенты умеют отправлять
+тело в запросе <code class="docutils literal notranslate"><span class="pre">GET</span></code>, поэтому этот способ лучше не использовать.</p></li>
+</ul>
+<p>Параметр-список (<code class="docutils literal notranslate"><span class="pre">id</span></code>, <code class="docutils literal notranslate"><span class="pre">attributes</span></code>, <code class="docutils literal notranslate"><span class="pre">tagId</span></code>, <code class="docutils literal notranslate"><span class="pre">parentId</span></code>)
+в адресе повторяют несколько раз. Параметр-объект (<code class="docutils literal notranslate"><span class="pre">filter</span></code>) передают
+строкой JSON.</p>
+</section>
+<section id="id3">
+<h2>Ответы и ошибки<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14.0%" />
+<col style="width: 86.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Код</p></th>
+<th class="head"><p>Когда</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">200</span></code></p></td>
+<td><p>Чтение и запись данных выполнены.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">201</span></code></p></td>
+<td><p>Узел создан. В ответе — идентификатор нового узла: <code class="docutils literal notranslate"><span class="pre">{&quot;id&quot;:</span> <span class="pre">&quot;&lt;id&gt;&quot;}</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">202</span></code></p></td>
+<td><p>Узел изменён или удалён. Ответ — пустой объект.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">403</span></code></p></td>
+<td><p>Нет прав на действие. Бывает только в промышленной редакции,
+см. <a class="reference internal" href="security_extension_points.html"><span class="doc">Точки расширения безопасности</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">404</span></code></p></td>
+<td><p>Нет такого адреса или нет данных (например, видеозаписи за период).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">409</span></code></p></td>
+<td><p>Действие противоречит состоянию модели: например, удаляется метод
+каталога, на который есть ссылки.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">422</span></code></p></td>
+<td><p>Запрос составлен неверно: нет обязательного поля, идентификатор
+не в формате GUID, нет такого узла.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">424</span></code></p></td>
+<td><p>Нет сервиса, который должен обработать запрос: например, тег не
+привязан ни к хранилищу, ни к методу чтения.</p></td>
+</tr>
+</tbody>
+</table>
+<p>При ошибке ответ содержит ключ <code class="docutils literal notranslate"><span class="pre">detail</span></code>. Обычно это строка:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"detail"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Узел 2e9c3c5a-0f6b-103f-8a4b-27c2f0a7d6e1 не существует."</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Некоторые запросы при ошибке формата возвращают в <code class="docutils literal notranslate"><span class="pre">detail</span></code> список ошибок
+с указанием поля. Например, удаление с идентификатором не в формате GUID:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">"detail"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"type_of_error"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"loc"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"place_of_error"</span><span class="p">],</span>
-<span class="w">      </span><span class="nt">"msg"</span><span class="p">:</span><span class="w"> </span><span class="s2">"message"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"input"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
-<span class="w">      </span><span class="nt">"ctx"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="s2">"name_of_error"</span><span class="p">}</span>
+<span class="w">      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"value_error"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"loc"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"body"</span><span class="p">,</span><span class="w"> </span><span class="s2">"id"</span><span class="p">],</span>
+<span class="w">      </span><span class="nt">"msg"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Value error, id должен быть в виде GUID"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"input"</span><span class="p">:</span><span class="w"> </span><span class="s2">"123"</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">]</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-</li>
-</ol>
 </section>
-<section id="id3">
-<h2>Разделы<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
-<p>API v2 интеграционных хранилищ описан в разделе <a class="reference internal" href="integrational_v2.html#integrational-v2"><span class="std std-ref">Интеграционные хранилища</span></a>.</p>
+<section id="id4">
+<h2>Служебные запросы<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/</span></code> и <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/version</span></code> возвращают номер версии платформы:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"v0.25.0"</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Запрос <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/</span></code> использует проверка источника данных в Grafana
+(<a class="reference internal" href="grafana/grafana_integration.html"><span class="doc">Создание экранов в Grafana</span></a>).</p>
+</section>
+<section id="id5">
+<h2>Разделы справочника<a class="headerlink" href="#id5" title="Ссылка на этот заголовок"></a></h2>
+<p>Запросы к узлам модели устроены одинаково для всех сущностей и описаны
+один раз, в разделе <a class="reference internal" href="api_nodes.html"><span class="doc">Узлы модели: общие правила</span></a>. На страницах сущностей — только
+их особенности.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="alerts.html">Тревоги</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="alerts.html#id2">Состояние тревоги</a></li>
-<li class="toctree-l2"><a class="reference internal" href="alerts.html#id3">Список и квитирование</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="alerts.html#alerts_api_crud_svc.AlertCopy"><code class="docutils literal notranslate"><span class="pre">AlertCopy</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="alerts.html#alerts_api_crud_svc.AlertCopy.model_config"><code class="docutils literal notranslate"><span class="pre">AlertCopy.model_config</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_nodes.html">Узлы модели: общие правила</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api_nodes.html#id2">Общие атрибуты</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_nodes.html#id3">Создание</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_nodes.html#id4">Чтение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_nodes.html#id5">Изменение и перенос</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_nodes.html#id6">Удаление</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_nodes.html#id7">Копирование</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="alerts.html#alerts_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="alerts.html#alerts_api_crud_svc.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="alerts.html#alerts_api_crud_svc.read"><code class="docutils literal notranslate"><span class="pre">read()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="alerts.html#alerts_api_crud_svc.update"><code class="docutils literal notranslate"><span class="pre">update()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="objects.html">Объекты</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tags.html">Теги</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tags.html#tags_api_crud_svc.TagCopy"><code class="docutils literal notranslate"><span class="pre">TagCopy</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="tags.html#tags_api_crud_svc.TagCopy.model_config"><code class="docutils literal notranslate"><span class="pre">TagCopy.model_config</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tags.html#id2">Атрибуты тега</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tags.html#id3">Источник и хранилище</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="tags.html#tags_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="tags.html#tags_api_crud_svc.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="tags.html#tags_api_crud_svc.read"><code class="docutils literal notranslate"><span class="pre">read()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="tags.html#tags_api_crud_svc.update"><code class="docutils literal notranslate"><span class="pre">update()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="objects.html">Объекты</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="objects.html#objects_api_crud_svc.ObjectCopy"><code class="docutils literal notranslate"><span class="pre">ObjectCopy</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="objects.html#objects_api_crud_svc.ObjectCopy.model_config"><code class="docutils literal notranslate"><span class="pre">ObjectCopy.model_config</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="objects.html#objects_api_crud_svc.copy_object"><code class="docutils literal notranslate"><span class="pre">copy_object()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="objects.html#objects_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="objects.html#objects_api_crud_svc.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="objects.html#objects_api_crud_svc.read"><code class="docutils literal notranslate"><span class="pre">read()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="objects.html#objects_api_crud_svc.update"><code class="docutils literal notranslate"><span class="pre">update()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="folders.html">Папки</a></li>
-<li class="toctree-l1"><a class="reference internal" href="connectors.html">Коннекторы</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="connectors.html#id2">Протокол обмена</a></li>
-<li class="toctree-l2"><a class="reference internal" href="connectors.html#id3">Потеря связи</a></li>
-<li class="toctree-l2"><a class="reference internal" href="connectors.html#id4">Камеры</a></li>
-<li class="toctree-l2"><a class="reference internal" href="connectors.html#api">Сервисный API коннекторов</a></li>
-<li class="toctree-l2"><a class="reference internal" href="connectors.html#module-connectors_api_crud_svc">CRUD API</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="connectors.html#connectors_api_crud_svc.ConfigStringForLinkedTag"><code class="docutils literal notranslate"><span class="pre">ConfigStringForLinkedTag</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="connectors.html#connectors_api_crud_svc.ConfigStringForLinkedTag.model_config"><code class="docutils literal notranslate"><span class="pre">ConfigStringForLinkedTag.model_config</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="connectors.html#connectors_api_crud_svc.ConnectorCopy"><code class="docutils literal notranslate"><span class="pre">ConnectorCopy</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="connectors.html#connectors_api_crud_svc.ConnectorCopy.model_config"><code class="docutils literal notranslate"><span class="pre">ConnectorCopy.model_config</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="connectors.html#connectors_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="connectors.html#connectors_api_crud_svc.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="connectors.html#connectors_api_crud_svc.read"><code class="docutils literal notranslate"><span class="pre">read()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="connectors.html#connectors_api_crud_svc.update"><code class="docutils literal notranslate"><span class="pre">update()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="dataStorages_api_doc.html#dataStorages_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="dataStorages_api_doc.html#dataStorages_api_crud_svc.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="schedules.html">Расписания</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="schedules.html#schedules_api_crud_svc.ScheduleUpdateAttributes"><code class="docutils literal notranslate"><span class="pre">ScheduleUpdateAttributes</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="schedules.html#schedules_api_crud_svc.ScheduleUpdateAttributes.model_config"><code class="docutils literal notranslate"><span class="pre">ScheduleUpdateAttributes.model_config</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="schedules.html#schedules_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts.html">Тревоги</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="alerts.html#id2">Узлы тревог</a></li>
+<li class="toctree-l2"><a class="reference internal" href="alerts.html#id3">Чтение эпизодов</a></li>
+<li class="toctree-l2"><a class="reference internal" href="alerts.html#id8">Квитирование</a></li>
+<li class="toctree-l2"><a class="reference internal" href="alerts.html#v1-data">Чего не делает <code class="docutils literal notranslate"><span class="pre">/v1/data/</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="alerts.html#id9">Сообщения для сервисов</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="methods_api_doc.html">Методы</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodCopy"><code class="docutils literal notranslate"><span class="pre">MethodCopy</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodCopy.model_config"><code class="docutils literal notranslate"><span class="pre">MethodCopy.model_config</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="methods_api_doc.html#id2">Где лежит метод</a></li>
+<li class="toctree-l2"><a class="reference internal" href="methods_api_doc.html#id3">Атрибуты</a></li>
+<li class="toctree-l2"><a class="reference internal" href="methods_api_doc.html#id4">Поля запроса</a></li>
+<li class="toctree-l2"><a class="reference internal" href="methods_api_doc.html#id5">Чтение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="methods_api_doc.html#id6">Копирование и удаление</a></li>
+<li class="toctree-l2"><a class="reference internal" href="methods_api_doc.html#id7">Загрузка описания каталога</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodDescriptionImport"><code class="docutils literal notranslate"><span class="pre">MethodDescriptionImport</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodDescriptionImport.model_config"><code class="docutils literal notranslate"><span class="pre">MethodDescriptionImport.model_config</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="connectors.html">Коннекторы</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="connectors.html#id2">Узлы коннекторов</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connectors.html#id6">Сервисные запросы</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connectors.html#id8">Протокол обмена</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodParameterAttributes"><code class="docutils literal notranslate"><span class="pre">MethodParameterAttributes</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodParameterAttributes.model_config"><code class="docutils literal notranslate"><span class="pre">MethodParameterAttributes.model_config</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules.html">Расписания</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dataStorages_api_doc.html#id2">Тип и конфигурация</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataStorages_api_doc.html#id3">Привязка тегов и тревог</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataStorages_api_doc.html#id4">Чтение привязок</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodReadResult"><code class="docutils literal notranslate"><span class="pre">MethodReadResult</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodReadResult.model_config"><code class="docutils literal notranslate"><span class="pre">MethodReadResult.model_config</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="folders.html">Папки</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="folders.html#id2">Чтение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="folders.html#id3">Правила</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodUpdateAttributes"><code class="docutils literal notranslate"><span class="pre">MethodUpdateAttributes</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodUpdateAttributes.model_config"><code class="docutils literal notranslate"><span class="pre">MethodUpdateAttributes.model_config</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.OneMethodInReadResult"><code class="docutils literal notranslate"><span class="pre">OneMethodInReadResult</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.OneMethodInReadResult.model_config"><code class="docutils literal notranslate"><span class="pre">OneMethodInReadResult.model_config</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.import_description"><code class="docutils literal notranslate"><span class="pre">import_description()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="data_api.html">Запись и чтение данных</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="data_api.html#tags_app_api_svc.data_get"><code class="docutils literal notranslate"><span class="pre">data_get()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="data_api.html#tags_app_api_svc.data_set"><code class="docutils literal notranslate"><span class="pre">data_set()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_api.html">Данные тегов</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data_api.html#id2">Чтение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_api.html#id3">Запись</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_api.html#id4">Время в состояниях</a></li>
 </ul>
 </li>
 </ul>
 </div>
+<p>Запросы к видео (живой поток, снимки, записи, управление камерой) описаны
+в разделе <a class="reference internal" href="video_tag.html#video-tag"><span class="std std-ref">Видеопоток: API</span></a>, API v2 интеграционных хранилищ — в разделе
+<a class="reference internal" href="integrational_v2.html#integrational-v2"><span class="std std-ref">Интеграционные хранилища</span></a>.</p>
 </section>
 </section>
 
@@ -290,7 +310,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
         <a href="security_enterprise_setup.html" class="btn btn-neutral float-left" title="Настройка безопасности промышленной редакции" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
-        <a href="alerts.html" class="btn btn-neutral float-right" title="Тревоги" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="api_nodes.html" class="btn btn-neutral float-right" title="Узлы модели: общие правила" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

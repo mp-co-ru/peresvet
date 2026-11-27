@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Расписания &mdash; документация МПК-Пересвет v0.29.0</title>
+  <title>Расписания &mdash; документация МПК-Пересвет v0.30.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=399dde07"></script>
+      <script src="_static/documentation_options.js?v=62c6f60e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -24,8 +24,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
-    <link rel="next" title="Методы" href="methods_api_doc.html" />
-    <link rel="prev" title="Хранилища данных" href="dataStorages_api_doc.html" /> 
+    <link rel="next" title="Хранилища данных" href="dataStorages_api_doc.html" />
+    <link rel="prev" title="Коннекторы" href="connectors.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -37,7 +37,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.29.0</div>
+  <div class="prs-version">v0.30.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -60,11 +60,14 @@
 <p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
-<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
-<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
-<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storages_guide.html">Хранилища данных</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules_guide.html">Расписания</a></li>
 <li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
 </ul>
@@ -76,21 +79,21 @@
 <p class="caption" role="heading"><span class="caption-text">Справочник</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="api.html#id2">Общие правила</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="api.html#id3">Разделы</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id2">Адрес и формат</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#get">Параметры запросов GET</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id3">Ответы и ошибки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id4">Служебные запросы</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="api.html#id5">Разделы справочника</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="api_nodes.html">Узлы модели: общие правила</a></li>
 <li class="toctree-l3"><a class="reference internal" href="objects.html">Объекты</a></li>
-<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
-<li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
-<li class="toctree-l3"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Расписания</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#schedules_api_crud_svc.ScheduleUpdateAttributes"><code class="docutils literal notranslate"><span class="pre">ScheduleUpdateAttributes</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#schedules_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
+<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
 <li class="toctree-l3"><a class="reference internal" href="methods_api_doc.html">Методы</a></li>
-<li class="toctree-l3"><a class="reference internal" href="data_api.html">Запись и чтение данных</a></li>
+<li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Расписания</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a></li>
+<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_api.html">Данные тегов</a></li>
 </ul>
 </li>
 </ul>
@@ -122,93 +125,73 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-schedules_api_crud_svc">
-<span id="id1"></span><h1>Расписания<a class="headerlink" href="#module-schedules_api_crud_svc" title="Ссылка на этот заголовок"></a></h1>
-<p>Модуль содержит примеры запросов и ответов на них, параметров которые могут входить в
-запрос, в сервисе schedules.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="schedules_api_crud_svc.ScheduleUpdateAttributes">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">schedules_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">ScheduleUpdateAttributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">cn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prsJsonConfigString</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prsActive</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prsDefault</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prsEntityTypeCode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prsIndex</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#schedules_api_crud_svc.ScheduleUpdateAttributes" title="Ссылка на это определение"></a></dt>
-<dd><dl class="py attribute">
-<dt class="sig sig-object py" id="schedules_api_crud_svc.ScheduleUpdateAttributes.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'protected_namespaces':</span> <span class="pre">()}</span></span><a class="headerlink" href="#schedules_api_crud_svc.ScheduleUpdateAttributes.model_config" title="Ссылка на это определение"></a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="schedules_api_crud_svc.create">
-<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">schedules_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#schedules_api_crud_svc.create" title="Ссылка на это определение"></a></dt>
-<dd><p>Метод добавляет расписание в иерархию.</p>
-<p><strong>Запрос:</strong></p>
-<blockquote>
-<div><div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id2">
-<p><span class="caption-text">http</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">GET</span> <span class="nn">/v1/schedules/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
-<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"attributes"</span><span class="p">:{</span>
-<span class="w">        </span><span class="nt">"cn"</span><span class="p">:</span><span class="s2">"schedule3"</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"prsJsonConfigString"</span><span class="p">:</span><span class="s2">"{\"start\":\"2024-07-07\",\"end\":\"2025-07-07\",\"interval_type\":\"seconds\",\"interval_value\":4}"</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"description"</span><span class="p">:</span><span class="s2">"schedule description"</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">"prsActive"</span><span class="p">:</span><span class="kc">true</span>
+  <section id="id1">
+<h1>Расписания<a class="headerlink" href="#id1" title="Ссылка на этот заголовок"></a></h1>
+<p>Как работают расписания, описано в разделе <a class="reference internal" href="schedules_guide.html#schedules-guide"><span class="std std-ref">Расписания</span></a>.</p>
+<p>Адрес — <code class="docutils literal notranslate"><span class="pre">/v1/schedules/</span></code>. Запросы те же, что у всех узлов модели
+(<a class="reference internal" href="api_nodes.html"><span class="doc">Узлы модели: общие правила</span></a>). Родитель расписания — пользовательская папка в ветке
+расписаний; без <code class="docutils literal notranslate"><span class="pre">parentId</span></code> расписание создаётся в корне ветки.</p>
+<p>Конфигурация расписания — <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code>:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 60.0%" />
+<col style="width: 20.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Ключ</p></th>
+<th class="head"><p>Смысл</p></th>
+<th class="head"><p>По умолчанию</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">start</span></code></p></td>
+<td><p>Момент первого срабатывания, строка ISO 8601.</p></td>
+<td><p>момент создания</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">end</span></code></p></td>
+<td><p>Момент, после которого расписание больше не срабатывает.
+<code class="docutils literal notranslate"><span class="pre">null</span></code> — без конца.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">null</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">interval_type</span></code></p></td>
+<td><p>Единица шага: <code class="docutils literal notranslate"><span class="pre">seconds</span></code>, <code class="docutils literal notranslate"><span class="pre">minutes</span></code>, <code class="docutils literal notranslate"><span class="pre">hours</span></code> или <code class="docutils literal notranslate"><span class="pre">days</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hours</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">interval_value</span></code></p></td>
+<td><p>Шаг — целое число не меньше 1.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Пример — каждые 15 минут, начиная с полуночи 1 декабря 2026:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>POST /v1/schedules/
+</pre></div>
+</div>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Каждые 15 минут"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"prsJsonConfigString"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"start"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-12-01T00:00:00+03:00"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"interval_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"minutes"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"interval_value"</span><span class="p">:</span><span class="w"> </span><span class="mi">15</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-</div>
-<div class="http-example-response docutils container" id="id3">
-<p><span class="caption-text">response</span></p>
-<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 201 OK</span>
-<span class="na">Content-Type</span>: <span class="s">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
-<span class="na">Content-type</span>: <span class="s">application/json</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"идентификатор_созданного_расписания"</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-</div>
-<ul class="simple">
-<li><p><strong>parentId</strong> (str) - id пользовательской папки <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> в ветке
-расписаний. Если поле пустое, расписание создаётся в корне <code class="docutils literal notranslate"><span class="pre">schedules</span></code>.</p></li>
-<li><p><strong>attributes</strong> (dict) - словарь с параметрами для создания расписания.</p>
-<ul>
-<li><p><strong>cn</strong> (str) - имя расписания; Необязательный атрибут;</p></li>
-<li><p><strong>description</strong> (str) - описание экземпляра. Необязательный атрибут;</p></li>
-<li><p><strong>prsJsonConfigString</strong> (str) - Строка содержит, в случае необходимости,
-конфигурацию узла. Интерпретируется сервисом, управляющим сущностью,
-которой принадлежит экземпляр. Необязательный аттрибут</p></li>
-<li><p><strong>prsActive</strong> (bool) - Определяет, активен ли экземпляр. Необязательный атрибут;</p></li>
-</ul>
-</li>
-</ul>
-</div></blockquote>
-<p><strong>Ответ:</strong></p>
-<blockquote>
-<div><ul class="simple">
-<li><p><strong>id</strong> (uuid) - id созданного расписания</p></li>
-<li><p><strong>detail</strong> (str) - пояснения к ошибке</p></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
+<p>Платформа хранит <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">end</span></code> в часовом поясе сервера. Неверный
+формат конфигурации — ответ <code class="docutils literal notranslate"><span class="pre">422</span></code> с описанием ожидаемого формата.</p>
+<p>Чтобы расписание запускало метод, добавьте его идентификатор
+в <code class="docutils literal notranslate"><span class="pre">initiatedBy</span></code> метода (<a class="reference internal" href="methods_api_doc.html"><span class="doc">Методы</span></a>).</p>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
-        <a href="dataStorages_api_doc.html" class="btn btn-neutral float-left" title="Хранилища данных" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
-        <a href="methods_api_doc.html" class="btn btn-neutral float-right" title="Методы" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="connectors.html" class="btn btn-neutral float-left" title="Коннекторы" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="dataStorages_api_doc.html" class="btn btn-neutral float-right" title="Хранилища данных" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

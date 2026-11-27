@@ -1,0 +1,437 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Узлы модели: общие правила &mdash; документация МПК-Пересвет v0.30.0</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5a2fdaf1" />
+
+  
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=62c6f60e"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/sphinxcontrib-httpexample.js"></script>
+      <script src="_static/translations.js?v=cd1d70c9"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Объекты" href="objects.html" />
+    <link rel="prev" title="API платформы" href="api.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="index.html">
+    
+      <img src="_static/logo.png" class="logo" alt="Логотип"/>
+  </a>
+  <div class="prs-version">v0.30.0</div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Знакомство</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="description.html">Описание</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terms.html">Терминология</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Установка и сопровождение</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка и запуск</a></li>
+<li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storages_guide.html">Хранилища данных</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules_guide.html">Расписания</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Безопасность</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="security_extension_points.html">Точки расширения безопасности</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка промышленной редакции</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Справочник</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api.html#id2">Адрес и формат</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#get">Параметры запросов GET</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id3">Ответы и ошибки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id4">Служебные запросы</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="api.html#id5">Разделы справочника</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Узлы модели: общие правила</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id2">Общие атрибуты</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Создание</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id4">Чтение</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id5">Изменение и перенос</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id6">Удаление</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id7">Копирование</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="objects.html">Объекты</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
+<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
+<li class="toctree-l3"><a class="reference internal" href="methods_api_doc.html">Методы</a></li>
+<li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
+<li class="toctree-l3"><a class="reference internal" href="schedules.html">Расписания</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a></li>
+<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_api.html">Данные тегов</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">МПК-Пересвет</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">API платформы</a></li>
+      <li class="breadcrumb-item active">Узлы модели: общие правила</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/api_nodes.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="api-nodes">
+<span id="id1"></span><h1>Узлы модели: общие правила<a class="headerlink" href="#api-nodes" title="Ссылка на этот заголовок"></a></h1>
+<p>Объекты, теги, тревоги, методы, коннекторы, расписания и хранилища данных
+создаются, читаются, изменяются и удаляются одинаковыми запросами. Меняется
+только адрес:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 30.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Сущность</p></th>
+<th class="head"><p>Адрес</p></th>
+<th class="head"><p>Корень ветки по умолчанию</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Объекты</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/v1/objects/</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">objects</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Теги</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/v1/tags/</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tags</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Тревоги</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/v1/alerts/</span></code></p></td>
+<td><p>— (тревога всегда лежит под тегом)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Методы</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/v1/methods/</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">methods</span></code> (каталог методов)</p></td>
+</tr>
+<tr class="row-even"><td><p>Коннекторы</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/v1/connectors/</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">connectors</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Расписания</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/v1/schedules/</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">schedules</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Хранилища данных</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/v1/dataStorages/</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dataStorages</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Здесь описаны общие правила. Особенности каждой сущности — на её странице.</p>
+<section id="id2">
+<h2>Общие атрибуты<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
+<p>Свойства узла передаются в объекте <code class="docutils literal notranslate"><span class="pre">attributes</span></code>. У всех сущностей есть
+такие атрибуты:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 74.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Атрибут</p></th>
+<th class="head"><p>Смысл</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cn</span></code></p></td>
+<td><p>Имя узла. Должно быть уникальным среди узлов с тем же родителем.
+Если имя не задано, узел получает имя, равное своему идентификатору.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">description</span></code></p></td>
+<td><p>Описание. Конфигуратор показывает его в подсказке к узлу.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">prsActive</span></code></p></td>
+<td><p>Признак «Активный». <code class="docutils literal notranslate"><span class="pre">false</span></code> выключает узел: выключенный тег
+не читается и не пишется, выключенная тревога не проверяется,
+выключенный коннектор не опрашивает источник. По умолчанию <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code></p></td>
+<td><p>Конфигурация узла — объект JSON. Её формат зависит от сущности.
+Строка с JSON тоже принимается.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">prsEntityTypeCode</span></code></p></td>
+<td><p>Код типа. Смысл зависит от сущности: тип метода, тип хранилища,
+камера среди коннекторов.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">prsIndex</span></code></p></td>
+<td><p>Порядковый номер. Узлы одного родителя возвращаются отсортированными
+по нему.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">prsDefault</span></code></p></td>
+<td><p>Узел по умолчанию среди соседей того же вида. Так задаётся
+хранилище по умолчанию. Первый узел на уровне становится узлом
+по умолчанию сам. Если создать узел с <code class="docutils literal notranslate"><span class="pre">prsDefault:</span> <span class="pre">true</span></code>, прежний
+узел по умолчанию этот признак теряет. При изменении узла запросом
+<code class="docutils literal notranslate"><span class="pre">PUT</span></code> прежний признак не снимается: снимите его отдельно.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id3">
+<h2>Создание<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/&lt;сущность&gt;/</span></code></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"parentId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id родителя&gt;"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Насос 1"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Насос подачи воды"</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">parentId</span></code> — родитель нового узла. Если не задан, узел создаётся
+в корне ветки своей сущности. Какие родители допустимы, указано
+на странице сущности.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">attributes</span></code> — атрибуты нового узла. Незаданные атрибуты получают
+значения по умолчанию.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">folder</span></code> — <code class="docutils literal notranslate"><span class="pre">true</span></code> создаёт не узел сущности, а папку
+(см. <a class="reference internal" href="folders.html"><span class="doc">Папки</span></a>). По умолчанию <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
+</ul>
+<p>Ответ <code class="docutils literal notranslate"><span class="pre">201</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2e9c3c5a-0f6b-103f-8a4b-27c2f0a7d6e1"</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Если у родителя уже есть узел с таким именем, ответ — <code class="docutils literal notranslate"><span class="pre">422</span></code> «Ошибка
+создания узла».</p>
+</section>
+<section id="id4">
+<h2>Чтение<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/&lt;сущность&gt;/</span></code></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 18.0%" />
+<col style="width: 62.0%" />
+<col style="width: 20.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Параметр</p></th>
+<th class="head"><p>Смысл</p></th>
+<th class="head"><p>По умолчанию</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">id</span></code></p></td>
+<td><p>Идентификатор узла или список идентификаторов. Если задан,
+<code class="docutils literal notranslate"><span class="pre">base</span></code>, <code class="docutils literal notranslate"><span class="pre">scope</span></code> и <code class="docutils literal notranslate"><span class="pre">filter</span></code> не учитываются.</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">base</span></code></p></td>
+<td><p>Узел, от которого ведётся поиск: идентификатор, <code class="docutils literal notranslate"><span class="pre">prs</span></code> (корень
+всей модели) или имя корня ветки — <code class="docutils literal notranslate"><span class="pre">objects</span></code>, <code class="docutils literal notranslate"><span class="pre">tags</span></code>,
+<code class="docutils literal notranslate"><span class="pre">connectors</span></code>, <code class="docutils literal notranslate"><span class="pre">schedules</span></code>, <code class="docutils literal notranslate"><span class="pre">dataStorages</span></code>, <code class="docutils literal notranslate"><span class="pre">methods</span></code>.</p></td>
+<td><p>корень ветки сущности</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">scope</span></code></p></td>
+<td><p>Глубина поиска: <code class="docutils literal notranslate"><span class="pre">0</span></code> — сам узел <code class="docutils literal notranslate"><span class="pre">base</span></code>; <code class="docutils literal notranslate"><span class="pre">1</span></code> — его прямые
+потомки; <code class="docutils literal notranslate"><span class="pre">2</span></code> — всё поддерево.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">filter</span></code></p></td>
+<td><p>Отбор по атрибутам — объект JSON, где каждому атрибуту
+соответствует список допустимых значений. Значения одного атрибута
+объединяются через «или», разные атрибуты — через «и». Знак <code class="docutils literal notranslate"><span class="pre">*</span></code>
+заменяет любые символы: <code class="docutils literal notranslate"><span class="pre">{&quot;cn&quot;:</span> <span class="pre">[&quot;Насос*&quot;]}</span></code>.</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">attributes</span></code></p></td>
+<td><p>Какие атрибуты вернуть. <code class="docutils literal notranslate"><span class="pre">*</span></code> — все.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">cn</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hierarchy</span></code></p></td>
+<td><p>Вместе со <code class="docutils literal notranslate"><span class="pre">scope=2</span></code> возвращает дерево: у каждого узла есть
+список потомков <code class="docutils literal notranslate"><span class="pre">children</span></code>, папки тоже обходятся.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">getParent</span></code></p></td>
+<td><p>Добавить каждому узлу поле <code class="docutils literal notranslate"><span class="pre">parentId</span></code>. Для узла в корне ветки
+<code class="docutils literal notranslate"><span class="pre">parentId</span></code> равен <code class="docutils literal notranslate"><span class="pre">null</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deref</span></code></p></td>
+<td><p>Раскрывать ссылки LDAP (псевдонимы) при поиске. Обычно не меняют.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Без параметров запрос возвращает узлы, лежащие прямо в корне ветки
+сущности. Например, <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/tags/</span></code> вернёт теги из папки «Теги», но не
+теги объектов. Чтобы найти узлы во всей модели, задайте <code class="docutils literal notranslate"><span class="pre">base=prs</span></code>
+и <code class="docutils literal notranslate"><span class="pre">scope=2</span></code>. Узел внутри пользовательской папки не является прямым
+потомком родителя папки: его возвращает только <code class="docutils literal notranslate"><span class="pre">scope=2</span></code>.</p>
+<p>Пример — все активные теги модели с типом значения:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/tags/?base=prs&amp;scope=2&amp;filter={"prsActive":[true]}&amp;attributes=cn&amp;attributes=prsValueTypeCode
+</pre></div>
+</div>
+<p>Ответ <code class="docutils literal notranslate"><span class="pre">200</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2e9c3c5a-0f6b-103f-8a4b-27c2f0a7d6e1"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"dn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cn=Температура,cn=Насос 1,cn=objects,cn=prs"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Температура"</span><span class="p">],</span>
+<span class="w">        </span><span class="nt">"prsValueTypeCode"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"1"</span><span class="p">]</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Значения атрибутов приходят так, как их хранит LDAP: каждое значение —
+список строк. Логические значения — строки <code class="docutils literal notranslate"><span class="pre">&quot;TRUE&quot;</span></code> и <code class="docutils literal notranslate"><span class="pre">&quot;FALSE&quot;</span></code>,
+конфигурация <code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code> — строка с JSON. Если у узла нет
+запрошенного атрибута, приходит <code class="docutils literal notranslate"><span class="pre">[null]</span></code>. Если ничего не найдено,
+<code class="docutils literal notranslate"><span class="pre">data</span></code> — пустой список.</p>
+</section>
+<section id="id5">
+<h2>Изменение и перенос<a class="headerlink" href="#id5" title="Ссылка на этот заголовок"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">PUT</span> <span class="pre">/v1/&lt;сущность&gt;/</span></code></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id узла&gt;"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Насос 2"</span><span class="p">,</span><span class="w"> </span><span class="nt">"prsActive"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"parentId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id нового родителя&gt;"</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">attributes</span></code> — только те атрибуты, которые нужно изменить.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">parentId</span></code> — необязательный. Если задан, узел вместе со всей своей
+веткой переносится к новому родителю. Вместо идентификатора можно указать
+имя корня ветки (<code class="docutils literal notranslate"><span class="pre">objects</span></code>, <code class="docutils literal notranslate"><span class="pre">tags</span></code> и т.д.). Перенести узел внутрь
+его собственной ветки нельзя.</p></li>
+</ul>
+<p>Ответ <code class="docutils literal notranslate"><span class="pre">202</span></code> — пустой объект.</p>
+<p>Признак <code class="docutils literal notranslate"><span class="pre">prsActive</span></code> меняется только у самого узла. Его потомки остаются
+в прежнем состоянии.</p>
+</section>
+<section id="id6">
+<h2>Удаление<a class="headerlink" href="#id6" title="Ссылка на этот заголовок"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DELETE</span> <span class="pre">/v1/&lt;сущность&gt;/</span></code></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"&lt;id1&gt;"</span><span class="p">,</span><span class="w"> </span><span class="s2">"&lt;id2&gt;"</span><span class="p">]}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">id</span></code> — идентификатор или список. Узел удаляется вместе со всеми
+потомками: удаление объекта удаляет его теги, их тревоги и методы.
+Ответ <code class="docutils literal notranslate"><span class="pre">202</span></code>.</p>
+</section>
+<section id="id7">
+<h2>Копирование<a class="headerlink" href="#id7" title="Ссылка на этот заголовок"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/&lt;сущность&gt;/copy</span></code> — для объектов, тегов, тревог и методов.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"sourceId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id копируемого узла&gt;"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"parentId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id родителя копии&gt;"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Насос 2"</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Копия создаётся вместе со всеми потомками. <code class="docutils literal notranslate"><span class="pre">attributes</span></code> необязательны:
+в них задают, например, имя копии. Если имя занято, платформа добавит
+к нему «(копия)», «(копия 2)» и т.д.</p>
+<p>Ссылки внутри копируемой ветки указывают на новые узлы: метод в копии
+объекта читает теги копии, а не оригинала. Ссылки на узлы вне ветки
+остаются прежними. Копия привязана к тем же хранилищам, что и оригинал,
+а к коннекторам не привязана: два тега не должны читать один и тот же
+адрес источника.</p>
+<p>Тот же результат даёт запрос создания <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/&lt;сущность&gt;/</span></code>
+с полем <code class="docutils literal notranslate"><span class="pre">sourceId</span></code>. Коннектор копируется только так,
+см. <a class="reference internal" href="connectors.html"><span class="doc">Коннекторы</span></a>. Ответ <code class="docutils literal notranslate"><span class="pre">201</span></code> с идентификатором копии.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="api.html" class="btn btn-neutral float-left" title="API платформы" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="objects.html" class="btn btn-neutral float-right" title="Объекты" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права 2026, ООО Матч Поинт Консалтинг. </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

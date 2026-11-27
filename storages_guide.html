@@ -1,0 +1,262 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Хранилища данных &mdash; документация МПК-Пересвет v0.30.0</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5a2fdaf1" />
+
+  
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=62c6f60e"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/sphinxcontrib-httpexample.js"></script>
+      <script src="_static/translations.js?v=cd1d70c9"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Исторические данные" href="historical_data.html" />
+    <link rel="prev" title="Коннекторы" href="connectors_guide.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="index.html">
+    
+      <img src="_static/logo.png" class="logo" alt="Логотип"/>
+  </a>
+  <div class="prs-version">v0.30.0</div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Знакомство</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="description.html">Описание</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terms.html">Терминология</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Установка и сопровождение</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка и запуск</a></li>
+<li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Хранилища данных</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Типы хранилищ</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Хранилище из поставки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">Новое хранилище</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Хранилище по умолчанию</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">Привязка тегов и тревог</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Хранилище или метод</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id8">Что хранится</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules_guide.html">Расписания</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Безопасность</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="security_extension_points.html">Точки расширения безопасности</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка промышленной редакции</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Справочник</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">МПК-Пересвет</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Хранилища данных</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/storages_guide.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="storages-guide">
+<span id="id1"></span><h1>Хранилища данных<a class="headerlink" href="#storages-guide" title="Ссылка на этот заголовок"></a></h1>
+<p>Хранилище данных — база, в которой лежит история значений тегов и эпизоды
+тревог. Тег сам ничего не хранит: пока он не привязан к хранилищу (или
+к методу чтения), прочитать его историю нельзя.</p>
+<section id="id2">
+<h2>Типы хранилищ<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 8.0%" />
+<col style="width: 24.0%" />
+<col style="width: 68.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Код</p></th>
+<th class="head"><p>Тип</p></th>
+<th class="head"><p>Для чего</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>PostgreSQL</p></td>
+<td><p>История тегов и эпизоды тревог. Рекомендуется для промышленной
+автоматизации.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>VictoriaMetrics</p></td>
+<td><p>История числовых тегов в базе временных рядов. Драйвер есть
+в исходном коде, но в стандартную поставку не входит: ни база,
+ни драйвер <code class="docutils literal notranslate"><span class="pre">./run_one_app.sh</span></code> не запускает.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">2</span></code></p></td>
+<td><p>Интеграционное</p></td>
+<td><p>Чтение и запись тегов запросами SQL к внешней базе, например ERP.
+См. <a class="reference internal" href="integrational_v2.html#integrational-v2"><span class="std std-ref">Интеграционные хранилища</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">3</span></code></p></td>
+<td><p>Видеоархив</p></td>
+<td><p>Каталог и срок хранения записей видеокамер. См. <a class="reference internal" href="video.html#video-cameras"><span class="std std-ref">Подключение видеокамер</span></a>.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Платформа работает с несколькими хранилищами одновременно, в том числе
+разных типов.</p>
+</section>
+<section id="id3">
+<h2>Хранилище из поставки<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
+<p>Стандартная поставка запускает PostgreSQL в контейнере <code class="docutils literal notranslate"><span class="pre">prs-psql</span></code>
+и заводит в модели хранилище <code class="docutils literal notranslate"><span class="pre">psql</span></code>, подключённое к нему. Оно отмечено
+как хранилище по умолчанию. Для начала работы другие хранилища не нужны.</p>
+</section>
+<section id="id4">
+<h2>Новое хранилище<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h2>
+<ol class="arabic simple">
+<li><p>В конфигураторе в меню папки «Хранилища данных» выберите
+<strong>Новое хранилище</strong>.</p></li>
+<li><p>Задайте имя, код типа и конфигурацию подключения.</p></li>
+<li><p>Нажмите <strong>Записать</strong>.</p></li>
+</ol>
+<p>Конфигурация PostgreSQL — строка подключения:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"dsn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"postgres://&lt;пользователь&gt;:&lt;пароль&gt;@&lt;сервер&gt;:5432/&lt;база&gt;"</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Сервер платформы должен иметь сетевой доступ к этой базе. Конфигурации
+остальных типов описаны в справочнике: <a class="reference internal" href="dataStorages_api_doc.html"><span class="doc">Хранилища данных</span></a>.</p>
+<section id="id5">
+<h3>Хранилище по умолчанию<a class="headerlink" href="#id5" title="Ссылка на этот заголовок"></a></h3>
+<p>Одно из хранилищ отмечают признаком «по умолчанию». Если в настройках
+конфигуратора включена привязка к хранилищу по умолчанию, новый тег
+и новая тревога сразу привязываются к нему.</p>
+</section>
+</section>
+<section id="id6">
+<h2>Привязка тегов и тревог<a class="headerlink" href="#id6" title="Ссылка на этот заголовок"></a></h2>
+<p>В конфигураторе хранилище выбирают на вкладке <strong>Хранилище</strong> в свойствах
+тега или тревоги. Привязанные узлы видны и в дереве: под каждым
+хранилищем перечислены его теги и тревоги, путь к ним указан через
+стрелку <code class="docutils literal notranslate"><span class="pre">→</span></code>.</p>
+<p>При привязке хранилище заводит место для данных: в PostgreSQL — таблицу
+<code class="docutils literal notranslate"><span class="pre">t_&lt;id</span> <span class="pre">тега&gt;</span></code> для тега и <code class="docutils literal notranslate"><span class="pre">a_&lt;id</span> <span class="pre">тревоги&gt;</span></code> для тревоги.</p>
+<div class="admonition warning">
+<p class="admonition-title">Предупреждение</p>
+<p>При отвязке хранилище удаляет таблицу вместе с историей. Конфигуратор
+отвязывает узел от прежнего хранилища, когда на вкладке <strong>Хранилище</strong>
+выбирают другое: история в прежнем хранилище при этом пропадает,
+а в новое она не переносится.</p>
+</div>
+<p>Через API тег можно привязать к нескольким хранилищам сразу: значения
+пишутся в каждое из них. Конфигуратор показывает и меняет одну привязку.</p>
+<section id="id7">
+<h3>Хранилище или метод<a class="headerlink" href="#id7" title="Ссылка на этот заголовок"></a></h3>
+<p>На чтение тега отвечает хранилище, а если у тега есть метод чтения —
+и метод тоже. Платформа берёт первый пришедший ответ, поэтому тег
+с методом чтения или записи к хранилищу обычно не привязывают.
+Конфигуратор отмечает такое сочетание восклицательным знаком.
+Подробно — в разделе <a class="reference internal" href="methods.html"><span class="doc">Методы</span></a>.</p>
+</section>
+</section>
+<section id="id8">
+<h2>Что хранится<a class="headerlink" href="#id8" title="Ссылка на этот заголовок"></a></h2>
+<p>Каждое значение тега хранится точкой: метка времени, значение и код
+качества. Как читать историю и что означают ключи запроса, описано
+в разделе <a class="reference internal" href="historical_data.html#historical-data"><span class="std std-ref">Исторические данные</span></a>.</p>
+<p>Не каждое значение, присланное в тег, попадает в хранилище. Значения,
+которые отличаются от последнего записанного меньше чем на значимое
+отклонение тега, отбрасываются (см. <a class="reference internal" href="tags.html"><span class="doc">Теги</span></a>).</p>
+<p>Эпизоды тревог описаны в разделе <a class="reference internal" href="alerts_guide.html#alerts-guide"><span class="std std-ref">Тревоги</span></a>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="connectors_guide.html" class="btn btn-neutral float-left" title="Коннекторы" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="historical_data.html" class="btn btn-neutral float-right" title="Исторические данные" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права 2026, ООО Матч Поинт Консалтинг. </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

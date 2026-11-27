@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>МПК-Пересвет &mdash; документация МПК-Пересвет v0.29.0</title>
+  <title>МПК-Пересвет &mdash; документация МПК-Пересвет v0.30.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=399dde07"></script>
+      <script src="_static/documentation_options.js?v=62c6f60e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -36,7 +36,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.29.0</div>
+  <div class="prs-version">v0.30.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -59,11 +59,14 @@
 <p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
-<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
-<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
-<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storages_guide.html">Хранилища данных</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules_guide.html">Расписания</a></li>
 <li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
 </ul>
@@ -118,7 +121,13 @@
 <li class="toctree-l2"><a class="reference internal" href="description.html#id5">Редакции</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="terms.html">Терминология</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terms.html">Терминология</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="terms.html#id2">Модель</a></li>
+<li class="toctree-l2"><a class="reference internal" href="terms.html#id3">Сущности модели объекта</a></li>
+<li class="toctree-l2"><a class="reference internal" href="terms.html#id4">Сущности информационной системы</a></li>
+<li class="toctree-l2"><a class="reference internal" href="terms.html#id5">События</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
 </ul>
 </div>
@@ -130,29 +139,32 @@
 <li class="toctree-l2"><a class="reference internal" href="installation.html#id4">Установка из дистрибутива</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#id5">Установка из исходников</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#id6">Первый вход</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#id7">Настройки запуска</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id8">Настройки запуска</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#https">HTTPS</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#id8">Зеркало образов</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#id9">Остановка платформы</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id9">Зеркало образов</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id10">Остановка платформы</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#optional-services">Дополнительные сервисы</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="installation.html#optional-own-port">Сервис со своим портом</a></li>
 <li class="toctree-l3"><a class="reference internal" href="installation.html#nginx">Сервис через nginx</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#id12">Сборка дистрибутива</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id13">Сборка дистрибутива</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="administration.html#id2">Какой способ выбрать</a></li>
+<li class="toctree-l2"><a class="reference internal" href="administration.html#id3">Общие правила</a></li>
 <li class="toctree-l2"><a class="reference internal" href="administration.html#administration-docker-runtime-backup">Резервная копия всех контейнеров</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="administration.html#id3">Что сохраняется</a></li>
-<li class="toctree-l3"><a class="reference internal" href="administration.html#id4">Создание архива</a></li>
-<li class="toctree-l3"><a class="reference internal" href="administration.html#id5">Восстановление</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="administration.html#ldap">Резервная копия LDAP</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="administration.html#id5">Что сохраняется</a></li>
 <li class="toctree-l3"><a class="reference internal" href="administration.html#id6">Создание архива</a></li>
 <li class="toctree-l3"><a class="reference internal" href="administration.html#id7">Восстановление</a></li>
-<li class="toctree-l3"><a class="reference internal" href="administration.html#id8">Отладка определения тома</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="administration.html#administration-ldap-backup">Резервная копия данных</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="administration.html#id9">Все три хранилища сразу</a></li>
+<li class="toctree-l3"><a class="reference internal" href="administration.html#id10">Каждое хранилище отдельно</a></li>
+<li class="toctree-l3"><a class="reference internal" href="administration.html#id11">Параметры</a></li>
+<li class="toctree-l3"><a class="reference internal" href="administration.html#id12">Отладка определения тома</a></li>
 </ul>
 </li>
 </ul>
@@ -167,26 +179,61 @@
 <li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id3">Дерево модели</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="configurator/configurator.html#id4">Корневые папки</a></li>
 <li class="toctree-l3"><a class="reference internal" href="configurator/configurator.html#id5">Пользовательские папки</a></li>
-<li class="toctree-l3"><a class="reference internal" href="configurator/configurator.html#id6">Цвет тегов</a></li>
-<li class="toctree-l3"><a class="reference internal" href="configurator/configurator.html#id7">Пометки в дереве</a></li>
-<li class="toctree-l3"><a class="reference internal" href="configurator/configurator.html#id8">Порядок узлов</a></li>
-<li class="toctree-l3"><a class="reference internal" href="configurator/configurator.html#id9">Поиск</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configurator/configurator.html#id6">Порядок и поиск</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configurator/configurator.html#configurator-marks">Пометки в дереве</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configurator/configurator.html#id8">Перетаскивание</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id10">Настройки</a></li>
-<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id11">Команды узла</a></li>
-<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id12">Перетаскивание</a></li>
-<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id13">Свойства узла</a></li>
-<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id14">Тег: хранилище, коннектор и данные</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id9">Команды узла</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id10">Свойства узла</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id11">Тег: данные, хранилище и коннектор</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="configurator/configurator.html#id12">Вкладка «Данные»</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configurator/configurator.html#id13">Вкладка «Хранилище»</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configurator/configurator.html#id14">Вкладка «Коннектор»</a></li>
 <li class="toctree-l3"><a class="reference internal" href="configurator/configurator.html#id15">Данные тега</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id16">Метод</a></li>
-<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id17">Тревога и расписание</a></li>
-<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id18">Коннектор: журнал и команды</a></li>
-<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id19">Хранилища данных</a></li>
-<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id20">Сервисы</a></li>
-<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id21">Дальше</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id16">Методы</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="configurator/configurator.html#id17">Инициаторы</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configurator/configurator.html#id18">Параметры</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configurator/configurator.html#id19">Определение в каталоге</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#configurator-alarms">Тревоги</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="configurator/configurator.html#id21">Кружок в дереве</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configurator/configurator.html#id22">Список тревог</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configurator/configurator.html#id23">Данные тревоги</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id24">Расписания</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id25">Коннектор: журнал и команды</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id26">Хранилища данных</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id27">Сервисы</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id28">Настройки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configurator/configurator.html#id29">Дальше</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="connectors_guide.html#id2">Где запускать</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connectors_guide.html#id3">Как это работает</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connectors_guide.html#id4">Потеря и восстановление связи</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connectors_guide.html#id5">Журнал</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connectors_guide.html#id6">Удалённые команды</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connectors_guide.html#id7">Свой коннектор</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="storages_guide.html">Хранилища данных</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="storages_guide.html#id2">Типы хранилищ</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storages_guide.html#id3">Хранилище из поставки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storages_guide.html#id4">Новое хранилище</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="storages_guide.html#id5">Хранилище по умолчанию</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="storages_guide.html#id6">Привязка тегов и тревог</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="storages_guide.html#id7">Хранилище или метод</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="storages_guide.html#id8">Что хранится</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a><ul>
@@ -250,6 +297,18 @@
 <li class="toctree-l2"><a class="reference internal" href="historical_data.html#null"><code class="docutils literal notranslate"><span class="pre">null</span></code> в истории данных</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="alerts_guide.html#id2">Как работает тревога</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="alerts_guide.html#id3">Несколько уровней</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="alerts_guide.html#id4">Квитирование</a></li>
+<li class="toctree-l2"><a class="reference internal" href="alerts_guide.html#id5">Где хранятся эпизоды</a></li>
+<li class="toctree-l2"><a class="reference internal" href="alerts_guide.html#id6">Тревоги в конфигураторе</a></li>
+<li class="toctree-l2"><a class="reference internal" href="alerts_guide.html#api">Тревоги через API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="alerts_guide.html#id7">Тревога как инициатор метода</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="methods.html#id2">Как устроен вызов</a></li>
 <li class="toctree-l2"><a class="reference internal" href="methods.html#id3">Типы методов</a></li>
@@ -262,19 +321,29 @@
 <li class="toctree-l2"><a class="reference internal" href="methods.html#id8">Каталог методов</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="methods.html#id9">Определение в каталоге</a></li>
 <li class="toctree-l3"><a class="reference internal" href="methods.html#id10">Ссылка на определение</a></li>
-<li class="toctree-l3"><a class="reference internal" href="methods.html#id11">Загрузка описания</a></li>
+<li class="toctree-l3"><a class="reference internal" href="methods.html#methods-yaml">Загрузка описания</a></li>
 <li class="toctree-l3"><a class="reference internal" href="methods.html#id12">Пакеты методов</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="connectors_guide.html#id2">Где запускать</a></li>
-<li class="toctree-l2"><a class="reference internal" href="connectors_guide.html#id3">Как это работает</a></li>
-<li class="toctree-l2"><a class="reference internal" href="connectors_guide.html#id4">Потеря и восстановление связи</a></li>
-<li class="toctree-l2"><a class="reference internal" href="connectors_guide.html#id5">Журнал</a></li>
-<li class="toctree-l2"><a class="reference internal" href="connectors_guide.html#id6">Удалённые команды</a></li>
-<li class="toctree-l2"><a class="reference internal" href="connectors_guide.html#id7">Свой коннектор</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules_guide.html">Расписания</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="schedules_guide.html#id2">Настройка</a></li>
+<li class="toctree-l2"><a class="reference internal" href="schedules_guide.html#id3">Запуск метода</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="integrational_v2.html#id2">Включение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integrational_v2.html#id3">Хранилище</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integrational_v2.html#id4">Тег и операции</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="integrational_v2.html#id5">Конфигурация операции</a></li>
+<li class="toctree-l3"><a class="reference internal" href="integrational_v2.html#id6">Параметры операции</a></li>
+<li class="toctree-l3"><a class="reference internal" href="integrational_v2.html#id7">Пример привязки</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="integrational_v2.html#id8">Выбор операции</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integrational_v2.html#id9">Примеры запросов клиента</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integrational_v2.html#api-v2">API v2 хранилищ данных</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a><ul>
@@ -299,24 +368,11 @@
 <li class="toctree-l3"><a class="reference internal" href="video_tag.html#id2">Живой поток</a></li>
 <li class="toctree-l3"><a class="reference internal" href="video_tag.html#id3">Своя страница</a></li>
 <li class="toctree-l3"><a class="reference internal" href="video_tag.html#id4">Управление камерой</a></li>
-<li class="toctree-l3"><a class="reference internal" href="video_tag.html#id5">Ошибки</a></li>
-<li class="toctree-l3"><a class="reference internal" href="video_tag.html#id6">Устройство видеосервисов</a></li>
+<li class="toctree-l3"><a class="reference internal" href="video_tag.html#id5">Звук в камеру</a></li>
+<li class="toctree-l3"><a class="reference internal" href="video_tag.html#id6">Ошибки</a></li>
+<li class="toctree-l3"><a class="reference internal" href="video_tag.html#id7">Устройство видеосервисов</a></li>
 </ul>
 </li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="integrational_v2.html#id2">Включение</a></li>
-<li class="toctree-l2"><a class="reference internal" href="integrational_v2.html#id3">Хранилище</a></li>
-<li class="toctree-l2"><a class="reference internal" href="integrational_v2.html#id4">Тег и операции</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="integrational_v2.html#id5">Конфигурация операции</a></li>
-<li class="toctree-l3"><a class="reference internal" href="integrational_v2.html#id6">Параметры операции</a></li>
-<li class="toctree-l3"><a class="reference internal" href="integrational_v2.html#id7">Пример привязки</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="integrational_v2.html#id8">Выбор операции</a></li>
-<li class="toctree-l2"><a class="reference internal" href="integrational_v2.html#id9">Примеры запросов клиента</a></li>
-<li class="toctree-l2"><a class="reference internal" href="integrational_v2.html#api-v2">API v2 хранилищ данных</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a><ul>
@@ -363,114 +419,83 @@
 <p class="caption" role="heading"><span class="caption-text">Справочник</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api.html#id2">Общие правила</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api.html#id3">Разделы</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="alerts.html#id2">Состояние тревоги</a></li>
-<li class="toctree-l4"><a class="reference internal" href="alerts.html#id3">Список и квитирование</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="alerts.html#alerts_api_crud_svc.AlertCopy"><code class="docutils literal notranslate"><span class="pre">AlertCopy</span></code></a><ul>
-<li class="toctree-l6"><a class="reference internal" href="alerts.html#alerts_api_crud_svc.AlertCopy.model_config"><code class="docutils literal notranslate"><span class="pre">AlertCopy.model_config</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id2">Адрес и формат</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#get">Параметры запросов GET</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id3">Ответы и ошибки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id4">Служебные запросы</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id5">Разделы справочника</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api_nodes.html">Узлы модели: общие правила</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api_nodes.html#id2">Общие атрибуты</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api_nodes.html#id3">Создание</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api_nodes.html#id4">Чтение</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api_nodes.html#id5">Изменение и перенос</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api_nodes.html#id6">Удаление</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api_nodes.html#id7">Копирование</a></li>
 </ul>
 </li>
-<li class="toctree-l5"><a class="reference internal" href="alerts.html#alerts_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
-<li class="toctree-l5"><a class="reference internal" href="alerts.html#alerts_api_crud_svc.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
-<li class="toctree-l5"><a class="reference internal" href="alerts.html#alerts_api_crud_svc.read"><code class="docutils literal notranslate"><span class="pre">read()</span></code></a></li>
-<li class="toctree-l5"><a class="reference internal" href="alerts.html#alerts_api_crud_svc.update"><code class="docutils literal notranslate"><span class="pre">update()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="objects.html">Объекты</a></li>
 <li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="tags.html#tags_api_crud_svc.TagCopy"><code class="docutils literal notranslate"><span class="pre">TagCopy</span></code></a><ul>
-<li class="toctree-l5"><a class="reference internal" href="tags.html#tags_api_crud_svc.TagCopy.model_config"><code class="docutils literal notranslate"><span class="pre">TagCopy.model_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tags.html#id2">Атрибуты тега</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tags.html#id3">Источник и хранилище</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="tags.html#tags_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="tags.html#tags_api_crud_svc.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="tags.html#tags_api_crud_svc.read"><code class="docutils literal notranslate"><span class="pre">read()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="tags.html#tags_api_crud_svc.update"><code class="docutils literal notranslate"><span class="pre">update()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="alerts.html#id2">Узлы тревог</a></li>
+<li class="toctree-l4"><a class="reference internal" href="alerts.html#id3">Чтение эпизодов</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="alerts.html#id4">Какие тревоги попадают в ответ</a></li>
+<li class="toctree-l5"><a class="reference internal" href="alerts.html#id5">Режимы ответа</a></li>
+<li class="toctree-l5"><a class="reference internal" href="alerts.html#id6">Ответ</a></li>
+<li class="toctree-l5"><a class="reference internal" href="alerts.html#id7">Примеры</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="objects.html">Объекты</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="objects.html#objects_api_crud_svc.ObjectCopy"><code class="docutils literal notranslate"><span class="pre">ObjectCopy</span></code></a><ul>
-<li class="toctree-l5"><a class="reference internal" href="objects.html#objects_api_crud_svc.ObjectCopy.model_config"><code class="docutils literal notranslate"><span class="pre">ObjectCopy.model_config</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="objects.html#objects_api_crud_svc.copy_object"><code class="docutils literal notranslate"><span class="pre">copy_object()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="objects.html#objects_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="objects.html#objects_api_crud_svc.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="objects.html#objects_api_crud_svc.read"><code class="docutils literal notranslate"><span class="pre">read()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="objects.html#objects_api_crud_svc.update"><code class="docutils literal notranslate"><span class="pre">update()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
-<li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="connectors.html#id2">Протокол обмена</a></li>
-<li class="toctree-l4"><a class="reference internal" href="connectors.html#id3">Потеря связи</a></li>
-<li class="toctree-l4"><a class="reference internal" href="connectors.html#id4">Камеры</a></li>
-<li class="toctree-l4"><a class="reference internal" href="connectors.html#api">Сервисный API коннекторов</a></li>
-<li class="toctree-l4"><a class="reference internal" href="connectors.html#module-connectors_api_crud_svc">CRUD API</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="connectors.html#connectors_api_crud_svc.ConfigStringForLinkedTag"><code class="docutils literal notranslate"><span class="pre">ConfigStringForLinkedTag</span></code></a><ul>
-<li class="toctree-l6"><a class="reference internal" href="connectors.html#connectors_api_crud_svc.ConfigStringForLinkedTag.model_config"><code class="docutils literal notranslate"><span class="pre">ConfigStringForLinkedTag.model_config</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l5"><a class="reference internal" href="connectors.html#connectors_api_crud_svc.ConnectorCopy"><code class="docutils literal notranslate"><span class="pre">ConnectorCopy</span></code></a><ul>
-<li class="toctree-l6"><a class="reference internal" href="connectors.html#connectors_api_crud_svc.ConnectorCopy.model_config"><code class="docutils literal notranslate"><span class="pre">ConnectorCopy.model_config</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l5"><a class="reference internal" href="connectors.html#connectors_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
-<li class="toctree-l5"><a class="reference internal" href="connectors.html#connectors_api_crud_svc.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
-<li class="toctree-l5"><a class="reference internal" href="connectors.html#connectors_api_crud_svc.read"><code class="docutils literal notranslate"><span class="pre">read()</span></code></a></li>
-<li class="toctree-l5"><a class="reference internal" href="connectors.html#connectors_api_crud_svc.update"><code class="docutils literal notranslate"><span class="pre">update()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="dataStorages_api_doc.html#dataStorages_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="dataStorages_api_doc.html#dataStorages_api_crud_svc.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="schedules.html">Расписания</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="schedules.html#schedules_api_crud_svc.ScheduleUpdateAttributes"><code class="docutils literal notranslate"><span class="pre">ScheduleUpdateAttributes</span></code></a><ul>
-<li class="toctree-l5"><a class="reference internal" href="schedules.html#schedules_api_crud_svc.ScheduleUpdateAttributes.model_config"><code class="docutils literal notranslate"><span class="pre">ScheduleUpdateAttributes.model_config</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="schedules.html#schedules_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="alerts.html#id8">Квитирование</a></li>
+<li class="toctree-l4"><a class="reference internal" href="alerts.html#v1-data">Чего не делает <code class="docutils literal notranslate"><span class="pre">/v1/data/</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="alerts.html#id9">Сообщения для сервисов</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="methods_api_doc.html">Методы</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodCopy"><code class="docutils literal notranslate"><span class="pre">MethodCopy</span></code></a><ul>
-<li class="toctree-l5"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodCopy.model_config"><code class="docutils literal notranslate"><span class="pre">MethodCopy.model_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="methods_api_doc.html#id2">Где лежит метод</a></li>
+<li class="toctree-l4"><a class="reference internal" href="methods_api_doc.html#id3">Атрибуты</a></li>
+<li class="toctree-l4"><a class="reference internal" href="methods_api_doc.html#id4">Поля запроса</a></li>
+<li class="toctree-l4"><a class="reference internal" href="methods_api_doc.html#id5">Чтение</a></li>
+<li class="toctree-l4"><a class="reference internal" href="methods_api_doc.html#id6">Копирование и удаление</a></li>
+<li class="toctree-l4"><a class="reference internal" href="methods_api_doc.html#id7">Загрузка описания каталога</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodDescriptionImport"><code class="docutils literal notranslate"><span class="pre">MethodDescriptionImport</span></code></a><ul>
-<li class="toctree-l5"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodDescriptionImport.model_config"><code class="docutils literal notranslate"><span class="pre">MethodDescriptionImport.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="connectors.html#id2">Узлы коннекторов</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="connectors.html#id3">Конфигурация коннектора</a></li>
+<li class="toctree-l5"><a class="reference internal" href="connectors.html#id4">Привязка тегов</a></li>
+<li class="toctree-l5"><a class="reference internal" href="connectors.html#id5">Копирование</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodParameterAttributes"><code class="docutils literal notranslate"><span class="pre">MethodParameterAttributes</span></code></a><ul>
-<li class="toctree-l5"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodParameterAttributes.model_config"><code class="docutils literal notranslate"><span class="pre">MethodParameterAttributes.model_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="connectors.html#id6">Сервисные запросы</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="connectors.html#id7">Удалённые команды</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodReadResult"><code class="docutils literal notranslate"><span class="pre">MethodReadResult</span></code></a><ul>
-<li class="toctree-l5"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodReadResult.model_config"><code class="docutils literal notranslate"><span class="pre">MethodReadResult.model_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="connectors.html#id8">Протокол обмена</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="connectors.html#id9">Потеря связи</a></li>
+<li class="toctree-l5"><a class="reference internal" href="connectors.html#id10">Камеры</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodUpdateAttributes"><code class="docutils literal notranslate"><span class="pre">MethodUpdateAttributes</span></code></a><ul>
-<li class="toctree-l5"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.MethodUpdateAttributes.model_config"><code class="docutils literal notranslate"><span class="pre">MethodUpdateAttributes.model_config</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.OneMethodInReadResult"><code class="docutils literal notranslate"><span class="pre">OneMethodInReadResult</span></code></a><ul>
-<li class="toctree-l5"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.OneMethodInReadResult.model_config"><code class="docutils literal notranslate"><span class="pre">OneMethodInReadResult.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="schedules.html">Расписания</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dataStorages_api_doc.html#id2">Тип и конфигурация</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dataStorages_api_doc.html#id3">Привязка тегов и тревог</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dataStorages_api_doc.html#id4">Чтение привязок</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="methods_api_doc.html#methods_api_crud_svc.import_description"><code class="docutils literal notranslate"><span class="pre">import_description()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="folders.html#id2">Чтение</a></li>
+<li class="toctree-l4"><a class="reference internal" href="folders.html#id3">Правила</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="data_api.html">Запись и чтение данных</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="data_api.html#tags_app_api_svc.data_get"><code class="docutils literal notranslate"><span class="pre">data_get()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="data_api.html#tags_app_api_svc.data_set"><code class="docutils literal notranslate"><span class="pre">data_set()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_api.html">Данные тегов</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="data_api.html#id2">Чтение</a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_api.html#id3">Запись</a></li>
+<li class="toctree-l4"><a class="reference internal" href="data_api.html#id4">Время в состояниях</a></li>
 </ul>
 </li>
 </ul>

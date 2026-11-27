@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Установка и запуск &mdash; документация МПК-Пересвет v0.29.0</title>
+  <title>Установка и запуск &mdash; документация МПК-Пересвет v0.30.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=399dde07"></script>
+      <script src="_static/documentation_options.js?v=62c6f60e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -37,7 +37,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.29.0</div>
+  <div class="prs-version">v0.30.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -59,16 +59,16 @@
 <li class="toctree-l2"><a class="reference internal" href="#id4">Установка из дистрибутива</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id5">Установка из исходников</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id6">Первый вход</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id7">Настройки запуска</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id8">Настройки запуска</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#https">HTTPS</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id8">Зеркало образов</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id9">Остановка платформы</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id9">Зеркало образов</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id10">Остановка платформы</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#optional-services">Дополнительные сервисы</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#optional-own-port">Сервис со своим портом</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#nginx">Сервис через nginx</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id12">Сборка дистрибутива</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id13">Сборка дистрибутива</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a></li>
@@ -76,11 +76,14 @@
 <p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
-<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
-<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
-<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storages_guide.html">Хранилища данных</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules_guide.html">Расписания</a></li>
 <li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
 </ul>
@@ -142,7 +145,7 @@
 <a class="reference external" href="https://docs.docker.com/engine/install/linux-postinstall/">настройку прав</a>,
 чтобы команды <code class="docutils literal notranslate"><span class="pre">docker</span></code> работали без <code class="docutils literal notranslate"><span class="pre">sudo</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">python3</span></code> на сервере — только если образы скачиваются с зеркала
-(см. <a class="reference internal" href="#id8">Зеркало образов</a>).</p></li>
+(см. <a class="reference internal" href="#id9">Зеркало образов</a>).</p></li>
 <li><p><a class="reference external" href="https://git-scm.com/">Git</a> — только для установки из исходников.</p></li>
 </ol>
 </section>
@@ -194,9 +197,12 @@ $<span class="w"> </span>./run_one_app.sh<span class="w"> </span>--ip<span class
 <p>Имя и пароль при первом входе — <code class="docutils literal notranslate"><span class="pre">admin</span></code> / <code class="docutils literal notranslate"><span class="pre">admin</span></code>. Grafana сразу
 предложит сменить пароль. После входа откроется
 <a class="reference internal" href="configurator/configurator.html#configurator"><span class="std std-ref">конфигуратор модели</span></a>.</p>
+<p>В платформе уже заведено хранилище данных <code class="docutils literal notranslate"><span class="pre">psql</span></code> (PostgreSQL), так что
+можно сразу создавать объекты и теги. Пошаговый пример построения модели —
+в <a class="reference external" href="https://github.com/mp-co-ru/prs-peresvet-courses/tree/main/01.base">базовом курсе</a>.</p>
 </section>
-<section id="id7">
-<h2>Настройки запуска<a class="headerlink" href="#id7" title="Ссылка на этот заголовок"></a></h2>
+<section id="id8">
+<h2>Настройки запуска<a class="headerlink" href="#id8" title="Ссылка на этот заголовок"></a></h2>
 <p>Настройки по умолчанию лежат в файле <code class="docutils literal notranslate"><span class="pre">.env</span></code> рядом со скриптом.
 Переменная окружения с тем же именем перекрывает значение из <code class="docutils literal notranslate"><span class="pre">.env</span></code>,
 а ключ командной строки перекрывает и то, и другое.</p>
@@ -247,12 +253,21 @@ $<span class="w"> </span>./run_one_app.sh<span class="w"> </span>--ip<span class
 <td><p><code class="docutils literal notranslate"><span class="pre">--mcp-grafana</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">true</span></code> — запустить MCP-сервер Grafana.</p></td>
 </tr>
+<tr class="row-even"><td><p>—</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--tmpdir</span></code></p></td>
+<td><p>Каталог для временных файлов при скачивании образов с зеркала.
+По умолчанию <code class="docutils literal notranslate"><span class="pre">/tmp</span></code>; если там маленький <code class="docutils literal notranslate"><span class="pre">tmpfs</span></code>, укажите каталог
+на диске, например <code class="docutils literal notranslate"><span class="pre">--tmpdir</span> <span class="pre">/var/tmp</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>—</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--local</span></code></p></td>
+<td><p>Собирать образы из зависимостей, заранее уложенных в дистрибутив,
+без обращения к интернету. Работает только с дистрибутивом,
+собранным командой <code class="docutils literal notranslate"><span class="pre">./packaging/build_dev_distribution.sh</span> <span class="pre">--local</span></code>.</p></td>
+</tr>
 </tbody>
 </table>
-<p>Ключ <code class="docutils literal notranslate"><span class="pre">--tmpdir</span> <span class="pre">&lt;каталог&gt;</span></code> задаёт каталог для временных файлов при
-скачивании образов с зеркала. По умолчанию это <code class="docutils literal notranslate"><span class="pre">/tmp</span></code>; если там маленький
-<code class="docutils literal notranslate"><span class="pre">tmpfs</span></code>, укажите каталог на диске, например <code class="docutils literal notranslate"><span class="pre">--tmpdir</span> <span class="pre">/var/tmp</span></code>.
-Полный список ключей выводит <code class="docutils literal notranslate"><span class="pre">./run_one_app.sh</span> <span class="pre">--help</span></code>.</p>
+<p>Полный список ключей выводит <code class="docutils literal notranslate"><span class="pre">./run_one_app.sh</span> <span class="pre">--help</span></code>.</p>
 <p>Примеры:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./run_one_app.sh<span class="w"> </span>--ip<span class="w"> </span><span class="m">192</span>.168.1.10
 $<span class="w"> </span>./run_one_app.sh<span class="w"> </span>--hostname<span class="w"> </span>prod-oee
@@ -282,8 +297,8 @@ $<span class="w"> </span>./run_one_app.sh<span class="w"> </span>--mirror<span c
 сам, один раз пересоберите образы: <code class="docutils literal notranslate"><span class="pre">./run_one_app.sh</span> <span class="pre">--build</span> <span class="pre">true</span></code>.</p>
 </div>
 </section>
-<section id="id8">
-<h2>Зеркало образов<a class="headerlink" href="#id8" title="Ссылка на этот заголовок"></a></h2>
+<section id="id9">
+<h2>Зеркало образов<a class="headerlink" href="#id9" title="Ссылка на этот заголовок"></a></h2>
 <p>Если Docker Hub с сервера недоступен, базовые образы можно скачивать
 с зеркала — registry, где заранее опубликован нужный платформе набор
 образов. Адрес задаётся переменной <code class="docutils literal notranslate"><span class="pre">PRS_REGISTRY_MIRROR</span></code> или ключом
@@ -318,8 +333,8 @@ PRS_REGISTRY_MIRROR=http://127.0.0.1:5000
 <code class="docutils literal notranslate"><span class="pre">PRS_REGISTRY_MIRROR=</span></code>. Если все образы уже загружены на сервер,
 проверку можно пропустить: <code class="docutils literal notranslate"><span class="pre">PRS_SKIP_IMAGE_PULL=1</span> <span class="pre">./run_one_app.sh</span></code>.</p>
 </section>
-<section id="id9">
-<h2>Остановка платформы<a class="headerlink" href="#id9" title="Ссылка на этот заголовок"></a></h2>
+<section id="id10">
+<h2>Остановка платформы<a class="headerlink" href="#id10" title="Ссылка на этот заголовок"></a></h2>
 <p>Из каталога со скриптом <code class="docutils literal notranslate"><span class="pre">./run_one_app.sh</span></code> выполните <code class="docutils literal notranslate"><span class="pre">down</span></code> для того же
 набора compose-файлов, с которым платформа запускалась:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>--env-file<span class="w"> </span>docker/compose/.cont_one_app.env<span class="w"> </span><span class="se">\</span>
@@ -344,7 +359,7 @@ PRS_REGISTRY_MIRROR=http://127.0.0.1:5000
 видеоархив. Следующий <code class="docutils literal notranslate"><span class="pre">./run_one_app.sh</span></code> подхватит их.</p>
 </section>
 <section id="optional-services">
-<span id="id10"></span><h2>Дополнительные сервисы<a class="headerlink" href="#optional-services" title="Ссылка на этот заголовок"></a></h2>
+<span id="id11"></span><h2>Дополнительные сервисы<a class="headerlink" href="#optional-services" title="Ссылка на этот заголовок"></a></h2>
 <p>Некоторые сервисы нужны не каждому заказчику. Они не входят ни в команду
 <code class="docutils literal notranslate"><span class="pre">./run_one_app.sh</span></code>, ни в архив <code class="docutils literal notranslate"><span class="pre">peresvet-product-*.tar.gz</span></code>, и их ставят
 после того, как платформа уже запущена.</p>
@@ -358,7 +373,7 @@ PRS_REGISTRY_MIRROR=http://127.0.0.1:5000
 и распознавание видео.</p></li>
 </ul>
 <section id="optional-own-port">
-<span id="id11"></span><h3>Сервис со своим портом<a class="headerlink" href="#optional-own-port" title="Ссылка на этот заголовок"></a></h3>
+<span id="id12"></span><h3>Сервис со своим портом<a class="headerlink" href="#optional-own-port" title="Ссылка на этот заголовок"></a></h3>
 <p>Такой сервис узнаётся по compose-файлу: в нём есть секция <code class="docutils literal notranslate"><span class="pre">ports:</span></code>,
 и к нему не прилагается файл для <code class="docutils literal notranslate"><span class="pre">config/nginx/optional/</span></code>.</p>
 <ol class="arabic">
@@ -445,12 +460,12 @@ compose-файлом, без файлов ядра:</p>
 <span class="w">    </span>stop<span class="w"> </span>&lt;сервис&gt;
 </pre></div>
 </div>
-<p>Команда остановки платформы из раздела <a class="reference internal" href="#id9">Остановка платформы</a>
+<p>Команда остановки платформы из раздела <a class="reference internal" href="#id10">Остановка платформы</a>
 дополнительные сервисы не затрагивает: их compose-файлов в ней нет.</p>
 </section>
 </section>
-<section id="id12">
-<h2>Сборка дистрибутива<a class="headerlink" href="#id12" title="Ссылка на этот заголовок"></a></h2>
+<section id="id13">
+<h2>Сборка дистрибутива<a class="headerlink" href="#id13" title="Ссылка на этот заголовок"></a></h2>
 <p>Архив для релиза собирают из корня репозитория:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./packaging/build_product_distribution.sh
 $<span class="w"> </span>./packaging/build_product_distribution.sh<span class="w"> </span>--output<span class="w"> </span>dist/peresvet-product-&lt;tag&gt;.tar.gz

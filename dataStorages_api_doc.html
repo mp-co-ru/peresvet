@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Хранилища данных &mdash; документация МПК-Пересвет v0.29.0</title>
+  <title>Хранилища данных &mdash; документация МПК-Пересвет v0.30.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=399dde07"></script>
+      <script src="_static/documentation_options.js?v=62c6f60e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -24,8 +24,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
-    <link rel="next" title="Расписания" href="schedules.html" />
-    <link rel="prev" title="Коннекторы" href="connectors.html" /> 
+    <link rel="next" title="Папки" href="folders.html" />
+    <link rel="prev" title="Расписания" href="schedules.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -37,7 +37,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.29.0</div>
+  <div class="prs-version">v0.30.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -60,11 +60,14 @@
 <p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
-<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
-<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
-<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storages_guide.html">Хранилища данных</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules_guide.html">Расписания</a></li>
 <li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
 </ul>
@@ -76,21 +79,26 @@
 <p class="caption" role="heading"><span class="caption-text">Справочник</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="api.html#id2">Общие правила</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="api.html#id3">Разделы</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id2">Адрес и формат</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#get">Параметры запросов GET</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id3">Ответы и ошибки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id4">Служебные запросы</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="api.html#id5">Разделы справочника</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="api_nodes.html">Узлы модели: общие правила</a></li>
 <li class="toctree-l3"><a class="reference internal" href="objects.html">Объекты</a></li>
-<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
+<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
+<li class="toctree-l3"><a class="reference internal" href="methods_api_doc.html">Методы</a></li>
 <li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
+<li class="toctree-l3"><a class="reference internal" href="schedules.html">Расписания</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Хранилища данных</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#dataStorages_api_crud_svc.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#dataStorages_api_crud_svc.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id2">Тип и конфигурация</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Привязка тегов и тревог</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id4">Чтение привязок</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="schedules.html">Расписания</a></li>
-<li class="toctree-l3"><a class="reference internal" href="methods_api_doc.html">Методы</a></li>
-<li class="toctree-l3"><a class="reference internal" href="data_api.html">Запись и чтение данных</a></li>
+<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_api.html">Данные тегов</a></li>
 </ul>
 </li>
 </ul>
@@ -122,74 +130,112 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-dataStorages_api_crud_svc">
-<span id="id1"></span><h1>Хранилища данных<a class="headerlink" href="#module-dataStorages_api_crud_svc" title="Ссылка на этот заголовок"></a></h1>
-<p>Модуль содержит примеры запросов и ответов на них, параметров которые могут входить в
-запрос, в сервисе dataStorages.</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="dataStorages_api_crud_svc.create">
-<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">dataStorages_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dataStorages_api_crud_svc.create" title="Ссылка на это определение"></a></dt>
-<dd><p>Метод добавляет хранилище данных.</p>
-<ul class="simple">
-<li><p><strong>parentId</strong> (str) - id пользовательской папки <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code> в ветке
-хранилищ. Если поле пустое, хранилище создаётся в корне <code class="docutils literal notranslate"><span class="pre">dataStorages</span></code>.</p></li>
-</ul>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="dataStorages_api_crud_svc.delete">
-<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">dataStorages_api_crud_svc.</span></span><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NodeDelete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dataStorages_api_crud_svc.delete" title="Ссылка на это определение"></a></dt>
-<dd><p>Удаление хранилища данных.</p>
-<p><strong>Запрос:</strong></p>
-<blockquote>
-<div><div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id2">
-<p><span class="caption-text">http</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">DELETE</span> <span class="nn">/v1/dataStorages/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
-<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"id of a dataStorage to delete"</span>
+  <section id="id1">
+<h1>Хранилища данных<a class="headerlink" href="#id1" title="Ссылка на этот заголовок"></a></h1>
+<p>Какие бывают хранилища и как их настраивать, описано в разделе
+<a class="reference internal" href="storages_guide.html#storages-guide"><span class="std std-ref">Хранилища данных</span></a>.</p>
+<p>Адрес — <code class="docutils literal notranslate"><span class="pre">/v1/dataStorages/</span></code>. Запросы те же, что у всех узлов модели
+(<a class="reference internal" href="api_nodes.html"><span class="doc">Узлы модели: общие правила</span></a>). Родитель хранилища — пользовательская папка в ветке
+хранилищ; без <code class="docutils literal notranslate"><span class="pre">parentId</span></code> хранилище создаётся в корне ветки.</p>
+<section id="id2">
+<h2>Тип и конфигурация<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
+<p>Тип хранилища задаёт <code class="docutils literal notranslate"><span class="pre">prsEntityTypeCode</span></code>, подключение —
+<code class="docutils literal notranslate"><span class="pre">prsJsonConfigString</span></code>:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 10.0%" />
+<col style="width: 26.0%" />
+<col style="width: 64.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Код</p></th>
+<th class="head"><p>Тип</p></th>
+<th class="head"><p>Конфигурация</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>PostgreSQL (по умолчанию)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{&quot;dsn&quot;:</span> <span class="pre">&quot;postgres://&lt;пользователь&gt;:&lt;пароль&gt;&#64;&lt;сервер&gt;:5432/&lt;база&gt;&quot;}</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>VictoriaMetrics</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{&quot;putUrl&quot;:</span> <span class="pre">&quot;http://&lt;сервер&gt;:4242/api/put&quot;,</span> <span class="pre">&quot;getUrl&quot;:</span> <span class="pre">&quot;http://&lt;сервер&gt;:8428/api/v1/export&quot;}</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">2</span></code></p></td>
+<td><p>Интеграционное</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{&quot;dsn&quot;:</span> <span class="pre">&quot;postgresql://&lt;пользователь&gt;:&lt;пароль&gt;&#64;&lt;сервер&gt;:5432/&lt;база&gt;&quot;}</span></code>,
+см. <a class="reference internal" href="integrational_v2.html#integrational-v2"><span class="std std-ref">Интеграционные хранилища</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">3</span></code></p></td>
+<td><p>Видеоархив</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{&quot;archivePath&quot;:</span> <span class="pre">&quot;/var/lib/peresvet/video&quot;,</span> <span class="pre">&quot;retentionHours&quot;:</span> <span class="pre">24}</span></code>,
+см. <a class="reference internal" href="video.html#video-cameras"><span class="std std-ref">Подключение видеокамер</span></a></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id3">
+<h2>Привязка тегов и тревог<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
+<p>Теги и тревоги привязывают к хранилищу полями <code class="docutils literal notranslate"><span class="pre">linkedTags</span></code>
+и <code class="docutils literal notranslate"><span class="pre">linkedAlerts</span></code> в запросах <code class="docutils literal notranslate"><span class="pre">POST</span></code> и <code class="docutils literal notranslate"><span class="pre">PUT</span></code>, отвязывают — полями
+<code class="docutils literal notranslate"><span class="pre">unlinkTags</span></code> и <code class="docutils literal notranslate"><span class="pre">unlinkAlerts</span></code> в запросе <code class="docutils literal notranslate"><span class="pre">PUT</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>PUT /v1/dataStorages/
+</pre></div>
+</div>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id хранилища&gt;"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"linkedTags"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id тега&gt;"</span><span class="p">}],</span>
+<span class="w">  </span><span class="nt">"linkedAlerts"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"alertId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id тревоги&gt;"</span><span class="p">}],</span>
+<span class="w">  </span><span class="nt">"unlinkTags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"&lt;id другого тега&gt;"</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"unlinkAlerts"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"&lt;id другой тревоги&gt;"</span><span class="p">]</span>
 <span class="p">}</span>
 </pre></div>
 </div>
+<p>При привязке хранилище само заводит место для данных: в PostgreSQL —
+таблицу <code class="docutils literal notranslate"><span class="pre">t_&lt;id</span> <span class="pre">тега&gt;</span></code> для тега и <code class="docutils literal notranslate"><span class="pre">a_&lt;id</span> <span class="pre">тревоги&gt;</span></code> для тревоги.
+При отвязке эта таблица удаляется вместе с историей.</p>
+<div class="admonition warning">
+<p class="admonition-title">Предупреждение</p>
+<p>PostgreSQL создаёт таблицу заново при каждой привязке. Если передать
+в <code class="docutils literal notranslate"><span class="pre">linkedTags</span></code> тег, который уже привязан к этому хранилищу, его
+история будет стёрта. Передавайте в <code class="docutils literal notranslate"><span class="pre">linkedTags</span></code> только новые теги.</p>
 </div>
-<div class="http-example-response docutils container" id="id3">
-<p><span class="caption-text">response</span></p>
-<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
-<span class="na">Content-Type</span>: <span class="s">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
-<span class="na">Content-type</span>: <span class="s">application/json</span>
-
-<span class="w">    </span><span class="kc">null</span>
+<p>Тег можно привязать к нескольким хранилищам: значения пишутся в каждое.
+Тег типа «Видеопоток» к хранилищу истории не привязывается: только
+к видеоархиву.</p>
+</section>
+<section id="id4">
+<h2>Чтение привязок<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/dataStorages/?getLinkedTags=true&amp;getLinkedAlerts=true</span></code>
+добавляет к каждому хранилищу списки привязок:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id хранилища&gt;"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"psql"</span><span class="p">]},</span>
+<span class="w">      </span><span class="nt">"linkedTags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id тега&gt;"</span><span class="p">,</span><span class="w"> </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id тега&gt;"</span><span class="p">,</span><span class="w"> </span><span class="nt">"prsStore"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"table"</span><span class="p">:</span><span class="w"> </span><span class="s2">"t_&lt;id тега&gt;"</span><span class="p">}}}</span>
+<span class="w">      </span><span class="p">],</span>
+<span class="w">      </span><span class="nt">"linkedAlerts"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span><span class="nt">"alertId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id тревоги&gt;"</span><span class="p">,</span><span class="w"> </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"cn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id тревоги&gt;"</span><span class="p">,</span><span class="w"> </span><span class="nt">"prsStore"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"table"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a_&lt;id тревоги&gt;"</span><span class="p">}}}</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
 </pre></div>
 </div>
-</div>
-</div>
-<ul class="simple">
-<li><p><strong>id</strong> (str | list[str]) - идентификатор(ы) удаляемого хранилища.</p></li>
-</ul>
-</div></blockquote>
-<p><strong>Ответ:</strong></p>
-<blockquote>
-<div><ul class="simple">
-<li><p>null - в случае успешного запроса.</p></li>
-<li><p><strong>detail</strong> (list) - детали ошибки.</p></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
+<p>API v2 (интеграционные хранилища с операциями) описан в разделе
+<a class="reference internal" href="integrational_v2.html#integrational-v2"><span class="std std-ref">Интеграционные хранилища</span></a>.</p>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
-        <a href="connectors.html" class="btn btn-neutral float-left" title="Коннекторы" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
-        <a href="schedules.html" class="btn btn-neutral float-right" title="Расписания" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="schedules.html" class="btn btn-neutral float-left" title="Расписания" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="folders.html" class="btn btn-neutral float-right" title="Папки" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

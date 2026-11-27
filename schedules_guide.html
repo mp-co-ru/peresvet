@@ -1,0 +1,204 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="ru" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Расписания &mdash; документация МПК-Пересвет v0.30.0</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5a2fdaf1" />
+
+  
+    <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=62c6f60e"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/sphinxcontrib-httpexample.js"></script>
+      <script src="_static/translations.js?v=cd1d70c9"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Интеграционные хранилища" href="integrational_v2.html" />
+    <link rel="prev" title="Методы" href="methods.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="index.html">
+    
+      <img src="_static/logo.png" class="logo" alt="Логотип"/>
+  </a>
+  <div class="prs-version">v0.30.0</div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Меню навигации">
+              <p class="caption" role="heading"><span class="caption-text">Знакомство</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="description.html">Описание</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terms.html">Терминология</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Компоненты системы</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Установка и сопровождение</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка и запуск</a></li>
+<li class="toctree-l1"><a class="reference internal" href="administration.html">Администрирование</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storages_guide.html">Хранилища данных</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Расписания</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Настройка</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Запуск метода</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Безопасность</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="security_extension_points.html">Точки расширения безопасности</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security_enterprise_setup.html">Настройка промышленной редакции</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Справочник</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Меню навигации для мобильных устройств" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">МПК-Пересвет</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Навигация по страницам">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Расписания</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/schedules_guide.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="schedules-guide">
+<span id="id1"></span><h1>Расписания<a class="headerlink" href="#schedules-guide" title="Ссылка на этот заголовок"></a></h1>
+<p>Расписание генерирует события по времени: раз в 15 минут, раз в час,
+раз в сутки. Само по себе оно ничего не делает — его выбирают инициатором
+вычислительного метода, и метод запускается при каждом срабатывании.
+Так считают сменные и суточные итоги, формируют отчёты, опрашивают
+внешние системы.</p>
+<section id="id2">
+<h2>Настройка<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
+<ol class="arabic simple">
+<li><p>В конфигураторе в меню папки «Расписания» выберите <strong>Новое расписание</strong>.</p></li>
+<li><p>Задайте начало, конец и шаг. Шаг указывают в секундах, минутах, часах
+или днях.</p></li>
+<li><p>Нажмите <strong>Записать</strong>.</p></li>
+</ol>
+<p>Если ничего не менять, расписание срабатывает раз в час, начиная с момента
+создания.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22.0%" />
+<col style="width: 78.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Поле</p></th>
+<th class="head"><p>Смысл</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Начало</p></td>
+<td><p>Момент первого срабатывания. Следующие идут через каждый шаг
+от него: при начале в 08:00 и шаге 8 часов — в 08:00, 16:00, 00:00.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Конец</p></td>
+<td><p>После этого момента расписание больше не срабатывает. Пусто —
+без конца.</p></td>
+</tr>
+<tr class="row-even"><td><p>Шаг</p></td>
+<td><p>Промежуток между срабатываниями — целое число не меньше 1.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Выключенное расписание (снят признак «Активный») не срабатывает.
+Изменения настроек применяются сразу.</p>
+</section>
+<section id="id3">
+<h2>Запуск метода<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
+<ol class="arabic simple">
+<li><p>Откройте вычислительный метод (тип <code class="docutils literal notranslate"><span class="pre">0</span></code>) у тега.</p></li>
+<li><p>На вкладке <strong>Инициаторы → Расписания</strong> выберите расписание.</p></li>
+<li><p>Запишите метод.</p></li>
+</ol>
+<p>При каждом срабатывании платформа вызывает метод с моментом срабатывания:
+параметры «Данные тега(-ов)» читают значения на этот момент, и результат
+записывается в тег с этой же меткой времени. Подробно — в разделе
+<a class="reference internal" href="methods.html"><span class="doc">Методы</span></a>.</p>
+<p>Одно расписание может запускать сколько угодно методов.</p>
+<p>Через API расписания создают запросом <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/schedules/</span></code>,
+см. <a class="reference internal" href="schedules.html"><span class="doc">Расписания</span></a>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
+        <a href="methods.html" class="btn btn-neutral float-left" title="Методы" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="integrational_v2.html" class="btn btn-neutral float-right" title="Интеграционные хранилища" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Авторские права 2026, ООО Матч Поинт Консалтинг. </p>
+  </div>
+
+  Собрано при помощи <a href="https://www.sphinx-doc.org/">Sphinx</a> с использованием
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">темы,</a>
+    предоставленной <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

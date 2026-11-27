@@ -1,6 +1,56 @@
 Расписания
 ~~~~~~~~~~
 
-.. automodule:: schedules_api_crud_svc
-   :members:
-   :exclude-members: ScheduleCreateAttributes, ScheduleCreate, ScheduleRead, OneScheduleInReadResult, ScheduleReadResult, ScheduleUpdate, SchedulesAPICRUD
+Как работают расписания, описано в разделе :ref:`schedules_guide`.
+
+Адрес — ``/v1/schedules/``. Запросы те же, что у всех узлов модели
+(:doc:`api_nodes`). Родитель расписания — пользовательская папка в ветке
+расписаний; без ``parentId`` расписание создаётся в корне ветки.
+
+Конфигурация расписания — ``prsJsonConfigString``:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 60 20
+
+   * - Ключ
+     - Смысл
+     - По умолчанию
+   * - ``start``
+     - Момент первого срабатывания, строка ISO 8601.
+     - момент создания
+   * - ``end``
+     - Момент, после которого расписание больше не срабатывает.
+       ``null`` — без конца.
+     - ``null``
+   * - ``interval_type``
+     - Единица шага: ``seconds``, ``minutes``, ``hours`` или ``days``.
+     - ``hours``
+   * - ``interval_value``
+     - Шаг — целое число не меньше 1.
+     - ``1``
+
+Пример — каждые 15 минут, начиная с полуночи 1 декабря 2026:
+
+.. code-block:: text
+
+   POST /v1/schedules/
+
+.. code-block:: json
+
+   {
+     "attributes": {
+       "cn": "Каждые 15 минут",
+       "prsJsonConfigString": {
+         "start": "2026-12-01T00:00:00+03:00",
+         "interval_type": "minutes",
+         "interval_value": 15
+       }
+     }
+   }
+
+Платформа хранит ``start`` и ``end`` в часовом поясе сервера. Неверный
+формат конфигурации — ответ ``422`` с описанием ожидаемого формата.
+
+Чтобы расписание запускало метод, добавьте его идентификатор
+в ``initiatedBy`` метода (:doc:`methods_api_doc`).

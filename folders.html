@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Папки &mdash; документация МПК-Пересвет v0.29.0</title>
+  <title>Папки &mdash; документация МПК-Пересвет v0.30.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=399dde07"></script>
+      <script src="_static/documentation_options.js?v=62c6f60e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -24,8 +24,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
-    <link rel="next" title="Коннекторы" href="connectors.html" />
-    <link rel="prev" title="Объекты" href="objects.html" /> 
+    <link rel="next" title="Данные тегов" href="data_api.html" />
+    <link rel="prev" title="Хранилища данных" href="dataStorages_api_doc.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -37,7 +37,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.29.0</div>
+  <div class="prs-version">v0.30.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -60,11 +60,14 @@
 <p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
-<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
-<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
-<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storages_guide.html">Хранилища данных</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules_guide.html">Расписания</a></li>
 <li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
 </ul>
@@ -76,17 +79,25 @@
 <p class="caption" role="heading"><span class="caption-text">Справочник</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="api.html#id2">Общие правила</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="api.html#id3">Разделы</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id2">Адрес и формат</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#get">Параметры запросов GET</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id3">Ответы и ошибки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id4">Служебные запросы</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="api.html#id5">Разделы справочника</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="api_nodes.html">Узлы модели: общие правила</a></li>
 <li class="toctree-l3"><a class="reference internal" href="objects.html">Объекты</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Папки</a></li>
-<li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
-<li class="toctree-l3"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a></li>
-<li class="toctree-l3"><a class="reference internal" href="schedules.html">Расписания</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
+<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
 <li class="toctree-l3"><a class="reference internal" href="methods_api_doc.html">Методы</a></li>
-<li class="toctree-l3"><a class="reference internal" href="data_api.html">Запись и чтение данных</a></li>
+<li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
+<li class="toctree-l3"><a class="reference internal" href="schedules.html">Расписания</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Папки</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id2">Чтение</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Правила</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="data_api.html">Данные тегов</a></li>
 </ul>
 </li>
 </ul>
@@ -177,30 +188,39 @@
 </table>
 <p>Тревоги папок не имеют: запрос <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/alerts/</span></code> с <code class="docutils literal notranslate"><span class="pre">&quot;folder&quot;:</span> <span class="pre">true</span></code>
 вернёт <code class="docutils literal notranslate"><span class="pre">422</span></code>.</p>
-<p>Правила:</p>
+<section id="id2">
+<h2>Чтение<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
+<p>Папки читают тем же <code class="docutils literal notranslate"><span class="pre">GET</span></code> сущности с фильтром по классу <code class="docutils literal notranslate"><span class="pre">prsFolder</span></code>.
+Вместо идентификатора в <code class="docutils literal notranslate"><span class="pre">base</span></code> можно указать имя корня ветки:
+<code class="docutils literal notranslate"><span class="pre">objects</span></code>, <code class="docutils literal notranslate"><span class="pre">tags</span></code>, <code class="docutils literal notranslate"><span class="pre">connectors</span></code>, <code class="docutils literal notranslate"><span class="pre">schedules</span></code>, <code class="docutils literal notranslate"><span class="pre">dataStorages</span></code>,
+<code class="docutils literal notranslate"><span class="pre">methods</span></code>.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /v1/objects/?base=objects&amp;scope=2&amp;filter={"objectClass":["prsFolder"]}
+</pre></div>
+</div>
+<p>Узлы внутри папки не являются прямыми потомками родителя папки:
+при <code class="docutils literal notranslate"><span class="pre">scope=1</span></code> от родителя их не видно, их возвращает <code class="docutils literal notranslate"><span class="pre">scope=2</span></code>.</p>
+</section>
+<section id="id3">
+<h2>Правила<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
 <ul class="simple">
 <li><p>Имя <code class="docutils literal notranslate"><span class="pre">system</span></code> зарезервировано.</p></li>
 <li><p>У папки хранятся только <code class="docutils literal notranslate"><span class="pre">cn</span></code>, <code class="docutils literal notranslate"><span class="pre">description</span></code>, <code class="docutils literal notranslate"><span class="pre">prsActive</span></code>
 и <code class="docutils literal notranslate"><span class="pre">prsIndex</span></code>.</p></li>
-<li><p>Папки читают тем же <code class="docutils literal notranslate"><span class="pre">GET</span></code> сущности с фильтром <code class="docutils literal notranslate"><span class="pre">objectClass=prsFolder</span></code>.
-Имя корня ветки (<code class="docutils literal notranslate"><span class="pre">objects</span></code>, <code class="docutils literal notranslate"><span class="pre">tags</span></code>, <code class="docutils literal notranslate"><span class="pre">connectors</span></code>, <code class="docutils literal notranslate"><span class="pre">schedules</span></code>,
-<code class="docutils literal notranslate"><span class="pre">dataStorages</span></code>, <code class="docutils literal notranslate"><span class="pre">methods</span></code>) можно указать в <code class="docutils literal notranslate"><span class="pre">base</span></code>.</p></li>
-<li><p>Узлы внутри папки не видны при <code class="docutils literal notranslate"><span class="pre">scope=1</span></code> от родителя папки, их
-возвращает <code class="docutils literal notranslate"><span class="pre">scope=2</span></code>.</p></li>
 <li><p>Изменение и удаление — <code class="docutils literal notranslate"><span class="pre">PUT</span></code> и <code class="docutils literal notranslate"><span class="pre">DELETE</span></code> той же сущности
 с идентификатором папки. Удаление удаляет всё содержимое папки.</p></li>
-<li><p>Перенести папку в другую ветку или внутрь её самой нельзя.</p></li>
+<li><p>Перенести папку в другую ветку или внутрь неё самой нельзя.</p></li>
 <li><p>Права на папку — права сущности её ветки (<code class="docutils literal notranslate"><span class="pre">prsObject.create</span></code> и т.д.),
 отдельных действий для папок нет.</p></li>
 </ul>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
-        <a href="objects.html" class="btn btn-neutral float-left" title="Объекты" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
-        <a href="connectors.html" class="btn btn-neutral float-right" title="Коннекторы" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="dataStorages_api_doc.html" class="btn btn-neutral float-left" title="Хранилища данных" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="data_api.html" class="btn btn-neutral float-right" title="Данные тегов" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

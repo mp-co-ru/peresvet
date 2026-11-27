@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Данные &mdash; документация МПК-Пересвет v0.29.0</title>
+  <title>Данные тегов &mdash; документация МПК-Пересвет v0.30.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=399dde07"></script>
+      <script src="_static/documentation_options.js?v=62c6f60e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -24,7 +24,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
-    <link rel="prev" title="Методы" href="methods_api_doc.html" /> 
+    <link rel="prev" title="Папки" href="folders.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -36,7 +36,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.29.0</div>
+  <div class="prs-version">v0.30.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -59,11 +59,14 @@
 <p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
-<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
-<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
-<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storages_guide.html">Хранилища данных</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules_guide.html">Расписания</a></li>
 <li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_data.html">Работа с видеоданными</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
 </ul>
@@ -75,19 +78,24 @@
 <p class="caption" role="heading"><span class="caption-text">Справочник</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="api.html#id2">Общие правила</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="api.html#id3">Разделы</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id2">Адрес и формат</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#get">Параметры запросов GET</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id3">Ответы и ошибки</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#id4">Служебные запросы</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="api.html#id5">Разделы справочника</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="api_nodes.html">Узлы модели: общие правила</a></li>
 <li class="toctree-l3"><a class="reference internal" href="objects.html">Объекты</a></li>
-<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
-<li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
-<li class="toctree-l3"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a></li>
-<li class="toctree-l3"><a class="reference internal" href="schedules.html">Расписания</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tags.html">Теги</a></li>
+<li class="toctree-l3"><a class="reference internal" href="alerts.html">Тревоги</a></li>
 <li class="toctree-l3"><a class="reference internal" href="methods_api_doc.html">Методы</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Запись и чтение данных</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#tags_app_api_svc.data_get"><code class="docutils literal notranslate"><span class="pre">data_get()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#tags_app_api_svc.data_set"><code class="docutils literal notranslate"><span class="pre">data_set()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="connectors.html">Коннекторы</a></li>
+<li class="toctree-l3"><a class="reference internal" href="schedules.html">Расписания</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dataStorages_api_doc.html">Хранилища данных</a></li>
+<li class="toctree-l3"><a class="reference internal" href="folders.html">Папки</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Данные тегов</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id2">Чтение</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Запись</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id4">Время в состояниях</a></li>
 </ul>
 </li>
 </ul>
@@ -111,7 +119,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="api.html">API платформы</a></li>
-      <li class="breadcrumb-item active">Данные</li>
+      <li class="breadcrumb-item active">Данные тегов</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/data_api.rst.txt" rel="nofollow"> Просмотреть исходный код страницы</a>
       </li>
@@ -121,212 +129,178 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-tags_app_api_svc">
-<span id="id1"></span><span id="data-api"></span><h1>Данные<a class="headerlink" href="#module-tags_app_api_svc" title="Ссылка на этот заголовок"></a></h1>
-<p>Запись и получение исторических данных.</p>
-<p>Подробно работа с историческими данными и примеры использования ключей в запросе
-рассмотрены в разделе <a class="reference internal" href="historical_data.html#historical-data"><span class="std std-ref">Исторические данные</span></a>.</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="tags_app_api_svc.data_get">
-<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">tags_app_api_svc.</span></span><span class="sig-name descname"><span class="pre">data_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tagId</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Query(None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">finish</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxCount</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actual</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeStep</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataGet</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tags_app_api_svc.data_get" title="Ссылка на это определение"></a></dt>
-<dd><p>Запрос исторических данных.</p>
-<p><strong>Пример запроса в формате JSON.</strong></p>
-<div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id2">
-<p><span class="caption-text">http</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">GET</span> <span class="nn">/v1/data/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
-<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"&lt;id_of_a_tag_to_read_from&gt;"</span><span class="p">],</span>
-<span class="w">    </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"actual"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"count"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"start"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;start_of_a_period&gt;"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"finish"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;end_of_a_period&gt;"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"timeStep"</span><span class="p">:</span><span class="w"> </span><span class="mi">60000000</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"maxCount"</span><span class="p">:</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span>
+  <section id="data-api">
+<span id="id1"></span><h1>Данные тегов<a class="headerlink" href="#data-api" title="Ссылка на этот заголовок"></a></h1>
+<p>Значения тегов читаются запросом <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/</span></code> и пишутся запросом
+<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/data/</span></code>. Каждое значение — точка <code class="docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y,</span> <span class="pre">q]</span></code>: метка времени,
+значение и код качества (<a class="reference internal" href="historical_data.html#qualitycodes"><span class="std std-ref">Коды качества</span></a>).</p>
+<section id="id2">
+<h2>Чтение<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/</span></code></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 18.0%" />
+<col style="width: 82.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Параметр</p></th>
+<th class="head"><p>Смысл</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tagId</span></code></p></td>
+<td><p>Тег или список тегов. Обязательный.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code></p></td>
+<td><p>Начало и конец периода: целое число микросекунд или строка
+ISO 8601. <code class="docutils literal notranslate"><span class="pre">finish</span></code> по умолчанию — текущий момент.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">count</span></code></p></td>
+<td><p>Сколько значений вернуть.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">timeStep</span></code></p></td>
+<td><p>Шаг между значениями в микросекундах.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">maxCount</span></code></p></td>
+<td><p>Наибольшее число значений в ответе (обычно ширина графика
+в пикселях).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">actual</span></code></p></td>
+<td><p>Только значения, реально записанные в хранилище, без вычисленных.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">value</span></code></p></td>
+<td><p>Отбор по значению.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">format</span></code></p></td>
+<td><p>Метки времени строками ISO 8601 в часовом поясе сервера.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">operation</span></code>, <code class="docutils literal notranslate"><span class="pre">params</span></code></p></td>
+<td><p>Операция и её параметры для интеграционного тега
+(<a class="reference internal" href="integrational_v2.html#integrational-v2"><span class="std std-ref">Интеграционные хранилища</span></a>).</p></td>
+</tr>
+</tbody>
+</table>
+<p>Без <code class="docutils literal notranslate"><span class="pre">start</span></code> и <code class="docutils literal notranslate"><span class="pre">count</span></code> запрос возвращает текущее значение тега на момент
+<code class="docutils literal notranslate"><span class="pre">finish</span></code>. Как сочетаются ключи и что именно возвращается в каждом
+случае, подробно разобрано с примерами в разделе <a class="reference internal" href="historical_data.html#historical-data"><span class="std std-ref">Исторические данные</span></a>.</p>
+<p>Ответ:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id тега&gt;"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="s2">"2026-11-17T19:10:00+03:00"</span><span class="p">,</span><span class="w"> </span><span class="mf">21.5</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="s2">"2026-11-17T19:11:00+03:00"</span><span class="p">,</span><span class="w"> </span><span class="mf">21.7</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-</div>
-<div class="http-example-response docutils container" id="id3">
-<p><span class="caption-text">response</span></p>
-<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
-<span class="na">Content-Type</span>: <span class="s">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
-<span class="na">Content-type</span>: <span class="s">application/json</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id_of_a_tag&gt;"</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">                </span><span class="p">[</span>
-<span class="w">                    </span><span class="s2">"&lt;timestamp&gt;"</span><span class="p">,</span>
-<span class="w">                    </span><span class="mf">1.0</span><span class="p">,</span>
-<span class="w">                    </span><span class="kc">null</span>
-<span class="w">                </span><span class="p">],</span>
-<span class="w">                </span><span class="p">[</span>
-<span class="w">                    </span><span class="s2">"&lt;timestamp&gt;"</span><span class="p">,</span>
-<span class="w">                    </span><span class="mf">7.0</span><span class="p">,</span>
-<span class="w">                    </span><span class="kc">null</span>
-<span class="w">                </span><span class="p">]</span>
-<span class="w">            </span><span class="p">]</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">]</span>
+<p>Выключенный тег и тег, которого нет, в ответ не попадают. Если тег
+не привязан ни к хранилищу, ни к методу чтения, ответ — <code class="docutils literal notranslate"><span class="pre">424</span></code>.</p>
+<p>Другие параметры адреса, не перечисленные в таблице, передаются методу
+чтения тега как часть запроса клиента (см. <a class="reference internal" href="methods.html"><span class="doc">Методы</span></a>).</p>
+<p>Тег «Видеопоток» отвечает на этот запрос не точками, а видео или снимком,
+см. <a class="reference internal" href="video_tag.html#video-tag"><span class="std std-ref">Видеопоток: API</span></a>.</p>
+</section>
+<section id="id3">
+<h2>Запись<a class="headerlink" href="#id3" title="Ссылка на этот заголовок"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/data/</span></code></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id тега&gt;"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="s2">"2026-11-17T19:10:00+03:00"</span><span class="p">,</span><span class="w"> </span><span class="mf">21.5</span><span class="p">],</span>
+<span class="w">        </span><span class="p">[</span><span class="mi">1794931860000000</span><span class="p">,</span><span class="w"> </span><span class="mf">21.7</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id другого тега&gt;"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[[</span><span class="s2">"Насос включён"</span><span class="p">]]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-</div>
-</div>
-<p><strong>Пример query запроса.</strong></p>
-<div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id4">
-<p><span class="caption-text">http</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">GET</span> <span class="nn">/v1/data/?q={"tagId":"&lt;id_of_a_tag&gt;","format":true,"actual":false,"count":100,"start":"&lt;start_of_a_period&gt;","finish":"&lt;end_of_a_period&gt;"}</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
-<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
-</pre></div>
-</div>
-</div>
-<div class="http-example-response docutils container" id="id5">
-<p><span class="caption-text">response</span></p>
-<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
-<span class="na">Content-Type</span>: <span class="s">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
-<span class="na">Content-type</span>: <span class="s">application/json</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id_of_a_tag&gt;"</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">                </span><span class="p">[</span>
-<span class="w">                    </span><span class="s2">"&lt;timestamp&gt;"</span><span class="p">,</span>
-<span class="w">                    </span><span class="mf">1.0</span><span class="p">,</span>
-<span class="w">                    </span><span class="kc">null</span>
-<span class="w">                </span><span class="p">],</span>
-<span class="w">                </span><span class="p">[</span>
-<span class="w">                    </span><span class="s2">"&lt;timestamp&gt;"</span><span class="p">,</span>
-<span class="w">                    </span><span class="mf">7.0</span><span class="p">,</span>
-<span class="w">                    </span><span class="kc">null</span>
-<span class="w">                </span><span class="p">]</span>
-<span class="w">            </span><span class="p">]</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">]</span>
+<p><code class="docutils literal notranslate"><span class="pre">data</span></code> — список тегов, у каждого свой список точек. Точку можно задать
+так:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 24.0%" />
+<col style="width: 76.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Точка</p></th>
+<th class="head"><p>Что записывается</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y,</span> <span class="pre">q]</span></code></p></td>
+<td><p>Значение <code class="docutils literal notranslate"><span class="pre">y</span></code> с меткой <code class="docutils literal notranslate"><span class="pre">x</span></code> и кодом качества <code class="docutils literal notranslate"><span class="pre">q</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y]</span></code></p></td>
+<td><p>Значение <code class="docutils literal notranslate"><span class="pre">y</span></code> с меткой <code class="docutils literal notranslate"><span class="pre">x</span></code>, качество нормальное (<code class="docutils literal notranslate"><span class="pre">null</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">[y]</span></code></p></td>
+<td><p>Значение <code class="docutils literal notranslate"><span class="pre">y</span></code> с текущей меткой времени.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">null</span></code> с текущей меткой времени.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Метка <code class="docutils literal notranslate"><span class="pre">x</span></code> — целое число микросекунд с 1970-01-01 UTC или строка
+ISO 8601. Строка без часового пояса считается временем UTC. Во второй
+точке примера <code class="docutils literal notranslate"><span class="pre">1794931860000000</span></code> — это <code class="docutils literal notranslate"><span class="pre">2026-11-17T16:11:00Z</span></code>, то есть
+19:11 по Москве.</p>
+<p>Для интеграционного тега рядом с <code class="docutils literal notranslate"><span class="pre">data</span></code> можно передать <code class="docutils literal notranslate"><span class="pre">operation</span></code>
+(имя SET-операции) и <code class="docutils literal notranslate"><span class="pre">params</span></code> (её параметры), см. <a class="reference internal" href="integrational_v2.html#integrational-v2"><span class="std std-ref">Интеграционные хранилища</span></a>.</p>
+<p>Ответ <code class="docutils literal notranslate"><span class="pre">200</span></code> — пустой объект. Для интеграционного тега ответ может
+содержать <code class="docutils literal notranslate"><span class="pre">data</span></code> с тем, что вернула операция.</p>
+<p>Не каждая точка попадает в хранилище:</p>
+<ul class="simple">
+<li><p>в выключенный тег ничего не пишется;</p></li>
+<li><p>точка, отличающаяся от последней записанной меньше чем на значимое
+отклонение тега (<code class="docutils literal notranslate"><span class="pre">prsMaxLineDev</span></code>), отбрасывается;</p></li>
+<li><p>точка с другим кодом качества записывается всегда;</p></li>
+<li><p>повтор <code class="docutils literal notranslate"><span class="pre">null</span></code> с тем же качеством отбрасывается.</p></li>
+</ul>
+<p>Подробно о значимом отклонении — в описании атрибутов тега
+(<a class="reference internal" href="tags.html"><span class="doc">Теги</span></a>).</p>
+</section>
+<section id="id4">
+<h2>Время в состояниях<a class="headerlink" href="#id4" title="Ссылка на этот заголовок"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/datafunc/</span></code> принимает те же параметры, что и <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/data/</span></code>,
+и считает, сколько времени тег провёл в каждом своём значении за период.
+Удобно для тегов, в которых записан код состояния: «работа», «простой»,
+«авария».</p>
+<p>Без <code class="docutils literal notranslate"><span class="pre">timeStep</span></code> по каждому тегу приходит одна точка на момент
+<code class="docutils literal notranslate"><span class="pre">finish</span></code>. Её значение — объект «код состояния → длительность
+в микросекундах»:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"tagId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;id тега&gt;"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">[</span><span class="s2">"2026-11-17T20:00:00+03:00"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="nt">"1"</span><span class="p">:</span><span class="w"> </span><span class="mi">3000000000</span><span class="p">,</span><span class="w"> </span><span class="nt">"2"</span><span class="p">:</span><span class="w"> </span><span class="mi">600000000</span><span class="p">},</span><span class="w"> </span><span class="kc">null</span><span class="p">]</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-</div>
-</div>
-<p><strong>Параметры запроса:</strong></p>
-<blockquote>
-<div><ul class="simple">
-<li><p><strong>tagId</strong> (str | [str]): тег или список тегов, по которым запрашиваются данные;</p></li>
-<li><p><strong>format</strong> (bool): флаг перевода меток времени в ответе в формат ISO8601;</p></li>
-<li><p><strong>actual</strong> (bool): если = true, то возвращаются только реально записанные в базу данные,
-без интерполируемых значений на границах диапазона;</p></li>
-<li><p><strong>count</strong> (int): количество значений тега, которое необходимо возвратить;</p></li>
-<li><p><strong>start</strong> (int | str): начало запрашиваемого периода;</p></li>
-<li><p><strong>finish</strong> (int | str): окончание запрашиваемого периода;</p></li>
-<li><p><strong>timeStep</strong> (int): шаг в микросекундах между соседними возвращаемыми значениями тега;</p></li>
-<li><p><strong>maxCount</strong> (int): максимальное количество значений одного тега в ответе на запрос;</p></li>
-<li><p><strong>value</strong> (any): фильтр на значения тега.</p></li>
-<li><p><strong>operation</strong> (str): cn операции интеграционного тега. Если не указан
-и GET-операция одна, берётся она. Если их несколько, берётся операция
-с <code class="docutils literal notranslate"><span class="pre">prsDefault</span> <span class="pre">=</span> <span class="pre">true</span></code>.</p></li>
-<li><p><strong>params</strong> (json): необязательные параметры запроса (например
-<code class="docutils literal notranslate"><span class="pre">allRecordsAsValue</span></code> для интеграционных табличных тегов).
-Имя операции в этот объект не кладётся.</p></li>
-<li><p>Любые другие query-параметры (например <code class="docutils literal notranslate"><span class="pre">calendarTagId</span></code>) передаются в цепочку
-чтения данных и попадают в <code class="docutils literal notranslate"><span class="pre">clientRequest</span></code> виртуального метода для параметров
-с источником «данные из запроса клиента».</p></li>
-</ul>
-</div></blockquote>
-<p><strong>Ответ:</strong></p>
-<blockquote>
-<div><ul class="simple">
-<li><p><strong>data</strong> (list) - возвращаемые данные;</p></li>
-<li><p><strong>detail</strong> (str) - пояснение к возникшей ошибке.</p></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="tags_app_api_svc.data_set">
-<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">tags_app_api_svc.</span></span><span class="sig-name descname"><span class="pre">data_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AllData</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ErrorHandler</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(dependency=None,</span> <span class="pre">use_cache=True,</span> <span class="pre">scope=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tags_app_api_svc.data_set" title="Ссылка на это определение"></a></dt>
-<dd><p>Запись исторических данных тега.</p>
-<div class="http-example docutils container">
-<div class="http-example-http docutils container" id="id6">
-<p><span class="caption-text">http</span></p>
-<div class="highlight-http notranslate"><div class="highlight"><pre><span></span><span class="nf">POST</span> <span class="nn">/v1/data/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
-<span class="na">Host</span><span class="o">:</span> <span class="l">localhost</span>
-<span class="na">Accept</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
-<span class="na">Authorization</span><span class="o">:</span> <span class="l">No Auth</span>
-
-<span class="p">{</span>
-<span class="w">	</span><span class="nt">"data"</span><span class="p">:[{</span>
-<span class="w">	    </span><span class="nt">"tagId"</span><span class="p">:</span><span class="s2">"&lt;id_of_a_tag&gt;"</span><span class="p">,</span>
-<span class="w">	    </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">	        </span><span class="p">[</span><span class="s2">"value"</span><span class="p">,</span><span class="w"> </span><span class="s2">"&lt;time_stamp&gt;"</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">]</span>
-<span class="w">	    </span><span class="p">]</span>
-<span class="w">	</span><span class="p">}]</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-<div class="http-example-response docutils container" id="id7">
-<p><span class="caption-text">response</span></p>
-<div class="highlight-http-response notranslate"><div class="highlight"><pre><span></span><span class="kr">HTTP/1.1 200 OK</span>
-<span class="na">Content-Type</span>: <span class="s">application/json</span>
-<span class="na">Access-Control-Allow-Origin</span>: <span class="s">*</span>
-<span class="na">Content-type</span>: <span class="s">application/json</span>
-
-<span class="kc">null</span>
-</pre></div>
-</div>
-</div>
-</div>
-<p><strong>Параметры запроса:</strong></p>
-<blockquote>
-<div><ul class="simple">
-<li><p><strong>data</strong> ([json]) - массив данных тегов; каждый элемент этого массива -
-json с данными одного тега. Json имеет формат:</p>
-<ul>
-<li><p><strong>tagId</strong> (str) - id тега;</p></li>
-<li><p><strong>operation</strong> (str) - необязательное имя операции интеграционного тега.
-Если не указано и SET-операция одна, берётся она. Если их несколько,
-берётся операция с <code class="docutils literal notranslate"><span class="pre">prsDefault</span> <span class="pre">=</span> <span class="pre">true</span></code>.</p></li>
-<li><p><strong>params</strong> (json) - необязательные параметры операции.</p></li>
-<li><p><strong>data</strong> ([[value, timestamp, quality_code]]) - массив значений тега; каждое значение -
-массив из трёх элементов: значение тега, метка времени (целое число микросекунд или
-строка в формате ISO8601). В случае отсутствия метки времени берётся текущий момент времени.
-В случае отсутствия кода качества берётся значение <code class="docutils literal notranslate"><span class="pre">null</span></code>, означающее нормальное качество.</p></li>
-</ul>
-</li>
-</ul>
-</div></blockquote>
-<p><strong>Ответ:</strong></p>
-<blockquote>
-<div><p>null</p>
-</div></blockquote>
-</dd></dl>
-
+<p>С <code class="docutils literal notranslate"><span class="pre">timeStep</span></code> период делится на интервалы такой длины, и такой объект
+приходит для каждого интервала.</p>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
-        <a href="methods_api_doc.html" class="btn btn-neutral float-left" title="Методы" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
+        <a href="folders.html" class="btn btn-neutral float-left" title="Папки" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
     </div>
 
   <hr/>

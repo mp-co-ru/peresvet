@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Видеопоток: API &mdash; документация МПК-Пересвет v0.29.0</title>
+  <title>Видеопоток: API &mdash; документация МПК-Пересвет v0.30.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/peresvet_middle.png"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=399dde07"></script>
+      <script src="_static/documentation_options.js?v=62c6f60e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/sphinxcontrib-httpexample.js"></script>
@@ -24,7 +24,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Алфавитный указатель" href="genindex.html" />
     <link rel="search" title="Поиск" href="search.html" />
-    <link rel="next" title="Интеграционные хранилища" href="integrational_v2.html" />
+    <link rel="next" title="Создание экранов в Grafana" href="grafana/grafana_integration.html" />
     <link rel="prev" title="Подключение видеокамер" href="video.html" /> 
 </head>
 
@@ -37,7 +37,7 @@
     
       <img src="_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.29.0</div>
+  <div class="prs-version">v0.30.0</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -60,9 +60,13 @@
 <p class="caption" role="heading"><span class="caption-text">Работа с платформой</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="configurator/configurator.html">Конфигуратор модели</a></li>
-<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
-<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
 <li class="toctree-l1"><a class="reference internal" href="connectors_guide.html">Коннекторы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storages_guide.html">Хранилища данных</a></li>
+<li class="toctree-l1"><a class="reference internal" href="historical_data.html">Исторические данные</a></li>
+<li class="toctree-l1"><a class="reference internal" href="alerts_guide.html">Тревоги</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Методы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schedules_guide.html">Расписания</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="video_data.html">Работа с видеоданными</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="video.html">Подключение видеокамер</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Видеопоток: API</a><ul>
@@ -70,13 +74,13 @@
 <li class="toctree-l3"><a class="reference internal" href="#id2">Живой поток</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id3">Своя страница</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id4">Управление камерой</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id5">Ошибки</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id6">Устройство видеосервисов</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Звук в камеру</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Ошибки</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Устройство видеосервисов</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="integrational_v2.html">Интеграционные хранилища</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grafana/grafana_integration.html">Создание экранов в Grafana</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP-сервер</a></li>
 </ul>
@@ -159,7 +163,7 @@
 <p>Запись за период не лежит на диске готовым файлом. Сервис захвата находит
 файлы архива, покрывающие период, склеивает их и перекодирует в один mp4
 (H.264). На это отводится до 180 секунд, и всё это время клиент ждёт ответ.</p>
-<p>Если записи нет, вместо картинки приходит JSON с ошибкой (см. <a class="reference internal" href="#id5">Ошибки</a>).</p>
+<p>Если записи нет, вместо картинки приходит JSON с ошибкой (см. <a class="reference internal" href="#id6">Ошибки</a>).</p>
 </section>
 <section id="id2">
 <h2>Живой поток<a class="headerlink" href="#id2" title="Ссылка на этот заголовок"></a></h2>
@@ -294,7 +298,23 @@ JSON. Обязательные поля — <code class="docutils literal notran
 не привязан к камере — 424, камера отклонила команду — 502.</p>
 </section>
 <section id="id5">
-<h2>Ошибки<a class="headerlink" href="#id5" title="Ссылка на этот заголовок"></a></h2>
+<h2>Звук в камеру<a class="headerlink" href="#id5" title="Ссылка на этот заголовок"></a></h2>
+<p>Кнопка «Микрофон» в конфигураторе передаёт звук в динамик камеры
+запросами <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/talk/?tagId=&lt;id</span> <span class="pre">тега&gt;&amp;phase=&lt;фаза&gt;</span></code>:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">phase=open</span></code> — начать разговор. Одновременно с камерой может
+говорить только один клиент: второй получит ответ <code class="docutils literal notranslate"><span class="pre">409</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phase=write</span></code> — тело запроса — очередная порция звука в формате
+G.711 A-law, 8000 Гц. Таких запросов идёт столько, сколько длится
+разговор.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phase=close</span></code> — закончить разговор.</p></li>
+</ol>
+<p>Для разговора камере нужен пароль: в <code class="docutils literal notranslate"><span class="pre">rtspUrl</span></code> или в <code class="docutils literal notranslate"><span class="pre">onvifPassword</span></code>
+коннектора. Без него ответ — <code class="docutils literal notranslate"><span class="pre">422</span></code>. Право на разговор проверяется так же,
+как на управление камерой.</p>
+</section>
+<section id="id6">
+<h2>Ошибки<a class="headerlink" href="#id6" title="Ссылка на этот заголовок"></a></h2>
 <p>Ошибка приходит JSON вида <code class="docutils literal notranslate"><span class="pre">{&quot;error&quot;:</span> <span class="pre">{&quot;code&quot;:</span> <span class="pre">...,</span> <span class="pre">&quot;message&quot;:</span> <span class="pre">&quot;...&quot;}}</span></code>,
 а не картинкой.</p>
 <ul class="simple">
@@ -319,8 +339,8 @@ JSON. Обязательные поля — <code class="docutils literal notran
 <li><p>503 «Сервис подхвата видео не запущен.»</p></li>
 </ul>
 </section>
-<section id="id6">
-<h2>Устройство видеосервисов<a class="headerlink" href="#id6" title="Ссылка на этот заголовок"></a></h2>
+<section id="id7">
+<h2>Устройство видеосервисов<a class="headerlink" href="#id7" title="Ссылка на этот заголовок"></a></h2>
 <p>Этот раздел нужен администраторам, которые распределяют камеры между
 несколькими серверами.</p>
 <p><strong>Захват</strong> (<code class="docutils literal notranslate"><span class="pre">prs-video-capture</span></code>) держит соединение RTSP с камерой, пишет
@@ -354,7 +374,7 @@ JSON. Обязательные поля — <code class="docutils literal notran
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Нижняя область">
         <a href="video.html" class="btn btn-neutral float-left" title="Подключение видеокамер" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Предыдущая</a>
-        <a href="integrational_v2.html" class="btn btn-neutral float-right" title="Интеграционные хранилища" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="grafana/grafana_integration.html" class="btn btn-neutral float-right" title="Создание экранов в Grafana" accesskey="n" rel="next">Следующая <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
