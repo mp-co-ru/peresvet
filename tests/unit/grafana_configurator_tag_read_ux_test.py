@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
 DOCS_HOST = "mp-co-ru.github.io/peresvet"
-CODE_VERSION = "20261117-alarm-monitor-v60"
+CODE_VERSION = "20261127-services-icon-mask"
 
 
 def _dashboard_parts():
@@ -170,6 +170,48 @@ def test_tag_read_request_ux_dashboard_contract():
     ):
         assert code_line in read
     assert "formTagDataPanels()" in read
+
+
+def _div_span(html: str, element_id: str) -> tuple[int, int]:
+    token = f'id="{element_id}"'
+    at = html.index(token)
+    start = html.rfind("<div", 0, at)
+    depth = 0
+    cursor = start
+    while cursor < len(html):
+        nxt_open = html.find("<div", cursor)
+        nxt_close = html.find("</div>", cursor)
+        if nxt_open != -1 and nxt_open < nxt_close:
+            depth += 1
+            cursor = nxt_open + 4
+        else:
+            depth -= 1
+            cursor = nxt_close + 6
+            if depth == 0:
+                return start, cursor
+    raise AssertionError(element_id)
+
+
+def test_tag_data_block_is_independent_of_storage():
+    _, html, _, javascript = _dashboard_parts()
+    assert html.index('id="prs-tab-trigger-props"') < html.index('id="prs-tab-li-data"')
+    assert html.index('id="prs-tab-li-data"') < html.index('id="prs-tab-li-storage"')
+    data = _div_span(html, "prs-tab-pane-data")
+    block = _div_span(html, "div-tagData")
+    storage = _div_span(html, "prs-storage-tag-only")
+    assert data[0] < block[0] < block[1] < data[1]
+    assert not (storage[0] <= block[0] < block[1] <= storage[1])
+    assert 'id="prs-storage-v2-host"' in html[storage[0]:storage[1]]
+    assert 'id="prs-alert-history"' in html[_div_span(html, "prs-tab-pane-storage")[0]:_div_span(html, "prs-tab-pane-storage")[1]]
+    assert 'r("prs-tab-li-data","prsTag"===e)' in javascript
+    assert (
+        '["#prs-tab-pane-props","#prs-tab-pane-data","#prs-tab-pane-storage","#prs-tab-pane-connector"]'
+        in javascript
+    )
+    ge = javascript[javascript.index("function ge()"):javascript.index("function he(")]
+    assert "select-prsTagLinkedStorage" not in ge
+    assert 'e.classList.remove("d-none")' in ge
+    assert "prsSyncVideoTagDataChrome" in ge
 
 
 def test_tag_read_request_preserves_method_param_flag_layout():

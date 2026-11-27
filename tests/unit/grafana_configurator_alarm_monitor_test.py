@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD_PATH = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261117-alarm-monitor-v60"
+CODE_VERSION = "20261127-services-icon-mask"
 MENU_LITERAL = (
     '["__copy__","fa-clone","Копировать"],["__sep__","after-copy"],'
     '["__active__","fa-pause","Приостановить узел"],'
@@ -103,6 +103,23 @@ def test_alarm_monitor_is_a_separate_tree_mark_and_uses_the_alarms_api():
     assert "function prsTreeSetOwnMarks(item,marks)" in javascript
     assert "function prsMethodIdByParameter(item,byDn)" in javascript
     assert "prsAlarmCloseList();if(prsTreeRootIds.includes(n)||\"prsConnectorLinkedTag\"===r)prsFormDismiss();else fillForm(t)" in javascript
+    assert 'row.closest&&row.closest("#services-tree")' in javascript
+    assert 'querySelectorAll(\'#tree .list-group-item[role="treeitem"]\')' in javascript
+    assert '#services-tree .list-group-item[role="treeitem"]' not in javascript
+    assert 't.target.closest("input,button,.prs-node-actions")' in javascript
+    assert 'e.target.closest("input,button,.prs-node-actions,.prs-problem-menu-btn,.prs-problem-menu-list")' in javascript
+    assert "prsServicesForceAll" in javascript
+    assert "prsServicesSelectAllOnLoad" not in javascript
+    assert 'prsServicesSetAllSelected(0===ev.detail?!r.checked:r.dataset.prsWas!=="1")' in javascript
+    assert "Object.keys(prsServicesSelected).forEach(function(k){prsServicesSelected[k]=!1})" in javascript
+    assert 'class="item-icon fa-solid fa-server"' in javascript
+    assert "prsServicesIconSvg" not in javascript
+    assert "prs-services-root-icon" not in css
+    assert '<rect x="2.35" y="3.2" width="11.3" height="9.6" rx="1.6"' in javascript
+    assert "#tree .list-group-item[role=treeitem]>.item-icon.fa-solid,#services-tree .list-group-item[role=treeitem]>.item-icon.fa-solid{overflow:visible;color:var(--prs-primary,#2c707f)!important}" in css
+    assert ".fa-solid.fa-server{--prs-icon:url('data:image/svg+xml," in css
+    assert "x%3D%222.35%22%20y%3D%223.2%22" in css
+    assert "y%3D%221.55%22" not in css
 
 
 def test_alarm_state_classification_and_dn_ancestors():
