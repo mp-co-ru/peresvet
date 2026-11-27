@@ -28,7 +28,7 @@ from src.services.tags.model_crud.tags_model_crud_settings import TagsModelCRUDS
 
 ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD = ROOT / "src/grafana/configurator/Configurator.json"
-CODE_VERSION = "20261127-services-icon-mask"
+CODE_VERSION = "20261127-svc-drag"
 
 
 class _Logger:
