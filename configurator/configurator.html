@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Конфигуратор модели &mdash; документация МПК-Пересвет v0.30.0</title>
+  <title>Конфигуратор модели &mdash; документация МПК-Пересвет v0.30.1</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinxcontrib-httpexample.css" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="../_static/peresvet_middle.png"/>
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=62c6f60e"></script>
+      <script src="../_static/documentation_options.js?v=c6be7217"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/sphinxcontrib-httpexample.js"></script>
@@ -37,7 +37,7 @@
     
       <img src="../_static/logo.png" class="logo" alt="Логотип"/>
   </a>
-  <div class="prs-version">v0.30.0</div>
+  <div class="prs-version">v0.30.1</div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Поиск в документации" aria-label="Поиск в документации" />
@@ -166,9 +166,12 @@
 <p><span class="caption-text">Слева дерево модели, справа свойства выбранного узла.</span><a class="headerlink" href="#id31" title="Ссылка на это изображение"></a></p>
 </figcaption>
 </figure>
-<p>Экран разделён на две колонки. Слева — дерево модели и под ним блок
-«Сервисы» с журналами платформы. Справа — свойства узла, выбранного
-в дереве. Границы между колонками и между деревом и блоком «Сервисы»
+<p>Экран разделён на две колонки. Слева три отдельных блока: заголовок
+«Пересвет», дерево модели и «Сервисы» с журналами платформы. Между
+ними виден фон панели. От края панели блоки отступают на то же
+расстояние, что и от линии разделителя. Внутри дерева и списка сервисов
+отдельной рамки нет. Справа — свойства узла, выбранного в дереве.
+Граница между колонками и граница между деревом и блоком «Сервисы»
 двигаются мышью: это тонкая линия с ручкой посередине.</p>
 <p>Над деревом стоит надпись «Пересвет». Под ней мелким шрифтом показана
 версия платформы, сама надпись открывает эту документацию, шестерёнка
@@ -744,6 +747,9 @@ JSON и отменяют правки в поле.</p>
 <section id="id27">
 <h2>Сервисы<a class="headerlink" href="#id27" title="Ссылка на этот заголовок"></a></h2>
 <p>Блок «Сервисы» под деревом показывает журналы процессов платформы.
+Свёрнутый блок занимает одну строку «Сервисы». Граница над ним
+растягивает блок от этой строки. Развёрнутый список занимает заданную
+высоту.
 Флажок в строке «Сервисы» отмечает сразу все сервисы. У каждого сервиса
 есть свой флажок «Показывать лог сервиса» и число подключённых
 обработчиков очереди. Справа выводятся последние строки журналов
