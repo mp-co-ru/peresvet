@@ -124,17 +124,15 @@ Service accounts → Add service account token, см.
 
 **Тревоги**
 
-* ``peresvet_alert_create`` — создать тревогу (порог ``value``, направление
-  ``high``, автоквитирование ``autoAck``);
-* ``peresvet_alarms_get``, ``peresvet_alarm_ack`` — чтение тревог
-  и их квитирование. ``parent_id`` — объект, тег, тревога или список.
-  ``alert_id`` — то же, что один ``parent_id`` тревоги. ``fired=true``
-  (по умолчанию) возвращает эпизод, активный в момент ``finish``
-  (по умолчанию сейчас); ``count`` при этом не передаётся.
-  ``fired=false`` без ``start`` и ``count`` — состояние каждой тревоги.
-  ``fired=false`` со ``start`` или ``count`` — список срабатываний.
-  В элементе: ``id``, ``cn``, ``tagId``, ``fired``, ``finish``, ``acked``.
-  Квитирование без ``x`` берёт текущий момент.
+* ``peresvet_alert_create`` — создать тревогу у тега: порог ``value``,
+  направление ``high``, автоквитирование ``auto_ack``
+  (см. :ref:`alerts_guide`);
+* ``peresvet_alarms_get`` — эпизоды тревог, то же, что запрос
+  ``GET /v1/alarms/`` (:doc:`alerts`). Параметры: ``parent_id``
+  (объект, тег, тревога или их список), ``alert_id``, ``get_children``,
+  ``fired``, ``start``, ``finish``, ``count``, ``format_ts``;
+* ``peresvet_alarm_ack`` — квитировать тревогу ``alarm_id``; без ``x``
+  квитирует текущим моментом.
 
 **Коннекторы**
 

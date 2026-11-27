@@ -17,10 +17,10 @@ def _parts():
 def test_hierarchy_pane_fills_panel_and_scrolls_inside_the_tree():
     css, javascript = _parts()
 
-    assert 'prsConfiguratorCodeVersion="20261117-alarm-monitor-v60"' in javascript
-    assert 'rgba(44,112,127,.1), rgba(44,112,127,.32) 48%, rgba(44,112,127,.1)' in javascript
-    assert 'rgba(44,112,127,.72)' not in javascript
-    assert 'rgba(44,112,127,.32) 48%,rgba(44,112,127,.1)' in css
+    assert 'prsConfiguratorCodeVersion="20261127-services-icon-mask"' in javascript
+    assert "rgba(44,112,127,.32)" not in javascript
+    assert "rgba(44,112,127,.32)" not in css
+    assert ".prs-splitter::after{content:\"\";position:absolute;left:50%;top:50%;width:16px;height:28px;" in css
     assert "min-height:min(88vh,920px)" not in css
     assert (
         ".main-container.prs-split-root{height:100%!important;min-height:0!important;max-height:100%!important;overflow:hidden!important}"
@@ -70,10 +70,12 @@ def test_services_splitter_sits_between_hierarchy_and_services():
     assert "prsInitServicesSplitter()" in javascript
     assert 'setProperty(name,val,"important")' in javascript
     assert 'imp(bar,"cursor","row-resize")' in javascript
-    assert 'imp(bar,"height","8px")' in javascript
+    assert 'imp(bar,"height","18px")' in javascript
+    assert 'imp(bar,"background","transparent")' in javascript
     assert "prsSplitServicesRatio" in javascript
     assert "left.insertBefore(bar,services)" in javascript
-    assert "#prs-splitter-services{flex:0 0 8px!important;" in css
+    assert "#prs-splitter-services.prs-splitter{position:relative!important;flex:0 0 18px!important;" in css
+    assert "#prs-splitter-services.prs-splitter::after{width:28px;height:16px;" in css
     assert "cursor:row-resize!important" in css
     assert "cursor:row-resize" in css
     assert "#prs-split-left .prs-services-tree-scroll{flex:0 0 var(--prs-services-size,auto)!important;" in css
